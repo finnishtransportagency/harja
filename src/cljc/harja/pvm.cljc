@@ -119,6 +119,9 @@
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
 
+(def kuukausi-ja-vuosi-fmt
+  (luo-format "MM/yy"))
+
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
@@ -160,6 +163,11 @@
 (defn aika-iso8601
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
+
+(defn kuukausi-ja-vuosi
+  "Formatoi MM/yy lyhyen vuosi ja kuukausi tekstin. Esim \"01/15\" tammikuulle 2015."
+  [pvm]
+  (formatoi kuukausi-ja-vuosi-fmt pvm))
 
  (defn ->pvm-aika [teksti]
    "Jäsentää tekstistä d.M.yyyy H:mm muodossa olevan päivämäärän ja ajan. Jos teksti ei ole oikeaa muotoa, palauta nil."

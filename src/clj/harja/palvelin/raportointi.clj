@@ -11,7 +11,9 @@
             ;; vaaditaan built in raportit
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot]))
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot]
+            [harja.palvelin.raportointi.raportit.suolasakko]
+            [harja.palvelin.raportointi.raportit.ymparisto]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -79,6 +81,7 @@
     (or @raportit
         (try
           (let [r (raportit-q/raportit (:db this))]
+            (log/debug "Raportit saatu: " (pr-str r))
             (reset! raportit r)
             r)
           (catch Exception e

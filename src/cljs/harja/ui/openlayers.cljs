@@ -62,7 +62,7 @@
 (defn poista-hover-kasittelija! []
   (aseta-hover-kasittelija! nil))
 
-
+(def +karttaikonipolku+ "images/karttaikonit/")
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -214,6 +214,13 @@
                  (when-let [g (tapahtuman-geometria this e)]
                    (on-select g e))))))))
 
+;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
+(defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
+  (.on ol3 "dblclick" (fn [e]
+                        (when on-select
+                          (when-let [g (tapahtuman-geometria this e)]
+                            (on-select g e))))))
+
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove"
@@ -269,6 +276,13 @@
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
 
+;; Käytetään the-karttaa joka oli aiemmin "puhtaasti REPL-tunkkausta varten"
+(defn nykyinen-zoom-taso []
+  (-> (.getView @the-kartta) (.getZoom)))
+
+(defn aseta-zoom [zoom]
+  (-> (.getView @the-kartta) (.setZoom zoom)))
+
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
@@ -284,7 +298,7 @@
         _ (reset!
             openlayers-kartan-leveys
             (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
-        _ (reset! the-kartta ol3)                           ;; puhtaasi REPL tunkkausta varten
+        _ (reset! the-kartta ol3)
         view (:view mapspec)
         zoom (:zoom mapspec)
         selection (:selection mapspec)
@@ -295,7 +309,7 @@
     (when (animaatio/transition-end-tuettu?)
       (animaatio/kasittele-transition-end (.getElementById js/document (:id mapspec))
                                           #(.updateSize ol3)))
-    
+
     ;; Aloitetaan komentokanavan kuuntelu
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
@@ -312,9 +326,9 @@
                    (nayta-popup! this coordinate content))
 
                  ::invalidate-size
-                 (do (log "OL3:updateSize kutsuttu")
-                     (.updateSize ol3)
-                     (.render ol3))
+                 (do
+                   (.updateSize ol3)
+                   (.render ol3))
 
                  ::hide-popup
                  (poista-popup! this)
@@ -332,8 +346,8 @@
                                       {:hover {:x x :y y :tooltip teksti}})))
                (recur (alts! [komento-ch unmount-ch]))))
 
-    (.setView ol3 (ol.View. #js {:center (clj->js @view)
-                                 :zoom   @zoom
+    (.setView ol3 (ol.View. #js {:center  (clj->js @view)
+                                 :zoom    @zoom
                                  :maxZoom 20
                                  :minZoom 5}))
 
@@ -346,6 +360,7 @@
 
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
+    (aseta-dblclick-kasittelija this ol3 (:on-dblclick mapspec) (:on-dblclick-select mapspec))
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
@@ -438,7 +453,7 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
@@ -454,7 +469,7 @@
                       :image    (ol.style.Icon. #js {:src            "images/nuoli.png"
                                                      :anchor         #js [0.5 0.5]
                                                      :opacity        1
-                                                     :scale          0.5
+                                                     :scale          (or scale 0.5)
                                                      :size           #js [32 32]
                                                      :zIndex         6
                                                      :rotateWithView false
@@ -466,6 +481,45 @@
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
+(defn- tee-kaksiosainen-ikoni [coordinates pohja img rotation anchor]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (clj->js [(ol.style.Style.
+                           #js {:image  (ol.style.Icon.
+                                          #js {:src      (str +karttaikonipolku+ pohja)
+                                               :rotation (or rotation 0)
+                                               :anchor   (if anchor
+                                                           (clj->js anchor)
+                                                           #js [0.5 0.5])})
+                                :zIndex 4})
+
+                         (ol.style.Style.
+                           #js {:image  (ol.style.Icon.
+                                          #js {:src    (str +karttaikonipolku+ img)
+                                               :anchor (if anchor
+                                                         (clj->js anchor)
+                                                         #js [0.5 0.5])})
+                                :zIndex 5})]))))
+
+(defmethod luo-feature :tack-icon [{:keys [coordinates img]}]
+  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img 0 [0.5 1]))
+
+(defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
+  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
+
+(defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (ol.style.Style.
+                 #js {:image  (ol.style.Icon.
+                                #js {:src          img
+                                     :anchor       (if anchor
+                                                     (clj->js anchor)
+                                                     #js [0.5 1])
+                                     :opacity      1
+                                     ;;:size         #js [40 40]
+                                     :rotation     (or direction 0)
+                                     :anchorXUnits "fraction"
+                                     :anchorYUnits "fraction"})
+                      :zIndex 4}))))
 
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -484,21 +538,6 @@
                                                                   :opacity      1
                                                                   :size         #js [62 62]})
                                      :zIndex (or zindex 4)}))))
-
-(defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (ol.style.Style.
-                 #js {:image  (ol.style.Icon.
-                                #js {:src          img
-                                     :anchor       (if anchor
-                                                     (clj->js anchor)
-                                                     #js [0.5 1])
-                                     :opacity      1
-                                     ;;:size         #js [40 40]
-                                     :rotation     (or direction 0)
-                                     :anchorXUnits "fraction"
-                                     :anchorYUnits "fraction"})
-                      :zIndex 4}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
@@ -542,7 +581,7 @@
                               (.addFeature features new-shape)
 
                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                              (when (not (or (= :arrow-line (:type geom)) (= :icon (:type geom))))
+                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :sticker-icon})
                                 (aseta-tyylit new-shape geom))
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?

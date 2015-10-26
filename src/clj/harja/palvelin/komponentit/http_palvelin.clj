@@ -130,13 +130,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
   :tarkista-polku?    Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
                       ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa 
-                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.
-")
+                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
 
   (poista-palvelu [this nimi]
-    "Poistaa nimetyn palvelun käsittelijän.")
-
-  )
+    "Poistaa nimetyn palvelun käsittelijän."))
 
 (defn- arityt
   "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
@@ -155,10 +152,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        :headers {"Content-Type" "text/html"}
        :body (index/tee-paasivu kehitysmoodi)})))
 
-(defrecord HttpPalvelin [portti kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
+(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
-    (log/info "HttpPalvelin käynnistetään portissa " portti)
+    (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (let [todennus (:todennus this)
           resurssit (if kehitysmoodi
                       (route/files "" {:root "dev-resources"})
@@ -167,16 +164,20 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
              (constantly
               (http/run-server (session/wrap-session
                                 (fn [req]
-                                  (let [sessiolliset (conj (mapv :fn @kasittelijat)
-                                                           (partial index-kasittelija kehitysmoodi)
+                                  (try+
+                                   (let [sessiolliset (conj (mapv :fn @kasittelijat)
+                                                            (partial index-kasittelija kehitysmoodi)
                                                            resurssit)
-                                        sessiokasittelija (-> (apply compojure/routes sessiolliset)
+                                         sessiokasittelija (-> (apply compojure/routes sessiolliset)
                                                               (csrf/wrap-anti-forgery))]
-                                    (reitita (todennus/todenna-pyynto todennus req)
-                                             (conj (mapv :fn @sessiottomat-kasittelijat) sessiokasittelija))))
-                                +sessioattribuutit+)                               
-                               {:port portti
-                                :thread 64})))
+                                     (reitita (todennus/todenna-pyynto todennus req)
+                                             (conj (mapv :fn @sessiottomat-kasittelijat) sessiokasittelija)))
+                                   (catch [:virhe :todennusvirhe] _
+                                     {:status 403 :body "Todennusvirhe"})))
+                                +sessioattribuutit+)
+                               {:port (or (:portti asetukset) asetukset)
+                                :thread (or (:threads asetukset) 8)
+                                :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
@@ -210,8 +211,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
            (fn [kasittelijat]
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
-(defn luo-http-palvelin [portti kehitysmoodi]
-  (->HttpPalvelin portti (atom []) (atom []) (atom nil) kehitysmoodi))
+(defn luo-http-palvelin [asetukset kehitysmoodi]
+  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti [http nimi reitti]
   (julkaise-palvelu http nimi  (wrap-params reitti)

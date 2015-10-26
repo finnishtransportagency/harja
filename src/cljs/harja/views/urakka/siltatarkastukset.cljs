@@ -295,8 +295,7 @@
            :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                     (:id @nav/valittu-urakka)
                                                     #(paivita-siltatarkastus! %)
-                                                    :ei-mahdollinen)
-           }
+                                                    :ei-mahdollinen)}
 
           ;; sarakkeet
           @siltatarkastussarakkeet
@@ -349,7 +348,7 @@
             :varoita [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
            {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true :leveys-col 4
-            :tyyppi  :string :pituus-max 128
+            :tyyppi :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
           @lomakkeen-tiedot]
@@ -382,7 +381,6 @@
            ;; Lisätiedon maksimipituus tietokantasarakkeesta jonka tyyppi varchar(255)
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "30%"
             :pituus-max 255}]
-
           @taulukon-rivit]
 
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
@@ -399,7 +397,7 @@
                                       (reset! tallennus-kaynnissa false)
                                       (reset! uuden-syottaminen false))
                                   ;; Epäonnistui jostain syystä
-                                  ;; fixme: pitäisköhän näyttää se käyttäjällekin ;)
+                                  (viesti/nayta! "Tallentaminen epäonnistui" ::danger 1500)
                                   (reset! tallennus-kaynnissa false)))))}
            (ikonit/tallenna) " Tallenna tarkastus"]
          (when (not @voi-tallentaa?)
@@ -408,11 +406,13 @@
 (defn siltatarkastukset []
 
   (komp/luo
-    {:component-will-mount (fn [_]
-                             (kartta-tasot/taso-paalle! :sillat))
-     :component-will-unmount (fn [_]
-                               (kartta-tasot/taso-pois! :sillat))}
-
+    (komp/sisaan-ulos #(do
+                        (kartta-tasot/taso-paalle! :sillat)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                        (nav/vaihda-kartan-koko! :L))
+                      #(do
+                        (kartta-tasot/taso-pois! :sillat)
+                        (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn []
       (if @uuden-syottaminen
         [uuden-tarkastuksen-syottaminen]

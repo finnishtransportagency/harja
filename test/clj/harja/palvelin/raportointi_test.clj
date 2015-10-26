@@ -29,5 +29,6 @@
     (is (contains? r :laskutusyhteenveto) "Laskutusyhteenveto löytyy raporteista")
     (is (contains? r :materiaaliraportti) "Materiaaliraportti löytyy raporteista")
     (is (contains? r :yks-hint-tyot) "Yksikköhintaiset työt löytyy raporteista")
+    (is (contains? r :suolasakko) "Suolasakot löytyy raporteista")
     (is (not (contains? r :olematon-raportti)))))
 

@@ -227,23 +227,36 @@ button > .ajax-loader {
     display: none;
   }
 }
-div.file-upload {
-   position: relative;
-   overflow: hidden;
-   margin: 0px;
 
-   input.upload {
-     position: absolute;
-     top: 0;
+.liitekomponentti {
+  > div.file-upload {
+    position: relative;
+    overflow: hidden;
+    margin: 0px;
+
+    input.upload {
+      position: absolute;
+      top: 0;
       right: 0;
-     margin: 0;
-     padding: 0;
-     font-size: 20px;
-     cursor: pointer;
-     opacity: 0;
-     filter: alpha(opacity=0);
-   }
+      margin: 0;
+      padding: 0;
+      font-size: 20px;
+      cursor: pointer;
+      opacity: 0;
+      filter: alpha(opacity=0);
+    }
+  }
+
+  > .liite-virheviesti {
+    color: @vaara;
+  }
 }
+
 .bold {
   font-weight: bold;
+}
+.tr-valitsin-teksti {
+  background-color: @harjan-taustavari;
+  border: none;
+  padding: 6px 4px;
 }

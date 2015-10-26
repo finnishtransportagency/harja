@@ -106,11 +106,11 @@
          
          }
         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna nimi"]]}
-         {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna tienumero"]]}
-         {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna alkuosa"]]}
-         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
-         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna loppuosa"]]}
-         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
+         {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Anna tienumero"]]}
+         {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :positiivinen-numero  :leveys "10%" :validoi [[:ei-tyhja "Anna alkuosa"]]}
+         {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :positiivinen-numero  :leveys "10%" :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
+         {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :positiivinen-numero  :leveys "10%" :validoi [[:ei-tyhja "Anna loppuosa"]]}
+         {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
          {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
           :hae (fn [rivi]
                  (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
@@ -129,9 +129,7 @@
          {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna toimenpide"]]}]
         kohdeosat]
 
-       [paallystyskohdeosa-virheet tr-virheet]
-       
-       ])))
+       [paallystyskohdeosa-virheet tr-virheet]])))
 
 (defn paallystyskohteet []
   (let [paallystyskohteet (reaction (let [kohteet @paallystyskohderivit]
