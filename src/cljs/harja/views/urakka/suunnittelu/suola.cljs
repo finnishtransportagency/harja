@@ -36,7 +36,7 @@
                        (suola/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
 
 (defonce suolasakko-kaytossa?
-  (reaction (let [ss @suolasakot-ja-lampotilat]
+  (reaction (let [ss (:suolasakot @suolasakot-ja-lampotilat)]
               (or (empty? ss)
                   (some :kaytossa ss)))))
 
@@ -50,6 +50,7 @@
                          :urakka (:id @nav/valittu-urakka))]
     (k/post! :tallenna-suolasakko-ja-lampotilat ehostettu-data)))
 
+
 (defn lampotila-lomake
   []
   (let [urakka @nav/valittu-urakka
@@ -58,7 +59,7 @@
         valitun-hoitokauden-tiedot (reaction (when @suolasakot-ja-lampotilat
                                                (first (filter #(or (= (:hoitokauden_alkuvuosi %) (pvm/vuosi (first @u/valittu-hoitokausi)))
                                                                    (= (:lt_alkupvm %) (first @u/valittu-hoitokausi)))
-                                                              @suolasakot-ja-lampotilat))))
+                                                              (:suolasakot @suolasakot-ja-lampotilat)))))
         lampotilaerotus (reaction )]
 
     (fn []
@@ -86,7 +87,9 @@
                                                       (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                       (reset! suolasakot-ja-lampotilat %))}]]])])}
           [
-
+           {:otsikko "Talvisuolan käyttöraja" :pakollinen? true :nimi :talvisuolaraja :tyyppi :positiivinen-numero :leveys-col 2
+            :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"
+            }
            {:otsikko "Suolasakko" :pakollinen? true :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
             :valinta-arvo  first
@@ -99,6 +102,7 @@
 
             :leveys-col    2}
 
+           
            {:otsikko "Sydäntalven keskilämpötila" :leveys-col 4
             :nimi :lampotilat
             :komponentti [grid/grid {}
@@ -119,6 +123,7 @@
            ]
           @valitun-hoitokauden-tiedot]
          ]))))
+
 
 (defn suola []
   (komp/luo

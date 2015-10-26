@@ -2,11 +2,13 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.lampotilat :as q]
+            [harja.kyselyt.pohjavesialueet :as pohjavesialueet-q]
             [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
+            [harja.geo :as geo]
             [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]))
 
 (defn keskilampo-ja-pitkalampo-floatiksi
@@ -59,12 +61,16 @@
   [db user urakka-id]
   (log/debug "hae-urakan-suolasakot-ja-lampotilat")
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        (comp
-          (map #(konv/decimal->double % :maara))
-          (map #(konv/decimal->double % :keskilampotila))
-          (map #(konv/decimal->double % :pitkakeskilampotila)))
-          (q/hae-urakan-suokasakot-ja-lampotilat db urakka-id)))
+  {:suolasakot (into []
+                     (comp
+                      (map #(konv/decimal->double % :maara))
+                      (map #(konv/decimal->double % :keskilampotila))
+                      (map #(konv/decimal->double % :pitkakeskilampotila)))
+                     (q/hae-urakan-suokasakot-ja-lampotilat db urakka-id))
+   :pohjavesialueet (into []
+                          (geo/muunna-pg-tulokset :alue)
+                          (pohjavesialueet-q/hae-urakan-pohjavesialueet db urakka-id))
+   :pohjavesialue-talvisuola (q/hae-urakan-pohjavesialue-talvisuolarajat db urakka-id)})
 
 (defn luo-suolasakko
   [params]
@@ -87,7 +93,7 @@
   (log/debug "tallenna suolasakko" tiedot)
   (let [params [db (:maara tiedot) (:hoitokauden_alkuvuosi tiedot)
                 (:maksukuukausi tiedot) (:indeksi tiedot) (:urakka tiedot)
-                (:id user)]
+                (:id user) (:talvisuolaraja tiedot)]
   id (if (:id tiedot)
        (paivita-suolasakko params (:id tiedot))
        (luo-suolasakko params))]

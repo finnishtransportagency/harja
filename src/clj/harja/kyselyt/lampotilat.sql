@@ -22,6 +22,11 @@ FROM suolasakko ss
                                   OR lt.id IS null)
   WHERE ss.urakka = :urakka;
 
+-- name: hae-urakan-pohjavesialue-talvisuolarajat
+SELECT *
+  FROM pohjavesialue_talvisuola pt
+ WHERE pt.urakka = :urakka;
+
 
 -- name: luo-suolasakko<!
 INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja)
@@ -30,7 +35,8 @@ INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, ur
 -- name: paivita-suolasakko!
 UPDATE suolasakko
    SET maara = :maara, hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi, maksukuukausi = :maksukuukausi,
-       indeksi = :indeksi, urakka = :urakka, muokattu = NOW(), muokkaaja = :kayttaja, id = :id
+       indeksi = :indeksi, urakka = :urakka, muokattu = NOW(), muokkaaja = :kayttaja,
+       talvisuolaraja = :talvisuolaraja
  WHERE id = :id;
 
 -- name: aseta-suolasakon-kaytto!

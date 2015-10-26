@@ -18,3 +18,4 @@
 (defn aseta-suolasakon-kaytto [urakka-id kaytossa?]
   (k/post! :aseta-suolasakon-kaytto {:urakka-id urakka-id
                                      :kaytossa? kaytossa?}))
+
