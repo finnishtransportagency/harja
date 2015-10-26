@@ -156,7 +156,7 @@
         (let [yht (q/luo-yhteyshenkilo<! c
                                          (:etunimi p) (:sukunimi p)
                                          (:tyopuhelin p) (:matkapuhelin p)
-                                         (:sahkoposti p) (:id (:organisaatio p))
+                                         (:sahkoposti p) (:organisaatio p)
                                          nil
                                          nil
                                          nil)]
@@ -170,7 +170,7 @@
           (q/paivita-yhteyshenkilo<! c
                                     (:etunimi p) (:sukunimi p)
                                     (:tyopuhelin p) (:matkapuhelin p)
-                                    (:sahkoposti p) (:id (:organisaatio p))
+                                    (:sahkoposti p) (:organisaatio p)
                                     yht-id)
           (q/paivita-paivystys! c
                                 (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
