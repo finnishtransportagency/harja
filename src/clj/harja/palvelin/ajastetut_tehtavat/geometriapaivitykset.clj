@@ -18,7 +18,8 @@
             [clojure.java.io :as io]
             [clj-time.coerce :as coerce])
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import (java.net URI)))
+  (:import (java.net URI)
+           (java.sql Timestamp)))
 
 (defn aja-alk-paivitys [alk db paivitystunnus kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
   (log/debug "Geometria-aineisto: " paivitystunnus " on muuttunut ja tarvitaan päivittää")
@@ -44,27 +45,24 @@
           (time-coerce/from-sql-time viimeisin-paivitys)))))
 
 (defn tarvitaanko-paikallinen-paivitys? [db paivitystunnus tiedostourl]
-  (log/debug "Tarkistetaan tarviiko ajaa paikallinen geometriapäivitys:" paivitystunnus)
   (try
     (let [polku (if (not tiedostourl) nil (.substring (.getSchemeSpecificPart (URI. tiedostourl)) 2))
           tiedosto (if (not polku) nil (io/file polku))
-          tiedoston-muutospvm (if (not tiedosto) nil (.lastModified tiedosto))]
-      ;; todo: poista!
-      (println "----------------->" polku)
-      (println "----------------->" tiedosto)
-      (println "----------------->" tiedoston-muutospvm)
-      (when (and
-              (not (nil? tiedosto))
-              (.exists tiedosto)
-              (pitaako-paivittaa? db paivitystunnus (coerce/from-long tiedoston-muutospvm)))
-        (log/debug "Tarvitaan ajaa paikallinen geometriapäivitys: " paivitystunnus)
-        true))
+          tiedoston-muutospvm (if (not tiedosto) nil (coerce/to-sql-time (Timestamp. (.lastModified tiedosto))))]
+      (if (and
+            (not (nil? tiedosto))
+            (.exists tiedosto)
+            (pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm))
+        (do
+          (log/debug "Tarvitaan ajaa paikallinen geometriapäivitys:" paivitystunnus)
+          true)
+        false))
     (catch Exception e
       (log/warn "Tarkistettaessa paikallista ajoa geometriapäivitykselle: " paivitystunnus ", tapahtui poikkeus: " e)
       false)))
 
 (defn kaynnista-alk-paivitys [alk db paivitystunnus tiedostourl kohdepolku kohdetiedoston-nimi paivitys]
-  (log/debug "Tarkistetaan onko geometria-aineisto: " paivitystunnus " päivittynyt")
+  (log/debug "Tarkistetaan onko geometria-aineisto: " paivitystunnus " päivittynyt ALK:ssa.")
   (let [kohdetiedoston-polku (str kohdepolku kohdetiedoston-nimi)]
     ;; todo: tarvii todennäköisesti tehdä tarkempi tarkastus kohdetiedostolle
     (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdepolku kohdetiedoston-nimi))
