@@ -147,9 +147,6 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (def +sessioattribuutit+ {:cookie-attrs {:max-age 3600}})
 
-(defn wrap-anti-csrf [f]
-  (csrf/wrap-anti-forgery f))
-
 (defn index-kasittelija [kehitysmoodi req]
   (let [uri (:uri req)]
     (when (or (= uri "/")
@@ -158,7 +155,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        :headers {"Content-Type" "text/html"}
        :body (index/tee-paasivu kehitysmoodi)})))
 
-(defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
+(defrecord HttpPalvelin [portti kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
     (log/info "HttpPalvelin käynnistetään portissa " portti)
@@ -170,11 +167,14 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
              (constantly
               (http/run-server (session/wrap-session
                                 (fn [req]
-                                  (reitita (todennus/todenna-pyynto todennus req)
-                                           (conj (mapv :fn @kasittelijat)
-                                                 (wrap-anti-csrf (partial index-kasittelija kehitysmoodi))
-                                                 resurssit)))
-                                +sessioattribuutit+)
+                                  (let [sessiolliset (conj (mapv :fn @kasittelijat)
+                                                           (partial index-kasittelija kehitysmoodi)
+                                                           resurssit)
+                                        sessiokasittelija (-> (apply compojure/routes sessiolliset)
+                                                              (csrf/wrap-anti-forgery))]
+                                    (reitita (todennus/todenna-pyynto todennus req)
+                                             (conj (mapv :fn @sessiottomat-kasittelijat) sessiokasittelija))))
+                                +sessioattribuutit+)                               
                                {:port portti
                                 :thread 64})))
       this))
@@ -188,10 +188,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
     (if (:ring-kasittelija? optiot)
-      (swap! kasittelijat conj {:nimi nimi
-                                :fn (if (= false (:tarkista-polku? optiot))
-                                      palvelu-fn
-                                      (ring-kasittelija nimi palvelu-fn))})
+      (swap! sessiottomat-kasittelijat conj {:nimi nimi
+                                             :fn (if (= false (:tarkista-polku? optiot))
+                                                   palvelu-fn
+                                                   (ring-kasittelija nimi palvelu-fn))})
       (let [ar (arityt palvelu-fn)
             liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
         (when liikaa-parametreja
@@ -199,11 +199,11 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
         (when (ar 2)
           ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
           (swap! kasittelijat
-                 conj {:nimi nimi :fn (wrap-anti-csrf (transit-post-kasittelija nimi palvelu-fn optiot))}))
+                 conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
         (when (ar 1)
           ;; GET metodi, vain käyttäjätiedot parametrina
           (swap! kasittelijat
-                 conj {:nimi nimi :fn (wrap-anti-csrf (transit-get-kasittelija nimi palvelu-fn optiot))})))))
+                 conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)})))))
 
   (poista-palvelu [this nimi]
     (swap! kasittelijat
@@ -211,7 +211,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
 (defn luo-http-palvelin [portti kehitysmoodi]
-  (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
+  (->HttpPalvelin portti (atom []) (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti [http nimi reitti]
   (julkaise-palvelu http nimi  (wrap-params reitti)
