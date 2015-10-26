@@ -408,7 +408,7 @@
   (komp/luo
     (komp/sisaan-ulos #(do
                         (kartta-tasot/taso-paalle! :sillat)
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :L))
                       #(do
                         (kartta-tasot/taso-pois! :sillat)

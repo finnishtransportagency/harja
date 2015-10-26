@@ -440,7 +440,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (komp/luo
     (komp/lippu kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :XL))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []

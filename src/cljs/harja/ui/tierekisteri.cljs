@@ -132,7 +132,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                               (nav/vaihda-kartan-koko! :L))
                             (kartta/aseta-kursori! :crosshair))
                           #(do
-                            (reset! nav/kartan-koko @nav/kartan-edellinen-koko)
+                            (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
                             (kartta/aseta-kursori! nil)))
         (komp/ulos (kartta/kaappaa-hiiri tapahtumat))

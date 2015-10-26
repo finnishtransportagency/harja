@@ -29,7 +29,7 @@
   (let [ur @nav/valittu-urakka]
     (komp/luo
       (komp/sisaan-ulos #(do
-                          (reset! nav/kartan-edellinen-koko @nav/kartan-kokovalinta)
+                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                           (nav/vaihda-kartan-koko! :S))
                         #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
       (fn []

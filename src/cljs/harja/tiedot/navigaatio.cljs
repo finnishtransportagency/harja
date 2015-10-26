@@ -41,9 +41,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def kartan-kokovalinta "Kartan koko" (atom :S))
 
 (defn vaihda-kartan-koko! [uusi-koko]
-  (log "in nav/vaihda kartan koko, uusi koko: " (pr-str uusi-koko))
   (let [vanha-koko @kartan-kokovalinta]
-    (log "in nav/vaihda kartan, vanha koko: " (pr-str vanha-koko))
     (when uusi-koko
       (reset! kartan-kokovalinta uusi-koko)
       (t/julkaise! {:aihe :kartan-koko-vaihdettu
@@ -138,8 +136,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
   (reaction (let [valittu-koko @kartan-kokovalinta
                   sivu @sivu
-                  v-ur @valittu-urakka]
-              (if-not (empty? @tarvitsen-isoa-karttaa)
+                  v-ur @valittu-urakka
+                  tarvitsen-isoa-karttaa @tarvitsen-isoa-karttaa]
+              (if-not (empty? tarvitsen-isoa-karttaa)
                 :L
                 ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
                 ;; tai palautetaan käyttäjän valitsema koko
