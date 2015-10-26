@@ -92,10 +92,10 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [kohdetiedot (first (q/hae-urakan-paallystyskohde db urakka-id paallystyskohde-id))
-        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
-                         (:arvonvahennykset kohdetiedot)
-                         (:bitumi_indeksi kohdetiedot)
-                         (:kaasuindeksi kohdetiedot))
+        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen_mukaiset_tyot
+                                                   :arvonvahennykset
+                                                   :bitumi_indeksi
+                                                   :kaasuindeksi]))
         paallystysilmoitus (first (into []
                                         (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                               (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
