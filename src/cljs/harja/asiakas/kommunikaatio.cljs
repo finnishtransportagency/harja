@@ -18,6 +18,10 @@
 (defn polku []
   (str +polku+ "_/"))
 
+(defn get-csrf-token []
+  (-> (.getElementsByTagName js/document "body")
+      (aget 0)
+      (.getAttribute "data-anti-csrf-token")))
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
@@ -31,7 +35,7 @@
     (ajax-request {:uri             (str (polku) (name palvelu))
                    :method          metodi
                    :params          parametrit
-                   :headers         {"X-CSRF-Token" (.-innerHTML (.getElementById js/document "anti-csrf-token"))}
+                   :headers         {"X-CSRF-Token" (get-csrf-token)}
                    :format          (transit-request-format transit/write-optiot)
                    :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
                                                               :raw    true})
