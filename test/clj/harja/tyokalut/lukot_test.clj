@@ -42,3 +42,11 @@
     (is @muuttuja "Toiminto ajettiin oikein")
     (tarkista-lukon-avaus)))
 
+
+(deftest tarkista-poikkeusten-kasittely
+  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+        toiminto-fn (fn [] (throw (Exception. "Poikkeus")))]
+    (is (thrown? Exception (lukot/aja-lukon-kanssa db +testilukko+ toiminto-fn 1) "Poikkeus heitettiin ulos"))
+    (tarkista-lukon-avaus)))
+
+

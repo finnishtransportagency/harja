@@ -6,7 +6,11 @@
   ([db tunniste toiminto-fn aikaraja]
    (if (lukko/aseta-lukko? db tunniste aikaraja)
      (do
-       (toiminto-fn)
-       (lukko/avaa-lukko? db tunniste)
+       (try
+         (toiminto-fn)
+         (lukko/avaa-lukko? db tunniste)
+         (catch Exception e
+           (lukko/avaa-lukko? db tunniste)
+           (throw e)))
        true)
      false)))
