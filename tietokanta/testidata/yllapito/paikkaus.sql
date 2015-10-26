@@ -25,7 +25,7 @@ INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr
 INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka')), 6, 'HKI-Joensuu-Kajaani');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '6'), 'HKI-Joensuu-Kajaani', 6, 21, 6000, 311, 3300, 8700, 1, 'Urem SMA 16/25 An10');
 
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Helsinki-Vaalimaa')), 7, 'HKI-Joensuu-Kajaani');
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka')), 7, 'Helsinki-Vaalimaa');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '7'), 'Helsinki-Vaalimaa', 7, 29, 1000, 39, 5000, 6000, 1, 'Urem SMA 16/25 An10');
 
 -- Paikkausilmoitukset
