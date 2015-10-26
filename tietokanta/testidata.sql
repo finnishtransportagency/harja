@@ -908,7 +908,7 @@ INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoit
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case
 
 SELECT paivita_urakoiden_alueet();
-SELECT paivita_hallintayksikoiden_pohjavesialueet();
+SELECT paivita_pohjavesialueet();
 
 -- Luodaan testidataa laskutusyhteenvetoraporttia varten
 \i testidata/laskutusyhteenveto.sql

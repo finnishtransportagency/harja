@@ -6,9 +6,10 @@ SELECT id, nimi, alue, tunnus
 
 -- name: hae-urakan-pohjavesialueet
 -- Hakee hoidon alueurakan alueella olevat pohjavesialueet
-SELECT nimi, tunnus, alue 
-  FROM pohjavesialueet_urakoittain 
- WHERE urakka = :urakka;
+SELECT p.nimi, p.tunnus, p.alue, t.hoitokauden_alkuvuosi, t.talvisuolaraja 
+  FROM pohjavesialueet_urakoittain p
+       JOIN pohjavesialue_talvisuola t ON (p.tunnus = t.pohjavesialue AND p.urakka = t.urakka)
+ WHERE p.urakka = :urakka;
 		    
 
 -- name: tuhoa-pohjavesialuedata!
@@ -19,5 +20,6 @@ DELETE FROM pohjavesialue;
 INSERT INTO pohjavesialue (nimi, tunnus, alue) VALUES
        (:nimi, :tunnus, ST_GeomFromText(:geometria)::geometry);
 
--- name: paivita-hallintayksikoiden-pohjavesialueet
-SELECT paivita_hallintayksikoiden_pohjavesialueet();
+-- name: paivita-pohjavesialueet
+SELECT paivita_pohjavesialueet();
+
