@@ -119,28 +119,35 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                                (reset! alkupiste sijainti) 
                                (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
-    
-    (komp/luo
-     {:component-will-receive-props
-      (fn [_ _ uudet-optiot]
-        (reset! optiot uudet-optiot))}
-     
-     (komp/sisaan #(nav/vaihda-kartan-koko! :M))
-     (komp/sisaan-ulos #(kartta/aseta-kursori! :crosshair)
-                       #(kartta/aseta-kursori! nil))
-     (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
-     (komp/kuuntelija :esc-painettu
-                      (fn [_]
-                        (log "optiot: " @optiot)
-                        ((:kun-peruttu @optiot)))
-                      :enter-painettu
-                      #(go (>! tapahtumat {:tyyppi :enter})))
-     (fn [_] ;; suljetaan kun-peruttu ja kun-valittu yli
-       [:span
-        (case @tila
-          :ei-valittu "Valitse alkupiste"
-          :alku-valittu "Valitse loppupiste"
-          "")
 
-        (when-let [virhe @virhe]
-          [:div.virhe virhe])]))))
+    (let [kartan-koko @nav/kartan-koko]
+      (komp/luo
+        {:component-will-receive-props
+         (fn [_ _ uudet-optiot]
+           (reset! optiot uudet-optiot))}
+
+        (komp/sisaan-ulos #(do
+                            (reset! nav/kartan-edellinen-koko kartan-koko)
+                            (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
+                              (nav/vaihda-kartan-koko! :L))
+                            (kartta/aseta-kursori! :crosshair))
+                          #(do
+                            (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                            (reset! nav/kartan-edellinen-koko nil)
+                            (kartta/aseta-kursori! nil)))
+        (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
+        (komp/kuuntelija :esc-painettu
+                         (fn [_]
+                           (log "optiot: " @optiot)
+                           ((:kun-peruttu @optiot)))
+                         :enter-painettu
+                         #(go (>! tapahtumat {:tyyppi :enter})))
+        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
+          [:div.tr-valitsin-teksti.form-control
+           [:div (case @tila
+                   :ei-valittu "Valitse alkupiste"
+                   :alku-valittu "Valitse loppupiste"
+                   "")]
+
+           (when-let [virhe @virhe]
+             [:div.virhe virhe])])))))

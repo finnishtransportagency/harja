@@ -23,17 +23,15 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(def kartan-edellinen-koko (atom nil))
-
 (defn toteumat
   "Toteumien pääkomponentti"
   []
   (let [ur @nav/valittu-urakka]
     (komp/luo
       (komp/sisaan-ulos #(do
-                          (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                           (nav/vaihda-kartan-koko! :S))
-                        #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
+                        #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
       (fn []
         [bs/tabs {:style :tabs :classes "tabs-taso2" :active u/toteumat-valilehti}
 

@@ -57,7 +57,12 @@
         (set! (.-left tyyli) (fmt/pikseleina x))
         (set! (.-top tyyli) (fmt/pikseleina y))
         (set! (.-width tyyli) (fmt/pikseleina w))
-        (set! (.-height tyyli) (fmt/pikseleina h))))))
+        (set! (.-height tyyli) (fmt/pikseleina h))))
+    ;; jotta vältetään muiden kontrollien hautautuminen float:right Näytä kartta alle, kavenna kartta-container
+    (when (= :S @nav/kartan-koko)
+      (set! (.-left tyyli) "")
+      (set! (.-right tyyli) (fmt/pikseleina 20))
+      (set! (.-width tyyli) (fmt/pikseleina 100)))))
 
 ;; Kun kartan paikkavaraus poistuu, aseta flägi, joka pakottaa seuraavalla
 ;; kerralla paikan asetuksen... läheta false kanavaan
@@ -556,3 +561,19 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
    [kartan-yleiset-kontrollit]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]])
+
+
+;; Käytä tätä jos haluat luoda rinnakkain sisällön ja kartan näkymääsi
+;; tämä on täällä eikä ui.yleiset koska olisi tullut syklinen riippuvuus
+(defn sisalto-ja-kartta-2-palstana
+  "Luo BS-rivin ja sarakkeet, joissa toisella puolella parameterinä annettava sisältö, toisella kartta."
+  [sisalto]
+  [:div.row
+   [:div {:class (if (= @nav/kartan-koko :S)
+                   "col-sm-12"
+                   "col-sm-6")}
+    sisalto]
+   [:div {:class (if (= @nav/kartan-koko :S)
+                   ""
+                   "col-sm-6")}
+    [kartan-paikka]]])
