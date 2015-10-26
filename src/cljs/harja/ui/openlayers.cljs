@@ -62,7 +62,7 @@
 (defn poista-hover-kasittelija! []
   (aseta-hover-kasittelija! nil))
 
-
+(def +karttaikonipolku+ "images/karttaikonit/")
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -485,7 +485,7 @@
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (clj->js [(ol.style.Style.
                            #js {:image  (ol.style.Icon.
-                                          #js {:src      (str "images/karttaikonit/" pohja)
+                                          #js {:src      (str +karttaikonipolku+ pohja)
                                                :rotation (or rotation 0)
                                                :anchor   (if anchor
                                                            (clj->js anchor)
@@ -494,7 +494,7 @@
 
                          (ol.style.Style.
                            #js {:image  (ol.style.Icon.
-                                          #js {:src    (str "images/karttaikonit/" img)
+                                          #js {:src    (str +karttaikonipolku+ img)
                                                :anchor (if anchor
                                                          (clj->js anchor)
                                                          #js [0.5 0.5])})

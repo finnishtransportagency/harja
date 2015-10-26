@@ -283,20 +283,20 @@
   (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
                             {:tyyppi :silta :selitys "Silta"}
                             {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
+        selitetyt-tyypit (into #{} (map :tyyppi ikonien-selitykset))
         esitettavat-tyypit (remove nil? (keys (group-by :tyyppi-kartalla @tasot/geometriat)))
         geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
                                                      (first
                                                        (filter (fn [geo]
                                                                  (= (:tyyppi-kartalla geo) tyyppi))
                                                                @tasot/geometriat)))
-                                                   esitettavat-tyypit)
-        _ (log "Geo: " (pr-str esitettavat-tyypit))]
-  (if (and (not= :S @nav/kartan-koko)
-           (some true? (map
-                         (fn [selitys geo]
-                           (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
-                         ikonien-selitykset geometriat-ilman-duplikaattityyppeja))
-           @ikonien-selitykset-nakyvissa?)
+                                                   esitettavat-tyypit)]
+    (if (and (not= :S @nav/kartan-koko)
+             (some
+               (fn [geometrian-tyyppi]
+                 (geometrian-tyyppi selitetyt-tyypit))
+               esitettavat-tyypit)
+             @ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        (if @ikonien-selitykset-auki
          [:div
@@ -309,7 +309,8 @@
                (if selitys
                  ^{:key (:tyyppi selitys)}
                  [:tr
-                  [:td.kartan-ikonien-selitykset-ikoni-sarake [:img.kartan-ikonien-selitykset-ikoni {:src (get-in geo [:alue :img])}]]
+                  [:td.kartan-ikonien-selitykset-ikoni-sarake
+                   [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (get-in geo [:alue :img]))}]]
                   [:td.kartan-ikonien-selitykset-selitys-sarake (:selitys selitys)]]
                  (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
           [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
@@ -438,10 +439,13 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                      (when @pida-geometriat-nakyvilla?
                        (when (or
                                (not (= (count vanha) (count uusi)))
+
+                               ;; Tässä vertaillaan järjestyksessä, joten periaatteessa voi tulla false positive
                                (some false?
                                      (map
                                        (fn [vanha uusi] (= (dissoc vanha :alue) (dissoc uusi :alue)))
                                        vanha uusi)))
+
                          (zoomaa-geometrioihin)))))))
     (fn []
       (let [hals @hal/hallintayksikot
