@@ -1,5 +1,7 @@
 -- Paikkauskohteet
 
+-- Muhoksen päällystysurakka
+
 INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null), 311, 'Oulaisten ohitusramppi 2', 0, false, 3457, 5, 6);
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide, sijainti) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi 2'), 'Laivalahti 1', 19521, 10, 5, 10, 15, 2, 2, 'PAB-B 16/80 MPKJ', ST_GeomFromText('MULTILINESTRING((426888 7212758,427081 7212739),(434777 7215499,436899 7217174,438212 7219910,438676 7220554,440102 7221432,441584 7222729,442255 7223162,443128 7223398,443750 7223713,448682 7225293,451886 7226708,456379 7228018,459945 7229222,461039 7229509))'));
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide, sijainti) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi 2'), 'Laivalahti 2', 19521, 10, 5, 10, 15, 2, 2, 'PAB-B 16/80 MPKJ', ST_GeomFromText('MULTILINESTRING((384276 6674532,384269 6674528,383563 6674582,383518 6674607,383350 6674736,383244 6674822,383201 6674859,383028 6675028,382959 6675071,382825 6675131,382737 6675175,382737 6675213,382730 6675251,382615 6675745,382569 6675961,382555 6675978,382529 6675975,382519 6675967))'));
@@ -10,23 +12,28 @@ INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_muka
 
 INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null), 314, 'Leppäjärven ramppi 3', 0, false, 3457, 5, 6);
 
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka')), 1, 'Hamina-LPR');
+-- Päällysteiden paikkausurakka KAS ELY 2014-2016
+
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016')), 1, 'Hamina-LPR');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '1'), 'Hamina-LPR', 26, 4, 300, 9, 450, 3584, 1, 'Reunaremix');
 
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka')), 3, 'Joutseno KK-Hangasoja');
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016')), 3, 'Joutseno KK-Hangasoja');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '3'), 'Joutseno KK-Hangasoja', 3951, 1, 880, 1, 4550, 390, 1, 'AB 16/100');
 
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausuqrakka')), 4, 'Joutseno-Valtakunnanraja');
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausuqrakka')), 4, 'Joutseno-Valtakunnanraja');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '4'), 'Joutseno-Valtakunnanraja', 3932, 1, 2000, 2, 5050, 324, 1, 'AB paikkaus levittimellä');
 
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka')), 5, 'Tuomoja');
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016')), 5, 'Tuomoja');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '5'), 'Tuomoja', 14833, 2, 4160, 2, 4550, 324, 1, 'AB 16/100');
 
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka')), 6, 'HKI-Joensuu-Kajaani');
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016')), 6, 'HKI-Joensuu-Kajaani');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '6'), 'HKI-Joensuu-Kajaani', 6, 21, 6000, 311, 3300, 8700, 1, 'Urem SMA 16/25 An10');
 
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen paikkausurakka')), 7, 'Helsinki-Vaalimaa');
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016')), 7, 'Helsinki-Vaalimaa');
 INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '7'), 'Helsinki-Vaalimaa', 7, 29, 1000, 39, 5000, 6000, 1, 'Urem SMA 16/25 An10');
+
+INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Päällysteiden paikkausurakka KAS ELY 2014-2016')), 10, 'Rasilan pt');
+INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide) VALUES ((SELECT id FROM paallystyskohde WHERE kohdenumero = '3'), 'Rasilan pt', 14879, 1, 1645, 1, 2350, 3021, 1, 'AB paikkaus levittimellä');
 
 -- Paikkausilmoitukset
 
