@@ -111,7 +111,7 @@
                                           (:etunimi yht) (:sukunimi yht)
                                           (:tyopuhelin yht) (:matkapuhelin yht)
                                           (:sahkoposti yht)
-                                          (:id (:organisaatio yht))
+                                          (:organisaatio yht)
                                           id)
                 (q/aseta-yhteyshenkilon-rooli! c (:rooli yht) id urakka-id)))
           
@@ -120,7 +120,7 @@
                                                (:etunimi yht) (:sukunimi yht)
                                                (:tyopuhelin yht) (:matkapuhelin yht)
                                                (:sahkoposti yht)
-                                               (:id (:organisaatio yht))
+                                               (:organisaatio yht)
                                                nil
                                                nil
                                                nil))]
