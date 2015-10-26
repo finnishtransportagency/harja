@@ -6,7 +6,7 @@ CREATE TABLE lukko (
 );
 
 -- Lukitseminen
-CREATE OR REPLACE FUNCTION aseta_lukko(tarkistettava_tunniste VARCHAR(30), uusi_lukko CHAR(36), aikaraja INTEGER)
+CREATE OR REPLACE FUNCTION aseta_lukko(tarkistettava_tunniste VARCHAR(30), uusi_lukko CHAR(36), aikaraja BIGINT)
   RETURNS BOOLEAN LANGUAGE plpgsql AS $$
 DECLARE
   loytynyt_tunniste VARCHAR(30);

@@ -4,8 +4,8 @@
 
 (defqueries "harja/kyselyt/lukot.sql")
 
-(defn aseta-lukko? [db tunniste]
-  (:aseta_lukko (first (harja.kyselyt.lukot/aseta-lukko db tunniste (str (UUID/randomUUID)) nil))))
+(defn aseta-lukko? [db tunniste aikaraja]
+  (:aseta_lukko (first (harja.kyselyt.lukot/aseta-lukko db tunniste (str (UUID/randomUUID)) aikaraja))))
 
 (defn avaa-lukko? [db tunniste]
   (:avaa_lukko (first (harja.kyselyt.lukot/avaa-lukko db tunniste))))
