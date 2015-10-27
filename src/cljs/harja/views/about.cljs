@@ -114,9 +114,7 @@
 (defn about []
   [:span
    [:div.section [:label "Yleistä"]
-      [harja-info]]
-   [:div.section [:label "Attribuutiot"]
-   [:ul]]
+    [harja-info]]
    [:div.section [:label "Harjan ikonit"]
     [ikonit]]
    [gitlog]])
