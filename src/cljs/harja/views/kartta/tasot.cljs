@@ -5,28 +5,31 @@
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
             [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.tiedot.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.muut-tyot :as muut-tyot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 
 ;; Lisää uudet karttatasot tänne
-(def +karttatasot+ [:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
-                    :historiakuva :nykytilanne :paallystyskohteet])
+(def +karttatasot+ #{:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
+                    :historiakuva :nykytilanne :paallystyskohteet :tr-alkuosoite})
 
 (def geometriat (reaction
-                 (loop [geometriat (transient [])
+                  (loop [geometriat (transient [])
                         [g & gs] (concat @pohjavesialueet/pohjavesialueet
                                          @sillat/sillat
                                          @laadunseuranta/tarkastukset-kartalla
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
                                          @toteumat/yksikkohintainen-toteuma-kartalla
+                                         @tierekisteri/tr-alkupiste-kartalla
                                          @historiakuva/historiakuvan-asiat-kartalla
                                          @nykytilanne/nykytilanteen-asiat-kartalla
                                          @paallystys/paallystyskohteet-kartalla
@@ -47,6 +50,7 @@
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
     :nykytilanne nykytilanne/karttataso-nykytilanne
     :paallystyskohteet paallystys/karttataso-paallystyskohteet
+    :tr-alkuosoite tierekisteri/karttataso-tr-alkuosoite
     :muut-tyot muut-tyot/karttataso-muut-tyot))
 
 (defonce nykyiset-karttatasot

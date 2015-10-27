@@ -6,8 +6,13 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.vkm :as vkm]
-            [cljs.core.async :refer [>! <! alts! chan] :as async])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.tiedot.tierekisteri :as tierekisteri]
+            [cljs.core.async :refer [>! <! alts! chan] :as async]
+            [harja.geo :as geo])
+
+  (:require-macros
+    [reagent.ratom :refer [reaction run!]]
+    [cljs.core.async.macros :refer [go]]))
 
 (def vkm-alku (atom nil))
 (def vkm-loppu (atom nil))
@@ -40,15 +45,16 @@
                Jos käyttäjä valitsi pistemäisen osoitteen, loppuosa ja -etäisyys
                avaimia ei ole mäpissä.
 
-  :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan 
+  :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan
                ilman TR-osoitteen päivittämistä. Ei parametrejä.
 
-  :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim. 
+  :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim.
                kun käyttäjä valitsee alkupisteen, kutsutaan tätä funktiota
                osoitteella, jossa ei ole vielä loppupistettä."
   [optiot]
   (let [tapahtumat (chan)
         tila (atom :ei-valittu)
+        _ (tarkkaile! "tila: " tila)
         alkupiste (atom nil)
         tr-osoite (atom {})
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
@@ -67,14 +73,13 @@
               (if (= kanava vkm-haku)
                 ;; Saatiin VKM vastaus paikkahakuun, käsittele se
                 (let [{:keys [kun-valmis paivita]} @optiot
-                      osoite arvo] 
+                      osoite arvo]
                   (if (vkm/virhe? osoite)
                     (do (kartta/aseta-ohjelaatikon-sisalto [:span
                                                             [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
                                                             " "
                                                             [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]])
                         (recur nil))
-                    
                     (do
                       (kartta/tyhjenna-ohjelaatikko)
                       (case @tila
@@ -89,15 +94,20 @@
                                                       :loppuetaisyys)))]
                           (paivita osoite)
                           (reset! tila :alku-valittu)
+                          (go
+                            (log "Haetaan alkupisteen sijainti")
+                            (let [piste (<! (vkm/tieosoite->sijainti osoite))]
+                              (log "Alkupisteen sijainti saatu: " (pr-str piste))
+                              (reset! tierekisteri/valittu-alkupiste piste)))
                           (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
                                                               (str "Valittu alkupiste: "
                                                                    (:numero osoite) " "
                                                                    (:alkuosa osoite) " "
                                                                    (:alkuetaisyys osoite))]))
-                        
+
                         :alku-valittu
                         (let [osoite (swap! tr-osoite
-                                            merge 
+                                            merge
                                             {:numero (:tie osoite)
                                              :alkuosa (:aosa osoite)
                                              :alkuetaisyys (:aet osoite)
@@ -106,7 +116,7 @@
                                              :geometria (:geometria osoite)})]
                           (kun-valmis osoite)))
                       (recur nil))))
-                
+
                 ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
                 (let [{:keys [tyyppi sijainti x y]} arvo]
                   (case tyyppi
@@ -121,12 +131,12 @@
                              (do ((:kun-valmis @optiot) @tr-osoite)
                                  (kartta/tyhjenna-ohjelaatikko)))
                     nil)
-                  
+
                   (recur (if (= :click tyyppi)
                            (if (= :alku-valittu @tila)
                              (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)
                              (do
-                               (reset! alkupiste sijainti) 
+                               (reset! alkupiste sijainti)
                                (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
 

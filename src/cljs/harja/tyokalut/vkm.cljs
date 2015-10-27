@@ -76,7 +76,8 @@ Palautettavassa datassa:
 (defn tieosoite->sijainti	
   "Kutsuu VKM:n kautta tierekisteriosoitetta ja yrittää löytää parhaan sijainnin. 	
    Palauttaa kanavan, josta sijainnin voi lukea. Virhetapauksessa kanavaan kirjoitetaan virheen kuvaus. "	
-  [tierekisteriosoite]	
+  [tierekisteriosoite]
+  (log "Muunetaan tieosoite sijainniksi: " (pr-str tierekisteriosoite))
   (go (let [tulos (<! (tieosoite tierekisteriosoite))]	
         (log "TULOS: " (pr-str tulos))	
         (if (virhe? tulos)	
