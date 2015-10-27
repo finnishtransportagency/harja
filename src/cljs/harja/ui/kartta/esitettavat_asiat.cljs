@@ -1,7 +1,8 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [cljs-time.core :as t]))
 
 (defn- oletusalue [asia valittu?]
   (merge
@@ -66,7 +67,7 @@
                      (str (:toimenpide (first (:tehtavat toteuma))))))
          :alue {
                 :type   :arrow-line
-                :scale  (if (valittu? toteuma) 0.8 0.5)  ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
+                :scale  (if (valittu? toteuma) 0.8 0.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
                 :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
                                                                      :aika
                                                                      pvm/ennen?
@@ -99,27 +100,63 @@
         :alue (:sijainti kohdeosa)))
     (:kohdeosat pt)))
 
-(defn- suunta-radiaaneina [tyokone]
-  (let [sijainti (:sijainti tyokone)
-        edellinensijainti (or (:edellinensijainti tyokone) sijainti)
-        lat1 (sijainti 0)
-        lon1 (sijainti 1)
-        lat2 (edellinensijainti 0)
-        lon2 (edellinensijainti 1)]
-    (mod (Math/atan2 (* (Math/sin (- lon2 lon1))
-                        (Math/cos lat2))
-                     (- (* (Math/cos lat1) (Math/sin lat2))
-                        (* (Math/sin lat1) (Math/cos lat2) (Math/cos (- lon2 lon1)))))
-         (* 2 Math/PI))))
+(defn- paattele-tyokoneen-ikoni
+  [tehtavat lahetetty valittu?]
+  (let [tila (cond
+               valittu? "valittu"
+               (> 20 (t/in-minutes (t/interval lahetetty (t/now)))) "sininen"
+               :else "harmaa")
+        ;; TODO Miten päätellään järkevästi mikä ikoni työkoneelle näytetään?
+        ;; Ensinnäkin, en ole yhtään varma osuuko nämä suoritettavat tehtävät edes oikeanlaisiin ikoneihin
+        ;; Mutta tärkempää on, että työkoneella voi olla useampi tehtävä. Miten se hoidetaan?
+        ;; Voisi kuvitella että jotkut tehtävät ovat luonnostaan kiinnostavampia,
+        ;; Esim jos talvella aurataan paljon mutta suolataan vain vähän (ja yleensä aurataan kun suolataan),
+        ;; niin silloin pitäisi näyttää suolauksen ikoni silloin harvoin kun sitä tehdään.
+        ikoni (condp = (first tehtavat)
+                "auraus ja sohjonpoisto" "talvihoito"
+                "suolaus" "talvihoito"
+                "pistehiekoitus" "talvihoito"
+                "linjahiekoitus" "talvihoito"
+                "lumivallien madaltaminen" "talvihoito"
+                "sulamisveden haittojen torjunta" "talvihoito"
+                "kelintarkastus" "talvihoito"
+
+                "tiestotarkastus" "liikenneympariston-hoito"
+                "koneellinen niitto" "liikenneympariston-hoito"
+                "koneellinen vesakonraivaus" "liikenneympariston-hoito"
+
+                "liikennemerkkien puhdistus" "varusteet-ja-laitteet"
+
+                "sorateiden muokkaushoylays" "sorateiden-hoito"
+                "sorateiden polynsidonta" "sorateiden-hoito"
+                "sorateiden tasaus" "sorateiden-hoito"
+                "sorastus" "sorateiden-hoito"
+
+                "harjaus" "paallysteiden-yllapito"
+                "pinnan tasaus" "paallysteiden-yllapito"
+                "paallysteiden paikkaus" "paallysteiden-yllapito"
+                "paallysteiden juotostyot" "paallysteiden-yllapito"
+
+                "siltojen puhdistus" "sillat"
+
+                "l- ja p-alueiden puhdistus" "hairion-hallinta" ;; En tiedä yhtään mikä tämä on
+                "muu" "hairion-hallinta"
+                "hairion-hallinta")]
+    (log (str "kartta-" ikoni "-" tila ".svg"))
+    (str "kartta-" ikoni "-" tila ".svg")))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
-  (assoc tyokone
-    :type :tyokone
-    :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
-    :alue {:type        :icon
-           :coordinates (:sijainti tyokone)
-           :direction   (- (suunta-radiaaneina tyokone))
-           :img         "images/tyokone.png"}))
+  (log "Tehdäänpä työkone!")
+  [(assoc tyokone
+     :type :tyokone
+     :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
+     :alue {:type        :sticker-icon
+            :coordinates (:sijainti tyokone)
+            :direction   (- (/ Math/PI 2) (* (/ Math/PI 180) (:suunta tyokone))) ;; Onkohan oikein..
+            :img         (paattele-tyokoneen-ikoni
+                           (:tehtavat tyokone)
+                           (or (:lahetysaika tyokone) (:vastaanotettu tyokone))
+                           (valittu? tyokone))})])
 
 (defmethod asia-kartalle :default [_ _ _])
 
@@ -128,7 +165,7 @@
     (not (nil? valittu))
     (= (get-in asia tunniste) (get-in valittu tunniste))))
 
-;; Palauttaa joukon vektoreita, joten kutsu (mapcat kartalla-xf @jutut)
+;; Palauttaa joukon vektoreita joten kutsu (mapcat kartalla-xf @jutut)
 ;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
 ;; oma merkki. Tästä luovuttiin, mutta pidetään vielä kiinni siitä että täältä palautetaan joukko vektoreita,
 ;; jos vastaisuudessa tulee samankaltaisia tilanteita.
@@ -141,6 +178,6 @@
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
-   ;; tarkastetaan että edes jollain on..
+    ;; tarkastetaan että edes jollain on..
    (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")
    (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))

@@ -9,7 +9,8 @@
             [harja.pvm :as pvm]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [cljs-time.core :as t]
-            [clojure.set :refer [rename-keys]])
+            [clojure.set :refer [rename-keys]]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -28,72 +29,11 @@
 (defonce karttataso-nykytilanne (atom false))
 (def haetut-asiat (atom nil))
 
-(defn oletusalue [asia]
-  (merge
-    (:sijainti asia)
-    {:color  "green"
-     :radius 300
-     :stroke {:color "black" :width 10}}))
-
-(defmulti kartalla-xf (fn [kartta]
-                        (cond
-                          (:ilmoitustyyppi kartta) (:ilmoitustyyppi kartta)
-                          (:tilannekuvatyyppi kartta) (:tilannekuvatyyppi kartta)
-                          :else (:tyyppi kartta))))
-
-(defmethod kartalla-xf :tiedoitus [ilmoitus]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :alue (oletusalue ilmoitus))])
-
-(defmethod kartalla-xf :kysely [ilmoitus]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Kysely")
-     :alue (oletusalue ilmoitus))])
-
-(defmethod kartalla-xf :toimenpidepyynto [ilmoitus]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
-     :alue (oletusalue ilmoitus))])
-
-(defmethod kartalla-xf :havainto [havainto]
-  (assoc havainto
-    :type :havainto
-    :nimi (or (:nimi havainto) "Havainto")
-    :alue (oletusalue havainto)))
-
-(defn suunta-radiaaneina [tyokone]
-  (let [sijainti (:sijainti tyokone)
-        edellinensijainti (or (:edellinensijainti tyokone) sijainti)
-        lat1 (sijainti 0)
-        lon1 (sijainti 1)
-        lat2 (edellinensijainti 0)
-        lon2 (edellinensijainti 1)]
-    (mod (Math/atan2 (* (Math/sin (- lon2 lon1))
-                        (Math/cos lat2))
-                     (- (* (Math/cos lat1) (Math/sin lat2))
-                        (* (Math/sin lat1) (Math/cos lat2) (Math/cos (- lon2 lon1)))))
-         (* 2 Math/PI))))
-
-(defmethod kartalla-xf :tyokone [tyokone]
-  (assoc tyokone
-    :type :tyokone
-    :nimi (or (:nimi tyokone) (clojure.string/capitalize (name (:tyokonetyyppi tyokone))))
-    :alue {:type        :icon
-           :coordinates (:sijainti tyokone)
-           :direction   (- (suunta-radiaaneina tyokone))
-           :img         "images/tyokone.png"}))
-
-(defmethod kartalla-xf :default [_])
-
 (def nykytilanteen-asiat-kartalla
   (reaction
     @haetut-asiat
     (when @karttataso-nykytilanne
-      (into [] (map kartalla-xf) @haetut-asiat))))
+      (kartalla-esitettavaan-muotoon @haetut-asiat))))
 
 (defn kasaa-parametrit []
   {:hallintayksikko @nav/valittu-hallintayksikko-id
@@ -111,10 +51,13 @@
                     (apply (comp vec concat) (remove k/virhe? tulokset)))
           yhteiset-parametrit (kasaa-parametrit)
           tulos (yhdista
-                  (when @hae-tyokoneet? (<! (k/post! :hae-tyokoneseurantatiedot yhteiset-parametrit)))
+                  (when @hae-tyokoneet?
+                    (mapv
+                      #(assoc % :tyyppi-kartalla :tyokone)
+                      (<! (k/post! :hae-tyokoneseurantatiedot yhteiset-parametrit))))
                   (when (or @hae-toimenpidepyynnot? @hae-tiedoitukset? @hae-kyselyt?)
                     (mapv
-                      #(clojure.set/rename-keys % {:ilmoitustyyppi :tyyppi})
+                      #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
                       (<! (k/post! :hae-ilmoitukset (assoc
                                                       yhteiset-parametrit
                                                       :aikavali [(:alku yhteiset-parametrit)
@@ -123,11 +66,12 @@
                                                       :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
                                                                             (when @hae-kyselyt? :kysely)
                                                                             (when @hae-tiedoitukset? :tiedoitus)]))))))
-                  (when @hae-havainnot? (mapv
-                                          #(assoc % :tilannekuvatyyppi :havainto)
-                                          (<! (k/post! :hae-urakan-havainnot (rename-keys
-                                                                               yhteiset-parametrit
-                                                                               {:urakka :urakka-id}))))))]
+                  (when @hae-havainnot?
+                    (mapv
+                      #(assoc % :tyyppi-kartalla :havainto)
+                      (<! (k/post! :hae-urakan-havainnot (rename-keys
+                                                           yhteiset-parametrit
+                                                           {:urakka :urakka-id}))))))]
       (reset! haetut-asiat tulos)
       (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
                              :tyokoneet tulos}))))
