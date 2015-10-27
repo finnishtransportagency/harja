@@ -1,7 +1,7 @@
 (ns harja.ui.tierekisteri
   "Tierekisteriosoitteiden näyttämiseen, muokkaamiseen ja karttavalintaan liittyvät komponentit."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.tiedot.navigaatio :as nav]
@@ -29,10 +29,10 @@
 
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
-Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
-löytyneeseen pisteeseen.
+  Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
+  löytyneeseen pisteeseen.
 
-Optiot on mäppi parametreja, jossa seuraavat avaimet:
+  Optiot on mäppi parametreja, jossa seuraavat avaimet:
 
   :kun-valmis  Funktio, jota kutsutaan viimeisenä kun käyttäjän valinta on valmis.
                Parametrina valittu osoite mäppi, jossa avaimet:
@@ -45,8 +45,7 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
 
   :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim. 
                kun käyttäjä valitsee alkupisteen, kutsutaan tätä funktiota
-               osoitteella, jossa ei ole vielä loppupistettä.
-"
+               osoitteella, jossa ei ole vielä loppupistettä."
   [optiot]
   (let [tapahtumat (chan)
         tila (atom :ei-valittu)
@@ -55,8 +54,17 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
         ;; Muuten go lohko sulkee alkuarvojen yli
         optiot (cljs.core/atom optiot)
-
-        virhe (atom nil)]
+        luo-tooltip (fn
+                      ([] "")
+                      ([tila-teksti]
+                       [:span
+                        [:div tila-teksti]])
+                      ([tila-teksti virhe-teksti]
+                       [:span
+                        [:div tila-teksti]
+                        [:div.virhe virhe-teksti]]))
+        virhe-teksti (atom nil)
+        _ (tarkkaile! "Virhe: " virhe-teksti)]
     
     (go (loop [vkm-haku nil]
           (let [[arvo kanava] (alts! (if vkm-haku
@@ -68,11 +76,11 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                 (let [{:keys [kun-valmis paivita]} @optiot
                       osoite arvo] 
                   (if (vkm/virhe? osoite)
-                    (do (reset! virhe (vkm/virhe osoite))
+                    (do (reset! virhe-teksti (vkm/virhe osoite))
                         (recur nil))
                     
                     (do
-                      (reset! virhe nil) ;; poistetaan mahdollinen aiempi virhe
+                      (reset! virhe-teksti nil) ;; poistetaan mahdollinen aiempi virhe
                       (case @tila
                         :ei-valittu
                         (let [osoite (swap! tr-osoite
@@ -104,8 +112,8 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                     ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
                     :hover
                     (kartta/aseta-tooltip! x y (case @tila
-                                                 :ei-valittu "Klikkaa alkupiste"
-                                                 :alku-valittu "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä"))
+                                                 :ei-valittu (luo-tooltip "Klikkaa alkupiste" (when @virhe-teksti virhe-teksti))
+                                                 :alku-valittu (luo-tooltip "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä" (when @virhe-teksti virhe-teksti))))
 
                     ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
                     :enter (when (= @tila :alku-valittu)
@@ -147,7 +155,4 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
            [:div (case @tila
                    :ei-valittu "Valitse alkupiste"
                    :alku-valittu "Valitse loppupiste"
-                   "")]
-
-           (when-let [virhe @virhe]
-             [:div.virhe virhe])])))))
+                   "")]])))))
