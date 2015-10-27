@@ -249,15 +249,12 @@
     ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
     ;; tarkastuslistauksessa
     (komp/lippu laadunseuranta/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
+    (komp/kuuntelija :tarkastus-klikattu #(reset! laadunseuranta/valittu-tarkastus %2))
+    (komp/ulos (kartta/kuuntele-valittua! laadunseuranta/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :XL))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (komp/kuuntelija
-      :tarkastus-klikattu
-      (fn [e tarkastus]
-        (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))
-        (valitse-tarkastus tarkastus)))
 
     (fn []
       [:span.tarkastukset
