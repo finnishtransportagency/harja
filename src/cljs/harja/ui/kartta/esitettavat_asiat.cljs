@@ -115,7 +115,7 @@
 
 (defn- paattele-tyokoneen-ikoni
   [tehtavat lahetetty]
-  (let [tila (if (> 20 (t/in-minutes (t/interval (t/now) lahetetty))) "sininen" "harmaa")
+  (let [tila (if (> 20 (t/in-minutes (t/interval lahetetty (t/now)))) "sininen" "harmaa")
         ;; TODO Miten päätellään järkevästi mikä ikoni työkoneelle näytetään?
         ;; Ensinnäkin, en ole yhtään varma osuuko nämä suoritettavat tehtävät edes oikeanlaisiin ikoneihin
         ;; Mutta tärkempää on, että työkoneella voi olla useampi tehtävä. Miten se hoidetaan?
