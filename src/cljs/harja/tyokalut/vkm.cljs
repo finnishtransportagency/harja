@@ -108,7 +108,6 @@ Palautettavassa datassa:
   [tulos]
   (contains? tulos :virhe))
        
-(defn virhe [tulos]
-  "Pisteelle ei löydy tietä")
-
+(def pisteelle-ei-loydy-tieta "Pisteelle ei löydy tietä.")
+(def pisteelle-ei-loydy-tieta-vihje "Yritä zoomata lähemmäs.")
   

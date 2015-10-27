@@ -54,16 +54,16 @@
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
         ;; Muuten go lohko sulkee alkuarvojen yli
         optiot (cljs.core/atom optiot)
-        luo-tooltip (fn
-                      ([] "")
-                      ([tila-teksti]
-                       [:span
-                        [:div tila-teksti]])
-                      ([tila-teksti virhe-teksti]
+        luo-tooltip (fn [tila-teksti virhe-teksti virhe-vihje]
                        [:span
                         [:div tila-teksti]
-                        [:div.tr-valitsin-virhe virhe-teksti]]))
-        virhe-teksti (atom nil)]
+                        (when virhe-teksti
+                          [:div.tr-valitsin-virheosa
+                           [:div.tr-valitsin-virhe virhe-teksti]
+                            (when virhe-vihje
+                              [:div.tr-valitsin-virhe-vihje virhe-vihje])])])
+        virhe (atom nil)
+        virhe-vihje (atom nil)]
     
     (go (loop [vkm-haku nil]
           (let [[arvo kanava] (alts! (if vkm-haku
@@ -75,11 +75,13 @@
                 (let [{:keys [kun-valmis paivita]} @optiot
                       osoite arvo] 
                   (if (vkm/virhe? osoite)
-                    (do (reset! virhe-teksti (vkm/virhe osoite))
+                    (do (reset! virhe vkm/pisteelle-ei-loydy-tieta)
+                        (reset! virhe-vihje vkm/pisteelle-ei-loydy-tieta-vihje)
                         (recur nil))
                     
                     (do
-                      (reset! virhe-teksti nil) ;; poistetaan mahdollinen aiempi virhe
+                      (reset! virhe nil) ;; poistetaan mahdollinen aiempi virhe
+                      (reset! virhe-vihje nil) ;; poistetaan mahdollinen aiempi virhe
                       (case @tila
                         :ei-valittu
                         (let [osoite (swap! tr-osoite
@@ -111,8 +113,13 @@
                     ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
                     :hover
                     (kartta/aseta-tooltip! x y (case @tila
-                                                 :ei-valittu (luo-tooltip "Klikkaa alkupiste" (when @virhe-teksti @virhe-teksti))
-                                                 :alku-valittu (luo-tooltip "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä" (when @virhe-teksti @virhe-teksti))))
+                                                 :ei-valittu (luo-tooltip "Klikkaa alkupiste"
+                                                                          @virhe
+                                                                          @virhe-vihje)
+                                                 :alku-valittu (luo-tooltip
+                                                                 "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä"
+                                                                 @virhe
+                                                                 @virhe-vihje)))
 
                     ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
                     :enter (when (= @tila :alku-valittu)
