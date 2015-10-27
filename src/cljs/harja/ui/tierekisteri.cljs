@@ -118,7 +118,11 @@
                                                                           @virhe
                                                                           @virhe-vihje)
                                                  :alku-valittu (luo-tooltip
-                                                                 "Klikkaa loppupiste tai hyväksy pistemäinen enter-näppäimellä"
+                                                                 [:span (str "Alkupiste: "
+                                                                             (:numero @tr-osoite) " "
+                                                                             (:alkuosa @tr-osoite) " "
+                                                                             (:alkuetaisyys @tr-osoite))
+                                                                  [:br] "Klikkaa loppupiste tai hyväksy pistemäinen enter-näppäimellä"]
                                                                  @virhe
                                                                  @virhe-vihje)))
 
