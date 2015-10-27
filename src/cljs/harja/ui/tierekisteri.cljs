@@ -55,14 +55,15 @@
         ;; Muuten go lohko sulkee alkuarvojen yli
         optiot (cljs.core/atom optiot)
         luo-tooltip (fn [tila-teksti virhe-teksti virhe-vihje]
-                       [:span
-                        [:div tila-teksti]
-                        (when virhe-teksti
-                          [:div.tr-valitsin-virheosa
-                           [:div.tr-valitsin-virhe virhe-teksti]
+                      [:span
+                       (when-not virhe-teksti [:div tila-teksti])
+                       (when virhe-teksti
+                         [:div.tr-valitsin-virheosa
+                          [:div.tr-valitsin-virhe virhe-teksti]
                            (when virhe-vihje
                              [:div.tr-valitsin-virhe-vihje virhe-vihje])])
-                        [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])
+                       [:div.tr-valitsin-ohjeosa
+                        [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]]])
         virhe (atom nil)
         virhe-vihje (atom nil)]
     
@@ -122,7 +123,7 @@
                                                                              (:numero @tr-osoite) " "
                                                                              (:alkuosa @tr-osoite) " "
                                                                              (:alkuetaisyys @tr-osoite))
-                                                                  [:br] "Klikkaa loppupiste tai hyväksy pistemäinen enter-näppäimellä"]
+                                                                  [:br] "Klikkaa loppupiste tai hyväksy pistemäinen painamalla Enter."]
                                                                  @virhe
                                                                  @virhe-vihje)))
 
