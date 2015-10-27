@@ -60,8 +60,9 @@
                         (when virhe-teksti
                           [:div.tr-valitsin-virheosa
                            [:div.tr-valitsin-virhe virhe-teksti]
-                            (when virhe-vihje
-                              [:div.tr-valitsin-virhe-vihje virhe-vihje])])])
+                           (when virhe-vihje
+                             [:div.tr-valitsin-virhe-vihje virhe-vihje])])
+                        [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])
         virhe (atom nil)
         virhe-vihje (atom nil)]
     
@@ -117,7 +118,7 @@
                                                                           @virhe
                                                                           @virhe-vihje)
                                                  :alku-valittu (luo-tooltip
-                                                                 "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä"
+                                                                 "Klikkaa loppupiste tai hyväksy pistemäinen enter-näppäimellä"
                                                                  @virhe
                                                                  @virhe-vihje)))
 
