@@ -9,12 +9,12 @@
 
 (def valittu-alkupiste (atom nil))
 (def tr-alkupiste-kartalla (reaction
-                             (when @valittu-alkupiste
+                             (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
                                [{:sijainti (assoc @valittu-alkupiste
-                                             :alue {:type   :circle
+                                             :alue {:type   :point
                                                     :color  "green"
-                                                    :radius 1000
-                                                    :stroke {:color "black" :width 10}
-                                                    })}])))
+                                                    :coordinates (:coordinates @valittu-alkupiste)
+                                                    :radius 5000
+                                                    :stroke {:color "black" :width 10}})}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)
