@@ -251,11 +251,11 @@
     (komp/lippu laadunseuranta/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (kartta/zoomaa-geometrioihin)
                         (reset! kartta/pida-geometriat-nakyvilla?) ; Emme halua, että zoom-taso muuttuu kun TR:ää valitaan
                         (nav/vaihda-kartan-koko! :XL))
-                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-                           (kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)))
+                      #(do
+                        (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                        (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)))
     (komp/kuuntelija
       :tarkastus-klikattu
       (fn [e tarkastus]
