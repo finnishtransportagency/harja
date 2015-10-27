@@ -19,7 +19,7 @@
 
 ;; Lisää uudet karttatasot tänne
 (def +karttatasot+ #{:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
-                    :historiakuva :nykytilanne :paallystyskohteet :tr-alkuosoite})
+                    :historiakuva :nykytilanne :paallystyskohteet :tr-alkupiste})
 
 (def geometriat (reaction
                   (loop [geometriat (transient [])
@@ -50,7 +50,7 @@
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
     :nykytilanne nykytilanne/karttataso-nykytilanne
     :paallystyskohteet paallystys/karttataso-paallystyskohteet
-    :tr-alkuosoite tierekisteri/karttataso-tr-alkuosoite
+    :tr-alkupiste tierekisteri/karttataso-tr-alkuosoite
     :muut-tyot muut-tyot/karttataso-muut-tyot))
 
 (defonce nykyiset-karttatasot
@@ -66,10 +66,12 @@
 
 (defn taso-paalle! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-paalle nimi})
+  (log "Taso päälle: " (pr-str nimi))
   (reset! (taso-atom nimi) true))
 
 (defn taso-pois! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
+  (log "Taso pois: " (pr-str nimi))
   (reset! (taso-atom nimi) false))
 
 (defn taso-paalla? [nimi]

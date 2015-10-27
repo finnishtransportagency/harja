@@ -4,6 +4,7 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as karttatasot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.vkm :as vkm]
             [harja.tiedot.tierekisteri :as tierekisteri]
@@ -93,6 +94,7 @@
                                                       :loppuosa
                                                       :loppuetaisyys)))]
                           (paivita osoite)
+                          (karttatasot/taso-paalle! :tr-alkupiste)
                           (reset! tila :alku-valittu)
                           (go
                             (log "Haetaan alkupisteen sijainti")
@@ -114,6 +116,7 @@
                                              :loppuosa (:losa osoite)
                                              :loppuetaisyys (:let osoite)
                                              :geometria (:geometria osoite)})]
+                          (karttatasot/taso-pois! :tr-alkupiste)
                           (kun-valmis osoite)))
                       (recur nil))))
 
