@@ -59,7 +59,18 @@
                        [:div.tr-valitsin-tila tila-teksti]
                        [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])
         virhe (atom nil)
-        virhe-vihje (atom nil)]
+        virhe-vihje (atom nil)
+        aseta-virhe (fn []
+                      (reset! virhe vkm/pisteelle-ei-loydy-tieta)
+                      (reset! virhe-vihje vkm/vihje-zoomaa-lahemmas)
+                      (kartta/aseta-ohjelaatikon-sisalto [:span
+                                                          [:span.tr-valitsin-virhe @virhe]
+                                                          " "
+                                                          [:span.tr-valitsin-ohje @virhe-vihje]]))
+        tyhjenna-virheet (fn []
+                           (reset! virhe nil)
+                           (reset! virhe-vihje nil)
+                           (kartta/tyhjenna-ohjelaatikko))]
 
     (go (loop [vkm-haku nil]
           (let [[arvo kanava] (alts! (if vkm-haku
@@ -71,18 +82,11 @@
                 (let [{:keys [kun-valmis paivita]} @optiot
                       osoite arvo] 
                   (if (vkm/virhe? osoite)
-                    (do (reset! virhe vkm/pisteelle-ei-loydy-tieta)
-                        (reset! virhe-vihje vkm/vihje-zoomaa-lahemmas)
-                        (kartta/aseta-ohjelaatikon-sisalto [:span
-                                                            [:span.tr-valitsin-virhe @virhe]
-                                                            " "
-                                                            [:span.tr-valitsin-ohje @virhe-vihje]])
+                    (do (aseta-virhe)
                         (recur nil))
                     
                     (do
-                      (reset! virhe nil) ;; poistetaan mahdollinen aiempi virhe
-                      (reset! virhe-vihje nil) ;; poistetaan mahdollinen aiempi virhe
-                      (kartta/tyhjenna-ohjelaatikko)
+                      (tyhjenna-virheet)
                       (case @tila
                         :ei-valittu
                         (let [osoite (swap! tr-osoite
@@ -119,7 +123,8 @@
 
                     ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
                     :enter (when (= @tila :alku-valittu)
-                             ((:kun-valmis @optiot) @tr-osoite))
+                             (do ((:kun-valmis @optiot) @tr-osoite)
+                                 (tyhjenna-virheet)))
                     nil)
                   
                   (recur (if (= :click tyyppi)
@@ -149,7 +154,8 @@
         (komp/kuuntelija :esc-painettu
                          (fn [_]
                            (log "optiot: " @optiot)
-                           ((:kun-peruttu @optiot)))
+                           ((:kun-peruttu @optiot))
+                           (tyhjenna-virheet))
                          :enter-painettu
                          #(go (>! tapahtumat {:tyyppi :enter})))
         (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
