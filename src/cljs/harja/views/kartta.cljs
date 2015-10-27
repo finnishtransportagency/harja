@@ -402,15 +402,17 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
+(def pida-geometria-nakyvilla-oletusarvo true)
+(defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
+
 (defn zoomaa-geometrioihin
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (if-not (empty? (keep :alue @tasot/geometriat))
-    (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
-    (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
-
-(defonce pida-geometriat-nakyvilla? (atom true))
+  (when @pida-geometriat-nakyvilla?
+    (if-not (empty? (keep :alue @tasot/geometriat))
+      (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
+      (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))))
 
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
