@@ -5,7 +5,8 @@
             [compojure.route :as route]
             [clojure.string :as str]
             [taoensso.timbre :as log]
-            [ring.middleware.session :as session]
+            
+            [ring.middleware.cookies :as cookies]
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
@@ -16,7 +17,7 @@
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
-            [ring.middleware.anti-forgery :as csrf]
+            
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -150,7 +151,22 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
               (= uri "/index.html"))
       {:status 200
        :headers {"Content-Type" "text/html"}
-       :body (index/tee-paasivu kehitysmoodi)})))
+       :cookies {"anti-csrf-token" {:value (index/token-requestista req)
+                                    :http-only true
+                                    :max-age 3600}}
+       :body (index/tee-paasivu req kehitysmoodi)})))
+
+(defn wrap-anti-forgery [f]
+  (fn [req]
+    (let [cookies (:cookies req)
+          headers (:headers req)]
+      (if (and (not (nil? (headers "x-csrf-token")))
+               (= (headers "x-csrf-token")
+                  (:value (cookies "anti-csrf-token"))))
+        (f req)
+        {:status 403
+         :headers {"Content-Type" "text/html"}
+         :body "Access denied"}))))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
@@ -162,19 +178,19 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                       (route/resources ""))]
       (swap! lopetus-fn
              (constantly
-              (http/run-server (session/wrap-session
+              (http/run-server (cookies/wrap-cookies
                                 (fn [req]
                                   (try+
-                                   (let [sessiolliset (conj (mapv :fn @kasittelijat)
-                                                            (partial index-kasittelija kehitysmoodi)
-                                                           resurssit)
-                                         sessiokasittelija (-> (apply compojure/routes sessiolliset)
-                                                              (csrf/wrap-anti-forgery))]
+                                   (let [ui-kasittelijat (mapv :fn @kasittelijat)
+                                         uikasittelija (-> (apply compojure/routes ui-kasittelijat) 
+                                                           (wrap-anti-forgery))]
                                      (reitita (todennus/todenna-pyynto todennus req)
-                                             (conj (mapv :fn @sessiottomat-kasittelijat) sessiokasittelija)))
+                                              (-> (mapv :fn @sessiottomat-kasittelijat)
+                                                  (conj (partial index-kasittelija kehitysmoodi) resurssit)
+                                                  (conj uikasittelija))))
                                    (catch [:virhe :todennusvirhe] _
-                                     {:status 403 :body "Todennusvirhe"})))
-                                +sessioattribuutit+)
+                                     {:status 403 :body "Todennusvirhe"}))))
+                               
                                {:port (or (:portti asetukset) asetukset)
                                 :thread (or (:threads asetukset) 8)
                                 :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
