@@ -19,9 +19,6 @@
     (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro alueurakkanro)
           tyypit (:tyypit tyyppi-ja-alueurakkanro)
           alueurakkanro (:alueurakkanro tyyppi-ja-alueurakkanro)]
-      (println "-----> " (.length tyypit))
-      (println "-----> " (.length alueurakkanro))
-
       (if (hankkeet/onko-tuotu-samposta? db sampo-id)
         (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id)
         (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
