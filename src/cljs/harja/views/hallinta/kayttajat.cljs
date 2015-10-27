@@ -103,39 +103,40 @@
 
         [:form.form-inline
          [:div.form-group
-          [:label {:for "tuoKayttaja"} "Tuo käyttäjä Harjaan: "]
-          [:input#tuoKayttaja.form-control {:value       @tunnus
+          [:label {:for "tuoKayttaja" :style {:display "block"}} "Tuo käyttäjä Harjaan:"]
+          [:input#tuoKayttaja.form-control {:style {:margin-right "5px"}
+                                            :value       @tunnus
                                             :on-change   #(reset! tunnus (-> % .-target .-value))
 
-                                            :placeholder "Livi-tunnus (LX123456)..."}]]
-         [:button.nappi-toissijainen {:disabled (or @haku-menossa
-                                                    (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
-                                      :on-click #(do (.preventDefault %)
-                                                     (reset! haku-menossa true)
-                                                     (go (let [tunnus @tunnus
-                                                               res (<! (k/hae-fim-kayttaja tunnus))]
-                                                           (log "TULI: " res)
-                                                           ;; onko valittu käyttäjä edelleen nil?
-                                                           (when (nil? @valittu-kayttaja)
-                                                             (if (map? res)
-                                                               (reset! valittu-kayttaja res)
-                                                               (if (number? res)
-                                                                 (cond
-                                                                   (and (<= 400 res) (> 500 res))
-                                                                   (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
-                                                                                  :danger)
-                                                                   (and (<= 500 res) (> 600 res))
-                                                                   (viesti/nayta! (str "FIM-palvelun kutsuminen epäonnistui ("res")")
-                                                                                  :danger)
-                                                                   :else (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
-                                                                                        :warning))
+                                            :placeholder "Livi-tunnus (LX123456)"}]
+          [:button.nappi-toissijainen {:disabled (or @haku-menossa
+                                                     (nil? (re-matches #"^\w{1,}\d*$" @tunnus)))
+                                       :on-click #(do (.preventDefault %)
+                                                      (reset! haku-menossa true)
+                                                      (go (let [tunnus @tunnus
+                                                                res (<! (k/hae-fim-kayttaja tunnus))]
+                                                            (log "TULI: " res)
+                                                            ;; onko valittu käyttäjä edelleen nil?
+                                                            (when (nil? @valittu-kayttaja)
+                                                              (if (map? res)
+                                                                (reset! valittu-kayttaja res)
+                                                                (if (number? res)
+                                                                  (cond
+                                                                    (and (<= 400 res) (> 500 res))
+                                                                    (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
+                                                                                   :danger)
+                                                                    (and (<= 500 res) (> 600 res))
+                                                                    (viesti/nayta! (str "FIM-palvelun kutsuminen epäonnistui ("res")")
+                                                                                   :danger)
+                                                                    :else (viesti/nayta! (str "Palvelinkutsu epäonnistui ("res")")
+                                                                                         :warning))
 
-                                                                 (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
-                                                                                :warning))))
-                                                           (reset! haku-menossa false))))}
-          (when @haku-menossa
-            [ajax-loader])
-          "Tuo käyttäjä"]]]))))
+                                                                  (viesti/nayta! (str "Käyttäjää " tunnus " ei löydy.")
+                                                                                 :warning))))
+                                                            (reset! haku-menossa false))))}
+           (when @haku-menossa
+             [ajax-loader])
+           "Tuo käyttäjä"]]]]))))
 
 (defn valitut-urakat [urakat-map]
   (into #{}
