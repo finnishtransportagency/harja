@@ -109,5 +109,5 @@ Palautettavassa datassa:
   (contains? tulos :virhe))
        
 (def pisteelle-ei-loydy-tieta "Pisteelle ei löydy tietä.")
-(def pisteelle-ei-loydy-tieta-vihje "Yritä zoomata lähemmäs.")
+(def vihje-zoomaa-lahemmas "Yritä zoomata lähemmäs.")
   
