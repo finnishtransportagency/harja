@@ -43,7 +43,9 @@
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
-     :alue (oletusalue tarkastus valittu?))])
+     :alue {:type :tack-icon
+            :img "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in tarkastus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :laaduntarkastus [tarkastus valittu?]
   [(assoc tarkastus
