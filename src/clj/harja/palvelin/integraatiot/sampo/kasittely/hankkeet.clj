@@ -24,10 +24,10 @@
 
       (if (hankkeet/onko-tuotu-samposta? db sampo-id)
         (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id)
-        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id)))
+        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
 
-    (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
-    (urakat/paivita-tyyppi-hankkeen-urakoille! db (urakkatyyppi/paattele-urakkatyyppi alueurakkanro) sampo-id)
+      (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
+      (urakat/paivita-tyyppi-hankkeen-urakoille! db (urakkatyyppi/paattele-urakkatyyppi tyypit) sampo-id))
 
     (log/debug "Hanke käsitelty onnistuneesti")
     (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Program")

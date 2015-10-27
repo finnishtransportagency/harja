@@ -1,8 +1,8 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi)
 
-(defn paattele-yllapidon-tyyppi [alueurakkanumero]
-  (if (< 2 (count alueurakkanumero))
-    (let [tunniste (subs alueurakkanumero 2 3)]
+(defn paattele-yllapidon-tyyppi [tyypit]
+  (if (< 2 (count tyypit))
+    (let [tunniste (subs tyypit 2 3)]
       (case tunniste
         "V" "valaistus"
         "P" "paallystys"
@@ -11,19 +11,19 @@
         "hoito"))
     "hoito"))
 
-(defn paattele-urakkatyyppi [alueurakkanumero]
-  (if (< 1 (count alueurakkanumero))
-    (let [tunniste (subs alueurakkanumero 1 2)]
+(defn paattele-urakkatyyppi [tyypit]
+  (if (< 1 (count tyypit))
+    (let [tunniste (subs tyypit 1 2)]
       (case tunniste
         "H" "hoito"
-        "Y" (paattele-yllapidon-tyyppi alueurakkanumero)
+        "Y" (paattele-yllapidon-tyyppi tyypit)
         "hoito"))
     "hoito"))
 
-(defn paattele-liikennemuoto [alueurakkanumero]
-  (if (empty? alueurakkanumero)
+(defn paattele-liikennemuoto [tyypit]
+  (if (empty? tyypit)
     "t"
-    (let [tunniste (subs alueurakkanumero 0 1)]
+    (let [tunniste (subs tyypit 0 1)]
       (case tunniste
         "T" "t"
         "R" "r"
