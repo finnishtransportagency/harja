@@ -6,7 +6,7 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
