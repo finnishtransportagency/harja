@@ -16,6 +16,7 @@
                 {:id (:t3_id rivi) :nimi (:t3_nimi rivi) :koodi (:t3_koodi rivi) :taso 3}
                 {:id (:t4_id rivi) :nimi (:t4_nimi rivi) :taso 4 :yksikko (:t4_yksikko rivi) :kokonaishintainen (:t4_kokonaishintainen rivi)}]))
         (case tyyppi
+          :kokonaishintaiset (hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat db urakka)
           :yksikkohintaiset (hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat db urakka)
           :muutoshintaiset (hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat db urakka)
           (hae-urakan-toimenpiteet-ja-tehtavat db urakka)))))
