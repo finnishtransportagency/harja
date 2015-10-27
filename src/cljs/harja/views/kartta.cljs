@@ -260,14 +260,6 @@
          [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
           "Piilota kartta"]])]]))
 
-(def kartan-yleiset-kontrollit-sisalto (atom nil))
-
-(defn kartan-yleiset-kontrollit
-  "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
-  []
-  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
-    [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
-
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 (def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
 
@@ -320,11 +312,35 @@
                                                                                                (.stopPropagation event)
                                                                                                (.preventDefault event))}])])))
 
+(def kartan-yleiset-kontrollit-sisalto (atom nil))
+
+(defn kartan-yleiset-kontrollit
+  "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
+  []
+  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
+    (when (and sisalto (not= :S @nav/kartan-koko))
+      [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto])))
+
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 
 (defn tyhjenna-yleiset-kontrollit []
   (reset! kartan-yleiset-kontrollit-sisalto nil))
+
+(def kartan-ohjelaatikko-sisalto (atom nil))
+
+(defn kartan-ohjelaatikko
+  "Kartan ohjelaatikko -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
+  []
+  (let [sisalto @kartan-ohjelaatikko-sisalto]
+    (when (and sisalto (not= :S @nav/kartan-koko))
+      [:div.kartan-kontrollit.kartan-ohjelaatikko sisalto])))
+
+(defn aseta-ohjelaatikon-sisalto [uusi-sisalto]
+  (reset! kartan-ohjelaatikko-sisalto uusi-sisalto))
+
+(defn tyhjenna-ohjelaatikko []
+  (reset! kartan-ohjelaatikko-sisalto nil))
 
 (defn nayta-popup!
   "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng], 
@@ -559,6 +575,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   [:div
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
+   [kartan-ohjelaatikko]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]])
 
