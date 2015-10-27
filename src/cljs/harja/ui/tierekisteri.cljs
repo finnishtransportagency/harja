@@ -62,9 +62,8 @@
                       ([tila-teksti virhe-teksti]
                        [:span
                         [:div tila-teksti]
-                        [:div.virhe virhe-teksti]]))
-        virhe-teksti (atom nil)
-        _ (tarkkaile! "Virhe: " virhe-teksti)]
+                        [:div.tr-valitsin-virhe virhe-teksti]]))
+        virhe-teksti (atom nil)]
     
     (go (loop [vkm-haku nil]
           (let [[arvo kanava] (alts! (if vkm-haku
@@ -112,8 +111,8 @@
                     ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
                     :hover
                     (kartta/aseta-tooltip! x y (case @tila
-                                                 :ei-valittu (luo-tooltip "Klikkaa alkupiste" (when @virhe-teksti virhe-teksti))
-                                                 :alku-valittu (luo-tooltip "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä" (when @virhe-teksti virhe-teksti))))
+                                                 :ei-valittu (luo-tooltip "Klikkaa alkupiste" (when @virhe-teksti @virhe-teksti))
+                                                 :alku-valittu (luo-tooltip "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä" (when @virhe-teksti @virhe-teksti))))
 
                     ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
                     :enter (when (= @tila :alku-valittu)
