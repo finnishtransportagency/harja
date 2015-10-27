@@ -5,16 +5,18 @@
             [compojure.route :as route]
             [clojure.string :as str]
             [taoensso.timbre :as log]
+            [ring.middleware.session :as session]
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
             [schema.core :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
-
+            [harja.palvelin.index :as index]
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
+            [ring.middleware.anti-forgery :as csrf]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -140,30 +142,42 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defrecord HttpPalvelin [portti kasittelijat lopetus-fn kehitysmoodi]
+(def +sessioattribuutit+ {:cookie-attrs {:max-age 3600}})
+
+(defn index-kasittelija [kehitysmoodi req]
+  (let [uri (:uri req)]
+    (when (or (= uri "/")
+              (= uri "/index.html"))
+      {:status 200
+       :headers {"Content-Type" "text/html"}
+       :body (index/tee-paasivu kehitysmoodi)})))
+
+(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
-    (log/info "HttpPalvelin käynnistetään portissa " portti)
+    (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (let [todennus (:todennus this)
           resurssit (if kehitysmoodi
                       (route/files "" {:root "dev-resources"})
-                      ;;(let [files-route (route/files "" {:root "dev-resources"})]
-                      ;;  (fn [req]
-                      ;;    (let [resp (files-route req)]
-                      ;;      (if (= 200 (:status resp))
-                      ;;        (update-in resp :headers 
                       (route/resources ""))]
       (swap! lopetus-fn
              (constantly
-              (http/run-server (fn [req]
-                                 (try+
-                                   (reitita (todennus/todenna-pyynto todennus req)
-                                            (conj (mapv :fn @kasittelijat)
-                                                  resurssit))
+              (http/run-server (session/wrap-session
+                                (fn [req]
+                                  (try+
+                                   (let [sessiolliset (conj (mapv :fn @kasittelijat)
+                                                            (partial index-kasittelija kehitysmoodi)
+                                                           resurssit)
+                                         sessiokasittelija (-> (apply compojure/routes sessiolliset)
+                                                              (csrf/wrap-anti-forgery))]
+                                     (reitita (todennus/todenna-pyynto todennus req)
+                                             (conj (mapv :fn @sessiottomat-kasittelijat) sessiokasittelija)))
                                    (catch [:virhe :todennusvirhe] _
                                      {:status 403 :body "Todennusvirhe"})))
-                               {:port portti
-                                :thread 64})))
+                                +sessioattribuutit+)
+                               {:port (or (:portti asetukset) asetukset)
+                                :thread (or (:threads asetukset) 8)
+                                :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
@@ -175,10 +189,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
     (if (:ring-kasittelija? optiot)
-      (swap! kasittelijat conj {:nimi nimi
-                                :fn (if (= false (:tarkista-polku? optiot))
-                                      palvelu-fn
-                                      (ring-kasittelija nimi palvelu-fn))})
+      (swap! sessiottomat-kasittelijat conj {:nimi nimi
+                                             :fn (if (= false (:tarkista-polku? optiot))
+                                                   palvelu-fn
+                                                   (ring-kasittelija nimi palvelu-fn))})
       (let [ar (arityt palvelu-fn)
             liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
         (when liikaa-parametreja
@@ -197,8 +211,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
            (fn [kasittelijat]
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
-(defn luo-http-palvelin [portti kehitysmoodi]
-  (->HttpPalvelin portti (atom []) (atom nil) kehitysmoodi))
+(defn luo-http-palvelin [asetukset kehitysmoodi]
+  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti [http nimi reitti]
   (julkaise-palvelu http nimi  (wrap-params reitti)

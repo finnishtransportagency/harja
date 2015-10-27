@@ -212,6 +212,10 @@
 (defn sanktiot []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
+    (komp/sisaan-ulos #(do
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                        (nav/vaihda-kartan-koko! :S))
+                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
       [:span
        [kartta/kartan-paikka]
