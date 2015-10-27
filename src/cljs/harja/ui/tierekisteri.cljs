@@ -98,7 +98,12 @@
                                                       :loppuosa
                                                       :loppuetaisyys)))]
                           (paivita osoite)
-                          (reset! tila :alku-valittu))
+                          (reset! tila :alku-valittu)
+                          (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
+                                                              (str "Valittu alkupiste: "
+                                                                   (:numero osoite) " "
+                                                                   (:alkuosa osoite) " "
+                                                                   (:alkuetaisyys osoite))]))
                         
                         :alku-valittu
                         (let [osoite (swap! tr-osoite
