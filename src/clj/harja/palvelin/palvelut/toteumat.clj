@@ -500,11 +500,16 @@
 
 (defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [toteumat (into []
-                       (map konv/alaviiva->rakenne
-                            (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
-                              db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) toimenpide tehtava)))]
-    toteumat))
+  (into []
+        (filter #(not (nil? (:toimenpidekoodi %)))
+                (map konv/alaviiva->rakenne
+                     (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
+                       db urakka-id
+                       sopimus-id
+                       (konv/sql-date alkupvm)
+                       (konv/sql-date loppupvm)
+                       toimenpide
+                       tehtava)))))
 
 (defrecord Toteumat []
   component/Lifecycle
