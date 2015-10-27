@@ -19,19 +19,25 @@
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :alue (oletusalue ilmoitus valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Kysely")
-     :alue (oletusalue ilmoitus valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
-     :alue (oletusalue ilmoitus valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :havainto [havainto valittu?]
   [(assoc havainto
