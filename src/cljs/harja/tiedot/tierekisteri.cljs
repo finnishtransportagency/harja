@@ -10,10 +10,11 @@
 (def valittu-alkupiste (atom nil))
 (def tr-alkupiste-kartalla (reaction
                              (when @valittu-alkupiste
-                               (-> @valittu-alkupiste
-                                   (assoc :type :circle)
-                                   (assoc :color "green")
-                                   (assoc :radius 100)
-                                   (assoc :stroke {:color "black" :width 10})))))
+                               {:type :tr-alkupiste
+                                :alue (-> @valittu-alkupiste
+                                           (assoc :type :circle)
+                                           (assoc :color "green")
+                                           (assoc :radius 1000)
+                                           (assoc :stroke {:color "black" :width 10}))})))
 
 (tarkkaile! "Kartalla: " tr-alkupiste-kartalla)
