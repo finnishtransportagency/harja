@@ -421,6 +421,17 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                    (zoomaa-geometrioihin)
                    (recur nykyinen-koko))))))
 
+(defn- kun-geometriaa-klikattu
+  "Event handler geometrioiden yksi- ja tuplaklikkauksille"
+  [item event]
+  (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
+    (condp = (:type item)
+      :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
+            (nav/valitse-hallintayksikko item))
+      :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
+            (t/julkaise! (assoc item :aihe :urakka-klikattu)))
+      (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
+
 (defn kartta-openlayers []
   (komp/luo
 
@@ -476,26 +487,18 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
                                 (poista-popup!))
           :on-select          (fn [item event]
-                                (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
-                                  (condp = (:type item)
-                                    :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-                                          (nav/valitse-hallintayksikko item))
-                                    :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
-                                          (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                                    (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
-          :on-dblclick        nil
-          :on-dblclick-select (fn [item event]
-                                (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
-                                  (condp = (:type item)
-                                    :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-                                          (nav/valitse-hallintayksikko item))
-                                    :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
-                                          (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                                    (do (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))
+                                (kun-geometriaa-klikattu item event)
+                                (.stopPropagation event)
+                                (.preventDefault event))
 
-                                        ;; Estetään zoomaaminen kun tuplaklikillä valitaan geometria
-                                        (.stopPropagation event)
-                                        (.preventDefault event)))))
+          :on-dblclick        nil
+
+          :on-dblclick-select (fn [item event]
+                                (kun-geometriaa-klikattu item event)
+                                (.stopPropagation event)
+                                (.preventDefault event)
+                                (keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
+
           :tooltip-fn         (fn [geom]
                                 (and geom
                                      [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
