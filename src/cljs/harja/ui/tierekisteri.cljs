@@ -57,20 +57,7 @@
         luo-tooltip (fn [tila-teksti]
                       [:div.tr-valitsin-hover
                        [:div.tr-valitsin-tila tila-teksti]
-                       [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])
-        virhe (atom nil)
-        virhe-vihje (atom nil)
-        aseta-virhe (fn []
-                      (reset! virhe vkm/pisteelle-ei-loydy-tieta)
-                      (reset! virhe-vihje vkm/vihje-zoomaa-lahemmas)
-                      (kartta/aseta-ohjelaatikon-sisalto [:span
-                                                          [:span.tr-valitsin-virhe @virhe]
-                                                          " "
-                                                          [:span.tr-valitsin-ohje @virhe-vihje]]))
-        tyhjenna-virheet (fn []
-                           (reset! virhe nil)
-                           (reset! virhe-vihje nil)
-                           (kartta/tyhjenna-ohjelaatikko))]
+                       [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])]
 
     (go (loop [vkm-haku nil]
           (let [[arvo kanava] (alts! (if vkm-haku
@@ -82,11 +69,14 @@
                 (let [{:keys [kun-valmis paivita]} @optiot
                       osoite arvo] 
                   (if (vkm/virhe? osoite)
-                    (do (aseta-virhe)
+                    (do (kartta/aseta-ohjelaatikon-sisalto [:span
+                                                            [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
+                                                            " "
+                                                            [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]])
                         (recur nil))
                     
                     (do
-                      (tyhjenna-virheet)
+                      (kartta/tyhjenna-ohjelaatikko)
                       (case @tila
                         :ei-valittu
                         (let [osoite (swap! tr-osoite
@@ -129,7 +119,7 @@
                     ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
                     :enter (when (= @tila :alku-valittu)
                              (do ((:kun-valmis @optiot) @tr-osoite)
-                                 (tyhjenna-virheet)))
+                                 (kartta/tyhjenna-ohjelaatikko)))
                     nil)
                   
                   (recur (if (= :click tyyppi)
@@ -162,7 +152,7 @@
                          (fn [_]
                            (log "optiot: " @optiot)
                            ((:kun-peruttu @optiot))
-                           (tyhjenna-virheet))
+                           (kartta/tyhjenna-ohjelaatikko))
                          :enter-painettu
                          #(go (>! tapahtumat {:tyyppi :enter})))
         (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
