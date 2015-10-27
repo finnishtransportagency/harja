@@ -110,7 +110,7 @@
                                                                                                   {:urakka :urakka-id})))))
                   (when @hae-tarkastukset?
                     (mapv
-                      #(assoc % :tyyppi-kartalla :tarkastus)
+                      #(assoc % :tyyppi-kartalla (:tyyppi %))
                       (<! (k/post! :hae-urakan-tarkastukset (rename-keys
                                                              yhteiset-parametrit
                                                              {:urakka :urakka-id
