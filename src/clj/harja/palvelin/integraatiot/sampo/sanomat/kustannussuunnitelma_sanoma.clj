@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [clj-time.core :as time]
             [clj-time.coerce :as coerce]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn muodosta-maksueranumero [numero]
   (str/join "" ["HA" numero]))
@@ -44,24 +45,35 @@
    {:value arvo
     :code  koodi}])
 
-(defn valitse-lkp-tilinumero [toimenpidekoodi, tuotenumero]
+(defn valitse-lkp-tilinumero [toimenpidekoodi tuotenumero]
   (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
     "43021"
     ; Hoitotuotteet 110 - 150, 536
-    (if (or (and (>= tuotenumero 110) (<= tuotenumero 150))
-            (= tuotenumero 536)
-            (= tuotenumero 31))
-      "43021"
-      ; Ostotuotteet: 210, 240-271 ja 310-321
-      (if (or (= tuotenumero 21)
-              (= tuotenumero 30)
-              (= tuotenumero 210)
-              (and (>= tuotenumero 240) (<= tuotenumero 271))
-              (and (>= tuotenumero 310) (<= tuotenumero 321)))
-        "12981"
-        (let [viesti (format "Toimenpidekoodilla '%1$s' ja tuonenumerolla '%2$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle", toimenpidekoodi tuotenumero)]
-          (log/error viesti)
-          (throw (RuntimeException. viesti)))))))
+    (if (nil? tuotenumero)
+      (let [viesti "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui."]
+        (log/error viesti)
+        (throw+ {:type    :virhe-sampo-kustannussuunnitelman-lahetyksessa
+                 :virheet [{:koodi  :lpk-tilinnumeroa-ei-voi-paatella
+                            :viesti viesti}]}))
+
+      (if (or (and (>= tuotenumero 110) (<= tuotenumero 150))
+              (= tuotenumero 536)
+              (= tuotenumero 31))
+        "43021"
+        ; Ostotuotteet: 210, 240-271 ja 310-321
+        (if (or (= tuotenumero 21)
+                (= tuotenumero 30)
+                (= tuotenumero 210)
+                (and (>= tuotenumero 240) (<= tuotenumero 271))
+                (and (>= tuotenumero 310) (<= tuotenumero 321)))
+          "12981"
+          (let [viesti
+                (format "Toimenpidekoodilla '%1$s' ja tuonenumerolla '%2$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle"
+                        toimenpidekoodi tuotenumero)]
+            (log/error viesti)
+            (throw+ {:type    :virhe-sampo-kustannussuunnitelman-lahetyksessa
+                     :virheet [{:koodi  :lpk-tilinnumeroa-ei-voi-paatella
+                                :viesti viesti}]})))))))
 
 (defn tee-kustannussuunnitelmajakso [pvm]
   (let [vuosi (time/year (coerce/from-sql-date pvm))]
@@ -69,7 +81,7 @@
 
 (defn muodosta [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
-        {:keys [koodi]} (:toimenpidekoodi (:toimenpideinstanssi maksuera))
+        koodi (:toimenpidekoodi maksuera)
         tuotenumero (:tuotenumero maksuera)
         maksueranumero (muodosta-maksueranumero (:numero maksuera))
         kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero maksuera))]
