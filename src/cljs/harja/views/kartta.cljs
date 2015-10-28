@@ -198,6 +198,7 @@
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
 (def +koko-suomi-sijainti+ [431704.1 7211111])
 (def +koko-suomi-zoom-taso+ 6)
+(def +koko-suomi-extent+ [-485283.9715435868 6550588.658174125 1538768.5374478805 7886096.416372725])
 
 (defonce kartta-sijainti (atom +koko-suomi-sijainti+))
 (defonce zoom-taso (atom +koko-suomi-zoom-taso+))           ;;Miksi tämä on atomi - toimiiko todellisuudessa eri tavalla kuin kuvitellaan?
@@ -386,13 +387,17 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
+(defn suomen-sisalla? [alue]
+  (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
+
 (defn zoomaa-geometrioihin
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (if-not (empty? (keep :alue @tasot/geometriat))
-    (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
-    (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
+  (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))]
+    (if-not (empty? geometriat)
+      (keskita-kartta-alueeseen! (geo/extent-monelle geometriat))
+      (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))))
 
 (defonce pida-geometriat-nakyvilla? (atom true))
 
