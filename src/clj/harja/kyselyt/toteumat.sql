@@ -593,7 +593,8 @@ FROM toteuma t
     ON tk.id = tt.toimenpidekoodi
   LEFT JOIN kayttaja k
     ON k.id = t.luoja
-  LEFT JOIN reittipiste rp ON t.id = rp.toteuma
+  LEFT JOIN reittipiste rp
+    ON t.id = rp.toteuma
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
