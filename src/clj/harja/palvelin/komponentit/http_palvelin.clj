@@ -139,12 +139,16 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn index-kasittelija [kehitysmoodi req]
   (let [uri (:uri req)
-        token (index/token-requestista req)]
+        token (index/tee-random-avain)
+        salattu (index/laske-mac token)]
     (when (or (= uri "/")
               (= uri "/index.html"))
       {:status 200
-       :headers {"Content-Type" "text/html"}
-       :cookies {"anti-csrf-token" {:value token
+       :headers {"Content-Type" "text/html"
+                 "Cache-Control" "no-cache, no-store, must-revalidate"
+                 "Pragma" "no-cache"
+                 "Expires" "0"}
+       :cookies {"anti-csrf-token" {:value salattu
                                     :http-only true
                                     :max-age 36000000}}
        :body (index/tee-paasivu token kehitysmoodi)})))
@@ -156,7 +160,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
     (let [cookies (:cookies req)
           headers (:headers req)]
       (if (and (not (nil? (headers "x-csrf-token")))
-               (= (headers "x-csrf-token")
+               (= (index/laske-mac (headers "x-csrf-token"))
                   (:value (cookies "anti-csrf-token"))))
         (f req)
         {:status 403

@@ -6,18 +6,14 @@
 
 (def anti-forgery-secret-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
 
-(defn tee-anti-forgery-token [data]
+(defn laske-mac [data]
   (let [secret-key (SecretKeySpec. (.getBytes anti-forgery-secret-key "UTF-8") "HmacSHA256")
         mac (Mac/getInstance "HmacSHA256")]
     (.init mac secret-key)
     (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes data "UTF-8"))))))
 
-(defn token-requestista [req]
-  (let [headers (:headers req)
-        username (headers "oam_remote_user")
-        timestamp (System/currentTimeMillis)
-        remote (:remote-addr req)]
-    (tee-anti-forgery-token (str username timestamp remote))))
+(defn tee-random-avain []
+  (apply str (map (fn [_] (rand-nth "0123456789abcdefghijklmnopqrstuvwyz")) (range 128))))
 
 (defn tee-paasivu [token devmode]
   (html
