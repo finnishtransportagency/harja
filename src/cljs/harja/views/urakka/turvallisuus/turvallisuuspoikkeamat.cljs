@@ -56,7 +56,7 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
+        [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
 
          (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 3}
@@ -69,15 +69,15 @@
                        {:otsikko "Käsitelty" :pakollinen? true :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                   [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
-         
+
          {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :leveys-col 3}
          {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys-col 3}
          {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :leveys-col 4}
          {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :leveys-col 4}
          {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys-col 1
-          :tyyppi :positiivinen-numero :kokonaisluku? true}
+          :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys-col 1
-          :tyyppi :positiivinen-numero :kokonaisluku? true}
+          :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
           :sijainti (r/wrap (:sijainti @muokattu)
@@ -107,7 +107,7 @@
                                                               (:poistettu (val kartta)))))
                                                         uusi)))))]}]
         @muokattu]])))
-  
+
 (defn turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
@@ -121,9 +121,9 @@
       {:otsikko       "Turvallisuuspoikkeamat"
        :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(go
-                         (reset! tiedot/valittu-turvallisuuspoikkeama
-                                 (<! (tiedot/hae-turvallisuuspoikkeama (:id urakka)
-                                                                       (:id %)))))}
+                        (reset! tiedot/valittu-turvallisuuspoikkeama
+                                (<! (tiedot/hae-turvallisuuspoikkeama (:id urakka)
+                                                                      (:id %)))))}
       [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
        {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
        {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
@@ -131,7 +131,7 @@
        {:otsikko "Poissa" :nimi :poissa :tyyppi :string :leveys "5%"
         :hae     (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
-        :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
+        :hae     (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
       @tiedot/haetut-turvallisuuspoikkeamat
       ]]))
 
@@ -139,6 +139,11 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
     (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(reset! tiedot/valittu-turvallisuuspoikkeama %2))
+    (komp/sisaan-ulos #(do
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                        (nav/vaihda-kartan-koko! :L))
+                      #(do
+                        (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn []
       [:span
