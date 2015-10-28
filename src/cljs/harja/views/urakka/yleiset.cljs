@@ -166,11 +166,14 @@
         :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
         
         :validoi [[:ei-tyhja  "Anna yhteyshenkilön rooli"]]}
-       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "17%"
+       {:otsikko "Organisaatio"
+        :nimi :organisaatio
+        :fmt :nimi
+        :leveys "17%"
         :tyyppi :valinta
         :validoi [[:ei-tyhja "Anna yhteyshenkilön organisaatio"]]
         :valinta-arvo :id
-        :valinta-nayta #(if % (:nimi %) "- valitse -")
+        :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
        
        {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
@@ -207,7 +210,7 @@
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
         :tyyppi :valinta
         :valinta-arvo :id
-        :valinta-nayta #(if % (:nimi %) "- valitse -")
+        :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
        
        {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"
