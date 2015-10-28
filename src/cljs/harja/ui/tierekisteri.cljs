@@ -55,12 +55,15 @@
   [optiot]
   (let [tapahtumat (chan)
         tila (atom :ei-valittu)
-        _ (tarkkaile! "tila: " tila)
         alkupiste (atom nil)
         tr-osoite (atom {})
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
         ;; Muuten go lohko sulkee alkuarvojen yli
         optiot (cljs.core/atom optiot)
+        poistu-tr-valinnasta (fn []
+                               (karttatasot/taso-pois! :tr-alkupiste)
+                               (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
+                               (kartta/tyhjenna-ohjelaatikko))
         luo-tooltip (fn [tila-teksti]
                       [:div.tr-valitsin-hover
                        [:div.tr-valitsin-tila tila-teksti]
@@ -116,7 +119,7 @@
                                              :loppuosa (:losa osoite)
                                              :loppuetaisyys (:let osoite)
                                              :geometria (:geometria osoite)})]
-                          (karttatasot/taso-pois! :tr-alkupiste)
+                          (poistu-tr-valinnasta)
                           (kun-valmis osoite)))
                       (recur nil))))
 
@@ -132,7 +135,7 @@
                     ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
                     :enter (when (= @tila :alku-valittu)
                              (do ((:kun-valmis @optiot) @tr-osoite)
-                                 (kartta/tyhjenna-ohjelaatikko)))
+                                 (poistu-tr-valinnasta)))
                     nil)
 
                   (recur (if (= :click tyyppi)
@@ -158,14 +161,14 @@
                           #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
-                            (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
+                            (poistu-tr-valinnasta)
                             (kartta/aseta-kursori! nil)))
         (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
         (komp/kuuntelija :esc-painettu
                          (fn [_]
                            (log "optiot: " @optiot)
                            ((:kun-peruttu @optiot))
-                           (kartta/tyhjenna-ohjelaatikko))
+                           (poistu-tr-valinnasta))
                          :enter-painettu
                          #(go (>! tapahtumat {:tyyppi :enter})))
         (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
