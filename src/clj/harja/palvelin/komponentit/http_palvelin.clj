@@ -138,15 +138,16 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        (into #{})))
 
 (defn index-kasittelija [kehitysmoodi req]
-  (let [uri (:uri req)]
+  (let [uri (:uri req)
+        token (index/token-requestista req)]
     (when (or (= uri "/")
               (= uri "/index.html"))
       {:status 200
        :headers {"Content-Type" "text/html"}
-       :cookies {"anti-csrf-token" {:value (index/token-requestista req)
+       :cookies {"anti-csrf-token" {:value token
                                     :http-only true
                                     :max-age 36000000}}
-       :body (index/tee-paasivu req kehitysmoodi)})))
+       :body (index/tee-paasivu token kehitysmoodi)})))
 
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
