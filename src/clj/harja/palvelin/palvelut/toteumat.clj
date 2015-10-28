@@ -511,7 +511,10 @@
                                                                            (konv/sql-date loppupvm)
                                                                            toimenpide
                                                                            tehtava))
-        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin toteumat {:reittipiste :reittipisteet})]
+        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
+                                  toteumat
+                                  {:reittipiste :reittipisteet}
+                                  :toteumaid)]
     kasitellyt-toteumarivit))
 
 (defrecord Toteumat []
