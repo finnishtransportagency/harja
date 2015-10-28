@@ -12,7 +12,7 @@
 (defn hae-materiaalikoodit [db]
   (into []
         (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-        (q/hae-materiaalikoodit db)))
+        (q/hae-materiaalikoodit-ilman-talvisuolaa db)))
 
 (defn hae-urakan-materiaalit [db user urakka-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
