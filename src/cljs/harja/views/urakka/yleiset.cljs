@@ -230,10 +230,5 @@
                     (let [alku (:alku rivi)]
                       (when (and alku loppu
                                  (t/before? loppu alku))
-                        "Loppupvm ei voi olla alkua ennen.")))]} ]
-      @paivystajat ]
-       
-     ]))
-
-
-
+                        "Loppupvm ei voi olla alkua ennen.")))]}]
+      @paivystajat]]))
