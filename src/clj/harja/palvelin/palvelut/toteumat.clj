@@ -512,7 +512,6 @@
                                                                            toimenpide
                                                                            tehtava))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin toteumat {:reittipiste :reittipisteet})]
-    (log/debug "Kamat: " (pr-str kasitellyt-toteumarivit))
     kasitellyt-toteumarivit))
 
 (defrecord Toteumat []
