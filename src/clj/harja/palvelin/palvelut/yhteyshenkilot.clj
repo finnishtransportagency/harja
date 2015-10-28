@@ -111,7 +111,7 @@
                                           (:etunimi yht) (:sukunimi yht)
                                           (:tyopuhelin yht) (:matkapuhelin yht)
                                           (:sahkoposti yht)
-                                          (:organisaatio yht)
+                                          (:id (:organisaatio yht))
                                           id)
                 (q/aseta-yhteyshenkilon-rooli! c (:rooli yht) id urakka-id)))
           
@@ -120,7 +120,7 @@
                                                (:etunimi yht) (:sukunimi yht)
                                                (:tyopuhelin yht) (:matkapuhelin yht)
                                                (:sahkoposti yht)
-                                               (:organisaatio yht)
+                                               (:id (:organisaatio yht))
                                                nil
                                                nil
                                                nil))]
@@ -170,7 +170,7 @@
           (q/paivita-yhteyshenkilo<! c
                                     (:etunimi p) (:sukunimi p)
                                     (:tyopuhelin p) (:matkapuhelin p)
-                                    (:sahkoposti p) (:organisaatio p)
+                                    (:sahkoposti p) (:id (:organisaatio p))
                                     yht-id)
           (q/paivita-paivystys! c
                                 (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
