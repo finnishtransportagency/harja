@@ -33,21 +33,15 @@
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
 
-
-
-
-
-
-
 (defn ring-kasittelija [nimi kasittelija-fn]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn transit-vastaus [data]
+(defn transit-vastaus [req data]
   {:status 200
-   :headers {"Content-Type" "application/transit+json"}
+   :headers {"Content-Type" "application/transit+json"} 
    :body (transit/clj->transit data)})
 
 (defn- transit-post-kasittelija
@@ -77,7 +71,7 @@
                            (catch Exception e
                              (log/warn e "Virhe POST palvelussa " nimi)
                              {:virhe (.getMessage e)}))]
-              (transit-vastaus vastaus))))))))
+              (transit-vastaus req vastaus))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 
@@ -143,8 +137,6 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(def +sessioattribuutit+ {:cookie-attrs {:max-age 3600}})
-
 (defn index-kasittelija [kehitysmoodi req]
   (let [uri (:uri req)]
     (when (or (= uri "/")
@@ -153,10 +145,12 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        :headers {"Content-Type" "text/html"}
        :cookies {"anti-csrf-token" {:value (index/token-requestista req)
                                     :http-only true
-                                    :max-age 3600}}
+                                    :max-age 36000000}}
        :body (index/tee-paasivu req kehitysmoodi)})))
 
-(defn wrap-anti-forgery [f]
+(defn wrap-anti-forgery
+  "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
+  [f]
   (fn [req]
     (let [cookies (:cookies req)
           headers (:headers req)]
