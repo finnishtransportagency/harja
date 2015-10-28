@@ -40,17 +40,6 @@
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
-(def kokonaishintainen-toteuma-kartalla-xf
-  (map #(do
-         (assoc %
-           :type :kokonaishintainen-toteuma
-           :alue {:type   :arrow-line
-                  :points (mapv (comp :coordinates :sijainti)
-                                (sort-by
-                                  :aika
-                                  pvm/ennen?
-                                  (:reittipisteet %)))}))))
-
 (defonce kokonaishintainen-toteuma-kartalla
          (reaction
            (when @karttataso-kokonaishintainen-toteuma
