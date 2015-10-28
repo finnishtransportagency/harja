@@ -35,6 +35,8 @@
     :multipolygon (mapcat :coordinates (:polygons g))
     :point [(:coordinates g)]
     :icon [(:coordinates g)]
+    :tack-icon [(:coordinates g)]
+    :sticker-icon [(:coordinates g)]
     :circle [(:coordinates g)]))
 
 (defn keskipiste
@@ -81,6 +83,12 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod extent :icon [{c :coordinates}]
   (extent-point-circle c))
 
+(defmethod extent :tack-icon [{c :coordinates}]
+  (extent-point-circle c))
+
+(defmethod extent :sticker-icon [{c :coordinates}]
+  (extent-point-circle c))
+
 (defmethod extent :multipolygon [{polygons :polygons}]
   (laske-pisteiden-extent (mapcat :coordinates polygons)))
 
@@ -100,6 +108,18 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmulti ikonin-sijainti (fn [geometry] (:type geometry)))
 
 (defmethod ikonin-sijainti :point [geom]
+  (:coordinates geom))
+
+(defmethod ikonin-sijainti :circle [geom]
+  (:coordinates geom))
+
+(defmethod ikonin-sijainti :icon [geom]
+  (:coordinates geom))
+
+(defmethod ikonin-sijainti :tack-icon [geom]
+  (:coordinates geom))
+
+(defmethod ikonin-sijainti :sticker-icon [geom]
   (:coordinates geom))
 
 (defmethod ikonin-sijainti :default [g]

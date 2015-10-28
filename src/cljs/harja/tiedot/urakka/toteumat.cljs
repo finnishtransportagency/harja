@@ -19,13 +19,13 @@
 (def yksikkohintainen-toteuma-kartalla-xf
   (map #(do
          (assoc %
-         :type :yksikkohintainen-toteuma
-         :alue {:type   :arrow-line
-                :points (mapv (comp :coordinates :sijainti)
-                              (sort-by
-                               :aika
-                               pvm/ennen?
-                               (:reittipisteet %)))}))))
+           :type :yksikkohintainen-toteuma
+           :alue {:type   :arrow-line
+                  :points (mapv (comp :coordinates :sijainti)
+                                (sort-by
+                                  :aika
+                                  pvm/ennen?
+                                  (:reittipisteet %)))}))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
@@ -100,9 +100,9 @@
 
 (defn hae-urakan-erilliskustannukset [urakka-id [alkupvm loppupvm]]
   (k/post! :urakan-erilliskustannukset
-    {:urakka-id urakka-id
-     :alkupvm alkupvm
-     :loppupvm loppupvm}))
+           {:urakka-id urakka-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
 
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))

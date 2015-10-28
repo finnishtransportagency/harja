@@ -91,7 +91,8 @@
                                      (:portti tietokanta)
                                      (:tietokanta tietokanta)
                                      (:kayttaja tietokanta)
-                                     (:salasana tietokanta))
+                                     (:salasana tietokanta)
+                                     (:yhteyspoolin-koko tietokanta))
       :klusterin-tapahtumat (component/using
                               (tapahtumat/luo-tapahtumat)
                               [:db])
@@ -100,7 +101,7 @@
                   (todennus/http-todennus)
                   [:db :klusterin-tapahtumat])
       :http-palvelin (component/using
-                       (http-palvelin/luo-http-palvelin (:portti http-palvelin)
+                       (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
                        [:todennus])
 

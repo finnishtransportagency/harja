@@ -143,16 +143,14 @@
       @tiedot/haetut-turvallisuuspoikkeamat
       ]]))
 
-(def kartan-edellinen-koko (atom nil))
-
 (defn turvallisuuspoikkeamat []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
     (komp/sisaan-ulos #(do
-                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :L))
                       #(do
-                        (nav/vaihda-kartan-koko! @kartan-edellinen-koko)))
+                        (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn []
       [:span
        [:h3 "Turvallisuuspoikkeamat"]
