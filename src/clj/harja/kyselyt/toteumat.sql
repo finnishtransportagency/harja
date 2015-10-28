@@ -575,14 +575,17 @@ WHERE toteuma = :id;
 
 -- name: hae-urakan-kokonaishintaisten-toteumien-tehtavat
 SELECT
-  t.id               AS toteumaid,
-  t.alkanut          AS alkanut,
-  t.paattynyt        AS paattynyt,
-  tt.toimenpidekoodi AS toimenpidekoodi,
-  tk.nimi            AS nimi,
-  tt.maara           AS maara,
-  tk.yksikko         AS yksikko,
-  k.jarjestelma      AS jarjestelmanlisaama
+  t.id                AS toteumaid,
+  t.alkanut           AS alkanut,
+  t.paattynyt         AS paattynyt,
+  tt.toimenpidekoodi  AS toimenpidekoodi,
+  tk.nimi             AS nimi,
+  tt.maara            AS maara,
+  tk.yksikko          AS yksikko,
+  k.jarjestelma       AS jarjestelmanlisaama,
+  rp.id               AS reittipiste_id,
+  rp.aika             AS reittipiste_aika,
+  rp.sijainti         AS reittipiste_sijainti
 FROM toteuma t
   LEFT JOIN toteuma_tehtava tt
     ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
@@ -590,6 +593,7 @@ FROM toteuma t
     ON tk.id = tt.toimenpidekoodi
   LEFT JOIN kayttaja k
     ON k.id = t.luoja
+  LEFT JOIN reittipiste rp ON t.id = rp.toteuma
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
@@ -604,5 +608,3 @@ WHERE
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
 ORDER BY t.alkanut
 LIMIT 501;
-
-
