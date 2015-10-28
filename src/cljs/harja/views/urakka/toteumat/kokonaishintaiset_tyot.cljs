@@ -52,7 +52,6 @@
 (defn kokonaishintaiset-toteumat []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso)
-    (komp/lippu tiedot/karttataso)
     (komp/kuuntelija :toteuma-klikattu #(reset! tiedot/valittu-toteuma %2))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
 
