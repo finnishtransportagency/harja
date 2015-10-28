@@ -93,15 +93,21 @@
   (log/debug "tallenna suolasakko" tiedot)
   (let [suolasakon-id (:id (first (q/hae-suolasakko-id db urakka hoitokauden-alkuvuosi)))]
     (if suolasakon-id
-      (do (log/info "PAIVITA SUOLASAKKO" suolasakon-id)
+      (do 
         (q/paivita-suolasakko! db (:maara tiedot) (:maksukuukausi tiedot)
-                                 (:indeksi tiedot) (:id user)
-                                 (:talvisuolaraja tiedot) suolasakon-id)
+                               (:indeksi tiedot) (:id user)
+                               (:talvisuolaraja tiedot) suolasakon-id)
           suolasakon-id)
       
       (:id (q/luo-suolasakko<! db (:maara tiedot) hoitokauden-alkuvuosi (:maksukuukausi tiedot)
                                (:indeksi tiedot) urakka (:id user) (:talvisuolaraja tiedot))))))
 
+
+(defn tallenna-pohjavesialue-talvisuola
+  "Päivittää pohjavesialueen talvisuolarajan, tai luo uuden jos rajaa ei ole"
+  [db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja]
+  (when (zero? (q/paivita-pohjavesialue-talvisuola! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue))
+    (q/tallenna-pohjavesialue-talvisuola<! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue)))
 
 ;; TIEDOT:
 ;; {:suolasakko {:talvisuolaraja 444, :maksukuukausi 7, :indeksi "MAKU 2010", :maara 30}
@@ -118,7 +124,8 @@
     (let [_ (log/debug "tallenna-suolasakko-ja-lampotilat" tiedot)
           suolasakon-id (tallenna-suolasakko db user urakka hoitokauden-alkuvuosi suolasakko)]
 
-      (log/info "TALLENNA POHJAVESIALUEIDEN suolarajat"))
+      (doseq [{:keys [pohjavesialue talvisuolaraja]} pohjavesialue-talvisuola]
+        (tallenna-pohjavesialue-talvisuola db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja)))
 
     (hae-urakan-suolasakot-ja-lampotilat db user urakka)))        
 

@@ -40,8 +40,20 @@ UPDATE suolasakko
  WHERE id = :id;
 
 -- name: hae-suolasakko-id
-SELECt id FROM suolasakko WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
+SELECT id FROM suolasakko WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
 
+-- name: paivita-pohjavesialue-talvisuola!
+UPDATE pohjavesialue_talvisuola
+   SET talvisuolaraja = :talvisuolaraja
+ WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi AND pohjavesialue = :pohjavesialue;
+
+-- name: tallenna-pohjavesialue-talvisuola<!
+INSERT INTO pohjavesialue_talvisuola
+       (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue)
+VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
+
+ 
+ 
 -- name: aseta-suolasakon-kaytto!
 UPDATE suolasakko
    SET kaytossa = :kaytossa
