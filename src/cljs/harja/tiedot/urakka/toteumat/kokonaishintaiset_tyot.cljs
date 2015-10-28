@@ -21,10 +21,9 @@
             :tehtava    tehtava}))
 
 (def nakymassa? (atom false))
-(def karttataso (atom false))
-(defonce valittu-toteuma (atom nil))
+(def valittu-toteuma (atom nil))
 
-(defonce haetut-toteumat
+(def haetut-toteumat
          (reaction<!
            [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @urakka/valittu-sopimusnumero)
@@ -40,7 +39,7 @@
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
-(defonce kokonaishintainen-toteuma-kartalla
+(def kokonaishintainen-toteuma-kartalla
          (reaction
            (when @karttataso-kokonaishintainen-toteuma
              (kartalla-esitettavaan-muotoon
@@ -49,3 +48,5 @@
                  @haetut-toteumat)
                @valittu-toteuma
                [:toteumaid]))))
+
+(tarkkaile! "Toteuma kartalla: " kokonaishintainen-toteuma-kartalla)
