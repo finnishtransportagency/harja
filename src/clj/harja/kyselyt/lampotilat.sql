@@ -29,15 +29,18 @@ SELECT *
 
 
 -- name: luo-suolasakko<!
-INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja)
-    VALUES (:maara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja);
+INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja)
+    VALUES (:maara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja, :talvisuolaraja);
 
 -- name: paivita-suolasakko!
 UPDATE suolasakko
-   SET maara = :maara, hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi, maksukuukausi = :maksukuukausi,
-       indeksi = :indeksi, urakka = :urakka, muokattu = NOW(), muokkaaja = :kayttaja,
+   SET maara = :maara, maksukuukausi = :maksukuukausi,
+       indeksi = :indeksi, muokattu = NOW(), muokkaaja = :kayttaja,
        talvisuolaraja = :talvisuolaraja
  WHERE id = :id;
+
+-- name: hae-suolasakko-id
+SELECt id FROM suolasakko WHERE urakka = :urakka AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
 
 -- name: aseta-suolasakon-kaytto!
 UPDATE suolasakko

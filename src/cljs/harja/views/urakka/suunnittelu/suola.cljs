@@ -54,14 +54,11 @@
               (:pohjavesialueet ss))))
 
 (defn tallenna-suolasakko
-  [tiedot]
-  (log "tallenna-suolasakko"  (pr-str tiedot))
-  (let [ehostettu-data (assoc tiedot
-                         :hoitokauden_alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
-                         :lt_alkupvm (first @u/valittu-hoitokausi)
-                         :lt_loppupvm (second @u/valittu-hoitokausi)
-                         :urakka (:id @nav/valittu-urakka))]
-    (k/post! :tallenna-suolasakko-ja-lampotilat ehostettu-data)))
+  []
+  (k/post! :tallenna-suolasakko-ja-pohjavesialueet
+           (assoc @hoitokauden-tiedot
+                  :urakka (:id @nav/valittu-urakka)
+                  :hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi)))))
 
 
 
@@ -113,7 +110,7 @@
          [lomake {:luokka    :horizontal
                   :muokkaa!  (fn [uusi]
                                (log "lomaketta muokattu, tiedot:" (pr-str uusi))
-                               (swap! hoitokauden-tiedot assoc :muokattu true))
+                               (swap! hoitokauden-tiedot assoc :suolasakko uusi :muokattu true))
                   :footer-fn (fn [virheet _]
                                (log "virheet: " (pr-str virheet) ", muokattu? " (:muokattu @hoitokauden-tiedot))
                                [:span.lampotilalomake-footer
@@ -122,7 +119,7 @@
                                    [:div.col-md-4
                                     [napit/palvelinkutsu-nappi
                                      "Tallenna"
-                                     #(tallenna-suolasakko nil)
+                                     #(tallenna-suolasakko)
                                      {:luokka       "nappi-ensisijainen"
                                       :disabled (not (empty? virheet))
                                       :ikoni        (ikonit/tallenna)
