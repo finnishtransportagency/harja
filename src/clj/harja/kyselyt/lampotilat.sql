@@ -1,5 +1,6 @@
 -- name: uusi-lampotila<!
-INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila) VALUES (:urakka, :alku, :loppu, :keskilampo, :pitkalampo);
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
+VALUES (:urakka, :alku, :loppu, :keskilampo, :pitkalampo);
 
 -- name: paivita-lampotila<!
 UPDATE lampotilat SET

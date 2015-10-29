@@ -70,14 +70,13 @@
 
            [harja.ui.napit/palvelinkutsu-nappi
             "Tallenna"
-            #(let [rivit @lampotilarivit
-                   _ (log (pr-str rivit))]
-              (tiedot/tallenna-lampotilat (pvm/vuosi (first @tiedot/valittu-hoitokausi)) rivit))
+            #(tiedot/tallenna-teiden-hoitourakoiden-lampotilat @tiedot/valittu-hoitokausi @lampotilarivit)
             {:luokka       "nappi-ensisijainen pull-right"
              :disabled     (false? @voi-tallentaa?)
              :ikoni (ikonit/tallenna)
              :kun-onnistuu (fn [vastaus]
                              (viesti/nayta! "Lämpötilat tallennettu." :success)
+                             (reset! tiedot/hoitourakoiden-lampotilat vastaus)
                              (log "Lämpötilat tallennettu, vastaus: " (pr-str vastaus)))}]
 
            ; tieindeksi2-tilastoinnin-alkuvuosi 2006 mutta API palauttaa lämpötiloja vasta 2011 alkaen

@@ -16,7 +16,6 @@
   (k/post! :hae-lampotilat-ilmatieteenlaitokselta {:vuosi talvikauden-alkuvuosi}))
 
 (defn hae-teiden-hoitourakoiden-lampotilat [hoitokausi]
-  (log "tiedot hae-teiden-hoitourakoiden-lampotilat hoitokaudelle:" (pr-str hoitokausi))
   (k/post! :hae-teiden-hoitourakoiden-lampotilat {:hoitokausi hoitokausi}))
 
 (def hoitokaudet
@@ -33,7 +32,7 @@
                            (dec tama-vuosi)))]
         [(pvm/hoitokauden-alkupvm vuosi) (pvm/hoitokauden-loppupvm (inc vuosi))]))))
 
-(def valittu-hoitokausi (atom (last hoitokaudet)))
+(defonce valittu-hoitokausi (atom (last hoitokaudet)))
 
 (defn valitse-hoitokausi! [tk]
   (reset! valittu-hoitokausi tk))
@@ -52,5 +51,10 @@
   (k/post! :aseta-suolasakon-kaytto {:urakka-id urakka-id
                                      :kaytossa? kaytossa?}))
 
-(defn tallenna-lampotilat [talvikausi rivit]
-  (log "EI VIELÄ IMPLEMENTOITU! front, suola tiedot, tallenna-lampotilat: " talvikausi "rivit " (pr-str rivit)))
+(defn tallenna-teiden-hoitourakoiden-lampotilat [hoitokausi lampotilat]
+  (let [lampotilat (mapv #(assoc % :alkupvm (first hoitokausi)
+                                  :loppupvm (second hoitokausi))
+                         (vec (vals lampotilat)))]
+    (log "tallenna lämpötilat: " (pr-str lampotilat))
+    (k/post! :tallenna-teiden-hoitourakoiden-lampotilat {:hoitokausi hoitokausi
+                                                         :lampotilat lampotilat})))

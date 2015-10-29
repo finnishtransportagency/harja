@@ -78,7 +78,7 @@
            (case virheen-esitystapa
              :flash (do
                       (viesti/nayta! virheviesti :warning 5000)
-                      (when suljettava-virhe? (sulkemisfunktio))
+                      (sulkemisfunktio)
                       nil)
              :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
              :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)

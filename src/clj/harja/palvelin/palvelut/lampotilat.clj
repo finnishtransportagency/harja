@@ -21,34 +21,6 @@
         :pitkalampo (if (nil? pl) pl (float pl)))
       :pitka_keskilampotila :keskilampotila)))
 
-
-(defn tallenna-lampotilat!
-  [db user arvot]
-  (let [{:keys [urakka id alku loppu keskilampo pitkalampo]} arvot]
-    (log/debug "Tallennetaan lämpötilaa")
-    (if (roolit/rooli-urakassa? user "urakanvalvoja" urakka)
-      (if (:id arvot)
-        (do
-          (log/debug "Pävitetään olemassaolevaa riviä")
-          (keskilampo-ja-pitkalampo-floatiksi (q/paivita-lampotila<!
-                                                db
-                                                urakka
-                                                (konv/sql-timestamp alku)
-                                                (konv/sql-timestamp loppu)
-                                                keskilampo
-                                                pitkalampo
-                                                id)))
-
-        (do
-          (log/debug "lisätään uusi rivi lämpötilalle")
-          (keskilampo-ja-pitkalampo-floatiksi (q/uusi-lampotila<!
-                                                db
-                                                urakka
-                                                (konv/sql-timestamp alku)
-                                                (konv/sql-timestamp loppu)
-                                                keskilampo
-                                                pitkalampo)))))))
-
 (defn hae-lampotilat-ilmatieteenlaitokselta [db user url vuosi]
   (log/debug "hae-lampotilat-ilmatieteenlaitokselta, url " url " vuosi " vuosi)
   (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
@@ -74,6 +46,19 @@
     (into {}
           (map (juxt :urakka identity)
                (q/hae-teiden-hoitourakoiden-lampotilat db alkupvm loppupvm)))))
+
+(defn tallenna-teiden-hoitourakoiden-lampotilat [db user {:keys [hoitokausi lampotilat]}]
+  (log/debug "tallenna-teiden-hoitourakoiden-lampotilat, hoitokausi " hoitokausi ", lämpötilat: " lampotilat)
+  (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
+  (jdbc/with-db-transaction [db db]
+                            (doseq [lt lampotilat]
+                              (let [id (:lampotilaid lt)
+                                    parametrit [(:urakka lt) (:alkupvm lt) (:loppupvm lt)
+                                                (:keskilampotila lt) (:pitkakeskilampotila lt)]]
+                                (if id
+                                    (apply q/paivita-lampotila<! db (concat parametrit [id]))
+                                    (apply q/uusi-lampotila<! db parametrit))))
+                            (hae-teiden-hoitourakoiden-lampotilat db user hoitokausi)))
 
 (defn hae-urakan-suolasakot-ja-lampotilat
   [db user urakka-id]
@@ -158,15 +143,15 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)]
-      (julkaise-palvelu http :tallenna-lampotilat!
-                        (fn [user arvot]
-                          (tallenna-lampotilat! (:db this) user arvot)))
       (julkaise-palvelu http :hae-lampotilat-ilmatieteenlaitokselta
                         (fn [user {:keys [vuosi]}]
                           (hae-lampotilat-ilmatieteenlaitokselta (:db this) user ilmatieteenlaitos-url vuosi)))
       (julkaise-palvelu http :hae-teiden-hoitourakoiden-lampotilat
                         (fn [user {:keys [hoitokausi]}]
                           (hae-teiden-hoitourakoiden-lampotilat (:db this) user hoitokausi)))
+      (julkaise-palvelu http :tallenna-teiden-hoitourakoiden-lampotilat
+                        (fn [user tiedot]
+                          (tallenna-teiden-hoitourakoiden-lampotilat (:db this) user tiedot)))
       (julkaise-palvelu http :hae-urakan-suolasakot-ja-lampotilat
                         (fn [user urakka-id]
                           (hae-urakan-suolasakot-ja-lampotilat (:db this) user urakka-id)))
@@ -180,9 +165,9 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :tallenna-lampotilat!
                      :hae-lampotilat-ilmatieteenlaitokselta
                      :hae-teiden-hoitourakoiden-lampotilat
+                     :tallenna-teiden-hoitourakoiden-lampotilat
                      :hae-urakan-suolasakot-ja-lampotilat
                      :tallenna-suolasakko-ja-lampotilat
                      :aseta-suolasakon-kaytto)
