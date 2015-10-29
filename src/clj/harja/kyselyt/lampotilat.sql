@@ -61,3 +61,18 @@ UPDATE suolasakko
 
 -- name: onko-suolasakko-kaytossa?
 SELECT EXISTS(SELECT id FROM suolasakko WHERE urakka=:urakka AND kaytossa=true) as kaytossa;
+
+-- name: hae-teiden-hoitourakoiden-lampotilat
+SELECT
+  lt.id as lampotilaid,
+  u.id as urakka,
+  u.nimi as nimi,
+  lt.alkupvm as alkupvm,
+  lt.loppupvm as loppupvm,
+  lt.keskilampotila as keskilampotila,
+  lt.pitka_keskilampotila as pitkakeskilampotila
+FROM urakka u
+  LEFT JOIN lampotilat lt ON (lt.urakka = u.id AND lt.alkupvm = :alkupvm AND lt.loppupvm = :loppupvm)
+WHERE (u.tyyppi = 'hoito'::urakkatyyppi AND
+       u.alkupvm <= :alkupvm AND
+       :loppupvm <= u.loppupvm);

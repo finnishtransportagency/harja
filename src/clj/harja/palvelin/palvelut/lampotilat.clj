@@ -49,13 +49,31 @@
                                                 keskilampo
                                                 pitkalampo)))))))
 
-(defn hae-lampotilat-ilmatieteenlaitokselta [db url urakka-id vuosi]
-  ;; Haetaan urakan id:n perusteella alueurakan tunnus, jota ilmatieteenlaitos käyttää
-  (let [alueurakkanro (:alueurakkanro (first (urakat/hae-urakan-alueurakkanumero db urakka-id)))]
-    (when alueurakkanro
-      (some #(when (= (:urakka-id %) alueurakkanro)
-               %)
-            (ilmatieteenlaitos/hae-talvikausi url vuosi)))))
+(defn hae-lampotilat-ilmatieteenlaitokselta [db user url vuosi]
+  (log/debug "hae-lampotilat-ilmatieteenlaitokselta, url " url " vuosi " vuosi)
+  (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
+  (assert (and url vuosi) "Annettava url ja vuosi kun haetaan ilmatieteenlaitokselta lämpötiloja.")
+  ;; Ilmatieteenlaitos käyttää :urakka-id -kentässään Harjan :alueurakkanro -kenttää, siksi muunnoksia alla
+  (let [hoidon-urakoiden-lampotilat (into {}
+                                          (map (juxt :urakka-id #(dissoc % :urakka-id)))
+                                          (ilmatieteenlaitos/hae-talvikausi url vuosi))
+        hoidon-urakka-ja-alueurakkanro-avaimet (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)]
+    (into {}
+
+          (comp
+            (map (fn [urakka]
+                   (merge urakka (get hoidon-urakoiden-lampotilat (:alueurakkanro urakka)))))
+            (map (juxt :id identity)))
+          hoidon-urakka-ja-alueurakkanro-avaimet)))
+
+(defn hae-teiden-hoitourakoiden-lampotilat [db user hoitokausi]
+  (log/debug "hae-teiden-hoitourakoiden-lampotilat hoitokaudella: " hoitokausi)
+  (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
+  (let [alkupvm (first hoitokausi)
+        loppupvm (second hoitokausi)]
+    (into {}
+          (map (juxt :urakka identity)
+               (q/hae-teiden-hoitourakoiden-lampotilat db alkupvm loppupvm)))))
 
 (defn hae-urakan-suolasakot-ja-lampotilat
   [db user urakka-id]
@@ -144,8 +162,11 @@
                         (fn [user arvot]
                           (tallenna-lampotilat! (:db this) user arvot)))
       (julkaise-palvelu http :hae-lampotilat-ilmatieteenlaitokselta
-                        (fn [user {:keys [urakka-id vuosi]}]
-                          (hae-lampotilat-ilmatieteenlaitokselta (:db this) ilmatieteenlaitos-url urakka-id vuosi)))
+                        (fn [user {:keys [vuosi]}]
+                          (hae-lampotilat-ilmatieteenlaitokselta (:db this) user ilmatieteenlaitos-url vuosi)))
+      (julkaise-palvelu http :hae-teiden-hoitourakoiden-lampotilat
+                        (fn [user {:keys [hoitokausi]}]
+                          (hae-teiden-hoitourakoiden-lampotilat (:db this) user hoitokausi)))
       (julkaise-palvelu http :hae-urakan-suolasakot-ja-lampotilat
                         (fn [user urakka-id]
                           (hae-urakan-suolasakot-ja-lampotilat (:db this) user urakka-id)))
@@ -161,6 +182,7 @@
     (poista-palvelut (:http-palvelin this)
                      :tallenna-lampotilat!
                      :hae-lampotilat-ilmatieteenlaitokselta
+                     :hae-teiden-hoitourakoiden-lampotilat
                      :hae-urakan-suolasakot-ja-lampotilat
                      :tallenna-suolasakko-ja-lampotilat
                      :aseta-suolasakon-kaytto)
