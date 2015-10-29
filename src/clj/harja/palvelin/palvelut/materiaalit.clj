@@ -190,6 +190,11 @@
                               (hae-urakassa-kaytetyt-materiaalit
                                 c user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
+(defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (map konv/alaviiva->rakenne)
+        (q/hae-suolatoteumat db alkupvm loppupvm urakka-id)))
 
 (defrecord Materiaalit []
   component/Lifecycle
@@ -238,7 +243,10 @@
                                                            (:hk-alku tiedot)
                                                            (:hk-loppu tiedot)
                                                            (:sopimus tiedot))))
-
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-suolatoteumat
+                      (fn [user tiedot]
+                        (hae-suolatoteumat (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -250,6 +258,7 @@
                      :hae-toteuman-materiaalitiedot
                      :hae-urakassa-kaytetyt-materiaalit
                      :poista-toteuma-materiaali!
-                     :tallenna-toteuma-materiaaleja!)
+                     :tallenna-toteuma-materiaaleja!
+                     :hae-suolatoteumat)
 
     this))

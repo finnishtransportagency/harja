@@ -273,3 +273,43 @@ WHERE id IN (:id) AND poistettu IS NOT true;
 
 -- name: hae-materiaalikoodin-id-nimella
 SELECT id FROM materiaalikoodi WHERE nimi = :nimi;
+
+
+-- name: hae-suolatoteumat
+-- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
+SELECT tmid, tid, materiaali_id, materiaali_nimi, alkanut, maara, lisatieto, koneellinen
+ FROM (WITH paivat AS (
+         SELECT date_trunc('day', dd) as pvm
+           FROM generate_series(:alkupvm::date, :loppupvm::date, '1 day'::interval) dd )
+       SELECT tm.id as tmid, t.id as tid,
+              mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+      	      t.alkanut, tm.maara, t.lisatieto, false as koneellinen 
+	 FROM toteuma_materiaali tm
+    	      JOIN toteuma t ON tm.toteuma = t.id
+	      JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+	      JOIN kayttaja k ON tm.luoja = k.id
+        WHERE t.urakka = :urakka
+	  AND k.jarjestelma IS NOT true
+          AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+          AND mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
+       UNION
+       SELECT NULL as tmid, NULL as tid,
+              mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+              p.pvm,
+             (SELECT SUM(tm.maara)
+                FROM toteuma_materiaali tm
+                     JOIN toteuma t ON tm.toteuma = t.id
+		     JOIN kayttaja k ON tm.luoja = k.id
+	       WHERE k.jarjestelma = true
+	         AND t.urakka = :urakka
+		 AND tm.materiaalikoodi = mk.id
+	         AND date_trunc('day', t.alkanut) = p.pvm) as maara,
+	      '' as lisatieto, true as koneellinen
+	 FROM materiaalikoodi mk
+	      CROSS JOIN paivat p
+        WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi) toteumat
+ WHERE maara IS NOT NULL
+;
+   
+	 
+	 
