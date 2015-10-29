@@ -709,6 +709,7 @@ Optiot on mappi optioita:
   :voi-poistaa?    funktio, joka palauttaa true tai false.
   :rivinumerot?    Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
+  :piilota-toiminnot boolean, piilotetaan toiminnot sarake jos true
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   :virheet         atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
                    luodaan sisäisesti atomi virheille
@@ -718,7 +719,7 @@ Optiot on mappi optioita:
                    Tämä on hyödyllinen, jos gridin tieto muuttuu ulkoisesta syystä.
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
-           voi-muokata? voi-lisata? jarjesta
+           voi-muokata? voi-lisata? jarjesta piilota-toiminnot
            muokkaa-footer muutos uusi-rivi luokat validoi-aina?] :as opts} skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -852,7 +853,8 @@ Optiot on mappi optioita:
                 (for [{:keys [otsikko leveys nimi]} skeema]
                   ^{:key (str nimi)}
                   [:th {:width (or leveys "5%")} otsikko])
-                [:th.toiminnot {:width "40px"} " "]]]
+                (when-not piilota-toiminnot
+                  [:th.toiminnot {:width "40px"} " "])]]
 
               [:tbody
                (let [muokatut-atom muokatut
