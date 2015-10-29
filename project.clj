@@ -110,9 +110,6 @@
 
                  ;; Apache ANT core
                  [org.apache.ant/ant "1.9.6"]
-
-                 ;; anti-csrf
-                 [ring/ring-anti-forgery "1.0.0"]
                  ]
 
   :dev-dependencies [;; Selain REPL

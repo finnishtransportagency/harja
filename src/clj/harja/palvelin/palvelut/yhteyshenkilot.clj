@@ -156,7 +156,7 @@
         (let [yht (q/luo-yhteyshenkilo<! c
                                          (:etunimi p) (:sukunimi p)
                                          (:tyopuhelin p) (:matkapuhelin p)
-                                         (:sahkoposti p) (:id (:organisaatio p))
+                                         (:sahkoposti p) (:organisaatio p)
                                          nil
                                          nil
                                          nil)]
