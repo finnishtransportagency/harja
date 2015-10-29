@@ -47,9 +47,11 @@
              :muokattava? (constantly false)
              :tyyppi      :string}
             {:otsikko     (str "Talvikausi " valittu-talvikausi " (\u2103)") :nimi :keskilampotila :leveys "30%"
+             :desimaalien-maara 1
              :muokattava? (constantly true)
              :tyyppi      :numero}
             {:otsikko     "Vertailujakso 1981-2010 (\u2103)" :nimi :pitkakeskilampotila :leveys "30%"
+             :desimaalien-maara 1
              :muokattava? (constantly true)
              :tyyppi      :numero}]
 
