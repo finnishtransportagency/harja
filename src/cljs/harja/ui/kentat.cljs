@@ -188,7 +188,11 @@
        :reagent-render
        (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
          (let [nykyinen-teksti @teksti
-               vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))]
+               vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
+               kokonaisluku-re-pattern #"-?\d{1,10}"
+               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1,10}((\\.|,)\\d{0,"
+                                                         (or (:desimaalien-maara kentta) 2)
+                                                         "})?"))]
            [:input {:class       (when lomake? "form-control")
                     :type        "text"
                     :placeholder (:placeholder kentta)
@@ -199,16 +203,16 @@
                                    (when (or (= v "")
                                              (when-not vaadi-ei-negatiivinen? (= v "-"))
                                              (re-matches (if kokonaisluku?
-                                                           #"-?\d{1,10}"
-                                                           #"-?\d{1,10}((\.|,)\d{0,2})?") v))
-                                     (reset! teksti v)
+                                                           kokonaisluku-re-pattern
+                                                           desimaaliluku-re-pattern) v))
+                                             (reset! teksti v)
 
-                                     (let [numero (if kokonaisluku?
-                                                    (js/parseInt v)
-                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero)))))}]))})))
+                                             (let [numero (if kokonaisluku?
+                                                            (js/parseInt v)
+                                                            (js/parseFloat (str/replace v #"," ".")))]
+                                               (reset! data
+                                                       (when (not (js/isNaN numero))
+                                                         numero)))))}]))})))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
