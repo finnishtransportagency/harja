@@ -121,18 +121,18 @@
 (defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
                 {:otsikko "Lumimäärä" :tyyppi :numero :yksikko "cm"
-                 :nimi :lumimaara :leveys-col 1
+                 :nimi :lumimaara :leveys-col 2
                  :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
                 {:otsikko "Tasaisuus" :tyyppi :numero :yksikko "cm"
-                 :nimi :tasaisuus :leveys-col 1
+                 :nimi :tasaisuus :leveys-col 2
                  :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
                 {:otsikko "Kitka" :tyyppi :numero
-                 :nimi :kitka :leveys-col 1
+                 :nimi :kitka :leveys-col 2
                  :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
                 {:otsikko "Lämpötila" :tyyppi :numero :yksikko "\u2103"
                  :validoi [#(when-not (<= -55 %1 55)
                               "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
-                 :nimi :lampotila :leveys-col 1
+                 :nimi :lampotila :leveys-col 2
                  :hae (comp :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila] %2)}))
 
 (defn soratiemittaus []
@@ -141,22 +141,22 @@
                                "Anna arvo 1 - 5"))]
     (lomake/ryhma "Soratietarkastus"
                   {:otsikko "Tasaisuus" :tyyppi :numero
-                   :nimi :tasaisuus :leveys-col 1
+                   :nimi :tasaisuus :leveys-col 2
                    :hae (comp :tasaisuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :tasaisuus] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Kiinteys" :tyyppi :numero
-                   :nimi :kiinteys :leveys-col 1
+                   :nimi :kiinteys :leveys-col 2
                    :hae (comp :kiinteys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :kiinteys] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Pölyävyys" :tyyppi :numero
-                   :nimi :polyavyys :leveys-col 1
+                   :nimi :polyavyys :leveys-col 2
                    :hae (comp :polyavyys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :polyavyys] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Sivukaltevuus" :tyyppi :numero :yksikko "%"
-                   :nimi :sivukaltevuus :leveys-col 1
+                   :nimi :sivukaltevuus :leveys-col 2
                    :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
                    :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]}
 
@@ -240,7 +240,6 @@
                          }]]]
      ]))
 
-(def kartan-edellinen-koko (atom nil))
 
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
@@ -251,9 +250,9 @@
     ;; tarkastuslistauksessa
     (komp/lippu laadunseuranta/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
-                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :XL))
-                      #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
+                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/kuuntelija
       :tarkastus-klikattu
       (fn [e tarkastus]
@@ -262,14 +261,6 @@
 
     (fn []
       [:span.tarkastukset
-       [:div.row
-        [:div {:class (if (= @nav/kartan-koko :S)
-                        "col-sm-12"
-                        "col-sm-6")}
-         (if @laadunseuranta/valittu-tarkastus
-           [tarkastus laadunseuranta/valittu-tarkastus]
-           [tarkastuslistaus])]
-        [:div {:class (if (= @nav/kartan-koko :S)
-                        ""
-                        "col-sm-6")}
-         [kartta/kartan-paikka]]]])))
+       [kartta/sisalto-ja-kartta-2-palstana (if @laadunseuranta/valittu-tarkastus
+                                       [tarkastus laadunseuranta/valittu-tarkastus]
+                                       [tarkastuslistaus])]])))

@@ -21,8 +21,55 @@
       "id": "urn:harja/tietue",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tietue.schema.json",
-      "required": true
+      "required": true,
+      "properties": {
+        "sijainti": {
+          "id": "urn:harja/havainnot/0/sijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+          "required": true
+        },
+        "ajr": {
+          "id": "urn:harja/ajr",
+          "type": "number"
+        },
+        "kaista": {
+          "id": "urn:harja/kaista",
+          "type": "integer"
+        },
+        "alkupvm": {
+          "id": "urn:harja/alkupvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "loppupvm": {
+          "id": "urn:harja/loppupvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "karttapvm": {
+          "id": "urn:harja/karttapvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "kuntoluokitus": {
+          "id": "urn:harja/kuntoluokitus",
+          "type": "string"
+        },
+        "ely": {
+          "id": "urn:harja/ely",
+          "type": "integer"
+        },
+        "tietolaji": {
+          "tietolaji": {
+            "id": "urn:harja/tietolaji",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json"
+          }
+        }
+      }
     },
     "lisatty": {
       "id": "urn:harja/lisatty",

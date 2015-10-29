@@ -573,3 +573,36 @@ VALUES (
 DELETE FROM varustetoteuma
 WHERE toteuma = :id;
 
+-- name: hae-urakan-kokonaishintaisten-toteumien-tehtavat
+SELECT
+  t.id               AS toteumaid,
+  t.alkanut          AS alkanut,
+  t.paattynyt        AS paattynyt,
+  tt.toimenpidekoodi AS toimenpidekoodi,
+  tk.nimi            AS nimi,
+  tt.maara           AS maara,
+  tk.yksikko         AS yksikko,
+  k.jarjestelma      AS jarjestelmanlisaama
+FROM toteuma t
+  LEFT JOIN toteuma_tehtava tt
+    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
+  LEFT JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
+  LEFT JOIN kayttaja k
+    ON k.id = t.luoja
+WHERE
+  t.urakka = :urakkaid
+  AND t.sopimus = :sopimusid
+  AND t.alkanut >= :alkanut
+  AND t.paattynyt <= :paattynyt
+  AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
+  AND t.poistettu IS NOT TRUE
+  AND (:toimenpide :: INTEGER IS NULL OR
+       tk.emo = (SELECT toimenpide
+                 FROM toimenpideinstanssi
+                 WHERE id = :toimenpide))
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+ORDER BY t.alkanut
+LIMIT 501;
+
+

@@ -89,35 +89,46 @@
 
 
 (defn tallenna-suolasakko
-  [db user tiedot]
+  [db user urakka hoitokauden-alkuvuosi tiedot]
   (log/debug "tallenna suolasakko" tiedot)
-  (let [params [db (:maara tiedot) (:hoitokauden_alkuvuosi tiedot)
-                (:maksukuukausi tiedot) (:indeksi tiedot) (:urakka tiedot)
-                (:id user) (:talvisuolaraja tiedot)]
-  id (if (:id tiedot)
-       (paivita-suolasakko params (:id tiedot))
-       (luo-suolasakko params))]
-    id))
+  (let [suolasakon-id (:id (first (q/hae-suolasakko-id db urakka hoitokauden-alkuvuosi)))]
+    (if suolasakon-id
+      (do 
+        (q/paivita-suolasakko! db (:maara tiedot) (:maksukuukausi tiedot)
+                               (:indeksi tiedot) (:id user)
+                               (:talvisuolaraja tiedot) suolasakon-id)
+          suolasakon-id)
+      
+      (:id (q/luo-suolasakko<! db (:maara tiedot) hoitokauden-alkuvuosi (:maksukuukausi tiedot)
+                               (:indeksi tiedot) urakka (:id user) (:talvisuolaraja tiedot))))))
 
-(defn tallenna-suolasakko-ja-lampotilat
-  [db user tiedot]
+
+(defn tallenna-pohjavesialue-talvisuola
+  "Päivittää pohjavesialueen talvisuolarajan, tai luo uuden jos rajaa ei ole"
+  [db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja]
+  (when (zero? (q/paivita-pohjavesialue-talvisuola! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue))
+    (q/tallenna-pohjavesialue-talvisuola<! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue)))
+
+;; TIEDOT:
+;; {:suolasakko {:talvisuolaraja 444, :maksukuukausi 7, :indeksi "MAKU 2010", :maara 30}
+;;  :pohjavesialue-talvisuola [{:pohjavesialue "43091941", :urakka 4, :hoitokauden_alkuvuosi 2015, :talvisuolaraja 4242}]
+;;  :muokattu true
+;;  :hoitokauden_alkuvuosi 2015}
+(defn tallenna-suolasakko-ja-pohjavesialueet
+  [db user {:keys [hoitokauden-alkuvuosi urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
+  (log/info "TIEDOT: " (pr-str tiedot))
   (roolit/vaadi-rooli-urakassa user
                                #{roolit/urakanvalvoja}
-                               (:urakka tiedot))
+                               urakka)
   (jdbc/with-db-transaction [db db]
-                            (let [_ (log/debug "tallenna-suolasakko-ja-lampotilat" tiedot)
-                                  suolasakon-id (tallenna-suolasakko db user tiedot)
+    (let [_ (log/debug "tallenna-suolasakko-ja-lampotilat" tiedot)
+          suolasakon-id (tallenna-suolasakko db user urakka hoitokauden-alkuvuosi suolasakko)]
 
-                                  ; mäpätään kenttien nimet syömäkelpoiseksi aiemmin tehdylle funktiolle
-                                  ; --> urakka id alku loppu keskilampo pitkalampo
-                                  lampotila (assoc tiedot
-                                              :id (:lt_id tiedot)
-                                              :alku (:lt_alkupvm tiedot)
-                                              :loppu (:lt_loppupvm tiedot)
-                                              :keskilampo (:keskilampotila tiedot)
-                                              :pitkalampo (:pitkakeskilampotila tiedot))]
-                              (tallenna-lampotilat! db user lampotila))
-                            (hae-urakan-suolasakot-ja-lampotilat db user (:urakka tiedot))))
+      (doseq [{:keys [pohjavesialue talvisuolaraja]} pohjavesialue-talvisuola]
+        (tallenna-pohjavesialue-talvisuola db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja)))
+
+    (hae-urakan-suolasakot-ja-lampotilat db user urakka)))        
+
 
 (defn aseta-suolasakon-kaytto [db user {:keys [urakka-id kaytossa?]}]
   (roolit/vaadi-urakanvalvoja user urakka-id)
@@ -138,9 +149,9 @@
       (julkaise-palvelu http :hae-urakan-suolasakot-ja-lampotilat
                         (fn [user urakka-id]
                           (hae-urakan-suolasakot-ja-lampotilat (:db this) user urakka-id)))
-      (julkaise-palvelu http :tallenna-suolasakko-ja-lampotilat
+      (julkaise-palvelu http :tallenna-suolasakko-ja-pohjavesialueet
                         (fn [user tiedot]
-                          (tallenna-suolasakko-ja-lampotilat (:db this) user tiedot)))
+                          (tallenna-suolasakko-ja-pohjavesialueet (:db this) user tiedot)))
       (julkaise-palvelu http :aseta-suolasakon-kaytto
                         (fn [user tiedot]
                           (aseta-suolasakon-kaytto (:db this) user tiedot)))

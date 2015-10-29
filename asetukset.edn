@@ -1,8 +1,10 @@
 {
  :kehitysmoodi         true
+ :http-palvelin {:threads 16}
  :tietokanta           {:palvelin   "localhost"
                         :tietokanta "harja"
                         :portti     5432
+                        :yhteyspoolin-koko 16
                         :kayttaja   "harja"
                         :salasana   ""}
  :fim                  {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
@@ -43,7 +45,7 @@
 
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali                       5
+ :geometriapaivitykset {:tuontivali                       5000
                         :tieosoiteverkon-shapefile        "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
                         ;; :tieosoiteverkon-alk-osoite             ""
                         ;; :tieosoiteverkon-alk-tuontikohde        ""

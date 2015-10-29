@@ -24,7 +24,7 @@
 (defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (k/post! :hae-turvallisuuspoikkeama {:urakka-id urakka-id
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
-
+                                                                d
   
 (defonce haetut-turvallisuuspoikkeamat (reaction<! [urakka-id (:id @nav/valittu-urakka)
                                                     hoitokausi @urakka/valittu-hoitokausi
@@ -36,6 +36,7 @@
 
 (def turvallisuuspoikkeama-kartalla-xf
   #(assoc %
+    :tyyppi-kartalla :turvallisuuspoikkeama
     :type :turvallisuuspoikkeama
     :alue {:type        :icon
            :coordinates (geo/ikonin-sijainti (:sijainti %))

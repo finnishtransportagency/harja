@@ -102,6 +102,30 @@
                [:span.yksikko yksikko])]]
            (when vihje
              vihje)]]))
+     skeemat))])
+
+(defmethod kenttaryhma [:default :oletus] [_ ryhma skeemat luo-kentta]
+  ^{:key (:otsikko ryhma)}
+  [:fieldset
+   [:legend (:otsikko ryhma)]
+   (doall
+    (map
+     (fn [skeema]
+       (let [[kentta otsikko komponentti yksikko vihje] (luo-kentta skeema)]
+         ^{:key (:nimi kentta)}
+         [:div.form-group {:class (when (:pakollinen? skeema) "required")}
+          [:span
+           [:div.row
+            [:div.col-sm-2 otsikko]
+            
+            [:span
+             [:div {:class (str "col-sm-" (min (if yksikko 8 10) 
+                                               (or (:leveys-col kentta) 10)))}
+              komponentti]
+             (when yksikko
+               [:span.yksikko yksikko])]]
+           (when vihje
+             vihje)]]))
       skeemat))])
           
           

@@ -2,6 +2,12 @@
 -- Hakee kaikki järjestelmän materiaalikoodit
 SELECT id, nimi, yksikko, urakkatyyppi, kohdistettava FROM materiaalikoodi;
 
+-- name: hae-materiaalikoodit-ilman-talvisuolaa
+-- Hakee kaikki paitsi talvisuola tyyppiset materiaalikoodit
+SELECT id, nimi, yksikko, urakkatyyppi, kohdistettava
+  FROM materiaalikoodi
+ WHERE materiaalityyppi != 'talvisuola'::materiaalityyppi;
+ 
 -- name: hae-urakan-materiaalit
 -- Hakee jokaisen materiaalin, joka liittyy urakkaan JA JOLLA ON RIVI MATERIAALIN_KAYTTO taulussa.
 -- Oleellista on, että palauttaa yhden rivin per materiaali, ja laskee yhteen paljonko materiaalia
@@ -15,7 +21,8 @@ SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus,
        LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
        LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
  WHERE mk.urakka = :urakka AND
-       mk.poistettu = false;
+       mk.poistettu = false AND
+       m.materiaalityyppi != 'talvisuola'::materiaalityyppi;
 
 -- name: hae-urakassa-kaytetyt-materiaalit
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
@@ -67,7 +74,8 @@ FROM materiaalikoodi m
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
        AND t.alkanut :: DATE BETWEEN :alku AND :loppu
        AND t.sopimus = :sopimus
-WHERE (SELECT SUM(maara) AS maara
+WHERE m.materiaalityyppi != 'talvisuola'::materiaalityyppi
+  AND (SELECT SUM(maara) AS maara
        FROM materiaalin_kaytto
        WHERE materiaali = m.id
              AND poistettu IS NOT TRUE

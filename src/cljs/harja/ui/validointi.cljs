@@ -37,7 +37,7 @@
     (when (and data alkupvm loppupvm
                (not (pvm/valissa? data alkupvm loppupvm)))
       (or viesti
-          (str "Päivämäärä ei ole urakan sisällä (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")")))))
+          (str "Päivämäärä ei ole urakan aikana (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")")))))
 
 (defmethod validoi-saanto :urakan-aikana-ja-hoitokaudella [_ _ data _ _ & [viesti]]
   (let [urakka @nav/valittu-urakka
@@ -50,7 +50,7 @@
         hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))]
     (if (false? urakan-aikana?)
       (or viesti
-          (str "Päivämäärä ei ole urakan sisällä (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")"))
+          (str "Päivämäärä ei ole urakan aikana (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")"))
       (if (false? hoitokaudella?)
         (or viesti
             (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm hoitokausi-alku)

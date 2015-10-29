@@ -6,9 +6,8 @@ SELECT id, nimi, alue, tunnus
 
 -- name: hae-urakan-pohjavesialueet
 -- Hakee hoidon alueurakan alueella olevat pohjavesialueet
-SELECT p.nimi, p.tunnus, p.alue, t.hoitokauden_alkuvuosi, t.talvisuolaraja 
+SELECT p.nimi, p.tunnus, p.alue
   FROM pohjavesialueet_urakoittain p
-       JOIN pohjavesialue_talvisuola t ON (p.tunnus = t.pohjavesialue AND p.urakka = t.urakka)
  WHERE p.urakka = :urakka;
 		    
 
