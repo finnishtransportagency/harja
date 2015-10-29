@@ -80,5 +80,5 @@
 
            ; tieindeksi2-tilastoinnin-alkuvuosi 2006 mutta API palauttaa lämpötiloja vasta 2011 alkaen
            (when (< valitun-kauden-alkuvuosi 2011)
-             (yleiset/vihje "Ilmatieteenlaitos palauttaa tietoja hoitokaudesta 2011-2012 eteenpäin"))]))))
+             (yleiset/vihje "Ilmatieteenlaitokselta saa tietoja hoitokaudesta 2011-2012 eteenpäin"))]))))
 
