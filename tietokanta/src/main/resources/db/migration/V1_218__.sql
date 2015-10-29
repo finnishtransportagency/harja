@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION paivita_paallystys_ja_paikkausurakoiden_geometriat() 
 BEGIN
   UPDATE urakka
   SET alue = uusi_alue
-  FROM (SELECT u.id, u.nimi, ST_BUFFER(ST_UNION(sijainti), 100) AS uusi_alue
+  FROM (SELECT u.id, u.nimi, ST_Envelope(ST_UNION(sijainti)) AS uusi_alue
         FROM paallystyskohdeosa osa
           JOIN paallystyskohde pk ON osa.paallystyskohde = pk.id
           JOIN urakka u ON pk.urakka = u.id
@@ -17,7 +17,7 @@ CREATE OR REPLACE FUNCTION paivita_paallystys_tai_paikkausurakan_geometria(urakk
 BEGIN
   UPDATE urakka
   SET alue = uusi_alue
-  FROM (SELECT u.id, u.nimi, ST_BUFFER(ST_UNION(sijainti), 100) AS uusi_alue
+  FROM (SELECT u.id, u.nimi, ST_Envelope(ST_UNION(sijainti)) AS uusi_alue
         FROM paallystyskohdeosa osa
           JOIN paallystyskohde pk ON osa.paallystyskohde = pk.id
           JOIN urakka u ON pk.urakka = u.id
