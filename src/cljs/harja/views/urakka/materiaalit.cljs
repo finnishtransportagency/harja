@@ -166,7 +166,7 @@
 
           (when voi-muokata?
             [:div.toiminnot
-             [:button.btn.btn-primary
+             [:button.nappi-ensisijainen
               {:disabled (not voi-tallentaa?)
                :on-click #(do (.preventDefault %)
                               (go 
