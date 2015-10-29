@@ -15,7 +15,7 @@
         tyyppi (case maksueratyyppi
                  "kokonaishintainen" "Kokonaishintaiset"
                  "yksikkohintainen" "Yksikköhintaiset"
-                 "lisatyo" "Lisatyöt"
+                 "lisatyo" "Lisätyöt"
                  "indeksi" "Indeksit"
                  "bonus" "Bonukset"
                  "sakko" "Sakot"
