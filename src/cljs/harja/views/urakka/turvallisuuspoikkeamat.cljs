@@ -2,7 +2,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as tiedot]
+            [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
