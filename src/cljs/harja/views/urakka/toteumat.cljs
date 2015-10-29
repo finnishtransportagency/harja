@@ -10,6 +10,7 @@
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
+            [harja.views.urakka.toteumat.suola :refer [suolatoteumat]]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
@@ -44,6 +45,10 @@
          "Muutos- ja lisätyöt" :muut-tyot
          [muut-tyot/muut-tyot-toteumat]
 
+         "Suola" :suola
+         (when (= :hoito (:tyyppi ur))
+           [suolatoteumat])
+         
          "Materiaalit" :materiaalit
          [materiaalit-nakyma ur]
 

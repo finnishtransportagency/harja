@@ -8,6 +8,8 @@
             [harja.atom :refer-macros [reaction<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defonce suolatoteumissa? (atom false))
+
 (defonce lampotilojen-hallinnassa? (atom false))
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [talvikauden-alkuvuosi]
