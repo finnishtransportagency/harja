@@ -9,7 +9,8 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.tiedot.tierekisteri :as tierekisteri]
             [cljs.core.async :refer [>! <! alts! chan] :as async]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.asiakas.kommunikaatio :as k])
 
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
@@ -101,13 +102,13 @@
                           (reset! tila :alku-valittu)
                           (go
                             (log "Haetaan alkupisteen sijainti")
-                            (let [piste (<! (vkm/tieosoite->sijainti osoite))]
+                            (let [piste (<! (k/post! :hae-tr-pisteeksi osoite))]
                               (log "Alkupisteen sijainti saatu: " (pr-str piste))
                               (reset! tierekisteri/valittu-alkupiste piste)))
                           (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
                                                               (str "Valittu alkupiste: "
-                                                                   (:numero osoite) " "
-                                                                   (:alkuosa osoite) " "
+                                                                   (:numero osoite) " / "
+                                                                   (:alkuosa osoite) " / "
                                                                    (:alkuetaisyys osoite))]))
 
                         :alku-valittu

@@ -1,6 +1,5 @@
 (ns harja.tyokalut.vkm
-  "TR-osoitehaku"
-
+  "TR-osoitehaku. HUOM! TÄMÄN NAMESPACEN TARJOAMAT PALVELUT OVAT VANHENTUNEET!"
   (:require [cljs.core.async :refer [<! >! chan put! close!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]])
