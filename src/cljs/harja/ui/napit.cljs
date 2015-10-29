@@ -39,14 +39,14 @@
     (fn [teksti kysely asetukset]
       (let [luokka (if (nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
             ikoni (:ikoni asetukset)
-            virheviesti (if (nil? (:virheviesti asetukset)) "Virhe tapahtui." (:virheviesti asetukset))
+            virheviesti (or (:virheviesti asetukset) "Virhe tapahtui.")
             virheen-esitystapa (case (:virheen-esitystapa asetukset)
                                  :modal :modal
                                  :flash :flash
                                  :vertical :vertical
                                  :horizontal :horizontal
-                                 :vertical)
-            suljettava-virhe? (if (nil? (:suljettava-virhe? asetukset)) true false)
+                                 :flash)
+            suljettava-virhe? (or (:suljettava-virhe? asetukset) false)
             sulkemisfunktio #(reset! nayta-virheviesti? false)
             kun-valmis (:kun-valmis asetukset)
             kun-virhe (:kun-virhe asetukset)
