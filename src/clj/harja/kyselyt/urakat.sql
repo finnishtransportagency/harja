@@ -309,7 +309,23 @@ SELECT alueurakkanro
 FROM hanke
 WHERE id = (SELECT hanke
             FROM urakka
-            WHERE id = :id)
+            WHERE id = :id);
+
+-- name: hae-aktiivisten-hoitourakoiden-alueurakkanumerot
+-- Hakee käynnissäolevien hoitourakoiden alueurakkanumerot
+SELECT
+  u.id,
+  u.hanke,
+  u.nimi,
+  h.alueurakkanro
+FROM urakka u
+  LEFT JOIN hanke h ON u.hanke = h.id
+WHERE u.id IN (SELECT id
+               FROM urakka
+               WHERE (tyyppi = 'hoito' AND
+                      u.hanke IS NOT NULL AND
+                      (SELECT EXTRACT(YEAR FROM u.alkupvm)) <= :vuosi AND
+                      :vuosi <= (SELECT EXTRACT(YEAR FROM u.loppupvm))));
 
 -- name: hae-hallintayksikon-kaynnissa-olevat-urakat
 -- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakoista
