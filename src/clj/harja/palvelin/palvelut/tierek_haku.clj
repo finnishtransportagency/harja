@@ -50,6 +50,20 @@
     (log/debug "hae-tr-viiva " geom)
     (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
 
+(defn hae-tr-piste
+  ; FIXME Täytyy hakea pisteesijainti
+  "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
+  [db user params]
+  (let [korjattu-osoite (jarjestele-tr-osoite params)
+        geom (first (tv/tierekisteriosoite-viivaksi db
+                                                    (:numero korjattu-osoite)
+                                                    (:alkuosa korjattu-osoite)
+                                                    (:alkuetaisyys korjattu-osoite)
+                                                    (:alkuosa korjattu-osoite)
+                                                    (:alkuetaisyys korjattu-osoite)))]
+    (log/debug "hae-tr-piste " geom)
+    (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [this]
@@ -62,6 +76,9 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-tr-viivaksi (fn [user params]
                                          (hae-tr-viiva (:db this) user params)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-tr-pisteeksi (fn [user params]
+                                         (hae-tr-piste (:db this) user params)))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-tr-pisteella)
