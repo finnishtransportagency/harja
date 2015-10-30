@@ -26,7 +26,6 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
-                         ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
@@ -38,7 +37,6 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Hoitokausi"]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
-                         ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
@@ -95,7 +93,6 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Toimenpide"]
    [livi-pudotusvalikko {:valinta    @valittu-toimenpideinstanssi-atom
-                         ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
                          :valitse-fn valitse-fn}
     @urakan-toimenpideinstanssit-atom]])
@@ -110,7 +107,6 @@
    [:div.label-ja-alasveto
     [:span.alasvedon-otsikko "Toimenpide"]
     [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-toimenpideinstanssi-atom
-                          ;;\u2014 on väliviivan unikoodi
                           :format-fn  #(if % (str (second (first %))) "Kaikki toimenpiteet")
                           :valitse-fn #(do
                                         (valitse-kokonaishintainen-tehtava-fn nil)
@@ -120,7 +116,6 @@
    [:div.label-ja-alasveto
     [:span.alasvedon-otsikko "Tehtävä"]
     [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-tehtava-atom
-                          ;;\u2014 on väliviivan unikoodi
                           :format-fn  #(if % (str (:t4_nimi %)) "Kaikki tehtävät")
                           :valitse-fn valitse-kokonaishintainen-tehtava-fn}
      (concat [nil] (second @valittu-kokonaishintainen-toimenpideinstanssi-atom))]]])

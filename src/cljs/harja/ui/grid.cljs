@@ -906,15 +906,16 @@ Optiot on mappi optioita:
                                            [:td ((or fmt str) (if hae
                                                                 (hae rivi)
                                                                 (get rivi nimi)))]))))
-                                   [:td.toiminnot
-                                    (when (and (not= false voi-muokata?)
-                                               (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-                                      [:span.klikattava {:on-click #(do (.preventDefault %)
-                                                                        (muokkaa! muokatut-atom virheet id assoc :poistettu true))}
-                                       (ikonit/trash)])
-                                    (when-not (empty? rivin-virheet)
-                                      [:span.rivilla-virheita
-                                       (ikonit/warning-sign)])]]
+                                   (when-not piilota-toiminnot
+                                     [:td.toiminnot
+                                      (when (and (not= false voi-muokata?)
+                                                 (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
+                                        [:span.klikattava {:on-click #(do (.preventDefault %)
+                                                                          (muokkaa! muokatut-atom virheet id assoc :poistettu true))}
+                                         (ikonit/trash)])
+                                      (when-not (empty? rivin-virheet)
+                                        [:span.rivilla-virheita
+                                         (ikonit/warning-sign)])])]
 
                                   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))
                            (if jarjesta
