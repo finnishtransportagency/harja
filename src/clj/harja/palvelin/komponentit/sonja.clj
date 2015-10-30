@@ -1,5 +1,5 @@
 (ns harja.palvelin.komponentit.sonja
-  "Komponentti Sonja-väylään liittymiseksi."
+  "Komponentti Sonja-väylän JMS-jonoihin liittymiseksi."
   (:require [com.stuartsierra.component :as component]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
@@ -9,22 +9,20 @@
             [clojure.string :as str])
   (:import (progress.message.jclient QueueConnectionFactory)
            (javax.jms Session)
-           (org.apache.activemq ActiveMQConnectionFactory)))
+           (org.apache.activemq ActiveMQConnectionFactory))
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(def agentin-alkutila
+  {:yhteys nil :istunto nil :kuuntelijat [] :jonot {}})
 
-;; SONJA JMS jonoihin kytkeytyminen, alustavaa testailukoodia tulevaisuuden lähtökohdaksi
-;; kytkeydy jonoon:
-;; ssh -L2511:192.83.32.231:2511 harja-appi1-stg
-;;
-;; (def qcf (QueueConnectionFactory. "localhost:2511"))
-;; (def conn (.createConnection qcf "harja" "harjaxx"))
-;; (def s (session conn))
-;; (def s-to-h (queue s +sampo-to-harja+))
-;; (def c (consumer s s-to-h))
-;; (.start conn)
-;; Viestin vastaanotto: (blokkaa, jos viestiä ei ole odottamassa)
-;; (def m (.receive c))
+(defprotocol LuoViesti
+  (luo-viesti [x istunto]))
 
+(extend-protocol LuoViesti
+  String
+  (luo-viesti [s istunto]
+    (doto (.createTextMessage istunto)
+      (.setText s))))
 
 (defprotocol Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
@@ -34,25 +32,14 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (laheta [this jono viesti] [this jono viesti otsikot]
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n."))
 
-(defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
-  (log/info "Yhdistetään "
-            (if (= tyyppi :activemq) "ActiveMQ" "Sonic")
-            " JMS-brokeriin URL:lla:" url)
-  (try
-    (let [qcf (if (= tyyppi :activemq)
-                (ActiveMQConnectionFactory. url)
-                (doto (QueueConnectionFactory. url)
-                  (.setFaultTolerant true)
-                  (.setFaultTolerantReconnectTimeout (int 30))))
-          conn (.createConnection qcf kayttaja salasana)]
-      (.start conn)
-      conn)
-    (catch Exception e
-      (log/error "JMS brokeriin yhdistäminen epäonnistui: " e)
-      nil)))
+(defn- luo-connection-factory [url tyyppi]
+  (if (= tyyppi :activemq)
+    (ActiveMQConnectionFactory. url)
+    (doto (QueueConnectionFactory. url)
+      (.setFaultTolerant true)
+      (.setFaultTolerantReconnectTimeout (int 30)))))
 
-
-(defn- jonon-kuuntelija
+(defn- luo-jonon-kuuntelija
   "Luo jonon kuuntelijan annetulle istunnolle."
   [istunto jonon-nimi kasittelija]
   (let [jono (.createQueue istunto jonon-nimi)
@@ -73,66 +60,68 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 (defn- varmista-jono
   "Varmistaa, että nimetylle jonolle on luotu Queue instanssi. Palauttaa jonon."
   [istunto jonot jonon-nimi]
-  (if-let [jono (get-in @jonot [jonon-nimi :queue])]
+  (if-let [jono (get-in jonot [jonon-nimi :queue])]
     jono
     (let [q (.createQueue istunto jonon-nimi)]
-      (swap! jonot assoc-in [jonon-nimi :queue] q)
+      (assoc-in jonot [jonon-nimi :queue] q)
       q)))
 
 (defn- varmista-producer
   "Varmistaa, että nimetylle jonolle on luotu producer viestien lähettämistä varten. Palauttaa producerin."
   [istunto jonot jonon-nimi]
-  (if-let [producer (get-in @jonot [jonon-nimi :producer])]
+  (if-let [producer (get-in jonot [jonon-nimi :producer])]
     producer
-    (let [q (varmista-jono istunto jonot jonon-nimi)
-          p (.createProducer istunto q)]
-      (swap! jonot assoc-in [jonon-nimi :producer] p)
-      p)))
+    (let [jono (varmista-jono istunto jonot jonon-nimi)
+          producer (.createProducer istunto jono)]
+      (assoc-in jonot [jonon-nimi :producer] producer)
+      producer)))
 
-(defprotocol LuoViesti
-  (luo-viesti [x istunto]))
+(defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
+  (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
+  (try
+    (let [qcf (luo-connection-factory url tyyppi)
+          yhteys (.createConnection qcf kayttaja salasana)]
+      (.start yhteys)
+      yhteys)
+    (catch Exception e
+      (log/error "JMS brokeriin yhdistäminen epäonnistui: " e)
+      nil)))
 
-(extend-protocol LuoViesti
-  String
-  (luo-viesti [s istunto]
-    (doto (.createTextMessage istunto)
-      (.setText s))))
+(defn aloita-yhdistaminen [tila asetukset]
+  (println "-------> 4. ")
+  (loop []
+    (println "-------> 5. ")
+    (let [yhteys (yhdista asetukset)]
+      (if yhteys
+        (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
+          (println "-------> 6. ")
+          (assoc tila :yhteys yhteys)
+          (assoc tila :istunto istunto))
 
-(defn yhdista-kuuntelija [istunto jonot jonon-nimi kuuntelija-fn]
-  (let [jono (get @jonot jonon-nimi)]
+        (recur)))))
+
+(defn poista-kuuntelija [jonot jonon-nimi kuuntelija-fn]
+  (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
+
+(defn yhdista-kuuntelija [tila jonot jonon-nimi kuuntelija-fn]
+  (let [jono (get jonot jonon-nimi)
+        istunto (:istunto tila)]
     (if (:consumer jono)
       (do
         (log/info "Lisätään kuuntelija jonoon " jonon-nimi)
-        (swap! jonot update-in [jonon-nimi :kuuntelijat] conj kuuntelija-fn))
+        (update-in jonot [jonon-nimi :kuuntelijat] conj kuuntelija-fn))
 
       (do (log/info "Ensimmäinen kuuntelija jonolle " jonon-nimi ", luodaan consumer.")
-          (let [consumer (jonon-kuuntelija istunto jonon-nimi
-                                           #(doseq [k (get-in @jonot [jonon-nimi :kuuntelijat])]
-                                             (k %)))]
-            (swap! jonot update-in [jonon-nimi] assoc
-                   :consumer consumer
-                   :kuuntelijat #{kuuntelija-fn}))))
-    ;; palauta funktio, jolla kuuntelu voidaan lopettaa
-    #(swap! jonot update-in [jonon-nimi :kuuntelijat] disj kuuntelija-fn)))
-
-(defn lisaa-kuuntelija [this jonon-nimi kuuntelija-fn]
-  (update this :kuuntelijat conj {:jonon-nimi jonon-nimi :kuuntelija-fn kuuntelija-fn})
-  (when-let [istunto @(:istunto this)]
-    (yhdista-kuuntelija istunto (:jonot this) jonon-nimi kuuntelija-fn)))
-
-(defn aloita-yhdistaminen [this asetukset]
-  (go
-    (loop []
-      (let [yhteys (yhdista asetukset)]
-        (if yhteys
-          (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
-            (send (:yhteys this) (fn [_] yhteys))
-            (reset! (:istunto this) istunto))
-
-          (recur))))))
+          (let [consumer (luo-jonon-kuuntelija istunto jonon-nimi
+                                               #(doseq [k (get-in jonot [jonon-nimi :kuuntelijat])]
+                                                 (k %)))]
+            (update-in jonot [jonon-nimi] assoc
+                       :consumer consumer
+                       :kuuntelijat #{kuuntelija-fn}))))
+    #(poista-kuuntelija jonot jonon-nimi kuuntelija-fn)))
 
 (defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
-  (when istunto
+  (if istunto
     (try
       (let [producer (varmista-producer istunto jonot jonon-nimi)
             msg (luo-viesti viesti istunto)]
@@ -142,93 +131,56 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
         (.send producer msg)
         (.getJMSMessageID msg))
       (catch Exception e
-        (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))))
+        (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))
+    (throw+ {:type    :jms-yhteysvirhe
+             :virheet [{:koodi  :ei-yhteytta
+                        :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})))
 
-(defrecord SonjaYhteys [asetukset istunto yhteys jonot]
+(defrecord SonjaYhteys [asetukset tila]
   component/Lifecycle
   (start [this]
-    (assoc this
-      :yhteys (agent nil)
-      :istunto (atom nil)
-      :kuuntelijat []
+    (let [this (assoc this :tila (agent agentin-alkutila))]
+      (send-off (:tila this) aloita-yhdistaminen asetukset)
+      this))
 
-      ;; Jonot on mäppäys jonon nimestä {:queue #<queu impl> :consumer #<consumer impl> :producer #<producer impl> :kuuntelijat #{}}
-      :jonot (atom {}))
-    (add-watch (:yhteys this)
-               :yhteys-saatu (fn [_ _ _ uusi-yhteys]
-                               (when uusi-yhteys
-                                 (map #(yhdista-kuuntelija @(:istunto this) (:jonot this) {:jonon-nimi %} {:kuuntelija-fn %})
-                                      (:kuuntelijat this)))))
-    (aloita-yhdistaminen this asetukset))
-
-  (stop [{:keys [istunto yhteys] :as this}]
-    (when istunto
-      (.close istunto))
-    (when yhteys
-      (.close yhteys))
+  (stop [{:keys [tila] :as this}]
+    (when @(:istunto tila)
+      (.close (:istunto @tila)))
+    (when @(:yhteys tila)
+      (.close (:yhteys @tila)))
     (assoc this
-      :yhteys nil
-      :istunto nil
-      :jonot nil))
+      :tila (restart-agent (:tila this) agentin-alkutila)))
 
   Sonja
-  (kuuntele [{:keys [istunto jonot kuuntelijat]} jonon-nimi kuuntelija-fn]
-    (lisaa-kuuntelija istunto jonot kuuntelijat jonon-nimi kuuntelija-fn))
+  (kuuntele [this jonon-nimi kuuntelija-fn]
+    (send (:tila this) yhdista-kuuntelija jonon-nimi kuuntelija-fn))
 
-  (laheta [{:keys [istunto jonot]} jonon-nimi viesti {:keys [correlation-id]}]
-    (laheta-viesti istunto jonot jonon-nimi viesti correlation-id))
+  (laheta [{:keys [tila]} jonon-nimi viesti {:keys [correlation-id]}]
+    (laheta-viesti (:istunto @tila) (:jonot @tila) jonon-nimi viesti correlation-id))
 
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil)))
 
+(defn luo-oikea-sonja [asetukset]
+  (->SonjaYhteys asetukset nil))
+
+(defn luo-feikki-sonja []
+  (reify
+    component/Lifecycle
+    (start [this] this)
+    (stop [this] this)
+
+    Sonja
+    (kuuntele [this jonon-nimi kuuntelija-fn]
+      (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
+      #(log/debug "Feikki Sonja, lopeta muka kuuntelu jonossa: " jonon-nimi))
+    (laheta [this jonon-nimi viesti otsikot]
+      (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
+      (str "ID:" (System/currentTimeMillis)))
+    (laheta [this jonon-nimi viesti]
+      (laheta this jonon-nimi viesti nil))))
 
 (defn luo-sonja [asetukset]
   (if (and asetukset (not (str/blank? (:url asetukset))))
-    (->SonjaYhteys asetukset nil nil nil)
-    (reify
-      component/Lifecycle
-      (start [this] this)
-      (stop [this] this)
-
-      Sonja
-      (kuuntele [this jonon-nimi kuuntelija-fn]
-        (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
-        #(log/debug "Feikki Sonja, lopeta muka kuuntelu jonossa: " jonon-nimi))
-      (laheta [this jonon-nimi viesti otsikot]
-        (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
-        (str "ID:" (System/currentTimeMillis)))
-      (laheta [this jonon-nimi viesti]
-        (laheta this jonon-nimi viesti nil)))))
-
-
-;;(def +sampo-to-harja+ "Harja13-16.SampoToHarja.Msg") ;; SAMPO -> Harja (SAMPOn hankkeet,urakat, jne)
-;;(def +sampo-to-harja-ack+ "Harja13-16.HarjaToSampo.Ack") ;; Harjan vastausviestit edellisiin
-;;
-;;
-;;(def +harja-to-sampo+ "Harja13-16.HarjaToSampo.Msg")
-;,(def +harja-to-sampo-ack+ "Harja13-16.SampoToHarja.Ack")
-;;
-;;
-;;(defn parse-resource [r]
-;,  {:etunimi (z/xml1-> r (z/attr :first_name))
-;;   :sukunimi (z/xml1-> r (z/attr :last_name))})
-;;
-;;(defn parse-date [d]
-;;  (.parse (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") d))
-;;
-;;(defn parse-program [p]
-;;  {:sampo-id (z/xml1-> p (z/attr :id))
-;;   :alkupvm (z/xml1-> p (z/attr :schedule_start)
-;;                      parse-date)
-;;   :loppupvm (z/xml1-> p (z/attr :schedule_finish) parse-date)
-;;   :nimi (z/xml1-> p (z/attr :name))})
-;;
-;;(defn parse-sampo [payload]
-;;  (let [xml (xml-zip (parse (java.io.ByteArrayInputStream. (.getBytes payload "UTF-8"))))]
-;;    {:resurssit (z/xml-> xml
-;;                         :Resource
-;;                         parse-resource)
-;;     :hankkeet (z/xml-> xml :Program
-;;                        parse-program)}))
-
-  
+    (luo-oikea-sonja asetukset)
+    (luo-feikki-sonja)))
