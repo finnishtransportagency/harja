@@ -172,8 +172,7 @@
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
-      {:luokka :default
-       :muokkaa! #(reset! tarkastus-atom %)
+      {:muokkaa! #(reset! tarkastus-atom %)
        :voi-muokata? @laadunseuranta/voi-kirjata?}
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}

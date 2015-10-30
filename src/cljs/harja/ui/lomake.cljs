@@ -103,8 +103,6 @@
            (when vihje
              vihje)]]))
       skeemat))])
-          
-          
 
 (defmethod kenttaryhma [:horizontal :rivi] [_ ryhma skeemat luo-kentta]
   ^{:key (:otsikko ryhma)}
@@ -124,10 +122,6 @@
          [:label.control-label otsikko]
          komponentti]]))]])
 
-        
-        
-
-  
 (def +ei-otsikkoa+ #{:boolean})
 
 (defn yleinen-huomautus
@@ -197,6 +191,9 @@
       (let [voi-muokata? (if (some? voi-muokata?)
                            voi-muokata?
                            true)
+            luokka (if luokka
+                     luokka
+                     :horizontal)
             kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
             kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
             kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
@@ -257,7 +254,7 @@
         [:form.lomake {:class (case luokka
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
-                                :default "")}
+                                "")}
 
          (doall
           (for [skeema (keep identity skeema)]
