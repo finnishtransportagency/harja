@@ -191,9 +191,7 @@
       (let [voi-muokata? (if (some? voi-muokata?)
                            voi-muokata?
                            true)
-            luokka (if luokka
-                     luokka
-                     :horizontal)
+            luokka (if luokka luokka :horizontal)
             kaikki-skeemat (keep identity (mapcat #(if (ryhma? %) (:skeemat %) [%]) skeema))
             kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
             kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
