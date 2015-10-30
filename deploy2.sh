@@ -3,6 +3,7 @@
 function msg {
     echo "**************************************************************"
     echo "$1"
+    echo "**************************************************************"
 }
 
 function error_exit {
@@ -12,20 +13,32 @@ function error_exit {
 }
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 <env> [branch]"
+    echo "Usage: $0 <env> [unit-tests?(=true)] [branch]"
     exit 1
 fi
+
+set -e
 
 START_TS=`date +%s`
 
 CURRENT_BRANCH=`git symbolic-ref --short HEAD`
 HARJA_ENV=harja-dev$1
-BRANCH=$2
+BRANCH=$3
+UNIT=$2
 
 if [ -z "$BRANCH" ]; then
     BRANCH=$CURRENT_BRANCH
 fi
 
+if [ -z "$UNIT" ] || [ "$UNIT" = true ]; then
+  msg "Voit estää unit testien ajamisen antamalla toiseksi parametriksi jotain muuta kuin true"  
+  echo ""
+  sh unit.sh
+else
+  msg "Et ajanut unit-testejä. GOD KILLS A KITTEN"
+fi
+
+echo ""
 echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"
 
 git push $HARJA_ENV $BRANCH || error_exit "Push epäonnistui, tarkista että remote on olemassa: git remote add $HARJA_ENV ssh://root@$HARJA_ENV/opt/harja-repo"
