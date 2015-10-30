@@ -4,6 +4,7 @@
             [cljs.core.async :refer [<! >! chan]]
 
             [harja.ui.grid :as grid]
+            [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.valinnat :as valinnat]
@@ -59,10 +60,11 @@
 
             lampotilarivit]
 
-           [harja.ui.napit/palvelinkutsu-nappi
+           [napit/palvelinkutsu-nappi
             "Hae ilmatieteenlaitokselta"
             #(tiedot/hae-lampotilat-ilmatieteenlaitokselta valitun-kauden-alkuvuosi)
             {:luokka       "nappi-toissijainen"
+             :title "Tuodut lämpötilat lisätään taulukkoon, tarkastettuasi arvot voit tallentaa ne Harjaan."
              :disabled     (< valitun-kauden-alkuvuosi 2011)
              :ikoni        (ikonit/download)
              :virheviesti  "Lämpötilojen haku epäonnistui. Yritä myöhemmin uudelleen."
@@ -70,7 +72,7 @@
                              (reset! lampotilarivit (merge-with merge @lampotilarivit urakat))
                              (viesti/nayta! "Lämpötilat haettu ja päivitetty taulukkoon - tarkista tiedot ja tallenna." :success 5000))}]
 
-           [harja.ui.napit/palvelinkutsu-nappi
+           [napit/palvelinkutsu-nappi
             "Tallenna"
             #(tiedot/tallenna-teiden-hoitourakoiden-lampotilat @tiedot/valittu-hoitokausi @lampotilarivit)
             {:luokka       "nappi-ensisijainen pull-right"
