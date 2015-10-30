@@ -21,6 +21,8 @@
 
 (defonce lampotilarivit (reaction @tiedot/hoitourakoiden-lampotilat))
 
+(defonce taulukon-virheet (atom nil))
+
 (defn lampotilat
   "Lämpötilojen pääkomponentti"
   []
@@ -42,6 +44,7 @@
            :voi-lisata?       false
            :tyhja             "Ei lämpötiloja"
            :jarjesta          :nimi
+           :virheet           taulukon-virheet
            :tunniste          :urakka}
 
           [{:otsikko     "Urakka" :nimi :nimi :leveys "60%"
@@ -76,7 +79,7 @@
           "Tallenna"
           #(tiedot/tallenna-teiden-hoitourakoiden-lampotilat @tiedot/valittu-hoitokausi @lampotilarivit)
           {:luokka       "nappi-ensisijainen pull-right"
-           :disabled     (not tiedot-muuttuneet?)
+           :disabled     (not (and tiedot-muuttuneet? (empty? @taulukon-virheet)))
            :ikoni        (ikonit/tallenna)
            :kun-onnistuu (fn [vastaus]
                            (viesti/nayta! "Lämpötilat tallennettu." :success)
