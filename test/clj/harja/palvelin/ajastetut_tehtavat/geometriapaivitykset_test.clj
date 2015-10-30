@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialue :as pohjavesialueen-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [clj-time.core :as t]
             [clj-time.coerce :as time-coerce])
@@ -21,7 +21,7 @@
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
     (component/start integraatioloki)
     (component/start alk)
-    (geometriapaivitykset/tarkista-paivitys
+    (geometriapaivitykset/kaynnista-alk-paivitys
       alk
       testitietokanta
       "tieverkko"
@@ -40,7 +40,7 @@
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
     (component/start integraatioloki)
     (component/start alk)
-    (geometriapaivitykset/tarkista-paivitys
+    (geometriapaivitykset/kaynnista-alk-paivitys
       alk
       testitietokanta
       "pohjavesialue"
@@ -59,7 +59,7 @@
         alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
     (component/start integraatioloki)
     (component/start alk)
-    (geometriapaivitykset/tarkista-paivitys
+    (geometriapaivitykset/kaynnista-alk-paivitys
       alk
       testitietokanta
       "tieverkko"

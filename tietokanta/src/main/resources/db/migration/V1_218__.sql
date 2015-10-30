@@ -1,58 +1,66 @@
--- Lisää talvisuolan käyttöraja
-
--- Talvisuolan käyttöraja
-ALTER TABLE suolasakko ADD COLUMN talvisuolaraja NUMERIC;
-
--- Onko talvisuolan rajoitukset ja sakot lainkaan käytössä
-ALTER TABLE suolasakko ADD COLUMN kaytossa BOOLEAN NOT NULL DEFAULT true;
-
--- Pohjavesialueiden talvisuolarajat
-CREATE TABLE pohjavesialue_talvisuola (
-  pohjavesialue varchar(16), -- pohjavesialueen tunnus
-  urakka INTEGER REFERENCES urakka (id),
-  hoitokauden_alkuvuosi smallint, 
-  talvisuolaraja NUMERIC
+--- Lukkotaulut
+CREATE TABLE lukko (
+  tunniste VARCHAR(30) PRIMARY KEY,
+  lukko    CHAR(36),
+  lukittu  TIMESTAMP
 );
 
-CREATE INDEX pohjavesialue_talvisuola_urakka ON pohjavesialue_talvisuola (urakka);
-
-
--- Pohjavesialueet tulevat PTJ:stä tiepätkinä, ei yhtenä uniikkina alueena
--- Haetaan näkymään urakan pohjavesialueet.
--- Tehdään ST_UNION kutsulla tiepätkistä yksi multilinestring
-
--- Huom: polygonialueen laskeminen ST_BUFFER avulla epäonnistui, koska
--- tuli virhe TopologyException: depth mismatch
-
-CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
-  WITH
-  urakat_alueet AS (
-     SELECT u.id, au.alue
-       FROM urakka u
-            JOIN hanke h ON u.hanke = h.id
-	    JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
-      WHERE u.tyyppi = 'hoito'::urakkatyyppi),
-  pohjavesialue_alue AS (
-      SELECT p.nimi, p.tunnus, ST_UNION(p.alue) as alue
-        FROM pohjavesialue p GROUP BY nimi, tunnus)
-  SELECT pa.nimi, pa.tunnus, pa.alue, ua.id as urakka
-    FROM pohjavesialue_alue pa
-         CROSS JOIN urakat_alueet ua
-   WHERE ST_CONTAINS(ua.alue, pa.alue);
-	 
-	
-
--- Pohjavesialueet näkymien päivitys
-DROP FUNCTION paivita_hallintayksikoiden_pohjavesialueet ();
-
-CREATE OR REPLACE FUNCTION paivita_pohjavesialueet()
-  RETURNS VOID
-SECURITY DEFINER
-AS $$
+-- Lukitseminen
+CREATE OR REPLACE FUNCTION aseta_lukko(tarkistettava_tunniste VARCHAR(30), uusi_lukko CHAR(36), aikaraja BIGINT)
+  RETURNS BOOLEAN LANGUAGE plpgsql AS $$
+DECLARE
+  loytynyt_tunniste VARCHAR(30);
+  asetettu_lukko    CHAR(36);
+  lukko_asetettu    TIMESTAMP;
 BEGIN
-  REFRESH MATERIALIZED VIEW pohjavesialueet_hallintayksikoittain;
-  REFRESH MATERIALIZED VIEW pohjavesialueet_urakoittain;
-RETURN;
-END;
-$$ LANGUAGE plpgsql;
-;
+  SELECT
+    tunniste,
+    lukko,
+    lukittu
+  INTO loytynyt_tunniste, asetettu_lukko, lukko_asetettu
+  FROM lukko
+  WHERE tunniste = tarkistettava_tunniste;
+
+  IF loytynyt_tunniste IS NULL
+  THEN
+    INSERT INTO lukko (tunniste, lukko, lukittu) VALUES (tarkistettava_tunniste, uusi_lukko, now());
+    RETURN TRUE;
+  ELSE
+    IF asetettu_lukko IS NULL OR
+       (aikaraja IS NOT NULL AND (EXTRACT(EPOCH FROM (current_timestamp - lukko_asetettu)) > aikaraja))
+    THEN
+      UPDATE lukko
+      SET lukko = uusi_lukko, lukittu = now()
+      WHERE tunniste = tarkistettava_tunniste;
+      RETURN TRUE;
+    ELSE
+      RETURN FALSE;
+    END IF;
+  END IF;
+  RETURN FALSE;
+END
+$$;
+
+-- Lukon avaus
+CREATE OR REPLACE FUNCTION avaa_lukko(tarkistettava_tunniste VARCHAR(30))
+  RETURNS BOOLEAN LANGUAGE plpgsql AS $$
+DECLARE
+  loytynyt_tunniste VARCHAR(30);
+BEGIN
+  SELECT tunniste
+  INTO loytynyt_tunniste
+  FROM lukko
+  WHERE tunniste = tarkistettava_tunniste;
+
+  IF loytynyt_tunniste IS NULL
+  THEN
+    RETURN FALSE;
+  ELSE
+    UPDATE lukko
+    SET lukittu = NULL, lukko = NULL
+    WHERE tunniste = tarkistettava_tunniste;
+    RETURN TRUE;
+  END IF;
+  RETURN FALSE;
+END
+$$;

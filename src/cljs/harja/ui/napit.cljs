@@ -19,6 +19,9 @@
   Asetukset ovat valinnaisia. Mahdolliset arvot ja niiden oletusarvot ovat:
   - luokka (nappi-ensisijainen)
   - virheviesti (Virhe tapahtui)
+  - title. Asetetaan buttonin titleksi. Älä ylikäytä.
+  https://www.paciellogroup.com/blog/2012/01/html5-accessibility-chops-title-attribute-use-and-abuse/
+
   - ikoni. Oletuksena haetaan luokan perusteella, mutta on mahdollista antaa myös itse.
   - virheen-esitystapa (:vertical), joko :modal, :flash, :vertical tai :horizontal
     * Nappi käyttää harja.ui.yleiset/virheviesti-sailiota, modalia ja viestia
@@ -71,14 +74,15 @@
                                   (reset! kysely-kaynnissa? false)
                                   (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
                                   (reset! nayta-virheviesti? true)
-                                  (when kun-virhe (kun-virhe tulos)))))))}
+                                  (when kun-virhe (kun-virhe tulos)))))))
+           :title (:title asetukset)}
 
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
          (when @nayta-virheviesti?
            (case virheen-esitystapa
              :flash (do
                       (viesti/nayta! virheviesti :warning 5000)
-                      (when suljettava-virhe? (sulkemisfunktio))
+                      (sulkemisfunktio)
                       nil)
              :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
              :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
