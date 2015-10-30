@@ -310,6 +310,9 @@ SELECT tmid, tid, materiaali_id, materiaali_nimi, alkanut, maara, lisatieto, kon
         WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi) toteumat
  WHERE maara IS NOT NULL
 ;
-   
+
+-- name: hae-suolamateriaalit
+SELECT * FROM materiaalikoodi WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi;
+
 	 
 	 

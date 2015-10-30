@@ -12,10 +12,21 @@
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
-(defn hae-toteumat [urakka-id [alkupvm loppupvm]]
+(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
+                               :sopimus-id sopimus-id
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
+
+(defn tallenna-toteumat [urakka-id sopimus-id rivit]
+  (let [tallennettavat (into [] (filter (comp not :koskematon) rivit))]
+    (k/post! :tallenna-suolatoteumat
+             {:urakka-id urakka-id
+              :sopimus-id sopimus-id
+              :toteumat tallennettavat})))
+
+(defn hae-materiaalit []
+  (k/get! :hae-suolamateriaalit))
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [talvikauden-alkuvuosi]
   (k/post! :hae-lampotilat-ilmatieteenlaitokselta {:vuosi talvikauden-alkuvuosi}))
