@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.materiaalit :as q]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.toteumat :as toteumat]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
@@ -196,6 +197,37 @@
         (map konv/alaviiva->rakenne)
         (q/hae-suolatoteumat db alkupvm loppupvm urakka-id)))
 
+(defn hae-suolamateriaalit [db user]
+  (into []
+        (q/hae-suolamateriaalit db)))
+
+(defn luo-suolatoteuma [db user urakka-id sopimus-id toteuma]
+  (let [t (toteumat/luo-toteuma<!
+           db urakka-id sopimus-id
+           (:alkanut toteuma) (:alkanut toteuma)
+           "kokonaishintainen"
+           (:id user) "" ""
+           (:lisatieto toteuma)
+           nil nil)]
+    (toteumat/luo-toteuma-materiaali<!
+     db (:id t) (:id (:materiaali toteuma))
+     (:maara toteuma) (:id user))))
+
+(defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
+  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (doseq [toteuma toteumat]
+      (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
+      (if (neg? (:id toteuma))
+        (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
+        (let [tmid (:tmid toteuma)]
+          (log/info "päivitä toteuma materiaali id: " tmid)
+          (toteumat/paivita-toteuma-materiaali!
+           db (:id (:materiaali toteuma))
+           (:maara toteuma) (:id user)
+           (:tmid toteuma) urakka-id))))
+    true))
+
 (defrecord Materiaalit []
   component/Lifecycle
   (start [this]
@@ -247,6 +279,14 @@
                       :hae-suolatoteumat
                       (fn [user tiedot]
                         (hae-suolatoteumat (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-suolamateriaalit
+                      (fn [user]
+                        (hae-suolamateriaalit (:db this) user)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-suolatoteumat
+                      (fn [user tiedot]
+                        (tallenna-suolatoteumat (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -259,6 +299,8 @@
                      :hae-urakassa-kaytetyt-materiaalit
                      :poista-toteuma-materiaali!
                      :tallenna-toteuma-materiaaleja!
-                     :hae-suolatoteumat)
+                     :hae-suolatoteumat
+                     :hae-suolamateriaalit
+                     :tallenna-suolatoteumat)
 
     this))
