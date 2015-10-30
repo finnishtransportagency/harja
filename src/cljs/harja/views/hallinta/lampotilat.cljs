@@ -44,15 +44,15 @@
              :jarjesta          :nimi
              :tunniste          :urakka}
 
-            [{:otsikko     "Urakka" :nimi :nimi :leveys "40%"
+            [{:otsikko     "Urakka" :nimi :nimi :leveys "60%"
               :muokattava? (constantly false)
               :tyyppi      :string}
-             {:otsikko           (str "Talvikausi " valittu-talvikausi " (\u2103)") :nimi :keskilampotila :leveys "30%"
+             {:otsikko           (str "Talvi\u00ADkausi " valittu-talvikausi " (\u2103)") :nimi :keskilampotila :leveys "20%"
               :desimaalien-maara 1
               :validoi [[:lampotila]]
               :muokattava?       (constantly true)
               :tyyppi            :numero}
-             {:otsikko           "Vertailujakso 1981-2010 (\u2103)" :nimi :pitkakeskilampotila :leveys "30%"
+             {:otsikko           "Vertailu\u00ADjakso 1981-2010 (\u2103)" :nimi :pitkakeskilampotila :leveys "20%"
               :desimaalien-maara 1
               :validoi [[:lampotila]]
               :muokattava?       (constantly true)
