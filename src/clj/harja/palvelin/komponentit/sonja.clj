@@ -48,7 +48,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (.start conn)
       conn)
     (catch Exception e
-      (log/error "Kärähti!" e)
+      (log/error "JMS brokeriin yhdistäminen epäonnistui: " e)
       nil)))
 
 
@@ -93,24 +93,73 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (luo-viesti [x istunto]))
 
 (extend-protocol LuoViesti
-
-  java.lang.String
+  String
   (luo-viesti [s istunto]
     (doto (.createTextMessage istunto)
       (.setText s))))
 
+(defn yhdista-kuuntelija [istunto jonot jonon-nimi kuuntelija-fn]
+  (let [jono (get @jonot jonon-nimi)]
+    (if (:consumer jono)
+      (do
+        (log/info "Lisätään kuuntelija jonoon " jonon-nimi)
+        (swap! jonot update-in [jonon-nimi :kuuntelijat] conj kuuntelija-fn))
+
+      (do (log/info "Ensimmäinen kuuntelija jonolle " jonon-nimi ", luodaan consumer.")
+          (let [consumer (jonon-kuuntelija istunto jonon-nimi
+                                           #(doseq [k (get-in @jonot [jonon-nimi :kuuntelijat])]
+                                             (k %)))]
+            (swap! jonot update-in [jonon-nimi] assoc
+                   :consumer consumer
+                   :kuuntelijat #{kuuntelija-fn}))))
+    ;; palauta funktio, jolla kuuntelu voidaan lopettaa
+    #(swap! jonot update-in [jonon-nimi :kuuntelijat] disj kuuntelija-fn)))
+
+(defn lisaa-kuuntelija [this jonon-nimi kuuntelija-fn]
+  (update this :kuuntelijat conj {:jonon-nimi jonon-nimi :kuuntelija-fn kuuntelija-fn})
+  (when-let [istunto @(:istunto this)]
+    (yhdista-kuuntelija istunto (:jonot this) jonon-nimi kuuntelija-fn)))
+
+(defn aloita-yhdistaminen [this asetukset]
+  (go
+    (loop []
+      (let [yhteys (yhdista asetukset)]
+        (if yhteys
+          (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
+            (send (:yhteys this) (fn [_] yhteys))
+            (reset! (:istunto this) istunto))
+
+          (recur))))))
+
+(defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
+  (when istunto
+    (try
+      (let [producer (varmista-producer istunto jonot jonon-nimi)
+            msg (luo-viesti viesti istunto)]
+        (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
+        (when correlation-id
+          (.setJMSCorrelationID msg correlation-id))
+        (.send producer msg)
+        (.getJMSMessageID msg))
+      (catch Exception e
+        (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))))
 
 (defrecord SonjaYhteys [asetukset istunto yhteys jonot]
   component/Lifecycle
   (start [this]
-    (let [yhteys (yhdista asetukset)
-          istunto (when yhteys (.createSession yhteys false Session/AUTO_ACKNOWLEDGE))]
-      (assoc this
-        :yhteys yhteys
-        :istunto istunto
+    (assoc this
+      :yhteys (agent {:yhteys nil})
+      :istunto (atom nil)
+      :kuuntelijat []
 
-        ;; Jonot on mäppäys jonon nimestä {:queue #<queu impl> :consumer #<consumer impl> :producer #<producer impl> :kuuntelijat #{}}
-        :jonot (atom {}))))
+      ;; Jonot on mäppäys jonon nimestä {:queue #<queu impl> :consumer #<consumer impl> :producer #<producer impl> :kuuntelijat #{}}
+      :jonot (atom {}))
+    (add-watch (:yhteys this)
+               :yhteys-saatu (fn [_ _ _ uusi-yhteys]
+                               (when uusi-yhteys
+                                 (map #(yhdista-kuuntelija @(:istunto this) (:jonot this) {:jonon-nimi %} {:kuuntelija-fn %})
+                                      (:kuuntelijat this)))))
+    (aloita-yhdistaminen this asetukset))
 
   (stop [{:keys [istunto yhteys] :as this}]
     (when istunto
@@ -123,36 +172,11 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       :jonot nil))
 
   Sonja
-  (kuuntele [{:keys [istunto jonot]} jonon-nimi kuuntelija-fn]
-    (when istunto
-      (let [jono (get @jonot jonon-nimi)]
-        (if (:consumer jono)
-          (do
-            (log/info "Lisätään kuuntelija jonoon " jonon-nimi)
-            (swap! jonot update-in [jonon-nimi :kuuntelijat] conj kuuntelija-fn))
-
-          (do (log/info "Ensimmäinen kuuntelija jonolle " jonon-nimi ", luodaan consumer.")
-              (let [consumer (jonon-kuuntelija istunto jonon-nimi
-                                               #(doseq [k (get-in @jonot [jonon-nimi :kuuntelijat])]
-                                                 (k %)))]
-                (swap! jonot update-in [jonon-nimi] assoc
-                       :consumer consumer
-                       :kuuntelijat #{kuuntelija-fn}))))
-        ;; palauta funktio, jolla kuuntelu voidaan lopettaa
-        #(swap! jonot update-in [jonon-nimi :kuuntelijat] disj kuuntelija-fn))))
+  (kuuntele [{:keys [istunto jonot kuuntelijat]} jonon-nimi kuuntelija-fn]
+    (lisaa-kuuntelija istunto jonot kuuntelijat jonon-nimi kuuntelija-fn))
 
   (laheta [{:keys [istunto jonot]} jonon-nimi viesti {:keys [correlation-id]}]
-    (when istunto
-      (try
-        (let [producer (varmista-producer istunto jonot jonon-nimi)
-              msg (luo-viesti viesti istunto)]
-          (log/debug "Lähetetään JMS viesti ID:llä " (.getJMSMessageID msg))
-          (when correlation-id
-            (.setJMSCorrelationID msg correlation-id))
-          (.send producer msg)
-          (.getJMSMessageID msg))
-        (catch Exception e
-          (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))))
+    (laheta-viesti istunto jonot jonon-nimi viesti correlation-id))
 
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil)))
