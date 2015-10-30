@@ -88,22 +88,22 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       nil)))
 
 (defn aloita-yhdistaminen [tila asetukset]
-  (println "-------> 4. ")
   (loop []
-    (println "-------> 5. ")
     (let [yhteys (yhdista asetukset)]
       (if yhteys
         (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
-          (println "-------> 6. ")
           (assoc tila :yhteys yhteys)
           (assoc tila :istunto istunto))
-
-        (recur)))))
+        (do
+          (Thread/sleep 600000)
+          (recur))))))
 
 (defn poista-kuuntelija [jonot jonon-nimi kuuntelija-fn]
   (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
 
 (defn yhdista-kuuntelija [tila jonot jonon-nimi kuuntelija-fn]
+  ;; todo: selvitä miksi ei yhdistä
+  (println "----> Yhdistetään kuuntelijaan")
   (let [jono (get jonot jonon-nimi)
         istunto (:istunto tila)]
     (if (:consumer jono)
