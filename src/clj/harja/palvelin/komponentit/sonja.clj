@@ -148,7 +148,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   component/Lifecycle
   (start [this]
     (assoc this
-      :yhteys (agent {:yhteys nil})
+      :yhteys (agent nil)
       :istunto (atom nil)
       :kuuntelijat []
 
