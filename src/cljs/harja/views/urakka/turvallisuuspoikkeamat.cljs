@@ -2,7 +2,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as tiedot]
+            [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -21,7 +21,6 @@
 
 (defn korjaavattoimenpiteet
   [toimenpiteet]
-  #_[:div "HUHEUEH"]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
    [{:otsikko "Vastaava henkilö" :nimi :vastaavahenkilo :leveys "20%" :tyyppi :string}
@@ -56,7 +55,7 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
-        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
+        [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
 
          (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 3}
@@ -69,15 +68,15 @@
                        {:otsikko "Käsitelty" :pakollinen? true :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                   [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
-         
+
          {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :leveys-col 3}
          {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys-col 3}
          {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :leveys-col 4}
          {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :leveys-col 4}
          {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys-col 1
-          :tyyppi :positiivinen-numero :kokonaisluku? true}
+          :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys-col 1
-          :tyyppi :positiivinen-numero :kokonaisluku? true}
+          :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
           :sijainti (r/wrap (:sijainti @muokattu)
@@ -109,13 +108,13 @@
         @muokattu]])))
 
 (defonce rajaa-kartta-haettujen-poikkeamien-alueelle
-  (run! (let [valittu @tiedot/valittu-turvallisuuspoikkeama
-              tpt @tiedot/haetut-turvallisuuspoikkeamat]
-          (when (and (nil? valittu)
-                     (not (empty? tpt)))
-            (kartta/keskita-kartta-alueeseen!
-             (geo/laajenna-extent (geo/extent-monelle (keep :sijainti tpt)) 500))))))
-  
+         (run! (let [valittu @tiedot/valittu-turvallisuuspoikkeama
+                     tpt @tiedot/haetut-turvallisuuspoikkeamat]
+                 (when (and (nil? valittu)
+                            (not (empty? tpt)))
+                   (kartta/keskita-kartta-alueeseen!
+                     (geo/laajenna-extent (geo/extent-monelle (keep :sijainti tpt)) 500))))))
+
 (defn turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
@@ -129,9 +128,9 @@
       {:otsikko       "Turvallisuuspoikkeamat"
        :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(go
-                         (reset! tiedot/valittu-turvallisuuspoikkeama
-                                 (<! (tiedot/hae-turvallisuuspoikkeama (:id urakka)
-                                                                       (:id %)))))}
+                        (reset! tiedot/valittu-turvallisuuspoikkeama
+                                (<! (tiedot/hae-turvallisuuspoikkeama (:id urakka)
+                                                                      (:id %)))))}
       [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
        {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
        {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
@@ -139,7 +138,7 @@
        {:otsikko "Poissa" :nimi :poissa :tyyppi :string :leveys "5%"
         :hae     (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
-        :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
+        :hae     (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
       @tiedot/haetut-turvallisuuspoikkeamat
       ]]))
 
