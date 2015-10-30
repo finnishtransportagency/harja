@@ -32,7 +32,7 @@
                                        nakymassa? @toteumat/yksikkohintaiset-tyot-nakymassa?
                                        valittu-hoitokausi @u/valittu-hoitokausi]
                                       (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
-                                        (log "Haetaan urakan toteumat: " valittu-urakka-id valittu-sopimus-id valittu-hoitokausi)
+                                        (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
                                         (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen))))
 
 
