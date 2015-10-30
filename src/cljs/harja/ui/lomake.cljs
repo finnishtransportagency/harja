@@ -252,6 +252,7 @@
         [:form.lomake {:class (case luokka
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
+                                :default "form-horizontal"
                                 "")}
 
          (doall
