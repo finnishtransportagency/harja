@@ -5,12 +5,12 @@
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
             [harja.tiedot.urakka :as u]
-            [harja.views.urakka.toteumat.suolasakot :refer [suolasakot]]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
+            [harja.views.urakka.toteumat.suola :refer [suolatoteumat]]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
@@ -45,12 +45,13 @@
          "Muutos- ja lisätyöt" :muut-tyot
          [muut-tyot/muut-tyot-toteumat]
 
+         "Suola" :suola
+         (when (= :hoito (:tyyppi ur))
+           [suolatoteumat])
+         
          "Materiaalit" :materiaalit
          [materiaalit-nakyma ur]
 
          "Erilliskustannukset" :erilliskustannukset
-         [erilliskustannukset/erilliskustannusten-toteumat]
-
-         "Suolasakot" :suolasakot
-         [suolasakot]]))))
+         [erilliskustannukset/erilliskustannusten-toteumat]]))))
 

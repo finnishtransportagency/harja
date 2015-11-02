@@ -5,7 +5,8 @@
             [harja.palvelin.palvelut.materiaalit :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -52,10 +53,26 @@
   (is (oikeat-sarakkeet-palvelussa? [:id :nimi :yksikko :urakkatyyppi :kohdistettava] :hae-materiaalikoodit)))
 
 (deftest hae-urakan-materiaalit-sarakkeet
-  (is (oikeat-sarakkeet-palvelussa?
-        [:id :alkupvm :loppupvm :maara :sopimus [:materiaali :id] [:materiaali :nimi] [:materiaali :yksikko]
-         :kokonaismaara]
-        :hae-urakan-materiaalit @oulun-alueurakan-2005-2010-id)))
+  (let [tallennus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-urakan-materiaalit
+                                  +kayttaja-jvh+
+                                   
+                                  {:urakka-id @oulun-alueurakan-2005-2010-id
+                                   :sopimus-id @oulun-alueurakan-paasopimuksen-id
+                                   :hoitokausi [(pvm/->pvm "1.10.2014") (pvm/->pvm "30.9.2015")]
+                                   :tulevat-hoitokaudet-mukana? false
+                                   :materiaalit [{:alkupvm (pvm/->pvm "1.10.2014")
+                                                  :loppupvm (pvm/->pvm "30.9.2015")
+                                                  :materiaali {:id 5}
+                                                  :maara 666
+                                                  }]})
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) 
+                                :hae-urakan-materiaalit
+                                +kayttaja-jvh+ @oulun-alueurakan-2005-2010-id)]
+    (is (some #(and (= (:maara %) 666.0)
+                    (= (:sopimus %) @oulun-alueurakan-paasopimuksen-id)
+                    (= (:id (:materiaali %)) 5))
+              vastaus))))
 
 (deftest hae-urakan-toteumat-materiaalille-sarakkeet
   (let [tunnisteet
@@ -105,34 +122,7 @@
              :toteuma-id toteuma}))
         tunnisteet)))))
 
-(deftest hae-urakassa-kaytetyt-materiaalit-sarakkeet
-  (let [tunnisteet (q "SELECT DISTINCT t.urakka, t.alkanut, t.paattynyt, t.sopimus
-                       FROM materiaalikoodi m
-                       LEFT JOIN materiaalin_kaytto mk
-                       ON m.id = mk.materiaali AND mk.poistettu IS NOT TRUE
-                       LEFT JOIN toteuma_materiaali tm
-                       ON tm.materiaalikoodi = m.id and tm.poistettu IS NOT TRUE
-                       LEFT JOIN toteuma t
-                       ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
-                       WHERE t.urakka is not null and t.alkanut is not null and t.paattynyt is not null and
-                       t.sopimus is not null;")]
-  (is
-    (some
-      true?
-      (map
-        (fn [[urakka alkanut paattynyt sopimus]]
-          (oikeat-sarakkeet-palvelussa?
-            [[:materiaali :nimi] :maara [:materiaali :yksikko] [:materiaali :id] :kokonaismaara]
-            :hae-urakassa-kaytetyt-materiaalit
-            {:urakka-id urakka
-             :hk-alku alkanut
-             :hk-loppu paattynyt
-             :sopimus sopimus}))
-        tunnisteet)))))
 
-;; TODO: Joku joka käyttää tätä palvelua voisi tehdä testinkin..? Teemu
-(deftest tallenna-urakan-materiaalit-test
-  (let [] (is true)))
 
 (deftest tallenna-toteuma-materiaaleja-test
   (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id" LIMIT 1")))
@@ -197,16 +187,14 @@
     (is (= (hae-lkm) (+ 3 alkuperainen-lkm)))
 
     ;; Poistamisen pitäisi palauttaa urakassa käytetyt materiaalit jos hoitokausi annetaan
-    (is (-> (kutsu-palvelua (:http-palvelin jarjestelma) :poista-toteuma-materiaali! +kayttaja-jvh+
-                    {:urakka urakka
-                     :sopimus sopimus
-                     :id (vec lisatyt)
-                     :hk-alku (first hoitokausi)
-                     :hk-loppu (second hoitokausi)})
-            (first)
-            (:kokonaismaara)))
+    
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-toteuma-materiaali! +kayttaja-jvh+
+                                  {:urakka urakka
+                                   :sopimus sopimus
+                                   :id (vec lisatyt)
+                                   :hk-alku (first hoitokausi)
+                                   :hk-loppu (second hoitokausi)})]
+      ;; Testidatassa ei ole mitään materiaaleja, koska talvisuolat eivät enää tule tämän palvelun kautta
+      (is (vector? vastaus)))
 
-    (is (= alkuperainen-lkm (hae-lkm)))
-
-    (log/debug (vec lisatyt))
-    (u (str "DELETE FROM toteuma_materiaali WHERE id in ("(clojure.string/join "," lisatyt)")"))))
+    (is (= alkuperainen-lkm (hae-lkm)))))

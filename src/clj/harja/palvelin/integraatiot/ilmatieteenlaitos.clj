@@ -17,12 +17,13 @@
                {:urakka-id (z/attr urakka :id)
                 :kohde (z/xml1-> urakka (z/attr :kohde))
                 :keskilampotila (arvo :keskilampotila)
-                :ilmastollinen-keskiarvo (arvo :ilmastollinen_keskiarvo)
+                :pitkakeskilampotila (arvo :ilmastollinen_keskiarvo)
                 :keskilampotilan-ilm-ka-erotus (arvo :keskilampotilan_ilm_ka_erotus)
                 :ilmastollinen-alaraja (arvo :ilmastollinen_alaraja)
                 :ilmastollinen-ylaraja (arvo :ilmastollinen_ylaraja)}))))
 
 (defn hae-talvikausi [endpoint-url talvikauden-alkuvuosi]
+  (log/debug "hae talvikausi ilmatieteenlaitokselta: " endpoint-url " talvikauden alkuvuosi " talvikauden-alkuvuosi)
   (let [{:keys [status body error headers]} @(http/post endpoint-url
                                                 {:insecure? true ; pitää tehdä oma SSLEngine, jossa truststore
                                                  :query-params {"season" (str talvikauden-alkuvuosi "-" (inc talvikauden-alkuvuosi))

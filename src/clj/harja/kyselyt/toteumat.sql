@@ -609,3 +609,15 @@ WHERE
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
 ORDER BY t.alkanut
 LIMIT 501;
+
+
+-- name: paivita-toteuma-materiaali!
+-- Päivittää toteuma materiaalin tiedot
+UPDATE toteuma_materiaali 
+   SET materiaalikoodi = :materiaali,
+       maara = :maara,
+       muokkaaja = :kayttaja,
+       muokattu = now()
+ WHERE id = :tmid
+   AND toteuma IN (SELECT id FROM toteuma t WHERE t.urakka = :urakka);
+   
