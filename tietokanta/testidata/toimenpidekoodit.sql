@@ -1446,8 +1446,8 @@ INSERT INTO toimenpidekoodi (koodi, nimi,taso, emo) VALUES ('SAMPO_2', 'Kategori
 
 -- Ylläpito: tiemerkinnän tehtäviä
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Linjamerkinnät massalla, paksuus 3mm: Reunaviiva ja reunaviivan jatke', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
-INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Linjamerkinnät massalla, paksuus 3 mm:Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
-INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Linjamerkinnät massalla, paksuus 3 mm:Sulkuviiva ja varoitusviiva keltainen', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Linjamerkinnät massalla, paksuus 3 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Linjamerkinnät massalla, paksuus 3 mm: Sulkuviiva ja varoitusviiva keltainen', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Linjamerkinnät massalla paksuus 7 mm: Reunaviiva ja reunaviivan jatke', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Linjamerkinnät massalla paksuus 7 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Pienmerkinnät massalla paksuus 3 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)', 4, 'kpl', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
@@ -1457,7 +1457,7 @@ INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Pienmerkinnät m
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Pienmerkinnät massalla paksuus 3 mm: Pysäytysviiva', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Pienmerkinnät massalla paksuus 3 mm: Väistämisviivan yksi kolmio "hainhammas"', 4, 'kpl', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Pienmerkinnät massalla paksuus 3 mm: Nopeusrajoitusmerkinnät', 4, 'kpl', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
-INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Pienmerkinnät massalla paksuus 7 mm:Pyörätien jatkeet ja suojatiet', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Pienmerkinnät massalla paksuus 7 mm: Pyörätien jatkeet ja suojatiet', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm', 4, 'jm', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Täristävät merkinnät: sylinterijyrsintä, keskiviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm', 4, 'jm', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm', 4, 'jm', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
