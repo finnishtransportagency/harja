@@ -43,7 +43,7 @@
   (let [nimet (hae-maksuerien-nimet)]
     (is (some #(= (first %) "Laiturialue: Kokonaishintaiset") nimet))
     (is (some #(= (first %) "Laiturialue: Yksikköhintaiset") nimet))
-    (is (some #(= (first %) "Laiturialue: Lisatyöt") nimet))
+    (is (some #(= (first %) "Laiturialue: Lisätyöt") nimet))
     (is (some #(= (first %) "Laiturialue: Indeksit") nimet))
     (is (some #(= (first %) "Laiturialue: Bonukset") nimet))
     (is (some #(= (first %) "Laiturialue: Sakot") nimet))
