@@ -45,7 +45,7 @@
 
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali                       10000
+ :geometriapaivitykset {:tuontivali                       5000
                         :tieosoiteverkon-shapefile        "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
                         ;; :tieosoiteverkon-alk-osoite             "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/Tieosoiteverkko.shz"
                         ;; :tieosoiteverkon-alk-tuontikohde        "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
