@@ -309,6 +309,29 @@ INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohint
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2014-01-01', '2014-09-30', 9, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 866.0, 'km', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is ohituskaistat KVL >15000'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
 
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (13, '2013-10-01', '2013-12-31', 100, 'jm', 3, null, 1440, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (14, '2013-10-01', '2013-12-31', 100, 'jm', 1, null, 1441, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (15, '2013-10-01', '2013-12-31', 100, 'm2', 2, null, 1442, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (16, '2013-10-01', '2013-12-31', 50, 'kpl', 3, null, 1443, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (17, '2013-10-01', '2013-12-31', 100, 'm2', 2, null, 1444, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (18, '2013-10-01', '2013-12-31', 100, 'm2', 1, null, 1424, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (19, '2013-10-01', '2013-12-31', 400, 'm2', 3, null, 1425, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (20, '2013-10-01', '2013-12-31', 100, 'm2', 2, null, 1426, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (21, '2013-10-01', '2013-12-31', 1000, 'm2', 2, null, 1427, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (22, '2013-10-01', '2013-12-31', 3000, 'm2', 1, null, 1428, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (23, '2013-10-01', '2013-12-31', 10, 'kpl', 3, null, 1429, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (24, '2013-10-01', '2013-12-31', 10, 'kpl', 4, null, 1430, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (25, '2013-10-01', '2013-12-31', 200, 'm2', 3, null, 1431, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (26, '2013-10-01', '2013-12-31', 100, 'm2', 3, null, 1432, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (27, '2013-10-01', '2013-12-31', 400, 'm2', 2, null, 1433, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (28, '2013-10-01', '2013-12-31', 5, 'kpl', 2, null, 1434, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (29, '2013-10-01', '2013-12-31', 30, 'kpl', 2, null, 1435, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (30, '2013-10-01', '2013-12-31', 100, 'm2', 1, null, 1436, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (31, '2013-10-01', '2013-12-31', 400, 'jm', 5, null, 1437, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (32, '2013-10-01', '2013-12-31', 100, 'jm', 1, null, 1438, 13, 12);
+INSERT INTO yksikkohintainen_tyo (id, alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES (33, '2013-10-01', '2013-12-31', 5, 'jm', 1, null, 1439, 13, 12);
+
+
 -- talvihoidon laaja toimenpide Oulun ja Pudasjärven urakoille
 -- talvihoidon  laaja toimenpide 23104
 -- soratien hoidon laaja toimenpide 23124
