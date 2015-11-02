@@ -1463,7 +1463,9 @@ INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Täristävät me
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm', 4, 'jm', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla', 4, 'jm', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla', 4, 'jm', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
-
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Sulkualueet', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Nuolet ja nopeusrajoitusmerkinnät ja väistämisviivat', 4, 'kpl', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
+INSERT INTO toimenpidekoodi (nimi, taso, yksikko, emo) VALUES ('Muut pienmerkinnät', 4, 'm2', (SELECT id FROM toimenpidekoodi WHERE koodi='20123'));
 
 -- Aseta tuotenumerot kakkostason toimenpiteille
 UPDATE toimenpidekoodi SET tuotenumero = 110 WHERE koodi = '23100';
