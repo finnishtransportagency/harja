@@ -133,7 +133,8 @@
            (when-not (empty? pohjavesialueet)
              {:otsikko "Pohjavesialueiden käyttörajat"
               :nimi :pohjavesialueet :leveys-col 6
-              :komponentti [grid/muokkaus-grid {:voi-poistaa? (constantly false)
+              :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
+                                                :voi-poistaa? (constantly false)
                                                 :voi-lisata? false
                                                 :jos-tyhja "Urakan alueella ei pohjavesialueita"}
                             [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}

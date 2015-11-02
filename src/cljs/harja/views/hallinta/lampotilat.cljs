@@ -40,7 +40,7 @@
           {:otsikko           "Teiden hoitourakoiden sydäntalven keskilämpötilat"
            :voi-muokata?      (constantly true)
            :voi-poistaa?      (constantly false)
-           :piilota-toiminnot true
+           :piilota-toiminnot? true
            :voi-lisata?       false
            :tyhja             "Ei lämpötiloja"
            :jarjesta          :nimi
