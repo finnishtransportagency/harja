@@ -91,8 +91,16 @@
        read-string
        (yhdista-asetukset oletusasetukset)))
 
+(defn crlf-filter [msg]
+  (assoc msg :args (mapv (fn [s]
+                           (if (string? s)
+                             (clojure.string/replace s #"[\n\r]" "")
+                             s))
+                         (:args msg))))
 
 (defn konfiguroi-lokitus [asetukset]
+  (log/set-config! [:middleware] [crlf-filter])
+  
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))

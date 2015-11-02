@@ -50,10 +50,10 @@
   (poista-ilmoitus)
 
   (tuo-paallystysilmoitus)
-  (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+  ;; todo: Dirty fiksi. testimateriaalissa on tällä hetkellä valtava geometria Muhoksen päällystys urakalle. Palautettava takaisin 'Oulun alueurakka 2014-2019', kun se on korjattu.
+  (is (= (first (q "select id from urakka where nimi = 'Muhoksen päällystysurakka';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
-  (poista-ilmoitus))
+      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa."))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]

@@ -28,9 +28,9 @@
 
 (defn paattele-tyyppi [tyyppi]
   (case tyyppi
-    "lisatyo" 1
+    "yksikkohintainen" 6
     "kokonaishintainen" 2
-    "yksikköhintainen" 6
+    "lisatyo" 6
     "indeksi" 7
     "bonus" 8
     "sakko" 9

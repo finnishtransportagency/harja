@@ -52,11 +52,14 @@
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
         (let [skeema (:skeema optiot)
-              kysely (transit/lue-transit (:body req))
+              kysely (try (transit/lue-transit (:body req))
+                          (catch Exception e ::ei-validi-kysely))
               kysely (if-not skeema
                        kysely
                        (try
-                        (s/validate skeema kysely)
+                         (if (= kysely ::ei-validi-kysely)
+                           kysely
+                           (s/validate skeema kysely))
                         (catch Exception e
                           (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
                           ::ei-validi-kysely)))]

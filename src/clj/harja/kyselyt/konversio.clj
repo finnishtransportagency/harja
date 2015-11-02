@@ -46,6 +46,8 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   * sarake-vektori: Mäppi joka kertoo, mihin muotoon rivit muutetaan. Avain on
     yhden lapsirivin nimi, arvo on vektorin nimi, johon lapset tallennetaan.
       * (sarakkeet-vektoriin ilmoitukset {:kuittaus :kuittaukset})
+  * group-fn: Funktio, joka ryhmittelee rivit ennen sarakkeiden yhdistämistä. Voidaan käyttää esim.
+    saman id:n sisältävien rivien yhdistämiseen, koska kuvaavat loogisesti samaa asiaa.
 
   Funktio osaa käsitellä useamman 'lapsirivin' kerralla, tämä onnistuu yksinkertaisesti syöttämällä
   sarake-vektoriin useamman avain-arvo -parin.

@@ -13,7 +13,7 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.komponentti :as komponentti]
+            [harja.ui.komponentti :as komp]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -50,8 +50,10 @@
    (tee-taulukko)])
 
 (defn kokonaishintaiset-toteumat []
-  (komponentti/luo
-    (komponentti/lippu tiedot/nakymassa? tiedot/karttataso)
+  (komp/luo
+    (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
+    (komp/kuuntelija :toteuma-klikattu #(reset! tiedot/valittu-toteuma %2))
+
     (fn []
       [:span
        [kartta/kartan-paikka]

@@ -4,7 +4,9 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.pvm :as pvm]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -19,10 +21,9 @@
             :tehtava    tehtava}))
 
 (def nakymassa? (atom false))
-(def karttataso (atom false))
-(defonce valittu-toteuma (atom nil))
+(def valittu-toteuma (atom nil))
 
-(defonce haetut-toteumat
+(def haetut-toteumat
          (reaction<!
            [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @urakka/valittu-sopimusnumero)
@@ -33,3 +34,13 @@
             nakymassa? @nakymassa?]
            (when nakymassa?
              (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
+
+(def karttataso-kokonaishintainen-toteuma (atom false))
+
+(def kokonaishintainen-toteuma-kartalla
+         (reaction
+           (when @karttataso-kokonaishintainen-toteuma
+             (kartalla-esitettavaan-muotoon
+               (map
+                 #(assoc % :tyyppi-kartalla :toteuma)
+                 @haetut-toteumat)))))

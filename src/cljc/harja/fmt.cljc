@@ -46,6 +46,9 @@
   [arvo]
   (str arvo "px"))
 
+(defn asteina [arvo]
+  (str arvo " \u2103"))
+
 (defn kayttaja
   "Formatoi käyttäjän nimen."
   [{:keys [etunimi sukunimi]}]

@@ -52,7 +52,7 @@
                                           :paallystyskohde-id paallystyskohde-id
                                           :osat               osat}))
 
-(defonce paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+(def paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                            [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                            nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
                                           (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
