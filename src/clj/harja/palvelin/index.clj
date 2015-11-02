@@ -1,8 +1,21 @@
 (ns harja.palvelin.index
-  (:use [hiccup.core]
-        [ring.middleware.anti-forgery]))
+  (:use [hiccup.core])
+  (:import [javax.crypto Mac]
+           [javax.crypto.spec SecretKeySpec]
+           [java.util Base64]))
 
-(defn tee-paasivu [devmode]
+(def anti-forgery-secret-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
+
+(defn laske-mac [data]
+  (let [secret-key (SecretKeySpec. (.getBytes anti-forgery-secret-key "UTF-8") "HmacSHA256")
+        mac (Mac/getInstance "HmacSHA256")]
+    (.init mac secret-key)
+    (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes data "UTF-8"))))))
+
+(defn tee-random-avain []
+  (apply str (map (fn [_] (rand-nth "0123456789abcdefghijklmnopqrstuvwyz")) (range 128))))
+
+(defn tee-paasivu [token devmode]
   (html
    (if devmode
      [:html
@@ -16,7 +29,7 @@
        [:script {:type "text/javascript"}
         "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");"
         "proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-      [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token *anti-forgery-token*}
+      [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
        [:div#app]
        [:script {:src "js/out/goog/base.js" :type "text/javascript"}]
        [:script {:src "js/harja.js" :type "text/javascript"}]
@@ -35,5 +48,5 @@
        [:script {:type "text/javascript"}
         "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");"
         "proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-      [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token *anti-forgery-token*}
+      [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
        [:div#app]]])))

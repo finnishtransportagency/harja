@@ -35,8 +35,6 @@
            (when nakymassa?
              (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
 
-(tarkkaile! "Haetut kokonaishintaiset toteumat: " haetut-toteumat)
-
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
 (def kokonaishintainen-toteuma-kartalla
@@ -45,8 +43,4 @@
              (kartalla-esitettavaan-muotoon
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
-                 @haetut-toteumat)
-               @valittu-toteuma
-               [:toteumaid]))))
-
-(tarkkaile! "Toteuma kartalla: " kokonaishintainen-toteuma-kartalla)
+                 @haetut-toteumat)))))

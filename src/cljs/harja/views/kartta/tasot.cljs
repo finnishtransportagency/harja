@@ -5,7 +5,7 @@
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
-            [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]

@@ -9,22 +9,26 @@
             [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.alk-komponentti :as alk]
             [harja.pvm :as pvm]
+            [harja.palvelin.tyokalut.lukot :as lukko]
             [harja.palvelin.tyokalut.kansio :as kansio]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialue :as pohjavesialueen-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
+            [clojure.java.io :as io]
+            [clj-time.coerce :as coerce])
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import (java.util UUID)))
+  (:import (java.net URI)
+           (java.sql Timestamp)))
 
-(defn aja-paivitys [alk db geometria-aineisto kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
-  (log/debug "Geometria-aineisto: " geometria-aineisto " on muuttunut ja tarvitaan päivittää")
+(defn aja-alk-paivitys [alk db paivitystunnus kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
+  (log/debug "Geometria-aineisto: " paivitystunnus " on muuttunut ja tarvitaan päivittää")
   (kansio/poista-tiedostot kohdepolku)
-  (alk/hae-tiedosto alk (str geometria-aineisto "-haku") tiedostourl kohdetiedoston-polku)
+  (alk/hae-tiedosto alk (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
   (arkisto/pura-paketti kohdetiedoston-polku)
   (paivitys)
-  (geometriapaivitykset/paivita-viimeisin-paivitys<! db tiedoston-muutospvm geometria-aineisto)
-  (log/debug "Geometriapäivitys: " geometria-aineisto " onnistui"))
+  (geometriapaivitykset/paivita-viimeisin-paivitys<! db tiedoston-muutospvm paivitystunnus)
+  (log/debug "Geometriapäivitys: " paivitystunnus " onnistui"))
 
 (defn onko-kohdetiedosto-ok? [kohdepolku kohdetiedoston-nimi]
   (and
@@ -32,42 +36,59 @@
     (not (empty kohdetiedoston-nimi))
     (.isDirectory (clojure.java.io/file kohdepolku))))
 
-(defn pitaako-paivittaa? [db geometria-aineisto tiedoston-muutospvm]
-  (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db geometria-aineisto))
-        viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)
-        lukko (str (UUID/randomUUID))]
-    (and
-      (or (not viimeisin-paivitys)
-          (pvm/jalkeen?
-            (time-coerce/from-sql-time tiedoston-muutospvm)
-            (time-coerce/from-sql-time viimeisin-paivitys)))
-      (= 1 (geometriapaivitykset/lukitse-paivitys! db lukko geometria-aineisto)))))
+(defn pitaako-paivittaa? [db paivitystunnus tiedoston-muutospvm]
+  (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db paivitystunnus))
+        viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)]
+    (or (nil? viimeisin-paivitys)
+        (pvm/jalkeen?
+          (time-coerce/from-sql-time tiedoston-muutospvm)
+          (time-coerce/from-sql-time viimeisin-paivitys)))))
 
-(defn tarkista-paivitys [alk db geometria-aineisto tiedostourl kohdepolku kohdetiedoston-nimi paivitys]
-  (log/debug "Tarkistetaan onko geometria-aineisto: " geometria-aineisto " päivittynyt")
+(defn tarvitaanko-paikallinen-paivitys? [db paivitystunnus tiedostourl]
+  (try
+    (let [polku (if (not tiedostourl) nil (.substring (.getSchemeSpecificPart (URI. tiedostourl)) 2))
+          tiedosto (if (not polku) nil (io/file polku))
+          tiedoston-muutospvm (if (not tiedosto) nil (coerce/to-sql-time (Timestamp. (.lastModified tiedosto))))]
+      (if (and
+            (not (nil? tiedosto))
+            (.exists tiedosto)
+            (pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm))
+        (do
+          (log/debug "Tarvitaan ajaa paikallinen geometriapäivitys:" paivitystunnus)
+          true)
+        false))
+    (catch Exception e
+      (log/warn "Tarkistettaessa paikallista ajoa geometriapäivitykselle: " paivitystunnus ", tapahtui poikkeus: " e)
+      false)))
+
+(defn kaynnista-alk-paivitys [alk db paivitystunnus tiedostourl kohdepolku kohdetiedoston-nimi paivitys]
+  (log/debug "Tarkistetaan onko geometria-aineisto: " paivitystunnus " päivittynyt ALK:ssa.")
   (let [kohdetiedoston-polku (str kohdepolku kohdetiedoston-nimi)]
     ;; todo: tarvii todennäköisesti tehdä tarkempi tarkastus kohdetiedostolle
     (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdepolku kohdetiedoston-nimi))
-      (do
-        (try+
-          (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str geometria-aineisto "-muutospaivamaaran-haku") tiedostourl)]
-            (if (pitaako-paivittaa? db geometria-aineisto tiedoston-muutospvm)
-              (aja-paivitys alk db geometria-aineisto kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys)
-              (log/debug "Geometria-aineisto: " geometria-aineisto ", ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä.")))
-          (catch Exception e
-            (log/error "Geometria-aineiston päivityksessä: " geometria-aineisto ", tapahtui poikkeus: " e)))
-        (geometriapaivitykset/avaa-paivityksen-lukko! db geometria-aineisto)))))
+      (try+
+        (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str paivitystunnus "-muutospaivamaaran-haku") tiedostourl)
+              alk-paivitys (fn [] (aja-alk-paivitys alk db paivitystunnus kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys))]
+          (if (pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm)
+            (lukko/aja-lukon-kanssa db paivitystunnus alk-paivitys)
+            (log/debug "Geometria-aineisto: " paivitystunnus ", ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä.")))
+        (catch Exception e
+          (log/error "Geometria-aineiston päivityksessä: " paivitystunnus ", tapahtui poikkeus: " e))))))
 
-(defn ajasta-paivitys [this geometria-aineisto tuontivali osoite kohdepolku kohdetiedosto paivitys]
-  (log/debug " Ajastetaan geometria-aineiston " geometria-aineisto " päivitys ajettavaksi " tuontivali "minuutin välein ")
+(defn tee-alkuajastus []
+  (time/plus- (time/now) (time/seconds 10)))
+
+(defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdepolku kohdetiedosto paivitys]
+  (log/debug " Ajastetaan geometria-aineiston " paivitystunnus " päivitys ajettavaksi " tuontivali "minuutin välein ")
   (chime-at (periodic-seq (time/now) (-> tuontivali time/minutes))
             (fn [_]
-              (tarkista-paivitys (:alk this) (:db this) geometria-aineisto osoite kohdepolku kohdetiedosto paivitys))))
+              (kaynnista-alk-paivitys (:alk this) (:db this) paivitystunnus osoite kohdepolku kohdetiedosto paivitys))))
 
-(defn tee-tieverkon-hakutehtava [this {:keys [tuontivali
-                                              tieosoiteverkon-alk-osoite
-                                              tieosoiteverkon-alk-tuontikohde
-                                              tieosoiteverkon-shapefile]}]
+(defn tee-tieverkon-alk-paivitystehtava
+  [this {:keys [tuontivali
+                tieosoiteverkon-alk-osoite
+                tieosoiteverkon-alk-tuontikohde
+                tieosoiteverkon-shapefile]}]
   (when (and tuontivali
              tieosoiteverkon-alk-osoite
              tieosoiteverkon-alk-tuontikohde
@@ -80,88 +101,102 @@
                      "tieosoiteverkko.zip"
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
 
-(defn tee-pohjavesialueiden-hakutehtava [this {:keys [tuontivali
-                                              pohjavesialueen-alk-osoite
-                                              pohjavesialueen-alk-tuontikohde
-                                              pohjavesialueen-shapefile]}]
+(defn tee-tieverkon-paikallinen-paivitystehtava
+  [{:keys [db]}
+   {:keys [tieosoiteverkon-alk-osoite
+           tieosoiteverkon-alk-tuontikohde
+           tieosoiteverkon-shapefile
+           tuontivali]}]
+  (when (not (and tieosoiteverkon-alk-osoite tieosoiteverkon-alk-tuontikohde))
+    (chime-at
+      (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
+      (fn [_]
+        (try
+          (when (tarvitaanko-paikallinen-paivitys? db "tieverkko" tieosoiteverkon-shapefile)
+            (log/debug "Ajetaan tieverkon paikallinen päivitys")
+            (tieverkon-tuonti/vie-tieverkko-kantaan db tieosoiteverkon-shapefile)
+            (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) "tieverkko"))
+          (catch Exception e
+            (log/debug "Tieosoiteverkon paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
+
+(defn tee-pohjavesialueiden-alk-paivitystehtava
+  [this {:keys [tuontivali
+                pohjavesialueen-alk-osoite
+                pohjavesialueen-alk-tuontikohde
+                pohjavesialueen-shapefile]}]
   (when (and tuontivali
              pohjavesialueen-alk-osoite
              pohjavesialueen-alk-tuontikohde
              pohjavesialueen-shapefile)
     (ajasta-paivitys this
-                     "pohjavesialue"
+                     "pohjavesialueet"
                      tuontivali
                      pohjavesialueen-alk-osoite
                      pohjavesialueen-alk-tuontikohde
                      "pohjavesialue.zip"
                      (fn [] (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)))))
 
-(defn tee-alkuajastus []
-  (time/plus- (time/now) (time/seconds 10)))
-
-(defn tee-tieverkon-paivitystehtava [this {:keys [tieosoiteverkon-alk-osoite
-                                                  tieosoiteverkon-alk-tuontikohde
-                                                  tieosoiteverkon-shapefile
-                                                  tuontivali]}]
-  (when (not (and tieosoiteverkon-alk-osoite tieosoiteverkon-alk-tuontikohde))
-    (chime-at
-      (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
-      (fn [_]
-        (try
-          (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)
-          (catch Exception e
-            (log/debug "Tieosoiteverkon tuonnissa tapahtui poikkeus: " e)))))))
-
-(defn tee-pohjavesialueiden-paivitystehtava [this {:keys [pohjavesialueen-alk-osoite
-                                                  pohjavesialueen-alk-tuontikohde
-                                                  pohjavesialueen-shapefile
-                                                  tuontivali]}]
+(defn tee-pohjavesialueiden-paikallinen-paivitystehtava
+  [{:keys [db]}
+   {:keys [pohjavesialueen-alk-osoite
+           pohjavesialueen-alk-tuontikohde
+           pohjavesialueen-shapefile
+           tuontivali]}]
   (when (not (and pohjavesialueen-alk-osoite pohjavesialueen-alk-tuontikohde))
     (chime-at
       (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
       (fn [_]
         (try
-          (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)
+          (when (tarvitaanko-paikallinen-paivitys? db "pohjavesialueet" pohjavesialueen-shapefile)
+            (log/debug "Ajetaan pohjavesialueiden paikallinen päivitys")
+            (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan db pohjavesialueen-shapefile)
+            (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) "pohjavesialueet"))
           (catch Exception e
-            (log/debug "Pohjavesialueiden tuonnissa tapahtui poikkeus: " e)))))))
+            (log/debug "Pohjavesialueiden paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
 
-(defn tee-soratien-hoitoluokkien-hakutehtava [this {:keys [tuontivali
-                                                           soratien-hoitoluokkien-alk-osoite
-                                                           soratien-hoitoluokkien-alk-tuontikohde
-                                                           soratien-hoitoluokkien-shapefile]}]
+(defn tee-soratien-hoitoluokkien-alk-paivitystehtava
+  [this {:keys [tuontivali
+                soratien-hoitoluokkien-alk-osoite
+                soratien-hoitoluokkien-alk-tuontikohde
+                soratien-hoitoluokkien-shapefile]}]
   (when (and tuontivali
              soratien-hoitoluokkien-alk-osoite
              soratien-hoitoluokkien-alk-tuontikohde
              soratien-hoitoluokkien-shapefile)
     (ajasta-paivitys this
-                     "soratiehoitoluokat"
+                     "soratieluokat"
                      tuontivali
                      soratien-hoitoluokkien-alk-osoite
                      soratien-hoitoluokkien-alk-tuontikohde
                      "soratien-hoitoluokat.tgz"
                      (fn [] (soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan (:db this) soratien-hoitoluokkien-shapefile)))))
 
-(defn tee-soratien-hoitoluokkien-paivitystehtava [this {:keys [tuontivali
-                                                               soratien-hoitoluokkien-alk-osoite
-                                                               soratien-hoitoluokkien-alk-tuontikohde
-                                                               soratien-hoitoluokkien-shapefile]}]
+(defn tee-soratien-hoitoluokkien-paikallinen-paivitystehtava
+  [{:keys [db]}
+   {:keys [tuontivali
+           soratien-hoitoluokkien-alk-osoite
+           soratien-hoitoluokkien-alk-tuontikohde
+           soratien-hoitoluokkien-shapefile]}]
   (when (not (and soratien-hoitoluokkien-alk-osoite soratien-hoitoluokkien-alk-tuontikohde))
     (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
               (fn [_]
                 (try
-                  (soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan (:db this) soratien-hoitoluokkien-shapefile)
+                  (when (tarvitaanko-paikallinen-paivitys? db "soratieluokat" soratien-hoitoluokkien-shapefile)
+                    (log/debug "Ajetaan sorateiden hoitoluokkien paikallinen päivitys")
+                    (soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan db soratien-hoitoluokkien-shapefile)
+                    (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) "soratieluokat"))
                   (catch Exception e
-                    (log/debug "Tieosoiteverkon tuonnissa tapahtui poikkeus: " e)))))))
+                    (log/debug "Tieosoiteverkon paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
-    (assoc this :tieverkon-hakutehtava (tee-tieverkon-hakutehtava this asetukset))
-    (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paivitystehtava this asetukset))
-    (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-hakutehtava this asetukset))
-    (assoc this :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paivitystehtava this asetukset))
-    (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-hakutehtava this asetukset))
-    (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paivitystehtava this asetukset)))
+    (assoc this :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
+    (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
+    (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
+    (assoc this :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset))
+    (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset))
+    (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset)))
   (stop [this]
     (apply (:tieverkon-hakutehtava this) [])
     (apply (:soratien-hoitoluokkien-hakutehtava this) [])
