@@ -92,20 +92,21 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     (let [yhteys (yhdista asetukset)]
       (if yhteys
         (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
-          (assoc tila :yhteys yhteys)
-          (assoc tila :istunto istunto))
+          (assoc tila :yhteys yhteys :istunto istunto))
         (do
+          (log/warn "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan 10 minuutin päästä.")
           (Thread/sleep 600000)
           (recur))))))
 
 (defn poista-kuuntelija [jonot jonon-nimi kuuntelija-fn]
   (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
 
-(defn yhdista-kuuntelija [tila jonot jonon-nimi kuuntelija-fn]
+(defn yhdista-kuuntelija [tila jonon-nimi kuuntelija-fn]
   ;; todo: selvitä miksi ei yhdistä
-  (println "----> Yhdistetään kuuntelijaan")
-  (let [jono (get jonot jonon-nimi)
-        istunto (:istunto tila)]
+  (println "----> Yhdistetään kuuntelija jonoon:" jonon-nimi)
+  (let [istunto (:istunto tila)
+        jonot (:jonot @tila)
+        jono (get jonot jonon-nimi)]
     (if (:consumer jono)
       (do
         (log/info "Lisätään kuuntelija jonoon " jonon-nimi)
@@ -153,7 +154,10 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
-    (send (:tila this) yhdista-kuuntelija jonon-nimi kuuntelija-fn))
+    ;; todo: selvitä miksi ei kutsuta yhdista-kuuntelija -funktiota
+    (send (:tila this)
+          (fn [tila]
+            (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn))))
 
   (laheta [{:keys [tila]} jonon-nimi viesti {:keys [correlation-id]}]
     (laheta-viesti (:istunto @tila) (:jonot @tila) jonon-nimi viesti correlation-id))
