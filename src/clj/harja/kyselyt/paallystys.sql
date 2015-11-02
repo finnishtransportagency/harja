@@ -236,3 +236,6 @@ WHERE id = :id;
 UPDATE paallystyskohdeosa
 SET poistettu = true
 WHERE id = :id;
+
+-- name: paivita-paallystys-tai-paikkausurakan-geometria
+SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka)
