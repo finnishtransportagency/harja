@@ -5,6 +5,7 @@
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
@@ -65,12 +66,12 @@
 
 (defn taso-paalle! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-paalle nimi})
-  (log "Taso päälle: " (pr-str nimi))
+  (log "Karttataso päälle: " (pr-str nimi))
   (reset! (taso-atom nimi) true))
 
 (defn taso-pois! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
-  (log "Taso pois: " (pr-str nimi))
+  (log "Karttataso pois: " (pr-str nimi))
   (reset! (taso-atom nimi) false))
 
 (defn taso-paalla? [nimi]
