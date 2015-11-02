@@ -53,12 +53,13 @@
 (defn hae-tr-piste
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
   [db user params]
+  (log/debug "Haetaan piste osoitteelle: " (pr-str params))
   (let [geom (first (tv/tierekisteriosoite-pisteeksi db
                                                     (:numero params)
                                                     (:alkuosa params)
                                                     (:alkuetaisyys params)))]
-    (log/debug "hae-tr-piste " geom)
-    (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
+    (log/debug "Geometria saatu " geom)
+    (geo/pg->clj (:tierekisteriosoitteelle_piste geom))))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle
