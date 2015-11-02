@@ -75,7 +75,7 @@ FROM materiaalikoodi m
        AND t.alkanut :: DATE BETWEEN :alku AND :loppu
        AND t.sopimus = :sopimus
 WHERE m.materiaalityyppi != 'talvisuola'::materiaalityyppi
-  AND (SELECT SUM(maara) AS maara
+  AND ((SELECT SUM(maara) AS maara
        FROM materiaalin_kaytto
        WHERE materiaali = m.id
              AND poistettu IS NOT TRUE
@@ -96,7 +96,7 @@ WHERE m.materiaalityyppi != 'talvisuola'::materiaalityyppi
                      sopimus = :sopimus AND
                      poistettu IS NOT TRUE) AND
                  poistettu IS NOT TRUE
-         ) IS NOT NULL;
+         ) IS NOT NULL);
 
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
