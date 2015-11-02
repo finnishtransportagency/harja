@@ -58,7 +58,6 @@
                                                     (:numero params)
                                                     (:alkuosa params)
                                                     (:alkuetaisyys params)))]
-    (log/debug "Geometria saatu " geom)
     (geo/pg->clj (:tierekisteriosoitteelle_piste geom))))
 
 (defrecord TierekisteriHaku []
