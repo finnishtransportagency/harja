@@ -17,4 +17,4 @@ INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, lopp
 
 INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija) VALUES ('4242523-TES123', 'kokonaisurakka'::sopimustyyppi, (SELECT id FROM organisaatio WHERE lyhenne='POP'), 'Muhoksen paikkausurakka', '2007-10-01','2012-09-30', 'paikkaus', (SELECT id FROM organisaatio WHERE ytunnus='0651792-4'));
 
-INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija) VALUES ('424245-TIE956', 'kokonaisurakka'::sopimustyyppi, (SELECT id FROM organisaatio WHERE lyhenne='KAS'), 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2015', '2013-10-01','2015-09-30', 'tiemerkinta', (SELECT id FROM organisaatio WHERE ytunnus='0651792-4'));
+INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija) VALUES ('424245-TIE956', 'palvelusopimus'::sopimustyyppi, (SELECT id FROM organisaatio WHERE lyhenne='KAS'), 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2015', '2013-10-01','2015-09-30', 'tiemerkinta', (SELECT id FROM organisaatio WHERE ytunnus='0651792-4'));
