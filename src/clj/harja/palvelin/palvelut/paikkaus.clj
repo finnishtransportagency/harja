@@ -63,10 +63,10 @@
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [kohdetiedot (first (paallystys-q/hae-urakan-paallystyskohde db urakka-id paikkauskohde-id))
-        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
-                         (:arvonvahennykset kohdetiedot)
-                         (:bitumi_indeksi kohdetiedot)
-                         (:kaasuindeksi kohdetiedot))
+        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen_mukaiset_tyot
+                                                   :arvonvahennykset
+                                                   :bitumi_indeksi
+                                                   :kaasuindeksi]))
         paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                             (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
