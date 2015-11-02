@@ -47,13 +47,13 @@
 
  :geometriapaivitykset {:tuontivali                       5
                         :tieosoiteverkon-shapefile        "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
-                        ;; :tieosoiteverkon-alk-osoite             ""
-                        ;; :tieosoiteverkon-alk-tuontikohde        ""
+                        ;; :tieosoiteverkon-alk-osoite             "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/Tieosoiteverkko.shz"
+                        ;; :tieosoiteverkon-alk-tuontikohde        "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
                         :pohjavesialueen-shapefile        "file://shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shp"
-                        ;; :pohjavesialueen-alk-osoite             ""
-                        ;; :pohjavesialueen-alk-tuontikohde        ""
+                        ;; :pohjavesialueen-alk-osoite             "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_POHJAVESIALUE.shz"
+                        ;; :pohjavesialueen-alk-tuontikohde        "./shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shz"
                         :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/tl132.shp"
-                        ;; :soratien-hoitoluokkien-alk-osoite      ""
-                        ;; :soratien-hoitoluokkien-alk-tuontikohde ""
+                        ;; :soratien-hoitoluokkien-alk-osoite      "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/tl132.shz"
+                        ;; :soratien-hoitoluokkien-alk-tuontikohde "./shp/Soratieluokat/tl132.shz"
                         }
  }

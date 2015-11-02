@@ -5,16 +5,19 @@
             [compojure.route :as route]
             [clojure.string :as str]
             [taoensso.timbre :as log]
+            
+            [ring.middleware.cookies :as cookies]
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
             [schema.core :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
-
+            [harja.palvelin.index :as index]
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
+            
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -30,21 +33,15 @@
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
 
-
-
-
-
-
-
 (defn ring-kasittelija [nimi kasittelija-fn]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn transit-vastaus [data]
+(defn transit-vastaus [req data]
   {:status 200
-   :headers {"Content-Type" "application/transit+json"}
+   :headers {"Content-Type" "application/transit+json"} 
    :body (transit/clj->transit data)})
 
 (defn- transit-post-kasittelija
@@ -55,11 +52,14 @@
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
         (let [skeema (:skeema optiot)
-              kysely (transit/lue-transit (:body req))
+              kysely (try (transit/lue-transit (:body req))
+                          (catch Exception e ::ei-validi-kysely))
               kysely (if-not skeema
                        kysely
                        (try
-                        (s/validate skeema kysely)
+                         (if (= kysely ::ei-validi-kysely)
+                           kysely
+                           (s/validate skeema kysely))
                         (catch Exception e
                           (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
                           ::ei-validi-kysely)))]
@@ -74,7 +74,7 @@
                            (catch Exception e
                              (log/warn e "Virhe POST palvelussa " nimi)
                              {:virhe (.getMessage e)}))]
-              (transit-vastaus vastaus))))))))
+              (transit-vastaus req vastaus))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 
@@ -140,28 +140,59 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defrecord HttpPalvelin [asetukset kasittelijat lopetus-fn kehitysmoodi]
+(defn index-kasittelija [kehitysmoodi req]
+  (let [uri (:uri req)
+        token (index/tee-random-avain)
+        salattu (index/laske-mac token)]
+    (when (or (= uri "/")
+              (= uri "/index.html"))
+      {:status 200
+       :headers {"Content-Type" "text/html"
+                 "Cache-Control" "no-cache, no-store, must-revalidate"
+                 "Pragma" "no-cache"
+                 "Expires" "0"}
+       :cookies {"anti-csrf-token" {:value salattu
+                                    :http-only true
+                                    :max-age 36000000}}
+       :body (index/tee-paasivu token kehitysmoodi)})))
+
+(defn wrap-anti-forgery
+  "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
+  [f]
+  (fn [req]
+    (let [cookies (:cookies req)
+          headers (:headers req)]
+      (if (and (not (nil? (headers "x-csrf-token")))
+               (= (index/laske-mac (headers "x-csrf-token"))
+                  (:value (cookies "anti-csrf-token"))))
+        (f req)
+        {:status 403
+         :headers {"Content-Type" "text/html"}
+         :body "Access denied"}))))
+
+(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
     (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (let [todennus (:todennus this)
           resurssit (if kehitysmoodi
                       (route/files "" {:root "dev-resources"})
-                      ;;(let [files-route (route/files "" {:root "dev-resources"})]
-                      ;;  (fn [req]
-                      ;;    (let [resp (files-route req)]
-                      ;;      (if (= 200 (:status resp))
-                      ;;        (update-in resp :headers 
                       (route/resources ""))]
       (swap! lopetus-fn
              (constantly
-              (http/run-server (fn [req]
-                                 (try+
-                                   (reitita (todennus/todenna-pyynto todennus req)
-                                            (conj (mapv :fn @kasittelijat)
-                                                  resurssit))
+              (http/run-server (cookies/wrap-cookies
+                                (fn [req]
+                                  (try+
+                                   (let [ui-kasittelijat (mapv :fn @kasittelijat)
+                                         uikasittelija (-> (apply compojure/routes ui-kasittelijat) 
+                                                           (wrap-anti-forgery))]
+                                     (reitita (todennus/todenna-pyynto todennus req)
+                                              (-> (mapv :fn @sessiottomat-kasittelijat)
+                                                  (conj (partial index-kasittelija kehitysmoodi) resurssit)
+                                                  (conj uikasittelija))))
                                    (catch [:virhe :todennusvirhe] _
-                                     {:status 403 :body "Todennusvirhe"})))
+                                     {:status 403 :body "Todennusvirhe"}))))
+                               
                                {:port (or (:portti asetukset) asetukset)
                                 :thread (or (:threads asetukset) 8)
                                 :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
@@ -176,10 +207,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
     (if (:ring-kasittelija? optiot)
-      (swap! kasittelijat conj {:nimi nimi
-                                :fn (if (= false (:tarkista-polku? optiot))
-                                      palvelu-fn
-                                      (ring-kasittelija nimi palvelu-fn))})
+      (swap! sessiottomat-kasittelijat conj {:nimi nimi
+                                             :fn (if (= false (:tarkista-polku? optiot))
+                                                   palvelu-fn
+                                                   (ring-kasittelija nimi palvelu-fn))})
       (let [ar (arityt palvelu-fn)
             liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
         (when liikaa-parametreja
@@ -199,7 +230,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
-  (->HttpPalvelin asetukset (atom []) (atom nil) kehitysmoodi))
+  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti [http nimi reitti]
   (julkaise-palvelu http nimi  (wrap-params reitti)

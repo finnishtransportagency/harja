@@ -54,6 +54,9 @@ rm tietokanta.tgz
 
 END_TS=`date +%s`
 
-msg "Done!"
+msg "Deploy valmis palvelimelle $HARJA_ENV. Laitoin Harja Projekti HipChat-kanavalle tiedon asiasta."
+CONFIG="room_id=914801&from=deploy.sh&color=purple"
+MESSAGE="$USER deployasi juuri uuden Harja-version palvelimelle <a href=\"https://$HARJA_ENV\">$HARJA_ENV</a>"
+curl -d $CONFIG --data-urlencode "message=${MESSAGE}" 'https://api.hipchat.com/v1/rooms/message?auth_token=1c37e57158bf6a041a8a687b82e1bd&format=json'
 
-echo "It all took `echo "$END_TS-$START_TS"|bc` seconds."
+msg "Suorite kesti `echo "$END_TS-$START_TS"|bc` sekuntia."

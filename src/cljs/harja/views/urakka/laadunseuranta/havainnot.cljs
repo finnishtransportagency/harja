@@ -436,28 +436,18 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
             @havainto]])))))
 
-(def kartan-edellinen-koko (atom nil))
-
 (defn havainnot []
   (komp/luo
     (komp/lippu kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
-                        (reset! kartan-edellinen-koko @nav/kartan-kokovalinta)
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :XL))
-                      #(nav/vaihda-kartan-koko! @kartan-edellinen-koko))
+                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
-     [:span
-      [:div.row
-       [:div {:class (if (= @nav/kartan-koko :S)
-                       "col-sm-12"
-                       "col-sm-6")}
-        (if @valittu-havainto
-          [havainto {} valittu-havainto]
-          [havaintolistaus])]
-       [:div {:class (if (= @nav/kartan-koko :S)
-                       ""
-                       "col-sm-6")}
-        [kartta/kartan-paikka]]]])))
+     [:span.havainnot
+      [kartta/sisalto-ja-kartta-2-palstana (if @valittu-havainto
+                                             [havainto {} valittu-havainto]
+                                             [havaintolistaus])]])))
 
   
   

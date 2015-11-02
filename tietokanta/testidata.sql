@@ -32,9 +32,6 @@ INSERT INTO organisaatio (tyyppi, ytunnus, nimi, sampoid) VALUES ('urakoitsija',
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
 
--- Luodaan toimenpidekoodit
-\i testidata/toimenpidekoodit.sql
-
 -- Luodaan sanktiotyypit
 \i testidata/sanktiot.sql
 

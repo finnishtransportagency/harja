@@ -57,7 +57,12 @@
         (set! (.-left tyyli) (fmt/pikseleina x))
         (set! (.-top tyyli) (fmt/pikseleina y))
         (set! (.-width tyyli) (fmt/pikseleina w))
-        (set! (.-height tyyli) (fmt/pikseleina h))))))
+        (set! (.-height tyyli) (fmt/pikseleina h))))
+    ;; jotta vältetään muiden kontrollien hautautuminen float:right Näytä kartta alle, kavenna kartta-container
+    (when (= :S @nav/kartan-koko)
+      (set! (.-left tyyli) "")
+      (set! (.-right tyyli) (fmt/pikseleina 20))
+      (set! (.-width tyyli) (fmt/pikseleina 100)))))
 
 ;; Kun kartan paikkavaraus poistuu, aseta flägi, joka pakottaa seuraavalla
 ;; kerralla paikan asetuksen... läheta false kanavaan
@@ -193,6 +198,7 @@
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
 (def +koko-suomi-sijainti+ [431704.1 7211111])
 (def +koko-suomi-zoom-taso+ 6)
+(def +koko-suomi-extent+ [-485283.9715435868 6550588.658174125 1538768.5374478805 7886096.416372725])
 
 (defonce kartta-sijainti (atom +koko-suomi-sijainti+))
 (defonce zoom-taso (atom +koko-suomi-zoom-taso+))           ;;Miksi tämä on atomi - toimiiko todellisuudessa eri tavalla kuin kuvitellaan?
@@ -304,7 +310,7 @@
                  [:tr
                   [:td.kartan-ikonien-selitykset-ikoni-sarake
                    [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (get-in geo [:alue :img]))}]]
-                  [:td.kartan-ikonien-selitykset-selitys-sarake (:selitys selitys)]]
+                  [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:selitys selitys)]]]
                  (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
           [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
                                                                         (reset! ikonien-selitykset-auki false)
@@ -381,13 +387,17 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
+(defn suomen-sisalla? [alue]
+  (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
+
 (defn zoomaa-geometrioihin
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (if-not (empty? (keep :alue @tasot/geometriat))
-    (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
-    (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
+  (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))]
+    (if-not (empty? geometriat)
+      (keskita-kartta-alueeseen! (geo/extent-monelle geometriat))
+      (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))))
 
 (defonce pida-geometriat-nakyvilla? (atom true))
 
@@ -556,3 +566,19 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
    [kartan-yleiset-kontrollit]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]])
+
+
+;; Käytä tätä jos haluat luoda rinnakkain sisällön ja kartan näkymääsi
+;; tämä on täällä eikä ui.yleiset koska olisi tullut syklinen riippuvuus
+(defn sisalto-ja-kartta-2-palstana
+  "Luo BS-rivin ja sarakkeet, joissa toisella puolella parameterinä annettava sisältö, toisella kartta."
+  [sisalto]
+  [:div.row
+   [:div {:class (if (= @nav/kartan-koko :S)
+                   "col-sm-12"
+                   "col-sm-6")}
+    sisalto]
+   [:div {:class (if (= @nav/kartan-koko :S)
+                   ""
+                   "col-sm-6")}
+    [kartan-paikka]]])

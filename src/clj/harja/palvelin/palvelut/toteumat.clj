@@ -498,6 +498,19 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
+(defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (filter #(not (nil? (:toimenpidekoodi %)))
+                (map konv/alaviiva->rakenne
+                     (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
+                       db urakka-id
+                       sopimus-id
+                       (konv/sql-date alkupvm)
+                       (konv/sql-date loppupvm)
+                       toimenpide
+                       tehtava)))))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
@@ -557,6 +570,9 @@
                                                                   (:toteumamateriaalit tiedot)
                                                                   (:hoitokausi tiedot)
                                                                   (:sopimus tiedot))))
+      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-tehtavat
+                        (fn [user tiedot]
+                          (hae-urakan-kokonaishintaisten-toteumien-tehtavat db user tiedot)))
       this))
 
   (stop [this]

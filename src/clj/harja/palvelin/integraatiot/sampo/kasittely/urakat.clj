@@ -41,8 +41,8 @@
   (toimenpiteet/paivita-urakka-sampoidlla! db urakka-sampo-id))
 
 (defn paattele-urakkatyyppi [db hanke-sampo-id]
-  (let [alueurakkanumero (:alueurakkanro (first (hankkeet/hae-alueurakkanumero-sampoidlla db hanke-sampo-id)))
-        urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi alueurakkanumero)]
+  (let [sampo-tyypit (:sampo_tyypit (first (hankkeet/hae-sampo-tyypit db hanke-sampo-id)))
+        urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi sampo-tyypit)]
     (log/debug "Urakan tyyppi on:" urakkatyyppi)
     urakkatyyppi))
 
