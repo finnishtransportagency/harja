@@ -33,3 +33,7 @@ REFRESH MATERIALIZED VIEW tieverkko_paloina WITH DATA
 -- name: tierekisteriosoite-viivaksi
 -- hakee geometrian annetulle tierekisteriosoitteelle
 SELECT * FROM tierekisteriosoitteelle_viiva(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER), CAST(:losa AS INTEGER), CAST(:loppuet AS INTEGER))
+
+-- name: tierekisteriosoite-pisteeksi
+-- hakee pisteen annetulle tierekisteriosoitteelle jossa ei ole loppuosaa
+SELECT * FROM tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER));
