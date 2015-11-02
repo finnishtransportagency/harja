@@ -113,9 +113,7 @@
            :fmt #(apply yleiset/tierekisteriosoite
                         (map (fn [kentta] (get % kentta))
                              [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
-           :leveys 2}
-          ]
-
+           :leveys 2}]
          @laadunseuranta/urakan-tarkastukset]])))
 
 (defn talvihoitomittaus []
@@ -209,8 +207,7 @@
          {:otsikko "Mittaaja" :nimi :mittaaja
           :pakollinen? true
           :tyyppi :string :pituus-max 256
-          :leveys-col 4})
-       ]
+          :leveys-col 4})]
       
       tarkastus]
 
@@ -236,8 +233,7 @@
          :kun-onnistuu (fn [tarkastus]
                          (reset! laadunseuranta/valittu-tarkastus nil)
                          (laadunseuranta/paivita-tarkastus-listaan! tarkastus))
-                         }]]]
-     ]))
+                         }]]]]))
 
 
 (defn tarkastukset

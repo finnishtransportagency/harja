@@ -706,7 +706,7 @@
                 (let [sijainti @sijainti]
                   (when sijainti
                     (if (vkm/virhe? sijainti)
-                      [:td [:div.virhe (vkm/virhe sijainti)]]
+                      [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]
                       [:td [:div.sijainti (pr-str sijainti)]]))))
 
               ]]]])))))
