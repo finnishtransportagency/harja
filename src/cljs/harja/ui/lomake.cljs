@@ -73,11 +73,11 @@
 (defmethod kentan-vihje :horizontal [_ {vihje :vihje}]
   (when vihje [:div.row
                [:div.col-sm-2]
-                [:div {:class
-                       (str "inline-block lomake-vihje col-sm-10")}
-                 [:div.vihjeen-sisalto
-                  (harja.ui.ikonit/info-sign)
-                  (str " " vihje)]]]))
+               [:div {:class
+                      (str "inline-block lomake-vihje col-sm-10")}
+                [:div.vihjeen-sisalto
+                 (harja.ui.ikonit/info-sign)
+                 (str " " vihje)]]]))
 
 (defmulti kenttaryhma (fn [lomake-luokka ryhma skeemat luo-kentta] [lomake-luokka (:ulkoasu (:optiot ryhma))]))
 
@@ -86,25 +86,25 @@
   [:fieldset
    [:legend (:otsikko ryhma)]
    (doall
-    (map
-     (fn [skeema]
-       (let [[kentta otsikko komponentti yksikko vihje] (luo-kentta skeema)]
-         ^{:key (:nimi kentta)}
-         [:div.form-group {:class (when (:pakollinen? skeema) "required")}
-          [:span
-           [:div.row
-            otsikko
+     (map
+       (fn [skeema]
+         (let [[kentta otsikko komponentti yksikko vihje] (luo-kentta skeema)]
+           ^{:key (:nimi kentta)}
+           [:div.form-group {:class (when (:pakollinen? skeema) "required")}
             [:span
-             [:div {:class (str "col-sm-" (min (if yksikko 8 10) 
-                                               (or (:leveys-col kentta) 10)))}
-              komponentti]
-             (when yksikko
-               [:span.yksikko yksikko])]]
-           (when vihje
-             vihje)]]))
-      skeemat))])
-          
-          
+             [:div.row
+              otsikko
+              [:span
+               [:div {:class (str "col-sm-" (min (if yksikko 8 10)
+                                                 (or (:leveys-col kentta) 10)))}
+                komponentti]
+               (when yksikko
+                 [:span.yksikko yksikko])]]
+             (when vihje
+               vihje)]]))
+       skeemat))])
+
+
 
 (defmethod kenttaryhma [:horizontal :rivi] [_ ryhma skeemat luo-kentta]
   ^{:key (:otsikko ryhma)}
@@ -112,22 +112,23 @@
    [:div.row
     [:label.col-sm-2.control-label (:otsikko ryhma)]
     (doall
-     (for [skeema skeemat
-           :let [[kentta otsikko komponentti yksikko vihje] (luo-kentta (assoc skeema :lomake? :rivi))]]
-       ^{:key (:nimi kentta)}
-       [:div {:class (str "col-sm-" (or (:leveys (:optiot ryhma))
-                                        (:leveys-col skeema)
-                                        2))}
-        ;; PENDING: rivissä yksikön ja vihjeen näyttämiseen ei oikein ole
-        ;; hyvää tapaa. Pitäisikö vain hyväksyä, että silloin ei ole?
-        [:div
-         [:label.control-label otsikko]
-         komponentti]]))]])
+      (for [skeema skeemat
+            :let [[kentta otsikko komponentti yksikko vihje] (luo-kentta (assoc skeema :lomake? :rivi))]]
+        ^{:key (:nimi kentta)}
+        [:div {:class (str "col-sm-" (or (:leveys (:optiot ryhma))
+                                         (:leveys-col skeema)
+                                         2)
+                           (when (:pakollinen? skeema) " required"))}
+         ;; PENDING: rivissä yksikön ja vihjeen näyttämiseen ei oikein ole
+         ;; hyvää tapaa. Pitäisikö vain hyväksyä, että silloin ei ole?
+         [:div
+          [:label otsikko]
+          komponentti]]))]])
 
-        
-        
 
-  
+
+
+
 (def +ei-otsikkoa+ #{:boolean})
 
 (defn yleinen-huomautus
@@ -138,8 +139,8 @@
 (defn lomake-lukittu-huomautus
   [nykyinen-lukko]
   [:div.lomake-lukittu-huomautus (harja.ui.ikonit/info-sign) (str " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä"
-   (when nykyinen-lukko (str " (" (:etunimi nykyinen-lukko) " " (:sukunimi nykyinen-lukko) ")"))
-    " muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen.")])
+                                                                  (when nykyinen-lukko (str " (" (:etunimi nykyinen-lukko) " " (:sukunimi nykyinen-lukko) ")"))
+                                                                  " muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen.")])
 
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
@@ -223,8 +224,8 @@
 
                        [kentta
                         (if (+ei-otsikkoa+ (:tyyppi kentta))
-                           [tyhja-otsikko luokka]
-                           [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
+                          [tyhja-otsikko luokka]
+                          [kentan-otsikko luokka (name nimi) (:otsikko kentta)])
                         (kentan-komponentti
                           (if-let [komponentti (:komponentti kentta)]
                             komponentti
@@ -244,32 +245,32 @@
                                           (@muokatut nimi))
                                    (virheen-ohje kentan-varoitukset :varoitus)))
                                [tee-kentta (assoc kentta
-                                                  :focus (= @nykyinen-fokus kentan-tunniste)
-                                                  :on-focus #(aseta-fokus! kentan-tunniste)) arvo]]
+                                             :focus (= @nykyinen-fokus kentan-tunniste)
+                                             :on-focus #(aseta-fokus! kentan-tunniste)) arvo]]
 
                               ;; Ei muokattava, näytetään
                               [:div.form-control-static
                                (if fmt
                                  (fmt ((or hae #(get % nimi)) data))
                                  (nayta-arvo kentta arvo))])))
-                         [kentan-yksikko luokka kentta]
-                         [kentan-vihje luokka kentta]]))]
+                        [kentan-yksikko luokka kentta]
+                        [kentan-vihje luokka kentta]]))]
         [:form.lomake {:class (case luokka
                                 :inline "form-inline"
                                 :horizontal "form-horizontal"
                                 :default "")}
 
          (doall
-          (for [skeema (keep identity skeema)]
-            (if-let [ryhma (and (ryhma? skeema) skeema)]
-              (do
-                ^{:key (:otsikko ryhma)}
-                (kenttaryhma luokka ryhma (keep identity (:skeemat ryhma)) #(kentta identity %)))
+           (for [skeema (keep identity skeema)]
+             (if-let [ryhma (and (ryhma? skeema) skeema)]
+               (do
+                 ^{:key (:otsikko ryhma)}
+                 (kenttaryhma luokka ryhma (keep identity (:skeemat ryhma)) #(kentta identity %)))
 
-              ^{:key (:nimi skeema)}
-              (apply kentta-ui (kentta (fn [k]
-                                         (kentan-komponentti luokka skeema k))
-                                       skeema)))))
+               ^{:key (:nimi skeema)}
+               (apply kentta-ui (kentta (fn [k]
+                                          (kentan-komponentti luokka skeema k))
+                                        skeema)))))
 
          (if footer-fn
            [lomake-footer luokka (footer-fn kaikki-virheet kaikki-varoitukset)]
