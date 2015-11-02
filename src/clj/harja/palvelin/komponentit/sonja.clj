@@ -42,16 +42,13 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 (defn- luo-jonon-kuuntelija
   "Luo jonon kuuntelijan annetulle istunnolle."
   [istunto jonon-nimi kasittelija]
-  (println "----> Luodaan jonon kuuntelija")
   (let [jono (.createQueue istunto jonon-nimi)
         consumer (.createConsumer istunto jono)]
     (thread
       (try
         (loop [viesti (.receive consumer)]
-          (println "----> VIESTIVASTAANOTETTU")
           (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
           (try
-            (println "----> Kutsutaan käsittelijää: " kasittelija)
             (kasittelija viesti)
             (catch Exception e
               (log/warn e (str "Viestin käsittelijä heitti poikkeuksen, jono: " jonon-nimi))))
@@ -104,27 +101,17 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 (defn poista-kuuntelija [jonot jonon-nimi kuuntelija-fn]
   (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
 
-(defn yhdista-kuuntelija [tila jonon-nimi kuuntelija-fn]
-  ;; todo: selvitä miksi ei yhdistä
-  (println "----> Yhdistetään kuuntelija jonoon:" jonon-nimi)
-  (let [istunto (:istunto tila)
-        jonot (:jonot tila)
-        jono (get jonot jonon-nimi)]
-    (if (:consumer jono)
-      (do
-        (log/info "Lisätään kuuntelija jonoon " jonon-nimi)
-        (update-in jonot [jonon-nimi :kuuntelijat] conj kuuntelija-fn))
-
-      (do
-        (log/info "Ensimmäinen kuuntelija jonolle " jonon-nimi ", luodaan consumer.")
-        (let [consumer (luo-jonon-kuuntelija istunto jonon-nimi
-                                             #(doseq [kuuntelija (get-in jonot [jonon-nimi :kuuntelijat])]
-                                               (println "-------> Koitetaan epatoivoisesti kutsua kuuntelijaa")
-                                               (kuuntelija %)))]
-          (update-in jonot [jonon-nimi] assoc
-                     :consumer consumer
-                     :kuuntelijat #{kuuntelija-fn}))))
-    #(poista-kuuntelija jonot jonon-nimi kuuntelija-fn)))
+(defn yhdista-kuuntelija [{:keys [istunto] :as tila} jonon-nimi kuuntelija-fn]
+  (update-in tila [:jonot jonon-nimi]
+             (fn [{:keys [consumer kuuntelijat] :as jonon-tiedot}]
+               (let [kuuntelijat (or kuuntelijat (atom []))]
+                 (swap! kuuntelijat conj kuuntelija-fn)
+                 (assoc jonon-tiedot
+                   :consumer (or consumer
+                                 (luo-jonon-kuuntelija istunto jonon-nimi
+                                                       #(doseq [kuuntelija @kuuntelijat]
+                                                         (kuuntelija %))))
+                   :kuuntelijat kuuntelijat)))))
 
 (defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
   (if istunto
@@ -150,7 +137,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       this))
 
   (stop [{:keys [tila] :as this}]
-    (when @(:istunto tila)
+    (when (:istunto @tila)
       (.close (:istunto @tila)))
     (when @(:yhteys tila)
       (.close (:yhteys @tila)))
