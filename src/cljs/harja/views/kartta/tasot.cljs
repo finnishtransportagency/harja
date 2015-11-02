@@ -7,6 +7,7 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
             [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
@@ -16,8 +17,8 @@
 
 
 ;; Lisää uudet karttatasot tänne
-(def +karttatasot+ [:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
-                    :historiakuva :nykytilanne :paallystyskohteet])
+(def +karttatasot+ #{:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
+                    :historiakuva :nykytilanne :paallystyskohteet :yksikkohintainen-toteuma :kokonaishintainen-toteuma})
 
 (def geometriat (reaction
                  (loop [geometriat (transient [])
@@ -27,6 +28,7 @@
                                          @ilmoitukset/ilmoitukset-kartalla
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
                                          @toteumat/yksikkohintainen-toteuma-kartalla
+                                         @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
                                          @historiakuva/historiakuvan-asiat-kartalla
                                          @nykytilanne/nykytilanteen-asiat-kartalla
                                          @paallystys/paallystyskohteet-kartalla
@@ -45,6 +47,7 @@
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
     :historiakuva historiakuva/karttataso-historiakuva
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
+    :kokonaishintainen-toteuma kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
     :nykytilanne nykytilanne/karttataso-nykytilanne
     :paallystyskohteet paallystys/karttataso-paallystyskohteet
     :muut-tyot muut-tyot/karttataso-muut-tyot))
