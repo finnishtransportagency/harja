@@ -26,3 +26,5 @@ BEGIN
   RETURN;
 END;
 $$ LANGUAGE plpgsql;
+
+SELECT paivita_urakoiden_alueet();
