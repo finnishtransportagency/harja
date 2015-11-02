@@ -51,14 +51,11 @@
     (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
 
 (defn hae-tr-piste
-  ; FIXME Täytyy hakea pisteesijainti
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
   [db user params]
   (let [korjattu-osoite (jarjestele-tr-osoite params)
-        geom (first (tv/tierekisteriosoite-viivaksi db
+        geom (first (tv/tierekisteriosoite-pisteeksi db
                                                     (:numero korjattu-osoite)
-                                                    (:alkuosa korjattu-osoite)
-                                                    (:alkuetaisyys korjattu-osoite)
                                                     (:alkuosa korjattu-osoite)
                                                     (:alkuetaisyys korjattu-osoite)))]
     (log/debug "hae-tr-piste " geom)
