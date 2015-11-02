@@ -53,11 +53,10 @@
 (defn hae-tr-piste
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
   [db user params]
-  (let [korjattu-osoite (jarjestele-tr-osoite params)
-        geom (first (tv/tierekisteriosoite-pisteeksi db
-                                                    (:numero korjattu-osoite)
-                                                    (:alkuosa korjattu-osoite)
-                                                    (:alkuetaisyys korjattu-osoite)))]
+  (let [geom (first (tv/tierekisteriosoite-pisteeksi db
+                                                    (:numero params)
+                                                    (:alkuosa params)
+                                                    (:alkuetaisyys params)))]
     (log/debug "hae-tr-piste " geom)
     (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
 
