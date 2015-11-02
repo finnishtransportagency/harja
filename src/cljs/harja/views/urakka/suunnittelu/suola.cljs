@@ -172,7 +172,7 @@
                              (assoc hk
                                     :id 1
                                     :erotus (and keskilampotila pitkakeskilampotila
-                                                 (.toFixed (- keskilampotila pitkakeskilampotila)))))]]}
+                                                 (.toFixed (- keskilampotila pitkakeskilampotila) 1))))]]}
                  
            ]
           (:suolasakko @hoitokauden-tiedot)]
