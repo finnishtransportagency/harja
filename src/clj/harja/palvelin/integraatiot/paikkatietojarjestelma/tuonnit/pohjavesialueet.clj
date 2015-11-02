@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialue
+(ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [clj-time.periodic :refer [periodic-seq]]

@@ -152,6 +152,7 @@ SELECT
   tpi.talousosasto_id      AS toimenpideinstanssi_talousosasto,
   tpi.talousosastopolku    AS toimenpideinstanssi_talousosastopolku,
   tpi.sampoid              AS toimenpideinstanssi_sampoid,
+  tpk.koodi                AS toimenpidekoodi,
   s.sampoid                AS sopimus_sampoid,
   u.sampoid                AS urakka_sampoid,
   k.tila                   AS kustannussuunnitelma_tila,

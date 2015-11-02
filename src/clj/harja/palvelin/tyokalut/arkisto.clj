@@ -25,6 +25,7 @@
   (let [tiedostotyyppi (FilenameUtils/getExtension kohdetiedoston-polku)]
     (case tiedostotyyppi
       "zip" (pura-zip-paketti kohdetiedoston-polku)
+      "shz" (pura-zip-paketti kohdetiedoston-polku)
       "gz" (pura-gzip-paketti kohdetiedoston-polku)
       "tgz" (pura-gzip-paketti kohdetiedoston-polku)
       (throw+ {:type  :tuntematon-arkisto-tyyppi
