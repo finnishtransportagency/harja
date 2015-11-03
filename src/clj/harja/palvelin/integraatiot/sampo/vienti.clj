@@ -53,13 +53,13 @@
           (log/warn "Kustannussuunnitelman (numero: " numero ") lukitus epäonnistui.")
           {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
       (catch Exception e
+        (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
         (integraatioloki/kirjaa-epaonnistunut-integraatio
           integraatioloki
           "Sampo kustannussuunnitelmalähetyksessä tapahtui poikkeus"
           (str "Poikkeus: " (.getMessage e))
           tapahtuma-id
           nil)
-        (log/error "Sampo maksuerälähetyksessä tapahtui poikkeus." e)
         {:virhe :poikkeus}))))
 
 (defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero]
@@ -81,13 +81,13 @@
           (log/warn "Maksuerän (numero: " numero ") lukitus epäonnistui.")
           {:virhe :maksueran-lukitseminen-epaonnistui}))
       (catch Exception e
+        (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
         (integraatioloki/kirjaa-epaonnistunut-integraatio
           integraatioloki
           "Sampo maksuerälähetyksessä tapahtui poikkeus"
           (str "Poikkeus: " (.getMessage e))
           tapahtuma-id
           nil)
-        (log/error "Sampo maksuerälähetyksessä tapahtui poikkeus." e)
         {:virhe :poikkeus}))))
 
 (defn aja-paivittainen-lahetys [sonja integraatioloki db lahetysjono-ulos]
