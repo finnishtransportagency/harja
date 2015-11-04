@@ -18,9 +18,10 @@
       ]
     },
     "maara": {
-      "id": "urn:harja/maara",
-      "type": "number",
-      "required": true
+	"id": "urn:harja/maara",
+	"type": "number",
+	"minimum": 0,
+	"required": true
     }
   }
 }
