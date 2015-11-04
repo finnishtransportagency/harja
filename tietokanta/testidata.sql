@@ -408,6 +408,7 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, 
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, NOW(), 1351, 150);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 1350, 28);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 1351, 123);
+INSERT INTO toteuma_tehtava  (toteuma, luotu,toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'), '2005-11-11 00:00.00', 1351, 666);
 
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 1, 7);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 2, 4);
