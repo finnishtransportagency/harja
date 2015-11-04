@@ -159,8 +159,8 @@ INSERT INTO silta (tyyppi, siltanro, siltanimi, alue) VALUES
 
 -- name: paivita-silta-siltanumerolla!
 UPDATE silta
-   SET tyyppi = :tyyppi
-       siltanro = :siltanro
-       siltanimi = :nimi
+   SET tyyppi = :tyyppi,
+       siltanro = :siltanro,
+       siltanimi = :nimi,
        alue = ST_GeomFromText(:geometria)::geometry
  WHERE siltanro = :siltanro;

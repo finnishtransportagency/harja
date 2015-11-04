@@ -7,18 +7,16 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn paivita-silta [db silta]
-  (log/debug "Päivitetään wanha silta")
   (s/paivita-silta-siltanumerolla! db
-                       (:tyyppi silta)
-                       (:nro silta)
+                       nil ;(:siltatyy silta) FIXME Selvitä miten tyyppi menee kantaan
+                       (int (:nro silta))
                        (:nimi silta)
                        (.toString (:the_geom silta))))
 
 (defn luo-silta [db silta]
-  (log/debug "Luodaan uusi silta.")
   (s/vie-siltatauluun! db
-                       (:tyyppi silta)
-                       (:nro silta)
+                       nil ;(:siltatyy silta) FIXME Selvitä miten tyyppi menee kantaan
+                       (int (:nro silta))
                        (:nimi silta)
                        (.toString (:the_geom silta))))
 
