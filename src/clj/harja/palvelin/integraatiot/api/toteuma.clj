@@ -24,11 +24,18 @@
              :virheet [{:koodi  virheet/+tuntematon-materiaali+
                         :viesti (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)}]})))
 
+(defn tarkasta-pvmvalin-validiteetti [alku loppu]
+  (when (.after (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu))
+    (throw+ {:type   virheet/+sisainen-kasittelyvirhe+
+             :virheet [{:koodi virheet/+viallinen-kutsu+
+                        :viesti (format "Alkuaika on loppuajan jälkeen")}]})))
+
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
 
   (println "++++++++++++++ reitti: " (:reitti toteuma))
-
+  (tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
+  
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
          (pvm-string->java-sql-date (:alkanut toteuma))
@@ -44,6 +51,7 @@
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
+  (tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
   (:id (toteumat/luo-toteuma<!
          db
          urakka-id
