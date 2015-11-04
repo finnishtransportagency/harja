@@ -202,7 +202,7 @@
            :voi-poistaa?           (constantly false)
            :aloita-muokkaus-fn     (fn [_]
                                      (ryhmittele-hinnoitellut @tyorivit))
-           :piilota-toiminnot      true
+           :piilota-toiminnot?      true
            :muokkaa-footer         (fn [g]
                                      [raksiboksi "Tallenna tulevillekin hoitokausille"
                                       @tuleville?

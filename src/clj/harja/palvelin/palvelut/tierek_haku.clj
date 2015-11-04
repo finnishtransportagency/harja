@@ -50,6 +50,16 @@
     (log/debug "hae-tr-viiva " geom)
     (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
 
+(defn hae-tr-piste
+  "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
+  [db user params]
+  (log/debug "Haetaan piste osoitteelle: " (pr-str params))
+  (let [geom (first (tv/tierekisteriosoite-pisteeksi db
+                                                    (:numero params)
+                                                    (:alkuosa params)
+                                                    (:alkuetaisyys params)))]
+    (geo/pg->clj (:tierekisteriosoitteelle_piste geom))))
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [this]
@@ -62,6 +72,9 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-tr-viivaksi (fn [user params]
                                          (hae-tr-viiva (:db this) user params)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-tr-pisteeksi (fn [user params]
+                                         (hae-tr-piste (:db this) user params)))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-tr-pisteella)

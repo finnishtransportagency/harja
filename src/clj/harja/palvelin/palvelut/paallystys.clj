@@ -322,7 +322,7 @@
       (if (and (:id osa) (not (neg? (:id osa))))
         (paivita-paallystyskohdeosa c user osa)
         (luo-uusi-paallystyskohdeosa c user paallystyskohde-id osa)))
-    (q/paivita-paallystys-tai-paikkausurakan-geometria urakka-id)
+    (q/paivita-paallystys-tai-paikkausurakan-geometria c urakka-id)
     (let [paallystyskohdeosat (hae-urakan-paallystyskohdeosat c user {:urakka-id          urakka-id
                                                                       :sopimus-id         sopimus-id
                                                                       :paallystyskohde-id paallystyskohde-id})]

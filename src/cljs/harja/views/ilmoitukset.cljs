@@ -217,7 +217,7 @@
           :rivi-klikattu #(do (reset! tiedot/valittu-ilmoitus %)
                               (kartta/keskita-kartta-pisteeseen
                                 (get-in % [:sijainti :coordinates])))
-          :piilota-toiminnot true}
+          :piilota-toiminnot? true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(tiedot/ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}

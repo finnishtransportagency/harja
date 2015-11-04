@@ -1,6 +1,5 @@
 (ns harja.tyokalut.vkm
-  "TR-osoitehaku"
-
+  "TR-osoitehaku. HUOM! TÄMÄN NAMESPACEN TARJOAMAT PALVELUT OVAT VANHENTUNEET!"
   (:require [cljs.core.async :refer [<! >! chan put! close!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]])
@@ -76,7 +75,8 @@ Palautettavassa datassa:
 (defn tieosoite->sijainti	
   "Kutsuu VKM:n kautta tierekisteriosoitetta ja yrittää löytää parhaan sijainnin. 	
    Palauttaa kanavan, josta sijainnin voi lukea. Virhetapauksessa kanavaan kirjoitetaan virheen kuvaus. "	
-  [tierekisteriosoite]	
+  [tierekisteriosoite]
+  (log "Muunetaan tieosoite sijainniksi: " (pr-str tierekisteriosoite))
   (go (let [tulos (<! (tieosoite tierekisteriosoite))]	
         (log "TULOS: " (pr-str tulos))	
         (if (virhe? tulos)	
@@ -108,7 +108,6 @@ Palautettavassa datassa:
   [tulos]
   (contains? tulos :virhe))
        
-(defn virhe [tulos]
-  "Pisteelle ei löydy tietä")
-
+(def pisteelle-ei-loydy-tieta "Pisteelle ei löydy tietä.")
+(def vihje-zoomaa-lahemmas "Yritä zoomata lähemmäs.")
   

@@ -1,13 +1,20 @@
 (ns harja.ui.tierekisteri
   "Tierekisteriosoitteiden näyttämiseen, muokkaamiseen ja karttavalintaan liittyvät komponentit."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as karttatasot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.vkm :as vkm]
-            [cljs.core.async :refer [>! <! alts! chan] :as async])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.tiedot.tierekisteri :as tierekisteri]
+            [cljs.core.async :refer [>! <! alts! chan] :as async]
+            [harja.geo :as geo]
+            [harja.asiakas.kommunikaatio :as k])
+
+  (:require-macros
+    [reagent.ratom :refer [reaction run!]]
+    [cljs.core.async.macros :refer [go]]))
 
 (def vkm-alku (atom nil))
 (def vkm-loppu (atom nil))
@@ -29,10 +36,10 @@
 
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
-Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
-löytyneeseen pisteeseen.
+  Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
+  löytyneeseen pisteeseen.
 
-Optiot on mäppi parametreja, jossa seuraavat avaimet:
+  Optiot on mäppi parametreja, jossa seuraavat avaimet:
 
   :kun-valmis  Funktio, jota kutsutaan viimeisenä kun käyttäjän valinta on valmis.
                Parametrina valittu osoite mäppi, jossa avaimet:
@@ -40,13 +47,12 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                Jos käyttäjä valitsi pistemäisen osoitteen, loppuosa ja -etäisyys
                avaimia ei ole mäpissä.
 
-  :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan 
+  :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan
                ilman TR-osoitteen päivittämistä. Ei parametrejä.
 
-  :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim. 
+  :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim.
                kun käyttäjä valitsee alkupisteen, kutsutaan tätä funktiota
-               osoitteella, jossa ei ole vielä loppupistettä.
-"
+               osoitteella, jossa ei ole vielä loppupistettä."
   [optiot]
   (let [tapahtumat (chan)
         tila (atom :ei-valittu)
@@ -55,9 +61,15 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
         ;; Pidetään optiot atomissa, jota päivitetään will-receive-props tapahtumassa
         ;; Muuten go lohko sulkee alkuarvojen yli
         optiot (cljs.core/atom optiot)
+        poistu-tr-valinnasta (fn []
+                               (karttatasot/taso-pois! :tr-alkupiste)
+                               (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
+                               (kartta/tyhjenna-ohjelaatikko))
+        luo-tooltip (fn [tila-teksti]
+                      [:div.tr-valitsin-hover
+                       [:div.tr-valitsin-tila tila-teksti]
+                       [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])]
 
-        virhe (atom nil)]
-    
     (go (loop [vkm-haku nil]
           (let [[arvo kanava] (alts! (if vkm-haku
                                        [vkm-haku tapahtumat]
@@ -66,13 +78,15 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
               (if (= kanava vkm-haku)
                 ;; Saatiin VKM vastaus paikkahakuun, käsittele se
                 (let [{:keys [kun-valmis paivita]} @optiot
-                      osoite arvo] 
+                      osoite arvo]
                   (if (vkm/virhe? osoite)
-                    (do (reset! virhe (vkm/virhe osoite))
+                    (do (kartta/aseta-ohjelaatikon-sisalto [:span
+                                                            [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
+                                                            " "
+                                                            [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]])
                         (recur nil))
-                    
                     (do
-                      (reset! virhe nil) ;; poistetaan mahdollinen aiempi virhe
+                      (kartta/tyhjenna-ohjelaatikko)
                       (case @tila
                         :ei-valittu
                         (let [osoite (swap! tr-osoite
@@ -84,39 +98,52 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                                                       :loppuosa
                                                       :loppuetaisyys)))]
                           (paivita osoite)
-                          (reset! tila :alku-valittu))
-                        
+                          (karttatasot/taso-paalle! :tr-alkupiste)
+                          (reset! tila :alku-valittu)
+                          (go
+                            (log "Haetaan alkupisteen sijainti")
+                            (let [piste (<! (k/post! :hae-tr-pisteeksi osoite))]
+                              (log "Alkupisteen sijainti saatu: " (pr-str piste))
+                              (reset! tierekisteri/valittu-alkupiste piste)))
+                          (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
+                                                              (str "Valittu alkupiste: "
+                                                                   (:numero osoite) " / "
+                                                                   (:alkuosa osoite) " / "
+                                                                   (:alkuetaisyys osoite))]))
+
                         :alku-valittu
                         (let [osoite (swap! tr-osoite
-                                            merge 
+                                            merge
                                             {:numero (:tie osoite)
                                              :alkuosa (:aosa osoite)
                                              :alkuetaisyys (:aet osoite)
                                              :loppuosa (:losa osoite)
                                              :loppuetaisyys (:let osoite)
                                              :geometria (:geometria osoite)})]
+                          (poistu-tr-valinnasta)
                           (kun-valmis osoite)))
                       (recur nil))))
-                
+
                 ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
                 (let [{:keys [tyyppi sijainti x y]} arvo]
                   (case tyyppi
                     ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
                     :hover
                     (kartta/aseta-tooltip! x y (case @tila
-                                                 :ei-valittu "Klikkaa alkupiste"
-                                                 :alku-valittu "Klikkaa loppupiste tai hyväksy pistemäinen enter näppäimellä"))
+                                                 :ei-valittu (luo-tooltip "Klikkaa alkupiste")
+                                                 :alku-valittu (luo-tooltip "Klikkaa loppupiste tai hyväksy pistemäinen painamalla Enter")))
 
                     ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
                     :enter (when (= @tila :alku-valittu)
-                             ((:kun-valmis @optiot) @tr-osoite))
+                             (do ((:kun-valmis @optiot) @tr-osoite)
+                                 (poistu-tr-valinnasta)))
                     nil)
-                  
+
                   (recur (if (= :click tyyppi)
                            (if (= :alku-valittu @tila)
                              (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)
                              (do
-                               (reset! alkupiste sijainti) 
+                               (reset! alkupiste sijainti)
                                (vkm/koordinaatti->trosoite sijainti)))
                            vkm-haku))))))))
 
@@ -130,16 +157,19 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
                             (reset! nav/kartan-edellinen-koko kartan-koko)
                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
+                            (reset! kartta/pida-geometriat-nakyvilla?) ; Emme halua, että zoom-taso muuttuu kun TR:ää valitaan
                             (kartta/aseta-kursori! :crosshair))
                           #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
+                            (poistu-tr-valinnasta)
                             (kartta/aseta-kursori! nil)))
         (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
         (komp/kuuntelija :esc-painettu
                          (fn [_]
                            (log "optiot: " @optiot)
-                           ((:kun-peruttu @optiot)))
+                           ((:kun-peruttu @optiot))
+                           (poistu-tr-valinnasta))
                          :enter-painettu
                          #(go (>! tapahtumat {:tyyppi :enter})))
         (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
@@ -147,7 +177,4 @@ Optiot on mäppi parametreja, jossa seuraavat avaimet:
            [:div (case @tila
                    :ei-valittu "Valitse alkupiste"
                    :alku-valittu "Valitse loppupiste"
-                   "")]
-
-           (when-let [virhe @virhe]
-             [:div.virhe virhe])])))))
+                   "")]])))))

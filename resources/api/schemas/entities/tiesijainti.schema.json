@@ -11,33 +11,40 @@
     "numero": {
       "id": "urn:harja/sijainti/tie/numero",
       "type": "integer",
+      "minimum": 0,
       "required": true
     },
     "aet": {
       "id": "urn:harja/sijainti/tie/aet",
       "type": "integer",
+      "minimum": 0,
       "required": true
     },
     "aosa": {
       "id": "urn:harja/sijainti/tie/aosa",
       "type": "integer",
+      "minimum": 0,
       "required": true
     },
     "let": {
       "id": "urn:harja/sijainti/tie/let",
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "losa": {
       "id": "urn:harja/sijainti/tie/losa",
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "ajr": {
       "id": "urn:harja/sijainti/tie/ajr",
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "puoli": {
       "id": "urn:harja/sijainti/tie/puoli",
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "alkupvm": {
       "id": "urn:harja/sijainti/tie/puoli",

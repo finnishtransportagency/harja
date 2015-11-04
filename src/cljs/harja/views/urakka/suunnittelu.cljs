@@ -7,6 +7,7 @@
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
+            [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.materiaalit :as mat]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
@@ -51,6 +52,10 @@
            ^{:key "muut-tyot"}
            [muut-tyot/muut-tyot ur]
 
+           "Suola" :suola
+           (when (= :hoito (:tyyppi ur))
+             [suola/suola])
+           
            "Materiaalit"
            :materiaalit
            ^{:key "materiaalit"}
