@@ -12,7 +12,8 @@
             [schema.core :as s :include-macros true])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
+(def esta-usean-gridin-yhtaikainen-muokkaus (atom false))
+(def gridia-muokataan? (atom false))
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 
 ;; Otsikot
@@ -487,6 +488,7 @@ Optiot on mappi optioita:
                   (muutos ohjaus)))
 
         nollaa-muokkaustiedot! (fn []
+                                 (reset! gridia-muokataan? false)
                                  (reset! virheet {})
                                  (reset! varoitukset {})
                                  (reset! muokatut nil)
@@ -495,8 +497,8 @@ Optiot on mappi optioita:
                                  (reset! viime-assoc nil)
                                  (reset! uusi-id 0))
         aloita-muokkaus! (fn [tiedot]
-
                            (nollaa-muokkaustiedot!)
+                           (reset! gridia-muokataan? true)
                            (loop [muok {}
                                   jarj []
                                   [r & rivit] ((or aloita-muokkaus-fn identity) tiedot)]
@@ -544,8 +546,10 @@ Optiot on mappi optioita:
                                   (if-not muokataan
                                     [:span.pull-right.muokkaustoiminnot
                                      (when tallenna
-                                       [:button.nappi-ensisijainen (if (= :ei-mahdollinen tallenna)
-                                                                     {:disabled (= :ei-mahdollinen tallenna)}
+                                       [:button.nappi-ensisijainen (if (or (= :ei-mahdollinen tallenna)
+                                                                           (and @esta-usean-gridin-yhtaikainen-muokkaus
+                                                                                @gridia-muokataan?))
+                                                                     {:disabled true}
                                                                      {:on-click #(do (.preventDefault %)
                                                                                      (aloita-muokkaus! tiedot))})
                                         [:span.livicon-pen.grid-muokkaa " Muokkaa"]])]
@@ -583,10 +587,8 @@ Optiot on mappi optioita:
                                                      (nollaa-muokkaustiedot!)
                                                      (when peruuta (peruuta))
                                                      nil)}
-                                        [:span.livicon-ban " Peruuta"]])
-                                     ])
-                                  (when nayta-otsikko? [:h6.panel-title otsikko])
-                                  ])]
+                                        [:span.livicon-ban " Peruuta"]])])
+                                  (when nayta-otsikko? [:h6.panel-title otsikko])])]
            [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
             (muokkauspaneeli true)
             [:div.panel-body
@@ -645,7 +647,7 @@ Optiot on mappi optioita:
                                                                   :fokus                    nykyinen-fokus
                                                                   :aseta-fokus!             #(reset! fokus %)
                                                                   :tulevat-rivit            (tulevat-rivit i)
-                                                                  :piilota-toiminnot?        piilota-toiminnot?}
+                                                                  :piilota-toiminnot?       piilota-toiminnot?}
                                                    skeema rivi]
                                                    (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                                           jarjestys))))))
@@ -669,17 +671,17 @@ Optiot on mappi optioita:
 
                                          (let [id ((or tunniste :id) rivi)]
                                            [^{:key id}
-                                           [naytto-rivi {:ohjaus            ohjaus
-                                                         :vetolaatikot      vetolaatikot
-                                                         :id                id
-                                                         :tallenna          tallenna
-                                                         :luokka            (str (if (even? (+ i 1)) "parillinen" "pariton")
-                                                                                 (when rivi-klikattu
-                                                                                   " klikattava ")
-                                                                                 (when (:yhteenveto rivi) " yhteenveto ")
-                                                                                 (when rivin-luokka
-                                                                                   (rivin-luokka rivi)))
-                                                         :rivi-klikattu     rivi-klikattu
+                                           [naytto-rivi {:ohjaus             ohjaus
+                                                         :vetolaatikot       vetolaatikot
+                                                         :id                 id
+                                                         :tallenna           tallenna
+                                                         :luokka             (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                                                  (when rivi-klikattu
+                                                                                    " klikattava ")
+                                                                                  (when (:yhteenveto rivi) " yhteenveto ")
+                                                                                  (when rivin-luokka
+                                                                                    (rivin-luokka rivi)))
+                                                         :rivi-klikattu      rivi-klikattu
                                                          :piilota-toiminnot? piilota-toiminnot?}
                                             skeema rivi]
                                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
