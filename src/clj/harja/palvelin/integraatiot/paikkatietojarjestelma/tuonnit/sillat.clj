@@ -8,7 +8,7 @@
 
 (defn paivita-silta [db silta]
   (s/paivita-silta-siltanumerolla! db
-                       nil ;(:siltatyy silta) FIXME Selvitä miten tyyppi menee kantaan
+                       (:siltatyy silta)
                        (int (:nro silta))
                        (:nimi silta)
                        (.toString (:the_geom silta))
@@ -18,7 +18,7 @@
 
 (defn luo-silta [db silta]
   (s/vie-siltatauluun! db
-                       nil ;(:siltatyy silta) FIXME Selvitä miten tyyppi menee kantaan
+                       (:siltatyy silta)
                        (int (:nro silta))
                        (:nimi silta)
                        (.toString (:the_geom silta))
