@@ -158,7 +158,7 @@
                                :kokonaishinta            kokonaishinta}]))]
     
     (komp/luo
-      (komp/lippu paallystys-tai-paikkauskohteet-nakymassa grid/esta-usean-gridin-yhtaikainen-muokkaus)
+      (komp/lippu paallystys-tai-paikkauskohteet-nakymassa)
       (fn []
         (let [paallystysnakyma?  (= :paallystys (:tyyppi @nav/valittu-urakka))]
 

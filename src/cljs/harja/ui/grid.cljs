@@ -12,7 +12,6 @@
             [schema.core :as s :include-macros true])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def esta-usean-gridin-yhtaikainen-muokkaus (atom false))
 (def gridia-muokataan? (atom false))
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 
@@ -547,8 +546,7 @@ Optiot on mappi optioita:
                                     [:span.pull-right.muokkaustoiminnot
                                      (when tallenna
                                        [:button.nappi-ensisijainen (if (or (= :ei-mahdollinen tallenna)
-                                                                           (and @esta-usean-gridin-yhtaikainen-muokkaus
-                                                                                @gridia-muokataan?))
+                                                                           @gridia-muokataan?)
                                                                      {:disabled true}
                                                                      {:on-click #(do (.preventDefault %)
                                                                                      (aloita-muokkaus! tiedot))})
