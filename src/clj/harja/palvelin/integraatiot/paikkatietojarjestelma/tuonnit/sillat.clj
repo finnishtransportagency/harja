@@ -12,7 +12,7 @@
                        (int (:nro silta))
                        (:nimi silta)
                        (.toString (:the_geom silta))
-                       (:numero silta)
+                       (:tie silta)
                        (:aosa silta)
                        (:aet silta)))
 
@@ -22,7 +22,7 @@
                        (int (:nro silta))
                        (:nimi silta)
                        (.toString (:the_geom silta))
-                       (:numero silta)
+                       (:tie silta)
                        (:aosa silta)
                        (:aet silta)))
 
