@@ -152,3 +152,11 @@ UPDATE siltatarkastus
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
 DELETE FROM siltatarkastuskohde WHERE siltatarkastus = :siltatarkastus;
+
+-- name: tuhoa-siltadata!
+-- Poistaa kaikki sillat
+DELETE FROM silta;
+
+-- name: vie-siltatauluun!
+INSERT INTO silta (tyyppi, siltanro, siltanimi, alue) VALUES
+       (:nimi, :siltanro, :siltanimi, ST_GeomFromText(:geometria)::geometry);
