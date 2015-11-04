@@ -11,14 +11,20 @@
                        nil ;(:siltatyy silta) FIXME Selvitä miten tyyppi menee kantaan
                        (int (:nro silta))
                        (:nimi silta)
-                       (.toString (:the_geom silta))))
+                       (.toString (:the_geom silta))
+                       (:numero silta)
+                       (:aosa silta)
+                       (:aet silta)))
 
 (defn luo-silta [db silta]
   (s/vie-siltatauluun! db
                        nil ;(:siltatyy silta) FIXME Selvitä miten tyyppi menee kantaan
                        (int (:nro silta))
                        (:nimi silta)
-                       (.toString (:the_geom silta))))
+                       (.toString (:the_geom silta))
+                       (:numero silta)
+                       (:aosa silta)
+                       (:aet silta)))
 
 (defn luo-tai-paivita-silta [db silta]
   (if-let [silta-kannassa (first (s/hae-silta-numerolla db (:nro silta)))]
