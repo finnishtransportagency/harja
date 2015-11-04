@@ -155,7 +155,7 @@ DELETE FROM siltatarkastuskohde WHERE siltatarkastus = :siltatarkastus;
 
 -- name: vie-siltatauluun!
 INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_alkuetaisyys) VALUES
-       (:nimi, :siltanro, :siltanimi, ST_GeomFromText(:geometria)::geometry, :numero, :aosa:, :aet);
+       (:nimi, :siltanro, :siltanimi, ST_GeomFromText(:geometria)::geometry, :numero, :aosa, :aet);
 
 -- name: paivita-silta-siltanumerolla!
 UPDATE silta
