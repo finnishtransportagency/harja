@@ -39,7 +39,7 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn transit-vastaus [req data]
+(defn transit-vastaus [data]
   {:status 200
    :headers {"Content-Type" "application/transit+json"} 
    :body (transit/clj->transit data)})
@@ -74,7 +74,7 @@
                            (catch Exception e
                              (log/warn e "Virhe POST palvelussa " nimi)
                              {:virhe (.getMessage e)}))]
-              (transit-vastaus req vastaus))))))))
+              (transit-vastaus vastaus))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 
