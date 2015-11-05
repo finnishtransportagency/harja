@@ -64,8 +64,9 @@
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
 (defn tallenna-sijainti [db sijainti toteuma-id]
-  (log/debug "Tuhotaan toteuman vanha sijainti")
+  (log/debug "Tuhotaan toteuman " toteuma-id " vanha sijainti")
   (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)
+  (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")
   (toteumat/luo-reittipiste<! db toteuma-id nil
                               (get-in sijainti [:koordinaatit :x])
                               (get-in sijainti [:koordinaatit :y])))
