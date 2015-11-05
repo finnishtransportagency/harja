@@ -521,6 +521,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan urakan " urakka-id " varustetoteumat.")
   (let [toteumat (into [] (q/hae-urakan-varustetoteumat db urakka-id))]
+    (log/debug "Palautetaan " (count toteumat) " toteuma(a)")
     toteumat))
 
 (defrecord Toteumat []

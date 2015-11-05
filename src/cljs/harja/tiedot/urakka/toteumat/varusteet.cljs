@@ -23,3 +23,5 @@
             nakymassa? @nakymassa?]
            (when nakymassa?
              (hae-toteumat urakka-id))))
+
+(tarkkaile! "Haetut toteumat: " haetut-toteumat)

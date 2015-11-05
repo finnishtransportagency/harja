@@ -24,11 +24,11 @@
      [grid/grid
       {:otsikko "Varustetoteumat"
        :tyhja   (if @varustetiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
-       :tunniste :toteumaid}
-      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
+       :tunniste :id}
+      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys "20%"}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys "10%"}
-       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :numero :leveys "10%"}
-       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :numero :leveys "10%"}
+       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys "10%"}
+       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "10%"}
        {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"}
        {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"}
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"}
