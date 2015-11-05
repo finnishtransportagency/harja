@@ -35,8 +35,8 @@
        {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "5%"}
-       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}
-       @varustetiedot/haetut-toteumat]]))
+       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}]
+       @varustetiedot/haetut-toteumat]))
 
 (defn valinnat []
   [:span
