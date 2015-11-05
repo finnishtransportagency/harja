@@ -50,7 +50,7 @@
 
 (defn varusteet []
   (komp/luo
-    (komp/lippu varustetiedot/nakymassa?)
+    (komp/lippu varustetiedot/nakymassa? varustetiedot/karttataso-varustetoteuma)
 
     (fn []
       [:span
