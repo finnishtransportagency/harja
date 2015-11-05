@@ -20,24 +20,23 @@
 
 (defn toteumataulukko []
   (let [toteumat @varustetiedot/haetut-toteumat
-        toimenpiteet {:lisatty "Lisätty"
-                      :paivitetty "Päivitetty"
-                      :poistettu "Poistettu"}]
-    [:span
-     [grid/grid
+        toimenpidestringit {:lisatty    "Lisätty"
+                            :paivitetty "Päivitetty"
+                            :poistettu "Poistettu"}]
+    [grid/grid
       {:otsikko "Varustetoteumat"
-       :tyhja   (if @varustetiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
+       :tyhja   (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
        :tunniste :id}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys "10%"}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys "15%"}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys "15%"}
-       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :hae (fn [rivi] (toimenpiteet (:toimenpide rivi))) :leveys "10%"}
+       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :hae (fn [rivi] (toimenpidestringit (:toimenpide rivi))) :leveys "10%"}
        {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"}
        {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}
-       toteumat]]]))
+       toteumat]]))
 
 (defn valinnat []
   [:span ""]) ; FIXME Selvitä mitä filttereitä on
