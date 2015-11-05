@@ -263,7 +263,7 @@
   (let [lisaa-tyoriveille-yksikkohinta (fn [rivit] (map
                                                      (fn [rivi] (assoc rivi :yksikkohinta
                                                                             (or (:yksikkohinta (first (filter
-                                                                                                        (fn [tyo] (and (= (:sopimus tyo) @u/valittu-hoitokausi)
+                                                                                                        (fn [tyo] (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
                                                                                                                        (= (:tehtava tyo) (:id rivi))
                                                                                                                        (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                         @u/urakan-yks-hint-tyot)))
@@ -272,7 +272,7 @@
         lisaa-tyoriveille-suunniteltu-maara (fn [rivit] (map
                                                           (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
                                                                                  (or (:maara (first (filter
-                                                                                                      (fn [tyo] (and (= (:sopimus tyo) @u/valittu-hoitokausi)
+                                                                                                      (fn [tyo] (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
                                                                                                                      (= (:tehtava tyo) (:id rivi))
                                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                       @u/urakan-yks-hint-tyot)))
@@ -282,7 +282,7 @@
                                                       (map
                                                         (fn [rivi] (assoc rivi :hoitokauden-suunnitellut-kustannukset
                                                                                (or (:yhteensa (first (filter
-                                                                                                       (fn [tyo] (and (= (:sopimus tyo) @u/valittu-hoitokausi)
+                                                                                                       (fn [tyo] (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
                                                                                                                       (= (:tehtava tyo) (:id rivi))
                                                                                                                       (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
                                                                                                        @u/urakan-yks-hint-tyot)))
