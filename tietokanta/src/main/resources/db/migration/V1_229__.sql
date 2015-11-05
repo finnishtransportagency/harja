@@ -1,0 +1,3 @@
+-- Lisää puuttuva toimenpidekoodi
+SELECT lisaa_tai_paivita_toimenpidekoodi('Pienmerkinnät massalla paksuus 7 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)', NULL, 4, 'm2',NULL,false,false,'Laaja toimenpide','20123',3);
+SELECT lisaa_tai_paivita_toimenpidekoodi('Pienmerkinnät massalla paksuus 7 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)', NULL, 4, 'm2',NULL,false,false,'Laaja toimenpide','20123',3);
