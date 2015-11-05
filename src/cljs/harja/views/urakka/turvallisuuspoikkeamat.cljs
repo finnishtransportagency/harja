@@ -1,4 +1,4 @@
-(ns harja.views.urakka.turvallisuus.turvallisuuspoikkeamat
+(ns harja.views.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
