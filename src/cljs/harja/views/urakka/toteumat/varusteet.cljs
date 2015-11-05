@@ -18,36 +18,33 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-#_(defn toteumataulukko []
+(defn toteumataulukko []
   (let [toteumat @varustetiedot/haetut-toteumat]
     [:span
      [grid/grid
-      {:otsikko "Kokonaishintaisten töiden toteumat"
+      {:otsikko "Varustetoteumat"
        :tyhja   (if @varustetiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
        :tunniste :toteumaid}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
-       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
-       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
-       {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
-       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
-      (take 500 toteumat)]
-     (when (> (count toteumat) 500)
-       [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
+       {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys "10%"}
+       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :numero :leveys "10%"}
+       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :numero :leveys "10%"}
+       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"}
+       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"}
+       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"}
+       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "10%"}
+       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"}]
+      toteumat]]))
 
-#_(defn valinnat []
-  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @navigaatio/valittu-urakka]
-  (let [urakka @navigaatio/valittu-urakka]
-    [:span
-     (urakka-valinnat/urakan-sopimus urakka)
-     (urakka-valinnat/urakan-hoitokausi-ja-kuukausi urakka)
-     (urakka-valinnat/urakan-kokonaishintainen-toimenpide-ja-tehtava)]))
+(defn valinnat []
+  [:span ""]) ; FIXME Selvitä mitä filttereitä on
 
 (defn varusteet []
   (komp/luo
     (komp/lippu varustetiedot/nakymassa?)
 
     (fn []
-      [:span "Täällä on tekemätöntä työtä"
+      [:span
        [kartta/kartan-paikka]
-       #_[valinnat]
-       #_[toteumataulukko]])))
+       [valinnat]
+       [toteumataulukko]])))
