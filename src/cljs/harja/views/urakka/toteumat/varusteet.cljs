@@ -7,20 +7,20 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.tiedot.navigaatio :as navigaatio]
+            [harja.ui.kentat :refer [tee-kentta]]
             [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komp]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.views.urakka.valinnat :as urakka-valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn toteumataulukko []
-  (let [toteumat @varustetiedot/haetut-toteumat
-        toimenpidestringit {:lisatty    "Lisätty"
+  (let [toimenpidestringit {:lisatty    "Lisätty"
                             :paivitetty "Päivitetty"
                             :poistettu "Poistettu"}]
     [grid/grid
@@ -36,10 +36,19 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}
-       toteumat]]))
+       @varustetiedot/haetut-toteumat]]))
+
+
 
 (defn valinnat []
-  [:span ""]) ; FIXME Selvitä mitä filttereitä on
+  [:span
+   [urakka-valinnat/urakan-sopimus]
+   [urakka-valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
+
+  [:span.label-ja-kentta
+   [:span.kentan-otsikko "Tienumero"]
+   [:div.kentta
+    [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} varustetiedot/tienumero]]]])
 
 (defn varusteet []
   (komp/luo
@@ -47,6 +56,5 @@
 
     (fn []
       [:span
-       [kartta/kartan-paikka]
        [valinnat]
        [toteumataulukko]])))
