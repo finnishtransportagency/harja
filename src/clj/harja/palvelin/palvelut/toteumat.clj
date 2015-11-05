@@ -517,11 +517,16 @@
                                   :toteumaid)]
     kasitellyt-toteumarivit))
 
+(def muunna-toimenpiteet-keywordeiksi-xf
+  (map #(assoc % :toimenpide (keyword (:toimenpide %)))))
+
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan urakan " urakka-id " varustetoteumat.")
-  (let [toteumat (into [] (q/hae-urakan-varustetoteumat db urakka-id))]
-    (log/debug "Palautetaan " (count toteumat) " toteuma(a)")
+  (let [toteumat (into []
+                       muunna-toimenpiteet-keywordeiksi-xf
+                       (q/hae-urakan-varustetoteumat db urakka-id))]
+    (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
     toteumat))
 
 (defrecord Toteumat []
