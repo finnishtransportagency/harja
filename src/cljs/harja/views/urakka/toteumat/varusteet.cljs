@@ -38,8 +38,6 @@
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}
        @varustetiedot/haetut-toteumat]]))
 
-
-
 (defn valinnat []
   [:span
    [urakka-valinnat/urakan-sopimus]
@@ -56,5 +54,6 @@
 
     (fn []
       [:span
+       [kartta/kartan-paikka]
        [valinnat]
        [toteumataulukko]])))

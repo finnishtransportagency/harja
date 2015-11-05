@@ -520,12 +520,18 @@
 (def muunna-toimenpiteet-keywordeiksi-xf
   (map #(assoc % :toimenpide (keyword (:toimenpide %)))))
 
-(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id]}]
+(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (log/debug "Haetaan urakan " urakka-id " varustetoteumat.")
+  (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
                        muunna-toimenpiteet-keywordeiksi-xf
-                       (q/hae-urakan-varustetoteumat db urakka-id))]
+                       (q/hae-urakan-varustetoteumat db
+                                                     urakka-id
+                                                     sopimus-id
+                                                     (konv/sql-date alkupvm)
+                                                     (konv/sql-date loppupvm)
+                                                     (if tienumero true false)
+                                                     tienumero))]
     (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
     toteumat))
 

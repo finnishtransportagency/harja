@@ -643,4 +643,8 @@ SELECT
   t.id AS toteuma_id
 FROM varustetoteuma vt
   LEFT JOIN toteuma t ON vt.toteuma = t.id
-WHERE urakka = :urakka;
+WHERE urakka = :urakka
+AND sopimus = :sopimus
+AND alkanut >= :alkupvm
+AND alkanut <= :loppupvm
+AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)
