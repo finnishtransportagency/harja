@@ -5,7 +5,6 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.pvm :as pvm]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
@@ -43,5 +42,5 @@
     (when karttataso-varustetoteuma
       (kartalla-esitettavaan-muotoon
         (map
-          #(assoc % :tyyppi-kartalla :tarkastus) ; FIXME Vaihda tyyppi oikeaksi kun näkyy kartalla
+          #(assoc % :tyyppi-kartalla :toteuma)
           @haetut-toteumat)))))
