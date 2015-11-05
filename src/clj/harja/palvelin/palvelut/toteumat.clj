@@ -517,6 +517,12 @@
                                   :toteumaid)]
     kasitellyt-toteumarivit))
 
+(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (log/debug "Haetaan urakan " urakka-id " varustetoteumat.")
+  (let [toteumat (into [] (q/hae-urakan-varustetoteumat db urakka-id))]
+    toteumat))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
@@ -579,6 +585,9 @@
       (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-tehtavat
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-tehtavat db user tiedot)))
+      (julkaise-palvelu http :urakan-varustetoteumat
+                        (fn [user tiedot]
+                          (hae-urakan-varustetoteumat db user tiedot)))
       this))
 
   (stop [this]
@@ -596,5 +605,6 @@
       :tallenna-toteuma-ja-toteumamateriaalit
       :poista-toteuma!
       :poista-tehtava!
-      :hae-toteumat-historiakuvaan)
+      :hae-toteumat-historiakuvaan
+      :urakan-varustetoteumat)
     this))
