@@ -42,5 +42,5 @@
     (when karttataso-varustetoteuma
       (kartalla-esitettavaan-muotoon
         (map
-          #(assoc % :tyyppi-kartalla :toteuma)
+          #(assoc % :tyyppi-kartalla :varustetoteuma)
           @haetut-toteumat)))))
