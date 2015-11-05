@@ -35,3 +35,13 @@
              (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
 (tarkkaile! "Haetut toteumat: " haetut-toteumat)
+
+(def karttataso-varustetoteuma (atom false))
+
+(def varusteet-kartalla
+  (reaction
+    (when karttataso-varustetoteuma
+      (kartalla-esitettavaan-muotoon
+        (map
+          #(assoc % :tyyppi-kartalla :tarkastus) ; FIXME Vaihda tyyppi oikeaksi kun näkyy kartalla
+          @haetut-toteumat)))))
