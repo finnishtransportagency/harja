@@ -420,7 +420,7 @@ INSERT INTO toteuma (urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suo
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi) VALUES ('HARJ951547ZK', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma'), 'lisatty', 'tl505', 89, 1, null, null, 12, null, null, 9, '2015-11-05 11:57:05.360537', null, 1, null, null, null, 'HARJ951547ZK        2                           HARJ951547ZK          01  ', null);
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma'),
-'2008-09-09 10:00.00',
+'2008-09-09 13:04.00',
 NOW(),
 st_makepoint(498919, 7247099) ::POINT, 2);
 
