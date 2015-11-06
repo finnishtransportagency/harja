@@ -45,14 +45,13 @@
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"
   []
-  [:div.sanktiot
+  [:div
    (tee-valinnat)
    (tee-taulukko)])
 
 (defn kokonaishintaiset-toteumat []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
-    (komp/kuuntelija :toteuma-klikattu #(reset! tiedot/valittu-toteuma %2))
 
     (fn []
       [:span
