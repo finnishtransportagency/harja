@@ -517,15 +517,12 @@
                                   :toteumaid)]
     kasitellyt-toteumarivit))
 
-(def muunna-toimenpiteet-keywordeiksi-xf
-  (map #(assoc % :toimenpide (keyword (:toimenpide %)))))
-
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
                        (comp
-                         muunna-toimenpiteet-keywordeiksi-xf
+                         (map #(konv/string->keyword % :toimenpide))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                          (map konv/alaviiva->rakenne))
                        (q/hae-urakan-varustetoteumat db

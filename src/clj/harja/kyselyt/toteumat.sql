@@ -645,8 +645,8 @@ SELECT
   rp.aika       AS reittipiste_aika,
   rp.sijainti   AS reittipiste_sijainti
 FROM varustetoteuma vt
-  LEFT JOIN toteuma t ON vt.toteuma = t.id
-  LEFT JOIN reittipiste rp ON rp.toteuma = t.id
+  JOIN reittipiste rp ON rp.toteuma = t.id
+  JOIN toteuma t ON vt.toteuma = t.id
 WHERE urakka = :urakka
 AND sopimus = :sopimus
 AND alkanut >= :alkupvm
