@@ -642,7 +642,7 @@ SELECT
   tierekisteriurakkakoodi,
   t.id AS toteuma_id
 FROM varustetoteuma vt
-  LEFT JOIN toteuma t ON vt.toteuma = t.id
+  JOIN toteuma t ON vt.toteuma = t.id
 WHERE urakka = :urakka
 AND sopimus = :sopimus
 AND alkanut >= :alkupvm
