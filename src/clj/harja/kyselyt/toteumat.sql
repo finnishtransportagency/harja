@@ -612,7 +612,6 @@ SELECT
   rp.id              AS reittipiste_id,
   rp.aika            AS reittipiste_aika,
   rp.sijainti        AS reittipiste_sijainti,
-  rt.toimenpidekoodi AS reittipiste_toimenpidekoodi,
   tk.nimi            AS reittipiste_tehtavanimi
 FROM toteuma t
   LEFT JOIN reittipiste rp

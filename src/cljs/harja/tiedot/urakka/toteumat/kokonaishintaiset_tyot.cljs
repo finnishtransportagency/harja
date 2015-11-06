@@ -11,8 +11,17 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
+(defn hae-toteumatehtavat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
   (k/post! :urakan-kokonaishintaisten-toteumien-tehtavat
+           {:urakka-id  urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm    alkupvm
+            :loppupvm   loppupvm
+            :toimenpide toimenpide
+            :tehtava    tehtava}))
+
+(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
+  (k/post! :urakan-kokonaishintaisten-toteumien-reitit
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
             :alkupvm    alkupvm
@@ -33,7 +42,19 @@
             tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
             nakymassa? @nakymassa?]
            (when nakymassa?
-             (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
+             (hae-toteumatehtavat urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
+
+(def haetut-reitit
+  (reaction<!
+    [urakka-id (:id @nav/valittu-urakka)
+     sopimus-id (first @urakka/valittu-sopimusnumero)
+     hoitokausi @urakka/valittu-hoitokausi
+     kuukausi @urakka/valittu-hoitokauden-kuukausi
+     toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
+     tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
+     nakymassa? @nakymassa?]
+    (when nakymassa?
+      (hae-toteumareitit urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
@@ -43,7 +64,8 @@
              (kartalla-esitettavaan-muotoon
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
-                 @haetut-toteumat)))))
+                 @haetut-reitit)))))
 
 
-(tarkkaile! "------> Haetut toteumat: " hae-toteumat)
+(tarkkaile! "------> Haetut toteumat: " haetut-toteumat)
+(tarkkaile! "------> Haetut reitit: " haetut-reitit)

@@ -498,8 +498,25 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
+(defn yhdista-reittipisteiden-tehtavat [toteumat]
+  (mapv (fn [toteuma]
+          (let [toteuman-reittipisteet (:reittipisteet toteuma)
+                yhdistetyt-piste-idt (keys (group-by :id toteuman-reittipisteet))
+                lopputulos (mapv (fn [piste-id]
+                                   (let [eka-yhdistetty (first (filter
+                                                                 #(= (:id %) piste-id)
+                                                                 toteuman-reittipisteet))]
+                                     (-> eka-yhdistetty
+                                         (assoc :tehtavat (mapv :tehtavanimi (filter
+                                                                               #(= (:id %) (:id eka-yhdistetty))
+                                                                               toteuman-reittipisteet)))
+                                         (dissoc :tehtavanimi))))
+                                 yhdistetyt-piste-idt)]
+            (assoc toteuma :reittipisteet lopputulos)))
+        toteumat))
+
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
-  #_(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteumat (into []
                        (comp
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
@@ -514,9 +531,7 @@
                                   toteumat
                                   {:reittipiste :reittipisteet}
                                   :toteumaid)]
-    (println "toteumat  " (count (:reittipisteet (first kasitellyt-toteumarivit))))
-
-    kasitellyt-toteumarivit))
+    (yhdista-reittipisteiden-tehtavat kasitellyt-toteumarivit)))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -607,6 +622,9 @@
       (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-tehtavat
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-tehtavat db user tiedot)))
+      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit
+                        (fn [user tiedot]
+                          (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot)))
       this))
 
   (stop [this]
