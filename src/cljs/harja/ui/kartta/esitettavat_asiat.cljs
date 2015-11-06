@@ -43,7 +43,9 @@
   [(assoc havainto
      :type :havainto
      :nimi (or (:nimi havainto) "Havainto")
-     :alue (oletusalue havainto valittu?))])
+     :alue {:type :tack-icon
+            :img "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in havainto [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :pistokoe [tarkastus valittu?]
   [(assoc tarkastus
@@ -57,7 +59,9 @@
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
-     :alue (oletusalue tarkastus valittu?))])
+     :alue {:type :tack-icon
+            :img "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in tarkastus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
