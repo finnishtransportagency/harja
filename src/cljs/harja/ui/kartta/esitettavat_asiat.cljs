@@ -19,19 +19,25 @@
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :alue (oletusalue ilmoitus valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Kysely")
-     :alue (oletusalue ilmoitus valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
-     :alue (oletusalue ilmoitus valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :havainto [havainto valittu?]
   [(assoc havainto
@@ -51,11 +57,13 @@
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
      :alue (oletusalue tarkastus valittu?))])
 
-(defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu?]
+(defmethod asia-kartalle :varustetoteuma [varustetoteuma]
   [(assoc varustetoteuma
      :type :varustetoteuma
      :nimi (or (:nimi varustetoteuma) "Varustetoteuma")
-     :alue (oletusalue varustetoteuma valittu?))])
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
