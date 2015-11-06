@@ -501,7 +501,12 @@
                                 :zIndex 5})]))))
 
 (defmethod luo-feature :tack-icon [{:keys [coordinates img]}]
-  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img 0 [0.5 1]))
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (ol.style.Style.
+                 #js {:image  (ol.style.Icon.
+                                #js {:src    (str +karttaikonipolku+ img)
+                                     :anchor #js [0.5 1]})
+                      :zIndex 4}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
