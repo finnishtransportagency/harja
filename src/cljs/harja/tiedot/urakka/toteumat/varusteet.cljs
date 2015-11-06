@@ -31,6 +31,7 @@
             kuukausi @urakka/valittu-hoitokauden-kuukausi
             tienumero @tienumero
             nakymassa? @nakymassa?]
+           {:odota 500}
            (when nakymassa?
              (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
