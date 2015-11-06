@@ -47,7 +47,7 @@
       "enum": [
         "yksikkohintainen",
         "kokonaishintainen",
-        "akillinen_hoitotyo",
+        "akillinen-hoitotyo",
         "lisatyo",
         "muutostyo"
       ]
