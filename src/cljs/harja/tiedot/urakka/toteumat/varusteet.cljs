@@ -36,12 +36,21 @@
 
 (tarkkaile! "Haetut toteumat: " haetut-toteumat)
 
+(def varuste-toimenpide->string {:lisatty    "Lisätty"
+                                 :paivitetty "Päivitetty"
+                                 :poistettu  "Poistettu"})
+
 (def karttataso-varustetoteuma (atom false))
 
 (def varusteet-kartalla
   (reaction
     (when karttataso-varustetoteuma
       (kartalla-esitettavaan-muotoon
-        (map
-          #(assoc % :tyyppi-kartalla :varustetoteuma)
+        (map (fn [toteuma]
+               (-> toteuma
+                   (assoc :tyyppi-kartalla :varustetoteuma)
+                   (assoc :selitys-kartalla (str
+                                              (varuste-toimenpide->string (:toimenpide toteuma))
+                                              ": "
+                                              (:tietolaji toteuma)))))
           @haetut-toteumat)))))

@@ -60,7 +60,7 @@
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
   [(assoc varustetoteuma
      :type :varustetoteuma
-     :nimi (or (:nimi varustetoteuma) "Varustetoteuma")
+     :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
      :alue {:type        :tack-icon
             :img         "kartta-hairion-hallinta-sininen.svg"
             :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])

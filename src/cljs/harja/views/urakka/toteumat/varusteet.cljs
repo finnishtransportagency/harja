@@ -19,11 +19,10 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+
+
 (defn toteumataulukko []
-  (let [toimenpidestringit {:lisatty    "Lisätty"
-                            :paivitetty "Päivitetty"
-                            :poistettu  "Poistettu"}
-        toteumat @varustetiedot/haetut-toteumat]
+  (let [toteumat @varustetiedot/haetut-toteumat]
     [:span
      [grid/grid
       {:otsikko  "Varustetoteumat"
@@ -32,7 +31,9 @@
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys "10%"}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys "15%"}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys "15%"}
-       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :hae (fn [rivi] (toimenpidestringit (:toimenpide rivi))) :leveys "10%"}
+       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :hae (fn [rivi]
+                                                                       (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))
+        :leveys "10%"}
        {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"}
        {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
