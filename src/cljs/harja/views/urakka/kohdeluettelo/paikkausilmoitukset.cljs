@@ -261,17 +261,17 @@
               :virheet      toteutuneet-osoitteet-virheet
               :uusi-id      (inc (count @toteutuneet-osoitteet))}
              [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alkutieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alkuetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Lopputieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppuetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alku\u00ADtieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alku\u00ADetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                         (paallystysilmoitukset/laske-tien-pituus rivi))}
-              {:otsikko "Tienpäällysteen leveys" :nimi :paallysteen_leveys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tiepäällysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+              {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen_leveys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                                (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
-              {:otsikko "Paikkausneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Paikkaus-%" :nimi :paikkausprosentti :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+              {:otsikko "Paik\u00ADkaus\u00ADneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Paik\u00ADkaus-%" :nimi :paikkausprosentti :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                    (laske-paikkausprosentti (:paikkausneliot rivi)
                                                                                                                                                             (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
              toteutuneet-osoitteet]
@@ -326,7 +326,7 @@
                                                                                                            (nayta-tila (:tila rivi)))}
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
                                                                                                                             (nayta-paatos (:paatos rivi)))}
-         {:otsikko     "Paikkausilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+         {:otsikko     "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
           :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]
                                                    [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
