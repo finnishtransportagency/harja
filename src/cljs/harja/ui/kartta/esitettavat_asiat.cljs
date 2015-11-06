@@ -20,7 +20,8 @@
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
      :alue {:type        :tack-icon
-            :img         "kartta-hairion-hallinta-sininen.svg"
+            :scale (if (valittu? ilmoitus) 1.5 1)
+            :img         "kartta-tiedotus-violetti.svg"
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
@@ -28,7 +29,8 @@
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Kysely")
      :alue {:type        :tack-icon
-            :img         "kartta-hairion-hallinta-sininen.svg"
+            :scale (if (valittu? ilmoitus) 1.5 1)
+            :img         "kartta-kysely-violetti.svg"
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
@@ -36,7 +38,8 @@
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
      :alue {:type        :tack-icon
-            :img         "kartta-hairion-hallinta-sininen.svg"
+            :scale (if (valittu? ilmoitus) 1.5 1)
+            :img         "kartta-toimenpidepyynto-violetti.svg"
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :havainto [havainto valittu?]
@@ -44,7 +47,8 @@
      :type :havainto
      :nimi (or (:nimi havainto) "Havainto")
      :alue {:type :tack-icon
-            :img "kartta-hairion-hallinta-sininen.svg"
+            :scale (if (valittu? havainto) 1.5 1)
+            :img "kartta-havainto-violetti.svg"
             :coordinates (get-in havainto [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :pistokoe [tarkastus valittu?]
@@ -52,7 +56,8 @@
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
      :alue {:type :tack-icon
-            :img "kartta-hairion-hallinta-sininen.svg"
+            :scale (if (valittu? tarkastus) 1.5 1)
+            :img "kartta-tarkastus-violetti.svg"
             :coordinates (get-in tarkastus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :laaduntarkastus [tarkastus valittu?]
@@ -60,7 +65,8 @@
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
      :alue {:type :tack-icon
-            :img "kartta-hairion-hallinta-sininen.svg"
+            :scale (if (valittu? tarkastus) 1.5 1)
+            :img "kartta-tarkastus-violetti.svg"
             :coordinates (get-in tarkastus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
@@ -90,7 +96,8 @@
      :type :turvallisuuspoikkeama
      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
      :alue {:type        :tack-icon
-            :img         "kartta-hairion-hallinta-sininen.svg"
+            :scale (if (valittu? tp) 1.5 1)
+            :img         "kartta-turvallisuuspoikkeama-avoin-oranssi.svg"
             :coordinates (get-in tp [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]

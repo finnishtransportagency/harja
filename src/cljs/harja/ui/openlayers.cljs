@@ -500,12 +500,13 @@
                                                          #js [0.5 0.5])})
                                 :zIndex 5})]))))
 
-(defmethod luo-feature :tack-icon [{:keys [coordinates img]}]
+(defmethod luo-feature :tack-icon [{:keys [coordinates img scale]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
                                 #js {:src    (str +karttaikonipolku+ img)
-                                     :anchor #js [0.5 1]})
+                                     :anchor #js [0.5 1]
+                                     :scale  (or scale 1)})
                       :zIndex 4}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
@@ -520,7 +521,6 @@
                                                      (clj->js anchor)
                                                      #js [0.5 1])
                                      :opacity      1
-                                     ;;:size         #js [40 40]
                                      :rotation     (or direction 0)
                                      :anchorXUnits "fraction"
                                      :anchorYUnits "fraction"})
