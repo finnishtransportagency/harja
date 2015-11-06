@@ -612,7 +612,6 @@ WHERE
 ORDER BY t.alkanut
 LIMIT 501;
 
-
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma materiaalin tiedot
 UPDATE toteuma_materiaali 
@@ -623,3 +622,33 @@ UPDATE toteuma_materiaali
  WHERE id = :tmid
    AND toteuma IN (SELECT id FROM toteuma t WHERE t.urakka = :urakka);
    
+-- name: hae-urakan-varustetoteumat
+SELECT
+  vt.id,
+  tunniste,
+  toimenpide,
+  tietolaji,
+  tr_numero AS tie,
+  tr_alkuosa AS aosa,
+  tr_alkuetaisyys AS aet,
+  tr_loppuosa AS losa,
+  tr_loppuetaisyys AS let,
+  piiri,
+  kuntoluokka,
+  karttapvm,
+  tr_puoli,
+  tr_ajorata,
+  t.alkanut AS alkupvm,
+  t.paattynyt AS loppupvm,
+  arvot,
+  tierekisteriurakkakoodi,
+  t.id AS toteuma_id
+FROM varustetoteuma vt
+  JOIN toteuma t ON vt.toteuma = t.id
+WHERE urakka = :urakka
+AND sopimus = :sopimus
+AND alkanut >= :alkupvm
+AND alkanut <= :loppupvm
+AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)
+ORDER BY t.alkanut
+LIMIT 501;
