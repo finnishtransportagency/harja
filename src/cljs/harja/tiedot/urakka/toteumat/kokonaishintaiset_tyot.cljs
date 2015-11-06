@@ -44,3 +44,6 @@
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
                  @haetut-toteumat)))))
+
+
+(tarkkaile! "------> Haetut toteumat: " hae-toteumat)

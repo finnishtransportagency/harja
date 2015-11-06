@@ -24,7 +24,7 @@
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"
        :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
-       :tunniste :toteumaid}
+       :tunniste :tehtavaid}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}

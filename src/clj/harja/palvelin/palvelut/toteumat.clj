@@ -514,7 +514,7 @@
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
                                   {:reittipiste :reittipisteet}
-                                  :toteumaid)]
+                                  :tehtavaid)]
     kasitellyt-toteumarivit))
 
 (defrecord Toteumat []

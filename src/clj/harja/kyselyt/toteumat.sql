@@ -351,7 +351,7 @@ INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
  poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id, reitti)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
-        FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti);
+                 FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti);
 
 -- name: poista-toteuma!
 UPDATE toteuma
@@ -575,17 +575,18 @@ WHERE toteuma = :id;
 
 -- name: hae-urakan-kokonaishintaisten-toteumien-tehtavat
 SELECT
-  t.id                AS toteumaid,
-  t.alkanut           AS alkanut,
-  t.paattynyt         AS paattynyt,
-  tt.toimenpidekoodi  AS toimenpidekoodi,
-  tk.nimi             AS nimi,
-  tt.maara            AS maara,
-  tk.yksikko          AS yksikko,
-  k.jarjestelma       AS jarjestelmanlisaama,
-  rp.id               AS reittipiste_id,
-  rp.aika             AS reittipiste_aika,
-  rp.sijainti         AS reittipiste_sijainti
+  t.id               AS toteumaid,
+  t.alkanut          AS alkanut,
+  t.paattynyt        AS paattynyt,
+  tt.toimenpidekoodi AS toimenpidekoodi,
+  tk.nimi            AS nimi,
+  tt.id              AS tehtavaid,
+  tt.maara           AS maara,
+  tk.yksikko         AS yksikko,
+  k.jarjestelma      AS jarjestelmanlisaama,
+  rp.id              AS reittipiste_id,
+  rp.aika            AS reittipiste_aika,
+  rp.sijainti        AS reittipiste_sijainti
 FROM toteuma t
   LEFT JOIN toteuma_tehtava tt
     ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
@@ -613,11 +614,13 @@ LIMIT 501;
 
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma materiaalin tiedot
-UPDATE toteuma_materiaali 
-   SET materiaalikoodi = :materiaali,
-       maara = :maara,
-       muokkaaja = :kayttaja,
-       muokattu = now()
- WHERE id = :tmid
-   AND toteuma IN (SELECT id FROM toteuma t WHERE t.urakka = :urakka);
+UPDATE toteuma_materiaali
+SET materiaalikoodi = :materiaali,
+  maara             = :maara,
+  muokkaaja         = :kayttaja,
+  muokattu          = now()
+WHERE id = :tmid
+      AND toteuma IN (SELECT id
+                      FROM toteuma t
+                      WHERE t.urakka = :urakka);
    
