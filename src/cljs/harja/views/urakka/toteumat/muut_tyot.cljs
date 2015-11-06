@@ -405,9 +405,9 @@
                              nil
                              (:yksikkohinta %))
               :muokattava? (constantly false) :fmt fmt/euro-opt :leveys "10%"}
-             {:otsikko "Hinnoit\u00ADtelu" :tyyppi :string :nimi :hinnoittelu
+             {:otsikko "Hin\u00ADnoit\u00ADtelu" :tyyppi :string :nimi :hinnoittelu
               :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Muutos\u00ADhinta") :leveys "10%"}
-             {:otsikko "Kustannus (€)" :tyyppi :string :nimi :kustannus :tasaa :oikea
+             {:otsikko "Kus\u00ADtannus (€)" :tyyppi :string :nimi :kustannus :tasaa :oikea
               ;; kustannus on päivän hinta jos se on annettu, muutoin yksikköhinta * määrä
               :hae     #(if (get-in % [:tehtava :paivanhinta])
                          (get-in % [:tehtava :paivanhinta])
