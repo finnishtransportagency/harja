@@ -103,7 +103,7 @@
 
         [:form.form-inline
          [:div.form-group
-          [:label {:for "tuoKayttaja" :style {:display "block"}} "Tuo käyttäjä Harjaan:"]
+          [:label {:for "tuoKayttaja" :style {:display "block"}} "Livi-käyttäjän tuominen Harjaan"]
           [:input#tuoKayttaja.form-control {:style {:margin-right "5px"}
                                             :value       @tunnus
                                             :on-change   #(reset! tunnus (-> % .-target .-value))

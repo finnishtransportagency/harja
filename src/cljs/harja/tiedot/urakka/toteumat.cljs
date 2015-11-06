@@ -11,6 +11,9 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+; FIXME Tämä nimiavaruus hallinoi kaikkia Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
+; jokaisella näkymällä olisi oma tiedot-namespace kaverina (kuten esim. kokonaishintaisilla nyt on).
+
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))
 
@@ -19,13 +22,13 @@
 (def yksikkohintainen-toteuma-kartalla-xf
   (map #(do
          (assoc %
-         :type :yksikkohintainen-toteuma
-         :alue {:type   :arrow-line
-                :points (mapv (comp :coordinates :sijainti)
-                              (sort-by
-                               :aika
-                               pvm/ennen?
-                               (:reittipisteet %)))}))))
+           :type :yksikkohintainen-toteuma
+           :alue {:type   :arrow-line
+                  :points (mapv (comp :coordinates :sijainti)
+                                (sort-by
+                                  :aika
+                                  pvm/ennen?
+                                  (:reittipisteet %)))}))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
@@ -100,9 +103,9 @@
 
 (defn hae-urakan-erilliskustannukset [urakka-id [alkupvm loppupvm]]
   (k/post! :urakan-erilliskustannukset
-    {:urakka-id urakka-id
-     :alkupvm alkupvm
-     :loppupvm loppupvm}))
+           {:urakka-id urakka-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
 
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))

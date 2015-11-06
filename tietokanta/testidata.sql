@@ -30,24 +30,7 @@ INSERT INTO organisaatio (tyyppi, ytunnus, nimi, sampoid) VALUES ('urakoitsija',
 \i testidata/urakat.sql
 
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun alueurakka pääsopimus', '2005-10-01','2010-09-30','1H05228/01', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun alueurakka pääsopimus','2014-10-01','2019-09-30','2H16339/01', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus) VALUES ('Oulun alueurakka lisäsopimus', '2005-10-01','2010-09-30','2H05228/10', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE sampoid='1H05228/01'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus) VALUES ('Oulun alueurakka lisäsopimus', '2014-10-01','2019-09-30','5H16339/01', (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE sampoid='2H16339/01'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Pudasjärvi pääsopimus', '2007-10-01','2012-09-30','3H05228/40', (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus) VALUES ('Pudasjärvi lisäsopimus', '2007-10-01','2012-09-30','9H143239/01', (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id FROM sopimus WHERE sampoid='3H05228/40'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Porin pääsopimus', '2007-10-01','2012-09-30','4H05111/22', (SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Muhoksen pääsopimus', '2007-06-01','2012-09-30','5H05228/10', (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Muhoksen pääsopimus', '2007-06-01','2012-09-30','5H05229/10', (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Porintien pääsopimus', '2007-05-01','2007-08-22','8605228/10', (SELECT id FROM urakka WHERE nimi='Porintien päällystysurakka'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018', '2013-01-01','2018-12-31','7H05228/10', (SELECT id FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2013-2018'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun valaistuksen palvelusopimuksen pääsopimus 2013-2018', '2013-01-01','2018-12-31','5A05228/10', (SELECT id FROM urakka WHERE nimi='Oulun valaistuksen palvelusopimus 2013-2018'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Pirkanmaan tiemerkinnän palvelusopimuksen pääsopimus 2013-2018', '2013-01-01','2018-12-31','2A05228/10', (SELECT id FROM urakka WHERE nimi='Pirkanmaan tiemerkinnän palvelusopimus 2013-2018'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Lapin tiemerkinnän palvelusopimuksen pääsopimus 2013-2018', '2013-01-01','2018-12-31','2A06228/10', (SELECT id FROM urakka WHERE nimi='Lapin tiemerkinnän palvelusopimus 2013-2018'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Kempeleen valaistuksen pääsopimus', '2007-03-01','2012-05-30','9H05224/01', (SELECT id FROM urakka WHERE nimi='Kempeleen valaistusurakka'));
-
--- Luodaan toimenpidekoodit
-\i testidata/toimenpidekoodit.sql
+\i testidata/sopimukset.sql
 
 -- Luodaan sanktiotyypit
 \i testidata/sanktiot.sql
@@ -62,7 +45,7 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaa
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('ulle', 'Ulle', 'Urakoitsija', 'ulle@example.org', 123123123, (SELECT id FROM organisaatio WHERE nimi='Destia Oy'));
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('yit_pk','Yitin', 'Pääkäyttäjä', 'yit_pk@example.org', 43223123, (SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy'));
-INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('yit_pk2','Uuno', 'Urakoitsija', 'yit_pk2@example.org', 43223123, (SELECT id FROM organisaatio WHERE lyhenne='POP'));
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('yit_pk2','Uuno', 'Urakoitsija', 'yit_pk2@example.org', 43223123, (SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy'));
 INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='tero'), 'urakanvalvoja');
 INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='yit_pk2'), 'urakoitsijan paakayttaja');
 INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='yit_pk'), 'urakoitsijan paakayttaja');
@@ -191,7 +174,7 @@ INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) values (3, 1, 'T
 
 -- Tehdään pari hanketta
 INSERT INTO hanke (nimi,alkupvm,loppupvm,alueurakkanro, sampoid) values ('Oulun alueurakka','2010-10-01', '2015-09-30', '1238', 'oulu1');
-INSERT INTO hanke (nimi,alkupvm,loppupvm,alueurakkanro, sampoid) values ('Pudasjärven alueurakka','2007-10-01', '2012-09-30', '1240', 'pudis2');
+INSERT INTO hanke (nimi,alkupvm,loppupvm,alueurakkanro, sampoid) values ('Pudasjärven alueurakka','2007-10-01', '2012-09-30', '1229', 'pudis2');
 INSERT INTO hanke (nimi,alkupvm,loppupvm,alueurakkanro, sampoid) values ('Oulun alueurakka','2014-10-01', '2019-09-30', '1238', 'oulu2');
 
 -- Liitetään urakat niihin
@@ -308,6 +291,29 @@ INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohint
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2014-01-01', '2014-09-30', 9, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 866.0, 'km', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is ohituskaistat KVL >15000'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
 
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 20, 'm2', 1, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Pyörätien jatkeet ja suojatiet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'kpl', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nopeusrajoitusmerkinnät'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'kpl', 5, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Väistämisviivan yksi kolmio hainhammas'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 60, 'm2', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pysäytysviiva'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 4, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Sulkualueet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pyörätien jatkeet ja suojatiet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 50, 'kpl', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 400, 'm2', 4, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla paksuus 7 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 190, 'm2', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla paksuus 7 mm: Reunaviiva ja reunaviivan jatke'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla, paksuus 3 mm: Sulkuviiva ja varoitusviiva keltainen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 2000, 'm2', 4, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla, paksuus 3 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla, paksuus 3mm: Reunaviiva ja reunaviivan jatke'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 20, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Muut pienmerkinnät'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Nuolet ja nopeusrajoitusmerkinnät ja väistämisviivat'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Sulkualueet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 200, 'm2', 1, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnän upotusjyrsintä'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 60, 'jm', 4.5, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'jm', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'jm', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'jm', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, keskiviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 50, 'jm', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+
 -- talvihoidon laaja toimenpide Oulun ja Pudasjärven urakoille
 -- talvihoidon  laaja toimenpide 23104
 -- soratien hoidon laaja toimenpide 23124
@@ -334,6 +340,7 @@ INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotep
 INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porintien päällystysurakka'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20101'), 'Porintien Ajoradan päällyste TP', '2007-01-01','2012-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun valaistuksen palvelusopimus 2013-2018'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20172'), 'Oulu Valaistuksen korjaus TP', '2013-01-01','2018-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Kempeleen valaistusurakka'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20172'), 'Kempele Valaistuksen korjaus TP', '2007-10-01','2012-09-30', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20123'), 'Valaistuksen korjaus TP', '2013-10-01','2015-09-30', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
 INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus) VALUES (2005, 10, 3500, '2005-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null));
 INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus) VALUES (2005, 11, 3500, '2005-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null));
@@ -385,12 +392,15 @@ INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinsta
 INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, sopimus, pohjavesialue, luotu, muokattu, luoja, muokkaaja, poistettu) VALUES ('20051001', '20100930', 15, 1, 1, 1, null, '2004-10-19 10:23:54+02', '2004-10-19 10:23:54+02', 1, 1, false);
 
 -- Toteumat
+
+-- Oulun alueurakka 2005-2010
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'Tällä toteumalla on reitti.');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-01 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', 'Y125', 'Tehtävä oli vaikea');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-02 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'Sateinen sää haittasi.');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), NOW(), '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Teppo Tienraivaaja', 'Y125', 'Tehtävä oli vaikea :(');
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null), '2004-10-19 10:23:54+02', '2005-10-03 00:00:00+02', '2006-09-30 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Pekan Kone OY', 'Y125', 'Automaattisesti lisätty fastroi toteuma', (SELECT id FROM kayttaja WHERE kayttajanimi = 'fastroi'));
+
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (1, NOW(), 1350, 10);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (2, NOW(), 1350, 7);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (1, NOW(), 1351, 5);
@@ -398,11 +408,44 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, 
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES (3, NOW(), 1351, 150);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 1350, 28);
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Automaattisesti lisätty fastroi toteuma'), '2005-10-01 00:00.00', 1351, 123);
+INSERT INTO toteuma_tehtava  (toteuma, luotu,toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'), '2005-11-11 00:00.00', 1351, 666);
+
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 1, 7);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (1, '2005-10-01 00:00.00', 2, 4);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (2, '2005-10-01 00:00.00', 3, 3);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (3, '2005-10-01 00:00.00', 4, 9);
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES ((SELECT id FROM toteuma WHERE luoja = 7), '2005-10-01 00:00.00', 5, 25);
+
+-- Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017') AND paasopimus IS null), NOW(), '2013-11-01 00:00:00+02', '2013-11-01 10:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'KAS ELY 2013 - 2018 56');
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 5);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 5);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 5);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 5);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 5);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 5);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 10);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 10);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 10);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 10);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 10);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), 10);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), 25000);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, keskiviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), 30000);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), 5000);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnän upotusjyrsintä'), 500);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pyörätien jatkeet ja suojatiet'), 150);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 56'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Sulkualueet'), 150);
+
+
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017') AND paasopimus IS null), NOW(), '2013-11-01 00:00:00+02', '2013-11-01 10:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'KAS ELY 2013 - 2018 3');
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 3'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pyörätien jatkeet ja suojatiet'), 11037);
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017') AND paasopimus IS null), NOW(), '2013-11-01 00:00:00+02', '2013-11-01 10:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'KAS ELY 2013 - 2018 4');
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 4'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Sulkualueet'), 854);
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017') AND paasopimus IS null), NOW(), '2013-11-01 00:00:00+02', '2013-11-01 10:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'KAS ELY 2013 - 2018 5');
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 5'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Nuolet ja nopeusrajoitusmerkinnät ja väistämisviivat'), 2525);
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017') AND paasopimus IS null), NOW(), '2013-11-01 00:00:00+02', '2013-11-01 10:00:00+02', 'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'KAS ELY 2013 - 2018 6');
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAS ELY 2013 - 2018 6'), NOW(), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Muut pienmerkinnät'), 595);
 
 -- Muutos-, lisä- ja äkillistä hoitotytöätoteumatyyppi: 'akillinen-hoitotyo', 'lisatyo', 'muutostyo'
 INSERT INTO toteuma (urakka, sopimus, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -434,41 +477,19 @@ INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehta
 INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2005-10-01', '2010-09-30', 'tiekm', 3.5, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='I ohituskaistat'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null));
 INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2005-10-01', '2010-09-30', 'tiekm', 4.5, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='I rampit'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null));
 
--- Päällystyskohteet
+-- Päällystyskohteet & -ilmoitukset
+\i testidata/yllapito/paallystys.sql
 
--- Päällystys
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null), 'L03', 'Leppäjärven ramppi', 400, true, 100, 4543.95, 0);
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null), 308, 'Mt 2855 Viisari - Renko', 9000, false, 200, 565, 100);
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null), 'L010', 'Tie 357', 500, true, 3457, 5, 6);
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null), 310, 'Oulaisten ohitusramppi', 500, false, 3457, 5, 6);
+-- Paikkauskohteet & -ilmoitukset
+\i testidata/yllapito/paikkaus.sql
 
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide, sijainti) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi'), 'Laivaniemi 1', 19521, 10, 5, 10, 15, 2, 2, 'PAB-B 16/80 MPKJ', ST_GeomFromText('MULTILINESTRING((426888 7212758,427081 7212739),(434777 7215499,436899 7217174,438212 7219910,438676 7220554,440102 7221432,441584 7222729,442255 7223162,443128 7223398,443750 7223713,448682 7225293,451886 7226708,456379 7228018,459945 7229222,461039 7229509))'));
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide, sijainti) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi'), 'Laivaniemi 2', 19521, 10, 5, 10, 15, 2, 2, 'PAB-B 16/80 MPKJ', ST_GeomFromText('MULTILINESTRING((384276 6674532,384269 6674528,383563 6674582,383518 6674607,383350 6674736,383244 6674822,383201 6674859,383028 6675028,382959 6675071,382825 6675131,382737 6675175,382737 6675213,382730 6675251,382615 6675745,382569 6675961,382555 6675978,382529 6675975,382519 6675967))'));
-
--- Paikkaus
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null), 311, 'Oulaisten ohitusramppi 2', 0, false, 3457, 5, 6);
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null), 312, 'Tie 358', 0, false, 3457, 5, 6);
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null), 313, 'Leppäjärven ramppi 2', 0, false, 3457, 5, 6);
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null), 314, 'Leppäjärven ramppi 3', 0, false, 3457, 5, 6);
-
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide, sijainti) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi 2'), 'Laivalahti 1', 19521, 10, 5, 10, 15, 2, 2, 'PAB-B 16/80 MPKJ', ST_GeomFromText('MULTILINESTRING((426888 7212758,427081 7212739),(434777 7215499,436899 7217174,438212 7219910,438676 7220554,440102 7221432,441584 7222729,442255 7223162,443128 7223398,443750 7223713,448682 7225293,451886 7226708,456379 7228018,459945 7229222,461039 7229509))'));
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, kvl, nykyinen_paallyste, toimenpide, sijainti) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi 2'), 'Laivalahti 2', 19521, 10, 5, 10, 15, 2, 2, 'PAB-B 16/80 MPKJ', ST_GeomFromText('MULTILINESTRING((384276 6674532,384269 6674528,383563 6674582,383518 6674607,383350 6674736,383244 6674822,383201 6674859,383028 6675028,382959 6675071,382825 6675131,382737 6675175,382737 6675213,382730 6675251,382615 6675745,382569 6675961,382555 6675978,382529 6675975,382519 6675967))'));
-
--- Paikkaus
--- Päällystysilmoitukset
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, aloituspvm, takuupvm, muutoshinta, ilmoitustiedot) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Leppäjärven ramppi'), 'aloitettu'::paallystystila, '2005-11-14 00:00:00+02', '2005-12-20 00:00:00+02', 2000, '{"osoitteet":[{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":0,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":16,"massa":100,"rc%":0,"tyomenetelma":12,"leveys":6.5,"massamaara":1781,"edellinen-paallystetyyppi":12,"pinta-ala":15},{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":1,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":10,"massa":512,"rc%":0,"tyomenetelma":12,"leveys":4,"massamaara":1345,"edellinen-paallystetyyppi":11,"pinta-ala":9}],"kiviaines":[{"esiintyma":"KAMLeppäsenoja","km-arvo":"An14","muotoarvo":"Fi20","sideainetyyppi":"B650/900","pitoisuus":4.3,"lisaaineet":"Tartuke"}],"alustatoimet":[{"aosa":22,"aet":3,"losa":5,"let":4785,"kasittelymenetelma":13,"paksuus":30,"verkkotyyppi":1,"tekninen-toimenpide":2}],"tyot":[{"tyyppi":"ajoradan-paallyste","tyo":"AB 16/100 LTA","tilattu-maara":10000,"toteutunut-maara":10100,"yksikkohinta":20, "yksikko": "km"}]}');
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, aloituspvm, valmispvm_kohde, valmispvm_paallystys, takuupvm, muutoshinta, ilmoitustiedot) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Tie 357'), 'valmis'::paallystystila, '2005-11-14 00:00:00+02', '2005-12-19 00:00:00+02', '2005-12-19 00:00:00+02', '2005-12-20 00:00:00+02', 2000, '{"osoitteet":[{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":0,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":16,"massa":100,"rc%":0,"tyomenetelma":12,"leveys":6.5,"massamaara":1781,"edellinen-paallystetyyppi":12,"pinta-ala":15},{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":1,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":10,"massa":512,"rc%":0,"tyomenetelma":12,"leveys":4,"massamaara":1345,"edellinen-paallystetyyppi":11,"pinta-ala":9}],"kiviaines":[{"esiintyma":"KAMLeppäsenoja","km-arvo":"An14","muotoarvo":"Fi20","sideainetyyppi":"B650/900","pitoisuus":4.3,"lisaaineet":"Tartuke"}],"alustatoimet":[{"aosa":22,"aet":3,"losa":5,"let":4785,"kasittelymenetelma":13,"paksuus":30,"verkkotyyppi":1,"tekninen-toimenpide":2}],"tyot":[{"tyyppi":"ajoradan-paallyste","tyo":"AB 16/100 LTA","tilattu-maara":10000,"toteutunut-maara":10100,"yksikkohinta":20, "yksikko": "km"}]}');
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, aloituspvm, valmispvm_kohde, valmispvm_paallystys, takuupvm, muutoshinta, ilmoitustiedot, paatos_tekninen_osa, paatos_taloudellinen_osa, perustelu_tekninen_osa, perustelu_taloudellinen_osa, kasittelyaika_tekninen_osa, kasittelyaika_taloudellinen_osa) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi'), 'valmis'::paallystystila, '2005-11-14 00:00:00+02', '2005-12-19 00:00:00+02', '2005-12-19 00:00:00+02', '2005-12-20 00:00:00+02', 2000, '{"osoitteet":[{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":0,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":16,"massa":100,"rc%":0,"tyomenetelma":12,"leveys":6.5,"massamaara":1781,"edellinen-paallystetyyppi":12,"pinta-ala":15},{"tie":2846,"aosa":5,"aet":22,"losa":5,"let":9377,"ajorata":1,"suunta":0,"kaista":1,"paallystetyyppi":21,"raekoko":10,"massa":512,"rc%":0,"tyomenetelma":12,"leveys":4,"massamaara":1345,"edellinen-paallystetyyppi":11,"pinta-ala":9}],"kiviaines":[{"esiintyma":"KAMLeppäsenoja","km-arvo":"An14","muotoarvo":"Fi20","sideainetyyppi":"B650/900","pitoisuus":4.3,"lisaaineet":"Tartuke"}],"alustatoimet":[{"aosa":22,"aet":3,"losa":5,"let":4785,"kasittelymenetelma":13,"paksuus":30,"verkkotyyppi":1,"tekninen-toimenpide":2}],"tyot":[{"tyyppi":"ajoradan-paallyste","tyo":"AB 16/100 LTA","tilattu-maara":10000,"toteutunut-maara":10100,"yksikkohinta":20, "yksikko": "km"}]}', 'hylatty'::paallystysilmoituksen_paatostyyppi, 'hylatty'::paallystysilmoituksen_paatostyyppi, 'Ei tässä ole mitään järkeä', 'Ei tässä ole mitään järkeä', '2005-12-20 00:00:00+02', '2005-12-20 00:00:00+02');
-
--- Paikkausilmoitukset
-INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Leppäjärven ramppi 2'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paikkausneliot":2}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-14 00:00:00+02', NOW(), null, null, '2005-12-20 00:00:00+02', 'aloitettu'::paikkausilmoituksen_tila);
-INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_paikkaus, valmispvm_kohde, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Tie 358'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paikkausneliot":2}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-15 00:00:00+02', '2005-11-16 00:00:00+02', '2005-11-17 00:00:00+02', NOW(), 'hylatty'::paikkausilmoituksen_paatostyyppi, 'Tämä ei nyt ole oikein hyvä', '2005-12-20 00:00:00+02', 'valmis'::paikkausilmoituksen_tila);
-INSERT INTO paikkausilmoitus (paikkauskohde, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_paikkaus, valmispvm_kohde, luotu, paatos, perustelu, kasittelyaika, tila) VALUES ((SELECT id FROM paallystyskohde WHERE nimi ='Oulaisten ohitusramppi 2'), '{"osoitteet":[{"tie":1,"aosa":1,"aet":1,"losa":5,"let": 7,"paallysteen_leveys":2,"paikkausneliot":2}],"toteumat":[{"suorite":1,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":2,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":3,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":4,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":5,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":6,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"},{"suorite":7,"yksikko":"km","maara":1,"yks_hint_alv_0":1,"takuupvm":"2005-11-13T22:00:00+02"}]}', 7, '2005-11-14 00:00:00+02', '2005-11-15 00:00:00+02', '2005-11-16 00:00:00+02', NOW(), null, null, '2005-12-20 00:00:00+02', 'valmis'::paikkausilmoituksen_tila);
+-- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
+SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 
 -- Ilmoitukset ja kuittaukset
 -- Ensimmäinen ilmoitus: Oulun alueella, kysely
-INSERT INTO ilmoitus 
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti, 
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
@@ -772,14 +793,57 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu jut
 NOW(),
 st_makepoint(499820, 7249885) ::POINT, 2);
 
--- Reittipisteet muutostyölle
--- Tämä paikka on suunnilleen Muhoksella en tarkastanut kartalta kovin tarkasti..
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
-        '2005-11-13 00:00.00',
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
+        '2005-11-11 10:01.00',
         NOW(),
-        st_makepoint(453919, 7187099) ::POINT, 2);
+        st_makepoint(440919, 7207099) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
+        '2005-11-11 10:03.51',
+        NOW(),
+        st_makepoint(440271, 7208395) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
+        '2005-11-11 10:06.00',
+        NOW(),
+        st_makepoint(440399, 7209019) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
+        '2005-11-11 10:09.00',
+        NOW(),
+        st_makepoint(440820, 7209885) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
+'2005-10-10 10:00.00',
+NOW(),
+st_makepoint(498919, 7247099) ::POINT, 3);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
+'2005-10-10 10:00.00',
+NOW(),
+st_makepoint(499271, 7248395) ::POINT, 3);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
+'2005-10-10 10:00.00',
+NOW(),
+st_makepoint(499399, 7249019) ::POINT, 3);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
+'2005-10-10 10:00.00',
+NOW(),
+st_makepoint(499820, 7249885) ::POINT, 3);
+
+-- Reittipisteet muutostyölle
+-- Tämä paikka on suunnilleen Muhoksella en tarkastanut kartalta kovin tarkasti..
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
@@ -908,8 +972,17 @@ INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoit
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case
 
 SELECT paivita_urakoiden_alueet();
-SELECT paivita_hallintayksikoiden_pohjavesialueet();
+SELECT paivita_pohjavesialueet();
 
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), '2006-10-01', '2007-09-30', -7.2, -9.0),
+ ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), '2007-10-01', '2008-09-30', -11.2, -9.0),
+ ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), '2009-10-01', '2010-09-30', -6.2, -9.0),
+ ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2011-10-01', '2012-09-30', -8.2, -9.0),
+ ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2007-10-01', '2008-09-30', -13.2, -9.0),
+ ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2008-10-01', '2009-09-30', -5.2, -9.0),
+ ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2009-10-01', '2010-09-30', -5.2, -9.0),
+  ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), '2009-10-01', '2010-09-30', 1.2, -3.0);
 -- Luodaan testidataa laskutusyhteenvetoraporttia varten
 \i testidata/laskutusyhteenveto.sql
 -- ****

@@ -26,7 +26,6 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
-                         ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
@@ -38,7 +37,6 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Hoitokausi"]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
-                         ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
@@ -50,15 +48,23 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
-                         :format-fn  #(let [[alkupvm _] %
-                                            kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
-                                       (if %
-                                         (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm))
-                                         "Valitse"))
+                         :format-fn  #(if %
+                                       (let [[alkupvm _] %
+                                             kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
+                                         (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
+                                       "Koko hoitokausi")
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
                          }
     hoitokauden-kuukaudet]])
+
+(defn urakan-hoitokausi-ja-kuukausi
+  [ur
+   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn
+   hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]
+  [:span
+   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
+   [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]])
 
 (defn aikavali
   [valittu-aikavali-atom]
@@ -87,10 +93,32 @@
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Toimenpide"]
    [livi-pudotusvalikko {:valinta    @valittu-toimenpideinstanssi-atom
-                         ;;\u2014 on väliviivan unikoodi
                          :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
                          :valitse-fn valitse-fn}
     @urakan-toimenpideinstanssit-atom]])
+
+(defn urakan-kokonaishintainen-toimenpide-ja-tehtava
+  [urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-atom
+   valittu-kokonaishintainen-toimenpideinstanssi-atom
+   valitse-kokonaishintainen-toimenpide-fn
+   valittu-kokonaishintainen-tehtava-atom
+   valitse-kokonaishintainen-tehtava-fn]
+  [:span
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Toimenpide"]
+    [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-toimenpideinstanssi-atom
+                          :format-fn  #(if % (str (second (first %))) "Kaikki toimenpiteet")
+                          :valitse-fn #(do
+                                        (valitse-kokonaishintainen-tehtava-fn nil)
+                                        (valitse-kokonaishintainen-toimenpide-fn %))}
+     (concat [nil] @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-atom)]]
+
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Tehtävä"]
+    [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-tehtava-atom
+                          :format-fn  #(if % (str (:t4_nimi %)) "Kaikki tehtävät")
+                          :valitse-fn valitse-kokonaishintainen-tehtava-fn}
+     (concat [nil] (second @valittu-kokonaishintainen-toimenpideinstanssi-atom))]]])
 
 ;; Parametreja näissä on melkoisen hurja määrä, mutta ei voi mitään
 (defn urakan-sopimus-ja-hoitokausi

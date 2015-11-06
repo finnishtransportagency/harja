@@ -127,33 +127,34 @@
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
 (defn valitse-hoitokausi! [hk]
+  (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))
   (reset! valittu-hoitokausi hk))
 
 (defonce valittu-hoitokauden-kuukausi
-  (reaction
-   (let [hk @valittu-hoitokausi
-         ur @nav/valittu-urakka
-         kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
-         nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
-         edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
-     (when (and hk ur)
-       (cond
-         ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
-         ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
-         (kuuluu-hoitokauteen? edellinen-kk)
-         edellinen-kk
+         (reaction
+           (let [hk @valittu-hoitokausi
+                 ur @nav/valittu-urakka
+                 kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
+                 nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
+                 edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
+             (when (and hk ur)
+               (cond
+                 ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
+                 ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
+                 (kuuluu-hoitokauteen? edellinen-kk)
+                 edellinen-kk
 
-         ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
-         (kuuluu-hoitokauteen? nykyinen-kk)
-         nykyinen-kk
+                 ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
+                 (kuuluu-hoitokauteen? nykyinen-kk)
+                 nykyinen-kk
 
-         ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
-         (pvm/ennen? (pvm/nyt) (first hk))
-         (first (pvm/hoitokauden-kuukausivalit hk))
-         
-         ;; fallback on hoitokauden viimeinen kuukausi
-         :default
-         (last (pvm/hoitokauden-kuukausivalit hk)))))))
+                 ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
+                 (pvm/ennen? (pvm/nyt) (first hk))
+                 (first (pvm/hoitokauden-kuukausivalit hk))
+
+                 ;; fallback on hoitokauden viimeinen kuukausi
+                 :default
+                 (last (pvm/hoitokauden-kuukausivalit hk)))))))
 
 (defn valitse-hoitokauden-kuukausi! [hk-kk]
   (reset! valittu-hoitokauden-kuukausi hk-kk))
@@ -224,13 +225,34 @@
 
 (defonce urakan-valittu-valilehti (atom :yleiset))
 (defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
-(defonce toteumat-valilehti (atom :yksikkohintaiset-tyot))
+(defonce toteumat-valilehti (atom :kokonaishintaiset-tyot))
 (defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
+(defonce hallinnan-valittu-valilehti (atom :kayttajat))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)]
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+
+(defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
+         (reaction<! [ur (:id @nav/valittu-urakka)
+                      nakymassa? (and (= :toteumat @urakan-valittu-valilehti)
+                                      (= :kokonaishintaiset-tyot @toteumat-valilehti))]
+                     (when (and ur nakymassa?)
+                       (go
+                         (group-by
+                           (juxt :tpi_id :tpi_nimi)
+                           (<! (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur)))))))
+
+(defonce valittu-kokonaishintainen-toimenpide (atom nil))
+
+(defn valitse-kokonaishintainen-toimenpide [tpi]
+  (reset! valittu-kokonaishintainen-toimenpide tpi))
+
+(defonce valittu-kokonaishintainen-tehtava (atom nil))
+
+(defn valitse-kokonaishintainen-tehtava! [tpi]
+  (reset! valittu-kokonaishintainen-tehtava tpi))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)
@@ -239,7 +261,6 @@
                                    (= :muut-tyot @toteumat-valilehti))]
                      (when (and ur nakymassa?)
                        (urakan-toimenpiteet/hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat ur))))
-
 
 (defonce urakan-organisaatio
          (reaction<! [ur (:id @nav/valittu-urakka)]

@@ -115,8 +115,12 @@
   [:span
    [:div.section [:label "Yleistä"]
       [harja-info]]
-   [:div.section [:label "Attribuutiot"]
-   [:ul]]
+   [:div.section
+    [:label "Harja käyttää avoimen lähdekoodin ohjelmistokomponentteja"]
+    [:ul
+     [:li [:a {:href "http://getbootstrap.com/"} "Bootstrap"]]
+     [:li [:a {:href "http://openlayers.org/"} "OpenLayers"]]
+     [:li [:a {:href "https://reagent-project.github.io/"} "Reagent"]]]]
    [:div.section [:label "Harjan ikonit"]
     [ikonit]]
    [gitlog]])

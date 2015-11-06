@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat
+(ns harja.tiedot.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
@@ -25,7 +25,6 @@
 (defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (k/post! :hae-turvallisuuspoikkeama {:urakka-id                urakka-id
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
-
 
 (defonce haetut-turvallisuuspoikkeamat (reaction<! [urakka-id (:id @nav/valittu-urakka)
                                                     hoitokausi @urakka/valittu-hoitokausi

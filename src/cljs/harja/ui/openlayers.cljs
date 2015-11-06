@@ -105,6 +105,12 @@
     (let [view (.getView ol3)]
       (.fitExtent view (clj->js alue) (.getSize ol3)))))
 
+(defn extent-sisaltaa-extent? [iso pieni]
+  (assert (and (vector? iso) (vector? pieni)) "Alueen tulee vektori numeroita")
+  (assert (and (= 4 (count iso)) (= 4 (count pieni))) "Alueen tulee olla vektori [minx miny maxx maxy]")
+
+  (ol/extent.containsExtent (clj->js iso) (clj->js pieni)))
+
 (defn ^:export debug-keskita [x y]
   (keskita-kartta-pisteeseen! [x y]))
 

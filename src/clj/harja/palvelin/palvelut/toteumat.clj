@@ -498,6 +498,25 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
+(defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [toteumat (into []
+                       (comp
+                         (filter #(not (nil? (:toimenpidekoodi %))))
+                         (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                         (map konv/alaviiva->rakenne))
+                       (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat db urakka-id
+                                                                           sopimus-id
+                                                                           (konv/sql-date alkupvm)
+                                                                           (konv/sql-date loppupvm)
+                                                                           toimenpide
+                                                                           tehtava))
+        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
+                                  toteumat
+                                  {:reittipiste :reittipisteet}
+                                  :toteumaid)]
+    kasitellyt-toteumarivit))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
@@ -557,6 +576,9 @@
                                                                   (:toteumamateriaalit tiedot)
                                                                   (:hoitokausi tiedot)
                                                                   (:sopimus tiedot))))
+      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-tehtavat
+                        (fn [user tiedot]
+                          (hae-urakan-kokonaishintaisten-toteumien-tehtavat db user tiedot)))
       this))
 
   (stop [this]

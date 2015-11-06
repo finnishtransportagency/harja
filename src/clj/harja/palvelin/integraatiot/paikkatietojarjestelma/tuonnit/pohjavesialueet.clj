@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialue
+(ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [clj-time.periodic :refer [periodic-seq]]
@@ -22,6 +22,6 @@
         (p/tuhoa-pohjavesialuedata! transaktio)
         (doseq [pohjavesialue (shapefile/tuo shapefile)]
           (vie-pohjavesialue-entry transaktio pohjavesialue)))
-      (p/paivita-hallintayksikoiden-pohjavesialueet db)
+      (p/paivita-pohjavesialueet db)
       (log/debug "Pohjavesialueen tuonti kantaan valmis."))
     (log/debug "Pohjavesialueen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

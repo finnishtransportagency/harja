@@ -25,8 +25,10 @@
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja]
-    ;; FIXME: mitä oman nimen klikkaamisesta pitäisi tapahtua?
-    [:a {:href "#" :on-click #(.preventDefault %)} etunimi " " sukunimi]))
+    [:a {:href "#" :on-click #(do
+                               (.preventDefault %)
+                               (haku/nayta-kayttaja @kayttaja))}
+     etunimi " " sukunimi]))
 
 (defn header [s]
   [bs/navbar {}

@@ -1,8 +1,8 @@
-(ns harja.views.urakka.turvallisuus.turvallisuuspoikkeamat
+(ns harja.views.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.turvallisuus.turvallisuuspoikkeamat :as tiedot]
+            [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -21,7 +21,6 @@
 
 (defn korjaavattoimenpiteet
   [toimenpiteet]
-  #_[:div "HUHEUEH"]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
    [{:otsikko "Vastaava henkilö" :nimi :vastaavahenkilo :leveys "20%" :tyyppi :string}

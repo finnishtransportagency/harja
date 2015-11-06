@@ -166,7 +166,7 @@
         scroll-kuuntelija (fn [_]
                             (paivita :scroll))]
     (komp/luo
-      (komp/kuuntelija :ikkunan-koko-muuttunut #(paivita true))
+      (komp/kuuntelija :ikkunan-koko-muuttunut #(paivita :aseta))
       {:component-did-mount    #(do
                                  (events/listen js/window
                                                 EventType/SCROLL
@@ -198,6 +198,7 @@
 (def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
 (def +koko-suomi-sijainti+ [431704.1 7211111])
 (def +koko-suomi-zoom-taso+ 6)
+(def +koko-suomi-extent+ [-485283.9715435868 6550588.658174125 1538768.5374478805 7886096.416372725])
 
 (defonce kartta-sijainti (atom +koko-suomi-sijainti+))
 (defonce zoom-taso (atom +koko-suomi-zoom-taso+))           ;;Miksi tämä on atomi - toimiiko todellisuudessa eri tavalla kuin kuvitellaan?
@@ -260,14 +261,6 @@
          [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
           "Piilota kartta"]])]]))
 
-(def kartan-yleiset-kontrollit-sisalto (atom nil))
-
-(defn kartan-yleiset-kontrollit
-  "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
-  []
-  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
-    [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto]))
-
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 (def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
 
@@ -320,11 +313,35 @@
                                                                                                (.stopPropagation event)
                                                                                                (.preventDefault event))}])])))
 
+(def kartan-yleiset-kontrollit-sisalto (atom nil))
+
+(defn kartan-yleiset-kontrollit
+  "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
+  []
+  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
+    (when (and sisalto (not= :S @nav/kartan-koko))
+      [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto])))
+
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 
 (defn tyhjenna-yleiset-kontrollit []
   (reset! kartan-yleiset-kontrollit-sisalto nil))
+
+(def kartan-ohjelaatikko-sisalto (atom nil))
+
+(defn kartan-ohjelaatikko
+  "Kartan ohjelaatikko -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
+  []
+  (let [sisalto @kartan-ohjelaatikko-sisalto]
+    (when (and sisalto (not= :S @nav/kartan-koko))
+      [:div.kartan-kontrollit.kartan-ohjelaatikko sisalto])))
+
+(defn aseta-ohjelaatikon-sisalto [uusi-sisalto]
+  (reset! kartan-ohjelaatikko-sisalto uusi-sisalto))
+
+(defn tyhjenna-ohjelaatikko []
+  (reset! kartan-ohjelaatikko-sisalto nil))
 
 (defn nayta-popup!
   "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng], 
@@ -386,15 +403,21 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))))))
 
+(def pida-geometria-nakyvilla-oletusarvo true)
+(defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
+
+(defn suomen-sisalla? [alue]
+  (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
+
 (defn zoomaa-geometrioihin
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (if-not (empty? (keep :alue @tasot/geometriat))
-    (keskita-kartta-alueeseen! (geo/extent-monelle (keep :alue @tasot/geometriat)))
-    (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))
-
-(defonce pida-geometriat-nakyvilla? (atom true))
+  (when @pida-geometriat-nakyvilla?
+    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))]
+      (if-not (empty? geometriat)
+        (keskita-kartta-alueeseen! (geo/extent-monelle geometriat))
+        (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
@@ -562,6 +585,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   [:div
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
+   [kartan-ohjelaatikko]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]])
 

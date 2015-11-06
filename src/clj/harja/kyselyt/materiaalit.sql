@@ -2,6 +2,12 @@
 -- Hakee kaikki järjestelmän materiaalikoodit
 SELECT id, nimi, yksikko, urakkatyyppi, kohdistettava FROM materiaalikoodi;
 
+-- name: hae-materiaalikoodit-ilman-talvisuolaa
+-- Hakee kaikki paitsi talvisuola tyyppiset materiaalikoodit
+SELECT id, nimi, yksikko, urakkatyyppi, kohdistettava
+  FROM materiaalikoodi
+ WHERE materiaalityyppi != 'talvisuola'::materiaalityyppi;
+ 
 -- name: hae-urakan-materiaalit
 -- Hakee jokaisen materiaalin, joka liittyy urakkaan JA JOLLA ON RIVI MATERIAALIN_KAYTTO taulussa.
 -- Oleellista on, että palauttaa yhden rivin per materiaali, ja laskee yhteen paljonko materiaalia
@@ -15,7 +21,8 @@ SELECT mk.id, mk.alkupvm, mk.loppupvm, mk.maara, mk.sopimus,
        LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
        LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
  WHERE mk.urakka = :urakka AND
-       mk.poistettu = false;
+       mk.poistettu = false AND
+       m.materiaalityyppi != 'talvisuola'::materiaalityyppi;
 
 -- name: hae-urakassa-kaytetyt-materiaalit
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
@@ -67,7 +74,8 @@ FROM materiaalikoodi m
     ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
        AND t.alkanut :: DATE BETWEEN :alku AND :loppu
        AND t.sopimus = :sopimus
-WHERE (SELECT SUM(maara) AS maara
+WHERE m.materiaalityyppi != 'talvisuola'::materiaalityyppi
+  AND ((SELECT SUM(maara) AS maara
        FROM materiaalin_kaytto
        WHERE materiaali = m.id
              AND poistettu IS NOT TRUE
@@ -88,7 +96,7 @@ WHERE (SELECT SUM(maara) AS maara
                      sopimus = :sopimus AND
                      poistettu IS NOT TRUE) AND
                  poistettu IS NOT TRUE
-         ) IS NOT NULL;
+         ) IS NOT NULL);
 
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
@@ -265,3 +273,46 @@ WHERE id IN (:id) AND poistettu IS NOT true;
 
 -- name: hae-materiaalikoodin-id-nimella
 SELECT id FROM materiaalikoodi WHERE nimi = :nimi;
+
+
+-- name: hae-suolatoteumat
+-- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
+SELECT tmid, tid, materiaali_id, materiaali_nimi, alkanut, maara, lisatieto, koneellinen
+ FROM (WITH paivat AS (
+         SELECT date_trunc('day', dd) as pvm
+           FROM generate_series(:alkupvm::date, :loppupvm::date, '1 day'::interval) dd )
+       SELECT tm.id as tmid, t.id as tid,
+              mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+      	      t.alkanut, tm.maara, t.lisatieto, false as koneellinen 
+	 FROM toteuma_materiaali tm
+    	      JOIN toteuma t ON tm.toteuma = t.id
+	      JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+	      JOIN kayttaja k ON tm.luoja = k.id
+        WHERE t.urakka = :urakka
+	  AND k.jarjestelma IS NOT true
+          AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+          AND mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
+       UNION
+       SELECT NULL as tmid, NULL as tid,
+              mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+              p.pvm,
+             (SELECT SUM(tm.maara)
+                FROM toteuma_materiaali tm
+                     JOIN toteuma t ON tm.toteuma = t.id
+		     JOIN kayttaja k ON tm.luoja = k.id
+	       WHERE k.jarjestelma = true
+	         AND t.urakka = :urakka
+		 AND tm.materiaalikoodi = mk.id
+	         AND date_trunc('day', t.alkanut) = p.pvm) as maara,
+	      '' as lisatieto, true as koneellinen
+	 FROM materiaalikoodi mk
+	      CROSS JOIN paivat p
+        WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi) toteumat
+ WHERE maara IS NOT NULL
+;
+
+-- name: hae-suolamateriaalit
+SELECT * FROM materiaalikoodi WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi;
+
+	 
+	 
