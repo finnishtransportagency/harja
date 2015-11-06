@@ -1,8 +1,7 @@
 (ns harja.views.urakka.toteumat.varusteet
   "Urakan 'Toteumat' välilehden 'Varusteet' osio"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! chan]]
-            [cljs.core.async :refer [<! timeout]]
+            [cljs.core.async :refer [<! >! chan timeout]]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -38,7 +37,7 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}]
-      (sort-by :alkupvm toteumat)]
+      (take 500 toteumat)]
      (when (> (count toteumat) 500)
        [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
 
