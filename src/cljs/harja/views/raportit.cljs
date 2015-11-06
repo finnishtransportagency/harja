@@ -124,6 +124,14 @@
 (defmethod raportin-parametri-arvo "urakoittain" [p]
   {:urakoittain? @urakoittain?})
 
+(defmethod raportin-parametri "checkbox" [p]
+  [:div
+   [yleiset/raksiboksi (:nimi p) true (fn []) nil false]])
+
+
+(defmethod raportin-parametri-arvo "checkbox" [p]
+  nil)
+
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])
 
@@ -155,12 +163,36 @@
      
      (map-indexed (fn [i cols]
                     ^{:key i}
-                    [:div.row cols])
-                  (partition 3 3 (repeat nil)
-                             (concat (for [p parametrit]
-                                       ^{:key (:nimi p)}
-                                       [:div.col-md-4 [raportin-parametri p]])
-                                     )))
+                    [:div.row (seq cols)])
+                  (loop [rows []
+                         row nil
+                         [p & parametrit] parametrit]
+                    (if-not p
+                      (do (log "RIVIT: " (pr-str rows))
+                          rows)
+                      (let [par [:div.col-md-4 [raportin-parametri p]]]
+                        (cond
+                          ;; checkboxit aina omalle riville
+                          (= "checkbox" (:tyyppi p))
+                          (recur (conj (if row
+                                         (conj rows row)
+                                         rows)
+                                       [par])
+                                 nil
+                                 parametrit)
+
+                          ;; Jos rivi on täynnä aloitetaan uusi
+                          (= 3 (count row))
+                          (recur (conj rows row)
+                                 [par]
+                                 parametrit)
+
+                          ;; Muutoin lisätään aiempaan riviin
+                          :default
+                          (recur rows
+                                 (if row (conj row par)
+                                     [par])
+                                 parametrit))))))
 
      [:div.row
       [:div.col-md-12
