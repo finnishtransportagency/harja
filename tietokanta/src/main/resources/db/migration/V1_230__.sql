@@ -29,10 +29,12 @@ CREATE TYPE toteumatyyppi AS ENUM ('kokonaishintainen', 'yksikkohintainen', 'aki
 
 ALTER TABLE toteuma RENAME COLUMN tyyppi TO _tyyppi;
 
-ALTER TABLE toteuma ADD tyyppi toteumatyyppi NOT NULL;
+ALTER TABLE toteuma ADD tyyppi toteumatyyppi;
 
 UPDATE toteuma
 SET tyyppi = _tyyppi :: TEXT :: toteumatyyppi;
+
+ALTER TABLE toteuma ALTER COLUMN tyyppi SET NOT NULL;
 
 ALTER TABLE toteuma DROP COLUMN _tyyppi;
 DROP TYPE _tt;
