@@ -648,3 +648,5 @@ AND sopimus = :sopimus
 AND alkanut >= :alkupvm
 AND alkanut <= :loppupvm
 AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)
+ORDER BY t.alkanut
+LIMIT 501;

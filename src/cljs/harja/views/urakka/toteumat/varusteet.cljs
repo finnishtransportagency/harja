@@ -22,7 +22,8 @@
 (defn toteumataulukko []
   (let [toimenpidestringit {:lisatty    "Lisätty"
                             :paivitetty "Päivitetty"
-                            :poistettu "Poistettu"}]
+                            :poistettu "Poistettu"}
+        toteumat @varustetiedot/haetut-toteumat]
     [grid/grid
       {:otsikko "Varustetoteumat"
        :tyhja   (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
@@ -36,7 +37,9 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}]
-     (sort-by :alkupvm @varustetiedot/haetut-toteumat)]))
+     (sort-by :alkupvm toteumat)]
+    (when (> (count toteumat) 500)
+      [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])))
 
 (defn valinnat []
   [:span
