@@ -92,6 +92,7 @@
     :konsultti "Konsultti"
     "Ei tiedossa"))
 
+
 (defn havaintolistaus
   "Listaa urakan havainnot"
   []
@@ -124,8 +125,11 @@
      {:otsikko "Kohde" :nimi :kohde :leveys 1}
      {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
      {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt kuvaile-tekija}
-     {:otsikko "Päätös" :nimi :paatos :fmt kuvaile-paatos :leveys 2}] ; Päätös
-    @urakan-havainnot]])
+     {:otsikko "Päätös" :nimi :paatos :fmt kuvaile-paatos :leveys 2} ;; Päätös
+     ]
+
+    @urakan-havainnot
+    ]])
 
 (defn paatos?
   "Onko annetussa havainnossa päätös?"
@@ -230,7 +234,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                :tyyppi        :valinta
                                                :valinnat      ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
                                                :valinta-nayta #(or % "Ei sidota indeksiin")
-                                               :leveys-col    3})]
+                                               :leveys-col    3})
+
+                                            ]
                                            sanktio]))
                                   @sanktiot-atom))}
 
@@ -264,7 +270,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]
           }
          {:otsikko     "Sakko" :nimi :summa :hae kuvaile-sanktion-sakko :tyyppi :string :leveys 3.5
-          :muokattava? (constantly false)}]
+          :muokattava? (constantly false)}
+
+         ]
+
         sanktiot-atom]])))
 
 (defn havainto [asetukset havainto]
@@ -335,8 +344,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :validoi     [[:ei-tyhja "Anna havainnon kohde"]]})
 
              {:otsikko     "Kuvaus"
-              :nimi        :kuvaus
-              :tyyppi      :text
+              :nimi :kuvaus
+              :tyyppi :text
               :pakollinen? true
               :validoi     [[:ei-tyhja "Kirjoita kuvaus"]] :pituus-max 4096
               :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
@@ -347,18 +356,18 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                     [:span (liitteet/liitetiedosto liite)])
                             [liitteet/liite {:urakka-id     (:id @nav/valittu-urakka)
                                              :liite-ladattu #(swap! havainto assoc :uusi-liite %)
-                                             :nappi-teksti  " Lisää liite havaintoon"}]]}
+                                             :nappi-teksti " Lisää liite havaintoon"}]]}
 
              (when-not uusi?
                (lomake/ryhma
-                 "Kommentit"
+               "Kommentit"
                  {:otsikko     "" :nimi :kommentit
-                  :komponentti [kommentit/kommentit {:voi-kommentoida?   true
-                                                     :voi-liittaa        true
+                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                                     :voi-liittaa      true
                                                      :liita-nappi-teksti " Lisää liite kommenttiin"
-                                                     :placeholder        "Kirjoita kommentti..."
-                                                     :uusi-kommentti     (r/wrap (:uusi-kommentti @havainto)
-                                                                                 #(swap! havainto assoc :uusi-kommentti %))}
+                                                     :placeholder      "Kirjoita kommentti..."
+                                                     :uusi-kommentti   (r/wrap (:uusi-kommentti @havainto)
+                                                                               #(swap! havainto assoc :uusi-kommentti %))}
                                 (:kommentit @havainto)]}))
 
              ;; Päätös
@@ -421,8 +430,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :komponentti [havainnon-sanktiot
                                   (r/wrap (:sanktiot @havainto)
                                           #(swap! havainto assoc :sanktiot %))
-                                  sanktio-virheet]})))
-             @havainto]]])))))
+                                  sanktio-virheet]})
+                 ))]
+
+            @havainto]])))))
 
 (defn havainnot []
   (komp/luo
