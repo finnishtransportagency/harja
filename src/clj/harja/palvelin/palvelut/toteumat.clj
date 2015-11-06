@@ -500,10 +500,8 @@
 
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   #_(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (println "-----> Parametrit: " urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava)
   (let [toteumat (into []
                        (comp
-                         (filter #(not (nil? (:toimenpidekoodi %))))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                          (map konv/alaviiva->rakenne))
                        (q/hae-urakan-kokonaishintaisten-toteumien-reitit db urakka-id
@@ -515,9 +513,9 @@
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
                                   {:reittipiste :reittipisteet}
-                                  :tehtavaid)]
-    (println "-----> toteumat: " toteumat)
-    (println "-----> kasitellyt-toteumarivit: " kasitellyt-toteumarivit)
+                                  :toteumaid)]
+    (println "toteumat  " (count (:reittipisteet (first kasitellyt-toteumarivit))))
+
     kasitellyt-toteumarivit))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
@@ -526,12 +524,13 @@
                        (comp
                          (filter #(not (nil? (:toimenpidekoodi %))))
                          (map konv/alaviiva->rakenne))
-                       (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat db urakka-id
-                                                                           sopimus-id
-                                                                           (konv/sql-date alkupvm)
-                                                                           (konv/sql-date loppupvm)
-                                                                           toimenpide
-                                                                           tehtava))
+                       (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
+                         db urakka-id
+                         sopimus-id
+                         (konv/sql-date alkupvm)
+                         (konv/sql-date loppupvm)
+                         toimenpide
+                         tehtava))
         paivittaiset-rivit (map (fn [[_ arvo]] arvo)
                                 (group-by
                                   (fn [rivi]

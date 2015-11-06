@@ -609,26 +609,18 @@ LIMIT 501;
 -- name: hae-urakan-kokonaishintaisten-toteumien-reitit
 SELECT
   t.id               AS toteumaid,
-  t.alkanut          AS alkanut,
-  t.paattynyt        AS paattynyt,
-  tt.toimenpidekoodi AS toimenpidekoodi,
-  tk.nimi            AS nimi,
-  tt.id              AS tehtavaid,
-  tt.maara           AS maara,
-  tk.yksikko         AS yksikko,
-  k.jarjestelma      AS jarjestelmanlisaama,
   rp.id              AS reittipiste_id,
   rp.aika            AS reittipiste_aika,
-  rp.sijainti        AS reittipiste_sijainti
+  rp.sijainti        AS reittipiste_sijainti,
+  rt.toimenpidekoodi AS reittipiste_toimenpidekoodi,
+  tk.nimi            AS reittipiste_tehtavanimi
 FROM toteuma t
-  LEFT JOIN toteuma_tehtava tt
-    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-  LEFT JOIN toimenpidekoodi tk
-    ON tk.id = tt.toimenpidekoodi
-  LEFT JOIN kayttaja k
-    ON k.id = t.luoja
   LEFT JOIN reittipiste rp
     ON t.id = rp.toteuma
+  LEFT JOIN reitti_tehtava rt
+    ON rt.reittipiste = rp.id
+  LEFT JOIN toimenpidekoodi tk
+    ON tk.id = rt.toimenpidekoodi
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
