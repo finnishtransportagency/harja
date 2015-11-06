@@ -22,10 +22,12 @@
 (defn toteumataulukko []
   (let [toimenpidestringit {:lisatty    "Lisätty"
                             :paivitetty "Päivitetty"
-                            :poistettu "Poistettu"}]
-    [grid/grid
-      {:otsikko "Varustetoteumat"
-       :tyhja   (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
+                            :poistettu  "Poistettu"}
+        toteumat @varustetiedot/haetut-toteumat]
+    [:span
+     [grid/grid
+      {:otsikko  "Varustetoteumat"
+       :tyhja    (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
        :tunniste :id}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys "10%"}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys "15%"}
@@ -36,17 +38,15 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "5%"}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}]
-     (sort-by :alkupvm @varustetiedot/haetut-toteumat)]))
+      (sort-by :alkupvm toteumat)]
+     (when (> (count toteumat) 500)
+       [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
 
 (defn valinnat []
   [:span
    [urakka-valinnat/urakan-sopimus]
    [urakka-valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
-
-  [:span.label-ja-kentta
-   [:span.kentan-otsikko "Tienumero"]
-   [:div.kentta
-    [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} varustetiedot/tienumero]]]])
+   [urakka-valinnat/tienumero varustetiedot/tienumero]])
 
 (defn varusteet []
   (komp/luo
