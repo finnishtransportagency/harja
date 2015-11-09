@@ -611,9 +611,9 @@ LIMIT 501;
 -- name: hae-urakan-kokonaishintaiset-toteumat
 SELECT t.id AS toteumaid
 FROM toteuma t
-  LEFT JOIN toteuma_tehtava tt
+  INNER JOIN toteuma_tehtava tt
     ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-  LEFT JOIN toimenpidekoodi tk
+  INNER JOIN toimenpidekoodi tk
     ON tk.id = tt.toimenpidekoodi
 WHERE
   t.urakka = :urakkaid
@@ -638,7 +638,7 @@ SELECT
   tt.maara           AS maara,
   tk.yksikko         AS yksikko
 FROM toteuma_tehtava tt
-  LEFT JOIN toimenpidekoodi tk
+  INNER JOIN toimenpidekoodi tk
     ON tk.id = tt.toimenpidekoodi
 WHERE
   tt.toteuma = :toteuma_id AND tt.poistettu IS NOT TRUE;
@@ -663,38 +663,38 @@ WHERE id = :tmid
       AND toteuma IN (SELECT id
                       FROM toteuma t
                       WHERE t.urakka = :urakka);
-   
+
 -- name: hae-urakan-varustetoteumat
 SELECT
   vt.id,
   tunniste,
   toimenpide,
   tietolaji,
-  tr_numero AS tie,
-  tr_alkuosa AS aosa,
-  tr_alkuetaisyys AS aet,
-  tr_loppuosa AS losa,
+  tr_numero        AS tie,
+  tr_alkuosa       AS aosa,
+  tr_alkuetaisyys  AS aet,
+  tr_loppuosa      AS losa,
   tr_loppuetaisyys AS let,
   piiri,
   kuntoluokka,
   karttapvm,
   tr_puoli,
   tr_ajorata,
-  t.alkanut AS alkupvm,
-  t.paattynyt AS loppupvm,
+  t.alkanut        AS alkupvm,
+  t.paattynyt      AS loppupvm,
   arvot,
   tierekisteriurakkakoodi,
-  t.id AS toteuma_id,
-  rp.id         AS reittipiste_id,
-  rp.aika       AS reittipiste_aika,
-  rp.sijainti   AS reittipiste_sijainti
+  t.id             AS toteuma_id,
+  rp.id            AS reittipiste_id,
+  rp.aika          AS reittipiste_aika,
+  rp.sijainti      AS reittipiste_sijainti
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
   JOIN reittipiste rp ON rp.toteuma = t.id
 WHERE urakka = :urakka
-AND sopimus = :sopimus
-AND alkanut >= :alkupvm
-AND alkanut <= :loppupvm
-AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)
+      AND sopimus = :sopimus
+      AND alkanut >= :alkupvm
+      AND alkanut <= :loppupvm
+      AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
 ORDER BY t.alkanut
 LIMIT 501;
