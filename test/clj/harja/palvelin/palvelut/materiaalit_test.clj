@@ -58,7 +58,7 @@
                                   +kayttaja-jvh+
                                    
                                   {:urakka-id @oulun-alueurakan-2005-2010-id
-                                   :sopimus-id @oulun-alueurakan-paasopimuksen-id
+                                   :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
                                    :hoitokausi [(pvm/->pvm "1.10.2014") (pvm/->pvm "30.9.2015")]
                                    :tulevat-hoitokaudet-mukana? false
                                    :materiaalit [{:alkupvm (pvm/->pvm "1.10.2014")
@@ -70,7 +70,7 @@
                                 :hae-urakan-materiaalit
                                 +kayttaja-jvh+ @oulun-alueurakan-2005-2010-id)]
     (is (some #(and (= (:maara %) 666.0)
-                    (= (:sopimus %) @oulun-alueurakan-paasopimuksen-id)
+                    (= (:sopimus %) @oulun-alueurakan-2005-2010-paasopimuksen-id)
                     (= (:id (:materiaali %)) 5))
               vastaus))))
 

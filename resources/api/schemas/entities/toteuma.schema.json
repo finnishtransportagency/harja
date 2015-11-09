@@ -47,9 +47,10 @@
       "enum": [
         "yksikkohintainen",
         "kokonaishintainen",
-        "akillinen_hoitotyo",
+        "akillinen-hoitotyo",
         "lisatyo",
-        "muutostyo"
+        "muutostyo",
+        "vahinkojen-korjaukset"
       ]
     },
     "tehtavat": {

@@ -9,6 +9,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [clj-time.core :as t]
             [clj-time.coerce :as time-coerce])
@@ -51,6 +52,25 @@
         (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan
           testitietokanta
           "file:///Users/jarihan/Desktop/Pohjavesialue-testi/Pohjavesialue.shp")))))
+
+(defn aja-siltojen-paivitys []
+  "REPL-testiajofunktio"
+  (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
+        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
+    (component/start integraatioloki)
+    (component/start alk)
+    (geometriapaivitykset/kaynnista-alk-paivitys
+      alk
+      testitietokanta
+      "sillat"
+      "http://185.26.50.104/Sillat.zip"
+      "/Users/jarihan/Desktop/Sillat-testi/"
+      "Sillat.zip"
+      (fn []
+        (siltojen-tuonti/vie-sillat-kantaan
+          testitietokanta
+          "file:///Users/jarihan/Desktop/Pohjavesialue-testi/Sillat.shp")))))
 
 (defn aja-soratien-hoitoluokkien-paivitys []
   "REPL-testiajofunktio"

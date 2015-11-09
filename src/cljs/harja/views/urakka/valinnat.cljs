@@ -7,7 +7,14 @@
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]))
+
+(defn tienumero [tienumero-atom]
+  [:span.label-ja-kentta
+   [:span.kentan-otsikko "Tienumero"]
+   [:div.kentta
+    [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} tienumero-atom]]])
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))

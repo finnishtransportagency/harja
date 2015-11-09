@@ -4,6 +4,7 @@ events {
 }
 
 http {
+client_max_body_size 32m;
 
 proxy_cache_path /var/cache/nginx/kartat keys_zone=kartat:10m;
 

@@ -202,7 +202,9 @@ FROM toteuma_tehtava tt
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
                           AND tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                         'lisatyo' :: toteumatyyppi, 'muutostyo' :: toteumatyyppi)
+                                         'lisatyo' :: toteumatyyppi,
+                                         'muutostyo' :: toteumatyyppi,
+                                         'vahinkojen-korjaukset' :: toteumatyyppi)
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN reittipiste rp ON t.id = rp.toteuma
@@ -662,3 +664,37 @@ WHERE id = :tmid
                       FROM toteuma t
                       WHERE t.urakka = :urakka);
    
+-- name: hae-urakan-varustetoteumat
+SELECT
+  vt.id,
+  tunniste,
+  toimenpide,
+  tietolaji,
+  tr_numero AS tie,
+  tr_alkuosa AS aosa,
+  tr_alkuetaisyys AS aet,
+  tr_loppuosa AS losa,
+  tr_loppuetaisyys AS let,
+  piiri,
+  kuntoluokka,
+  karttapvm,
+  tr_puoli,
+  tr_ajorata,
+  t.alkanut AS alkupvm,
+  t.paattynyt AS loppupvm,
+  arvot,
+  tierekisteriurakkakoodi,
+  t.id AS toteuma_id,
+  rp.id         AS reittipiste_id,
+  rp.aika       AS reittipiste_aika,
+  rp.sijainti   AS reittipiste_sijainti
+FROM varustetoteuma vt
+  JOIN toteuma t ON vt.toteuma = t.id
+  JOIN reittipiste rp ON rp.toteuma = t.id
+WHERE urakka = :urakka
+AND sopimus = :sopimus
+AND alkanut >= :alkupvm
+AND alkanut <= :loppupvm
+AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)
+ORDER BY t.alkanut
+LIMIT 501;

@@ -10,6 +10,7 @@
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
+            [harja.views.urakka.toteumat.varusteet :as varusteet]
             [harja.views.urakka.toteumat.suola :refer [suolatoteumat]]
 
             [harja.ui.lomake :refer [lomake]]
@@ -53,5 +54,9 @@
          [materiaalit-nakyma ur]
 
          "Erilliskustannukset" :erilliskustannukset
-         [erilliskustannukset/erilliskustannusten-toteumat]]))))
+         [erilliskustannukset/erilliskustannusten-toteumat]
+
+         "Varusteet" :varusteet
+         (when (= :hoito (:tyyppi ur))
+           [varusteet/varusteet])]))))
 
