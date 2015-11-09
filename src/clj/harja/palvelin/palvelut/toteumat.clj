@@ -521,16 +521,23 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
-                       (map #(konv/string->keyword % :toimenpide))
+                       (comp
+                         (map #(konv/string->keyword % :toimenpide))
+                         (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                         (map konv/alaviiva->rakenne))
                        (q/hae-urakan-varustetoteumat db
                                                      urakka-id
                                                      sopimus-id
                                                      (konv/sql-date alkupvm)
                                                      (konv/sql-date loppupvm)
                                                      (if tienumero true false)
-                                                     tienumero))]
-    (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
-    toteumat))
+                                                     tienumero))
+        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
+                                  toteumat
+                                  {:reittipiste :reittipisteet}
+                                  :id)]
+    (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
+    kasitellyt-toteumarivit))
 
 (defrecord Toteumat []
   component/Lifecycle

@@ -5,8 +5,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.pvm :as pvm]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
+            [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -36,3 +36,23 @@
              (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
 (tarkkaile! "Haetut toteumat: " haetut-toteumat)
+
+(def varuste-toimenpide->string {:lisatty    "Lisätty"
+                                 :paivitetty "Päivitetty"
+                                 :poistettu  "Poistettu"})
+
+(def karttataso-varustetoteuma (atom false))
+
+(def varusteet-kartalla
+  (reaction
+    (when karttataso-varustetoteuma
+      (kartalla-esitettavaan-muotoon
+        (map (fn [toteuma]
+               (-> toteuma
+                   (assoc :tyyppi-kartalla :varustetoteuma)
+                   (assoc :selitys-kartalla (str
+                                              (varuste-toimenpide->string (:toimenpide toteuma))
+                                              ": "
+                                              (:tietolaji toteuma)
+                                              " (" (pvm/pvm (:alkupvm toteuma)) " )"))))
+          @haetut-toteumat)))))
