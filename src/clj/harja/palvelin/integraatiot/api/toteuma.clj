@@ -32,10 +32,7 @@
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
-
-  (println "++++++++++++++ reitti: " (:reitti toteuma))
   (tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
-  
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
          (pvm-string->java-sql-date (:alkanut toteuma))
@@ -72,8 +69,9 @@
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
 (defn tallenna-sijainti [db sijainti toteuma-id]
-  (log/debug "Tuhotaan toteuman vanha sijainti")
+  (log/debug "Tuhotaan toteuman " toteuma-id " vanha sijainti")
   (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)
+  (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")
   (toteumat/luo-reittipiste<! db toteuma-id nil
                               (get-in sijainti [:koordinaatit :x])
                               (get-in sijainti [:koordinaatit :y])))

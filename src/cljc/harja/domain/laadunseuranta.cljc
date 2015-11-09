@@ -39,6 +39,7 @@
    :tekija                             Osapuoli
    (s/optional-key :kohde)             (s/maybe s/Str)
    (s/optional-key :urakka)            s/Any
+   (s/optional-key :sijainti)          s/Any
    (s/optional-key :tekijanimi)        s/Str
    (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
    (s/optional-key :uusi-liite)        s/Any

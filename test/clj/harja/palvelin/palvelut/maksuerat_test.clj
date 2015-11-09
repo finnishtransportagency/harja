@@ -23,11 +23,14 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :once (compose-fixtures
+                      tietokanta-fixture
+                      (compose-fixtures jarjestelma-fixture urakkatieto-fixture)))
+
 
 (deftest urakan-maksuerat-haettu-oikein-urakalle-1
   (let [maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-urakan-maksuerat +kayttaja-jvh+ 1)]
+                                  :hae-urakan-maksuerat +kayttaja-jvh+ @oulun-alueurakan-2005-2010-id)]
     (is (= 16 (count maksuerat)))
     (is (= (count (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)) 2))
     (is (= (count (filter #(= :yksikkohintainen (:tyyppi (:maksuera %))) maksuerat)) 2))
