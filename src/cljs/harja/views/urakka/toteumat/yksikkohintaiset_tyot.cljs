@@ -80,9 +80,22 @@
        :tyyppi        :valinta
        :valinta-arvo  #(:id (nth % 3))
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
-       :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                        (:toimenpideinstanssi %)
-                        toimenpideinstanssit tehtavat-tasoineen)       
+       :valinnat-fn   #(let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                                                   (:toimenpideinstanssi %)
+                                                   toimenpideinstanssit tehtavat-tasoineen)
+                             urakan-hoitokauden-yks-hint-tyot (filter
+                                                                (fn [tyo]
+                                                                  (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi)))
+                                                                @u/urakan-yks-hint-tyot)
+                             yksikkohintaiset-tehtavat (filter
+                                                         (fn [tehtava]
+                                                           (let [tehtavan-tiedot (first (filter
+                                                                                          (fn [tiedot]
+                                                                                            (= (:tehtavan_id tiedot) (:id (nth tehtava 3))))
+                                                                                          urakan-hoitokauden-yks-hint-tyot))]
+                                                             (> (:yksikkohinta tehtavan-tiedot) 0)))
+                                                         urakan-tpi-tehtavat)]
+                        yksikkohintaiset-tehtavat)
        :leveys        "45%"
        :validoi       [[:ei-tyhja "Valitse tehtävä"]]
        :aseta         (fn [rivi arvo] (assoc rivi
