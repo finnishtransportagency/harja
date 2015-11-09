@@ -532,10 +532,6 @@ Optiot on mappi optioita:
          (when muokkaa-aina
            (aloita-muokkaus! (nth new-argv 3))))
 
-       :component-will-unmount
-       (fn []
-         (nollaa-muokkaustiedot!))
-
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
