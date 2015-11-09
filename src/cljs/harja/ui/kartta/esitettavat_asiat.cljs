@@ -57,7 +57,6 @@
                         (fn [[_ arvo]] (first arvo))
                         (group-by :id (:reittipisteet toteuma)))]
     [(when-not (empty? reittipisteet)
-       (log "--------> Tehtavat: " (:tehtavat toteuma))
        (assoc toteuma
          :type :toteuma
          :nimi (or (:nimi toteuma)

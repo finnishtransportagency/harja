@@ -523,11 +523,10 @@
                                          (assoc vanha :maara (+ (:maara vanha) (:maara uusi)))
                                          (assoc vanha :maara 0)))
                                      %) paivittaiset-rivit))]
-    (println "-------> summatut-rivit:" summatut-rivit)
     summatut-rivit))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
-  #_(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteuma-idt (distinct (mapv :toteumaid (q/hae-urakan-kokonaishintaiset-toteumat
                                                  db urakka-id
                                                  sopimus-id
@@ -539,14 +538,10 @@
                        (let [reittipisteet (into [] (harja.geo/muunna-pg-tulokset :sijainti)
                                                  (q/hae-toteuman-reittipisteet db toteuma-id))
                              tehtavat (mapv :nimi (q/hae-toteuman-tehtavat db toteuma-id))]
-                         (println "-------> reittipisteet" reittipisteet)
-                         (println "-------> tehtavat" tehtavat)
-
                          {:id            toteuma-id
                           :reittipisteet reittipisteet
                           :tehtavat      tehtavat}))
                      toteuma-idt)]
-    (println "-------> reitit:" reitit)
     reitit))
 
 (defrecord Toteumat []

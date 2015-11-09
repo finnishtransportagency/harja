@@ -124,5 +124,3 @@
             :sopimus-id sopimus-id
             :alkupvm alkupvm
             :loppupvm loppupvm}))
-
-(tarkkaile! "-----> yksikkohintainen tyo kartalla" yksikkohintainen-toteuma-kartalla)
