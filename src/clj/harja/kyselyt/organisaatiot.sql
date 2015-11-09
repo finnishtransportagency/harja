@@ -1,3 +1,4 @@
+
 -- name: luo-organisaatio<!
 -- Luo uuden organisaation.
 INSERT INTO organisaatio (sampoid, nimi, ytunnus, katuosoite, postinumero)
@@ -14,6 +15,12 @@ SET
   postinumero = :postinumero
 WHERE
   id = :id;
+
+-- name: hae-id-y-tunnuksella
+-- Hakee organisaation id:n y-tunnuksella
+SELECT id
+FROM organisaatio
+WHERE ytunnus = :ytunnus;
 
 -- name: hae-id-sampoidlla
 -- Hakee organisaation id:n sampo id:llä
