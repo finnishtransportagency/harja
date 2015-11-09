@@ -106,7 +106,7 @@
                                        (str "SELECT count(*)
                                                FROM toteuma
                                               WHERE urakka = " @oulun-alueurakan-2005-2010-id "
-                                                     AND sopimus = " @oulun-alueurakan-paasopimuksen-id "
+                                                     AND sopimus = " @oulun-alueurakan-2005-2010-paasopimuksen-id "
                                                     AND tyyppi IN ('muutostyo', 'lisatyo', 'akillinen-hoitotyo', 'vahinkojen-korjaukset')
                                                     AND alkanut >= to_date('1-10-2005', 'DD-MM-YYYY')
                                                     AND paattynyt <= to_date('30-09-2006', 'DD-MM-YYYY');;")))
