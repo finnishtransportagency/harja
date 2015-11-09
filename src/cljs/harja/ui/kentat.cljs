@@ -702,14 +702,11 @@
                                                    (reset! karttavalinta-kaynnissa false)
                                                    (go (>! tr-osoite-ch %)))}])
 
-              #_(when hae-sijainti
+              (when hae-sijainti
                 (let [sijainti @sijainti]
                   (when sijainti
                     (if (vkm/virhe? sijainti)
-                      [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]
-                      [:td [:div.sijainti (pr-str sijainti)]]))))
-
-              ]]]])))))
+                      [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))))]]]])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
