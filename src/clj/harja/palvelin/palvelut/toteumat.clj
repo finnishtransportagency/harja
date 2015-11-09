@@ -498,42 +498,7 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
-(defn yhdista-reittipisteiden-tehtavat [toteumat]
-  (mapv (fn [toteuma]
-          (let [toteuman-reittipisteet (:reittipisteet toteuma)
-                yhdistetyt-piste-idt (keys (group-by :id toteuman-reittipisteet))
-                lopputulos (mapv (fn [piste-id]
-                                   (let [eka-yhdistetty (first (filter
-                                                                 #(= (:id %) piste-id)
-                                                                 toteuman-reittipisteet))]
-                                     (-> eka-yhdistetty
-                                         (assoc :tehtavat (mapv :tehtavanimi (filter
-                                                                               #(= (:id %) (:id eka-yhdistetty))
-                                                                               toteuman-reittipisteet)))
-                                         (dissoc :tehtavanimi))))
-                                 yhdistetyt-piste-idt)]
-            (assoc toteuma :reittipisteet lopputulos)))
-        toteumat))
-
-(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [toteumat (into []
-                       (comp
-                         (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                         (map konv/alaviiva->rakenne))
-                       (q/hae-urakan-kokonaishintaisten-toteumien-reitit db urakka-id
-                                                                         sopimus-id
-                                                                         (konv/sql-date alkupvm)
-                                                                         (konv/sql-date loppupvm)
-                                                                         toimenpide
-                                                                         tehtava))
-        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
-                                  toteumat
-                                  {:reittipiste :reittipisteet}
-                                  :toteumaid)]
-    (yhdista-reittipisteiden-tehtavat kasitellyt-toteumarivit)))
-
-(defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+(defn hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteumat (into []
                        (comp
@@ -551,14 +516,38 @@
                                   (fn [rivi]
                                     [(:toimenpidekoodi rivi) (:alkanut rivi)])
                                   (map #(assoc % :alkanut (clj-time.coerce/to-local-date (:alkanut %))) toteumat)))
-        summatut-rivit (map #(assoc % :alkanut (clj-time.coerce/to-date (:alkanut %)))
-                            (mapv #(reduce
-                                    (fn [vanha uusi]
-                                      (if (and (:maara vanha) (:maara uusi))
-                                        (assoc vanha :maara (+ (:maara vanha) (:maara uusi)))
-                                        (assoc vanha :maara 0)))
-                                    %) paivittaiset-rivit))]
+        summatut-rivit (mapv #(assoc % :alkanut (clj-time.coerce/to-date (:alkanut %)))
+                             (mapv #(reduce
+                                     (fn [vanha uusi]
+                                       (if (and (:maara vanha) (:maara uusi))
+                                         (assoc vanha :maara (+ (:maara vanha) (:maara uusi)))
+                                         (assoc vanha :maara 0)))
+                                     %) paivittaiset-rivit))]
+    (println "-------> summatut-rivit:" summatut-rivit)
     summatut-rivit))
+
+(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+  #_(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [toteuma-idt (distinct (mapv :toteumaid (q/hae-urakan-kokonaishintaiset-toteumat
+                                                 db urakka-id
+                                                 sopimus-id
+                                                 (konv/sql-date alkupvm)
+                                                 (konv/sql-date loppupvm)
+                                                 toimenpide
+                                                 tehtava)))
+        reitit (mapv (fn [toteuma-id]
+                       (let [reittipisteet (into [] (harja.geo/muunna-pg-tulokset :sijainti)
+                                                 (q/hae-toteuman-reittipisteet db toteuma-id))
+                             tehtavat (mapv :nimi (q/hae-toteuman-tehtavat db toteuma-id))]
+                         (println "-------> reittipisteet" reittipisteet)
+                         (println "-------> tehtavat" tehtavat)
+
+                         {:id            toteuma-id
+                          :reittipisteet reittipisteet
+                          :tehtavat      tehtavat}))
+                     toteuma-idt)]
+    (println "-------> reitit:" reitit)
+    reitit))
 
 (defrecord Toteumat []
   component/Lifecycle
@@ -619,9 +608,9 @@
                                                                   (:toteumamateriaalit tiedot)
                                                                   (:hoitokausi tiedot)
                                                                   (:sopimus tiedot))))
-      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-tehtavat
+      (julkaise-palvelu http :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
                         (fn [user tiedot]
-                          (hae-urakan-kokonaishintaisten-toteumien-tehtavat db user tiedot)))
+                          (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat db user tiedot)))
       (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot)))

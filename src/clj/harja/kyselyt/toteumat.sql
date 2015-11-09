@@ -606,20 +606,13 @@ WHERE
 ORDER BY t.alkanut
 LIMIT 501;
 
--- name: hae-urakan-kokonaishintaisten-toteumien-reitit
-SELECT
-  t.id               AS toteumaid,
-  rp.id              AS reittipiste_id,
-  rp.aika            AS reittipiste_aika,
-  rp.sijainti        AS reittipiste_sijainti,
-  tk.nimi            AS reittipiste_tehtavanimi
+-- name: hae-urakan-kokonaishintaiset-toteumat
+SELECT t.id AS toteumaid
 FROM toteuma t
-  LEFT JOIN reittipiste rp
-    ON t.id = rp.toteuma
-  LEFT JOIN reitti_tehtava rt
-    ON rt.reittipiste = rp.id
+  LEFT JOIN toteuma_tehtava tt
+    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
   LEFT JOIN toimenpidekoodi tk
-    ON tk.id = rt.toimenpidekoodi
+    ON tk.id = tt.toimenpidekoodi
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
@@ -635,6 +628,27 @@ WHERE
 ORDER BY t.alkanut
 LIMIT 501;
 
+-- name: hae-toteuman-tehtavat
+SELECT
+  tt.id              AS id,
+  tt.toimenpidekoodi AS toimenpidekoodi,
+  tk.nimi            AS nimi,
+  tt.maara           AS maara,
+  tk.yksikko         AS yksikko
+FROM toteuma_tehtava tt
+  LEFT JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
+WHERE
+  tt.toteuma = :toteuma_id AND tt.poistettu IS NOT TRUE;
+
+-- name: hae-toteuman-reittipisteet
+SELECT
+  rp.id       AS id,
+  rp.aika     AS aika,
+  rp.sijainti AS sijainti
+FROM reittipiste rp
+WHERE
+  rp.toteuma = :toteuma_id;
 
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma materiaalin tiedot

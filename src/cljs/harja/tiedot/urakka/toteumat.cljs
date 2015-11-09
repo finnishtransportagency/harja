@@ -4,7 +4,7 @@
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [reagent.core :refer [atom]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]])
   (:require-macros [harja.atom :refer [reaction<!]]
@@ -28,9 +28,9 @@
                                 (sort-by
                                   :aika
                                   pvm/ennen?
-                                  (:reittipisteet %)))})))
+                                  (:reittipisteet %)))}))))
 
-  (defonce valittu-yksikkohintainen-toteuma (atom nil)))
+(defonce valittu-yksikkohintainen-toteuma (atom nil))
 
 (defonce yksikkohintainen-toteuma-kartalla
          (reaction
@@ -124,3 +124,5 @@
             :sopimus-id sopimus-id
             :alkupvm alkupvm
             :loppupvm loppupvm}))
+
+(tarkkaile! "-----> yksikkohintainen tyo kartalla" yksikkohintainen-toteuma-kartalla)
