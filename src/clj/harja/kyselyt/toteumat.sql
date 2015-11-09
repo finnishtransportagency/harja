@@ -202,7 +202,9 @@ FROM toteuma_tehtava tt
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
                           AND tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                         'lisatyo' :: toteumatyyppi, 'muutostyo' :: toteumatyyppi)
+                                         'lisatyo' :: toteumatyyppi,
+                                         'muutostyo' :: toteumatyyppi,
+                                         'vahinkojen-korjaukset' :: toteumatyyppi)
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN reittipiste rp ON t.id = rp.toteuma
