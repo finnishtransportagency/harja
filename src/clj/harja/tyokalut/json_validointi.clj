@@ -15,7 +15,7 @@
 (defmethod formatoi-virhe :additional-properties [polku virhe]
   (str polku ": Ylimääräisiä kenttiä: " (str/join ", " (:property-names virhe))))
 (defmethod formatoi-virhe :out-of-bounds [polku virhe]
-  (str polku ": Ei-sallittu arvoalue. Minimi: " (:minimum ) ", maksimi: " (:maximum) ", arvo" (pr-str (:data virhe)) ))
+  (str polku ": Ei-sallittu arvoalue. Minimi: " (:minimum (or virhe "-")) ", maksimi: " (or (:maximum virhe) "-") ", annettu arvo: " (pr-str (:data virhe)) ))
 (defmethod formatoi-virhe :properties [polku virhe]
   (str/join "\n"
             (for [[avain virhe] (seq (:properties virhe))]
