@@ -112,7 +112,10 @@
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        [:div.kartta-popup
                         [:p [:b "Havainto"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue :type :tilannekuvatyyppi)))]))
+                        [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
+                        [:div "Tekijä: " (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
+                        [:div "Päätös: " (name (get-in tapahtuma [:paatos :paatos])) ", "
+                         (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika]))]]))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
   (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
