@@ -26,9 +26,6 @@
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
-
-  (println "++++++++++++++ reitti: " (:reitti toteuma))
-
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
          (pvm-string->java-sql-date (:alkanut toteuma))
