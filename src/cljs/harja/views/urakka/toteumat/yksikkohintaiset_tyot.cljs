@@ -21,7 +21,8 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -208,38 +209,41 @@
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko     "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
-          :komponentti (fn [rivi] [:button.nappi-toissijainen.nappi-grid {:on-click
-                                                                          #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id rivi)))]
-                                                                                 (log "toteuma: " (pr-str toteuma)
-                                                                                      (let [lomake-tiedot {:toteuma-id           (:id toteuma)
-                                                                                                           :tehtavat             (zipmap (iterate inc 1)
-                                                                                                                                         (mapv (fn [tehtava]
-                                                                                                                                                 (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
-                                                                                                                                                                                              (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                                                                                                            @u/urakan-toimenpiteet-ja-tehtavat)) 3)
-                                                                                                                                                       emo (get (first (filter (fn [tehtavat]
-                                                                                                                                                                                 (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                                                                                               @u/urakan-toimenpiteet-ja-tehtavat)) 2)
-                                                                                                                                                       tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
-                                                                                                                                                   (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
-                                                                                                                                                   (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
-                                                                                                                                                   {:tehtava             {:id (:tpk-id tehtava)}
-                                                                                                                                                    :maara               (:maara tehtava)
-                                                                                                                                                    :tehtava-id          (:tehtava-id tehtava)
-                                                                                                                                                    :toimenpideinstanssi (:tpi_id tpi)
-                                                                                                                                                    :yksikko             (:yksikko tehtava-urakassa)}))
-                                                                                                                                               (:tehtavat toteuma)))
-                                                                                                           :alkanut              (:alkanut toteuma)
-                                                                                                           :paattynyt            (:paattynyt toteuma)
-                                                                                                           :lisatieto            (:lisatieto toteuma)
-                                                                                                           :suorittajan-nimi     (:suorittajan_nimi toteuma)
-                                                                                                           :suorittajan-ytunnus  (:suorittajan_ytunnus toteuma)
-                                                                                                           :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
-                                                                                                           :luoja                (:kayttajanimi toteuma)
-                                                                                                           :reittipisteet        (:reittipisteet toteuma)
-                                                                                                           :organisaatio         (:organisaatio toteuma)}]
-                                                                                        (reset! toteumat/valittu-yksikkohintainen-toteuma lomake-tiedot)))))}
-                                   (ikonit/eye-open) " Toteuma"])}]
+          :komponentti (fn [rivi]
+                         [:button.nappi-toissijainen.nappi-grid
+                          {:on-click
+                           #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id rivi)))]
+                                  (log "toteuma: " (pr-str toteuma))
+                                  (if-not (k/virhe? toteuma)
+                                    (let [lomake-tiedot {:toteuma-id           (:id toteuma)
+                                                         :tehtavat             (zipmap (iterate inc 1)
+                                                                                       (mapv (fn [tehtava]
+                                                                                               (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
+                                                                                                                                            (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
+                                                                                                                                          @u/urakan-toimenpiteet-ja-tehtavat)) 3)
+                                                                                                     emo (get (first (filter (fn [tehtavat]
+                                                                                                                               (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
+                                                                                                                             @u/urakan-toimenpiteet-ja-tehtavat)) 2)
+                                                                                                     tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
+                                                                                                 (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
+                                                                                                 (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
+                                                                                                 {:tehtava             {:id (:tpk-id tehtava)}
+                                                                                                  :maara               (:maara tehtava)
+                                                                                                  :tehtava-id          (:tehtava-id tehtava)
+                                                                                                  :toimenpideinstanssi (:tpi_id tpi)
+                                                                                                  :yksikko             (:yksikko tehtava-urakassa)}))
+                                                                                             (:tehtavat toteuma)))
+                                                         :alkanut              (:alkanut toteuma)
+                                                         :paattynyt            (:paattynyt toteuma)
+                                                         :lisatieto            (:lisatieto toteuma)
+                                                         :suorittajan-nimi     (:suorittajan_nimi toteuma)
+                                                         :suorittajan-ytunnus  (:suorittajan_ytunnus toteuma)
+                                                         :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
+                                                         :luoja                (:kayttajanimi toteuma)
+                                                         :reittipisteet        (:reittipisteet toteuma)
+                                                         :organisaatio         (:organisaatio toteuma)}]
+                                      (reset! toteumat/valittu-yksikkohintainen-toteuma lomake-tiedot)))))}
+                          (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
@@ -248,52 +252,63 @@
   "Yksikköhintaisten töiden toteumat"
   []
   (let [lisaa-tyoriveille-yksikkohinta (fn [rivit] (map
-                                                     (fn [rivi] (assoc rivi :yksikkohinta
-                                                                            (or (:yksikkohinta (first (filter
-                                                                                                        (fn [tyo] (and (= (:sopimus tyo) @u/valittu-hoitokausi)
-                                                                                                                       (= (:tehtava tyo) (:id rivi))
-                                                                                                                       (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                        @u/urakan-yks-hint-tyot)))
-                                                                                nil)))
+                                                     (fn [rivi]
+                                                       (assoc rivi :yksikkohinta
+                                                                   (or (:yksikkohinta (first (filter
+                                                                                               (fn [tyo]
+                                                                                                 (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
+                                                                                                      (= (:tehtava tyo) (:id rivi))
+                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                               @u/urakan-yks-hint-tyot)))
+                                                                       nil)))
                                                      rivit))
         lisaa-tyoriveille-suunniteltu-maara (fn [rivit] (map
-                                                          (fn [rivi] (assoc rivi :hoitokauden-suunniteltu-maara
-                                                                                 (or (:maara (first (filter
-                                                                                                      (fn [tyo] (and (= (:sopimus tyo) @u/valittu-hoitokausi)
-                                                                                                                     (= (:tehtava tyo) (:id rivi))
-                                                                                                                     (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                      @u/urakan-yks-hint-tyot)))
-                                                                                     nil)))
+                                                          (fn [rivi]
+                                                            (assoc rivi :hoitokauden-suunniteltu-maara
+                                                                        (or (:maara (first (filter
+                                                                                             (fn [tyo]
+                                                                                               (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
+                                                                                                    (= (:tehtava tyo) (:id rivi))
+                                                                                                    (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                             @u/urakan-yks-hint-tyot)))
+                                                                            nil)))
                                                           rivit))
         lisaa-tyoriveille-suunnitellut-kustannukset (fn [rivit]
                                                       (map
-                                                        (fn [rivi] (assoc rivi :hoitokauden-suunnitellut-kustannukset
-                                                                               (or (:yhteensa (first (filter
-                                                                                                       (fn [tyo] (and (= (:sopimus tyo) @u/valittu-hoitokausi)
-                                                                                                                      (= (:tehtava tyo) (:id rivi))
-                                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                                       @u/urakan-yks-hint-tyot)))
-                                                                                   nil)))
+                                                        (fn [rivi]
+                                                          (assoc rivi :hoitokauden-suunnitellut-kustannukset
+                                                                      (or (:yhteensa (first (filter
+                                                                                              (fn [tyo]
+                                                                                                (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
+                                                                                                     (= (:tehtava tyo) (:id rivi))
+                                                                                                     (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                              @u/urakan-yks-hint-tyot)))
+                                                                          nil)))
                                                         rivit))
         lisaa-tyoriveille-toteutunut-maara (fn [rivit]
                                              (map
-                                               (fn [rivi] (assoc rivi :hoitokauden-toteutunut-maara (or (:maara (first (filter
-                                                                                                                         (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
-                                                                                                                         @yks-hint-tehtavien-summat)))
-                                                                                                        nil)))
+                                               (fn [rivi]
+                                                 (assoc rivi :hoitokauden-toteutunut-maara (or (:maara
+                                                                                                 (first (filter
+                                                                                                          (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
+                                                                                                          @yks-hint-tehtavien-summat)))
+                                                                                               nil)))
                                                rivit))
         lisaa-tyoriveille-toteutuneet-kustannukset (fn [rivit]
                                                      (map
-                                                       (fn [rivi] (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
+                                                       (fn [rivi]
+                                                         (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
                                                        rivit))
         lisaa-tyoriveille-erotus (fn [rivit] (map
-                                               (fn [rivi] (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
+                                               (fn [rivi]
+                                                 (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
                                                rivit))
         tyorivit (reaction
                    (let [urakan-4-tason-tehtavat (map
-                                                   (fn [tasot] (let [kolmostaso (nth tasot 2)
-                                                                     nelostaso (nth tasot 3)]
-                                                                 (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
+                                                   (fn [tasot]
+                                                     (let [kolmostaso (nth tasot 2)
+                                                           nelostaso (nth tasot 3)]
+                                                       (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
                                                    @u/urakan-toimenpiteet-ja-tehtavat)
                          tehtavien-summat @yks-hint-tehtavien-summat]
 

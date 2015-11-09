@@ -13,6 +13,7 @@
             [harja.palvelin.tyokalut.kansio :as kansio]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
             [clojure.java.io :as io]
@@ -154,6 +155,41 @@
           (catch Exception e
             (log/debug "Pohjavesialueiden paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
 
+(defn tee-siltojen-alk-paivitystehtava
+  [this {:keys [tuontivali
+                siltojen-alk-osoite
+                siltojen-alk-tuontikohde
+                siltojen-shapefile]}]
+  (when (and tuontivali
+             siltojen-alk-osoite
+             siltojen-alk-tuontikohde
+             siltojen-shapefile)
+    (ajasta-paivitys this
+                     "sillat"
+                     tuontivali
+                     siltojen-alk-osoite
+                     siltojen-alk-tuontikohde
+                     "sillat.zip"
+                     (fn [] (siltojen-tuonti/vie-sillat-kantaan (:db this) siltojen-shapefile)))))
+
+(defn tee-siltojen-paikallinen-paivitystehtava
+  [{:keys [db]}
+   {:keys [siltojen-alk-osoite
+           siltojen-alk-tuontikohde
+           siltojen-shapefile
+           tuontivali]}]
+  (when (not (and siltojen-alk-osoite siltojen-alk-tuontikohde))
+    (chime-at
+      (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
+      (fn [_]
+        (try
+          (when (tarvitaanko-paikallinen-paivitys? db "sillat" siltojen-shapefile)
+            (log/debug "Ajetaan siltojen paikallinen päivitys")
+            (siltojen-tuonti/vie-sillat-kantaan db siltojen-shapefile)
+            (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) "sillat"))
+          (catch Exception e
+            (log/debug "Siltojen paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
+
 (defn tee-soratien-hoitoluokkien-alk-paivitystehtava
   [this {:keys [tuontivali
                 soratien-hoitoluokkien-alk-osoite
@@ -196,7 +232,9 @@
     (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
     (assoc this :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset))
-    (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset)))
+    (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
+    (assoc this :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))
+    (assoc this :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset)))
   (stop [this]
     (apply (:tieverkon-hakutehtava this) [])
     (apply (:soratien-hoitoluokkien-hakutehtava this) [])

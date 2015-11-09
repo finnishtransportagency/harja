@@ -356,8 +356,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                     [:span (liitteet/liitetiedosto liite)])
                             [liitteet/liite {:urakka-id     (:id @nav/valittu-urakka)
                                              :liite-ladattu #(swap! havainto assoc :uusi-liite %)
-                                             :nappi-teksti " Lisää liite havaintoon"
-                                             }]]}
+                                             :nappi-teksti " Lisää liite havaintoon"}]]}
 
              (when-not uusi?
                (lomake/ryhma
