@@ -25,29 +25,30 @@
 (defmulti nayta-popup :aihe)
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
-  (kartta/nayta-popup! (last (get-in tapahtuma [:alue :points]))
-                       [:div.kartta-toteuma-popup
-                        [:p [:b "Toteuma"]]
-                        [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
-                        (when (:suorittaja tapahtuma)
-                          [:span
-                           [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
-                        (when-not (empty? (:tehtavat tapahtuma))
-                          (doall
-                            (for [tehtava (:tehtavat tapahtuma)]
-                              [:span
-                               [:p "Toimenpide: " (:toimenpide tehtava)]
-                               [:p "Määrä: " (:maara tehtava)]
-                               [:p "Päivän hinta: " (:paivanhinta tehtava)]
-                               [:p "Lisätieto: " (:lisatieto tehtava)]])))
-                        (when-not (empty? (:materiaalit tapahtuma))
-                          (doall
-                            (for [toteuma (:materiaalit tapahtuma)]
-                              [:span
-                               [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
-                               [:p "Määrä: " (:maara toteuma)]])))
-                        (when (:lisatieto tapahtuma)
-                          [:p "Lisätieto: " (:lisatieto tapahtuma)])]))
+  (let [reittipisteet (get-in tapahtuma [:alue :points])]
+    (kartta/nayta-popup! (nth reittipisteet (int (/ (count reittipisteet) 2)))
+                        [:div.kartta-toteuma-popup
+                         [:p [:b "Toteuma"]]
+                         [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                         (when (:suorittaja tapahtuma)
+                           [:span
+                            [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
+                         (when-not (empty? (:tehtavat tapahtuma))
+                           (doall
+                             (for [tehtava (:tehtavat tapahtuma)]
+                               [:span
+                                [:p "Toimenpide: " (:toimenpide tehtava)]
+                                [:p "Määrä: " (:maara tehtava)]
+                                [:p "Päivän hinta: " (:paivanhinta tehtava)]
+                                [:p "Lisätieto: " (:lisatieto tehtava)]])))
+                         (when-not (empty? (:materiaalit tapahtuma))
+                           (doall
+                             (for [toteuma (:materiaalit tapahtuma)]
+                               [:span
+                                [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                [:p "Määrä: " (:maara toteuma)]])))
+                         (when (:lisatieto tapahtuma)
+                           [:p "Lisätieto: " (:lisatieto tapahtuma)])])))
 
 
 (defmethod nayta-popup :reittipiste-klikattu [tapahtuma]
