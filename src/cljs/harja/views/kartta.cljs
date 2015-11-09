@@ -271,39 +271,19 @@
 (def ikonien-selitykset-auki (atom false))
 
 (defn kartan-ikonien-selitykset []
-  (let [ikonien-selitykset [{:tyyppi :tarkastus :selitys "Tarkastus"} ; FIXME Ja loput mitä puuttuu
-                            {:tyyppi :silta :selitys "Silta"}
-                            {:tyyppi :turvallisuuspoikkeama :selitys "Turvallisuuspoikkeama"}]
-        selitetyt-tyypit (into #{} (map :tyyppi ikonien-selitykset))
-        esitettavat-tyypit (remove nil? (keys (group-by :tyyppi-kartalla @tasot/geometriat)))
-        geometriat-ilman-duplikaattityyppeja (mapv (fn [tyyppi]
-                                                     (first
-                                                       (filter (fn [geo]
-                                                                 (= (:tyyppi-kartalla geo) tyyppi))
-                                                               @tasot/geometriat)))
-                                                   esitettavat-tyypit)]
+  (let [selitteet (into #{} (keep :selite @tasot/geometriat))]
     (if (and (not= :S @nav/kartan-koko)
-             (some
-               (fn [geometrian-tyyppi]
-                 (geometrian-tyyppi selitetyt-tyypit))
-               esitettavat-tyypit)
              @ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        (if @ikonien-selitykset-auki
          [:div
           [:table
-           (for [geo geometriat-ilman-duplikaattityyppeja]
-             (let [selitys (first (filter
-                                    (fn [selitys]
-                                      (= (:tyyppi selitys) (:tyyppi-kartalla geo)))
-                                    ikonien-selitykset))]
-               (if selitys
-                 ^{:key (:tyyppi selitys)}
-                 [:tr
-                  [:td.kartan-ikonien-selitykset-ikoni-sarake
-                   [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (get-in geo [:alue :img]))}]]
-                  [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:selitys selitys)]]]
-                 (log "Geometrialle tyypillä " (pr-str (:tyyppi-kartalla geo)) " ei löydy selitystä"))))]
+           (for [selite selitteet]
+             ^{:key (:nimi selite)}
+             [:tr
+              [:td.kartan-ikonien-selitykset-ikoni-sarake
+               [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (:img selite))}]]
+              [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:teksti selite)]]])]
           [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
                                                                         (reset! ikonien-selitykset-auki false)
                                                                         (.stopPropagation event)

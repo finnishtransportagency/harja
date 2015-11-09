@@ -19,8 +19,10 @@
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
+     :selite {:teksti "Tiedotus"
+              :img    "kartta-tiedotus-violetti.svg"}
      :alue {:type        :tack-icon
-            :scale (if (valittu? ilmoitus) 1.5 1)
+            :scale       (if (valittu? ilmoitus) 1.5 1)
             :img         "kartta-tiedotus-violetti.svg"
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
@@ -28,8 +30,10 @@
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Kysely")
+     :selite {:teksti "Kysely"
+              :img    "kartta-kysely-violetti.svg"}
      :alue {:type        :tack-icon
-            :scale (if (valittu? ilmoitus) 1.5 1)
+            :scale       (if (valittu? ilmoitus) 1.5 1)
             :img         "kartta-kysely-violetti.svg"
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
@@ -37,8 +41,10 @@
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
+     :selite {:teksti "Toimenpidepyyntö"
+              :img    "kartta-toimenpidepyynto-violetti.svg"}
      :alue {:type        :tack-icon
-            :scale (if (valittu? ilmoitus) 1.5 1)
+            :scale       (if (valittu? ilmoitus) 1.5 1)
             :img         "kartta-toimenpidepyynto-violetti.svg"
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
@@ -46,27 +52,33 @@
   [(assoc havainto
      :type :havainto
      :nimi (or (:nimi havainto) "Havainto")
-     :alue {:type :tack-icon
-            :scale (if (valittu? havainto) 1.5 1)
-            :img "kartta-havainto-violetti.svg"
+     :selite {:teksti "Havainto"
+              :img    "kartta-havainto-violetti.svg"}
+     :alue {:type        :tack-icon
+            :scale       (if (valittu? havainto) 1.5 1)
+            :img         "kartta-havainto-violetti.svg"
             :coordinates (get-in havainto [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :pistokoe [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
-     :alue {:type :tack-icon
-            :scale (if (valittu? tarkastus) 1.5 1)
-            :img "kartta-tarkastus-violetti.svg"
+     :selite {:teksti "Pistokoe"
+              :img    "kartta-tarkastus-violetti.svg"}
+     :alue {:type        :tack-icon
+            :scale       (if (valittu? tarkastus) 1.5 1)
+            :img         "kartta-tarkastus-violetti.svg"
             :coordinates (get-in tarkastus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :laaduntarkastus [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
-     :alue {:type :tack-icon
-            :scale (if (valittu? tarkastus) 1.5 1)
-            :img "kartta-tarkastus-violetti.svg"
+     :selite {:teksti "Laaduntarkastus"
+              :img    "kartta-tarkastus-violetti.svg"}
+     :alue {:type        :tack-icon
+            :scale       (if (valittu? tarkastus) 1.5 1)
+            :img         "kartta-tarkastus-violetti.svg"
             :coordinates (get-in tarkastus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
@@ -83,6 +95,8 @@
                    (if (> 1 (count (:tehtavat toteuma)))
                      (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
                      (str (:toimenpide (first (:tehtavat toteuma))))))
+         :selite {:teksti "Toteuma"
+                  :img    "fixme.png"}
          :alue {
                 :type   :arrow-line
                 :scale  (if (valittu? toteuma) 0.8 0.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
@@ -95,8 +109,10 @@
   [(assoc tp
      :type :turvallisuuspoikkeama
      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
+     :selite {:teksti "Turvallisuuspoikkeama"
+              :img    "kartta-turvallisuuspoikkeama-avoin-oranssi.svg"}
      :alue {:type        :tack-icon
-            :scale (if (valittu? tp) 1.5 1)
+            :scale       (if (valittu? tp) 1.5 1)
             :img         "kartta-turvallisuuspoikkeama-avoin-oranssi.svg"
             :coordinates (get-in tp [:sijainti :coordinates])})])
 
@@ -131,51 +147,52 @@
         ;; Voisi kuvitella että jotkut tehtävät ovat luonnostaan kiinnostavampia,
         ;; Esim jos talvella aurataan paljon mutta suolataan vain vähän (ja yleensä aurataan kun suolataan),
         ;; niin silloin pitäisi näyttää suolauksen ikoni silloin harvoin kun sitä tehdään.
-        ikoni (condp = (first tehtavat)
-                "auraus ja sohjonpoisto" "talvihoito"
-                "suolaus" "talvihoito"
-                "pistehiekoitus" "talvihoito"
-                "linjahiekoitus" "talvihoito"
-                "lumivallien madaltaminen" "talvihoito"
-                "sulamisveden haittojen torjunta" "talvihoito"
-                "kelintarkastus" "talvihoito"
+        [ikoni selite] (condp = (first tehtavat)
+                         "auraus ja sohjonpoisto" ["talvihoito" "Talvihoito"]
+                         "suolaus" ["talvihoito" "Talvihoito"]
+                         "pistehiekoitus" ["talvihoito" "Talvihoito"]
+                         "linjahiekoitus" ["talvihoito" "Talvihoito"]
+                         "lumivallien madaltaminen" ["talvihoito" "Talvihoito"]
+                         "sulamisveden haittojen torjunta" ["talvihoito" "Talvihoito"]
+                         "kelintarkastus" ["talvihoito" "Talvihoito"]
 
-                "tiestotarkastus" "liikenneympariston-hoito"
-                "koneellinen niitto" "liikenneympariston-hoito"
-                "koneellinen vesakonraivaus" "liikenneympariston-hoito"
+                         "tiestotarkastus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+                         "koneellinen niitto" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+                         "koneellinen vesakonraivaus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
 
-                "liikennemerkkien puhdistus" "varusteet-ja-laitteet"
+                         "liikennemerkkien puhdistus" ["varusteet-ja-laitteet" "Varusteet ja laitteet"]
 
-                "sorateiden muokkaushoylays" "sorateiden-hoito"
-                "sorateiden polynsidonta" "sorateiden-hoito"
-                "sorateiden tasaus" "sorateiden-hoito"
-                "sorastus" "sorateiden-hoito"
+                         "sorateiden muokkaushoylays" ["sorateiden-hoito" "Sorateiden hoito"]
+                         "sorateiden polynsidonta" ["sorateiden-hoito" "Sorateiden hoito"]
+                         "sorateiden tasaus" ["sorateiden-hoito" "Sorateiden hoito"]
+                         "sorastus" ["sorateiden-hoito" "Sorateiden hoito"]
 
-                "harjaus" "paallysteiden-yllapito"
-                "pinnan tasaus" "paallysteiden-yllapito"
-                "paallysteiden paikkaus" "paallysteiden-yllapito"
-                "paallysteiden juotostyot" "paallysteiden-yllapito"
+                         "harjaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                         "pinnan tasaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                         "paallysteiden paikkaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                         "paallysteiden juotostyot" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
 
-                "siltojen puhdistus" "sillat"
+                         "siltojen puhdistus" ["sillat" "Sillat"]
 
-                "l- ja p-alueiden puhdistus" "hairion-hallinta" ;; En tiedä yhtään mikä tämä on
-                "muu" "hairion-hallinta"
-                "hairion-hallinta")]
-    (log (str "kartta-" ikoni "-" tila ".svg"))
-    (str "kartta-" ikoni "-" tila ".svg")))
+                         "l- ja p-alueiden puhdistus" ["hairion-hallinta" "Häiriön hallinta"] ;; En tiedä yhtään mikä tämä on
+                         "muu" ["hairion-hallinta" "Häiriön hallinta"]
+                         ["hairion-hallinta" "Häiriön hallinta"])]
+    [(str "kartta-" ikoni "-" tila ".svg") selite]))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
-  (log "Tehdäänpä työkone!")
-  [(assoc tyokone
-     :type :tyokone
-     :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
-     :alue {:type        :sticker-icon
-            :coordinates (:sijainti tyokone)
-            :direction   (- (/ Math/PI 2) (* (/ Math/PI 180) (:suunta tyokone))) ;; Onkohan oikein..
-            :img         (paattele-tyokoneen-ikoni
-                           (:tehtavat tyokone)
-                           (or (:lahetysaika tyokone) (:vastaanotettu tyokone))
-                           (valittu? tyokone))})])
+  (let [[img selite] (paattele-tyokoneen-ikoni
+                       (:tehtavat tyokone)
+                       (or (:lahetysaika tyokone) (:vastaanotettu tyokone))
+                       (valittu? tyokone))]
+    [(assoc tyokone
+       :type :tyokone
+       :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
+       :selite {:teksti selite
+                :img    img}
+       :alue {:type        :sticker-icon
+              :coordinates (:sijainti tyokone)
+              :direction   (- (/ Math/PI 2) (* (/ Math/PI 180) (:suunta tyokone))) ;; Onkohan oikein..
+              :img         img})]))
 
 (defmethod asia-kartalle :default [_ _ _])
 
