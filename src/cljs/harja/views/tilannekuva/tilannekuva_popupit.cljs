@@ -25,7 +25,7 @@
 (defmulti nayta-popup :aihe)
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (last (get-in tapahtuma [:alue :points]))
                        [:div.kartta-toteuma-popup
                         [:p [:b "Toteuma"]]
                         [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
@@ -109,7 +109,7 @@
 
 
 (defmethod nayta-popup :havainto-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Havainto"]]
                         [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
@@ -118,14 +118,14 @@
                          (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika]))]]))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b (str/capitalize (name (:tyyppi tapahtuma)))]]
                         [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
                         [:div "Mittaaja: " (:mittaaja tapahtuma)]]))
 
 (defmethod nayta-popup :turvallisuuspoikkeama-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b (str/join ", " (map (comp str/capitalize name) (:tyyppi tapahtuma)))]]
                         [:div (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
@@ -138,7 +138,7 @@
                          "/" (count (:korjaavattoimenpiteet tapahtuma))]]))
 
 (defmethod nayta-popup :paallystyskohde-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Päällystyskohde"]]
                         [:div (:nimi tapahtuma)]
@@ -146,7 +146,7 @@
                         [:div "Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))
 
 (defmethod nayta-popup :paikkaustoteuma-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Paikkaustoteuma"]]
                         [:div (:nimi tapahtuma)]
