@@ -220,8 +220,8 @@
                                                                      materiaalitoteumat-mapissa
                                                                      materiaalien-virheet
                                                                      (:jarjestelmanlisaama @muokattu)] :tyyppi :komponentti}
-           {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-           {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :nimi :ytunnus :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+           {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256 :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+           {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256 :nimi :ytunnus :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
            {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))}]
           @muokattu]]))))
 
@@ -256,7 +256,7 @@
             :hae (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
            {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :positiivinen-numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)
             :leveys "20%"}
-           {:otsikko "Suorittaja" :nimi :suorittaja :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false) :leveys "20%"}
+           {:otsikko "Suorittaja" :nimi :suorittaja :pituus-max 256 :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false) :leveys "20%"}
            {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false) :leveys "20%"}
            {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
             :komponentti (fn [rivi] (tarkastele-toteumaa-nappi rivi)) :muokattava? (constantly false) :leveys "20%"}]
