@@ -7,7 +7,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn vie-hoitoluokka-entry [db tv]
-  (k/vie-hoitoluokkatauluun! db
+  (hoitoluokat/vie-hoitoluokkatauluun! db
                              (:ajorata tv)
                              (:aosa tv)
                              (:tie tv)
