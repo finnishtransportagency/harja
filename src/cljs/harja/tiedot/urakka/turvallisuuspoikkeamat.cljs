@@ -6,7 +6,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -33,33 +34,13 @@
 
 (def karttataso-turvallisuuspoikkeamat (atom false))
 
-(def turvallisuuspoikkeama-kartalla-xf
-  #(assoc %
-    :tyyppi-kartalla :turvallisuuspoikkeama
-    :type :turvallisuuspoikkeama
-    :alue {:type        :icon
-           :coordinates (geo/ikonin-sijainti (:sijainti %))
-           :anchor      [0.5 1]
-           :direction   0
-           :img         (if (= (:id %) (:id @valittu-turvallisuuspoikkeama))
-                          "images/turvallisuuspoikkeama_korostettu.png"
-                          "images/turvallisuuspoikkeama.png")}))
-
 (defonce turvallisuuspoikkeamat-kartalla
-         (reaction @valittu-turvallisuuspoikkeama
-                   (when @karttataso-turvallisuuspoikkeamat
-                     (into []
-                           (comp
-                             (filter :sijainti)
-                             (map turvallisuuspoikkeama-kartalla-xf))
-
-                           @haetut-turvallisuuspoikkeamat))))
-
-(defonce turvallisuuspoikkeamaa-klikattu
-         (tapahtumat/kuuntele! :turvallisuuspoikkeama-klikattu
-                               (fn [tp]
-                                 (reset! valittu-turvallisuuspoikkeama (dissoc tp :type :alue)))))
-
+         (reaction (when @karttataso-turvallisuuspoikkeamat
+                     (kartalla-esitettavaan-muotoon
+                       (map
+                         #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
+                         @haetut-turvallisuuspoikkeamat)
+                       @valittu-turvallisuuspoikkeama))))
 
 (defn kasaa-tallennuksen-parametrit
   [tp]

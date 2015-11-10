@@ -25,29 +25,30 @@
 (defmulti nayta-popup :aihe)
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
-                       [:div.kartta-toteuma-popup
-                        [:p [:b "Toteuma"]]
-                        [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
-                        (when (:suorittaja tapahtuma)
-                          [:span
-                           [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
-                        (when-not (empty? (:tehtavat tapahtuma))
-                          (doall
-                            (for [tehtava (:tehtavat tapahtuma)]
-                              [:span
-                               [:p "Toimenpide: " (:toimenpide tehtava)]
-                               [:p "Määrä: " (:maara tehtava)]
-                               [:p "Päivän hinta: " (:paivanhinta tehtava)]
-                               [:p "Lisätieto: " (:lisatieto tehtava)]])))
-                        (when-not (empty? (:materiaalit tapahtuma))
-                          (doall
-                            (for [toteuma (:materiaalit tapahtuma)]
-                              [:span
-                               [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
-                               [:p "Määrä: " (:maara toteuma)]])))
-                        (when (:lisatieto tapahtuma)
-                          [:p "Lisätieto: " (:lisatieto tapahtuma)])]))
+  (let [reittipisteet (get-in tapahtuma [:alue :points])]
+    (kartta/nayta-popup! (nth reittipisteet (int (/ (count reittipisteet) 2)))
+                        [:div.kartta-toteuma-popup
+                         [:p [:b "Toteuma"]]
+                         [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                         (when (:suorittaja tapahtuma)
+                           [:span
+                            [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
+                         (when-not (empty? (:tehtavat tapahtuma))
+                           (doall
+                             (for [tehtava (:tehtavat tapahtuma)]
+                               [:span
+                                [:p "Toimenpide: " (:toimenpide tehtava)]
+                                [:p "Määrä: " (:maara tehtava)]
+                                [:p "Päivän hinta: " (:paivanhinta tehtava)]
+                                [:p "Lisätieto: " (:lisatieto tehtava)]])))
+                         (when-not (empty? (:materiaalit tapahtuma))
+                           (doall
+                             (for [toteuma (:materiaalit tapahtuma)]
+                               [:span
+                                [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                [:p "Määrä: " (:maara toteuma)]])))
+                         (when (:lisatieto tapahtuma)
+                           [:p "Lisätieto: " (:lisatieto tapahtuma)])])))
 
 
 (defmethod nayta-popup :reittipiste-klikattu [tapahtuma]
@@ -93,6 +94,7 @@
                        [:div.kartta-tyokone-popup
                         [:p [:b "Työkone"]]
                         [:div "Tyyppi: " (:tyokonetyyppi tapahtuma)]
+                        [:div "Viimeisin paikkatieto (lähetetty): " (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
                         [:div "Organisaatio: " (:organisaationimi tapahtuma)]
                         [:div "Urakka: " (:urakkanimi tapahtuma)]
                         [:div "Tehtävät: "
@@ -109,20 +111,23 @@
 
 
 (defmethod nayta-popup :havainto-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Havainto"]]
-                        (into [:div] (rakenna (dissoc tapahtuma :sijainti :aihe :klikkaus-koordinaatit :alue :type :tilannekuvatyyppi)))]))
+                        [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
+                        [:div "Tekijä: " (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
+                        [:div "Päätös: " (name (get-in tapahtuma [:paatos :paatos])) ", "
+                         (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika]))]]))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b (str/capitalize (name (:tyyppi tapahtuma)))]]
                         [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
                         [:div "Mittaaja: " (:mittaaja tapahtuma)]]))
 
 (defmethod nayta-popup :turvallisuuspoikkeama-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b (str/join ", " (map (comp str/capitalize name) (:tyyppi tapahtuma)))]]
                         [:div (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
@@ -135,7 +140,7 @@
                          "/" (count (:korjaavattoimenpiteet tapahtuma))]]))
 
 (defmethod nayta-popup :paallystyskohde-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Päällystyskohde"]]
                         [:div (:nimi tapahtuma)]
@@ -143,7 +148,7 @@
                         [:div "Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))
 
 (defmethod nayta-popup :paikkaustoteuma-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Paikkaustoteuma"]]
                         [:div (:nimi tapahtuma)]
