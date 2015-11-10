@@ -220,7 +220,7 @@
                 (try
                   (when (tarvitaanko-paikallinen-paivitys? db "talvihoitoluokat" talvihoidon-hoitoluokkien-shapefile)
                     (log/debug "Ajetaan talvihoidon hoitoluokkien paikallinen päivitys")
-                    (talvihoidon-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan db talvihoidon-hoitoluokkien-shapefile)
+                    (talvihoidon-tuonti/vie-hoitoluokat-kantaan db talvihoidon-hoitoluokkien-shapefile)
                     (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) "talvihoitoluokat"))
                   (catch Exception e
                     (log/debug "Talvihoidon paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
