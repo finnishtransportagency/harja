@@ -1,6 +1,6 @@
 (ns harja.views.raportit
   "Harjan raporttien pääsivu."
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
@@ -24,13 +24,15 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [alandipert.storage-atom :refer [local-storage]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-raporttityyppi (atom nil))
 
+(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
 
 ;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
 (defonce suoritettu-raportti (atom nil))
@@ -125,12 +127,15 @@
   {:urakoittain? @urakoittain?})
 
 (defmethod raportin-parametri "checkbox" [p]
-  [:div
-   [yleiset/raksiboksi (:nimi p) true (fn []) nil false]])
+  (let [avaimet [(:nimi @valittu-raporttityyppi) (:nimi p)]
+        paivita! #(swap! muistetut-parametrit
+                         update-in avaimet not)]
+    [:div
+     [yleiset/raksiboksi (:nimi p) (get-in @muistetut-parametrit avaimet) paivita! nil false]]))
 
 
 (defmethod raportin-parametri-arvo "checkbox" [p]
-  nil)
+  {(:nimi p) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])})
 
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])

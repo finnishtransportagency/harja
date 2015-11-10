@@ -69,7 +69,7 @@
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
 
-                 
+                 [alandipert/storage-atom "1.2.4"]
 
                  [clj-time "0.10.0"]
                  [com.andrewmcveigh/cljs-time "0.3.3"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
