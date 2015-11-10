@@ -137,47 +137,46 @@
 
 (defn- paattele-tyokoneen-ikoni
   [tehtavat lahetetty valittu?]
-  (let [tila (cond
+  ;; TODO Miten päätellään järkevästi mikä ikoni työkoneelle näytetään?
+  ;; Ensinnäkin, en ole yhtään varma osuuko nämä suoritettavat tehtävät edes oikeanlaisiin ikoneihin
+  ;; Mutta tärkempää on, että työkoneella voi olla useampi tehtävä. Miten se hoidetaan?
+  ;; Voisi kuvitella että jotkut tehtävät ovat luonnostaan kiinnostavampia,
+  ;; Esim jos talvella aurataan paljon mutta suolataan vain vähän (ja yleensä aurataan kun suolataan),
+  ;; niin silloin pitäisi näyttää suolauksen ikoni silloin harvoin kun sitä tehdään.
+  (let [ikonikartta {"auraus ja sohjonpoisto" ["talvihoito" "Talvihoito"]
+                     "suolaus" ["talvihoito" "Talvihoito"]
+                     "pistehiekoitus" ["talvihoito" "Talvihoito"]
+                     "linjahiekoitus" ["talvihoito" "Talvihoito"]
+                     "lumivallien madaltaminen" ["talvihoito" "Talvihoito"]
+                     "sulamisveden haittojen torjunta" ["talvihoito" "Talvihoito"]
+                     "kelintarkastus" ["talvihoito" "Talvihoito"]
+
+                     "tiestotarkastus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+                     "koneellinen niitto" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+                     "koneellinen vesakonraivaus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+
+                     "liikennemerkkien puhdistus" ["varusteet-ja-laitteet" "Varusteet ja laitteet"]
+
+                     "sorateiden muokkaushoylays" ["sorateiden-hoito" "Sorateiden hoito"]
+                     "sorateiden polynsidonta" ["sorateiden-hoito" "Sorateiden hoito"]
+                     "sorateiden tasaus" ["sorateiden-hoito" "Sorateiden hoito"]
+                     "sorastus" ["sorateiden-hoito" "Sorateiden hoito"]
+
+                     "harjaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                     "pinnan tasaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                     "paallysteiden paikkaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                     "paallysteiden juotostyot" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+
+                     "siltojen puhdistus" ["sillat" "Sillat"]
+
+                     "l- ja p-alueiden puhdistus" ["hairion-hallinta" "Häiriön hallinta"] ;; En tiedä yhtään mikä tämä on
+                     "muu" ["hairion-hallinta" "Häiriön hallinta"]}
+        tila (cond
                valittu? "valittu"
                (and lahetetty (t/before? lahetetty (t/now)) (> 20 (t/in-minutes (t/interval lahetetty (t/now)))))
                "sininen"
                :else "harmaa")
-        ;; TODO Miten päätellään järkevästi mikä ikoni työkoneelle näytetään?
-        ;; Ensinnäkin, en ole yhtään varma osuuko nämä suoritettavat tehtävät edes oikeanlaisiin ikoneihin
-        ;; Mutta tärkempää on, että työkoneella voi olla useampi tehtävä. Miten se hoidetaan?
-        ;; Voisi kuvitella että jotkut tehtävät ovat luonnostaan kiinnostavampia,
-        ;; Esim jos talvella aurataan paljon mutta suolataan vain vähän (ja yleensä aurataan kun suolataan),
-        ;; niin silloin pitäisi näyttää suolauksen ikoni silloin harvoin kun sitä tehdään.
-        [ikoni selite] (condp = (first tehtavat)
-                         "auraus ja sohjonpoisto" ["talvihoito" "Talvihoito"]
-                         "suolaus" ["talvihoito" "Talvihoito"]
-                         "pistehiekoitus" ["talvihoito" "Talvihoito"]
-                         "linjahiekoitus" ["talvihoito" "Talvihoito"]
-                         "lumivallien madaltaminen" ["talvihoito" "Talvihoito"]
-                         "sulamisveden haittojen torjunta" ["talvihoito" "Talvihoito"]
-                         "kelintarkastus" ["talvihoito" "Talvihoito"]
-
-                         "tiestotarkastus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
-                         "koneellinen niitto" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
-                         "koneellinen vesakonraivaus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
-
-                         "liikennemerkkien puhdistus" ["varusteet-ja-laitteet" "Varusteet ja laitteet"]
-
-                         "sorateiden muokkaushoylays" ["sorateiden-hoito" "Sorateiden hoito"]
-                         "sorateiden polynsidonta" ["sorateiden-hoito" "Sorateiden hoito"]
-                         "sorateiden tasaus" ["sorateiden-hoito" "Sorateiden hoito"]
-                         "sorastus" ["sorateiden-hoito" "Sorateiden hoito"]
-
-                         "harjaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
-                         "pinnan tasaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
-                         "paallysteiden paikkaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
-                         "paallysteiden juotostyot" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
-
-                         "siltojen puhdistus" ["sillat" "Sillat"]
-
-                         "l- ja p-alueiden puhdistus" ["hairion-hallinta" "Häiriön hallinta"] ;; En tiedä yhtään mikä tämä on
-                         "muu" ["hairion-hallinta" "Häiriön hallinta"]
-                         ["hairion-hallinta" "Häiriön hallinta"])]
+        [ikoni selite] (or (get ikonikartta (first tehtavat)) ["hairion-hallinta" "Häiriön hallinta"])]
     [(str "kartta-" ikoni "-" tila ".svg") (str "kartta-" ikoni "-sininen.svg") selite]))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
@@ -192,7 +191,7 @@
                 :img    selite-img}
        :alue {:type        :sticker-icon
               :coordinates (:sijainti tyokone)
-              :direction   (- (/ Math/PI 2) (* (/ Math/PI 180) (:suunta tyokone))) ;; Onkohan oikein..
+              :direction   (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
               :img         img})]))
 
 (defmethod asia-kartalle :default [_ _ _])
