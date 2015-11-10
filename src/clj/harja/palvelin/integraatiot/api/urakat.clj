@@ -15,7 +15,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn muodosta-tehtavat [tehtavat]
-  (mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data)}}) tehtavat))
+  (mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data) :yksikko (:yksikko data)}}) tehtavat))
 
 (defn muodosta-toteumakirjauskohteet [sopimus yksikkohintaiset-tehtavat kokonaishintaiset-tehtavat]
   (assoc sopimus :toteumakirjauskohteet (merge

@@ -20,7 +20,8 @@ ORDER BY vuosi, kuukausi;
 -- Urakan sopimuksen kokonaishintaiset tehtävät
 SELECT
   id,
-  nimi
+  nimi,
+  yksikko
 FROM toimenpidekoodi
 WHERE id IN
       (SELECT DISTINCT (id)
