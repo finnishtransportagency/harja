@@ -94,7 +94,7 @@
                        [:div.kartta-tyokone-popup
                         [:p [:b "Työkone"]]
                         [:div "Tyyppi: " (:tyokonetyyppi tapahtuma)]
-                        [:div "Viimeisin paikkatieto: " (pvm/pvm-aika-sek (:lahetetty tapahtuma))]
+                        [:div "Viimeisin paikkatieto (lähetetty): " (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
                         [:div "Organisaatio: " (:organisaationimi tapahtuma)]
                         [:div "Urakka: " (:urakkanimi tapahtuma)]
                         [:div "Tehtävät: "
