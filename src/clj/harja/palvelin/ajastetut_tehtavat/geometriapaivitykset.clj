@@ -16,6 +16,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.talvihoidon-hoitoluokat :as talvihoidon-tuonti]
             [clojure.java.io :as io]
             [clj-time.coerce :as coerce])
   (:use [slingshot.slingshot :only [try+ throw+]])
@@ -190,6 +191,40 @@
           (catch Exception e
             (log/debug "Siltojen paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
 
+(defn tee-talvihoidon-hoitoluokkien-alk-paivitystehtava
+  [this {:keys [tuontivali
+                talvihoidon-hoitoluokkien-alk-osoite
+                talvihoidon-hoitoluokkien-alk-tuontikohde
+                talvihoidon-hoitoluokkien-shapefile]}]
+  (when (and tuontivali
+             talvihoidon-hoitoluokkien-alk-osoite
+             talvihoidon-hoitoluokkien-alk-tuontikohde
+             talvihoidon-hoitoluokkien-shapefile)
+    (ajasta-paivitys this
+                     "talvihoitoluokat"
+                     tuontivali
+                     talvihoidon-hoitoluokkien-alk-osoite
+                     talvihoidon-hoitoluokkien-alk-tuontikohde
+                     "talvihoidon-hoitoluokat.tgz"
+                     (fn [] (talvihoidon-tuonti/vie-hoitoluokat-kantaan (:db this) talvihoidon-hoitoluokkien-shapefile)))))
+
+(defn tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava
+  [{:keys [db]}
+   {:keys [tuontivali
+           talvihoidon-hoitoluokkien-alk-osoite
+           talvihoidon-hoitoluokkien-alk-tuontikohde
+           talvihoidon-hoitoluokkien-shapefile]}]
+  (when (not (and talvihoidon-hoitoluokkien-alk-osoite talvihoidon-hoitoluokkien-alk-tuontikohde))
+    (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
+              (fn [_]
+                (try
+                  (when (tarvitaanko-paikallinen-paivitys? db "talvihoitoluokat" talvihoidon-hoitoluokkien-shapefile)
+                    (log/debug "Ajetaan talvihoidon hoitoluokkien paikallinen päivitys")
+                    (talvihoidon-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan db talvihoidon-hoitoluokkien-shapefile)
+                    (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) "talvihoitoluokat"))
+                  (catch Exception e
+                    (log/debug "Talvihoidon paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
+
 (defn tee-soratien-hoitoluokkien-alk-paivitystehtava
   [this {:keys [tuontivali
                 soratien-hoitoluokkien-alk-osoite
@@ -222,15 +257,17 @@
                     (soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan db soratien-hoitoluokkien-shapefile)
                     (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) "soratieluokat"))
                   (catch Exception e
-                    (log/debug "Tieosoiteverkon paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
+                    (log/debug "Sorateiden paikallisessa tuonnissa tapahtui poikkeus: " e)))))))
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
-  (start [this]
+  (start [this] ; FIXME Kaikissa näissä on miltei identtinen pohja, voisi ehkä yleistää yhdeksi funktioksi
     (assoc this :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
     (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
     (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
     (assoc this :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset))
+    (assoc this :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-alk-paivitystehtava this asetukset))
+    (assoc this :talvihoidon-hoitoluokkien-paivitystehtava (tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset))
     (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
     (assoc this :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))

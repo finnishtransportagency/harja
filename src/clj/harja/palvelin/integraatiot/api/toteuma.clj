@@ -74,7 +74,8 @@
   (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")
   (toteumat/luo-reittipiste<! db toteuma-id nil
                               (get-in sijainti [:koordinaatit :x])
-                              (get-in sijainti [:koordinaatit :y])))
+                              (get-in sijainti [:koordinaatit :y])
+                              "talvihoitoluokka"))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat tehtävät")

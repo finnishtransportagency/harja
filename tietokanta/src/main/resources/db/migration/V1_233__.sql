@@ -1,6 +1,6 @@
 -- Lisää hoitoluokka-tauluun tietolajitunniste
 
-CREATE TYPE hoitoluokan_tietolajitunniste AS ENUM ('talvihoitoluokka', 'soratieluokka', 'viherhoitoluokka');
+CREATE TYPE hoitoluokan_tietolajitunniste AS ENUM ('talvihoito', 'soratie', 'viherhoito');
 
 ALTER TABLE hoitoluokka ADD COLUMN tietolajitunniste hoitoluokan_tietolajitunniste;
 
