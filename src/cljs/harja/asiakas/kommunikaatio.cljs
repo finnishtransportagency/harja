@@ -88,14 +88,20 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (set! (.-onload xhr)
           (fn [event]
             (let [request (.-target event)]
-              (if (= 200 (.-status request))
-                (let [transit-json (.-responseText request)
-                      transit (transit/lue-transit transit-json)]
-                  (log "SAATIIN VASTAUS: " (pr-str transit))
-                  (put! ch transit)
-                  (close! ch))
-                (do (put! ch {:error :liitteen-lahetys-epaonnistui})
-                    (close! ch))))))
+              (case (.-status request)
+                200 (let [transit-json (.-responseText request)
+                          transit (transit/lue-transit transit-json)]
+                      (put! ch transit))
+                413 (do
+                      (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
+                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri"}))
+                500 (do
+                      (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
+                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "sisäinen virhe"}))
+                (do
+                  (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
+                  (put! ch {:error :liitteen-lahetys-epaonnistui})))
+              (close! ch))))
 
     (set! (.-onprogress siirto)
           (fn [e]
