@@ -22,6 +22,6 @@
       (if (> (:koko liite) max-koko-tavuina)
         {:hyvaksytty false :viesti (str "Liite on liian suuri (sallittu koko " max-koko-tavuina " tavua).")}
         (if (nil? (mime-whitelist (:tyyppi liite)))
-          {:hyvaksytty false :viesti "Tiedostotyyppi " (:tyyppi liite) " ei ole sallittu."}
+          {:hyvaksytty false :viesti (str "Tiedostotyyppi (" (:tyyppi liite) ") ei ole sallittu.")}
           {:hyvaksytty true :viesti nil}))
       {:hyvaksytty false :viesti "Järjestelmä ei voi käsitellä tiedostoa."})))
