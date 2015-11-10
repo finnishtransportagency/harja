@@ -3,8 +3,7 @@
 CREATE TYPE hoitoluokan_tietolajitunniste AS ENUM ('talvihoito', 'soratie', 'viherhoito');
 
 ALTER TABLE hoitoluokka ADD COLUMN tietolajitunniste hoitoluokan_tietolajitunniste;
-
-UPDATE hoitoluokka SET tietolajitunniste = 'talvihoitoluokka'::hoitoluokan_tietolajitunniste;
+UPDATE hoitoluokka SET tietolajitunniste = 'talvihoito'::hoitoluokan_tietolajitunniste;
 
 CREATE OR REPLACE FUNCTION hoitoluokka_pisteelle(
   piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER)
