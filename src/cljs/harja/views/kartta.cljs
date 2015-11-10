@@ -213,7 +213,12 @@
                       #(openlayers/hide-popup!)))
 
 ;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
-(def +varit+ ["#E04836" "#F39D41" "#8D5924" "#5696BC" "#2F5168" "wheat" "teal"])
+(def +varit+ ["rgba(102, 204, 255, 0.7)" "rgba(0, 255, 204, 0.7)" "rgba(0, 102, 0, 0.7)" "rgba(255, 153, 0, 0.7)"
+              "rgba(204, 0, 102, 0.7)" "rgba(255, 204, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 51, 204, 0.7)"
+              "rgba(0, 51, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 204, 51, 0.7)" "rgba(0, 0, 255, 0.7)"
+              "rgba(0, 102, 102, 0.7)" "rgba(51, 153, 102, 0.7)" "rgba(51, 102, 0, 0.7)" "rgba(153, 102, 51, 0.7)"
+              "rgba(153, 0, 51, 0.7)"])
+#_(def +varit+ ["#E04836ff" "#F39D41ff" "#8D5924ff" "#5696BCff" "#2F5168ff"])
 
 (defonce kartan-koon-paivitys
          (run! (do @yleiset/ikkunan-koko
@@ -278,12 +283,13 @@
        (if @ikonien-selitykset-auki
          [:div
           [:table
-           (for [selite selitteet]
-             ^{:key (:nimi selite)}
+           [:tbody
+            (for [selite selitteet]
+             ^{:key (str (:img selite) "_" (:nimi selite))}
              [:tr
               [:td.kartan-ikonien-selitykset-ikoni-sarake
                [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (:img selite))}]]
-              [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:teksti selite)]]])]
+              [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:teksti selite)]]])]]
           [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
                                                                         (reset! ikonien-selitykset-auki false)
                                                                         (.stopPropagation event)
@@ -547,7 +553,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                                   {:width 3}))
                                       ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                                       :color (or (:color alue)
-                                                 (nth +varit+ (mod (hash (:nimi piirrettava)) (count +varit+))))
+                                                 (nth +varit+ (mod (:id piirrettava) (count +varit+))))
                                       :zindex (or (:zindex alue) (case (:type piirrettava)
                                                                    :hy 0
                                                                    :ur 1
