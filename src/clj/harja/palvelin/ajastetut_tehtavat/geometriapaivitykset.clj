@@ -261,7 +261,7 @@
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
-  (start [this] ; FIXME Kaikissa näissä on miltei identtinen pohja, voisi ehkä yleistää yhdeksi funktioksi
+  (start [this] ; FIXME Kaikissa näissä on miltei identtinen pohja, voisi ehkä yleistää yhdeksi funktioksi tai multimethodiksi
     (assoc this :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
     (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
     (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
