@@ -135,7 +135,11 @@
 
 
 (defmethod raportin-parametri-arvo "checkbox" [p]
-  {(:nimi p) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])})
+  {(case (:nimi p)
+     "Laskutusyhteenveto" :laskutusyhteenveto
+     "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
+     "Ympäristöraportti" :ymparisto
+     (:nimi p)) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])})
 
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])
@@ -175,7 +179,7 @@
                     (if-not p
                       (do (log "RIVIT: " (pr-str rows))
                           rows)
-                      (let [par [:div.col-md-4 [raportin-parametri p]]]
+                      (let [par ^{:key (:nimi p)} [:div.col-md-4 [raportin-parametri p]]]
                         (cond
                           ;; checkboxit aina omalle riville
                           (= "checkbox" (:tyyppi p))
