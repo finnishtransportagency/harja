@@ -13,12 +13,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.indeksit :as i]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
-            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.muut-tyot :as muut-tyot]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.views.urakka.valinnat :as valinnat]
 
@@ -26,16 +22,11 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [cljs.core.async :refer [<! >! chan]]
-            [clojure.string :as str]
-            [cljs-time.core :as t]
-            [cljs.core.async :refer [<! timeout]]
+            [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
-            [harja.geo :as geo]
-            [harja.asiakas.tapahtumat :as tapahtumat])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -88,6 +79,8 @@
   (case avainsana
     :muutostyo "Muutostyö"
     :lisatyo "Lisätyö"
+    :akillinen-hoitotyo "Äkillinen hoitotyö"
+    :vahinkojen-korjaukset "Vahinkojen korjaukset"
     +valitse-tyyppi+))
 
 (defn muun-tyon-tyypin-teksti-genetiivissa [avainsana]
@@ -95,15 +88,16 @@
   (case avainsana
     :muutostyo "muutostyön"
     :lisatyo "lisätyön"
+    :akillinen-hoitotyo "äkillisen hoitotyön"
+    :vahinkojen-korjaukset "vahinkojen korjaukset"
     "työn jonka tyyppi on tuntematon"))
 
 (def +muun-tyon-tyypit+
-  [:muutostyo :lisatyo])
+  [:muutostyo :lisatyo :akillinen-hoitotyo :vahinkojen-korjaukset])
 
 
 (def korostettavan-rivin-id (atom nil))
 
-;; FIXME: siirrä rivin korostuksen funktio gridiin josta sitä voi käyttää
 (defn korosta-rivia
   ([id] (korosta-rivia id +korostuksen-kesto+))
   ([id kesto]
@@ -335,8 +329,8 @@
                              (get-in @muokattu [:suorittajan :nimi])
                              (:nimi @u/urakan-organisaatio))
                   :aseta   (fn [rivi arvo] (assoc-in rivi [:suorittajan :nimi] arvo))
-                  :tyyppi  :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
-                 {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus
+                  :tyyppi  :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :pituus-max 256}
+                 {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256
                   :hae     #(if (get-in @muokattu [:suorittajan :ytunnus])
                              (get-in @muokattu [:suorittajan :ytunnus])
                              (:ytunnus @u/urakan-organisaatio))
@@ -390,7 +384,7 @@
             (ikonit/plus) " Lisää toteuma"]
 
            [grid/grid
-            {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt ")
+            {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt sekä vahinkojen korjaukset")
              :tyhja         (if (nil? @valitut-muut-tyot)
                               [ajax-loader "Toteumia haetaan..."]
                               "Ei toteumia saatavilla.")
@@ -406,14 +400,14 @@
               :leveys  "10%"}
              {:otsikko "Yksikkö"
               :nimi    :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
-             {:otsikko     "Muutoshinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :positiivinen-numero
+             {:otsikko     "Muutos\u00ADhinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :positiivinen-numero
               :hae         #(if (get-in % [:tehtava :paivanhinta])
                              nil
                              (:yksikkohinta %))
               :muokattava? (constantly false) :fmt fmt/euro-opt :leveys "10%"}
-             {:otsikko "Hinnoittelu" :tyyppi :string :nimi :hinnoittelu
-              :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Muutoshinta") :leveys "10%"}
-             {:otsikko "Kustannus (€)" :tyyppi :string :nimi :kustannus :tasaa :oikea
+             {:otsikko "Hin\u00ADnoit\u00ADtelu" :tyyppi :string :nimi :hinnoittelu
+              :hae     #(if (get-in % [:tehtava :paivanhinta]) "Päivän hinta" "Muutos\u00ADhinta") :leveys "10%"}
+             {:otsikko "Kus\u00ADtannus (€)" :tyyppi :string :nimi :kustannus :tasaa :oikea
               ;; kustannus on päivän hinta jos se on annettu, muutoin yksikköhinta * määrä
               :hae     #(if (get-in % [:tehtava :paivanhinta])
                          (get-in % [:tehtava :paivanhinta])

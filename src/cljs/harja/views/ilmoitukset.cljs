@@ -27,13 +27,11 @@
 (defn urakan-sivulle-nappi
   [ilmoitus]
   (when (and (:urakka ilmoitus) (:hallintayksikko ilmoitus))
-    [:button.nappi-toissijainen
-     {:on-click (fn [e]
-                  (.stopPropagation e)
-                  (reset! nav/valittu-hallintayksikko-id (:hallintayksikko ilmoitus))
-                  (reset! nav/valittu-urakka-id (:urakka ilmoitus))
-                  (reset! nav/sivu :urakat))}
-     "Urakan sivulle"]))
+    [napit/urakan-sivulle "Urakan sivulle" (fn [e]
+                                             (.stopPropagation e)
+                                             (reset! nav/valittu-hallintayksikko-id (:hallintayksikko ilmoitus))
+                                             (reset! nav/valittu-urakka-id (:urakka ilmoitus))
+                                             (reset! nav/sivu :urakat))]))
 
 (defn nayta-tierekisteriosoite
   [tr]

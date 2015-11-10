@@ -3,6 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.0.5. Julkaistu: - . Muutokset:
+    - Lisätty uusi toteumatyyppi vahingonkorvaus reitti, piste & varustetoteumille
     - Tyokoneseurannasta poistettu sopimus id.
     - Varusterajapinta päivitetty vastaamaan tierekisterin rajapintaa
     - Urakoiden hakuun lisätty alueurakkanumero

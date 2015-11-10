@@ -33,7 +33,7 @@
 
 (def +testisopimus-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Order contactId=\"\" contractPartyId=\"TESTIORGANISAATI\" id=\"TESTISOPIMUS\" messageId=\"OrganisaatioMessageId\"
+    <Order contactId=\"\" contractPartyId=\"TESTIORG\" id=\"TESTISOPIMUS\" messageId=\"OrganisaatioMessageId\"
            name=\"Testisopimus\" projectId=\"TESTIURAKKA\" schedule_finish=\"2013-10-31T00:00:00.0\"
            schedule_start=\"2013-09-02T00:00:00.0\" vv_code=\"\" vv_dno=\"-\">
         <documentLinks/>
@@ -42,7 +42,7 @@
 
 (def +testiorganisaatio-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Company id=\"TESTIORGANISAATI\" messageId=\"OrganisaatioMessageId\" name=\"Testi Oy\" vv_corporate_id=\"3214567-8\">
+    <Company id=\"TESTIORG\" messageId=\"OrganisaatioMessageId\" name=\"Testi Oy\" vv_corporate_id=\"3214527-8\">
         <contactInformation address=\"Katu 1\" city=\"Helsinki\" postal_Code=\"00100\" type=\"main\"/>
     </Company>
 </Sampo2harja>")
@@ -171,7 +171,7 @@
               FROM urakka
               WHERE urakoitsija = (SELECT id
                               FROM organisaatio
-                              WHERE sampoid = 'TESTIORGANISAATI'));"))))
+                              WHERE sampoid = 'TESTIORG'));"))))
 
 (defn tuo-toimenpide []
   (let [toimenpiteet (:toimenpideinstanssit (sampo-sanoma/lue-viesti +testitoimenpide-sanoma+))]
@@ -241,11 +241,11 @@
     (organisaatiot/kasittele-organisaatiot testi/ds organisaatiot)))
 
 (defn poista-organisaatio []
-  (u "update urakka set urakoitsija = null where urakoitsija in  (select id from organisaatio where sampoid = 'TESTIORGANISAATI') ")
-  (u "delete from organisaatio where sampoid = 'TESTIORGANISAATI';"))
+  (u "update urakka set urakoitsija = null where urakoitsija in  (select id from organisaatio where sampoid = 'TESTIORG') ")
+  (u "delete from organisaatio where sampoid = 'TESTIORG';"))
 
 (defn hae-organisaatiot []
-  (q "select id from organisaatio where sampoid = 'TESTIORGANISAATI';"))
+  (q "select id from organisaatio where sampoid = 'TESTIORG';"))
 
 (defn tuo-yhteyshenkilo []
   (let [yhteyshenkilot (:yhteyshenkilot (sampo-sanoma/lue-viesti +testiyhteyshenkilo-sanoma+))]

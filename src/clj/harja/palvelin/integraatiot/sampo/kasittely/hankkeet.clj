@@ -18,13 +18,14 @@
   (try
     (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro alueurakkanro)
           tyypit (:tyypit tyyppi-ja-alueurakkanro)
-          alueurakkanro (:alueurakkanro tyyppi-ja-alueurakkanro)]
+          alueurakkanro (:alueurakkanro tyyppi-ja-alueurakkanro)
+          urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)]
       (if (hankkeet/onko-tuotu-samposta? db sampo-id)
         (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id)
         (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
 
       (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
-      (urakat/paivita-tyyppi-hankkeen-urakoille! db (urakkatyyppi/paattele-urakkatyyppi tyypit) sampo-id))
+      (urakat/paivita-tyyppi-hankkeen-urakoille! db urakkatyyppi sampo-id))
 
     (log/debug "Hanke käsitelty onnistuneesti")
     (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Program")

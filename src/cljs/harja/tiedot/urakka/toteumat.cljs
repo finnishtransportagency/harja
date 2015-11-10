@@ -4,7 +4,7 @@
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [reagent.core :refer [atom]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]])
   (:require-macros [harja.atom :refer [reaction<!]]
