@@ -278,6 +278,7 @@
 (defn kartan-ikonien-selitykset []
   (let [selitteet (into #{} (keep :selite @tasot/geometriat))]
     (if (and (not= :S @nav/kartan-koko)
+             (not (empty? selitteet))
              @ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        (if @ikonien-selitykset-auki
