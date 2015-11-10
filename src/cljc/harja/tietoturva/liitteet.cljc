@@ -1,7 +1,7 @@
 (ns harja.tietoturva.liitteet)
 
 (defn tarkista-liite [liite]
-  (let [max-koko-tavuina 16000000
+  (let [max-koko-tavuina 32000000
         mime-whitelist #{"image/png"
                          "image/tiff"
                          "image/jpeg"
