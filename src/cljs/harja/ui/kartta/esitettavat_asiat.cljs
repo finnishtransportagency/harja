@@ -139,7 +139,8 @@
   [tehtavat lahetetty valittu?]
   (let [tila (cond
                valittu? "valittu"
-               (> 20 (t/in-minutes (t/interval lahetetty (t/now)))) "sininen"
+               (and lahetetty (t/before? lahetetty (t/now)) (> 20 (t/in-minutes (t/interval lahetetty (t/now)))))
+               "sininen"
                :else "harmaa")
         ;; TODO Miten päätellään järkevästi mikä ikoni työkoneelle näytetään?
         ;; Ensinnäkin, en ole yhtään varma osuuko nämä suoritettavat tehtävät edes oikeanlaisiin ikoneihin
