@@ -13,12 +13,11 @@
           (drop 2 raportti)))
 
 (defn suorita [db user {:keys [kuukausi urakka-id] :as tiedot}]
-  [:raportti "Työmaakokousraportti"
-   (when (get tiedot "Laskutusyhteenveto")
-       [:otsikko "Laskutusyhteenveto"])
-   (when (get tiedot "Laskutusyhteenveto")
-     (osat (laskutusyhteenveto/suorita db user tiedot)))
-   (when (get tiedot "Yksikköhintaisten töiden raportti")
-     (osat (yks-hint/suorita db user tiedot)))
-   (when (get tiedot "Ympäristöraportti")
-     (osat (ymparisto/suorita db user tiedot)))])
+  [:raportti {:nimi "Työmaakokousraportti"}
+   (mapcat (fn [[aja-parametri otsikko raportti-fn]]
+             (when (get tiedot aja-parametri)
+               (concat [[:otsikko otsikko]]
+                       (osat (raportti-fn db user tiedot)))))
+           [[:laskutusyhteenveto "Laskutusyhteenveto" laskutusyhteenveto/suorita]
+            [:yksikkohintaiset-tyot "Yksikköhintaisten töiden raportti" yks-hint/suorita]
+            [:ymparisto "Ympäristöraportti" ymparisto/suorita]])])
