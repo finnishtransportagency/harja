@@ -295,10 +295,14 @@
         [mml-spec & _] (:layers mapspec)
         mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
         geometry-layer (ol.layer.Vector. #js {:source (ol.source.Vector.)})
+        interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom false
+                                                                  :dragPan false})]
+                      (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
+                      oletukset)
         map-optiot (clj->js {:layers       [mml geometry-layer]
                              :target       (:id mapspec)
                              :controls     (ol-control/defaults #js {})
-                             :interactions (ol-interaction/defaults #js {:mouseWheelZoom false})})
+                             :interactions interaktiot})
         ol3 (ol/Map. map-optiot)
 
         _ (reset!

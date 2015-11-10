@@ -6,7 +6,8 @@
 
 (defn- oletusalue [asia valittu?]
   (merge
-    (:sijainti asia)
+    (or (:sijainti asia)
+        (:sijainti (first (:reittipisteet asia))))
     {:color  (if (valittu? asia) "blue" "green")
      :radius 300
      :stroke {:color "black" :width 10}}))
@@ -80,6 +81,14 @@
             :scale       (if (valittu? tarkastus) 1.5 1)
             :img         "kartta-tarkastus-violetti.svg"
             :coordinates (get-in tarkastus [:sijainti :coordinates])})])
+
+(defmethod asia-kartalle :varustetoteuma [varustetoteuma]
+  [(assoc varustetoteuma
+     :type :varustetoteuma
+     :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
+     :alue {:type        :tack-icon
+            :img         "kartta-hairion-hallinta-sininen.svg"
+            :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla

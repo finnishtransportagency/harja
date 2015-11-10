@@ -4,8 +4,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.lampotilat :refer :all]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [com.stuartsierra.component :as component]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -15,9 +14,15 @@
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :tallenna-suolasakko-ja-pohjavesialueet  (component/using
+                                                                   (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
+                                                                   [:http-palvelin :db])
+                        :hae-urakan-suolasakot-ja-lampotilat (component/using
+                                                               (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
+                                                               [:http-palvelin :db])
                         :lampotilat (component/using
-                                     (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
-                                     [:http-palvelin :db])))))
+                                      (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
+                                      [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))

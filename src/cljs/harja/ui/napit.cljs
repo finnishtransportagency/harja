@@ -94,6 +94,10 @@
   [:button.nappi-toissijainen {:on-click #(takaisin-fn)}
    [:span.livicon-chevron-left " " teksti]])
 
+(defn urakan-sivulle [teksti click-fn]
+  [:button.nappi-toissijainen {:on-click #(click-fn)}
+   [:span.livicon-chevron-left  " " teksti]])
+
 (defn uusi
   "Nappi 'uuden asian' luonnille. 
 Asetukset on optionaalinen mäppi ja voi sisältää:

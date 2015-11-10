@@ -73,10 +73,7 @@
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/aikavali urakka]
 
-         [:span.label-ja-kentta
-          [:span.kentan-otsikko "Tienumero"]
-          [:div.kentta
-           [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} laadunseuranta/tienumero]]]
+         [valinnat/tienumero laadunseuranta/tienumero]
 
          [:span.label-ja-kentta
           [:span.kentan-otsikko "Tyyppi"]
