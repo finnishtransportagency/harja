@@ -64,7 +64,7 @@
 (defn luo-reitin-materiaalit [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin materiaalit")
   (doseq [materiaali (get-in reittipiste [:reittipiste :materiaalit])]
-    (let [materiaali-nimi (api-toteuma/materiaali-enum->string (:materiaali materiaali))
+    (let [materiaali-nimi (:materiaali materiaali)
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
         (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
