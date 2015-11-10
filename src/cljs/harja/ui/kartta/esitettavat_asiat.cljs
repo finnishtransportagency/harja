@@ -178,18 +178,18 @@
                          "l- ja p-alueiden puhdistus" ["hairion-hallinta" "Häiriön hallinta"] ;; En tiedä yhtään mikä tämä on
                          "muu" ["hairion-hallinta" "Häiriön hallinta"]
                          ["hairion-hallinta" "Häiriön hallinta"])]
-    [(str "kartta-" ikoni "-" tila ".svg") selite]))
+    [(str "kartta-" ikoni "-" tila ".svg") (str "kartta-" ikoni "-sininen.svg") selite]))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
-  (let [[img selite] (paattele-tyokoneen-ikoni
-                       (:tehtavat tyokone)
-                       (or (:lahetysaika tyokone) (:vastaanotettu tyokone))
-                       (valittu? tyokone))]
+  (let [[img selite-img selite-teksti] (paattele-tyokoneen-ikoni
+                                         (:tehtavat tyokone)
+                                         (or (:lahetysaika tyokone) (:vastaanotettu tyokone))
+                                         (valittu? tyokone))]
     [(assoc tyokone
        :type :tyokone
        :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
-       :selite {:teksti selite
-                :img    img}
+       :selite {:teksti selite-teksti
+                :img    selite-img}
        :alue {:type        :sticker-icon
               :coordinates (:sijainti tyokone)
               :direction   (- (/ Math/PI 2) (* (/ Math/PI 180) (:suunta tyokone))) ;; Onkohan oikein..
