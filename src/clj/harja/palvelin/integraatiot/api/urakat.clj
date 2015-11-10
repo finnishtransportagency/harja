@@ -38,7 +38,7 @@
 (defn hae-materiaalit [db]
   (let [materiaalit (materiaalit/hae-kaikki-materiaalit db)]
     (for [materiaali materiaalit]
-      {:materiaali {:id (:id materiaali) :nimi (:nimi materiaali) :yksikko (:yksikko materiaali)}})))
+      {:materiaali {:nimi (:nimi materiaali) :yksikko (:yksikko materiaali)}})))
 
 (defn muodosta-vastaus-urakan-haulle [db id urakka]
   {:urakka

@@ -145,11 +145,6 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "id": {
-                    "id": "urn:harja/urakka/materiaalit/0/materiaali/id",
-                    "type": "integer",
-                    "required": true
-                  },
                   "nimi": {
                     "id": "urn:harja/urakka/materiaalit/0/materiaali/nimi",
                     "type": "string",

@@ -69,7 +69,7 @@
       (if (nil? materiaalikoodi-id)
         (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi  virheet/+tuntematon-materiaali+
-                            :viesti (format "Materiaalia %s ei löydy tietokannasta." materiaali-nimi)}]}))
+                            :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
       (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
 (defn luo-reitti [db reitti toteuma-id]
