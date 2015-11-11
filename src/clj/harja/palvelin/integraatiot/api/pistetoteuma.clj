@@ -30,9 +30,10 @@
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
-  (let [urakka-id (Integer/parseInt id)]
+  (let [urakka-id (Integer/parseInt id)
+        sopimus-id (get-in data [:pistetoteuma :toteuma :sopimusId])]
     (log/debug "Kirjataan uusi pistetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 

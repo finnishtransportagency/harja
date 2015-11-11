@@ -26,6 +26,7 @@
          ""
          (:toteumatyyppi toteuma)
          (:reitti toteuma)
+         (:sopimusId toteuma)
          (get-in toteuma [:tunniste :id])
          urakka-id)))
 
