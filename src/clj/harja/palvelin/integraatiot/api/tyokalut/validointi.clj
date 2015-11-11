@@ -14,7 +14,7 @@
     (do
       (let [viesti (format "Urakkaa id:llä %s ei löydy." urakka-id)]
         (log/warn viesti)
-        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+        (throw+ {:type    virheet/+viallinen-kutsu+
                  :virheet [{:koodi virheet/+tuntematon-urakka-koodi+ :viesti viesti}]})))))
 
 (defn tarkista-sopimus [db urakka-id sopimus-id]
@@ -23,7 +23,7 @@
                (do
                  (let [viesti (format "Urakalle id: %s ei löydy sopimusta id: %s." urakka-id sopimus-id)]
                    (log/warn viesti)
-                   (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                   (throw+ {:type    virheet/+viallinen-kutsu+
                             :virheet [{:koodi virheet/+tuntematon-sopimus-koodi+ :viesti viesti}]}))))))
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
