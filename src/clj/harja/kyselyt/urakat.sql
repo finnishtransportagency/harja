@@ -335,3 +335,9 @@ SELECT id, nimi
    AND (alkupvm IS NULL OR alkupvm <= current_date)
    AND (loppupvm IS NULL OR loppupvm >= current_date);
 
+-- name: onko-urakalla-tehtavaa
+SELECT EXISTS(SELECT id
+              FROM
+                toimenpideinstanssi
+              WHERE urakka = :urakkaid AND toimenpide = :tehtavaid);
+
