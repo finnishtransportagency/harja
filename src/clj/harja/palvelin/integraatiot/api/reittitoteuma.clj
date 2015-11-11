@@ -81,7 +81,7 @@
                                 (pvm-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
                                 (get-in reittipiste [:reittipiste :koordinaatit :x])
                                 (get-in reittipiste [:reittipiste :koordinaatit :y])
-                                "talvihoito"))]
+                                "soratie"))]
       (log/debug "Reittipiste tallennettu, id: " reittipiste-id)
       (log/debug "Aloitetaan reittipisteen tehtävien tallennus.")
       (luo-reitin-tehtavat db reittipiste reittipiste-id)
