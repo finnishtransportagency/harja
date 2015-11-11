@@ -19,8 +19,8 @@
                                          (:osa talvihoito)
                                          (int (:kplk talvihoito))
                                          (.toString (:the_geom talvihoito))
-                                         "talvihoito"))
-    (log/warn "Talvihoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error talvihoito)))
+                                         "talvihoito")
+    (log/warn "Talvihoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error talvihoito))))
 
 (defn vie-hoitoluokat-kantaan [db shapefile]
   (if shapefile
