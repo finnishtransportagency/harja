@@ -71,7 +71,7 @@
 
                  [alandipert/storage-atom "1.2.4"]
 
-                 [clj-time "0.10.0"]
+                 [clj-time "0.11.0"]
                  [com.andrewmcveigh/cljs-time "0.3.3"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
 
                  [cljsjs/openlayers "3.5.0-1"]

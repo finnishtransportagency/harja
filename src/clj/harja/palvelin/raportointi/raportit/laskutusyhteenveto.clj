@@ -5,6 +5,8 @@
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]
             [harja.fmt :as fmt]))
 
 (defn hae-laskutusyhteenvedon-tiedot
@@ -51,15 +53,15 @@
 
 (defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [
+  (let [joda-aikavali (t/plus (tc/from-date aikavali-alkupvm) (t/hours 2))
         laskutettu-teksti  (str "Laskutettu hoitokaudella ennen "
                                 (kuukausi aikavali-alkupvm)
                                 "ta "
-                                (pvm/vuosi aikavali-alkupvm))
+                                (pvm/vuosi joda-aikavali))
         laskutetaan-teksti  (str "Laskutetaan "
                                  (kuukausi aikavali-alkupvm)
                                  "ssa "
-                                 (pvm/vuosi aikavali-alkupvm))
+                                 (pvm/vuosi joda-aikavali))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
         talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)]
     
