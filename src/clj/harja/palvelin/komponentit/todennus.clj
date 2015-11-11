@@ -91,8 +91,10 @@
     (assoc req
       :kayttaja kayttaja)))
 
-(defn http-todennus [testikayttajat]
-  (->HttpTodennus testikayttajat))
+(defn http-todennus
+  ([] (http-todennus nil))
+  ([testikayttajat]
+   (->HttpTodennus testikayttajat)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))
