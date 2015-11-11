@@ -15,7 +15,8 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -119,6 +120,7 @@
     (log/debug "Kirjataan reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (toteuman-validointi/tarkista-reittipisteet data)
     (tallenna-toteuma-ja-reitti db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 

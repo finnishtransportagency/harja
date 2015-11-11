@@ -121,16 +121,3 @@
           varuste-arvot-kannassa (first (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
       (is (= varuste-arvot-kannassa ["----livitunniste----        2                           ----livitunniste----          01  "])))))
-
-
-(deftest tarkista-reittipisteiden-aikojen-tarkistus
-  (let [reitti [{:reittipiste {:aika "2014-02-02T12:00:00Z"}}
-                {:reittipiste {:aika "2014-02-02T13:00:00Z"}}]]
-
-    (toteuma/tarkista-reittipisteet (harja.pvm/luo-pvm 2014 1 1) (harja.pvm/luo-pvm 2014 2 1) reitti)
-
-    (is (thrown? Exception (toteuma/tarkista-reittipisteet (harja.pvm/luo-pvm 2014 2 1) (harja.pvm/luo-pvm 2014 2 3) reitti))
-        "Poikkeusta ei heitetty epävalidista reittipisteestä, kun reittipiste on kirjattu ennen toteuman alkua.")
-
-    (is (thrown? Exception (toteuma/tarkista-reittipisteet (harja.pvm/luo-pvm 2014 1 1) (harja.pvm/luo-pvm 2014 1 2) reitti))
-        "Poikkeusta ei heitetty epävalidista reittipisteestä, kun reittipiste on kirjattu toteuman päättymisen jälkeen.")))
