@@ -3,29 +3,32 @@
             [clojure.java.jdbc :as jdbc]
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]
-            [harja.kyselyt.tieverkko :as k]
+            [harja.kyselyt.hoitoluokat :as hoitoluokat]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn vie-hoitoluokka-entry [db tv]
-  (k/vie-hoitoluokkatauluun! db
-                             (:ajorata tv)
-                             (:aosa tv)
-                             (:tie tv)
-                             (:piirinro tv)
-                             (:let tv)
-                             (:losa tv)
-                             (:aet tv)
-                             (:osa tv)
-                             (int (:kplk tv))
-                             (.toString (:the_geom tv))))
+(defn vie-hoitoluokka-entry [db soratie]
+  (if (:the_geom soratie)
+    (hoitoluokat/vie-hoitoluokkatauluun! db
+                                         (:ajorata soratie)
+                                         (:alkutieo soratie)
+                                         (:tienro soratie)
+                                         (:piirinro soratie)
+                                         (:et_loppu soratie)
+                                         (:loppu_tieo soratie)
+                                         (:et_alku soratie)
+                                         (:lopputieo soratie)
+                                         (Integer/parseInt (:soratlk_ko soratie))
+                                         (.toString (:the_geom soratie))
+                                         "soratie")
+    (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error soratie))))
 
 (defn vie-hoitoluokat-kantaan [db shapefile]
   (if shapefile
     (do
-      (log/debug (str "Tuodaan hoitoluokkatietoja kantaan tiedostosta " shapefile))
+      (log/debug (str "Tuodaan soratiehoitoluokkatietoja kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [transaktio db]
-        (k/tuhoa-hoitoluokkadata! transaktio)
-        (doseq [tv (shapefile/tuo shapefile)]
-          (vie-hoitoluokka-entry transaktio tv))
-        (log/debug "Hoitoluokkatietojen tuonti kantaan valmis")))
-    (log/debug "Hoitoluokkatietojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+        (hoitoluokat/tuhoa-hoitoluokkadata! transaktio "soratie")
+        (doseq [soratie (shapefile/tuo shapefile)]
+          (vie-hoitoluokka-entry transaktio soratie))
+        (log/debug "Soratiehoitoluokkatietojen tuonti kantaan valmis")))
+    (log/debug "Soratiehoitoluokkatietojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

@@ -10,6 +10,7 @@
 (def +ulkoinen-kasittelyvirhe-koodi+ "ulkoinen-kasittelyvirhe")
 (def +virheellinen-liite-koodi+ "virheellinen-liite")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
+(def +tuntematon-sopimus-koodi+ "tuntematon-sopimus")
 
 ; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

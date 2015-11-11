@@ -7,6 +7,7 @@
     "id": {
       "id": "urn:harja/id",
       "type": "integer",
+      "maximum": 2147483647,
       "required": true
     }
   }
