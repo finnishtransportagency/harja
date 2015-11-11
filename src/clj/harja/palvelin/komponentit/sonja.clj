@@ -88,15 +88,15 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       nil)))
 
 (defn aloita-yhdistaminen [tila asetukset]
-  (loop []
+  (loop [aika 10000]
     (let [yhteys (yhdista asetukset)]
       (if yhteys
         (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
           (assoc tila :yhteys yhteys :istunto istunto))
         (do
-          (log/warn "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan 10 minuutin päästä.")
-          (Thread/sleep 600000)
-          (recur))))))
+          (log/warn (format "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan %smillisekunnin päästä." aika))
+          (Thread/sleep aika)
+          (recur (min (* 2 aika) 600000)))))))
 
 (defn poista-kuuntelija [jonot jonon-nimi kuuntelija-fn]
   (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
@@ -136,24 +136,23 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (send-off (:tila this) aloita-yhdistaminen asetukset)
       this))
 
-  (stop [{:keys [tila] :as this}]
-    (when (:istunto @tila)
-      (.close (:istunto @tila)))
-    (when @(:yhteys tila)
-      (.close (:yhteys @tila)))
-    (assoc this
-      :tila (restart-agent (:tila this) agentin-alkutila)))
+  (stop [this]
+    (let [tila (when (await-for 100 (:tila this)) @(:tila this))]
+      (some-> tila :istunto .close)
+      (some-> tila :yhteys deref .close)
+      (assoc this
+        :tila (restart-agent (:tila this) agentin-alkutila))))
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
-    ;; todo: selvitä miksi ei kutsuta yhdista-kuuntelija -funktiota
     (send (:tila this)
           (fn [tila]
             (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)
             tila)))
 
   (laheta [this jonon-nimi viesti {:keys [correlation-id]}]
-    (laheta-viesti (:istunto @(:tila this)) (:jonot @(:tila this)) jonon-nimi viesti correlation-id))
+    (let [tila (when (await-for 100 (:tila this)) @(:tila this))]
+      (laheta-viesti (:istunto tila) (:jonot tila) jonon-nimi viesti correlation-id)))
 
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil)))
@@ -170,7 +169,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     Sonja
     (kuuntele [this jonon-nimi kuuntelija-fn]
       (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
-      #(log/debug "Feikki Sonja, lopeta muka kuuntelu jonossa: " jonon-nimi))
+      # (log/debug "Feikki Sonja, lopeta muka kuuntelu jonossa: " jonon-nimi))
     (laheta [this jonon-nimi viesti otsikot]
       (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
       (str "ID:" (System/currentTimeMillis)))
