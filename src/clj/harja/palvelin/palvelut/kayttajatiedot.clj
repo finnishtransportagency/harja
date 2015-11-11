@@ -3,16 +3,23 @@
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.palvelut.kayttajat :as k]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.roolit :as roolit]))
 
 (declare hae-kayttajatiedot)
 
-(defrecord Kayttajatiedot []
+(defrecord Kayttajatiedot [testikayttajat]
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :kayttajatiedot (fn [user alku]
-                                        (hae-kayttajatiedot (:db this) user alku)))
+                      :kayttajatiedot
+                      (fn [user alku]
+                        (let [kt (hae-kayttajatiedot (:db this) user alku)]
+                          (if (and (roolit/roolissa? user roolit/jarjestelmavastuuhenkilo)
+                                   testikayttajat)
+                            (assoc kt
+                                   :testikayttajat testikayttajat)
+                            kt))))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :kayttajatiedot)

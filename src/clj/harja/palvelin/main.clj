@@ -146,7 +146,7 @@
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
-                        (kayttajatiedot/->Kayttajatiedot)
+                        (kayttajatiedot/->Kayttajatiedot (:testikayttajat asetukset))
                         [:http-palvelin :db])
       :urakoitsijat (component/using
                       (urakoitsijat/->Urakoitsijat)
