@@ -15,11 +15,30 @@
   (when (.after (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu))
     (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
              :virheet [{:koodi  virheet/+viallinen-kutsu+
-                        :viesti (format "Alkuaika on loppuajan jälkeen")}]})))
+                        :viesti "Alkuaika on loppuajan jälkeen"}]})))
+
+(defn tarkista-reittipisteet [toteuman-alku toteuman-loppu reitti]
+  (doseq [reittipiste reitti]
+    (let [pisteen-aika (pvm-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))]
+
+      (println "pisteen-aika " pisteen-aika )
+      (println "toteuman-loppu " toteuman-loppu)
+
+      (when (or (.before pisteen-aika toteuman-alku) (.after pisteen-aika toteuman-loppu))
+        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                 :virheet [{:koodi  virheet/+viallinen-kutsu+
+                            :viesti (format "Kaikkien reittipisteiden kirjausajat eivät ole toteuman alun: %s ja lopun: %s sisällä."
+                                            toteuman-alku
+                                            toteuman-loppu)}]})))))
+
+(defn tarkista-toteuma [{:keys [alkanut paattynyt reitti]}]
+  (tarkasta-pvmvalin-validiteetti alkanut paattynyt)
+  (tarkista-reittipisteet alkanut paattynyt reitti))
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
-  (tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
+  (tarkista-toteuma toteuma)
+
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
          (pvm-string->java-sql-date (:alkanut toteuma))
@@ -35,7 +54,8 @@
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
-  (tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
+  (tarkista-toteuma toteuma)
+
   (:id (toteumat/luo-toteuma<!
          db
          urakka-id
