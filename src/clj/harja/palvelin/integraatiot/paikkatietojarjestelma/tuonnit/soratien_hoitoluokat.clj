@@ -20,7 +20,7 @@
                                          (Integer/parseInt (:soratlk_ko soratie))
                                          (.toString (:the_geom soratie))
                                          "soratie")
-    (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error soratie)))
+    (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error soratie))))
 
 (defn vie-hoitoluokat-kantaan [db shapefile]
   (if shapefile
