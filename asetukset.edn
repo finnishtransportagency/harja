@@ -1,5 +1,9 @@
 {
  :kehitysmoodi         true
+ :testikayttajat [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
+                  {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
+                  {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
+ 
  :http-palvelin {:threads 16}
  :tietokanta           {:palvelin   "localhost"
                         :tietokanta "harja"
