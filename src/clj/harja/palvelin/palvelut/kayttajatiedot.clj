@@ -14,9 +14,14 @@
     (julkaise-palvelu (:http-palvelin this)
                       :kayttajatiedot
                       (fn [user alku]
-                        (let [kt (hae-kayttajatiedot (:db this) user alku)]
-                          (if (and (roolit/roolissa? user roolit/jarjestelmavastuuhenkilo)
-                                   testikayttajat)
+                        (let [kt (hae-kayttajatiedot (:db this) user alku)
+                              oikea-kayttaja (:oikea-kayttaja user)]
+                          (log/info "KAYTTAJA: " user)
+                          (log/info "jvh? " (roolit/jvh? user) ", oikea jvh? " (and oikea-kayttaja (roolit/jvh? oikea-kayttaja)))
+                          (if (and testikayttajat
+                                   (or (roolit/jvh? user)
+                                       (and oikea-kayttaja
+                                            (roolit/jvh? oikea-kayttaja))))
                             (assoc kt
                                    :testikayttajat testikayttajat)
                             kt))))
