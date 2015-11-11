@@ -103,6 +103,38 @@
                      "tieosoiteverkko.zip"
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
 
+
+
+(comment
+  ;; ylempi yleiseen muotoon ilman makroja =>
+
+  (defn maarittele-alk-paivitystehtava
+    [nimi alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitysfunktio]
+    (fn [this {:keys [tuontivali] :as asetukset}]
+      (let [alk-osoite (get asetukset alk-osoite-avain)
+            alk-tuontikohde (get asetukset alk-tuontikohde-avain)
+            shapefile (get asetukset shapefile-avain)]
+        (when (and tuontivali
+                   alk-osoite
+                   alk-tuontikohde
+                   shapefile)
+          (ajasta-paivitys this
+                           nimi
+                           tuontivali
+                           alk-osoite
+                           alk-tuontikohde
+                           (str nimi ".zip") ;; FIXME: esim "tieverkko" vs "tieosoiteverkko.zip" ei ihan sama
+                           (fn [] (paivitysfunktio (:db this) shapefile)))))))
+
+  (def tieverkon-alk-paivitystehtava
+    (maarittele-alk-paivitystehtava "tieosoiteverkko"
+                                    :tieosoiteverkon-alk-osoite :tieosoiteverkon-alk-tuontikohde
+                                    :tieosoiteverkon-shapefile
+                                    tieverkon-tuonti/vie-tieverkko-kantaan))
+  
+;; vastaava muunnos paikalliselle päivitystehtävälle
+)
+
 (defn tee-tieverkon-paikallinen-paivitystehtava
   [{:keys [db]}
    {:keys [tieosoiteverkon-alk-osoite
