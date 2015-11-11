@@ -4,7 +4,6 @@
             [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]))
 
