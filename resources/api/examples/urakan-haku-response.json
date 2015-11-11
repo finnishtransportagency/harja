@@ -25,11 +25,13 @@
               {
                 "tehtava": {
                   "id": 1399,
-                  "selite": "Auraus ja sohjonpoisto"
+                  "selite": "Auraus ja sohjonpoisto",
+                  "yksikko": "km"
                 },
                 "tehtava": {
                   "id": 1400,
-                  "selite": "Suolaus"
+                  "selite": "Suolaus",
+                  "yksikko": "km"
                 }
               }
             ],
@@ -37,11 +39,20 @@
               {
                 "tehtava": {
                   "id": 1371,
-                  "selite": "Vesakonraivaus"
+                  "selite": "Vesakonraivaus",
+                  "yksikko": "m2"
                 }
               }
             ]
           }
+        }
+      }
+    ],
+    "materiaalit": [
+      {
+        "materiaali": {
+          "nimi": "Talvisuolaliuos NaCl",
+          "yksikko": "t"
         }
       }
     ]
