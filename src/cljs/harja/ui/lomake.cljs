@@ -122,7 +122,11 @@
          ;; PENDING: rivissä yksikön ja vihjeen näyttämiseen ei oikein ole
          ;; hyvää tapaa. Pitäisikö vain hyväksyä, että silloin ei ole?
          [:div
-          [:label otsikko]
+          ;; otsikko on vektori [kentan-otsikko :horizontal kentan-nimi otsikon-teksti]
+          ;; unwrapataan normaali labelointi ja tehdään oma riville paremmin sopiva
+          [:label.control-label {:class (when (:pakollinen? skeema) "required")
+                                 :for (nth otsikko 2)}
+           (nth otsikko 3)]
           komponentti]]))]])
 
 
