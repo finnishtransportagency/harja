@@ -9,7 +9,8 @@
             [harja.ui.modal :as modal]
             [goog.dom :as dom]
             [goog.events :as events]
-            [reagent.core :as reagent])
+            [reagent.core :as reagent]
+            [goog.net.cookies :as cookie])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -109,11 +110,18 @@
 (defonce testikayttajat
   (reaction (let [k @kayttaja]
               (when ((:roolit k) "jarjestelmavastuuhenkilo")
-                  (:testikayttajat k)))))
-(defonce testikayttaja (atom nil)) ; cookie
+                (:testikayttajat k)))))
+
+(defonce testikayttaja
+  (reaction (let [tk (cookie/get "testikayttaja")]
+              (some #(when (= tk (:kayttajanimi %)) %) @testikayttajat))))
 
 (defn testikaytto-mahdollista? []
   (not (empty? @testikayttajat)))
   
 (defn aseta-testikayttaja! [kayttaja]
-  (reset! testikayttaja kayttaja))
+  (if-not kayttaja
+    (cookie/remove "testikayttaja")
+    (cookie/set "testikayttaja" (:kayttajanimi kayttaja)))
+  (.reload js/window.location))
+
