@@ -3,7 +3,6 @@
 CREATE TYPE hoitoluokan_tietolajitunniste AS ENUM ('talvihoito', 'soratie', 'viherhoito');
 
 ALTER TABLE hoitoluokka ADD COLUMN tietolajitunniste hoitoluokan_tietolajitunniste;
-UPDATE hoitoluokka SET tietolajitunniste = 'talvihoito'::hoitoluokan_tietolajitunniste;
 
 CREATE OR REPLACE FUNCTION hoitoluokka_pisteelle(
   piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER)
@@ -26,3 +25,8 @@ BEGIN
   RETURN hl.hoitoluokka;
 END;
 $$ LANGUAGE plpgsql;
+
+ALTER TABLE reittipiste RENAME COLUMN hoitoluokka to talvihoitoluokka;
+ALTER TABLE reittipiste ADD COLUMN soratiehoitoluokka INTEGER
+
+UPDATE hoitoluokka SET tietolajitunniste = 'talvihoito'::hoitoluokan_tietolajitunniste;
