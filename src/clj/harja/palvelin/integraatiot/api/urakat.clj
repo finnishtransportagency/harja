@@ -10,12 +10,13 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
+            [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn muodosta-tehtavat [tehtavat]
-  (mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data)}}) tehtavat))
+  (mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data) :yksikko (:yksikko data)}}) tehtavat))
 
 (defn muodosta-toteumakirjauskohteet [sopimus yksikkohintaiset-tehtavat kokonaishintaiset-tehtavat]
   (assoc sopimus :toteumakirjauskohteet (merge
@@ -34,10 +35,16 @@
                                                   yksikkohintaiset-tehtavat
                                                   kokonaishintaiset-tehtavat)}))))
 
+(defn hae-materiaalit [db]
+  (let [materiaalit (materiaalit/hae-kaikki-materiaalit db)]
+    (for [materiaali materiaalit]
+      {:materiaali {:nimi (:nimi materiaali) :yksikko (:yksikko materiaali)}})))
+
 (defn muodosta-vastaus-urakan-haulle [db id urakka]
   {:urakka
-   {:tiedot     (assoc urakka :vaylamuoto "tie")
-    :sopimukset (hae-urakan-sopimukset db id)}})
+   {:tiedot      (assoc urakka :vaylamuoto "tie")
+    :sopimukset  (hae-urakan-sopimukset db id)
+    :materiaalit (hae-materiaalit db)}})
 
 (defn muodosta-vastaus-organisaation-urakoiden-haulle [urakat]
   {:urakat (mapv (fn [urakka] {:urakka {:tiedot (assoc urakka :vaylamuoto "tie")}}) urakat)})

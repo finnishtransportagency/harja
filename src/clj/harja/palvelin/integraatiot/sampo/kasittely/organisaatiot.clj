@@ -18,9 +18,11 @@
     uusi-id))
 
 (defn tallenna-organisaatio [db sampo-id nimi y-tunnus katuosoite postinumero]
-  (let [organisaatio-id (:id (first (organisaatiot/hae-id-sampoidlla db sampo-id)))
-        postinumero (merkkijono/leikkaa 5 postinumero)
-        y-tunnus (if (empty? y-tunnus) nil (merkkijono/leikkaa 9 y-tunnus))]
+  (let [y-tunnus (if (empty? y-tunnus) nil (merkkijono/leikkaa 9 y-tunnus))
+        organisaatio-id (if y-tunnus
+                          (:id (first (organisaatiot/hae-id-y-tunnuksella db y-tunnus)))
+                          (:id (first (organisaatiot/hae-id-sampoidlla db sampo-id))))
+        postinumero (merkkijono/leikkaa 5 postinumero)]
     (if organisaatio-id
       (do
         (paivita-organisaatio db organisaatio-id nimi y-tunnus katuosoite postinumero)

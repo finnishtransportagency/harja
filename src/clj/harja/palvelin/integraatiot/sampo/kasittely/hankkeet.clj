@@ -4,7 +4,8 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn pura-alueurakkanro [alueurakkanro]
@@ -13,18 +14,22 @@
       {:tyypit (first osat) :alueurakkanro (second osat)}
       {:tyypit nil :alueurakkanro alueurakkanro})))
 
+(defn pudota-etunollat [alueurakkanumero]
+  (str/replace alueurakkanumero #"^0+" ""))
+
 (defn kasittele-hanke [db {:keys [viesti-id nimi alkupvm loppupvm alueurakkanro sampo-id]}]
   (log/debug "Käsitellään hanke Sampo id:llä: " sampo-id)
   (try
     (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro alueurakkanro)
           tyypit (:tyypit tyyppi-ja-alueurakkanro)
-          alueurakkanro (:alueurakkanro tyyppi-ja-alueurakkanro)]
+          alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
+          urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)]
       (if (hankkeet/onko-tuotu-samposta? db sampo-id)
         (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id)
         (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
 
       (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
-      (urakat/paivita-tyyppi-hankkeen-urakoille! db (urakkatyyppi/paattele-urakkatyyppi tyypit) sampo-id))
+      (urakat/paivita-tyyppi-hankkeen-urakoille! db urakkatyyppi sampo-id))
 
     (log/debug "Hanke käsitelty onnistuneesti")
     (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Program")

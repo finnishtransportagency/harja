@@ -58,14 +58,15 @@
   
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   [:div.raportti
-   (map-indexed (fn [i elementti]
-                  ^{:key i}
-                  [muodosta-html elementti])
-                (mapcat (fn [sisalto]
-                          (if (list? sisalto)
-                            sisalto
-                            [sisalto]))
-                        sisalto))])
+   (keep-indexed (fn [i elementti]
+                   (when elementti
+                     ^{:key i}
+                     [muodosta-html elementti]))
+                 (mapcat (fn [sisalto]
+                           (if (list? sisalto)
+                             sisalto
+                             [sisalto]))
+                         sisalto))])
 
                                    
   

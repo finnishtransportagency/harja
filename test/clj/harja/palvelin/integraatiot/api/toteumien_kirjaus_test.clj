@@ -20,8 +20,7 @@
                                                                 [:http-palvelin :db :integraatioloki])
                                            :api-varusteoteuma (component/using
                                                                 (api-varustetoteuma/->Varustetoteuma)
-                                                                [:http-palvelin :db :integraatioloki])
-                                           ))
+                                                                [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 

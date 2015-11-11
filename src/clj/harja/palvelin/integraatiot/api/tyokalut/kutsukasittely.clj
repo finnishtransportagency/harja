@@ -174,6 +174,8 @@
                     (kasittele-sisainen-kasittelyvirhe virheet))
                   (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                     (kasittele-sisainen-kasittelyvirhe virheet))
+                  (catch [:type virheet/+virheellinen-liite+] {:keys [virheet]}
+                    (kasittele-sisainen-kasittelyvirhe virheet))
                   (catch #(get % :virheet) poikkeus
                     (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
                   ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):

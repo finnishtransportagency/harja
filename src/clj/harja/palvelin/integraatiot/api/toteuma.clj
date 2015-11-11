@@ -11,23 +11,10 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-
-(defn materiaali-enum->string [materiaali]
-  (case materiaali
-    "talvisuolaliuosNaCl" "Talvisuolaliuos NaCl"
-    "talvisuolaliuosCaCl2" "Talvisuolaliuos CaCl2"
-    "erityisalueetNaCl" "Erityisalueet NaCl"
-    "erityisalueetNaClLiuos" "Erityisalueet NaCl-liuos"
-    "hiekoitushiekka" "Hiekoitushiekka"
-    "kaliumformiaatti" "Kaliumformiaatti"
-    (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-             :virheet [{:koodi  virheet/+tuntematon-materiaali+
-                        :viesti (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)}]})))
-
 (defn tarkasta-pvmvalin-validiteetti [alku loppu]
   (when (.after (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu))
-    (throw+ {:type   virheet/+sisainen-kasittelyvirhe+
-             :virheet [{:koodi virheet/+viallinen-kutsu+
+    (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+             :virheet [{:koodi  virheet/+viallinen-kutsu+
                         :viesti (format "Alkuaika on loppuajan jälkeen")}]})))
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
@@ -43,6 +30,7 @@
          ""
          (:toteumatyyppi toteuma)
          (:reitti toteuma)
+         (:sopimusId toteuma)
          (get-in toteuma [:tunniste :id])
          urakka-id)))
 
@@ -99,11 +87,12 @@
   (log/debug "Luodaan toteumalle uudet materiaalit")
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
-    (let [materiaali-nimi (materiaali-enum->string (:materiaali materiaali))
+    (let [materiaali-nimi (:materiaali materiaali)
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
-      (if (nil? materiaalikoodi-id) (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-                                             :virheet [{:koodi  virheet/+tuntematon-materiaali+
-                                                        :viesti (format "Materiaalia %s ei löydy tietokannasta." materiaali-nimi)}]}))
+      (if (nil? materiaalikoodi-id)
+        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                 :virheet [{:koodi  virheet/+tuntematon-materiaali+
+                            :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
       (toteumat/luo-toteuma-materiaali<!
         db
         toteuma-id

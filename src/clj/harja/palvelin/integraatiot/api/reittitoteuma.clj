@@ -64,12 +64,12 @@
 (defn luo-reitin-materiaalit [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin materiaalit")
   (doseq [materiaali (get-in reittipiste [:reittipiste :materiaalit])]
-    (let [materiaali-nimi (api-toteuma/materiaali-enum->string (:materiaali materiaali))
+    (let [materiaali-nimi (:materiaali materiaali)
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
         (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi  virheet/+tuntematon-materiaali+
-                            :viesti (format "Materiaalia %s ei löydy tietokannasta." materiaali-nimi)}]}))
+                            :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
       (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
 (defn luo-reitti [db reitti toteuma-id]

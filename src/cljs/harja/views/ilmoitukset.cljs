@@ -212,10 +212,8 @@
         (pollauksen-merkki)
         [grid
          {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu #(do (reset! tiedot/valittu-ilmoitus %)
-                              (kartta/keskita-kartta-pisteeseen
-                                (get-in % [:sijainti :coordinates])))
-          :piilota-toiminnot? true}
+          :rivi-klikattu #(do (reset! tiedot/valittu-ilmoitus %))
+          :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(tiedot/ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}
@@ -232,7 +230,8 @@
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :L))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-
+    (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
+    (komp/kuuntelija :ilmoitus-klikattu #(reset! tiedot/valittu-ilmoitus %2))
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 

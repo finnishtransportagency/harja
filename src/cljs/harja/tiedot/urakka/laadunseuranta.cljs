@@ -7,6 +7,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.pvm :as pvm]
             [harja.loki :refer [log logt tarkkaile!]]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log]]
             [harja.domain.roolit :as roolit]
@@ -81,13 +82,11 @@
 
 (defonce tarkastukset-kartalla
          (reaction
-           @valittu-tarkastus
+           @urakan-tarkastukset
            (when @karttataso-tarkastukset
-             (into []
-                   (comp
-                    (filter :sijainti)
-                    tarkastus-xf)
-                   @urakan-tarkastukset))))
+             (kartalla-esitettavaan-muotoon
+               (map #(assoc % :tyyppi-kartalla (:tyyppi %)) @urakan-tarkastukset)
+               @valittu-tarkastus))))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."

@@ -1,6 +1,6 @@
 (ns harja.views.raportit
   "Harjan raporttien pääsivu."
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
@@ -24,13 +24,15 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [alandipert.storage-atom :refer [local-storage]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-raporttityyppi (atom nil))
 
+(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
 
 ;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
 (defonce suoritettu-raportti (atom nil))
@@ -124,11 +126,36 @@
 (defmethod raportin-parametri-arvo "urakoittain" [p]
   {:urakoittain? @urakoittain?})
 
+(defmethod raportin-parametri "checkbox" [p]
+  (let [avaimet [(:nimi @valittu-raporttityyppi) (:nimi p)]
+        paivita! #(swap! muistetut-parametrit
+                         update-in avaimet not)]
+    [:div
+     [yleiset/raksiboksi (:nimi p) (get-in @muistetut-parametrit avaimet) paivita! nil false]]))
+
+(def tyomaakokousraportit
+  {"Laskutusyhteenveto" :laskutusyhteenveto
+   "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
+   "Ympäristöraportti" :ymparisto})
+
+(defmethod raportin-parametri-arvo "checkbox" [p]
+  {(or (tyomaakokousraportit (:nimi p))
+       (:nimi p)) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])})
+
 (defmethod raportin-parametri :default [p]
   [:span (pr-str p)])
 
 (defmethod raportin-parametri-arvo :default [p]
   {:virhe (str "Ei arvoa parametrilla: " (:nimi p))})
+
+;; Tarkistaa raporttityypin mukaan voiko näillä parametreilla suorittaa
+(defmulti raportin-voi-suorittaa? (fn [raporttityyppi parametrit] (:nimi raporttityyppi)))
+
+(defmethod raportin-voi-suorittaa? :tyomaakokous [_ parametrit]
+  (some #(get parametrit %) (vals tyomaakokousraportit)))
+
+;; Oletuksena voi suorittaa, jos ei raporttikohtaista sääntöä ole
+(defmethod raportin-voi-suorittaa? :default [_ _] true)
 
 (def parametrien-jarjestys
   ;; Koska parametreillä ei ole mitään järjestysnumeroa
@@ -147,20 +174,46 @@
                                     (:parametrit raporttityyppi)))
         arvot #(reduce merge {} (map raportin-parametri-arvo parametrit))
         arvot-nyt (arvot)
+        voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
+                            (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         _ (log "Arvot: " (pr-str arvot-nyt))]
 
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
     (reset! suoritettu-raportti nil)
     [:span
      
-     (map-indexed (fn [i cols]
-                    ^{:key i}
-                    [:div.row cols])
-                  (partition 3 3 (repeat nil)
-                             (concat (for [p parametrit]
-                                       ^{:key (:nimi p)}
-                                       [:div.col-md-4 [raportin-parametri p]])
-                                     )))
+     (map-indexed
+      (fn [i cols]
+        ^{:key i}
+        [:div.row (seq cols)])
+      (loop [rows []
+             row nil
+             [p & parametrit] parametrit]
+        (if-not p
+          (conj rows row)
+          (let [par ^{:key (:nimi p)} [:div.col-md-4 [raportin-parametri p]]]
+            (cond
+              ;; checkboxit aina omalle riville
+              (= "checkbox" (:tyyppi p))
+              (recur (conj (if row
+                             (conj rows row)
+                             rows)
+                           [par])
+                     nil
+                     parametrit)
+
+              ;; Jos rivi on täynnä aloitetaan uusi
+              (= 3 (count row))
+              (recur (conj rows row)
+                     [par]
+                     parametrit)
+
+              ;; Muutoin lisätään aiempaan riviin
+              :default
+              (recur rows
+                     (if row (conj row par)
+                         [par])
+                     parametrit))))))
 
      [:div.row
       [:div.col-md-12
@@ -172,7 +225,7 @@
                   :value ""}]
          [:button.nappi-ensisijainen.pull-right
           {:type "submit"
-           :disabled (contains? arvot-nyt :virhe)
+           :disabled (not voi-suorittaa?)
            :on-click #(do (let [input (-> js/document
                                           (.getElementById "raporttipdf")
                                           (aget "parametrit"))
@@ -200,7 +253,7 @@
                     (reset! suoritettu-raportti nil)
                     raportti))))
          {:ikoni [ikonit/list]
-          :disabled (contains? arvot-nyt :virhe)}]]]]]))
+          :disabled (not voi-suorittaa?)}]]]]]))
 
 (defn raporttivalinnat []
   (komp/luo

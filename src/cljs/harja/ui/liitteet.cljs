@@ -66,6 +66,9 @@ Optiot voi sisältää:
                                     (reset! virheviesti nil)
                                     (liite-ladattu (reset! tiedosto ed)))
                                   (do
+                                    (log "Virhe: " (pr-str ed))
                                     (reset! edistyminen nil)
-                                    (reset! virheviesti "Liitteen lisääminen epäonnistui")))))))}]]
+                                    (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
+                                                             (if (:viesti ed)
+                                                               (str " (" (:viesti ed) ")"))))))))))}]]
           [:div.liite-virheviesti @virheviesti]])])))
