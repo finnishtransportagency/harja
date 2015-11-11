@@ -19,13 +19,15 @@
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-                            (let [toteuma (assoc (get-in data [:pistetoteuma :toteuma]) :reitti nil)
-                                  toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
-                              (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-                              (log/debug "Aloitetaan sijainnin tallennus")
-                              (api-toteuma/tallenna-sijainti transaktio (get-in data [:pistetoteuma :sijainti]) toteuma-id)
-                              (log/debug "Aloitetaan toteuman tehtävien tallennus")
-                              (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id))))
+    (let [toteuma (assoc (get-in data [:pistetoteuma :toteuma]) :reitti nil)
+          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
+          sijainti (get-in data [:pistetoteuma :sijainti])
+          aika (pvm-string->java-sql-date (get-in data [:pistetoteuma :toteuma :alkanut]))]
+      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+      (log/debug "Aloitetaan sijainnin tallennus")
+      (api-toteuma/tallenna-sijainti transaktio sijainti aika toteuma-id)
+      (log/debug "Aloitetaan toteuman tehtävien tallennus")
+      (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

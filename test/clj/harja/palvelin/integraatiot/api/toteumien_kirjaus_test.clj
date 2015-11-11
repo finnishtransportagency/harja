@@ -5,8 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-            [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
-            [harja.palvelin.integraatiot.api.toteuma :as toteuma]))
+            [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]))
 
 (def kayttaja "fastroi")
 
