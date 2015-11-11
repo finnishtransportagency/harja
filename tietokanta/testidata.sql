@@ -778,7 +778,7 @@ NOW(), 1350, 10, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 40, 'Tämä
 
 -- Reittipisteet kokonaishintaiselle työlle
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)Korja
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:00.00',
 NOW(),
