@@ -25,10 +25,23 @@
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja]
-    [:a {:href "#" :on-click #(do
-                               (.preventDefault %)
-                               (haku/nayta-kayttaja @kayttaja))}
-     etunimi " " sukunimi]))
+    (if-not (istunto/testikaytto-mahdollista?)
+      [:a {:href "#" :on-click #(do
+                                  (.preventDefault %)
+                                  (haku/nayta-kayttaja @kayttaja))}
+       etunimi " " sukunimi]
+      
+      (let [testikayttaja @istunto/testikayttaja]
+        [:span
+         (when testikayttaja
+           [:span.alert-warning "TESTIKÄYTTÖ"])
+         [yleiset/livi-pudotusvalikko {:valinta testikayttaja
+                                       :format-fn #(if %
+                                                     (:kuvaus %)
+                                                     (str etunimi " " sukunimi))
+                                       :valitse-fn istunto/aseta-testikayttaja!}
+          (concat [nil] @istunto/testikayttajat)]]))))
+
 
 (defn header [s]
   [bs/navbar {}

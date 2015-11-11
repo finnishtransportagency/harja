@@ -103,3 +103,17 @@
           (aikakatkaise-istunto-jos-kayttoaika-umpeutunut))
         (when @ajastimen-paivitys-paalla
           (recur))))))
+
+;; Testikäytön ominaisuudet
+
+(defonce testikayttajat
+  (reaction (let [k @kayttaja]
+              (when ((:roolit k) "jarjestelmavastuuhenkilo")
+                  (:testikayttajat k)))))
+(defonce testikayttaja (atom nil)) ; cookie
+
+(defn testikaytto-mahdollista? []
+  (not (empty? @testikayttajat)))
+  
+(defn aseta-testikayttaja! [kayttaja]
+  (reset! testikayttaja kayttaja))
