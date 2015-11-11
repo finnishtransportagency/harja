@@ -27,6 +27,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 ALTER TABLE reittipiste RENAME COLUMN hoitoluokka to talvihoitoluokka;
-ALTER TABLE reittipiste ADD COLUMN soratiehoitoluokka INTEGER
+ALTER TABLE reittipiste ADD COLUMN soratiehoitoluokka INTEGER;
 
 UPDATE hoitoluokka SET tietolajitunniste = 'talvihoito'::hoitoluokan_tietolajitunniste;

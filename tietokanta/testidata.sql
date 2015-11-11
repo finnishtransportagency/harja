@@ -418,7 +418,7 @@ INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara) VALUES (
 
 INSERT INTO toteuma (urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2010') LIMIT 1), '2005-11-01 14:00:00.000000', '2005-11-01 15:00:00.000000', 'yksikkohintainen', 'Varustetoteuma', '8765432-1', 'Tehotekijät Oy');
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys, piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi) VALUES ('HARJ951547ZK', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma'), 'lisatty', 'tl505', 89, 1, null, null, 12, null, null, 9, '2015-11-05 11:57:05.360537', null, 1, null, null, null, 'HARJ951547ZK        2                           HARJ951547ZK          01  ', null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma'),
 '2008-09-09 13:04.00',
 NOW(),
@@ -778,74 +778,74 @@ NOW(), 1350, 10, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 40, 'Tämä
 
 -- Reittipisteet kokonaishintaiselle työlle
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)Korja
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:00.00',
 NOW(),
 st_makepoint(498919, 7247099) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:03.00',
 NOW(),
 st_makepoint(499271, 7248395) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:06.00',
 NOW(),
 st_makepoint(499399, 7249019) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
 '2008-09-09 10:09.00',
 NOW(),
 st_makepoint(499820, 7249885) ::POINT, 2);
 
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
         '2005-11-11 10:01.00',
         NOW(),
         st_makepoint(440919, 7207099) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
         '2005-11-11 10:03.51',
         NOW(),
         st_makepoint(440271, 7208395) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
         '2005-11-11 10:06.00',
         NOW(),
         st_makepoint(440399, 7209019) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tehtävä oli vaikea'),
         '2005-11-11 10:09.00',
         NOW(),
         st_makepoint(440820, 7209885) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
 '2005-10-10 10:00.00',
 NOW(),
 st_makepoint(498919, 7247099) ::POINT, 3);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
 '2005-10-10 10:00.00',
 NOW(),
 st_makepoint(499271, 7248395) ::POINT, 3);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
 '2005-10-10 10:00.00',
 NOW(),
 st_makepoint(499399, 7249019) ::POINT, 3);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
 '2005-10-10 10:00.00',
 NOW(),
@@ -854,19 +854,19 @@ st_makepoint(499820, 7249885) ::POINT, 3);
 -- Reittipisteet muutostyölle
 -- Tämä paikka on suunnilleen Muhoksella en tarkastanut kartalta kovin tarkasti..
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
         '2005-11-13 00:03.00',
         NOW(),
         st_makepoint(453271, 7188395) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
         '2005-11-13 00:06.00',
         NOW(),
         st_makepoint(453399, 7189019) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
         '2005-11-13 00:09.00',
         NOW(),
@@ -891,25 +891,25 @@ VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:09.00' :: TIMEST
 
 -- Toinen muutoshintainen työ
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
         '2005-11-13 10:00.00',
         NOW(),
         st_makepoint(440919, 7207099) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
         '2005-11-13 10:03.00',
         NOW(),
         st_makepoint(440271, 7208395) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
         '2005-11-13 10:06.00',
         NOW(),
         st_makepoint(440399, 7209019) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
         '2005-11-13 10:09.00',
         NOW(),
@@ -934,25 +934,25 @@ VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:09.00' :: TIMEST
 
 -- Reittipisteet yksikköhintaiselle työlle
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
 st_makepoint(498919, 7247099) ::POINT, 3);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
 st_makepoint(499271, 7248395) ::POINT, 3);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
 st_makepoint(499399, 7249019) ::POINT, 3);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä toteumalla on reitti.'),
 '2005-10-10 10:00.00',
 NOW(),
