@@ -109,8 +109,7 @@
 
 (defonce testikayttajat
   (reaction (let [k @kayttaja]
-              (when ((:roolit k) "jarjestelmavastuuhenkilo")
-                (:testikayttajat k)))))
+              (:testikayttajat k))))
 
 (defonce testikayttaja
   (reaction (let [tk (cookie/get "testikayttaja")]
