@@ -97,7 +97,7 @@
           (doseq [reittipiste-id reittipiste-idt]
             (let [reitti-tehtava-idt (into [] (flatten (q (str "SELECT id FROM reitti_tehtava WHERE reittipiste = " reittipiste-id))))
                   reitti-materiaali-idt (into [] (flatten (q (str "SELECT id FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))))
-                  reitti-hoitoluokka (ffirst (q (str "SELECT hoitoluokka FROM reittipiste WHERE id = " reittipiste-id)))]
+                  reitti-hoitoluokka (ffirst (q (str "SELECT soratiehoitoluokka FROM reittipiste WHERE id = " reittipiste-id)))]
               (is (= (count reitti-tehtava-idt) 2))
               (is (= (count reitti-materiaali-idt) 1))
               (is (= reitti-hoitoluokka 7))))               ; testidatassa on reittipisteen koordinaateille hoitoluokka
