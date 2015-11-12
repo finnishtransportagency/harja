@@ -121,7 +121,7 @@
     (go-loop []
       (when (and @pollataan-kantaa?
                  (not (empty? @kuittausta-odottavat-maksuerat)))
-        (let [result (first (alts! [(timeout 5000)
+        (let [result (first (alts! [(timeout 10000)
                                     (maksuerat/hae-urakan-maksuerat (:id ur))]))]
           (reset! maksuerat/maksuerat result)
           (recur))))))
