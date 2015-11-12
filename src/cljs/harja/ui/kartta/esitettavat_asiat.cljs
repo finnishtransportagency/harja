@@ -21,7 +21,8 @@
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
      :selite {:teksti "Tiedotus"
-              :img    "kartta-tiedotus-violetti.svg"}
+              :img    "kartta-tiedotus-violetti.svg"
+              }
      :alue {:type        :tack-icon
             :scale       (if (valittu? ilmoitus) 1.5 1)
             :img         "kartta-tiedotus-violetti.svg"
@@ -197,7 +198,7 @@
        :type :tyokone
        :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
        :selite {:teksti selite-teksti
-                :img    selite-img}
+                :img    ["kartta-suuntanuoli-sininen.svg" selite-img]}
        :alue {:type        :sticker-icon
               :coordinates (:sijainti tyokone)
               :direction   (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
