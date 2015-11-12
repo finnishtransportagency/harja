@@ -119,13 +119,13 @@
   (reset! pollataan-kantaa? true)
   (let [ur @nav/valittu-urakka]
     (go-loop []
-      (when (and @pollataan-kantaa?
-                 (not (empty? @kuittausta-odottavat-maksuerat)))
+      (when @pollataan-kantaa?
+        (when (not (empty? @kuittausta-odottavat-maksuerat))          
+          (let [result (<! (maksuerat/hae-urakan-maksuerat (:id ur)))]
+            (log "tuli maksueriä: " result)
+            (reset! maksuerat/maksuerat result)))
         (<! (timeout 10000))
-        (let [result (<! (maksuerat/hae-urakan-maksuerat (:id ur)))]
-          (log "tuli maksueriä: " result)
-          (reset! maksuerat/maksuerat result)
-          (recur))))))
+        (recur)))))
 
 (defn nayta-tila [tila lahetetty]
   (case tila
