@@ -15,6 +15,9 @@
 (def agentin-alkutila
   {:yhteys nil :istunto nil :kuuntelijat [] :jonot {}})
 
+(def ei-jms-yhteytta {:type    :jms-yhteysvirhe
+                      :virheet [{:koodi  :ei-yhteytta
+                                 :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
 
@@ -42,7 +45,6 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 (defn- viestin-kasittelija [kasittelija]
   (let [ch (async/chan)]
     (go (loop [viesti (<! ch)]
-          (log/info "VIESTI: " viesti)
           (when viesti
             (kasittelija viesti)
             (recur (<! ch)))))
@@ -124,10 +126,6 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
                                                          (kuuntelija %))))
                    :kuuntelijat kuuntelijat)))))
 
-(def ei-jms-yhteytta {:type    :jms-yhteysvirhe
-                      :virheet [{:koodi  :ei-yhteytta
-                                 :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
-
 (defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
   (if istunto
     (try
@@ -149,8 +147,8 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
           yhteys-ok? (atom false)]
       (send-off agentti aloita-yhdistaminen asetukset yhteys-ok?)
       (assoc this
-             :tila agentti
-             :yhteys-ok? yhteys-ok?)))
+        :tila agentti
+        :yhteys-ok? yhteys-ok?)))
 
   (stop [this]
     (when @yhteys-ok?
@@ -158,7 +156,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
         (some-> tila :istunto .close)
         (some-> tila :yhteys .close)
         (assoc this
-               :tila nil))))
+          :tila nil))))
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
@@ -172,7 +170,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (throw+ ei-jms-yhteytta)
       (let [tila @tila]
         (laheta-viesti (:istunto tila) (:jonot tila) jonon-nimi viesti correlation-id))))
-    
+
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil)))
 
@@ -198,14 +196,3 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (if (and asetukset (not (str/blank? (:url asetukset))))
     (luo-oikea-sonja asetukset)
     (luo-feikki-sonja)))
-
-(defn testaa []
-  (let [s (luo-sonja {:url "tcp://localhost:61616"
-                      :kayttaja "harja"
-                      :salasana "harjaxx"
-                      :tyyppi   :activemq})]
-    (com.stuartsierra.component/start s)
-    (kuuntele s "test-in"
-              #(do (log/info "SAIN: " %)
-                   (laheta s "test-out" "vastaus viestiin")))
-    s))
