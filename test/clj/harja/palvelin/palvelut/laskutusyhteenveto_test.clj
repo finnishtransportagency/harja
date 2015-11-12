@@ -40,7 +40,13 @@
           _ (log/debug "haetut-tiedot-liikenneymparisto" haetut-tiedot-liikenneymparisto)
           _ (log/debug "haetut-tiedot-soratiet" haetut-tiedot-soratiet)
 
-          odotetut-talvihoito {:erilliskustannukset_laskutetaan                 2000.0M
+          odotetut-talvihoito {:akilliset_hoitotyot_laskutetaan                 0.0M
+                               :akilliset_hoitotyot_laskutetaan_ind_korotettuna 0.0M
+                               :akilliset_hoitotyot_laskutetaan_ind_korotus     0.0M
+                               :akilliset_hoitotyot_laskutettu                  0.0M
+                               :akilliset_hoitotyot_laskutettu_ind_korotettuna  0.0M
+                               :akilliset_hoitotyot_laskutettu_ind_korotus      0.0M
+                               :erilliskustannukset_laskutetaan                 2000.0M
                                :erilliskustannukset_laskutetaan_ind_korotettuna 2124.0000000000000000M
                                :erilliskustannukset_laskutetaan_ind_korotus     124.0000000000000000M
                                :erilliskustannukset_laskutettu                  1000.0M
@@ -87,7 +93,13 @@
                                :yht_laskutettu_ind_korotettuna                  2098.0000000000000000M
                                :yht_laskutettu_ind_korotus                      98.0000000000000000M}
 
-          odotetut-liikenneymparisto {:yht_laskutettu_ind_korotettuna 1039.0000000000000000M,
+          odotetut-liikenneymparisto {:akilliset_hoitotyot_laskutetaan                 2000.0M
+                                      :akilliset_hoitotyot_laskutetaan_ind_korotettuna 2062.00000000000000000M
+                                      :akilliset_hoitotyot_laskutetaan_ind_korotus     62.00000000000000000M
+                                      :akilliset_hoitotyot_laskutettu                  1000.0M
+                                      :akilliset_hoitotyot_laskutettu_ind_korotettuna  1059.00000000000000000M
+                                      :akilliset_hoitotyot_laskutettu_ind_korotus      59.00000000000000000M
+                                      :yht_laskutettu_ind_korotettuna 1039.0000000000000000M,
                                       :suolasakot_laskutetaan 0.0M,
                                       :kaikki_laskutetaan_ind_korotus 248.00000000000000000M,
                                       :sakot_laskutetaan_ind_korotettuna 0.0M,
@@ -134,7 +146,13 @@
                                       :suolasakot_laskutettu_ind_korotus 0.0M,
                                       :yht_laskutetaan_ind_korotus 186.0000000000000000M}          
 
-          odotetut-soratiet {:yht_laskutettu_ind_korotettuna 0.0M,
+          odotetut-soratiet {:akilliset_hoitotyot_laskutetaan                 0.0M
+                             :akilliset_hoitotyot_laskutetaan_ind_korotettuna 0.0M
+                             :akilliset_hoitotyot_laskutetaan_ind_korotus     0.0M
+                             :akilliset_hoitotyot_laskutettu                  0.0M
+                             :akilliset_hoitotyot_laskutettu_ind_korotettuna  0.0M
+                             :akilliset_hoitotyot_laskutettu_ind_korotus      0.0M
+                             :yht_laskutettu_ind_korotettuna 0.0M,
                              :suolasakot_laskutetaan 0.0M,
                              :kaikki_laskutetaan_ind_korotus 731.6000000000000000M,
                              :sakot_laskutetaan_ind_korotettuna 1911.6000000000000000M,
