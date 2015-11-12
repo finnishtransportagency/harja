@@ -18,7 +18,7 @@
 <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
     <Program id=\"TESTIHANKE\" manager_Id=\"A010098\" manager_User_Name=\"A010098\" message_Id=\"HankeMessageId\"
              name=\"Testi alueurakka 2009-2014\" schedule_finish=\"2013-12-31T00:00:00.0\"
-             schedule_start=\"2009-01-01T00:00:00.0\" vv_alueurakkanro=\"TYP-123\" vv_code=\"14-1177\">
+             schedule_start=\"2009-01-01T00:00:00.0\" vv_alueurakkanro=\"TH-123\" vv_code=\"14-1177\">
         <documentLinks/>
     </Program>
 </Sampo2harja>")
