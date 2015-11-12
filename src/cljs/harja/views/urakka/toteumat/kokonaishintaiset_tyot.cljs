@@ -13,7 +13,7 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.komponentti :as komponentti]
+            [harja.ui.komponentti :as komp]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -24,7 +24,7 @@
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"
        :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
-       :tunniste :toteumaid}
+       :tunniste :tehtavaid}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
@@ -45,13 +45,14 @@
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"
   []
-  [:div.sanktiot
+  [:div
    (tee-valinnat)
    (tee-taulukko)])
 
 (defn kokonaishintaiset-toteumat []
-  (komponentti/luo
-    (komponentti/lippu tiedot/nakymassa? tiedot/karttataso)
+  (komp/luo
+    (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
+
     (fn []
       [:span
        [kartta/kartan-paikka]

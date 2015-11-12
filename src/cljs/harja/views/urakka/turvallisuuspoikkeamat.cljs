@@ -1,4 +1,4 @@
-(ns harja.views.urakka.turvallisuus.turvallisuuspoikkeamat
+(ns harja.views.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
@@ -107,14 +107,6 @@
                                                         uusi)))))]}]
         @muokattu]])))
 
-(defonce rajaa-kartta-haettujen-poikkeamien-alueelle
-         (run! (let [valittu @tiedot/valittu-turvallisuuspoikkeama
-                     tpt @tiedot/haetut-turvallisuuspoikkeamat]
-                 (when (and (nil? valittu)
-                            (not (empty? tpt)))
-                   (kartta/keskita-kartta-alueeseen!
-                     (geo/laajenna-extent (geo/extent-monelle (keep :sijainti tpt)) 500))))))
-
 (defn turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
@@ -145,11 +137,13 @@
 (defn turvallisuuspoikkeamat []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
+    (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(reset! tiedot/valittu-turvallisuuspoikkeama %2))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :L))
                       #(do
                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+    (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn []
       [:span
        [:h3 "Turvallisuuspoikkeamat"]

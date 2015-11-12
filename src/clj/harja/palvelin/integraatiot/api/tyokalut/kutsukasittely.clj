@@ -174,11 +174,13 @@
                     (kasittele-sisainen-kasittelyvirhe virheet))
                   (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
                     (kasittele-sisainen-kasittelyvirhe virheet))
+                  (catch [:type virheet/+virheellinen-liite+] {:keys [virheet]}
+                    (kasittele-sisainen-kasittelyvirhe virheet))
                   (catch #(get % :virheet) poikkeus
                     (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
                   ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
                   (catch SQLException e
-                    (log/error "Tapahtui SQL-poikkeus: " e)
+                    (log/error e "Tapahtui SQL-poikkeus: " )
                     (let [w (StringWriter.)]
                       (loop [ex (.getNextException e)]
                         (when (not (nil? ex))
@@ -189,7 +191,7 @@
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Sisäinen käsittelyvirhe"}]))
                   (catch Exception e
-                    (log/error "Tapahtui poikkeus: " e)
+                    (log/error e "Tapahtui poikkeus: ")
                     (kasittele-sisainen-kasittelyvirhe
                       [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Sisäinen käsittelyvirhe"}]))

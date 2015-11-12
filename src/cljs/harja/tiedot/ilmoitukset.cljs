@@ -9,6 +9,7 @@
             [cljs.core.async :refer [<!]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.geo :as geo])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -30,12 +31,12 @@
 (def +ilmoitustilat+ #{:suljetut :avoimet})
 
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-                             :urakka (:id @nav/valittu-urakka)
-                             :hoitokausi @u/valittu-hoitokausi
-                             :aikavali (or @u/valittu-hoitokausi [nil nil])
-                             :tyypit +ilmoitustyypit+
-                             :tilat +ilmoitustilat+
-                             :hakuehto ""}))
+                             :urakka          (:id @nav/valittu-urakka)
+                             :hoitokausi      @u/valittu-hoitokausi
+                             :aikavali        (or @u/valittu-hoitokausi [nil nil])
+                             :tyypit          +ilmoitustyypit+
+                             :tilat           +ilmoitustilat+
+                             :hakuehto        ""}))
 
 (defonce ilmoitushaku (atom 0))
 
@@ -53,35 +54,21 @@
       tulos)))
 
 (defonce haetut-ilmoitukset
-  (reaction<! [valinnat @valinnat
-               haku @ilmoitushaku]
-              {:odota 100}
-              (go
-                (if (zero? haku)
-                  []
-                  (let [tulos (<! (k/post! :hae-ilmoitukset
-                                           (-> valinnat
-                                               ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                                               (update-in [:tyypit]
-                                                          #(if (empty? %) +ilmoitustyypit+ %))
-                                               (update-in [:tilat]
-                                                          #(if (empty? %) +ilmoitustilat+ %)))))]
-                    (when-not (k/virhe? tulos)
-                      (jarjesta-ilmoitukset tulos)))))))
-
-(def ilmoitus-kartalla-xf
-  #(assoc %
-    :type :ilmoitus
-    :alue {:type        :circle
-           :coordinates (geo/ikonin-sijainti (:sijainti %))
-           :color        (if (= (:id %) (:id @valittu-ilmoitus)) "green" "blue")
-           :radius      5000
-           :stroke      {:color "black" :width 10}}))
-
-(defonce ilmoitusta-klikattu
-         (tapahtumat/kuuntele! :ilmoitus-klikattu
-                               (fn [ilmoitus]
-                                 (reset! valittu-ilmoitus (dissoc ilmoitus :type :alue)))))
+         (reaction<! [valinnat @valinnat
+                      haku @ilmoitushaku]
+                     {:odota 100}
+                     (go
+                       (if (zero? haku)
+                         []
+                         (let [tulos (<! (k/post! :hae-ilmoitukset
+                                                  (-> valinnat
+                                                      ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                                                      (update-in [:tyypit]
+                                                                 #(if (empty? %) +ilmoitustyypit+ %))
+                                                      (update-in [:tilat]
+                                                                 #(if (empty? %) +ilmoitustilat+ %)))))]
+                           (when-not (k/virhe? tulos)
+                             (jarjesta-ilmoitukset tulos)))))))
 
 (defonce karttataso-ilmoitukset (atom false))
 
@@ -89,4 +76,8 @@
          (reaction
            @valittu-ilmoitus
            (when @karttataso-ilmoitukset
-             (into [] (map ilmoitus-kartalla-xf) @haetut-ilmoitukset))))
+             (kartalla-esitettavaan-muotoon
+               (map
+                 #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
+                 @haetut-ilmoitukset)
+               @valittu-ilmoitus))))

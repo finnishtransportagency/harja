@@ -16,6 +16,9 @@
 }
 
 .ol-control {
+    &.ol-attribution {
+        display: none;
+    }
     &.ol-zoom {
         left: 0;
         top: 0;
@@ -59,6 +62,14 @@
 .kartan-yleiset-kontrollit {
     left: 0;
     top: 60px;
+}
+
+.kartan-ohjelaatikko {
+    top: 3px;
+    right: 3px;
+    background-color: @harmaa10;
+    border: 1px solid @harmaa6;
+    padding: 2px;
 }
 
 .kartan-ikonien-selitykset {
@@ -120,6 +131,7 @@
     z-index: 10;
     display: block;
     position: absolute;
+    max-width: 200px;
 
     box-shadow: 0 1px 7px rgba(0, 0, 0, 0.4);
     border-radius: 1px;

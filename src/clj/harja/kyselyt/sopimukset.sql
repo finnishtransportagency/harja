@@ -30,3 +30,9 @@ SET urakka = (SELECT id
               FROM urakka
               WHERE sampoid = :urakka_sampo_id)
 WHERE urakka_sampoid = :urakka_sampo_id;
+
+-- name: onko-olemassa
+-- Tarkistaa onko id:n mukaista urakkaa olemassa tietokannassa
+SELECT EXISTS(SELECT id
+              FROM sopimus
+              WHERE urakka = :urakka_id AND id = :sopimus_id);

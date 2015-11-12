@@ -167,45 +167,6 @@
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
-(defmethod tee-kentta :positiivinen-numero [kentta data]
-  (let [teksti (atom (str @data))]
-    (r/create-class
-      {:component-will-receive-props
-       (fn [_ [_ _ data]]
-         (swap! teksti
-                (fn [olemassaoleva-teksti]
-                  ;; Jos vanha teksti on sama kuin uusi, mutta perässä on "." tai "," ei korvata.
-                  ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
-                  ;; numeron syöttö (esim. "4," arvo ennen desimaalin kirjoittamista ylikirjoittuu
-                  (let [uusi (str @data)]
-                    (if (or (= olemassaoleva-teksti (str uusi ","))
-                            (= olemassaoleva-teksti (str uusi ".")))
-                      olemassaoleva-teksti
-                      uusi)))))
-
-       :reagent-render
-       (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
-         (let [nykyinen-teksti @teksti]
-           [:input {:class       (when lomake? "form-control")
-                    :type        "text"
-                    :placeholder (:placeholder kentta)
-                    :on-focus    (:on-focus kentta)
-                    :on-blur     #(reset! teksti (str @data))
-                    :value       nykyinen-teksti
-                    :on-change   #(let [v (-> % .-target .-value)]
-                                   (when (or (= v "")
-                                             (re-matches (if kokonaisluku?
-                                                           #"\d{1,10}"
-                                                           #"\d{1,10}((\.|,)\d{0,2})?") v))
-                                     (reset! teksti v)
-
-                                     (let [numero (if kokonaisluku?
-                                                    (js/parseInt v)
-                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero)))))}]))})))
-
 (defmethod tee-kentta :numero [kentta data]
   (let [teksti (atom (str @data))]
     (r/create-class
@@ -219,13 +180,19 @@
                   (let [uusi (str @data)]
                     (if (or (= olemassaoleva-teksti (str uusi ","))
                             (= olemassaoleva-teksti (str uusi "."))
-                            (= olemassaoleva-teksti (str "-" uusi)))
+                            (when-not (:vaadi-ei-negatiivinen? kentta)
+                              (= olemassaoleva-teksti (str "-" uusi))))
                       olemassaoleva-teksti
                       uusi)))))
 
        :reagent-render
        (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
-         (let [nykyinen-teksti @teksti]
+         (let [nykyinen-teksti @teksti
+               vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
+               kokonaisluku-re-pattern #"-?\d{1,10}"
+               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1,10}((\\.|,)\\d{0,"
+                                                         (or (:desimaalien-maara kentta) 2)
+                                                         "})?"))]
            [:input {:class       (when lomake? "form-control")
                     :type        "text"
                     :placeholder (:placeholder kentta)
@@ -234,20 +201,22 @@
                     :value       nykyinen-teksti
                     :on-change   #(let [v (-> % .-target .-value)]
                                    (when (or (= v "")
-                                             (= v "-")
+                                             (when-not vaadi-ei-negatiivinen? (= v "-"))
                                              (re-matches (if kokonaisluku?
-                                                           #"-?\d{1,10}"
-                                                           #"-?\d{1,10}((\.|,)\d{0,2})?") v))
-                                     (reset! teksti v)
+                                                           kokonaisluku-re-pattern
+                                                           desimaaliluku-re-pattern) v))
+                                             (reset! teksti v)
 
-                                     (let [numero (if kokonaisluku?
-                                                    (js/parseInt v)
-                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero)))))}]))})))
+                                             (let [numero (if kokonaisluku?
+                                                            (js/parseInt v)
+                                                            (js/parseFloat (str/replace v #"," ".")))]
+                                               (reset! data
+                                                       (when (not (js/isNaN numero))
+                                                         numero)))))}]))})))
 
-
+(defmethod tee-kentta :positiivinen-numero [kentta data]
+  (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
+                            :tyyppi :numero) data))
 
 (defmethod tee-kentta :email [{:keys [on-focus lomake?] :as kentta} data]
   [:input {:class     (when lomake? "form-control")
@@ -733,14 +702,9 @@
                                                    (reset! karttavalinta-kaynnissa false)
                                                    (go (>! tr-osoite-ch %)))}])
 
-              #_(when hae-sijainti
-                (let [sijainti @sijainti]
-                  (when sijainti
-                    (if (vkm/virhe? sijainti)
-                      [:td [:div.virhe (vkm/virhe sijainti)]]
-                      [:td [:div.sijainti (pr-str sijainti)]]))))
-
-              ]]]])))))
+              (when-let [sijainti (and hae-sijainti @sijainti)]
+                (when (vkm/virhe? sijainti)
+                  [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]

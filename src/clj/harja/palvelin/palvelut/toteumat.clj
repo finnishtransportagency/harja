@@ -131,50 +131,50 @@
                        (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user))))
           ;; Tuloksia ei rajata urakalla, jos urakkaa ei ole valittu ja käyttäjä on järjestelmavastuuhenkilö
           rajaa-urakalla? (not (and (nil? urakka) (get (:roolit user) "jarjestelmavastuuhenkilo")))
-          hallintayksikko_annettu (annettu? hallintayksikko)]
+          hallintayksikko_annettu (annettu? hallintayksikko)
 
-      ;; On mahdollista, että käyttäjä on joko järjestelmävastuuhenkilö (= Pääsy kaikkiin urakoihin), tai
-      ;; urakoitsija tms. joka pääsee vain tiettyihin urakoihin.
-      ;; On myös mahdollista, että käyttäjä valitsee käyttöliittymän kautta haettavan urakan, tai hakee
-      ;; kaikista tälle liitetyistä urakoista.
-      ;; - JOS käyttäjä on valinnut urakan, haetaan vain tästä urakasta (lista jossa on yksi elementti).
-      ;;   rajaa-urakalla? on tällöin true
-      ;; - JOS käyttäjä EI ole valinnut urakkaa JA tämä on 'normaali käyttäjä', ollaan haettu listaan
-      ;;   kaikki käyttäjälle kuuluvat urakat. Tällöin kysely tehdään jokaiselle listassa olevalle urakalle
-      ;; - JOS käyttäjä EI ole valinnut urakkaa JA tämä on JVH, 'rajaa-urakalla?' on FALSE, urakka-idt on
-      ;;   tyhjä lista ja palautetaan "kaikki asiat".
-      (let [kyselyn_tulos (if-not (empty? urakka-idt)
-                            (do
-                              (log/debug "Haetaan urakoista " (pr-str urakka-idt) " (" (pr-str rajaa-urakalla?) ")")
-                              (apply (comp vec flatten merge)
-                                     (for [urakka-id urakka-idt]
-                                       (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
-                                                                      toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
-                                                                      urakka-id rajaa-urakalla?
-                                                                      hallintayksikko_annettu hallintayksikko))))
+          ;; On mahdollista, että käyttäjä on joko järjestelmävastuuhenkilö (= Pääsy kaikkiin urakoihin), tai
+          ;; urakoitsija tms. joka pääsee vain tiettyihin urakoihin.
+          ;; On myös mahdollista, että käyttäjä valitsee käyttöliittymän kautta haettavan urakan, tai hakee
+          ;; kaikista tälle liitetyistä urakoista.
+          ;; - JOS käyttäjä on valinnut urakan, haetaan vain tästä urakasta (lista jossa on yksi elementti).
+          ;;   rajaa-urakalla? on tällöin true
+          ;; - JOS käyttäjä EI ole valinnut urakkaa JA tämä on 'normaali käyttäjä', ollaan haettu listaan
+          ;;   kaikki käyttäjälle kuuluvat urakat. Tällöin kysely tehdään jokaiselle listassa olevalle urakalle
+          ;; - JOS käyttäjä EI ole valinnut urakkaa JA tämä on JVH, 'rajaa-urakalla?' on FALSE, urakka-idt on
+          ;;   tyhjä lista ja palautetaan "kaikki asiat".
+          kyselyn_tulos (if-not (empty? urakka-idt)
+                          (do
+                            (log/debug "Haetaan urakoista " (pr-str urakka-idt) " (" (pr-str rajaa-urakalla?) ")")
+                            (apply (comp vec flatten merge)
+                                   (for [urakka-id urakka-idt]
+                                     (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
+                                                                    toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                                                    urakka-id rajaa-urakalla?
+                                                                    hallintayksikko_annettu hallintayksikko))))
 
-                            (when-not rajaa-urakalla?
-                              (log/debug "Hakua ei rajata urakalla - käyttäjä on järjestelmävastuuhenkilö")
-                              (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
-                                                             toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
-                                                             0 rajaa-urakalla?
-                                                             hallintayksikko_annettu hallintayksikko)))
+                          (when-not rajaa-urakalla?
+                            (log/debug "Hakua ei rajata urakalla - käyttäjä on järjestelmävastuuhenkilö")
+                            (q/hae-toteumat-historiakuvaan db (konv/sql-date alku) (konv/sql-date loppu)
+                                                           toimenpidekoodit (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                                           0 rajaa-urakalla?
+                                                           hallintayksikko_annettu hallintayksikko)))
 
-            _ (log/debug (pr-str (count kyselyn_tulos)))
-            mankeloitava (into []
-                               (comp
-                                 (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                                 (map konv/alaviiva->rakenne)
-                                 (map #(assoc % :tyyppi :toteuma)))
-                               kyselyn_tulos)
-            tulos (konv/sarakkeet-vektoriin
-                    mankeloitava
-                    {:tehtava     :tehtavat
-                     :materiaali  :materiaalit
-                     :reittipiste :reittipisteet})]
-        (log/debug (pr-str "Löydettiin " (count tulos) " toteumaa historiakuvaan."))
+          _ (log/debug (pr-str (count kyselyn_tulos)))
+          mankeloitava (into []
+                             (comp
+                               (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                               (map konv/alaviiva->rakenne)
+                               (map #(assoc % :tyyppi :toteuma)))
+                             kyselyn_tulos)
+          tulos (konv/sarakkeet-vektoriin
+                  mankeloitava
+                  {:tehtava     :tehtavat
+                   :materiaali  :materiaalit
+                   :reittipiste :reittipisteet})]
+      (log/debug (pr-str "Löydettiin " (count tulos) " toteumaa historiakuvaan."))
 
-        tulos))))
+      tulos)))
 
 (defn hae-urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
@@ -498,18 +498,73 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
-(defn hae-urakan-kokonaishintaisten-toteumien-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+(defn hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        (filter #(not (nil? (:toimenpidekoodi %)))
-                (map konv/alaviiva->rakenne
-                     (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
-                       db urakka-id
-                       sopimus-id
-                       (konv/sql-date alkupvm)
-                       (konv/sql-date loppupvm)
-                       toimenpide
-                       tehtava)))))
+  (let [toteumat (into []
+                       (comp
+                         (filter #(not (nil? (:toimenpidekoodi %))))
+                         (map konv/alaviiva->rakenne))
+                       (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
+                         db urakka-id
+                         sopimus-id
+                         (konv/sql-date alkupvm)
+                         (konv/sql-date loppupvm)
+                         toimenpide
+                         tehtava))
+        paivittaiset-rivit (map (fn [[_ arvo]] arvo)
+                                (group-by
+                                  (fn [rivi]
+                                    [(:toimenpidekoodi rivi) (:alkanut rivi)])
+                                  (map #(assoc % :alkanut (clj-time.coerce/to-local-date (:alkanut %))) toteumat)))
+        summatut-rivit (mapv #(assoc % :alkanut (clj-time.coerce/to-date (:alkanut %)))
+                             (mapv #(reduce
+                                     (fn [vanha uusi]
+                                       (if (and (:maara vanha) (:maara uusi))
+                                         (assoc vanha :maara (+ (:maara vanha) (:maara uusi)))
+                                         (assoc vanha :maara 0)))
+                                     %) paivittaiset-rivit))]
+    summatut-rivit))
+
+(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [toteuma-idt (distinct (mapv :toteumaid (q/hae-urakan-kokonaishintaiset-toteumat
+                                                 db urakka-id
+                                                 sopimus-id
+                                                 (konv/sql-date alkupvm)
+                                                 (konv/sql-date loppupvm)
+                                                 toimenpide
+                                                 tehtava)))
+        reitit (mapv (fn [toteuma-id]
+                       (let [reittipisteet (into [] (harja.geo/muunna-pg-tulokset :sijainti)
+                                                 (q/hae-toteuman-reittipisteet db toteuma-id))
+                             tehtavat (mapv :nimi (q/hae-toteuman-tehtavat db toteuma-id))]
+                         {:id            toteuma-id
+                          :reittipisteet reittipisteet
+                          :tehtavat      tehtavat}))
+                     toteuma-idt)]
+    reitit))
+
+(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
+  (let [toteumat (into []
+                       (comp
+                         (map #(konv/string->keyword % :toimenpide))
+                         (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                         (map konv/alaviiva->rakenne))
+                       (q/hae-urakan-varustetoteumat db
+                                                     urakka-id
+                                                     sopimus-id
+                                                     (konv/sql-date alkupvm)
+                                                     (konv/sql-date loppupvm)
+                                                     (if tienumero true false)
+                                                     tienumero))
+        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
+                                  toteumat
+                                  {:reittipiste :reittipisteet}
+                                  :id)]
+    (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
+    kasitellyt-toteumarivit))
 
 (defrecord Toteumat []
   component/Lifecycle
@@ -570,9 +625,15 @@
                                                                   (:toteumamateriaalit tiedot)
                                                                   (:hoitokausi tiedot)
                                                                   (:sopimus tiedot))))
-      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-tehtavat
+      (julkaise-palvelu http :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
                         (fn [user tiedot]
-                          (hae-urakan-kokonaishintaisten-toteumien-tehtavat db user tiedot)))
+                          (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat db user tiedot)))
+      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit
+                        (fn [user tiedot]
+                          (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot)))
+      (julkaise-palvelu http :urakan-varustetoteumat
+                        (fn [user tiedot]
+                          (hae-urakan-varustetoteumat db user tiedot)))
       this))
 
   (stop [this]
@@ -590,5 +651,6 @@
       :tallenna-toteuma-ja-toteumamateriaalit
       :poista-toteuma!
       :poista-tehtava!
-      :hae-toteumat-historiakuvaan)
+      :hae-toteumat-historiakuvaan
+      :urakan-varustetoteumat)
     this))

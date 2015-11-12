@@ -8,26 +8,14 @@
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi])
   (:use [slingshot.slingshot :only [throw+]]))
-
-
-(defn materiaali-enum->string [materiaali]
-  (case materiaali
-    "talvisuolaliuosNaCl" "Talvisuolaliuos NaCl"
-    "talvisuolaliuosCaCl2" "Talvisuolaliuos CaCl2"
-    "erityisalueetNaCl" "Erityisalueet NaCl"
-    "erityisalueetNaClLiuos" "Erityisalueet NaCl-liuos"
-    "hiekoitushiekka" "Hiekoitushiekka"
-    "kaliumformiaatti" "Kaliumformiaatti"
-    (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-             :virheet [{:koodi  virheet/+tuntematon-materiaali+
-                        :viesti (format "Materiaalikoodin %s oikeaa nimeä ei voitu selvittää." materiaali)}]})))
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
-
-  (println "++++++++++++++ reitti: " (:reitti toteuma))
+  (validointi/tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma))
 
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
@@ -39,11 +27,15 @@
          ""
          (:toteumatyyppi toteuma)
          (:reitti toteuma)
+         (:sopimusId toteuma)
          (get-in toteuma [:tunniste :id])
          urakka-id)))
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
+  (validointi/tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma))
+
   (:id (toteumat/luo-toteuma<!
          db
          urakka-id
@@ -63,10 +55,11 @@
     (paivita-toteuma db urakka-id kirjaaja toteuma)
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
-(defn tallenna-sijainti [db sijainti toteuma-id]
-  (log/debug "Tuhotaan toteuman vanha sijainti")
+(defn tallenna-sijainti [db sijainti aika toteuma-id]
+  (log/debug "Tuhotaan toteuman " toteuma-id " vanha sijainti")
   (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)
-  (toteumat/luo-reittipiste<! db toteuma-id nil
+  (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")
+  (toteumat/luo-reittipiste<! db toteuma-id aika
                               (get-in sijainti [:koordinaatit :x])
                               (get-in sijainti [:koordinaatit :y])))
 
@@ -93,11 +86,12 @@
   (log/debug "Luodaan toteumalle uudet materiaalit")
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
-    (let [materiaali-nimi (materiaali-enum->string (:materiaali materiaali))
+    (let [materiaali-nimi (:materiaali materiaali)
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
-      (if (nil? materiaalikoodi-id) (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-                                             :virheet [{:koodi  virheet/+tuntematon-materiaali+
-                                                        :viesti (format "Materiaalia %s ei löydy tietokannasta." materiaali-nimi)}]}))
+      (if (nil? materiaalikoodi-id)
+        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
+                 :virheet [{:koodi  virheet/+tuntematon-materiaali+
+                            :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
       (toteumat/luo-toteuma-materiaali<!
         db
         toteuma-id

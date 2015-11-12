@@ -3,11 +3,6 @@
 INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, geometria) VALUES
        (:osoite3, :tie, :ajorata, :osa, :tiepiiri, :tr_pituus, ST_GeomFromText(:the_geom)::geometry)
 
--- name: vie-hoitoluokkatauluun!
--- vie entryn hoitoluokkatauluun
-INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoitoluokka, geometria) VALUES
-       (:ajorata, :aosa, :tie, :piirinro, :let, :losa, :aet, :osa, :hoitoluokka, ST_GeomFromText(:geometria)::geometry)
-
 -- name: hae-tr-osoite-valille
 -- hakee tierekisteriosoitteen kahden pisteen välille
 SELECT * FROM tierekisteriosoite_pisteille(ST_MakePoint(:x1,:y1)::geometry,
@@ -21,11 +16,6 @@ SELECT * FROM tierekisteriosoite_pisteelle(ST_MakePoint(:x,:y)::geometry, CAST(:
 -- poistaa kaikki tieverkon tiedot taulusta. ajetaan transaktiossa
 DELETE FROM tieverkko
 
--- name: tuhoa-hoitoluokkadata!
--- poistaa kaikki hoitoluokkien tiedot taulusta. ajetaan transaktiossa
-DELETE FROM hoitoluokka
-
-
 -- name: paivita-paloiteltu-tieverkko!
 -- päivittää materialisoidun näkymän
 REFRESH MATERIALIZED VIEW tieverkko_paloina WITH DATA
@@ -33,3 +23,7 @@ REFRESH MATERIALIZED VIEW tieverkko_paloina WITH DATA
 -- name: tierekisteriosoite-viivaksi
 -- hakee geometrian annetulle tierekisteriosoitteelle
 SELECT * FROM tierekisteriosoitteelle_viiva(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER), CAST(:losa AS INTEGER), CAST(:loppuet AS INTEGER))
+
+-- name: tierekisteriosoite-pisteeksi
+-- hakee pisteen annetulle tierekisteriosoitteelle jossa ei ole loppuosaa
+SELECT * FROM tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER));

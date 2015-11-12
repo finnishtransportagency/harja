@@ -73,10 +73,7 @@
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/aikavali urakka]
 
-         [:span.label-ja-kentta
-          [:span.kentan-otsikko "Tienumero"]
-          [:div.kentta
-           [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} laadunseuranta/tienumero]]]
+         [valinnat/tienumero laadunseuranta/tienumero]
 
          [:span.label-ja-kentta
           [:span.kentan-otsikko "Tyyppi"]
@@ -113,26 +110,24 @@
            :fmt #(apply yleiset/tierekisteriosoite
                         (map (fn [kentta] (get % kentta))
                              [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
-           :leveys 2}
-          ]
-
+           :leveys 2}]
          @laadunseuranta/urakan-tarkastukset]])))
 
 (defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
                 {:otsikko "Lumimäärä" :tyyppi :numero :yksikko "cm"
-                 :nimi :lumimaara :leveys-col 1
+                 :nimi :lumimaara :leveys-col 2
                  :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
                 {:otsikko "Tasaisuus" :tyyppi :numero :yksikko "cm"
-                 :nimi :tasaisuus :leveys-col 1
+                 :nimi :tasaisuus :leveys-col 2
                  :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
                 {:otsikko "Kitka" :tyyppi :numero
-                 :nimi :kitka :leveys-col 1
+                 :nimi :kitka :leveys-col 2
                  :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
                 {:otsikko "Lämpötila" :tyyppi :numero :yksikko "\u2103"
                  :validoi [#(when-not (<= -55 %1 55)
                               "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
-                 :nimi :lampotila :leveys-col 1
+                 :nimi :lampotila :leveys-col 2
                  :hae (comp :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila] %2)}))
 
 (defn soratiemittaus []
@@ -141,22 +136,22 @@
                                "Anna arvo 1 - 5"))]
     (lomake/ryhma "Soratietarkastus"
                   {:otsikko "Tasaisuus" :tyyppi :numero
-                   :nimi :tasaisuus :leveys-col 1
+                   :nimi :tasaisuus :leveys-col 2
                    :hae (comp :tasaisuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :tasaisuus] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Kiinteys" :tyyppi :numero
-                   :nimi :kiinteys :leveys-col 1
+                   :nimi :kiinteys :leveys-col 2
                    :hae (comp :kiinteys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :kiinteys] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Pölyävyys" :tyyppi :numero
-                   :nimi :polyavyys :leveys-col 1
+                   :nimi :polyavyys :leveys-col 2
                    :hae (comp :polyavyys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :polyavyys] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Sivukaltevuus" :tyyppi :numero :yksikko "%"
-                   :nimi :sivukaltevuus :leveys-col 1
+                   :nimi :sivukaltevuus :leveys-col 2
                    :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
                    :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]}
 
@@ -172,8 +167,7 @@
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
-      {:luokka :default
-       :muokkaa! #(reset! tarkastus-atom %)
+      {:muokkaa! #(reset! tarkastus-atom %)
        :voi-muokata? @laadunseuranta/voi-kirjata?}
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
@@ -210,8 +204,7 @@
          {:otsikko "Mittaaja" :nimi :mittaaja
           :pakollinen? true
           :tyyppi :string :pituus-max 256
-          :leveys-col 4})
-       ]
+          :leveys-col 4})]
       
       tarkastus]
 
@@ -237,8 +230,7 @@
          :kun-onnistuu (fn [tarkastus]
                          (reset! laadunseuranta/valittu-tarkastus nil)
                          (laadunseuranta/paivita-tarkastus-listaan! tarkastus))
-                         }]]]
-     ]))
+                         }]]]]))
 
 
 (defn tarkastukset
@@ -249,15 +241,12 @@
     ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
     ;; tarkastuslistauksessa
     (komp/lippu laadunseuranta/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
+    (komp/kuuntelija :tarkastus-klikattu #(reset! laadunseuranta/valittu-tarkastus %2))
+    (komp/ulos (kartta/kuuntele-valittua! laadunseuranta/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :XL))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (komp/kuuntelija
-      :tarkastus-klikattu
-      (fn [e tarkastus]
-        (log "KLIKKASIT TARKASTUSTA: " (pr-str tarkastus))
-        (valitse-tarkastus tarkastus)))
 
     (fn []
       [:span.tarkastukset

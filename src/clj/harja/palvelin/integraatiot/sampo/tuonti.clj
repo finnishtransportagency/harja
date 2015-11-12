@@ -57,7 +57,7 @@
         (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)
         (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id (str virheet)))
       (catch Exception e
-        (log/error "Sampo sisäänluvussa tapahtui poikkeus." e)
+        (log/error e "Sampo sisäänluvussa tapahtui poikkeus." )
         (integraatioloki/kirjaa-epaonnistunut-integraatio
           integraatioloki
           "Sampo sisäänluvussa tapahtui poikkeus"

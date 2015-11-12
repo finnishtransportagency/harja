@@ -63,10 +63,11 @@
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [kohdetiedot (first (paallystys-q/hae-urakan-paallystyskohde db urakka-id paikkauskohde-id))
-        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
-                         (:arvonvahennykset kohdetiedot)
-                         (:bitumi_indeksi kohdetiedot)
-                         (:kaasuindeksi kohdetiedot))
+        _ (log/debug (pr-str kohdetiedot))
+        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen_mukaiset_tyot
+                                                   :arvonvahennykset
+                                                   :bitumi_indeksi
+                                                   :kaasuindeksi]))
         paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                             (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
@@ -79,7 +80,7 @@
       ^{:uusi true}
       {:kohdenumero        (:kohdenumero kohdetiedot)
        :kohdenimi          (:nimi kohdetiedot)
-       :paallystyskohde-id paikkauskohde-id
+       :paikkauskohde-id   paikkauskohde-id
        :kokonaishinta      kokonaishinta
        :kommentit          []}
       (do
@@ -93,7 +94,10 @@
                                              (dissoc kommentti :liite)))))
                               (q/hae-paikkausilmoituksen-kommentit db (:id paikkausilmoitus)))]
           (log/debug "Kommentit saatu: " kommentit)
-          (assoc paikkausilmoitus :kommentit kommentit))))))
+          (assoc paikkausilmoitus
+            :kokonaishinta kokonaishinta
+            :paikkauskohde-id paikkauskohde-id
+            :kommentit kommentit))))))
 
 
 (defn paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]

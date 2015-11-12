@@ -66,10 +66,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   [vastaus]
   (or (roolit/ei-oikeutta? vastaus)
       (and (map? vastaus)
-           (or
-             (not (nil? (get vastaus :failure)))
-             (not (nil? (get vastaus :virhe)))
-             (not (nil? (get vastaus :error)))))))
+           (some (partial contains? vastaus) [:failure :virhe :error]))))
+           ; Aiemmin oli hellempi tapa tarkistaa, että näiden avainten
+           ; sisällä on jokin loogisesti tosi arvo. On kuitenkin mahdollista,
+           ; että serveri palauttaa esim. {:error nil}
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
@@ -88,14 +88,20 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (set! (.-onload xhr)
           (fn [event]
             (let [request (.-target event)]
-              (if (= 200 (.-status request))
-                (let [transit-json (.-responseText request)
-                      transit (transit/lue-transit transit-json)]
-                  (log "SAATIIN VASTAUS: " (pr-str transit))
-                  (put! ch transit)
-                  (close! ch))
-                (do (put! ch {:error :liitteen-lahetys-epaonnistui})
-                    (close! ch))))))
+              (case (.-status request)
+                200 (let [transit-json (.-responseText request)
+                          transit (transit/lue-transit transit-json)]
+                      (put! ch transit))
+                413 (do
+                      (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
+                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
+                500 (do
+                      (log "Liitelähetys epäonnistui: "  (pr-str  (.-responseText request)))
+                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "tiedostotyyppi ei ole sallittu"}))
+                (do
+                  (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
+                  (put! ch {:error :liitteen-lahetys-epaonnistui})))
+              (close! ch))))
 
     (set! (.-onprogress siirto)
           (fn [e]

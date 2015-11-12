@@ -7,19 +7,12 @@
     "yksikko": {
       "id": "urn:harja/yksikko",
       "required": true,
-      "enum": [
-        "t",
-        "kg",
-        "km",
-        "m",
-        "euro",
-        "ha",
-        "kpl"
-      ]
+      "type": "string"
     },
     "maara": {
       "id": "urn:harja/maara",
       "type": "number",
+      "minimum": 0,
       "required": true
     }
   }

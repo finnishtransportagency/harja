@@ -65,22 +65,18 @@
 (defn erilliskustannustyypin-teksti [avainsana]
   "Erilliskustannustyypin teksti avainsanaa vastaan"
   (case avainsana
-    :vahinkojen_korjaukset "Vahinkojen korjaukset"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
-    :akillinen-hoitotyo "Äkillinen hoitotyö"
     :muu "Muu"
-    :tilaajan_maa-aines "Tilaajan maa-aines"
     +valitse-tyyppi+))
 
 ;; "tilaajan_maa-aines" -tyyppisiä erilliskustannuksia otetaan vastaan Aura-konversiossa
 ;; mutta ei anneta enää syöttää Harjaan käyttöliittymän kautta. -Anne L. palaverissa 2015-06-02"
 (def +erilliskustannustyypit+
-  [:vahinkojen_korjaukset :asiakastyytyvaisyysbonus :akillinen-hoitotyo :muu])
+  [:asiakastyytyvaisyysbonus :muu])
 
 (defn luo-kustannustyypit [urakkatyyppi]
-  (if (= :hoito urakkatyyppi)
-    +erilliskustannustyypit+
-    (remove #{:akillinen-hoitotyo} +erilliskustannustyypit+)))
+  ;; jätetään funktio tähän, jos jatkossa halutaan urakkatyypin perusteella antaa eri vaihtoehtoja
+  +erilliskustannustyypit+)
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
@@ -94,7 +90,6 @@
 
 (def korostettavan-rivin-id (atom nil))
 
-;; FIXME: siirrä rivin korostuksen funktio gridiin josta sitä voi käyttää
 (defn korosta-rivia
   ([id] (korosta-rivia id +korostuksen-kesto+))
   ([id kesto]

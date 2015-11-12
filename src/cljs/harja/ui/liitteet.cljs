@@ -13,15 +13,15 @@
   "Olemassaolevan liitteen näyttäminen. Näyttää pikkukuvan ja tiedoston nimen."
   [tiedosto]
   (let [naytettava? (zero? (.indexOf (:tyyppi tiedosto) "image/"))] ; jos kuva MIME tyyppi, näytetään modaalissa
-      [:div.liite {:on-click #(modal/nayta!
-                               {:otsikko (str "Liite: " (:nimi tiedosto))}
-                               [:div.liite-ikkuna
-                                [:img {:src (k/liite-url (:id tiedosto))}]])}
-       [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
-       ;; FIXME: voiko tässä poistaa myös?
-       (if-not naytettava?
-         [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)]
-         [:span.liite-nimi (:nimi tiedosto)])]))
+    [:div.liite {:on-click #(modal/nayta!
+                             {:otsikko (str "Liite: " (:nimi tiedosto))}
+                             [:div.liite-ikkuna
+                              [:img {:src (k/liite-url (:id tiedosto))}]])}
+     [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
+     ;; FIXME: voiko tässä poistaa myös?
+     (if-not naytettava?
+       [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)]
+       [:span.liite-nimi (:nimi tiedosto)])]))
 
 (defn liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
@@ -42,31 +42,33 @@ Optiot voi sisältää:
         virheviesti (atom nil)]
 
     (fn [{:keys [liite-ladattu nappi-teksti] :as opts}]
-      (if-let [tiedosto @tiedosto]
-        ;; Tiedosto on jo ladatty palvelimelle, näytetään se
-        [liitetiedosto tiedosto]
-
-        ;; Ei tiedostoa vielä, joko siirto on menossa tai ei vielä alkanut
-        (if-let [edistyminen @edistyminen]
-          ;; Siirto menossa, näytetään progress
-          [:progress {:value edistyminen :max 100}]
-
-          ;; Tiedostoa ei vielä valittu
-          [:span.liitekomponentti
-           [:div.file-upload.nappi-toissijainen
-            [:span (ikonit/upload) (or nappi-teksti " Valitse tiedosto")]
-            [:input.upload
-             {:type      "file"
-              :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
-                           (go
-                             (loop [ed (<! ch)]
-                               (if (number? ed)
-                                 (do (reset! edistyminen ed)
-                                     (recur (<! ch)))
-                                 (if (and ed (not (k/virhe? ed)))
-                                   (do
-                                     (liite-ladattu (reset! tiedosto ed)))
-                                   (do
-                                     (reset! virheviesti "Liitteen lisääminen epäonnistui")
-                                     (reset! edistyminen nil)))))))}]]
-           [:div.liite-virheviesti @virheviesti]])))))
+      [:span
+       (if-let [tiedosto @tiedosto]
+         [liitetiedosto tiedosto]) ;; Tiedosto ladattu palvelimelle, näytetään se
+       (if-let [edistyminen @edistyminen]
+         [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
+         [:span.liitekomponentti
+          [:div.file-upload.nappi-toissijainen
+           [:span (ikonit/upload) (if @tiedosto
+                                    "Vaihda liite"
+                                    (or nappi-teksti " Valitse tiedosto"))]
+           [:input.upload
+            {:type      "file"
+             :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
+                          (go
+                            (loop [ed (<! ch)]
+                              (if (number? ed)
+                                (do (reset! edistyminen ed)
+                                    (recur (<! ch)))
+                                (if (and ed (not (k/virhe? ed)))
+                                  (do
+                                    (reset! edistyminen nil)
+                                    (reset! virheviesti nil)
+                                    (liite-ladattu (reset! tiedosto ed)))
+                                  (do
+                                    (log "Virhe: " (pr-str ed))
+                                    (reset! edistyminen nil)
+                                    (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
+                                                             (if (:viesti ed)
+                                                               (str " (" (:viesti ed) ")"))))))))))}]]
+          [:div.liite-virheviesti @virheviesti]])])))

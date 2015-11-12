@@ -105,6 +105,9 @@ rooleista."
        true
        false))))
 
+(defn jvh? [kayttaja]
+  (roolissa? kayttaja jarjestelmavastuuhenkilo))
+
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   #?(:cljs ([rooli urakka-id] (rooli-urakassa? @istunto/kayttaja rooli urakka-id)))
@@ -161,6 +164,14 @@ rooleista."
      [kayttaja urakka-id]
      (when-not (lukuoikeus-urakassa? kayttaja urakka-id)
        (let [viesti (format "Käyttäjällä '%1$s' ei lukuoikeutta urakassa jonka id on %2$s", (:kayttajanimi kayttaja) urakka-id)]
+         (backlog/warn viesti)
+         (throw+ (->EiOikeutta viesti))))))
+
+#?(:clj
+   (defn vaadi-urakanvalvoja
+     [kayttaja urakka-id]
+     (when-not (rooli-urakassa? kayttaja urakanvalvoja urakka-id)
+       (let [viesti (format "Käyttäjä '%1$s' ei ole urakanvalvoja urakassa %2$s", (:kayttajanimi kayttaja) urakka-id)]
          (backlog/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 

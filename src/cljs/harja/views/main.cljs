@@ -24,9 +24,28 @@
 
 
 (defn kayttajatiedot [kayttaja]
-  (let [{:keys [etunimi sukunimi]} @kayttaja]
-    ;; FIXME: mitä oman nimen klikkaamisesta pitäisi tapahtua?
-    [:a {:href "#" :on-click #(.preventDefault %)} etunimi " " sukunimi]))
+  (let [{:keys [etunimi sukunimi]} @kayttaja
+        kayttajainfo [:a {:href "#" :on-click #(do
+                                  (.preventDefault %)
+                                  (haku/nayta-kayttaja @kayttaja))}
+       etunimi " " sukunimi]]
+    (if-not (istunto/testikaytto-mahdollista?)
+      kayttajainfo
+      
+      (let [testikayttaja @istunto/testikayttaja]
+        [:span
+         (if testikayttaja
+           [:span.alert-warning "TESTIKÄYTTÖ"]
+           kayttajainfo)
+         [yleiset/livi-pudotusvalikko {:valinta testikayttaja
+                                       :class      "testikaytto-alasveto"
+                                       :title "Järjestelmän vastuuhenkilönä voit testata Harjaa myös muissa rooleissa."
+                                       :format-fn #(if %
+                                                     (:kuvaus %)
+                                                     (str "- Ei testikäyttäjänä -"))
+                                       :valitse-fn istunto/aseta-testikayttaja!}
+          (concat [nil] @istunto/testikayttajat)]]))))
+
 
 (defn header [s]
   [bs/navbar {}

@@ -15,6 +15,7 @@
                                            (s/optional-key :threads) s/Int
                                            (s/optional-key :max-body-size) s/Int}
    :kehitysmoodi                          Boolean
+   (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta                            {:palvelin   s/Str
                                            :tietokanta s/Str
                                            :portti     s/Int
@@ -54,7 +55,10 @@
                                            (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde) s/Str
                                            (s/optional-key :pohjavesialueen-shapefile)              s/Str
                                            (s/optional-key :pohjavesialueen-alk-osoite)             s/Str
-                                           (s/optional-key :pohjavesialueen-alk-tuontikohde)        s/Str}
+                                           (s/optional-key :pohjavesialueen-alk-tuontikohde)        s/Str
+                                           (s/optional-key :siltojen-shapefile)                     s/Str
+                                           (s/optional-key :siltojen-alk-osoite)                    s/Str
+                                           (s/optional-key :siltojen-alk-tuontikohde)               s/Str}
    })
 
 (def oletusasetukset
@@ -91,8 +95,16 @@
        read-string
        (yhdista-asetukset oletusasetukset)))
 
+(defn crlf-filter [msg]
+  (assoc msg :args (mapv (fn [s]
+                           (if (string? s)
+                             (clojure.string/replace s #"[\n\r]" "")
+                             s))
+                         (:args msg))))
 
 (defn konfiguroi-lokitus [asetukset]
+  (log/set-config! [:middleware] [crlf-filter])
+  
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))

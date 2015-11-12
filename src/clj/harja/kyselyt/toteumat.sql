@@ -202,7 +202,9 @@ FROM toteuma_tehtava tt
                           AND alkanut >= :alkupvm
                           AND paattynyt <= :loppupvm
                           AND tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                         'lisatyo' :: toteumatyyppi, 'muutostyo' :: toteumatyyppi)
+                                         'lisatyo' :: toteumatyyppi,
+                                         'muutostyo' :: toteumatyyppi,
+                                         'vahinkojen-korjaukset' :: toteumatyyppi)
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN reittipiste rp ON t.id = rp.toteuma
@@ -340,7 +342,8 @@ SET alkanut           = :alkanut,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
   tyyppi              = :tyyppi :: toteumatyyppi,
-  reitti              = :reitti
+  reitti              = :reitti,
+  sopimus             = :sopimus 
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 
@@ -351,7 +354,7 @@ INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
  poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id, reitti)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
-        FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti);
+                 FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti);
 
 -- name: poista-toteuma!
 UPDATE toteuma
@@ -471,9 +474,10 @@ WHERE
 
 -- name: luo-reittipiste<!
 -- Luo uuden reittipisteen
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, hoitoluokka)
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka)
 VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y) :: POINT,
-        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 250 :: INTEGER));
+        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 'talvihoito' :: hoitoluokan_tietolajitunniste, 250 :: INTEGER),
+        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 'soratie' :: hoitoluokan_tietolajitunniste, 250 :: INTEGER));
 
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet
@@ -580,6 +584,7 @@ SELECT
   t.paattynyt        AS paattynyt,
   tt.toimenpidekoodi AS toimenpidekoodi,
   tk.nimi            AS nimi,
+  tt.id              AS tehtavaid,
   tt.maara           AS maara,
   tk.yksikko         AS yksikko,
   k.jarjestelma      AS jarjestelmanlisaama
@@ -605,4 +610,93 @@ WHERE
 ORDER BY t.alkanut
 LIMIT 501;
 
+-- name: hae-urakan-kokonaishintaiset-toteumat
+SELECT t.id AS toteumaid
+FROM toteuma t
+  INNER JOIN toteuma_tehtava tt
+    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
+  INNER JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
+WHERE
+  t.urakka = :urakkaid
+  AND t.sopimus = :sopimusid
+  AND t.alkanut >= :alkanut
+  AND t.paattynyt <= :paattynyt
+  AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
+  AND t.poistettu IS NOT TRUE
+  AND (:toimenpide :: INTEGER IS NULL OR
+       tk.emo = (SELECT toimenpide
+                 FROM toimenpideinstanssi
+                 WHERE id = :toimenpide))
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+ORDER BY t.alkanut
+LIMIT 501;
 
+-- name: hae-toteuman-tehtavat
+SELECT
+  tt.id              AS id,
+  tt.toimenpidekoodi AS toimenpidekoodi,
+  tk.nimi            AS nimi,
+  tt.maara           AS maara,
+  tk.yksikko         AS yksikko
+FROM toteuma_tehtava tt
+  INNER JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
+WHERE
+  tt.toteuma = :toteuma_id AND tt.poistettu IS NOT TRUE;
+
+-- name: hae-toteuman-reittipisteet
+SELECT
+  rp.id       AS id,
+  rp.aika     AS aika,
+  rp.sijainti AS sijainti
+FROM reittipiste rp
+WHERE
+  rp.toteuma = :toteuma_id;
+
+-- name: paivita-toteuma-materiaali!
+-- Päivittää toteuma materiaalin tiedot
+UPDATE toteuma_materiaali
+SET materiaalikoodi = :materiaali,
+  maara             = :maara,
+  muokkaaja         = :kayttaja,
+  muokattu          = now()
+WHERE id = :tmid
+      AND toteuma IN (SELECT id
+                      FROM toteuma t
+                      WHERE t.urakka = :urakka);
+
+-- name: hae-urakan-varustetoteumat
+SELECT
+  vt.id,
+  tunniste,
+  toimenpide,
+  tietolaji,
+  tr_numero        AS tie,
+  tr_alkuosa       AS aosa,
+  tr_alkuetaisyys  AS aet,
+  tr_loppuosa      AS losa,
+  tr_loppuetaisyys AS let,
+  piiri,
+  kuntoluokka,
+  karttapvm,
+  tr_puoli,
+  tr_ajorata,
+  t.alkanut        AS alkupvm,
+  t.paattynyt      AS loppupvm,
+  arvot,
+  tierekisteriurakkakoodi,
+  t.id             AS toteuma_id,
+  rp.id            AS reittipiste_id,
+  rp.aika          AS reittipiste_aika,
+  rp.sijainti      AS reittipiste_sijainti
+FROM varustetoteuma vt
+  JOIN toteuma t ON vt.toteuma = t.id
+  JOIN reittipiste rp ON rp.toteuma = t.id
+WHERE urakka = :urakka
+      AND sopimus = :sopimus
+      AND alkanut >= :alkupvm
+      AND alkanut <= :loppupvm
+      AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
+ORDER BY t.alkanut
+LIMIT 501;

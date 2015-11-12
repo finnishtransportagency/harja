@@ -73,11 +73,14 @@
                   "enum": [
                     "auraus ja sohjonpoisto",
                     "suolaus",
+                    "liuossuolaus",
                     "pistehiekoitus",
                     "linjahiekoitus",
                     "pinnan tasaus",
+                    "aurausviitoitus ja kinostimet",
                     "liikennemerkkien puhdistus",
                     "lumivallien madaltaminen",
+                    "lumensiirto",
                     "sulamisveden haittojen torjunta",
                     "tiestotarkastus",
                     "kelintarkastus",
@@ -90,6 +93,7 @@
                     "sorastus",
                     "paallysteiden paikkaus",
                     "paallysteiden juotostyot",
+                    "paannejään poisto",
                     "siltojen puhdistus",
                     "l- ja p-alueiden puhdistus",
                     "muu"

@@ -140,7 +140,9 @@ button > .ajax-loader {
     max-width: @valintakontrollin-leveys;
   }
 }
-
+.testikaytto-alasveto {
+  .livi-alasveto(215px);
+}
 .modal-body {
   .kuvaus {
     margin-bottom: 30px;
@@ -255,8 +257,17 @@ button > .ajax-loader {
 .bold {
   font-weight: bold;
 }
+
 .tr-valitsin-teksti {
   background-color: @harjan-taustavari;
   border: none;
   padding: 6px 4px;
+}
+
+.tr-valitsin-virhe {
+  color: @vaara;
+}
+
+.tr-valitsin-peruuta-esc {
+  font-size: 0.8em;
 }

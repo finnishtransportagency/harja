@@ -12,7 +12,7 @@
             [schema.core :as s :include-macros true])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
+(def gridia-muokataan? (atom false))
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 
 ;; Otsikot
@@ -178,7 +178,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 
 (defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset voi-poistaa? esta-poistaminen?
-                              esta-poistaminen-tooltip piilota-toiminnot
+                              esta-poistaminen-tooltip piilota-toiminnot?
                               fokus aseta-fokus! tulevat-rivit vetolaatikot]} skeema rivi]
   [:tr.muokataan {:class luokka}
    (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi] :as s} skeema]
@@ -243,7 +243,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
            ^{:key (str nimi)}
            [:td {:class tasaus-luokka}
             ((or fmt str) (hae rivi))]))))
-   (when-not piilota-toiminnot
+   (when-not piilota-toiminnot?
      [:td.toiminnot
       (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
         (if (or (nil? esta-poistaminen?) (false? (esta-poistaminen? rivi)))
@@ -255,7 +255,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:span.rivilla-virheita
          (ikonit/warning-sign)])])])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna piilota-toiminnot]} skeema rivi]
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna piilota-toiminnot?]} skeema rivi]
   [:tr {:class    luokka
         :on-click (when rivi-klikattu
                     #(rivi-klikattu rivi))}
@@ -279,7 +279,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
             (if fmt
               (fmt arvon-pituus-rajattu)
               [nayta-arvo skeema (vain-luku-atomina arvon-pituus-rajattu)])))]))
-   (when (and (not piilota-toiminnot)
+   (when (and (not piilota-toiminnot?)
            tallenna) [:td.toiminnot])])
 
 (defn laske-sarakkeiden-leveys [skeema]
@@ -323,7 +323,7 @@ Optiot on mappi optioita:
   :prosessoi-muutos  funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
                      parametrina muokkausdata, palauttaa uuden muokkausdatan
   :aloita-muokkaus-fn kutsutaan kun muokkaus alkaa. Kutsuva pää voi tällöin esim. muokata datasisällön eriksi muokkausta varten
-  :piilota-toiminnot boolean, piilotetaan toiminnot sarake jos true
+  :piilota-toiminnot? boolean, piilotetaan toiminnot sarake jos true
   :rivin-luokka    funktio joka palauttaa rivin luokan
   :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
   :vetolaatikot    {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
@@ -334,7 +334,7 @@ Optiot on mappi optioita:
   
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
-           muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot
+           muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot?
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
@@ -487,6 +487,7 @@ Optiot on mappi optioita:
                   (muutos ohjaus)))
 
         nollaa-muokkaustiedot! (fn []
+                                 (reset! gridia-muokataan? false)
                                  (reset! virheet {})
                                  (reset! varoitukset {})
                                  (reset! muokatut nil)
@@ -495,8 +496,8 @@ Optiot on mappi optioita:
                                  (reset! viime-assoc nil)
                                  (reset! uusi-id 0))
         aloita-muokkaus! (fn [tiedot]
-
                            (nollaa-muokkaustiedot!)
+                           (reset! gridia-muokataan? true)
                            (loop [muok {}
                                   jarj []
                                   [r & rivit] ((or aloita-muokkaus-fn identity) tiedot)]
@@ -531,11 +532,15 @@ Optiot on mappi optioita:
          (when muokkaa-aina
            (aloita-muokkaus! (nth new-argv 3))))
 
+       :component-will-unmount
+       (fn []
+         (nollaa-muokkaustiedot!))
+
        :reagent-render
-       (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot
+       (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
          (let [skeema (laske-sarakkeiden-leveys (keep identity skeema))
-               colspan (if piilota-toiminnot
+               colspan (if piilota-toiminnot?
                          (count skeema)
                          (inc (count skeema)))
                muokataan (not (nil? @muokatut))
@@ -544,8 +549,9 @@ Optiot on mappi optioita:
                                   (if-not muokataan
                                     [:span.pull-right.muokkaustoiminnot
                                      (when tallenna
-                                       [:button.nappi-ensisijainen (if (= :ei-mahdollinen tallenna)
-                                                                     {:disabled (= :ei-mahdollinen tallenna)}
+                                       [:button.nappi-ensisijainen (if (or (= :ei-mahdollinen tallenna)
+                                                                           @gridia-muokataan?)
+                                                                     {:disabled true}
                                                                      {:on-click #(do (.preventDefault %)
                                                                                      (aloita-muokkaus! tiedot))})
                                         [:span.livicon-pen.grid-muokkaa " Muokkaa"]])]
@@ -583,10 +589,8 @@ Optiot on mappi optioita:
                                                      (nollaa-muokkaustiedot!)
                                                      (when peruuta (peruuta))
                                                      nil)}
-                                        [:span.livicon-ban " Peruuta"]])
-                                     ])
-                                  (when nayta-otsikko? [:h6.panel-title otsikko])
-                                  ])]
+                                        [:span.livicon-ban " Peruuta"]])])
+                                  (when nayta-otsikko? [:h6.panel-title otsikko])])]
            [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
             (muokkauspaneeli true)
             [:div.panel-body
@@ -598,7 +602,7 @@ Optiot on mappi optioita:
                   (for [{:keys [otsikko leveys nimi]} skeema]
                     ^{:key (str nimi)}
                     [:th {:width (or leveys "5%")} otsikko])
-                  (when (and (not piilota-toiminnot)
+                  (when (and (not piilota-toiminnot?)
                              tallenna)
                     [:th.toiminnot {:width "40px"} " "])]]
 
@@ -645,7 +649,7 @@ Optiot on mappi optioita:
                                                                   :fokus                    nykyinen-fokus
                                                                   :aseta-fokus!             #(reset! fokus %)
                                                                   :tulevat-rivit            (tulevat-rivit i)
-                                                                  :piilota-toiminnot        piilota-toiminnot}
+                                                                  :piilota-toiminnot?       piilota-toiminnot?}
                                                    skeema rivi]
                                                    (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                                           jarjestys))))))
@@ -669,18 +673,18 @@ Optiot on mappi optioita:
 
                                          (let [id ((or tunniste :id) rivi)]
                                            [^{:key id}
-                                           [naytto-rivi {:ohjaus            ohjaus
-                                                         :vetolaatikot      vetolaatikot
-                                                         :id                id
-                                                         :tallenna          tallenna
-                                                         :luokka            (str (if (even? (+ i 1)) "parillinen" "pariton")
-                                                                                 (when rivi-klikattu
-                                                                                   " klikattava ")
-                                                                                 (when (:yhteenveto rivi) " yhteenveto ")
-                                                                                 (when rivin-luokka
-                                                                                   (rivin-luokka rivi)))
-                                                         :rivi-klikattu     rivi-klikattu
-                                                         :piilota-toiminnot piilota-toiminnot}
+                                           [naytto-rivi {:ohjaus             ohjaus
+                                                         :vetolaatikot       vetolaatikot
+                                                         :id                 id
+                                                         :tallenna           tallenna
+                                                         :luokka             (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                                                  (when rivi-klikattu
+                                                                                    " klikattava ")
+                                                                                  (when (:yhteenveto rivi) " yhteenveto ")
+                                                                                  (when rivin-luokka
+                                                                                    (rivin-luokka rivi)))
+                                                         :rivi-klikattu      rivi-klikattu
+                                                         :piilota-toiminnot? piilota-toiminnot?}
                                             skeema rivi]
                                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
                                             ])))
@@ -709,6 +713,7 @@ Optiot on mappi optioita:
   :voi-poistaa?    funktio, joka palauttaa true tai false.
   :rivinumerot?    Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
+  :piilota-toiminnot? boolean, piilotetaan toiminnot sarake jos true
   :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   :virheet         atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
                    luodaan sisäisesti atomi virheille
@@ -718,7 +723,7 @@ Optiot on mappi optioita:
                    Tämä on hyödyllinen, jos gridin tieto muuttuu ulkoisesta syystä.
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
-           voi-muokata? voi-lisata? jarjesta
+           voi-muokata? voi-lisata? jarjesta piilota-toiminnot?
            muokkaa-footer muutos uusi-rivi luokat validoi-aina?] :as opts} skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -852,7 +857,8 @@ Optiot on mappi optioita:
                 (for [{:keys [otsikko leveys nimi]} skeema]
                   ^{:key (str nimi)}
                   [:th {:width (or leveys "5%")} otsikko])
-                [:th.toiminnot {:width "40px"} " "]]]
+                (when-not piilota-toiminnot?
+                  [:th.toiminnot {:width "40px"} " "])]]
 
               [:tbody
                (let [muokatut-atom muokatut
@@ -904,15 +910,16 @@ Optiot on mappi optioita:
                                            [:td ((or fmt str) (if hae
                                                                 (hae rivi)
                                                                 (get rivi nimi)))]))))
-                                   [:td.toiminnot
-                                    (when (and (not= false voi-muokata?)
-                                               (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-                                      [:span.klikattava {:on-click #(do (.preventDefault %)
-                                                                        (muokkaa! muokatut-atom virheet id assoc :poistettu true))}
-                                       (ikonit/trash)])
-                                    (when-not (empty? rivin-virheet)
-                                      [:span.rivilla-virheita
-                                       (ikonit/warning-sign)])]]
+                                   (when-not piilota-toiminnot?
+                                     [:td.toiminnot
+                                      (when (and (not= false voi-muokata?)
+                                                 (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
+                                        [:span.klikattava {:on-click #(do (.preventDefault %)
+                                                                          (muokkaa! muokatut-atom virheet id assoc :poistettu true))}
+                                         (ikonit/trash)])
+                                      (when-not (empty? rivin-virheet)
+                                        [:span.rivilla-virheita
+                                         (ikonit/warning-sign)])])]
 
                                   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))
                            (if jarjesta

@@ -4,12 +4,15 @@
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [reagent.core :refer [atom]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
+
+; FIXME Tämä nimiavaruus hallinoi kaikkia Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
+; jokaisella näkymällä olisi oma tiedot-namespace kaverina (kuten esim. kokonaishintaisilla nyt on).
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))

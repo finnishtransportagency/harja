@@ -92,10 +92,10 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [kohdetiedot (first (q/hae-urakan-paallystyskohde db urakka-id paallystyskohde-id))
-        kokonaishinta (+ (:sopimuksen_mukaiset_tyot kohdetiedot)
-                         (:arvonvahennykset kohdetiedot)
-                         (:bitumi_indeksi kohdetiedot)
-                         (:kaasuindeksi kohdetiedot))
+        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen_mukaiset_tyot
+                                                   :arvonvahennykset
+                                                   :bitumi_indeksi
+                                                   :kaasuindeksi]))
         paallystysilmoitus (first (into []
                                         (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                               (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
@@ -128,8 +128,7 @@
           (assoc paallystysilmoitus
             :kokonaishinta kokonaishinta
             :paallystyskohde-id paallystyskohde-id
-            :kommentit kommentit
-            ))))))
+            :kommentit kommentit))))))
 
 (defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu_tekninen_osa perustelu_taloudellinen_osa kasittelyaika_tekninen_osa kasittelyaika_taloudellinen_osa]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
@@ -322,6 +321,7 @@
       (if (and (:id osa) (not (neg? (:id osa))))
         (paivita-paallystyskohdeosa c user osa)
         (luo-uusi-paallystyskohdeosa c user paallystyskohde-id osa)))
+    (q/paivita-paallystys-tai-paikkausurakan-geometria c urakka-id)
     (let [paallystyskohdeosat (hae-urakan-paallystyskohdeosat c user {:urakka-id          urakka-id
                                                                       :sopimus-id         sopimus-id
                                                                       :paallystyskohde-id paallystyskohde-id})]

@@ -5,3 +5,6 @@
 
 (defn onko-olemassa? [db id]
   (:exists (first (harja.kyselyt.urakat/onko-olemassa db id))))
+
+(defn onko-urakalla-tehtavaa? [db urakka-id tehtava-id]
+  (:exists (first (harja.kyselyt.urakat/onko-urakalla-tehtavaa db urakka-id tehtava-id))))
