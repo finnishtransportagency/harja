@@ -22,9 +22,27 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn valilehti-mahdollinen? [valilehti urakkatyyppi]
+    (case valilehti
+      :yleiset true
+      :suunnittelu (case urakkatyyppi
+                     :kokonaisurakka false
+                     true)
+      :toteumat (case urakkatyyppi
+                  :kokonaisurakka false
+                  true)
+      :kohdeluettelo (or (= urakkatyyppi :paallystys
+                            (= urakkatyyppi :paikkaus)))
+      :laadunseuranta true
+      :valitavoitteet (= urakkatyyppi :hoito)
+      :turvallisuuspoikkeamat (= urakkatyyppi :hoito)
+      :laskutus))
+
 (defn urakka
   "Urakkanäkymä"
   []
+  (if (false? (valilehti-mahdollinen? (:tyyppi ur) @u/urakan-valittu-valilehti))
+    (reset! u/urakan-valittu-valilehti :yleiset))
   (let [ur @nav/valittu-urakka
         hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
@@ -44,25 +62,25 @@
 
      "Suunnittelu"
      :suunnittelu
-     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :suunnittelu (:tyyppi ur))
        ^{:key "suunnittelu"}
        [suunnittelu/suunnittelu ur])
 
      "Toteumat"
      :toteumat
-     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :toteumat (:tyyppi ur))
        ^{:key "toteumat"}
        [toteumat/toteumat])
 
      "Kohdeluettelo"
      :kohdeluettelo
-     (when (= :paallystys (:tyyppi ur))
+     (when (valilehti-mahdollinen? :kohdeluettelo (:tyyppi ur))
        ^{:key "kohdeluettelo"}
        [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
      "Kohdeluettelo"
      :kohdeluettelo
-     (when (= :paikkaus (:tyyppi ur))
+     (when (valilehti-mahdollinen? :kohdeluettelo (:tyyppi ur))
        ^{:key "kohdeluettelo"}
        [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
@@ -73,13 +91,13 @@
 
      "Välitavoitteet"
      :valitavoitteet
-     (when-not (= :hoito (:tyyppi ur))
+     (when (valilehti-mahdollinen? :valitavoitteet (:tyyppi ur))
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
      "Turvallisuus"
      :turvallisuuspoikkeamat
-     (when (= :hoito (:tyyppi ur))
+     (when (valilehti-mahdollinen? :valitavoitteet (:tyyppi ur))
        ^{:key "turvallisuuspoikkeamat"}
        [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
 
