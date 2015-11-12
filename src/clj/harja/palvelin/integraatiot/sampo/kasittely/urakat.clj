@@ -7,7 +7,8 @@
             [harja.kyselyt.hankkeet :as hankkeet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi]
@@ -64,7 +65,8 @@
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Project" "Internal Error")]
         (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]})))))
+                 :virheet  [{:poikkeus e}]}))))
+  (toimenpiteet/perusta-maksuerat-hoidon-urakoille db))
 
 (defn kasittele-urakat [db urakat]
   (mapv #(kasittele-urakka db %) urakat))

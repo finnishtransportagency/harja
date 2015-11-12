@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.hankkeet :as hankkeet]
             [harja.kyselyt.urakat :as urakat]
+            [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
@@ -35,7 +36,8 @@
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Program" "Internal Error")]
         (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]})))))
+                 :virheet  [{:poikkeus e}]}))))
+  (toimenpiteet/perusta-maksuerat-hoidon-urakoille db))
 
 (defn kasittele-hankkeet [db hankkeet]
   (mapv #(kasittele-hanke db %) hankkeet))

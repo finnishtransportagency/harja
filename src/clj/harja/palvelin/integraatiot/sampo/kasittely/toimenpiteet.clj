@@ -24,13 +24,6 @@
                  "Muut")]
     (str emon-nimi ": " tyyppi)))
 
-(defn perusta-maksuerat-toimenpiteelle [db toimenpide-id toimenpidekoodi]
-  (log/debug "Perustetaan maksuerät toimenpideinstanssille id:" toimenpide-id)
-  (doseq [maksueratyyppi maksueratyypit]
-    (let [maksueran-nimi (tee-makseuran-nimi db toimenpidekoodi maksueratyyppi)
-          maksueranumero (:numero (maksuerat/luo-maksuera<! db toimenpide-id maksueratyyppi maksueran-nimi))]
-      (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))
-
 (defn perusta-maksuerat-hoidon-urakoille [db]
   (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
   (let [maksuerattomat-tpit (toimenpideinstanssit/hae-hoidon-maksuerattomat-toimenpideistanssit db)]
@@ -92,7 +85,8 @@
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Internal Error")]
         (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]})))))
+                 :virheet  [{:poikkeus e}]}))))
+  (perusta-maksuerat-hoidon-urakoille db))
 
 (defn kasittele-toimenpiteet [db toimenpiteet]
   (mapv #(kasittele-toimenpide db %) toimenpiteet))
