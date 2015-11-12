@@ -105,6 +105,9 @@ rooleista."
        true
        false))))
 
+(defn jvh? [kayttaja]
+  (roolissa? kayttaja jarjestelmavastuuhenkilo))
+
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   #?(:cljs ([rooli urakka-id] (rooli-urakassa? @istunto/kayttaja rooli urakka-id)))
