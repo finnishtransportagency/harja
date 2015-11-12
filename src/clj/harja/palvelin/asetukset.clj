@@ -15,6 +15,7 @@
                                            (s/optional-key :threads) s/Int
                                            (s/optional-key :max-body-size) s/Int}
    :kehitysmoodi                          Boolean
+   (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta                            {:palvelin   s/Str
                                            :tietokanta s/Str
                                            :portti     s/Int

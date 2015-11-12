@@ -116,10 +116,11 @@
       (luo-reitti transaktio reitti toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
-  (let [urakka-id (Integer/parseInt id)]
+  (let [urakka-id (Integer/parseInt id)
+        sopimus-id  (get-in data [:reittitoteuma :toteuma :sopimusId])]
     (log/debug "Kirjataan reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:reittitoteuma :toteuma :tehtavat]))
     (tallenna-toteuma-ja-reitti db urakka-id kirjaaja data)

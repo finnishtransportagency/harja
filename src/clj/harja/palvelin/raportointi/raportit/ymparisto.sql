@@ -32,7 +32,7 @@ SELECT *
      	       JOIN toteuma t1 ON rp1.toteuma=t1.id
      	       JOIN urakka u1 ON t1.urakka = u1.id
      	 WHERE rm.materiaalikoodi = mk.id
-     	   AND rp1.hoitoluokka = hl.column1
+     	   AND rp1.talvihoitoluokka = hl.column1
      	   AND (:urakka_annettu is false OR t1.urakka = :urakka)
      	   AND (:hal_annettu is false OR u1.hallintayksikko = :hal)
      	   AND date_trunc('month', rp1.aika) = kkt.kk) as maara
@@ -98,7 +98,7 @@ SELECT *
      	            JOIN reittipiste rp1 ON rm.reittipiste=rp1.id
      	            JOIN toteuma t1 ON rp1.toteuma=t1.id
      	      WHERE rm.materiaalikoodi = mk.id
-     	        AND rp1.hoitoluokka = hl.column1
+     	        AND rp1.talvihoitoluokka = hl.column1
      	        AND t1.urakka = urk.id
      	        AND date_trunc('month', rp1.aika) = kkt.kk) as maara
        FROM kuukaudet kkt
@@ -165,7 +165,7 @@ SELECT hl.column1 as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaa
 	       JOIN reittipiste rp1 ON rm.reittipiste=rp1.id
 	       JOIN toteuma t1 ON rp1.toteuma=t1.id
 	 WHERE rm.materiaalikoodi = mk.id
-	   AND rp1.hoitoluokka = hl.column1
+	   AND rp1.talvihoitoluokka = hl.column1
 	   AND t1.urakka = urk.id
 	   AND date_trunc('month', rp1.aika) = kkt.kk) as maara
   FROM kuukaudet kkt
