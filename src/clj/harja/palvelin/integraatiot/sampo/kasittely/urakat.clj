@@ -57,6 +57,7 @@
       (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
       (paivita-sopimukset db sampo-id)
       (paivita-toimenpiteet db sampo-id)
+      (maksuerat/perusta-maksuerat-hoidon-urakoille db)
 
       (log/debug "Urakka käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project"))
@@ -65,8 +66,7 @@
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Project" "Internal Error")]
         (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]}))))
-  (maksuerat/perusta-maksuerat-hoidon-urakoille db))
+                 :virheet  [{:poikkeus e}]})))))
 
 (defn kasittele-urakat [db urakat]
   (mapv #(kasittele-urakka db %) urakat))

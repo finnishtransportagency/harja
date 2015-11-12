@@ -30,7 +30,8 @@
         (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
 
       (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
-      (urakat/paivita-tyyppi-hankkeen-urakoille! db urakkatyyppi sampo-id))
+      (urakat/paivita-tyyppi-hankkeen-urakoille! db urakkatyyppi sampo-id)
+      (maksuerat/perusta-maksuerat-hoidon-urakoille db))
 
     (log/debug "Hanke käsitelty onnistuneesti")
     (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Program")
@@ -40,8 +41,7 @@
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Program" "Internal Error")]
         (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]}))))
-  (maksuerat/perusta-maksuerat-hoidon-urakoille db))
+                 :virheet  [{:poikkeus e}]})))))
 
 (defn kasittele-hankkeet [db hankkeet]
   (mapv #(kasittele-hanke db %) hankkeet))

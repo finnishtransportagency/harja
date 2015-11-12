@@ -48,6 +48,7 @@
   (try
     (let [toimenpide-id (tallenna-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi)]
       (log/debug "Käsiteltävän toimenpiteet id on:" toimenpide-id)
+      (maksuerat/perusta-maksuerat-hoidon-urakoille db)
       (log/debug "Toimenpide käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation"))
     (catch Exception e
@@ -55,8 +56,7 @@
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Internal Error")]
         (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]}))))
-  (maksuerat/perusta-maksuerat-hoidon-urakoille db))
+                 :virheet  [{:poikkeus e}]})))))
 
 (defn kasittele-toimenpiteet [db toimenpiteet]
   (mapv #(kasittele-toimenpide db %) toimenpiteet))
