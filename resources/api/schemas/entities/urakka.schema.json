@@ -19,7 +19,7 @@
         "sopimukset": {
           "id": "urn:harja/urakka/sopimukset",
           "type": "array",
-          "maxItems" : 100,
+          "maxItems": 100,
           "items": {
             "id": "urn:harja/urakka/sopimukset/0",
             "type": "object",
@@ -81,6 +81,10 @@
                                 "selite": {
                                   "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/selite",
                                   "type": "string"
+                                },
+                                "yksikko": {
+                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/yksikko",
+                                  "type": "string"
                                 }
                               }
                             }
@@ -109,6 +113,11 @@
                                 "selite": {
                                   "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava/selite",
                                   "type": "string"
+                                },
+                                "yksikko": {
+                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/yksikko",
+                                  "type": "string",
+                                  "required": true
                                 }
                               }
                             }
@@ -116,6 +125,35 @@
                         }
                       }
                     }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "materiaalit": {
+          "id": "urn:harja/urakka/materiaalit",
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "id": "urn:harja/urakka/materiaalit/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "materiaali": {
+                "id": "urn:harja/urakka/materiaalit/0/materiaali",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "nimi": {
+                    "id": "urn:harja/urakka/materiaalit/0/materiaali/nimi",
+                    "type": "string",
+                    "required": true
+                  },
+                  "yksikko": {
+                    "id": "urn:harja/urakka/materiaalit/0/materiaali/yksikko",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }

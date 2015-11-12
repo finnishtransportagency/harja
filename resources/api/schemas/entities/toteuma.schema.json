@@ -19,12 +19,14 @@
     "alkanut": {
       "id": "urn:harja/toteumat/0/toteuma/alkanut",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "required": true
     },
     "paattynyt": {
       "id": "urn:harja/toteumat/0/toteuma/paattynyt",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "required": true
     },
     "suorittaja": {
       "id": "urn:harja/suorittaja",

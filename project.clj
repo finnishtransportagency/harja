@@ -6,8 +6,7 @@
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.4.3"]
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-
+                 [org.clojure/core.async "0.2.371"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.220"]
                  [com.cognitect/transit-clj "0.8.275"]
@@ -26,7 +25,7 @@
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
-                 [compojure "1.3.4"]
+                 [compojure "1.4.0"]
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
@@ -65,13 +64,12 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.3.13"]
-                 ;;[lively "0.2.0"]
-                 [figwheel "0.4.0"]
+                 [figwheel "0.4.1"]
 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
 
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+                 [alandipert/storage-atom "1.2.4"]
 
                  [clj-time "0.10.0"]
                  [com.andrewmcveigh/cljs-time "0.3.3"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
@@ -79,9 +77,9 @@
                  [cljsjs/openlayers "3.5.0-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.12"]                ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
-                 [org.apache.poi/poi-scratchpad "3.12"]     ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.12"]          ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "3.13"]                ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
+                 [org.apache.poi/poi-scratchpad "3.13"]     ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.13"]          ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjastoe
@@ -106,7 +104,7 @@
                  [org.apache.xmlgraphics/fop "2.0"]
 
                  ;; Fake-HTTP testaukseen
-                 [http-kit.fake "0.2.1"]
+                 [http-kit.fake "0.2.2"]
 
                  ;; Apache ANT core
                  [org.apache.ant/ant "1.9.6"]
@@ -136,7 +134,7 @@
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.4.0"]
+            [lein-figwheel "0.4.1"]
             [cider/cider-nrepl "0.9.1"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]

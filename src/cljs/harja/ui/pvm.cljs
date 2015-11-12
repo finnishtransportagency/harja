@@ -122,6 +122,13 @@ Seuraavat optiot ovat mahdollisia:
                                                            "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
                                              :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
-                   (t/day paiva)])])]]))})))
+                   (t/day paiva)])])]
+            [:tbody.pvm-tanaan
+             [:tr [:td {:colSpan 7}
+                   [:a {:on-click #(do
+                                     (.preventDefault %)
+                                     (.stopPropagation %)
+                                     (valitse (pvm/nyt)))}
+                    "Tänään"]]]]]))})))
 
 

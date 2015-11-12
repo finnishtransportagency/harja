@@ -128,8 +128,7 @@
           (assoc paallystysilmoitus
             :kokonaishinta kokonaishinta
             :paallystyskohde-id paallystyskohde-id
-            :kommentit kommentit
-            ))))))
+            :kommentit kommentit))))))
 
 (defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu_tekninen_osa perustelu_taloudellinen_osa kasittelyaika_tekninen_osa kasittelyaika_taloudellinen_osa]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)

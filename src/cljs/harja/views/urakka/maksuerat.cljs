@@ -1,7 +1,7 @@
 (ns harja.views.urakka.maksuerat
   "Urakan 'Maksuerat' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! chan]]
+            [cljs.core.async :refer [<! >! chan timeout alts!]]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
@@ -14,7 +14,7 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.yleiset :as yleiset])
-  (:require-macros [cljs.core.async.macros :refer [go]]
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
@@ -66,10 +66,9 @@
 
 (def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat/maksuerat)))
 (def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
-(def pollaus-id (atom nil))
+
 (def pollataan-kantaa? (atom false))
 
-(declare aloita-pollaus)
 
 (defn rakenna-paivittyneet-maksuerat [paivittyneiden-maksuerien-tilat]
   (mapv (fn [uusi-maksuera]
@@ -92,9 +91,7 @@
   (into #{} (remove (set lahetettavat-maksueranumerot) kuittausta-odottavat-maksuerat)))
 
 (defn kasittele-onnistunut-siirto [uudet-maksuerat]
-  (do
-    (reset! maksuerat/maksuerat uudet-maksuerat)
-    (aloita-pollaus)))
+  (reset! maksuerat/maksuerat uudet-maksuerat))
 
 (defn kasittele-epaonnistunut-siirto [lahetetetyt-maksueranumerot uudet-kuittausta-odottavat]
   (do (reset! maksuerarivit (mapv (fn [rivi]
@@ -116,29 +113,19 @@
             (kasittele-onnistunut-siirto uudet-maksuerat)
             (kasittele-epaonnistunut-siirto lahetettavat-maksueranumerot uudet-kuittausta-odottavat))))))
 
-(defn lopeta-pollaus []
-  (reset! pollataan-kantaa? false)
-  (log (str "Kannan pollaus lopetettiin. Pollaus-id: " (pr-str @pollaus-id)))
-  (js/clearInterval @pollaus-id) (reset! pollaus-id nil))
-
 (defn pollaa-kantaa
   "Jos on olemassa maksueriä tai kustannussuunnitelmia, jotka odottavat kuittausta, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."
   []
+  (reset! pollataan-kantaa? true)
   (let [ur @nav/valittu-urakka]
-    (if (not (empty? @kuittausta-odottavat-maksuerat))
-      (do
-        (log (str "Pollataan kantaa. Pollaus-id: " (pr-str @pollaus-id)))
-        (go (reset! maksuerat/maksuerat (<! (maksuerat/hae-urakan-maksuerat (:id ur))))))
-      (do (log "Lopetetaan pollaus (ei lähetyksessä olevia maksueriä)")
-          (lopeta-pollaus)))))
-
-(defn aloita-pollaus
-  "Aloittaa kannan pollaamisen jos pollaus ei jo ole käynnissä"
-  []
-  (if (false? @pollataan-kantaa?) (do
-                                    (reset! pollataan-kantaa? true)
-                                    (reset! pollaus-id (js/setInterval pollaa-kantaa 10000))
-                                    (log (str "Aloitettiin pollaus 10s välein. Pollaus-id: " (pr-str @pollaus-id))))))
+    (go-loop []
+      (when @pollataan-kantaa?
+        (when (not (empty? @kuittausta-odottavat-maksuerat))          
+          (let [result (<! (maksuerat/hae-urakan-maksuerat (:id ur)))]
+            (log "tuli maksueriä: " result)
+            (reset! maksuerat/maksuerat result)))
+        (<! (timeout 10000))
+        (recur)))))
 
 (defn nayta-tila [tila lahetetty]
   (case tila
@@ -152,11 +139,11 @@
 (defn maksuerat-listaus
   "Maksuerien pääkomponentti"
   []
-  (aloita-pollaus)
+  (pollaa-kantaa)
   (komp/luo
     {:component-will-unmount
      (fn []
-       (lopeta-pollaus))}
+       (reset! pollataan-kantaa? false))}
     (fn []
       (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat
             maksuerarivit @maksuerarivit

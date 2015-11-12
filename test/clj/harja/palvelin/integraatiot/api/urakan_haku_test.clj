@@ -32,7 +32,8 @@
           yksikkohintaiset (get-in (first (get-in encoodattu-body [:urakka :sopimukset]))
                                    [:sopimus :toteumakirjauskohteet :yksikkohintaiset])]
       (is (= 12 (count kokonaishintaiset)))
-      (is (= 2 (count yksikkohintaiset))))))
+      (is (= 2 (count yksikkohintaiset)))
+      (is (= 13 (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]

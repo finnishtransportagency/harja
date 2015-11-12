@@ -66,10 +66,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   [vastaus]
   (or (roolit/ei-oikeutta? vastaus)
       (and (map? vastaus)
-           (or
-             (not (nil? (get vastaus :failure)))
-             (not (nil? (get vastaus :virhe)))
-             (not (nil? (get vastaus :error)))))))
+           (some (partial contains? vastaus) [:failure :virhe :error]))))
+           ; Aiemmin oli hellempi tapa tarkistaa, että näiden avainten
+           ; sisällä on jokin loogisesti tosi arvo. On kuitenkin mahdollista,
+           ; että serveri palauttaa esim. {:error nil}
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.

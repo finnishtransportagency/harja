@@ -20,7 +20,8 @@ WHERE urakka = :urakka;
 -- Urakan sopimuksen yksikköhintaiset tehtävät
 SELECT
   id,
-  nimi
+  nimi,
+  yksikko
 FROM toimenpidekoodi
 WHERE id IN (
   SELECT DISTINCT (tehtava)
@@ -72,7 +73,7 @@ SELECT date_trunc('day', tot.alkanut) as pvm,
  WHERE tot.urakka = :urakka
        AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
        AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
-      
+
  GROUP BY pvm, t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
  ORDER BY pvm ASC;
        

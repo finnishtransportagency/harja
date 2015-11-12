@@ -3,7 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
-            [clojure.core.async :refer [go <! >! thread >!!]]
+            [clojure.core.async :refer [go <! >! thread >!!] :as async]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str])
@@ -15,6 +15,9 @@
 (def agentin-alkutila
   {:yhteys nil :istunto nil :kuuntelijat [] :jonot {}})
 
+(def ei-jms-yhteytta {:type    :jms-yhteysvirhe
+                      :virheet [{:koodi  :ei-yhteytta
+                                 :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
 
@@ -39,17 +42,26 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (.setFaultTolerant true)
       (.setFaultTolerantReconnectTimeout (int 30)))))
 
+(defn- viestin-kasittelija [kasittelija]
+  (let [ch (async/chan)]
+    (go (loop [viesti (<! ch)]
+          (when viesti
+            (kasittelija viesti)
+            (recur (<! ch)))))
+    ch))
+
 (defn- luo-jonon-kuuntelija
   "Luo jonon kuuntelijan annetulle istunnolle."
   [istunto jonon-nimi kasittelija]
   (let [jono (.createQueue istunto jonon-nimi)
-        consumer (.createConsumer istunto jono)]
+        consumer (.createConsumer istunto jono)
+        viesti-ch (viestin-kasittelija kasittelija)]
     (thread
       (try
         (loop [viesti (.receive consumer)]
           (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
           (try
-            (kasittelija viesti)
+            (>!! viesti-ch viesti)
             (catch Exception e
               (log/warn e (str "Viestin käsittelijä heitti poikkeuksen, jono: " jonon-nimi))))
           (recur (.receive consumer)))
@@ -87,16 +99,17 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
       (log/error "JMS brokeriin yhdistäminen epäonnistui: " e)
       nil)))
 
-(defn aloita-yhdistaminen [tila asetukset]
-  (loop []
+(defn aloita-yhdistaminen [tila asetukset yhteys-ok?]
+  (loop [aika 10000]
     (let [yhteys (yhdista asetukset)]
       (if yhteys
         (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
+          (reset! yhteys-ok? true)
           (assoc tila :yhteys yhteys :istunto istunto))
         (do
-          (log/warn "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan 10 minuutin päästä.")
-          (Thread/sleep 600000)
-          (recur))))))
+          (log/warn (format "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan %smillisekunnin päästä." aika))
+          (Thread/sleep aika)
+          (recur (min (* 2 aika) 600000)))))))
 
 (defn poista-kuuntelija [jonot jonon-nimi kuuntelija-fn]
   (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
@@ -125,41 +138,44 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
         (.getJMSMessageID msg))
       (catch Exception e
         (log/error e "Virhe JMS-viestin lähettämisessä jonoon: " jonon-nimi)))
-    (throw+ {:type    :jms-yhteysvirhe
-             :virheet [{:koodi  :ei-yhteytta
-                        :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})))
+    (throw+ ei-jms-yhteytta)))
 
-(defrecord SonjaYhteys [asetukset tila]
+(defrecord SonjaYhteys [asetukset tila yhteys-ok?]
   component/Lifecycle
   (start [this]
-    (let [this (assoc this :tila (agent agentin-alkutila))]
-      (send-off (:tila this) aloita-yhdistaminen asetukset)
-      this))
+    (let [agentti (agent agentin-alkutila)
+          yhteys-ok? (atom false)]
+      (send-off agentti aloita-yhdistaminen asetukset yhteys-ok?)
+      (assoc this
+        :tila agentti
+        :yhteys-ok? yhteys-ok?)))
 
-  (stop [{:keys [tila] :as this}]
-    (when (:istunto @tila)
-      (.close (:istunto @tila)))
-    (when @(:yhteys tila)
-      (.close (:yhteys @tila)))
-    (assoc this
-      :tila (restart-agent (:tila this) agentin-alkutila)))
+  (stop [this]
+    (when @yhteys-ok?
+      (let [tila @tila]
+        (some-> tila :istunto .close)
+        (some-> tila :yhteys .close)
+        (assoc this
+          :tila nil))))
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
-    ;; todo: selvitä miksi ei kutsuta yhdista-kuuntelija -funktiota
-    (send (:tila this)
+    (send tila
           (fn [tila]
             (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)
             tila)))
 
   (laheta [this jonon-nimi viesti {:keys [correlation-id]}]
-    (laheta-viesti (:istunto @(:tila this)) (:jonot @(:tila this)) jonon-nimi viesti correlation-id))
+    (if-not @yhteys-ok?
+      (throw+ ei-jms-yhteytta)
+      (let [tila @tila]
+        (laheta-viesti (:istunto tila) (:jonot tila) jonon-nimi viesti correlation-id))))
 
   (laheta [this jonon-nimi viesti]
     (laheta this jonon-nimi viesti nil)))
 
 (defn luo-oikea-sonja [asetukset]
-  (->SonjaYhteys asetukset nil))
+  (->SonjaYhteys asetukset nil nil))
 
 (defn luo-feikki-sonja []
   (reify
@@ -169,8 +185,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 
     Sonja
     (kuuntele [this jonon-nimi kuuntelija-fn]
-      (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
-      #(log/debug "Feikki Sonja, lopeta muka kuuntelu jonossa: " jonon-nimi))
+      (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi))
     (laheta [this jonon-nimi viesti otsikot]
       (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
       (str "ID:" (System/currentTimeMillis)))
