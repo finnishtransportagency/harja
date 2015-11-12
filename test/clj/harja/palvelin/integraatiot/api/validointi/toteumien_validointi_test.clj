@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.api.validointi.toteumien-validointi-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi]))
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.testi :refer :all]))
 
 (deftest tarkista-reittipisteiden-aikojen-tarkistus
   (let [reitti [{:reittipiste {:aika "2014-02-02T12:00:00Z"}}
@@ -28,4 +30,7 @@
                  "Poikkeusta ei heitetty epävalidista reittipisteestä, kun reittipiste on kirjattu toteuman päättymisen jälkeen."))))
 
 (deftest tarkiasta-toteuman-tehtavien-tarkistus
-  )
+  (let [db (apply tietokanta/luo-tietokanta testitietokanta)]
+    (validointi/tarkista-tehtavat db 1 [{:tehtava {:id 608}}])
+    (is (thrown? Exception (validointi/tarkista-tehtavat db 1 [{:tehtava {:id 608}} {:tehtava {:id 1}}])
+                 "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla"))))
