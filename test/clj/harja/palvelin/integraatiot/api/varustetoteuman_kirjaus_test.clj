@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.pistetoteuman-kirjaus-test
+(ns harja.palvelin.integraatiot.api.varustetoteuman-kirjaus-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
