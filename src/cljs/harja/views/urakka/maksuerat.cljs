@@ -121,8 +121,9 @@
     (go-loop []
       (when (and @pollataan-kantaa?
                  (not (empty? @kuittausta-odottavat-maksuerat)))
-        (let [result (first (alts! [(timeout 10000)
-                                    (maksuerat/hae-urakan-maksuerat (:id ur))]))]
+        (<! (timeout 10000))
+        (let [result (<! (maksuerat/hae-urakan-maksuerat (:id ur)))]
+          (log "tuli maksueriä: " result)
           (reset! maksuerat/maksuerat result)
           (recur))))))
 
