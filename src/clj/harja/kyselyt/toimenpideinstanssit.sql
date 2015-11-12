@@ -3,10 +3,10 @@
 INSERT INTO toimenpideinstanssi (sampoid, nimi, alkupvm, loppupvm, vastuuhenkilo_id, talousosasto_id, talousosastopolku,
                                  tuote_id, tuotepolku, urakka_sampoid, toimenpide, urakka)
 VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_id, :talousosasto_polku, :tuote_id,
-        :tuote_polku, :urakka_sampoid,
-        (SELECT id
-         FROM toimenpidekoodi
-         WHERE koodi = :sampo_toimenpidekoodi),
+                  :tuote_polku, :urakka_sampoid,
+                  (SELECT id
+                   FROM toimenpidekoodi
+                   WHERE koodi = :sampo_toimenpidekoodi),
         (SELECT id
          FROM urakka
          WHERE sampoid = :urakka_sampoid));
@@ -57,18 +57,21 @@ SET urakka = (
   SELECT id
   FROM urakka
   WHERE sampoid = :urakka_sampoid)
-WHERE urakka_sampoid = :urakka_sampoid
+WHERE urakka_sampoid = :urakka_sampoid;
 
 -- name: hae-urakan-toimenpideinstanssi
 -- Hakee urakan toimenpideinstanssin urakan ja 3. tason toimenpidekoodin mukaan
-SELECT * FROM toimenpideinstanssi WHERE urakka=:urakka AND toimenpide=:tp
+SELECT *
+FROM toimenpideinstanssi
+WHERE urakka = :urakka AND toimenpide = :tp;
 
 -- name: hae-hoidon-maksuerattomat-toimenpideistanssit
 SELECT
-  tpi.id AS tpi_id,
+  tpi.id    AS tpi_id,
   tpk.koodi AS toimenpidekoodi
 FROM toimenpideinstanssi tpi
-JOIN urakka ON tpi.urakka = urakka.id
-JOIN toimenpidekoodi tpk ON tpk.id = tpi.toimenpide
-WHERE tpi.id NOT IN (SELECT toimenpideinstanssi FROM maksuera)
-AND urakka.tyyppi = 'hoito'
+  JOIN urakka ON tpi.urakka = urakka.id
+  JOIN toimenpidekoodi tpk ON tpk.id = tpi.toimenpide
+WHERE tpi.id NOT IN (SELECT toimenpideinstanssi
+                     FROM maksuera)
+      AND urakka.tyyppi = 'hoito';
