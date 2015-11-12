@@ -68,10 +68,10 @@ WHERE urakka = :urakka AND toimenpide = :tp;
 -- name: hae-hoidon-maksuerattomat-toimenpideistanssit
 SELECT
   tpi.id    AS tpi_id,
-  tpk.koodi AS toimenpidekoodi
+  tpk.nimi AS toimenpidekoodi
 FROM toimenpideinstanssi tpi
   JOIN urakka ON tpi.urakka = urakka.id
   JOIN toimenpidekoodi tpk ON tpk.id = tpi.toimenpide
-WHERE tpi.id NOT IN (SELECT toimenpideinstanssi
-                     FROM maksuera)
+WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
+                     FROM maksuera where toimenpideinstanssi is not null)
       AND urakka.tyyppi = 'hoito';
