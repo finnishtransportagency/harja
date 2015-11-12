@@ -369,7 +369,7 @@ BEGIN
                   tot.alkanut                      AS tot_alkanut
                 FROM toteuma_tehtava tt
                   JOIN toteuma tot ON tt.toteuma = tot.id
-                                      AND tot.tyyppi IN ('muutostyo':: toteumatyyppi, 'lisatyo'::toteumatyyppi)
+                                      AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
@@ -397,7 +397,7 @@ BEGIN
     SELECT SUM(tt.paivan_hinta)
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON tt.toteuma = tot.id
-                          AND tot.tyyppi IN ('muutostyo':: toteumatyyppi, 'lisatyo'::toteumatyyppi)
+                          AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
@@ -422,7 +422,7 @@ BEGIN
       tot.alkanut                      AS tot_alkanut,
       SUM(tt.maara * mht.yksikkohinta) AS mht_summa
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo'::toteumatyyppi, 'lisatyo'::toteumatyyppi))
+      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset'))
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN muutoshintainen_tyo mht ON tt.toimenpidekoodi = mht.tehtava
@@ -452,7 +452,7 @@ BEGIN
     SELECT SUM(tt.paivan_hinta)
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON tt.toteuma = tot.id
-                          AND tot.tyyppi IN ('muutostyo':: toteumatyyppi, 'lisatyo'::toteumatyyppi)
+                          AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id

@@ -105,12 +105,12 @@
                                       :erilliskustannukset_laskutettu                  0.0M
                                       :erilliskustannukset_laskutettu_ind_korotettuna  0.0M
                                       :erilliskustannukset_laskutettu_ind_korotus      0.0M
-                                      :kaikki_laskutetaan                              12310.00000000000000000M
-                                      :kaikki_laskutetaan_ind_korotus                  310.00000000000000000M
+                                      :kaikki_laskutetaan                              13372.00000000000000000M
+                                      :kaikki_laskutetaan_ind_korotus                  372.00000000000000000M
                                       :kaikki_laskutettu                               6383.00000000000000000M
                                       :kaikki_laskutettu_ind_korotus                   183.00000000000000000M
-                                      :kaikki_paitsi_kht_laskutetaan                   12310.00000000000000000M
-                                      :kaikki_paitsi_kht_laskutetaan_ind_korotus       310.00000000000000000M
+                                      :kaikki_paitsi_kht_laskutetaan                   13372.00000000000000000M
+                                      :kaikki_paitsi_kht_laskutetaan_ind_korotus       372.00000000000000000M
                                       :kaikki_paitsi_kht_laskutettu                    6383.00000000000000000M
                                       :kaikki_paitsi_kht_laskutettu_ind_korotus        183.00000000000000000M
                                       :kht_laskutetaan                                 0.0M
@@ -119,9 +119,9 @@
                                       :kht_laskutettu                                  0.0M
                                       :kht_laskutettu_ind_korotettuna                  0.0M
                                       :kht_laskutettu_ind_korotus                      0.0M
-                                      :muutostyot_laskutetaan                          7000.0M
-                                      :muutostyot_laskutetaan_ind_korotettuna          7062.00000000000000000M
-                                      :muutostyot_laskutetaan_ind_korotus              62.00000000000000000M
+                                      :muutostyot_laskutetaan                          8000.0M
+                                      :muutostyot_laskutetaan_ind_korotettuna          8124.00000000000000000M
+                                      :muutostyot_laskutetaan_ind_korotus              124.00000000000000000M
                                       :muutostyot_laskutettu                           3000.0M
                                       :muutostyot_laskutettu_ind_korotettuna           3059.00000000000000000M
                                       :muutostyot_laskutettu_ind_korotus               59.00000000000000000M
