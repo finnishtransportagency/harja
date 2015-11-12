@@ -108,6 +108,7 @@
          :type :toteuma
          :nimi (or (:nimi toteuma)
                    (get-in toteuma [:tehtava :nimi])
+                   (get-in toteuma [:tpi :nimi])
                    (if (> 1 (count (:tehtavat toteuma)))
                      (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
                      (str (:toimenpide (first (:tehtavat toteuma))))))
