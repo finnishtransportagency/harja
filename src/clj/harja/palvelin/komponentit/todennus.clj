@@ -42,7 +42,6 @@
 (defn testikaytto
   "Tekee mahdollisen testikäyttäjän korvaamisen. Jos testikäyttäjiä on konfiguroitu ja autentikoitu käyttäjä on järjestelmävastuuhenkilö ja hänellä on testikäyttäjä eväste, korvataan käyttäjätiedot evästeen nimeämän käyttäjätunnuksen tiedoilla."
   [db req kayttajatiedot testikayttajat]
-  ;;(log/info "REQ: " (pr-str req))
   (if-let [testitunnus (and testikayttajat
                             (roolit/roolissa? kayttajatiedot roolit/jarjestelmavastuuhenkilo)
                             (get-in req [:cookies "testikayttaja" :value]))]
