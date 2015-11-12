@@ -334,7 +334,3 @@ SELECT id, nimi
  WHERE hallintayksikko = :hal
    AND (alkupvm IS NULL OR alkupvm <= current_date)
    AND (loppupvm IS NULL OR loppupvm >= current_date);
-
--- name: onko-urakka-hoidon-urakka
--- Tarkistaa onko Samposta tuodun urakan tyyppi hoito
-SELECT EXISTS(SELECT * FROM urakka WHERE sampoid = :sampoid AND tyyppi = 'hoito');
