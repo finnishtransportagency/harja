@@ -42,9 +42,9 @@
 
   (tarkista-toimenpide db viesti-id urakka-sampo-id sampo-id sampo-toimenpidekoodi)
 
-  (do
-    (log/warn "Samposta tuodulla toimenpideinstanssilla (id: " sampo-id ") ei ole toimenpidekoodia, joten sitä ei voi tallentaa")
-    (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation"))
+  (log/warn "Samposta tuodulla toimenpideinstanssilla (id: " sampo-id ") ei ole toimenpidekoodia, joten sitä ei voi tallentaa")
+  (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation")
+
   (try
     (let [toimenpide-id (tallenna-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi)]
       (log/debug "Käsiteltävän toimenpiteet id on:" toimenpide-id)
