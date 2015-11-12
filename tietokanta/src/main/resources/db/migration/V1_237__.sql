@@ -1,0 +1,1 @@
+ALTER TABLE korjaavatoimenpide ADD COLUMN poistettu BOOLEAN;
