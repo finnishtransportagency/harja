@@ -38,6 +38,8 @@
            [:span.alert-warning "TESTIKÄYTTÖ"]
            kayttajainfo)
          [yleiset/livi-pudotusvalikko {:valinta testikayttaja
+                                       :class      "testikaytto-alasveto"
+                                       :title "Järjestelmän vastuuhenkilönä voit testata Harjaa myös muissa rooleissa."
                                        :format-fn #(if %
                                                      (:kuvaus %)
                                                      (str "- Ei testikäyttäjänä -"))
