@@ -16,6 +16,9 @@
   ^{:private true}
   asia-kartalle :tyyppi-kartalla)
 
+(defn sisaltaako-kuittauksen? [ilmoitus kuittaustyyppi]
+  (some #(= (:kuittaustyyppi %) kuittaustyyppi) (get-in ilmoitus [:kuittaukset])))
+
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu?]
   [(assoc ilmoitus
      :type :ilmoitus
@@ -35,7 +38,9 @@
               :img    "kartta-kysely-violetti.svg"}
      :alue {:type        :tack-icon
             :scale       (if (valittu? ilmoitus) 1.5 1)
-            :img         "kartta-kysely-violetti.svg"
+            :img         (if (sisaltaako-kuittauksen? ilmoitus :aloitus)
+                           "kartta-kysely-violetti.svg"
+                           "kartta-kysely-violetti.svg")
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
@@ -46,7 +51,9 @@
               :img    "kartta-toimenpidepyynto-violetti.svg"}
      :alue {:type        :tack-icon
             :scale       (if (valittu? ilmoitus) 1.5 1)
-            :img         "kartta-toimenpidepyynto-violetti.svg"
+            :img         (if (sisaltaako-kuittauksen? ilmoitus :vastaanotto)
+                           "kartta-toimenpidepyynto-violetti.svg"
+                           "kartta-toimenpidepyynto-violetti.svg")
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :havainto [havainto valittu?]
@@ -113,6 +120,7 @@
                                                                      :aika
                                                                      pvm/ennen?
                                                                      reittipisteet))}))]))
+
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
   [(assoc tp
