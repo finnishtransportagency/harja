@@ -64,9 +64,8 @@
         (merkitse-maksuera-lahetetyksi transaktio maksueranumero))
       (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
 
-(defn tee-makseuran-nimi [db toimenpidekoodi maksueratyyppi]
-  (let [emon-nimi (:nimi (first (toimenpidekoodit/hae-emon-nimi db toimenpidekoodi)))
-        tyyppi (case maksueratyyppi
+(defn tee-makseuran-nimi [toimenpiteen-nimi maksueratyyppi]
+  (let [tyyppi (case maksueratyyppi
                  "kokonaishintainen" "Kokonaishintaiset"
                  "yksikkohintainen" "Yksikköhintaiset"
                  "lisatyo" "Lisätyöt"
@@ -75,7 +74,7 @@
                  "sakko" "Sakot"
                  "akillinen-hoitotyo" "Äkilliset hoitotyöt"
                  "Muut")]
-    (str emon-nimi ": " tyyppi)))
+    (str toimenpiteen-nimi ": " tyyppi)))
 
 (defn perusta-maksuerat-hoidon-urakoille [db]
   (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
@@ -84,7 +83,7 @@
       (log/debug "Kaikki maksuerät on jo perustettu hoidon urakoiden toimenpiteille"))
     (doseq [tpi maksuerattomat-tpit]
       (doseq [maksueratyyppi maksueratyypit]
-        (let [maksueran-nimi (tee-makseuran-nimi db (:toimenpidekoodi tpi) maksueratyyppi)
+        (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi)
               maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 

@@ -70,4 +70,4 @@ SELECT nimi
 FROM toimenpidekoodi
 WHERE id = (SELECT emo
             FROM toimenpidekoodi
-            WHERE koodi = :id);
+            WHERE id = :id);
