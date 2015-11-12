@@ -1,4 +1,5 @@
-(ns harja.palvelin.integraatiot.api.tyokalut.virheet)
+(ns harja.palvelin.integraatiot.api.tyokalut.virheet
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def +invalidi-json+ ::invalidi-json)
 (def +viallinen-kutsu+ ::viallinen-kutsu)
@@ -12,7 +13,7 @@
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
 (def +tuntematon-sopimus-koodi+ "tuntematon-sopimus")
 
-; Virhetyypit
+;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
 (def +tuntematon-silta+ "tuntematon-silta")
 (def +tuntematon-materiaali+ "tuntematon-materiaali")
@@ -20,3 +21,18 @@
 (def +tyhja-vastaus+ "tyhja-vastaus")
 (def +kayttajalla-puutteelliset-oikeudet+ "kayttajalla-puutteelliset-oikeudet")
 (def +puutteelliset-parametrit+ "puutteelliset-parametrit")
+
+(defn heita-poikkeus [tyyppi virheet]
+  (throw+
+    (let [virheet (if (map? virheet) [virheet] virheet)]
+      {:type    tyyppi
+       :virheet virheet})))
+
+(defn heita-viallinen-apikutsu-poikkeus [virheet]
+  (heita-poikkeus +viallinen-kutsu+ virheet))
+
+(defn heita-sisainen-kasittelyvirhe-poikkeus [virheet]
+  (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet))
+
+(defn heita-ulkoinen-kasittelyvirhe-poikkeus [virheet]
+  (heita-poikkeus +ulkoinen-kasittelyvirhe-koodi+ virheet))

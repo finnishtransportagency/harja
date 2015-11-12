@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
@@ -30,10 +31,10 @@
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
-  (let [urakka-id (Integer/parseInt id)
-        sopimus-id (get-in data [:pistetoteuma :toteuma :sopimusId])]
+  (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi pistetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:pistetoteuma :toteuma :tehtavat]))
     (tallenna-toteuma db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 

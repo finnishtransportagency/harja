@@ -15,6 +15,7 @@
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (validointi/tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma))
 
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
@@ -33,6 +34,7 @@
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
   (validointi/tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
+  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma))
 
   (:id (toteumat/luo-toteuma<!
          db
