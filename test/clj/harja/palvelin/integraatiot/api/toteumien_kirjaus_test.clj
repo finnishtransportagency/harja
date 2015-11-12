@@ -4,7 +4,6 @@
             [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]))
 
@@ -20,8 +19,7 @@
                                                                 [:http-palvelin :db :integraatioloki])
                                            :api-varusteoteuma (component/using
                                                                 (api-varustetoteuma/->Varustetoteuma)
-                                                                [:http-palvelin :db :integraatioloki])
-                                           ))
+                                                                [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -97,7 +95,7 @@
           (doseq [reittipiste-id reittipiste-idt]
             (let [reitti-tehtava-idt (into [] (flatten (q (str "SELECT id FROM reitti_tehtava WHERE reittipiste = " reittipiste-id))))
                   reitti-materiaali-idt (into [] (flatten (q (str "SELECT id FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))))
-                  reitti-hoitoluokka (ffirst (q (str "SELECT hoitoluokka FROM reittipiste WHERE id = " reittipiste-id)))]
+                  reitti-hoitoluokka (ffirst (q (str "SELECT soratiehoitoluokka FROM reittipiste WHERE id = " reittipiste-id)))]
               (is (= (count reitti-tehtava-idt) 2))
               (is (= (count reitti-materiaali-idt) 1))
               (is (= reitti-hoitoluokka 7))))               ; testidatassa on reittipisteen koordinaateille hoitoluokka

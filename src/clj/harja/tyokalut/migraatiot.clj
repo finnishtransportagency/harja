@@ -43,12 +43,16 @@
   (sh/sh "git" "checkout" b)
   (assert (= (nykyinen-branch) b) "Branching vaihto ei onnistunut"))
 
+(defn pull []
+  (sh/sh "git" "pull"))
+
 (defn -main [& args]
   (let [nykyinen-branch (nykyinen-branch)]
     (if (= "develop" nykyinen-branch)
       (println "Olet jo developissa!")
       (let [branchin-migraatiot (migraatiot)]
         (vaihda-branch "develop")
+        (pull)
         (let [developin-migraatiot (migraatiot)]
           (println "Korkein migraatio tässä branchissa: " (reduce max (keys branchin-migraatiot)))
           (println "Korkein migraatio develop branchissa: " (reduce max (keys developin-migraatiot)))

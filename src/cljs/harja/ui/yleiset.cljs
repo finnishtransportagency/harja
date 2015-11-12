@@ -179,13 +179,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   (kuuntelija
     {:auki (atom false)}
 
-    (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus]} vaihtoehdot]
+    (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
       (let [auki (:auki (reagent/state (reagent/current-component)))
             term (atom "")]
         [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
          [:button.nappi-alasveto
           {:type        "button"
            :disabled    (if disabled "disabled" "")
+           :title title
            :on-click    #(do
                           (swap! auki not)
                           nil)

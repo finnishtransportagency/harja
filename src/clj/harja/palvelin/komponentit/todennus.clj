@@ -7,6 +7,7 @@
             [harja.kyselyt.kayttajat :as q]
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
+            [harja.domain.roolit :as roolit]
             ))
 
 
@@ -38,7 +39,22 @@
 
 (def todennusvirhe {:virhe :todennusvirhe})
 
-(defrecord HttpTodennus []
+(defn testikaytto
+  "Tekee mahdollisen testikäyttäjän korvaamisen. Jos testikäyttäjiä on konfiguroitu ja autentikoitu käyttäjä on järjestelmävastuuhenkilö ja hänellä on testikäyttäjä eväste, korvataan käyttäjätiedot evästeen nimeämän käyttäjätunnuksen tiedoilla."
+  [db req kayttajatiedot testikayttajat]
+  (if-let [testitunnus (and testikayttajat
+                            (roolit/roolissa? kayttajatiedot roolit/jarjestelmavastuuhenkilo)
+                            (get-in req [:cookies "testikayttaja" :value]))]
+    (do (when-not (some #(= testitunnus (:kayttajanimi %)) testikayttajat)
+          (log/warn "Käyttäjä " kayttajatiedot " yritti ei-sallittua testikäyttäjää: " testitunnus)
+          (throw+ todennusvirhe))
+        (assoc (koka-remote-id->kayttajatiedot db testitunnus)
+               ;; asetetaan myös oikea käyttäjä talteen, käyttäjätiedot tarvitsee sitä, jotta
+               ;; "su" tilanne voidaan tunnistaa
+               :oikea-kayttaja kayttajatiedot))
+    kayttajatiedot))
+
+(defrecord HttpTodennus [testikayttajat]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -49,15 +65,16 @@
     this)
 
   Todennus
-  (todenna-pyynto [this req]
+  (todenna-pyynto [{db :db :as this} req]
     (let [headerit (:headers req)
           kayttaja-id (headerit "oam_remote_user")]
       
       ;;(log/info "KOKA: " kayttaja-id)
       (if (nil? kayttaja-id)
         (throw+ todennusvirhe)
-        (if-let [kayttajatiedot (koka-remote-id->kayttajatiedot (:db this) kayttaja-id)]
-          (assoc req :kayttaja kayttajatiedot)
+        (if-let [kayttajatiedot (koka-remote-id->kayttajatiedot db kayttaja-id)]
+          (assoc req :kayttaja
+                 (testikaytto db req kayttajatiedot testikayttajat))
           (throw+ todennusvirhe))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
@@ -73,8 +90,10 @@
     (assoc req
       :kayttaja kayttaja)))
 
-(defn http-todennus []
-  (->HttpTodennus))
+(defn http-todennus
+  ([] (http-todennus nil))
+  ([testikayttajat]
+   (->HttpTodennus testikayttajat)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))

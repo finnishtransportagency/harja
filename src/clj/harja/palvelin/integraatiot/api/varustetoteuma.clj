@@ -92,10 +92,12 @@
   (jdbc/with-db-transaction [transaktio db]
     (let [toteuma (assoc (get-in data [:varustetoteuma :toteuma]) :reitti nil)
           toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
-          varustetiedot (get-in data [:varustetoteuma :varuste])]
+          varustetiedot (get-in data [:varustetoteuma :varuste])
+          sijainti (get-in data [:varustetoteuma :sijainti])
+          aika (pvm-string->java-sql-date (get-in data [:varustetoteuma :toteuma :alkanut]))]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
       (log/debug "Aloitetaan sijainnin tallennus")
-      (api-toteuma/tallenna-sijainti transaktio (get-in data [:varustetoteuma :sijainti]) toteuma-id)
+      (api-toteuma/tallenna-sijainti transaktio sijainti aika toteuma-id)
       (log/debug "Aloitetaan toteuman tehtävien tallennus")
       (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
       (log/debug "Aloitetaan toteuman varustetietojen tallentaminen")
@@ -103,9 +105,10 @@
       (tallenna-varuste transaktio kirjaaja varustetiedot toteuma-id))))
 
 (defn kirjaa-toteuma [tierekisteri db {id :id} data kirjaaja]
-  (let [urakka-id (Integer/parseInt id)]
+  (let [urakka-id (Integer/parseInt id)
+        sopimus-id (get-in data [:varustetoteuma :toteuma :sopimusId])]
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)
     (tallenna-toteuma db urakka-id kirjaaja data)
 
     (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja data)]

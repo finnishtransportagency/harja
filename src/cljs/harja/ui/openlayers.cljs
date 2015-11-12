@@ -294,7 +294,7 @@
   (let [mapspec (:mapspec (reagent/state this))
         [mml-spec & _] (:layers mapspec)
         mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
-        geometry-layer (ol.layer.Vector. #js {:source (ol.source.Vector.) :opacity 0.7})
+        geometry-layer (ol.layer.Vector. #js {:source (ol.source.Vector.)})
         interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom false
                                                                   :dragPan false})]
                       (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
@@ -447,17 +447,15 @@
 (defmulti luo-feature :type)
 
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
-  (when-not (= :clickable-area (:type geom))
-    (doto feature
-      (.setStyle (ol.style.Style.
-                   #js {:fill   (when fill (ol.style.Fill. #js {:color   (or color "red")
-                                                                :opacity 0.5}))
-                        :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
-                                                       :width (or (:width stroke) 1)})
-                        ;; Default zindex asetetaan harja.views.kartta:ssa.
-                        ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
-                        ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
-                        :zIndex (or zindex 0)})))))
+  (doto feature
+    (.setStyle (ol.style.Style.
+                 #js {:fill    (when fill (ol.style.Fill. #js {:color   (or color "red")}))
+                      :stroke  (ol.style.Stroke. #js {:color (or (:color stroke) "black")
+                                                      :width (or (:width stroke) 1)})
+                      ;; Default zindex asetetaan harja.views.kartta:ssa.
+                      ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
+                      ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
+                      :zIndex  (or zindex 0)}))))
 
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
@@ -497,6 +495,7 @@
                            #js {:image  (ol.style.Icon.
                                           #js {:src      (str +karttaikonipolku+ pohja)
                                                :rotation (or rotation 0)
+                                               :opacity  1
                                                :anchor   (if anchor
                                                            (clj->js anchor)
                                                            #js [0.5 0.5])})
@@ -504,14 +503,22 @@
 
                          (ol.style.Style.
                            #js {:image  (ol.style.Icon.
-                                          #js {:src    (str +karttaikonipolku+ img)
-                                               :anchor (if anchor
-                                                         (clj->js anchor)
-                                                         #js [0.5 0.5])})
+                                          #js {:src     (str +karttaikonipolku+ img)
+                                               :opacity 1
+                                               :anchor  (if anchor
+                                                          (clj->js anchor)
+                                                          #js [0.5 0.5])})
                                 :zIndex 5})]))))
 
-(defmethod luo-feature :tack-icon [{:keys [coordinates img]}]
-  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img 0 [0.5 1]))
+(defmethod luo-feature :tack-icon [{:keys [coordinates img scale]}]
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+    (.setStyle (ol.style.Style.
+                 #js {:image  (ol.style.Icon.
+                                #js {:src     (str +karttaikonipolku+ img)
+                                     :anchor  #js [0.5 1]
+                                     :opacity 1
+                                     :scale   (or scale 1)})
+                      :zIndex 4}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
@@ -525,7 +532,6 @@
                                                      (clj->js anchor)
                                                      #js [0.5 1])
                                      :opacity      1
-                                     ;;:size         #js [40 40]
                                      :rotation     (or direction 0)
                                      :anchorXUnits "fraction"
                                      :anchorYUnits "fraction"})
@@ -591,7 +597,7 @@
                               (.addFeature features new-shape)
 
                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :sticker-icon})
+                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :sticker-icon :clickable-area})
                                 (aseta-tyylit new-shape geom))
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?

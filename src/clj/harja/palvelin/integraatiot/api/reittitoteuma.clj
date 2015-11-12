@@ -15,7 +15,8 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -64,12 +65,12 @@
 (defn luo-reitin-materiaalit [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin materiaalit")
   (doseq [materiaali (get-in reittipiste [:reittipiste :materiaalit])]
-    (let [materiaali-nimi (api-toteuma/materiaali-enum->string (:materiaali materiaali))
+    (let [materiaali-nimi (:materiaali materiaali)
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
         (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi  virheet/+tuntematon-materiaali+
-                            :viesti (format "Materiaalia %s ei löydy tietokannasta." materiaali-nimi)}]}))
+                            :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
       (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
 (defn luo-reitti [db reitti toteuma-id]
@@ -115,10 +116,12 @@
       (luo-reitti transaktio reitti toteuma-id))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
-  (let [urakka-id (Integer/parseInt id)]
+  (let [urakka-id (Integer/parseInt id)
+        sopimus-id  (get-in data [:reittitoteuma :toteuma :sopimusId])]
     (log/debug "Kirjataan reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)
+    (toteuman-validointi/tarkista-reittipisteet data)
     (tallenna-toteuma-ja-reitti db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 

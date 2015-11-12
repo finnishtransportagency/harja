@@ -14,9 +14,9 @@
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/maara.schema.json"
     },
-      "selite": {
-	  "id": "urn:harja/tehtava/selite",
-	  "type": "string"
+    "selite": {
+      "id": "urn:harja/tehtava/selite",
+      "type": "string"
     }
   }
 }
