@@ -120,18 +120,27 @@
                                                                      :aika
                                                                      pvm/ennen?
                                                                      reittipisteet))}))]))
+(defn paattele-turpon-ikoni [turpo]
+  (let [kt (:korjaavattoimenpiteet turpo)]
+    (if (empty? kt)
+     ["kartta-turvallisuuspoikkeama-avoin-oranssi.svg" "Turvallisuuspoikkeama, avoin"]
 
+      (if (some (comp nil? :suoritettu) kt)
+        ["kartta-turvallisuuspoikkeama-ei-toteutettu-punainen.svg" "Turvallisuuspoikkeama, ei korjauksia"]
+
+        ["kartta-turvallisuuspoikkeama-toteutettu-vihrea.svg" "Turvallisuuspoikkeama, kaikki korjattu"]))))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
-  [(assoc tp
-     :type :turvallisuuspoikkeama
-     :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-     :selite {:teksti "Turvallisuuspoikkeama"
-              :img    "kartta-turvallisuuspoikkeama-avoin-oranssi.svg"}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? tp) 1.5 1)
-            :img         "kartta-turvallisuuspoikkeama-avoin-oranssi.svg"
-            :coordinates (get-in tp [:sijainti :coordinates])})])
+  (let [[ikoni selite] (paattele-turpon-ikoni tp)]
+    [(assoc tp
+      :type :turvallisuuspoikkeama
+      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
+      :selite {:teksti selite
+               :img    ikoni}
+      :alue {:type        :tack-icon
+             :scale       (if (valittu? tp) 1.5 1)
+             :img         ikoni
+             :coordinates (get-in tp [:sijainti :coordinates])})]))
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv
