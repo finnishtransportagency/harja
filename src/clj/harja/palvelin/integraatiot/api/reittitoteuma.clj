@@ -121,6 +121,7 @@
                " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (toteuman-validointi/tarkista-reittipisteet data)
+    (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:reittitoteuma :toteuma :tehtavat]))
     (tallenna-toteuma-ja-reitti db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 

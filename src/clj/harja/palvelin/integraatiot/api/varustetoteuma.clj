@@ -14,7 +14,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
-            [harja.kyselyt.livitunnisteet :as livitunnisteet])
+            [harja.kyselyt.livitunnisteet :as livitunnisteet]
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
@@ -108,6 +109,7 @@
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:varustetoteuma :toteuma :tehtavat]))
     (tallenna-toteuma db urakka-id kirjaaja data)
 
     (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja data)]

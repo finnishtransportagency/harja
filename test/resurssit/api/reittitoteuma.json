@@ -8,7 +8,7 @@
       }
     },
     "viestintunniste": {
-      "id": 123
+      "id": 60823
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
@@ -28,7 +28,7 @@
       "tehtavat": [
         {
           "tehtava": {
-            "id": 1,
+            "id": 608,
             "maara": {
               "yksikko": "km",
               "maara": 123
@@ -37,7 +37,7 @@
         },
         {
           "tehtava": {
-            "id": 2 ,
+            "id": 618,
             "maara": {
               "yksikko": "km",
               "maara": 123
@@ -66,12 +66,12 @@
           "tehtavat": [
             {
               "tehtava": {
-                "id": 1
+                "id": 608
               }
             },
             {
               "tehtava": {
-                "id": 2
+                "id": 618
               }
             }
           ],
@@ -96,12 +96,12 @@
           "tehtavat": [
             {
               "tehtava": {
-                "id": 1
+                "id": 608
               }
             },
             {
               "tehtava": {
-                "id": 2
+                "id": 618
               }
             }
           ],
@@ -126,12 +126,12 @@
           "tehtavat": [
             {
               "tehtava": {
-                "id": 1
+                "id": 608
               }
             },
             {
               "tehtava": {
-                "id": 2
+                "id": 618
               }
             }
           ],

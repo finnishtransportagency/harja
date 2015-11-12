@@ -12,7 +12,7 @@
 (def +virheellinen-liite-koodi+ "virheellinen-liite")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
 
-; Virhetyypit
+;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
 (def +tuntematon-silta+ "tuntematon-silta")
 (def +tuntematon-materiaali+ "tuntematon-materiaali")
