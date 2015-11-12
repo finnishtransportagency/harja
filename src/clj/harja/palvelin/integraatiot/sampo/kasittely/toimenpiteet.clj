@@ -3,6 +3,7 @@
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
+            [harja.kyselyt.toimenpideinstanssit :as toimenpideinstanssit]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit])
@@ -23,12 +24,21 @@
                  "Muut")]
     (str emon-nimi ": " tyyppi)))
 
-(defn perusta-maksuerat [db toimenpide-id toimenpidekoodi]
+(defn perusta-maksuerat-toimenpiteelle [db toimenpide-id toimenpidekoodi]
   (log/debug "Perustetaan maksuerät toimenpideinstanssille id:" toimenpide-id)
   (doseq [maksueratyyppi maksueratyypit]
     (let [maksueran-nimi (tee-makseuran-nimi db toimenpidekoodi maksueratyyppi)
           maksueranumero (:numero (maksuerat/luo-maksuera<! db toimenpide-id maksueratyyppi maksueran-nimi))]
       (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))
+
+(defn perusta-maksuerat-hoidon-urakoille [db]
+  (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
+  (let [maksuerattomat-tpit (toimenpideinstanssit/hae-hoidon-maksuerattomat-toimenpideistanssit db)]
+    (doseq [tpi maksuerattomat-tpit]
+      (doseq [maksueratyyppi maksueratyypit]
+        (let [maksueran-nimi (tee-makseuran-nimi db (:toimenpidekoodi tpi) maksueratyyppi)
+              maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
+          (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 
 (defn paivita-toimenpide [db nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi toimenpide-id]
   (log/debug "Päivitetään toimenpide, jonka id on: " toimenpide-id ".")
@@ -38,7 +48,7 @@
   (log/debug "Luodaan uusi toimenpide.")
   (let [uusi-id (:id (toimenpiteet/luo-toimenpideinstanssi<! db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi))]
     (log/debug "Uusi toimenpide id on:" uusi-id)
-    (perusta-maksuerat db uusi-id sampo-toimenpidekoodi)
+    (perusta-maksuerat-toimenpiteelle db uusi-id sampo-toimenpidekoodi)
     uusi-id))
 
 (defn tallenna-toimenpide [db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi]
