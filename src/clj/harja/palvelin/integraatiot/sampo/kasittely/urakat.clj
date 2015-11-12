@@ -3,11 +3,12 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.sopimukset :as sopimukset]
-            [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.kyselyt.hankkeet :as hankkeet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
+            [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi]
@@ -56,6 +57,7 @@
       (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
       (paivita-sopimukset db sampo-id)
       (paivita-toimenpiteet db sampo-id)
+      (maksuerat/perusta-maksuerat-hoidon-urakoille db)
 
       (log/debug "Urakka käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project"))

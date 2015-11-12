@@ -26,12 +26,12 @@
 
   (tuo-urakka)
   (tuo-hanke)
-  (is (= "paallystys" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein kun urakka on tuotu ensin.")
+  (is (= "hoito" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein kun urakka on tuotu ensin.")
   (poista-urakka)
   (poista-hanke)
 
   (tuo-hanke)
   (tuo-urakka)
-  (is (= "paallystys" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein kun hanke on tuotu ensin.")
+  (is (= "hoito" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein kun hanke on tuotu ensin.")
   (poista-urakka)
   (poista-hanke))

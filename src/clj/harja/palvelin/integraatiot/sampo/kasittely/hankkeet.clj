@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.hankkeet :as hankkeet]
             [harja.kyselyt.urakat :as urakat]
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
@@ -29,7 +30,8 @@
         (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
 
       (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
-      (urakat/paivita-tyyppi-hankkeen-urakoille! db urakkatyyppi sampo-id))
+      (urakat/paivita-tyyppi-hankkeen-urakoille! db urakkatyyppi sampo-id)
+      (maksuerat/perusta-maksuerat-hoidon-urakoille db))
 
     (log/debug "Hanke käsitelty onnistuneesti")
     (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Program")
