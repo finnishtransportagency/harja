@@ -43,7 +43,6 @@
   (log/debug "Luodaan uusi toimenpide.")
   (let [uusi-id (:id (toimenpiteet/luo-toimenpideinstanssi<! db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi))]
     (log/debug "Uusi toimenpide id on:" uusi-id)
-    (perusta-maksuerat-toimenpiteelle db uusi-id sampo-toimenpidekoodi)
     uusi-id))
 
 (defn tallenna-toimenpide [db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi]
