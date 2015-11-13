@@ -286,11 +286,17 @@
           [:table
            [:tbody
             (for [selite selitteet]
-             ^{:key (str (:img selite) "_" (:nimi selite))}
-             [:tr
-              [:td.kartan-ikonien-selitykset-ikoni-sarake
-               [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (:img selite))}]]
-              [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:teksti selite)]]])]]
+              ^{:key (str (:img selite) "_" (:nimi selite))}
+              [:tr
+               (if (vector? (:img selite))
+                 [:td.kartan-ikonien-selitykset-ikoni-sarake
+                  [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
+                   {:src (str openlayers/+karttaikonipolku+ (first (:img selite)))}]
+                  [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second (:img selite)))}]]
+
+                 [:td.kartan-ikonien-selitykset-ikoni-sarake
+                  [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (:img selite))}]])
+               [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:teksti selite)]]])]]
           [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
                                                                         (reset! ikonien-selitykset-auki false)
                                                                         (.stopPropagation event)
