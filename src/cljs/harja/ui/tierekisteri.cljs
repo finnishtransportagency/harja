@@ -18,11 +18,7 @@
 
 (defn laske-tien-pituus [{alkuet :aet loppuet :let}]
   (if (and alkuet loppuet)
-    (let [tulos (- loppuet alkuet)]
-      (if (>= tulos 0)
-        tulos
-        0)) ; Tien pituus ei voi olla negatiivinen
-    0))
+    (.abs js/Math (- loppuet alkuet))))
 
 (defn tieosoite
   "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
