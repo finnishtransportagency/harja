@@ -33,8 +33,6 @@
 (def materiaalit-ilman-maksimimaaria #{"Talvisuolaliuos CaCl2"
                                        "Talvisuolaliuos NaCl"
                                        "Kaliumformiaatti"})
-  
-
 
 (defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]}
                                 ur valittu-hk valittu-sop

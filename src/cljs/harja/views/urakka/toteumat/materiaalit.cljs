@@ -52,7 +52,8 @@
                                  tm)
         toteuma {:id (:id m) :urakka (:id @nav/valittu-urakka)
                  :alkanut (:alkanut m) :paattynyt (:paattynyt m)
-                 :sopimus (first @u/valittu-sopimusnumero) :tyyppi nil
+                 :sopimus (first @u/valittu-sopimusnumero)
+                 :tyyppi "materiaali"
                  :suorittajan-nimi (:suorittaja m)
                  :suorittajan-ytunnus (:ytunnus m)
                  :lisatieto (:lisatieto m)}

@@ -24,6 +24,6 @@
                                                        :paikkauskohde-id paikkauskohde-id}))
 
 (defn tallenna-paikkausilmoitus [urakka-id sopimus-id lomakedata]
-  (k/post! :tallenna-paikkausilmoitus {:urakka-id urakka-id
-                                         :sopimus-id sopimus-id
-                                         :paikkausilmoitus lomakedata}))
+  (k/post! :tallenna-paikkausilmoitus {:urakka-id        urakka-id
+                                       :sopimus-id       sopimus-id
+                                       :paikkausilmoitus lomakedata}))

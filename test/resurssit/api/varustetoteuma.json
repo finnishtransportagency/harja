@@ -20,7 +20,7 @@
       "alkanut": "2016-01-30T12:00:00Z",
       "paattynyt": "2016-01-30T12:00:00Z",
       "toteumatyyppi": "yksikkohintainen",
-      "sopimusId": 1,
+      "sopimusId": 5,
       "suorittaja": {
         "nimi": "Tehotekijät Oy",
         "ytunnus": "8765432-1"
@@ -28,7 +28,7 @@
       "tehtavat": [
         {
           "tehtava": {
-            "id": 1
+            "id": 1370
           }
         }
       ]

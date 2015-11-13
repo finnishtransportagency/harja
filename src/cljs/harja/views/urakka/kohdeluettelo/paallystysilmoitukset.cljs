@@ -310,7 +310,7 @@
                (when (or (= :valmis (:tila lomakedata-nyt))
                          (= :lukittu (:tila lomakedata-nyt)))
                  {:otsikko     "Kommentit" :nimi :kommentit
-                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                  :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila lomakedata-nyt))
                                                      :voi-liittaa      false
                                                      :leveys-col       40
                                                      :placeholder      "Kirjoita kommentti..."

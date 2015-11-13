@@ -5,6 +5,8 @@
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]
             [harja.fmt :as fmt]))
 
 (defn hae-laskutusyhteenvedon-tiedot
@@ -51,15 +53,15 @@
 
 (defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [
+  (let [joda-aikavali (t/plus (tc/from-date aikavali-alkupvm) (t/hours 2))
         laskutettu-teksti  (str "Laskutettu hoitokaudella ennen "
                                 (kuukausi aikavali-alkupvm)
                                 "ta "
-                                (pvm/vuosi aikavali-alkupvm))
+                                (pvm/vuosi joda-aikavali))
         laskutetaan-teksti  (str "Laskutetaan "
                                  (kuukausi aikavali-alkupvm)
                                  "ssa "
-                                 (pvm/vuosi aikavali-alkupvm))
+                                 (pvm/vuosi joda-aikavali))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
         talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)]
     
@@ -77,8 +79,10 @@
                :sakot_laskutettu :sakot_laskutetaan tiedot]
               ["Talvisuolasakko (autom. laskettu)" "Ei talvisuolasakkoa"
                :suolasakot_laskutettu :suolasakot_laskutetaan talvihoidon-tiedot]
-              ["Muutos- ja lisätyöt" "Ei muutos- ja lisätöitä"
+              ["Muutos- ja lisätyöt sekä vahinkojen korjaukset" "Ei muutos- ja lisätöitä"
                :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+              ["Äkilliset hoitotyöt" "Ei äkillisiä hoitotöitä"
+               :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
               ["Erilliskustannukset" "Ei erilliskustannuksia"
                :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
               ["Kokonaishintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
@@ -89,8 +93,10 @@
                :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
               ["Talvisuolasakon indeksitarkistus (autom. laskettu)" "Ei indeksitarkistuksia"
                :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus talvihoidon-tiedot]
-              ["Muutos- ja lisätöiden indeksitarkistukset" "Ei indeksitarkistuksia"
+              ["Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset" "Ei indeksitarkistuksia"
                :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
+              ["Äkillisten hoitotöiden indeksitarkistukset" "Ei indeksitarkistuksia"
+               :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot]
               ["Erilliskustannusten indeksitarkistukset" "Ei indeksitarkistuksia"
                :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
               ["Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"

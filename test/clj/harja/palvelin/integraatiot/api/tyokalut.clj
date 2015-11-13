@@ -36,3 +36,8 @@
                 {:body    body
                  :headers {"OAM_REMOTE_USER" kayttaja
                            "Content-Type"    "application/json"}}))
+
+(defn hae-vapaa-toteuma-ulkoinen-id []
+  (let [id (rand-int 10000)
+        vastaus (q (str "SELECT * FROM toteuma WHERE ulkoinen_id = '" id "';"))]
+    (if (empty? vastaus) id (recur))))
