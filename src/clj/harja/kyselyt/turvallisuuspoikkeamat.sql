@@ -26,6 +26,7 @@ SELECT
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
     ON t.id = k.turvallisuuspoikkeama
+       AND k.poistettu IS NOT TRUE
 WHERE t.urakka = :urakka
       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
 
@@ -80,6 +81,7 @@ SELECT
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
     ON t.id = k.turvallisuuspoikkeama
+       AND k.poistettu IS NOT TRUE
 
   LEFT JOIN turvallisuuspoikkeama_liite tl
     ON t.id = tl.turvallisuuspoikkeama
@@ -116,14 +118,15 @@ UPDATE korjaavatoimenpide
 SET
   kuvaus          = :kuvaus,
   suoritettu      = :suoritettu,
-  vastaavahenkilo = :vastaava
+  vastaavahenkilo = :vastaava,
+  poistettu       = :poistettu
 WHERE id = :id AND turvallisuuspoikkeama = :tp;
 
 --name: luo-korjaava-toimenpide<!
 INSERT INTO korjaavatoimenpide
-(turvallisuuspoikkeama, kuvaus, suoritettu, vastaavahenkilo)
+(turvallisuuspoikkeama, kuvaus, suoritettu, vastaavahenkilo, poistettu)
 VALUES
-  (:tp, :kuvaus, :suoritettu, :vastaava);
+  (:tp, :kuvaus, :suoritettu, :vastaava, FALSE);
 
 --name: paivita-turvallisuuspoikkeama<!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
