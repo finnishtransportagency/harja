@@ -1,15 +1,15 @@
-(ns harja.palvelin.integraatiot.tloik.toimenpiteet
+(ns harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
             [harja.palvelin.integraatiot.tloik.kasittely.toimenpide :as toimenpide]))
 
-(defn laheta-toimenpide [integraatioloki sonja db viestijono toimenpide-id]
+(defn laheta-ilmoitustoimenpide [jms-lahettaja db toimenpide-id]
   (try
-    (if-let [toimenpide-xml (toimenpide/muodosta-toimenpide db toimenpide-id)]
+    (if-let [xml (toimenpide/muodosta-toimenpide db toimenpide-id)]
       (do
-        (jms/laheta-jonoon integraatioloki sonja viestijono "tloik" "toimenpiteen-lahetys" toimenpide-xml)
+        (jms-lahettaja xml)
         ;; todo: merkitse toimenpide odottamaan vastausta
         )
       ;; todo: merkitse toimenpiteelle lähetysvirhe
@@ -18,6 +18,8 @@
       ;; todo: merkitse toimenpiteelle lähetysvirhe
       )
     ))
+
+
 
 (defn vastaanota-kuittaus [integraatioloki db viesti]
   (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)

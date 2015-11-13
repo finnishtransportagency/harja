@@ -124,3 +124,18 @@
   (kirjaa-lahteva-jms-kuittaus [this kuittaus tapahtuma-id onnistunut lisatietoja] (lokita-lahteva-jms-kuittaus this kuittaus tapahtuma-id onnistunut lisatietoja))
   (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut] (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut))
   (kirjaa-alkanut-tiedoston-haku [this jarjestelma integraatio lahde] (lokita-alkanut-tiedoston-haku this jarjestelma integraatio lahde)))
+
+(defn lokittaja [integraatioloki jarjestelma integraation-nimi]
+  (fn [operaatio & argumentit]
+    (case operaatio
+      :alkanut
+      (let [[ulkoinen-id viesti] argumentit]
+        (kirjaa-alkanut-integraatio integraatioloki jarjestelma integraation-nimi ulkoinen-id viesti))
+
+      :onnistunut
+      (let [[viesti lisatietoja tapahtumaid ulkoinen-id] argumentit]
+        (kirjaa-onnistunut-integraatio integraatioloki viesti lisatietoja tapahtumaid ulkoinen-id))
+
+      :epaonnistunut
+      (let [[viesti lisatietoja tapahtumaid ulkoinen-id] argumentit]
+        (kirjaa-epaonnistunut-integraatio integraatioloki viesti lisatietoja tapahtumaid ulkoinen-id)))))

@@ -7,11 +7,9 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn laheta-jonoon [integraatioloki sonja jono jarjestelma integraatio viesti]
-  (println "-----------> YRITETÄÄN LÄHETTÄÄ!")
   (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki jarjestelma integraatio nil nil)
         virheviesti (format "Lähetys Sonjan JMS jonoon järjestelmän: %s integraatiolle: %s epäonnistu." jarjestelma integraatio)]
     (try
-      (println "-----------> SONJA:" sonja)
       (if-let [viesti-id (sonja/laheta sonja jono viesti)]
         (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" viesti)
         (do
@@ -34,3 +32,9 @@
           nil)
         (virheet/heita-sisainen-kasittelyvirhe-poikkeus
           {:koodi :sonja-lahetys-epaonnistui :viesti (format "Poikkeus: %s" e)})))))
+
+(defn jono-lahettaja [integraatioloki sonja jono jarjestelma integraatio]
+  (fn [viesti]
+    (laheta-jonoon integraatioloki sonja jono jarjestelma integraatio viesti)))
+
+
