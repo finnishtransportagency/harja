@@ -6,7 +6,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitus-sanoma]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
-            [harja.palvelin.integraatiot.tloik.sanomat.kuittaus-sanoma :as kuittaus]
+            [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
             [harja.palvelin.komponentit.sonja :as sonja]))
 
 (defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id onnistunut lisatietoja]

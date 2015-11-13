@@ -47,8 +47,8 @@
    :ytunnus (z/xml1-> vastaanottaja :ytunnus z/text)})
 
 (defn lue-viesti [viesti]
-  (when (not (xml/validoi +xsd-polku+ "ilmoitus.xsd" viesti))
-    (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman ilmoitus.xsd mukaan validi.")))
+  (when (not (xml/validoi +xsd-polku+ "harja-tloik.xsd" viesti))
+    (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman harja-tloik.xsd mukaan validi.")))
 
   (let [data (xml/lue viesti)
         ilmoitus {:ilmoitettu         (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))

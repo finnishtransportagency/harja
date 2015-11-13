@@ -29,6 +29,7 @@
                 <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
                 <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1" />
                 <xs:element name="viestiId" type="xs:string" minOccurs="1" />
+                <xs:element name="virhe" type="xs:string" minOccurs="0" />
                 <xs:element name="valitystiedot" minOccurs="0" maxOccurs="1">
                     <xs:complexType>
                         <xs:sequence>

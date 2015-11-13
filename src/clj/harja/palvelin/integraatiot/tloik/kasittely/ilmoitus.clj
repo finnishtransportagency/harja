@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [clj-time.core :as time]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [harja.palvelin.integraatiot.tloik.sanomat.kuittaus-sanoma :as kuittaus]
+            [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
             [harja.kyselyt.urakat :as urakat]))
 
 (defn paattele-urakka [db urakkatyyppi sijainti]
