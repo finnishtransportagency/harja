@@ -369,7 +369,7 @@
 ;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
-
+(def +aika-regex+ #"\d{1,2}(:\d*)?")
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
@@ -521,13 +521,13 @@
 
                muuta-pvm! (fn [t]
                             (when (or
-                                    (str/blank? t)
-                                    (re-matches +pvm-regex+ t))
+                                   (str/blank? t)
+                                   (re-matches +pvm-regex+ t))
                               (reset! pvm-teksti t)))
 
                muuta-aika! (fn [t]
                              (when (or (str/blank? t)
-                                       (re-matches #"\d{1,2}(:\d*)?" t))
+                                       (re-matches +aika-regex+ t))
                                (reset! aika-teksti t)))
 
                koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
@@ -572,7 +572,10 @@
 
                                        :pvm     naytettava-pvm}]]))]
                [:td
-                [:input {:class       (when lomake? "form-control")
+                [:input {:class       (str (when lomake? "form-control")
+                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
+                                                      (pvm/->pvm nykyinen-pvm-teksti))
+                                               " puuttuva-arvo"))
                          :placeholder "tt:mm"
                          :size        5 :max-length 5
                          :value       nykyinen-aika-teksti
