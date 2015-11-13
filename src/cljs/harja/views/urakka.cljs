@@ -25,8 +25,8 @@
 (defn valilehti-mahdollinen? [valilehti urakkatyyppi sopimustyyppi]
   (case valilehti
     :yleiset true
-    :suunnittelu (= sopimustyyppi :kokonaisurakka)
-    :toteumat (= sopimustyyppi :kokonaisurakka)
+    :suunnittelu (not= sopimustyyppi :kokonaisurakka)
+    :toteumat (not= sopimustyyppi :kokonaisurakka)
     :kohdeluettelo-paallystys (= urakkatyyppi :paallystys)
     :kohdeluettelo-paikkaus (= urakkatyyppi :paikkaus)
     :laadunseuranta true
