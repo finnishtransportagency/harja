@@ -272,7 +272,8 @@
 
 (defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(clojure.string/capitalize (name %)))]
+                             #(clojure.string/capitalize (name %)))
+        valitut (set (or @data #{}))]
     [:span
      ;; Esimerkiksi historiakuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
      ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
@@ -288,9 +289,10 @@
         ^{:key (str "boolean-group-" (name v))}
         [:div.checkbox
          [:label
-          [:input {:type      "checkbox" :checked (if (some (set @data) [v]) true false)
+          [:input {:type      "checkbox" :checked (if (valitut v) true false)
                    :on-change #(let [valittu? (-> % .-target .-checked)]
-                                 (swap! data (if valittu? conj disj) v))}
+                                 (reset! data
+                                         ((if valittu? conj disj) valitut v)))}
            (vaihtoehto-nayta v)]]]))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
