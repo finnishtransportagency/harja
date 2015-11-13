@@ -23,7 +23,7 @@
        [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
        [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
-       [:link {:rel "icon" :type "image/png" :href "/images/harja_favicon.png"}]
+       [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
        [:script {:type "text/javascript" :src "js/less-2.5.0.js"}]
        [:script {:type "text/javascript" :src "js/proj4.js"}]
        [:script {:type "text/javascript"}
@@ -42,7 +42,7 @@
        [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
        [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
-       [:link {:rel "icon" :type "image/png" :href "/images/harja_favicon.png"}]
+       [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
        [:script {:type "text/javascript" :src "js/harja.js"}]
        [:script {:type "text/javascript" :src "js/proj4.js"}]
        [:script {:type "text/javascript"}
