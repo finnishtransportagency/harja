@@ -17,10 +17,10 @@
         tie6 {:aet 1}]
     (is (= (tierekisteri/laske-tien-pituus tie1) 2))
     (is (= (tierekisteri/laske-tien-pituus tie2) 0))
-    (is (= (tierekisteri/laske-tien-pituus tie3) 0))
+    (is (= (tierekisteri/laske-tien-pituus tie3) 103))
     (is (= (tierekisteri/laske-tien-pituus tie4) 1))
     (is (= (tierekisteri/laske-tien-pituus tie5) 1))
-    (is (= (tierekisteri/laske-tien-pituus tie6) 0))))
+    (is (= (tierekisteri/laske-tien-pituus tie6) nil))))
 
 (deftest muutos-kokonaishintaan-laskettu-oikein
   (let [tyot [{:tilattu-maara 10 :toteutunut-maara 15 :yksikkohinta 1}
