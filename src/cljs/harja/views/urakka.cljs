@@ -23,26 +23,21 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn valilehti-mahdollinen? [valilehti urakkatyyppi sopimustyyppi]
-    (case valilehti
-      :yleiset true
-      :suunnittelu (case sopimustyyppi
-                     :kokonaisurakka false
-                     true)
-      :toteumat (case sopimustyyppi
-                  :kokonaisurakka false
-                  true)
-      :kohdeluettelo (or (= urakkatyyppi :paallystys)
-                            (= urakkatyyppi :paikkaus))
-      :laadunseuranta true
-      :valitavoitteet (not= urakkatyyppi :hoito)
-      :turvallisuuspoikkeamat (= urakkatyyppi :hoito)
-      :laskutus))
+  (case valilehti
+    :yleiset true
+    :suunnittelu (= sopimustyyppi :kokonaisurakka)
+    :toteumat (= sopimustyyppi :kokonaisurakka)
+    :kohdeluettelo (or (= urakkatyyppi :paallystys) (= urakkatyyppi :paikkaus))
+    :laadunseuranta true
+    :valitavoitteet (not= urakkatyyppi :hoito)
+    :turvallisuuspoikkeamat (= urakkatyyppi :hoito)
+    :laskutus))
 
 (defn urakka
   "Urakkanäkymä"
   []
   (let [ur @nav/valittu-urakka
-        _ (if (false? (valilehti-mahdollinen? @u/urakan-valittu-valilehti (:tyyppi ur) (:sopimustyyppi ur)))
+        _ (when-not (valilehti-mahdollinen? @u/urakan-valittu-valilehti (:tyyppi ur) (:sopimustyyppi ur))
             (reset! u/urakan-valittu-valilehti :yleiset))
         hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
@@ -52,7 +47,7 @@
 
     ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
     @u/valittu-toimenpideinstanssi
-    
+
     (hae-urakan-tyot ur)
     [bs/tabs {:style :tabs :classes "tabs-taso1" :active u/urakan-valittu-valilehti}
      "Yleiset"
