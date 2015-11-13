@@ -29,7 +29,8 @@
 
             [harja.tyokalut.vkm :as vkm]
             [harja.views.kartta :as kartta]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.ui.tierekisteri :as tierekisteri])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -112,9 +113,9 @@
          {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :positiivinen-numero  :leveys "10%" :validoi [[:ei-tyhja "Anna loppuosa"]]}
          {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
          {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
-          :hae (fn [rivi]
-                 (str (paallystysilmoitukset/laske-tien-pituus {:let  (:tr_loppuetaisyys rivi)
-                                                                :losa (:tr_loppuosa rivi)})))
+          :hae     (fn [rivi]
+                     (str (tierekisteri/laske-tien-pituus {:aet  (:tr_alkuetaisyys rivi)
+                                                           :let  (:tr_loppuetaisyys rivi)})))
           :leveys  "10%"}
          {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna kvl"]]}
          {:otsikko       "Nykyinen päällyste"

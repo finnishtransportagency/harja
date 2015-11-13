@@ -16,8 +16,9 @@
     [reagent.ratom :refer [reaction run!]]
     [cljs.core.async.macros :refer [go]]))
 
-(def vkm-alku (atom nil))
-(def vkm-loppu (atom nil))
+(defn laske-tien-pituus [{alkuet :aet loppuet :let}]
+  (if (and alkuet loppuet)
+    (Math/abs (- loppuet alkuet))))
 
 (defn tieosoite
   "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
