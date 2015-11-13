@@ -26,14 +26,13 @@
 ;; r/wrap skeeman arvolle
 (defn atomina [{:keys [nimi hae aseta]} data vaihda!]
   (let [hae (or hae #(get % nimi))]
-    (r/wrap
-      (hae data)
-      (fn [uusi]
-        ; Resetoi data, jos uusi data annettu
-        (when (not= uusi (nimi data))
-          (if aseta
-            (vaihda! (aseta data uusi))
-            (vaihda! (assoc data nimi uusi))))))))
+    (r/wrap (hae data)
+            (fn [uusi]
+              ;; Resetoi data, jos uusi data annettu
+              (when (not= uusi (nimi data))
+                (if aseta
+                  (vaihda! (aseta data uusi))
+                  (vaihda! (assoc data nimi uusi))))))))
 
 (defn vain-luku-atomina [arvo]
   (r/wrap arvo
@@ -506,91 +505,94 @@
                          (when x
                            ;; PENDIN: kovakoodattua asemointia!
                            (reset! sijainti [15 (+ y h (if (= lomake? :rivi) 39))
-                                             w h])))))
+                                             w h])))))}
 
-       :reagent-render
-       (fn [_ data]
-         (let [aseta! (fn []
-                        (let [pvm @pvm-teksti
-                              aika @aika-teksti
-                              p (pvm/->pvm-aika (str pvm " " aika))]
-                          (when-not (some false? @pvm-aika-koskettu)
-                            (if p
-                              (reset! data p)
-                              (reset! data nil)))))
+      (fn [_ data]
+        (let [aseta! (fn []
+                       (let [pvm @pvm-teksti
+                             aika @aika-teksti
+                             p (pvm/->pvm-aika (str pvm " " aika))]
+                         (when-not (some false? @pvm-aika-koskettu)
+                           (if p
+                             (reset! data p)
+                             (reset! data nil)))))
 
-               muuta-pvm! (fn [t]
-                            (when (or
-                                   (str/blank? t)
-                                   (re-matches +pvm-regex+ t))
-                              (reset! pvm-teksti t)))
+              muuta-pvm! (fn [t]
+                           (when (or
+                                  (str/blank? t)
+                                  (re-matches +pvm-regex+ t))
+                             (reset! pvm-teksti t)))
 
-               muuta-aika! (fn [t]
-                             (when (or (str/blank? t)
-                                       (re-matches +aika-regex+ t))
-                               (reset! aika-teksti t)))
+              muuta-aika! (fn [t]
+                            (when (or (str/blank? t)
+                                      (re-matches +aika-regex+ t))
+                              (reset! aika-teksti t)))
 
-               koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
-               koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
+              koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
+              koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
 
-               nykyinen-pvm @data
-               nykyinen-pvm-teksti @pvm-teksti
-               nykyinen-aika-teksti @aika-teksti
-               pvm-tyhjana (or pvm-tyhjana (constantly nil))
-               naytettava-pvm (or
-                                (pvm/->pvm nykyinen-pvm-teksti)
-                                nykyinen-pvm
-                                (pvm-tyhjana rivi))]
-           [:span.pvm-kentta
-            [:table
-             [:tbody
-              [:tr
-               [:td
-                [:input.pvm {:class       (when lomake? "form-control")
-                             :placeholder "pp.kk.vvvv"
-                             :on-click    #(do (.stopPropagation %)
-                                               (.preventDefault %)
-                                               (reset! auki true)
-                                               nil)
-                             :value       nykyinen-pvm-teksti
-                             :on-focus    #(do (on-focus) (reset! auki true))
-                             :on-change   #(muuta-pvm! (-> % .-target .-value))
-                             ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
-                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+              nykyinen-pvm @data
+              nykyinen-pvm-teksti @pvm-teksti
+              nykyinen-aika-teksti @aika-teksti
+              pvm-tyhjana (or pvm-tyhjana (constantly nil))
+              naytettava-pvm (or
+                              (pvm/->pvm nykyinen-pvm-teksti)
+                              nykyinen-pvm
+                              (pvm-tyhjana rivi))]
+          [:span.pvm-kentta
+           [:table
+            [:tbody
+             [:tr
+              [:td
+               [:input.pvm {:class       (when lomake? "form-control")
+                            :placeholder "pp.kk.vvvv"
+                            :on-click    #(do (.stopPropagation %)
+                                              (.preventDefault %)
+                                              (reset! auki true)
+                                              nil)
+                            :value       nykyinen-pvm-teksti
+                            :on-focus    #(do (on-focus) (reset! auki true))
+                            :on-change   #(muuta-pvm! (-> % .-target .-value))
+                            ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
+                            :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                             (reset! auki false)
                                             %)
-                             :on-blur     #(do (koske-pvm!) (aseta!))}]
-                (when (and (#{:oikea :ylos} pvm-sijainti) @auki)
-                  (let [[x y w h] @sijainti]
-                    [:div.aikavalinta {:style (merge {:position "absolute" :z-index 100}
-                                                     (case pvm-sijainti
-                                                       :oikea {:top 0 :left w}
-                                                       :ylos {:bottom h :left x}))}
-                     [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                                     (muuta-pvm! (pvm/pvm %)))
-                                       :leveys  (when (= :ylos pvm-sijainti) w)
+                            :on-blur     #(do (koske-pvm!) (aseta!))}]
+               (when (and (#{:oikea :ylos} pvm-sijainti) @auki)
+                 (let [[x y w h] @sijainti]
+                   [:div.aikavalinta {:style (merge {:position "absolute" :z-index 100}
+                                                    (case pvm-sijainti
+                                                      :oikea {:top 0 :left w}
+                                                      :ylos {:bottom h :left x}))}
+                    [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                                    (muuta-pvm! (pvm/pvm %))
+                                                    (koske-pvm!)
+                                                    (aseta!))
+                                      :leveys  (when (= :ylos pvm-sijainti) w)
 
-                                       :pvm     naytettava-pvm}]]))]
-               [:td
-                [:input {:class       (str (when lomake? "form-control")
-                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
-                                                      (pvm/->pvm nykyinen-pvm-teksti))
-                                               " puuttuva-arvo"))
-                         :placeholder "tt:mm"
-                         :size        5 :max-length 5
-                         :value       nykyinen-aika-teksti
-                         :on-change   #(muuta-aika! (-> % .-target .-value))
-                         :on-blur     #(do (koske-aika!) (aseta!))}]
+                                      :pvm     naytettava-pvm}]]))]
+              [:td
+               [:input {:class       (str (when lomake? "form-control")
+                                          (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
+                                                     (pvm/->pvm nykyinen-pvm-teksti))
+                                            " puuttuva-arvo"))
+                        :placeholder "tt:mm"
+                        :size        5 :max-length 5
+                        :value       nykyinen-aika-teksti
+                        :on-change   #(muuta-aika! (-> % .-target .-value))
+                        :on-blur     #(do (koske-aika!) (aseta!))}]
 
-                ]]]]
+               ]]]]
 
-            (when (and (= :alas pvm-sijainti) @auki)
-              [:div.aikavalinta
-               [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
-                                                (muuta-pvm! (pvm/pvm %)))
-                                 :pvm      naytettava-pvm
-                                 :sijainti @sijainti
-                                 :leveys   leveys}]])]))})))
+           (when (and (= :alas pvm-sijainti) @auki)
+             [:div.aikavalinta
+              [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
+                                               (muuta-pvm! (pvm/pvm %))
+                                               (koske-pvm!)
+                                               (aseta!))
+                                :pvm      naytettava-pvm
+                                :sijainti @sijainti
+                                :leveys   leveys}]])])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   [:span (if-let [p @data]
