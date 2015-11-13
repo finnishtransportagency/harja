@@ -27,7 +27,8 @@
     :yleiset true
     :suunnittelu (= sopimustyyppi :kokonaisurakka)
     :toteumat (= sopimustyyppi :kokonaisurakka)
-    :kohdeluettelo (or (= urakkatyyppi :paallystys) (= urakkatyyppi :paikkaus))
+    :kohdeluettelo-paallystys (= urakkatyyppi :paallystys)
+    :kohdeluettelo-paikkaus (= urakkatyyppi :paikkaus)
     :laadunseuranta true
     :valitavoitteet (not= urakkatyyppi :hoito)
     :turvallisuuspoikkeamat (= urakkatyyppi :hoito)
@@ -68,14 +69,14 @@
        [toteumat/toteumat])
 
      "Kohdeluettelo"
-     :kohdeluettelo
-     (when (valilehti-mahdollinen? :kohdeluettelo (:tyyppi ur) (:sopimustyyppi ur))
+     :kohdeluettelo-paallystys
+     (when (valilehti-mahdollinen? :kohdeluettelo-paallystys (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "kohdeluettelo"}
        [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
      "Kohdeluettelo"
-     :kohdeluettelo
-     (when (valilehti-mahdollinen? :kohdeluettelo (:tyyppi ur) (:sopimustyyppi ur))
+     :kohdeluettelo-paikkaus
+     (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "kohdeluettelo"}
        [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
