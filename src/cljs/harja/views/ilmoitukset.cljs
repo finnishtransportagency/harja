@@ -28,7 +28,7 @@
   [ilmoitus]
   (when (and (:urakka ilmoitus) (:hallintayksikko ilmoitus))
     [napit/urakan-sivulle "Urakan sivulle" (fn [e]
-                                             (.stopPropagation e)
+                                             (if e (.stopPropagation e))
                                              (reset! nav/valittu-hallintayksikko-id (:hallintayksikko ilmoitus))
                                              (reset! nav/valittu-urakka-id (:urakka ilmoitus))
                                              (reset! nav/sivu :urakat))]))
