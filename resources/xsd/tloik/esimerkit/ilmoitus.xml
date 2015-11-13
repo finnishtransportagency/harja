@@ -1,4 +1,4 @@
-<ilmoitus>
+<harja:ilmoitus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
     <viestiId>14324234</viestiId>
     <ilmoitusId>3213123</ilmoitusId>
     <versionumero>1</versionumero>
@@ -29,4 +29,4 @@
         <selite>auraustarve</selite>
         <selite>aurausvallitNakemaesteena</selite>
     </seliteet>
-</ilmoitus>
+</harja:ilmoitus>

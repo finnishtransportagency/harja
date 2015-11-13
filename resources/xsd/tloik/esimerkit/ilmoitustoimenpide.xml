@@ -1,4 +1,4 @@
-<toimenpide>
+<harja:toimenpide xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
   <viestiId>123412343</viestiId>
   <ilmoitusId>3213123</ilmoitusId>
   <tyyppi>vastaus</tyyppi>
@@ -28,4 +28,4 @@
       <ytunnus>1234567-8</ytunnus>
     </organisaatio>
   </ilmoittaja>
-</toimenpide>
+</harja:toimenpide>
