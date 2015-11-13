@@ -37,9 +37,10 @@
 (defonce turvallisuuspoikkeamat-kartalla
          (reaction (when @karttataso-turvallisuuspoikkeamat
                      (kartalla-esitettavaan-muotoon
-                       (map
-                         #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
-                         @haetut-turvallisuuspoikkeamat)
+                      (into []
+                            (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
+                                  (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))
+                            @haetut-turvallisuuspoikkeamat)
                        @valittu-turvallisuuspoikkeama))))
 
 (defn kasaa-tallennuksen-parametrit
