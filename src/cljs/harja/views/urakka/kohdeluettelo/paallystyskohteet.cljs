@@ -69,6 +69,7 @@
          :rivi-klikattu (fn [rivi]
                           (log "KLIKKASIT: " (pr-str rivi))
                           (when-let [viiva (some-> rivi :sijainti)]
+                            (nav/vaihda-kartan-koko! :L)
                             (kartta/keskita-kartta-alueeseen! (geo/extent viiva))))
          :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
                               [sopimus-id _] @u/valittu-sopimusnumero
