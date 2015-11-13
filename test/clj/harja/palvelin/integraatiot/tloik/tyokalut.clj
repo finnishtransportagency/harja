@@ -13,7 +13,7 @@
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
-(def +testi-ilmoitus-sanoma+ "<ilmoitus>
+(def +testi-ilmoitus-sanoma+ "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
   <versionumero>1</versionumero>
@@ -44,7 +44,7 @@
   <selite>auraustarve</selite>
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
-  </ilmoitus>
+  </harja:ilmoitus>
 ")
 
 (defn tuo-ilmoitus []

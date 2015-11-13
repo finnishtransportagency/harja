@@ -14,9 +14,9 @@
    [:viestiId
     "123412343"]
    [:ilmoitusId
-    "3213123"
-    [:tyyppi
-     "vastaus"]]
+    "3213123"]
+   [:tyyppi
+    "vastaus"]
    [:aika
     "2015-09-29T04:49:45"]
    [:vapaateksti
@@ -53,7 +53,7 @@
       "1234567-8"]]]])
 
 (defn muodosta []
-  (let [sisalto (muodosta-viesti )
+  (let [sisalto (muodosta-viesti)
         xml (tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
       xml

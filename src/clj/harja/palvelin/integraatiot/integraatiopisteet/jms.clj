@@ -15,7 +15,7 @@
       (if-let [viesti-id (sonja/laheta sonja jono viesti)]
         (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" viesti)
         (do
-          (log/error virheviesti jarjestelma integraatio)
+          (log/error virheviesti)
           (integraatioloki/kirjaa-epaonnistunut-integraatio
             integraatioloki
             virheviesti
