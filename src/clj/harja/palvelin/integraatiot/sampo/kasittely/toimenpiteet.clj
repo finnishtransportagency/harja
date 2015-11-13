@@ -1,34 +1,10 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
-            [harja.kyselyt.maksuerat :as maksuerat]
-            [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
-            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit])
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat])
   (:use [slingshot.slingshot :only [throw+]]))
-
-(def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
-
-(defn tee-makseuran-nimi [db toimenpidekoodi maksueratyyppi]
-  (let [emon-nimi (:nimi (first (toimenpidekoodit/hae-emon-nimi db toimenpidekoodi)))
-        tyyppi (case maksueratyyppi
-                 "kokonaishintainen" "Kokonaishintaiset"
-                 "yksikkohintainen" "Yksikköhintaiset"
-                 "lisatyo" "Lisätyöt"
-                 "indeksi" "Indeksit"
-                 "bonus" "Bonukset"
-                 "sakko" "Sakot"
-                 "akillinen-hoitotyo" "Äkilliset hoitotyöt"
-                 "Muut")]
-    (str emon-nimi ": " tyyppi)))
-
-(defn perusta-maksuerat [db toimenpide-id toimenpidekoodi]
-  (log/debug "Perustetaan maksuerät toimenpideinstanssille id:" toimenpide-id)
-  (doseq [maksueratyyppi maksueratyypit]
-    (let [maksueran-nimi (tee-makseuran-nimi db toimenpidekoodi maksueratyyppi)
-          maksueranumero (:numero (maksuerat/luo-maksuera<! db toimenpide-id maksueratyyppi maksueran-nimi))]
-      (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))
 
 (defn paivita-toimenpide [db nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi toimenpide-id]
   (log/debug "Päivitetään toimenpide, jonka id on: " toimenpide-id ".")
@@ -38,7 +14,6 @@
   (log/debug "Luodaan uusi toimenpide.")
   (let [uusi-id (:id (toimenpiteet/luo-toimenpideinstanssi<! db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi))]
     (log/debug "Uusi toimenpide id on:" uusi-id)
-    (perusta-maksuerat db uusi-id sampo-toimenpidekoodi)
     uusi-id))
 
 (defn tallenna-toimenpide [db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi]
@@ -67,12 +42,13 @@
 
   (tarkista-toimenpide db viesti-id urakka-sampo-id sampo-id sampo-toimenpidekoodi)
 
-  (do
-    (log/warn "Samposta tuodulla toimenpideinstanssilla (id: " sampo-id ") ei ole toimenpidekoodia, joten sitä ei voi tallentaa")
-    (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation"))
+  (log/warn "Samposta tuodulla toimenpideinstanssilla (id: " sampo-id ") ei ole toimenpidekoodia, joten sitä ei voi tallentaa")
+  (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation")
+
   (try
     (let [toimenpide-id (tallenna-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi)]
       (log/debug "Käsiteltävän toimenpiteet id on:" toimenpide-id)
+      (maksuerat/perusta-maksuerat-hoidon-urakoille db)
       (log/debug "Toimenpide käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation"))
     (catch Exception e

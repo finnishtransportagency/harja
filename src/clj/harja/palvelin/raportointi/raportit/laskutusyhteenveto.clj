@@ -79,8 +79,10 @@
                :sakot_laskutettu :sakot_laskutetaan tiedot]
               ["Talvisuolasakko (autom. laskettu)" "Ei talvisuolasakkoa"
                :suolasakot_laskutettu :suolasakot_laskutetaan talvihoidon-tiedot]
-              ["Muutos- ja lisätyöt" "Ei muutos- ja lisätöitä"
+              ["Muutos- ja lisätyöt sekä vahinkojen korjaukset" "Ei muutos- ja lisätöitä"
                :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+              ["Äkilliset hoitotyöt" "Ei äkillisiä hoitotöitä"
+               :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
               ["Erilliskustannukset" "Ei erilliskustannuksia"
                :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
               ["Kokonaishintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
@@ -91,8 +93,10 @@
                :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
               ["Talvisuolasakon indeksitarkistus (autom. laskettu)" "Ei indeksitarkistuksia"
                :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus talvihoidon-tiedot]
-              ["Muutos- ja lisätöiden indeksitarkistukset" "Ei indeksitarkistuksia"
+              ["Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset" "Ei indeksitarkistuksia"
                :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
+              ["Äkillisten hoitotöiden indeksitarkistukset" "Ei indeksitarkistuksia"
+               :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot]
               ["Erilliskustannusten indeksitarkistukset" "Ei indeksitarkistuksia"
                :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
               ["Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"

@@ -5,10 +5,16 @@
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma])
+            [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
+            [harja.kyselyt.toimenpideinstanssit :as toimenpideinstanssit]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit]
+            [harja.kyselyt.maksuerat :as maksuerat]
+            [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat])
   (:import (java.util UUID)))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
+
+(def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
 
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
@@ -57,4 +63,27 @@
           (merkitse-maksueralle-lahetysvirhe transaktio maksueranumero))
         (merkitse-maksuera-lahetetyksi transaktio maksueranumero))
       (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
+
+(defn tee-makseuran-nimi [toimenpiteen-nimi maksueratyyppi]
+  (let [tyyppi (case maksueratyyppi
+                 "kokonaishintainen" "Kokonaishintaiset"
+                 "yksikkohintainen" "Yksikköhintaiset"
+                 "lisatyo" "Lisätyöt"
+                 "indeksi" "Indeksit"
+                 "bonus" "Bonukset"
+                 "sakko" "Sakot"
+                 "akillinen-hoitotyo" "Äkilliset hoitotyöt"
+                 "Muut")]
+    (str toimenpiteen-nimi ": " tyyppi)))
+
+(defn perusta-maksuerat-hoidon-urakoille [db]
+  (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
+  (let [maksuerattomat-tpit (toimenpideinstanssit/hae-hoidon-maksuerattomat-toimenpideistanssit db)]
+    (if (empty? maksuerattomat-tpit)
+      (log/debug "Kaikki maksuerät on jo perustettu hoidon urakoiden toimenpiteille"))
+    (doseq [tpi maksuerattomat-tpit]
+      (doseq [maksueratyyppi maksueratyypit]
+        (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi)
+              maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
+          (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 

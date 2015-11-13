@@ -234,7 +234,7 @@
                (when (or (= :valmis (:tila @paallystys/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata)))
                  {:otsikko     "Kommentit" :nimi :kommentit
-                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                  :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata))
                                                      :voi-liittaa      false
                                                      :leveys-col       40
                                                      :placeholder      "Kirjoita kommentti..."

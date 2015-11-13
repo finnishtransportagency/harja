@@ -22,6 +22,7 @@ SELECT exists(
           sampoid != :sampo_toimenpide_id AND
           urakka_sampoid = :urakka_sampoid);
 
+
 -- name: paivita-toimenpideinstanssi!
 -- Paivittaa toimenpideinstanssin.
 UPDATE toimenpideinstanssi
@@ -64,3 +65,14 @@ SELECT *
 FROM toimenpideinstanssi
 WHERE urakka = :urakka AND toimenpide = :tp;
 
+-- name: hae-hoidon-maksuerattomat-toimenpideistanssit
+SELECT
+  tpi.id   AS toimenpide_id,
+  tpk.nimi AS toimenpide_nimi
+FROM toimenpideinstanssi tpi
+  JOIN urakka ON tpi.urakka = urakka.id
+  JOIN toimenpidekoodi tpk ON tpk.id = tpi.toimenpide
+WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
+                     FROM maksuera
+                     WHERE toimenpideinstanssi IS NOT NULL)
+      AND urakka.tyyppi = 'hoito';

@@ -344,4 +344,3 @@ SELECT EXISTS(
     WHERE
       tpi.urakka = :urakkaid AND
       tpk.id = :tehtavaid);
-

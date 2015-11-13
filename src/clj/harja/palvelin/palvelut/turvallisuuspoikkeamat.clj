@@ -58,7 +58,7 @@
                                        kommentit))))))
 
 (defn luo-tai-paivita-korjaavatoimenpide
-  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo]}]
+  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu]}]
 
   (log/debug "Tallennetaan korjaavatoimenpide (" id ") turvallisuuspoikkeamalle " tp-id ".")
   ;; Jos tämä assertti failaa, joku on hassusti
@@ -68,7 +68,7 @@
     annettu turvallisuuspoikkeaman id.")
 
   (if-not (or (nil? id) (neg? id))
-    (q/paivita-korjaava-toimenpide<! db kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo id tp-id)
+    (q/paivita-korjaava-toimenpide<! db kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo (or poistettu false) id tp-id)
 
     (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
 

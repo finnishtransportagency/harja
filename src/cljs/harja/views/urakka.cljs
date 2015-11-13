@@ -22,10 +22,24 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn valilehti-mahdollinen? [valilehti urakkatyyppi sopimustyyppi]
+  (case valilehti
+    :yleiset true
+    :suunnittelu (not= sopimustyyppi :kokonaisurakka)
+    :toteumat (not= sopimustyyppi :kokonaisurakka)
+    :kohdeluettelo-paallystys (= urakkatyyppi :paallystys)
+    :kohdeluettelo-paikkaus (= urakkatyyppi :paikkaus)
+    :laadunseuranta true
+    :valitavoitteet (not= urakkatyyppi :hoito)
+    :turvallisuuspoikkeamat (= urakkatyyppi :hoito)
+    :laskutus))
+
 (defn urakka
   "Urakkanäkymä"
   []
   (let [ur @nav/valittu-urakka
+        _ (when-not (valilehti-mahdollinen? @u/urakan-valittu-valilehti (:tyyppi ur) (:sopimustyyppi ur))
+            (reset! u/urakan-valittu-valilehti :yleiset))
         hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                           (go (reset! u/urakan-yks-hint-tyot
@@ -34,7 +48,7 @@
 
     ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
     @u/valittu-toimenpideinstanssi
-    
+
     (hae-urakan-tyot ur)
     [bs/tabs {:style :tabs :classes "tabs-taso1" :active u/urakan-valittu-valilehti}
      "Yleiset"
@@ -44,25 +58,25 @@
 
      "Suunnittelu"
      :suunnittelu
-     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :suunnittelu (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "suunnittelu"}
        [suunnittelu/suunnittelu ur])
 
      "Toteumat"
      :toteumat
-     (when-not (= :kokonaisurakka (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :toteumat (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "toteumat"}
        [toteumat/toteumat])
 
      "Kohdeluettelo"
-     :kohdeluettelo
-     (when (= :paallystys (:tyyppi ur))
+     :kohdeluettelo-paallystys
+     (when (valilehti-mahdollinen? :kohdeluettelo-paallystys (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "kohdeluettelo"}
        [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
      "Kohdeluettelo"
-     :kohdeluettelo
-     (when (= :paikkaus (:tyyppi ur))
+     :kohdeluettelo-paikkaus
+     (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "kohdeluettelo"}
        [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
@@ -73,13 +87,13 @@
 
      "Välitavoitteet"
      :valitavoitteet
-     (when-not (= :hoito (:tyyppi ur))
+     (when (valilehti-mahdollinen? :valitavoitteet (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
      "Turvallisuus"
      :turvallisuuspoikkeamat
-     (when (= :hoito (:tyyppi ur))
+     (when (valilehti-mahdollinen? :turvallisuuspoikkeamat (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "turvallisuuspoikkeamat"}
        [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
 
