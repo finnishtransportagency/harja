@@ -26,12 +26,15 @@
     .virhe {
         .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
     }
+    .puuttuva-arvo {
+      border-bottom: solid 1px @vaara;
+    }
   .viesti {
     display: inline-block;
     margin-left: 0.5em;
   }
 
-  .form-group.required label.control-label:after {
+  .required label.control-label:after {
     content: " *";
     color: red;
     font-size: 0.9em;
