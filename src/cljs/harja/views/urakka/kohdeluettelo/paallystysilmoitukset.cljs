@@ -26,7 +26,8 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.ui.tierekisteri :as tierekisteri])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -75,13 +76,7 @@
     :hyvaksytty "Hyväksytty"
     :hylatty "Hylätty"))
 
-(defn laske-tien-pituus [{alkuet :aet loppuet :let}]
-  (if (and alkuet loppuet)
-    (let [tulos (- loppuet alkuet)]
-         (if (>= tulos 0)
-           tulos
-           0)) ; Tien pituus ei voi olla negatiivinen
-    0))
+
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
@@ -315,7 +310,7 @@
                (when (or (= :valmis (:tila lomakedata-nyt))
                          (= :lukittu (:tila lomakedata-nyt)))
                  {:otsikko     "Kommentit" :nimi :kommentit
-                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                  :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila lomakedata-nyt))
                                                      :voi-liittaa      false
                                                      :leveys-col       40
                                                      :placeholder      "Kirjoita kommentti..."
@@ -372,7 +367,7 @@
               {:otsikko "Alku\u00ADetäi\u00ADsyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppu\u00ADetäi\u00ADsyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tien-pituus rivi))}]
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri/laske-tien-pituus rivi))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
@@ -453,7 +448,7 @@
               {:otsikko "Alku\u00ADetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppu\u00ADtieosa" :nimi :losa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tien-pituus rivi))}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri/laske-tien-pituus rivi))}
               {:otsikko       "Käsittely\u00ADmenetelmä"
                :nimi          :kasittelymenetelma
                :tyyppi        :valinta

@@ -56,6 +56,8 @@
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
+          :pakollinen? true
+          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
 
          (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 3}
@@ -71,7 +73,9 @@
 
          {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :leveys-col 3}
          {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys-col 3}
-         {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :leveys-col 4}
+         {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :leveys-col 4
+          :pakollinen? true
+          :validoi [[:ei-tyhja "Anna kuvaus"]]}
          {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :leveys-col 4}
          {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys-col 1
           :tyyppi  :positiivinen-numero :kokonaisluku? true}

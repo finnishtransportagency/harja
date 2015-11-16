@@ -23,7 +23,8 @@
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.ui.tierekisteri :as tierekisteri])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -234,7 +235,7 @@
                (when (or (= :valmis (:tila @paallystys/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata)))
                  {:otsikko     "Kommentit" :nimi :kommentit
-                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                  :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata))
                                                      :voi-liittaa      false
                                                      :leveys-col       40
                                                      :placeholder      "Kirjoita kommentti..."
@@ -266,14 +267,14 @@
               {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                                                        (paallystysilmoitukset/laske-tien-pituus rivi))}
+                                                                                                                        (tierekisteri/laske-tien-pituus rivi))}
               {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen_leveys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                                                                               (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
+                                                                                                                                               (laske-tienpaallysteen-neliot (tierekisteri/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
               {:otsikko "Paik\u00ADkaus\u00ADneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Paik\u00ADkaus-%" :nimi :paikkausprosentti :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                    (laske-paikkausprosentti (:paikkausneliot rivi)
-                                                                                                                                                            (laske-tienpaallysteen-neliot (paallystysilmoitukset/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
+                                                                                                                                                            (laske-tienpaallysteen-neliot (tierekisteri/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid

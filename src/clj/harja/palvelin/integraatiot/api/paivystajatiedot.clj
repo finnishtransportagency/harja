@@ -56,6 +56,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     (tee-onnistunut-vastaus)))
 
 (defn hae-paivystajatiedot [db parametit data kayttaja]
+  ;; dummytoteutus t-loik testiä varten
   ;; todo: tee käyttäjärajaus
   ;; todo: validoi parametrit
   ;; todo: tee oikea haku
