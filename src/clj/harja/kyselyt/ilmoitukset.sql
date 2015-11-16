@@ -206,6 +206,7 @@ WHERE
 -- name: hae-ilmoitustoimenpide
 SELECT
   id                               AS id,
+  ilmoitusid                       AS ilmoitusid,
   kuitattu                         AS kuitattu,
   vapaateksti                      AS vapaateksti,
   kuittaustyyppi                   AS kuittaustyyppi,
@@ -228,7 +229,7 @@ WHERE id = :id;
 
 -- name: merkitse-ilmoitustoimenpide-odottamaan-vastausta!
 UPDATE ilmoitustoimenpide
-SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta'
+SET lahetysid = :lahetysid, tila = 'odottaa_vastausta'
 WHERE id = :id;
 
 -- name: merkitse-ilmoitustoimenpide-lahetetyksi!

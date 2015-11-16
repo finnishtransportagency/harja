@@ -23,6 +23,4 @@ ALTER TABLE kuittaus RENAME TO ilmoitustoimenpide;
 ALTER TABLE ilmoitustoimenpide
 ADD COLUMN tila lahetyksen_tila,
 ADD COLUMN lahetetty TIMESTAMP,
-ADD COLUMN lahetysid VARCHAR(255),
-ADD COLUMN lukko CHAR(36),
-ADD COLUMN lukittu TIMESTAMP;
+ADD COLUMN lahetysid VARCHAR(255);

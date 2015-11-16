@@ -4,21 +4,25 @@
             [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.tloik.sanomat.toimenpide-sanoma :as toimenpide-sanoma]))
+            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as toimenpide-sanoma]
+            [harja.palvelin.tyokalut.lukot :as lukko]))
+
+(defn laheta [jms-lahettaja db id]
+  (let [data (konversio/alaviiva->rakenne (first (ilmoitukset/hae-ilmoitustoimenpide db id)))
+        xml (toimenpide-sanoma/muodosta data)]
+    (if xml
+      (do
+        (jms-lahettaja xml)
+        (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db id)
+        (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys onnistui." id)))
+      (do
+        (log/error (format "Ilmoitustoimenpiteen (id: %s) lähetys epäonnistui." id))
+        (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id)))))
 
 (defn laheta-ilmoitustoimenpide [jms-lahettaja db id]
   (log/debug (format "Lähetetään ilmoitustoimenpide (id: %s)." id))
   (try
-    (let [data (konversio/alaviiva->rakenne (ilmoitukset/hae-ilmoitustoimenpide db id))
-          xml (toimenpide-sanoma/muodosta data)]
-      (if xml
-        (do
-          (jms-lahettaja xml)
-          (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db id)
-          (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys onnistui." id)))
-        (do
-          (log/error (format "Ilmoitustoimenpiteen (id: %s) lähetys epäonnistui." id))
-          (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id))))
+    (lukko/aja-lukon-kanssa db "tloik-ilm.toimenpidelahetys" (fn [] (laheta jms-lahettaja db id)))
     (catch Exception e
       (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetyksessä tapahtui poikkeus." id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id))))
