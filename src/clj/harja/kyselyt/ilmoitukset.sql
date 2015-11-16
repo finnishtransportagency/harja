@@ -130,21 +130,11 @@ INSERT INTO ilmoitus
  valitetty,
  yhteydenottopyynto,
  otsikko,
- lyhytkuvaus,
- pitkakuvaus,
+ lyhytselite,
+ pitkaselite,
  ilmoitustyyppi,
  selitteet,
- urakkatyyppi,
- ilmoittaja_etunimi,
- ilmoittaja_sukunimi,
- ilmoittaja_tyopuhelin,
- ilmoittaja_matkapuhelin,
- ilmoittaja_sahkoposti,
- ilmoittaja_tyyppi,
- lahettaja_etunimi,
- lahettaja_sukunimi,
- lahettaja_puhelinnumero,
- lahettaja_sahkoposti)
+ urakkatyyppi)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -152,42 +142,42 @@ VALUES
     :valitetty,
     :yhteydenottopyynto,
     :otsikko,
-    :lyhytkuvaus,
-    :pitkakuvaus,
+    :lyhytselite,
+    :pitkaselite,
     :ilmoitustyyppi :: ilmoitustyyppi,
     :selitteet :: ilmoituksenselite [],
-    :urakkatyyppi :: urakkatyyppi,
-    :ilmoittaja_etunimi,
-    :ilmoittaja_sukunimi,
-    :ilmoittaja_tyopuhelin,
-    :ilmoittaja_matkapuhelin,
-    :ilmoittaja_sahkoposti,
-    :ilmoittaja_tyyppi :: ilmoittajatyyppi,
-    :lahettaja_etunimi,
-    :lahettaja_sukunimi,
-    :lahettaja_puhelinnumero,
-    :lahettaja_sahkoposti);
+    :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
 -- Päivittää havainnon
 UPDATE ilmoitus
 SET
-  urakka                  = :urakka,
-  ilmoitusid              = :ilmoitusid,
-  ilmoitettu              = :ilmoitettu,
-  valitetty               = :valitetty,
-  yhteydenottopyynto      = :yhteydenottopyynto,
-  otsikko                 = :otsikko,
-  lyhytkuvaus             = :lyhytkuvaus,
-  pitkakuvaus             = :pitkakuvaus,
-  ilmoitustyyppi          = :ilmoitustyyppi :: ilmoitustyyppi,
-  selitteet               = :selitteet :: ilmoituksenselite [],
+  urakka             = :urakka,
+  ilmoitusid         = :ilmoitusid,
+  ilmoitettu         = :ilmoitettu,
+  valitetty          = :valitetty,
+  yhteydenottopyynto = :yhteydenottopyynto,
+  otsikko            = :otsikko,
+  lyhytselite        = :lyhytselite,
+  pitkaselite        = :pitkaselite,
+  ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
+  selitteet          = :selitteet :: ilmoituksenselite []
+WHERE id = :id;
+
+-- name: paivita-ilmoittaja-ilmoitukselle!
+UPDATE ilmoitus
+SET
   ilmoittaja_etunimi      = :ilmoittaja_etunimi,
   ilmoittaja_sukunimi     = :ilmoittaja_sukunimi,
   ilmoittaja_tyopuhelin   = :ilmoittaja_tyopuhelin,
   ilmoittaja_matkapuhelin = :ilmoittaja_matkapuhelin,
   ilmoittaja_sahkoposti   = :ilmoittaja_sahkoposti,
-  ilmoittaja_tyyppi       = :ilmoittaja_tyyppi :: ilmoittajatyyppi,
+  ilmoittaja_tyyppi       = :ilmoittaja_tyyppi :: ilmoittajatyyppi
+WHERE id = :id;
+
+-- name: paivita-lahettaja-ilmoitukselle!
+UPDATE ilmoitus
+SET
   lahettaja_etunimi       = :lahettaja_etunimi,
   lahettaja_sukunimi      = :lahettaja_sukunimi,
   lahettaja_puhelinnumero = :lahettaja_puhelinnumero,

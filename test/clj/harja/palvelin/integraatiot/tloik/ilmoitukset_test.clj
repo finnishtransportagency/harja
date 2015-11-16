@@ -23,7 +23,10 @@
                         :sonja (feikki-sonja)
                         :integraatioloki (component/using (->Integraatioloki nil) [:db])
                         :tloik (component/using
-                                 (->Tloik +tloik-ilmoitusviestijono+ +tloik-ilmoituskuittausjono+)
+                                 (->Tloik +tloik-ilmoitusviestijono+
+                                          +tloik-ilmoituskuittausjono+
+                                          +tloik-ilmoitustoimenpideviestijono+
+                                          +tloik-ilmoitustoimenpidekuittausjono+)
                                  [:db :sonja :integraatioloki])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
