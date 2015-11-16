@@ -11,15 +11,18 @@
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
 (defn formatoi-paivamaara [date]
-  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date))
+  (when date (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date)))
 
-(defn muodosta-taho [data]
+(defn muodosta-henkilo [data]
   (when data
     [:henkilo
      [:etunimi (:etunimi data)]
      [:sukunimi (:sukunimi data)]
      [:matkapuhelin (:matkapuhelin data)]
-     [:sahkoposti (:sahkoposti data)]]
+     [:sahkoposti (:sahkoposti data)]]))
+
+(defn muodosta-organisaatio [data]
+  (when data
     [:organisaatio
      [:nimi (:organisaatio data)]
      [:ytunnus (:ytunnus data)]]))
@@ -32,8 +35,12 @@
    [:tyyppi (:kuittaustyyppi data)]
    [:aika (formatoi-paivamaara (:kuitattu data))]
    [:vapaateksti (:vapaateksti data)]
-   [:kasittelija (muodosta-taho (:kasittelija data))]
-   [:ilmoittaja (muodosta-taho (:kuittaaja data))]])
+   [:kasittelija
+    (muodosta-henkilo (:kasittelija data))
+    (muodosta-organisaatio (:kasittelija data))]
+   [:ilmoittaja
+    (muodosta-henkilo (:kuittaaja data))
+    (muodosta-organisaatio (:kuittaaja data))]])
 
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
