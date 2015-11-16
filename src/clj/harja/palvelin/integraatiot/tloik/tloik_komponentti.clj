@@ -31,7 +31,6 @@
         (assoc :sonja-ilmoitusviestikuuntelija (tee-sonja-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono))
         (assoc :sonja-toimenpidekuittauskuuntelija (tee-sonja-toimenpidekuittauskuuntelija this toimenpidekuittausjono))))
   (stop [this]
-    (println "----> THIS:" this)
     (let [poista-ilmoitusviestikuuntelija (:sonja-ilmoitusviestikuuntelija this)
           poista-toimenpidekuittauskuuntelija (:sonja-toimenpidekuittauskuuntelija this)]
       (poista-ilmoitusviestikuuntelija)
