@@ -159,14 +159,14 @@ VALUES
     :urakkatyyppi :: urakkatyyppi,
     :ilmoittaja_etunimi,
     :ilmoittaja_sukunimi,
-   :ilmoittaja_tyopuhelin,
-   :ilmoittaja_matkapuhelin,
-   :ilmoittaja_sahkoposti,
-   :ilmoittaja_tyyppi :: ilmoittajatyyppi,
-   :lahettaja_etunimi,
-   :lahettaja_sukunimi,
-   :lahettaja_puhelinnumero,
-   :lahettaja_sahkoposti);
+    :ilmoittaja_tyopuhelin,
+    :ilmoittaja_matkapuhelin,
+    :ilmoittaja_sahkoposti,
+    :ilmoittaja_tyyppi :: ilmoittajatyyppi,
+    :lahettaja_etunimi,
+    :lahettaja_sukunimi,
+    :lahettaja_puhelinnumero,
+    :lahettaja_sahkoposti);
 
 -- name: paivita-ilmoitus!
 -- Päivittää havainnon
@@ -177,7 +177,9 @@ SET
   ilmoitettu              = :ilmoitettu,
   valitetty               = :valitetty,
   yhteydenottopyynto      = :yhteydenottopyynto,
-  vapaateksti             = :vapaateksti,
+  otsikko                 = :otsikko,
+  lyhytkuvaus             = :lyhytkuvaus,
+  pitkakuvaus             = :pitkakuvaus,
   ilmoitustyyppi          = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet               = :selitteet :: ilmoituksenselite [],
   ilmoittaja_etunimi      = :ilmoittaja_etunimi,
