@@ -179,14 +179,8 @@
                   ;; numeron syöttö (esim. "4,") ennen desimaalin kirjoittamista ylikirjoittuu
                   ;; Lisäksi esim. "4,0" parsitaan float-arvona kokonaisluvuksi 4, jolloin lukua "4,01" ei voi kirjoittaa.
                   (let [uusi (str @data)]
-                    (if (or (some #(= olemassaoleva-teksti (str uusi %))
-                                  (mapv
-                                    #(str "," (clojure.string/join (take % (repeat "0"))))
-                                    (range 0 10)))
-                            (some #(= olemassaoleva-teksti (str uusi %))
-                                  (mapv
-                                    #(str "." (clojure.string/join (take % (repeat "0"))))
-                                    (range 0 10)))
+                    (if (or (and (.startsWith olemassaoleva-teksti uusi)
+                                 (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi))))
                             (when-not (:vaadi-ei-negatiivinen? kentta)
                               (= olemassaoleva-teksti (str "-" uusi))))
                       olemassaoleva-teksti
