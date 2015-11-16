@@ -173,20 +173,12 @@
        (fn [_ [_ _ data]]
          (swap! teksti
                 (fn [olemassaoleva-teksti]
-                  ;; Jos vanha teksti on sama kuin uusi, mutta perässä on "." tai "," ja mahdollisesti n kappaletta nollia,
-                  ;; ei korvata.
+                  ;; Jos vanha teksti on sama kuin uusi, mutta perässä on "." tai "," ei korvata.
                   ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
-                  ;; numeron syöttö (esim. "4,") ennen desimaalin kirjoittamista ylikirjoittuu
-                  ;; Lisäksi esim. "4,0" parsitaan float-arvona kokonaisluvuksi 4, jolloin lukua "4,01" ei voi kirjoittaa.
+                  ;; numeron syöttö (esim. "4," arvo ennen desimaalin kirjoittamista ylikirjoittuu
                   (let [uusi (str @data)]
-                    (if (or (some #(= olemassaoleva-teksti (str uusi %))
-                                  (mapv
-                                    #(str "," (clojure.string/join (take % (repeat "0"))))
-                                    (range 0 10)))
-                            (some #(= olemassaoleva-teksti (str uusi %))
-                                  (mapv
-                                    #(str "." (clojure.string/join (take % (repeat "0"))))
-                                    (range 0 10)))
+                    (if (or (= olemassaoleva-teksti (str uusi ","))
+                            (= olemassaoleva-teksti (str uusi "."))
                             (when-not (:vaadi-ei-negatiivinen? kentta)
                               (= olemassaoleva-teksti (str "-" uusi))))
                       olemassaoleva-teksti
@@ -212,14 +204,14 @@
                                              (re-matches (if kokonaisluku?
                                                            kokonaisluku-re-pattern
                                                            desimaaliluku-re-pattern) v))
-                                     (reset! teksti v)
+                                             (reset! teksti v)
 
-                                     (let [numero (if kokonaisluku?
-                                                    (js/parseInt v)
-                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero)))))}]))})))
+                                             (let [numero (if kokonaisluku?
+                                                            (js/parseInt v)
+                                                            (js/parseFloat (str/replace v #"," ".")))]
+                                               (reset! data
+                                                       (when (not (js/isNaN numero))
+                                                         numero)))))}]))})))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
