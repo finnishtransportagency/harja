@@ -8,7 +8,8 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.fmt :as fmt]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [cljs-time.core :as t]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -85,7 +86,11 @@
     [tee-kentta {:tyyppi :pvm :irrallinen? true}
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]
-               (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo]))
+               (if (t/before? uusi-arvo (first @valittu-aikavali-atom))
+                 ; Estetään käänteinen aikaväli
+                 (reset! valittu-aikavali-atom [(first (pvm/kuukauden-aikavali uusi-arvo))
+                                                (second (pvm/kuukauden-aikavali uusi-arvo))])
+                 (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo])))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]])
 
 (defn urakan-toimenpide
