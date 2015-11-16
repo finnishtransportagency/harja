@@ -1,10 +1,16 @@
 (ns harja.kyselyt.asiakastyytyvaisyysbonus-test
   (:require [clojure.test :refer :all]
+            [clojure.test.check :as tc]
+            [clojure.test.check.clojure-test :refer [defspec]]
+            [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]
+            [clj-time.core :as t]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
-            [harja.testi :refer :all]))
+            [harja.testi :refer :all]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -50,3 +56,57 @@
       (is (= 50.1666666666667000M (nth bonarit 2)) "bonarin korotus")
       (is (= [nil nil nil] bonarit-jos-indekseja-ei-ole-syotetty)))))
 
+
+
+(defn laske-bonus [maksupvm indeksinimi summa]
+  (log/debug "laske-bonus " maksupvm "i: " indeksinimi)
+  (first (q (if indeksinimi
+              (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('"
+                   maksupvm "'::DATE, '"
+                   ;; FIXME_ tähän injektoitava NULL sql:ään asti
+                   (or indeksinimi "'null'") "', '"
+                   summa "'::NUMERIC);")
+              (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('"
+                   maksupvm "'::DATE, null, '"
+                   summa "'::NUMERIC);")
+              ))))
+
+
+(defspec muuta-bonuksen-maaraa
+         100
+         ;; Muuta bonuksen laskennassa käytettyjä arvoja
+         ;; - maksupvm
+         ;; - sakko per ylittävä tonni
+         ;; - indeksinimi
+         ;; - summa
+         ;; varmista, että sakko on aina oikein laskettu
+         (prop/for-all [summa (gen/fmap #(BigDecimal. %) (gen/double* {:min 10000 :max 500000 :NaN? false}))
+                        indeksinimi (gen/elements ["MAKU 2005" "MAKU 2010" nil])
+                        maksupvm (gen/elements [(pvm/->pvm "01.12.2015") (pvm/->pvm "01.12.2014") (pvm/->pvm "01.7.2014")
+                                                (pvm/->pvm "01.12.2016") (pvm/->pvm "01.12.2017") (pvm/->pvm "01.12.2018")])]
+
+                       (let [bonus (laske-bonus maksupvm
+                                                indeksinimi
+                                                summa)
+                             kyselyn-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
+                                              (:db jarjestelma)
+                                              {:maksupvm    maksupvm
+                                               :indeksinimi indeksinimi
+                                               :summa       summa})
+                             _ (log/debug "summa " summa)
+                             _ (log/debug "bonus " bonus)
+                             _ (log/debug "kyselyn kautta " kyselyn-kautta)]
+                         (if (and (or
+                                    (= maksupvm (pvm/->pvm "01.12.2016"))
+                                    (= maksupvm (pvm/->pvm "01.12.2017"))
+                                    (= maksupvm (pvm/->pvm "01.12.2018")))
+                                  (some? indeksinimi))
+                           ;; jos indeksilukuja ei löydy kaikille kuukausille, odotetaankin paluuarvoksi nil
+                           (do
+                             (is (= (nth bonus 0) (:summa kyselyn-kautta) nil) "summa")
+                             (is (= (nth bonus 1) (:korotettuna kyselyn-kautta) nil) "korotettuna")
+                             (is (= (nth bonus 2) (:korotus kyselyn-kautta) nil) "korotus"))
+                           (do
+                             (is (= (nth bonus 0) (:summa kyselyn-kautta)) "summa")
+                             (is (= (nth bonus 1) (:korotettuna kyselyn-kautta)) "korotettuna")
+                             (is (= (nth bonus 2) (:korotus kyselyn-kautta)) "korotus"))))))

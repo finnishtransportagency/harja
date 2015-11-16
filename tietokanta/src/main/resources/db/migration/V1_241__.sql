@@ -34,6 +34,11 @@ BEGIN
 
   RAISE NOTICE 'Lasketaan asiakastyytyväisyysbonus summasta % indeksillä % hoitokaudelle %-%', summa, indeksinimi, alkuv, loppuv;
 
+  IF (indeksinimi IS NULL) THEN
+    RAISE NOTICE 'Indeksiä ei käytetty tässä maksussa.';
+    RETURN (summa, summa, 0::NUMERIC);
+  END IF;
+
   -- Kerroin on hoitokauden loka-syyskuun keskiarvo
   SELECT INTO tulosrivi
     AVG(arvo) / 100.0 AS kerroin,

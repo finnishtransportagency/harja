@@ -26,7 +26,7 @@
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [maksupvm indeksinimi summa] :as tiedot}]
   (log/debug "laske-asiakastyytyvaisyysbonus" tiedot)
-  (assert (and maksupvm indeksinimi summa) "Annettava maksupvm, indeksinimi ja summa jotta voidaan laskea asiakastyytyväisyysbonuksen arvo.")
+  (assert (and maksupvm summa) "Annettava maksupvm ja summa jotta voidaan laskea asiakastyytyväisyysbonuksen arvo.")
   (first
     (into []
           (laskutus-q/laske-asiakastyytyvaisyysbonus db
