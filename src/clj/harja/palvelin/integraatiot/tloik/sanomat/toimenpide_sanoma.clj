@@ -52,7 +52,7 @@
      [:ytunnus
       "1234567-8"]]]])
 
-(defn muodosta []
+(defn muodosta [data]
   (let [sisalto (muodosta-viesti)
         xml (tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)

@@ -234,7 +234,7 @@ WHERE id = :id;
 -- name: merkitse-ilmoitustoimenpide-lahetetyksi!
 UPDATE ilmoitustoimenpide
 SET lahetetty = current_timestamp, tila = 'lahetetty'
-WHERE id = :id;
+WHERE lahetysid = :lahetysid;
 
 -- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe!
 UPDATE ilmoitustoimenpide
