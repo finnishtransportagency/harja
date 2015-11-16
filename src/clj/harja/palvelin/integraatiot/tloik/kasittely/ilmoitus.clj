@@ -23,7 +23,9 @@
     ilmoitettu
     valitettu
     yhteydenottopyynto
-    vapaateksti
+    otsikko
+    lyhytkuvaus
+    pitkakuvaus
     ilmoitustyyppi
     (str "{" (clojure.string/join "," (map name selitteet)) "}")
     (:etunimi ilmoittaja)
@@ -48,7 +50,9 @@
                   ilmoitettu
                   valitettu
                   yhteydenottopyynto
-                  vapaateksti
+                  otsikko
+                  lyhytkuvaus
+                  pitkakuvaus
                   ilmoitustyyppi
                   (str "{" (clojure.string/join "," (map name selitteet)) "}")
                   urakkatyyppi

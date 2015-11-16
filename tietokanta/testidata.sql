@@ -585,7 +585,7 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Ilmoitukset ja kuittaukset
 -- Ensimmäinen ilmoitus: Oulun alueella, kysely
 INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
@@ -642,7 +642,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, '2005-10-02 12:
 
 -- Toinen ilmoitus: Oulun alueella, toimenpidepyynto
 INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
@@ -684,7 +684,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12346), 12346, '2005-10-11 19:
 
 -- Kolmas ilmoitus: Pudasjärvi, toimenpidepyynto, avoin
 INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
@@ -759,7 +759,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12347), 12347, '2007-12-18 19:
 
 -- Neljäs ilmoitus: Turun alueella, tiedoitus. Ei kuittauksia!
 INSERT INTO ilmoitus
-(ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)

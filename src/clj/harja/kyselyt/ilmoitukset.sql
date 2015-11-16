@@ -9,7 +9,8 @@ SELECT
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
-  i.vapaateksti,
+  -- todo: tämä täytyy korjata hakemaan oikeat tiedot
+  i.lyhytselite                       AS vapaateksti,
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
@@ -99,7 +100,9 @@ WHERE
   -- Tarkasta vapaatekstihakuehto
   (
     :teksti_annettu IS FALSE OR
-    i.vapaateksti LIKE :teksti
+    i.otsikko LIKE :teksti OR
+    i.lyhytselite LIKE :teksti OR
+    i.pitkaselite LIKE :teksti
   ) AND
 
   -- Tarkasta ilmoituksen tilat
@@ -126,7 +129,9 @@ INSERT INTO ilmoitus
  ilmoitettu,
  valitetty,
  yhteydenottopyynto,
- vapaateksti,
+ otsikko,
+ lyhytkuvaus,
+ pitkakuvaus,
  ilmoitustyyppi,
  selitteet,
  urakkatyyppi,
@@ -146,7 +151,9 @@ VALUES
     :ilmoitettu,
     :valitetty,
     :yhteydenottopyynto,
-    :vapaateksti,
+    :otsikko,
+    :lyhytkuvaus,
+    :pitkakuvaus,
     :ilmoitustyyppi :: ilmoitustyyppi,
     :selitteet :: ilmoituksenselite [],
     :urakkatyyppi :: urakkatyyppi,
