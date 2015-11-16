@@ -138,8 +138,9 @@
                        (mapcat #(when %
                                  (if (seq? %)
                                    (map (fn [sisalto]
+                                          ; Raportin sisältö koostuu useammasta kuin yhdestä elementistä, näytetään
+                                          ; gridien otsikot. Sisällön ollessa yksi grid raportin otsikko kertoo sisällön.
                                           (if (= (first sisalto) :taulukko)
-                                            ; Jos sivulla on vain yksi taulukko, raportin otsikko kertoo sisällön
                                             (muodosta-pdf (assoc sisalto 1 (assoc (second sisalto) :nayta-otsikko? true)))
                                             (muodosta-pdf sisalto))) %)
                                    [(muodosta-pdf %)]))
