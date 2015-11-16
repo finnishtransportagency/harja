@@ -32,10 +32,10 @@
  ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
  ;; tarvii SSH-tunnelin testi-Sonjaan!!
  :sonja
-                       {:url      "tcp://localhost:61616"
+                       {:url      "tcp://localhost:2511"
                         :kayttaja "harja"
                         :salasana "harjaxx"
-                        :tyyppi   :activemq}
+                        :tyyppi   :sonicmq}
 
  :sampo                {:lahetysjono-sisaan       "Harja13-16.SampoToHarja.Msg"
                         :kuittausjono-sisaan      "Harja13-16.HarjaToSampo.Ack"
@@ -43,29 +43,30 @@
                         :kuittausjono-ulos        "Harja17.SampoToHarja.Ack"
                         :paivittainen-lahetysaika nil
                         }
- :tloik                {:ilmoitusviestijono     "tloik-ilmoitukset"
-                        :ilmoituskuittausjono   "tloik-ilmoituskuittaukset"
-                        :toimenpideviestijono   "tloik-toimenpiteet"
-                        :toimenpidekuittausjono "tloik-toimenpidekuittaukset"}
+ :tloik                {:ilmoitusviestijono     "Harja.T-LOIKToHarja.Msg"
+                        :ilmoituskuittausjono   "Harja.T-LOIKToHarja.Ack"
+                        :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
+                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+                        }
  :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
  :integraatiot         {:paivittainen-lokin-puhdistusaika nil}
 
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali                          5000
-                        :tieosoiteverkon-shapefile           "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
+ :geometriapaivitykset {:tuontivali                          5000000
+                        ;; :tieosoiteverkon-shapefile           "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
                         ;; :tieosoiteverkon-alk-osoite                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/Tieosoiteverkko.shz"
                         ;; :tieosoiteverkon-alk-tuontikohde             "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
-                        :pohjavesialueen-shapefile           "file://shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shp"
+                        ;; :pohjavesialueen-shapefile           "file://shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shp"
                         ;; :pohjavesialueen-alk-osoite                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_POHJAVESIALUE.shz"
                         ;; :pohjavesialueen-alk-tuontikohde             "./shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shz"
-                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/tl132.shp"
+                        ;; :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/tl132.shp"
                         ;; talvihoidon-hoitoluokkien-alk-osoite         "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/tl132.shz"
                         ;; talvihoidon-hoitoluokkien-alk-tuontikohde    "./shp/Talvihoitoluokat/tl132.shz"
-                        :soratien-hoitoluokkien-shapefile    "file://shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shp"
+                        ;; :soratien-hoitoluokkien-shapefile    "file://shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shp"
                         ;; :soratien-hoitoluokkien-alk-osoite           "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_SORATIELUOKKA.shz"
                         ;; :soratien-hoitoluokkien-alk-tuontikohde      "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
-                        :siltojen-shapefile                  "file://shp/Sillat/PTV_silta.shp"
+                        ;; :siltojen-shapefile                  "file://shp/Sillat/PTV_silta.shp"
                         ;; :siltojen-alk-osoite                         "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/Sillat.shz"
                         ;; :siltojen-alk-tuontikohde                    "./shp/Sillat/Sillat.shz"
                         }
