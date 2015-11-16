@@ -15,8 +15,8 @@
                  (pr-str elementti)))
     (first elementti)))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
-  [:fo:block {} otsikko
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto? nayta-otsikko?] :as optiot} sarakkeet data]]
+  [:fo:block {} (when nayta-otsikko? otsikko)
    [:fo:table {:border "solid 0.1mm black"}
     (for [{:keys [otsikko leveys]} sarakkeet]
       [:fo:table-column {:column-width leveys}])
@@ -93,14 +93,7 @@
                           [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (- y 1) :text-anchor "end"} (str value)]
                           [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (+ 4 (+ y bar-height)) :text-anchor "end"}
                            label]]))
-                     data)
-        
-        
-        
-        ])]]])
-
-
-
+                     data)])]]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)
@@ -143,8 +136,12 @@
                      (muodosta-pdf [:yhteenveto tiedot])])]
                  (keep identity
                        (mapcat #(when %
-                                  (if (seq? %)
-                                    (map muodosta-pdf %)
-                                    [(muodosta-pdf %)]))
+                                 (if (seq? %)
+                                   (map (fn [sisalto]
+                                          (if (= (first sisalto) :taulukko)
+                                            ; Jos sivulla on vain yksi taulukko, raportin otsikko kertoo sisällön
+                                            (muodosta-pdf (assoc sisalto 1 (assoc (second sisalto) :nayta-otsikko? true)))
+                                            (muodosta-pdf sisalto))) %)
+                                   [(muodosta-pdf %)]))
                                sisalto))
                  [[:fo:block {:id "raportti-loppu"}]])))
