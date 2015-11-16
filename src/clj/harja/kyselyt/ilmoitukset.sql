@@ -32,30 +32,30 @@ SELECT
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
 
-  k.id                               AS kuittaus_id,
-  k.kuitattu                         AS kuittaus_kuitattu,
-  k.vapaateksti                      AS kuittaus_vapaateksti,
-  k.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
+  it.id                               AS kuittaus_id,
+  it.kuitattu                         AS kuittaus_kuitattu,
+  it.vapaateksti                      AS kuittaus_vapaateksti,
+  it.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
 
-  k.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
-  k.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,
-  k.kuittaaja_henkilo_matkapuhelin   AS kuittaus_kuittaaja_matkapuhelin,
-  k.kuittaaja_henkilo_tyopuhelin     AS kuittaus_kuittaaja_tyopuhelin,
-  k.kuittaaja_henkilo_sahkoposti     AS kuittaus_kuittaaja_sahkoposti,
-  k.kuittaaja_organisaatio_nimi      AS kuittaus_kuittaaja_organisaatio,
-  k.kuittaaja_organisaatio_ytunnus   AS kuittaus_kuittaaja_ytunnus,
+  it.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,
+  it.kuittaaja_henkilo_matkapuhelin   AS kuittaus_kuittaaja_matkapuhelin,
+  it.kuittaaja_henkilo_tyopuhelin     AS kuittaus_kuittaaja_tyopuhelin,
+  it.kuittaaja_henkilo_sahkoposti     AS kuittaus_kuittaaja_sahkoposti,
+  it.kuittaaja_organisaatio_nimi      AS kuittaus_kuittaaja_organisaatio,
+  it.kuittaaja_organisaatio_ytunnus   AS kuittaus_kuittaaja_ytunnus,
 
-  k.kasittelija_henkilo_etunimi      AS kuittaus_kasittelija_etunimi,
-  k.kasittelija_henkilo_sukunimi     AS kuittaus_kasittelija_sukunimi,
-  k.kasittelija_henkilo_matkapuhelin AS kuittaus_kasittelija_matkapuhelin,
-  k.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
-  k.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
-  k.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
-  k.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_henkilo_etunimi      AS kuittaus_kasittelija_etunimi,
+  it.kasittelija_henkilo_sukunimi     AS kuittaus_kasittelija_sukunimi,
+  it.kasittelija_henkilo_matkapuhelin AS kuittaus_kasittelija_matkapuhelin,
+  it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
+  it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
+  it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
 
 
 FROM ilmoitus i
-  LEFT JOIN kuittaus k ON k.ilmoitus = i.id
+  LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE
   -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
   (
@@ -107,7 +107,7 @@ WHERE
     (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
     (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
   )
-ORDER BY i.ilmoitettu ASC, k.kuitattu ASC;
+ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 
 -- name: hae-id-ilmoitus-idlla
