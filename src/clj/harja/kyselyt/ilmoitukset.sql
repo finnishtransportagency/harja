@@ -2,7 +2,9 @@
 SELECT
   i.id,
   i.urakka,
-  (SELECT hallintayksikko FROM urakka WHERE id = i.urakka) AS hallintayksikko,
+  (SELECT hallintayksikko
+   FROM urakka
+   WHERE id = i.urakka)               AS hallintayksikko,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
@@ -73,7 +75,7 @@ WHERE
     -- Tai urakan tasolla..
     -- Joko ilmoituksen urakka-id osuu valittuun urakkaan..
     (i.urakka = :urakka OR
-    -- Tai ilmoitukselle ei ole annettu urakka-id:tä, mutta se on urakan alueella
+     -- Tai ilmoitukselle ei ole annettu urakka-id:tä, mutta se on urakan alueella
      (i.urakka IS NULL AND
       st_contains((SELECT alue
                    FROM urakoiden_alueet
@@ -140,16 +142,16 @@ INSERT INTO ilmoitus
  lahettaja_sahkoposti)
 VALUES
   (:urakka,
-   :ilmoitusid,
-   :ilmoitettu,
-   :valitetty,
-   :yhteydenottopyynto,
-   :vapaateksti,
-   :ilmoitustyyppi :: ilmoitustyyppi,
-   :selitteet :: ilmoituksenselite [],
-   :urakkatyyppi :: urakkatyyppi,
-   :ilmoittaja_etunimi,
-   :ilmoittaja_sukunimi,
+    :ilmoitusid,
+    :ilmoitettu,
+    :valitetty,
+    :yhteydenottopyynto,
+    :vapaateksti,
+    :ilmoitustyyppi :: ilmoitustyyppi,
+    :selitteet :: ilmoituksenselite [],
+    :urakkatyyppi :: urakkatyyppi,
+    :ilmoittaja_etunimi,
+    :ilmoittaja_sukunimi,
    :ilmoittaja_tyopuhelin,
    :ilmoittaja_matkapuhelin,
    :ilmoittaja_sahkoposti,
@@ -188,7 +190,7 @@ WHERE id = :id;
 UPDATE ilmoitus
 SET
   tr_numero = :tr_numero,
-  sijainti  = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY
+  sijainti  = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY
 WHERE id = :id;
 
 -- name: hae-ilmoituksen-urakka
@@ -200,3 +202,41 @@ WHERE
   ua.tyyppi = :urakkatyyppi :: urakkatyyppi AND
   (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
   (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
+
+-- name: hae-ilmoitustoimenpide
+SELECT
+  id                               AS id,
+  kuitattu                         AS kuitattu,
+  vapaateksti                      AS vapaateksti,
+  kuittaustyyppi                   AS kuittaustyyppi,
+  kuittaaja_henkilo_etunimi        AS kuittaaja_etunimi,
+  kuittaaja_henkilo_sukunimi       AS kuittaaja_sukunimi,
+  kuittaaja_henkilo_matkapuhelin   AS kuittaaja_matkapuhelin,
+  kuittaaja_henkilo_tyopuhelin     AS kuittaaja_tyopuhelin,
+  kuittaaja_henkilo_sahkoposti     AS kuittaaja_sahkoposti,
+  kuittaaja_organisaatio_nimi      AS kuittaaja_organisaatio,
+  kuittaaja_organisaatio_ytunnus   AS kuittaaja_ytunnus,
+  kasittelija_henkilo_etunimi      AS kasittelija_etunimi,
+  kasittelija_henkilo_sukunimi     AS kasittelija_sukunimi,
+  kasittelija_henkilo_matkapuhelin AS kasittelija_matkapuhelin,
+  kasittelija_henkilo_tyopuhelin   AS kasittelija_tyopuhelin,
+  kasittelija_henkilo_sahkoposti   AS kasittelija_sahkoposti,
+  kasittelija_organisaatio_nimi    AS kasittelija_organisaatio,
+  kasittelija_organisaatio_ytunnus AS kasittelija_ytunnus
+FROM ilmoitustoimenpide
+WHERE id = :id;
+
+-- name: merkitse-ilmoitustoimenpide-odottamaan-vastausta!
+UPDATE ilmoitustoimenpide
+SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta'
+WHERE id = :id;
+
+-- name: merkitse-ilmoitustoimenpide-lahetetyksi!
+UPDATE ilmoitustoimenpide
+SET lahetetty = current_timestamp, tila = 'lahetetty'
+WHERE id = :id;
+
+-- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe!
+UPDATE ilmoitustoimenpide
+SET tila = 'virhe'
+WHERE id = :id;
