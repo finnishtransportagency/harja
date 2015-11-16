@@ -146,7 +146,7 @@
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]
   (jdbc/with-db-transaction [c db]
 
-    (log/info "SAATIIN päivystäjät: " paivystajat)
+    (log/debug "SAATIIN päivystäjät: " paivystajat)
     (doseq [id poistettu]
       (q/poista-paivystaja! c id urakka-id))
 
@@ -166,7 +166,7 @@
 
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
         (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p) urakka-id)))]
-          (log/info "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
+          (log/debug "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
           (q/paivita-yhteyshenkilo<! c
                                     (:etunimi p) (:sukunimi p)
                                     (:tyopuhelin p) (:matkapuhelin p)
