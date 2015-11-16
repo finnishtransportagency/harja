@@ -88,8 +88,7 @@
              (fn [uusi-arvo]
                (if (t/before? uusi-arvo (first @valittu-aikavali-atom))
                  ; Estetään käänteinen aikaväli
-                 (reset! valittu-aikavali-atom [(first (pvm/kuukauden-aikavali uusi-arvo))
-                                                (second (pvm/kuukauden-aikavali uusi-arvo))])
+                 (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali uusi-arvo))
                  (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo])))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]])
 
