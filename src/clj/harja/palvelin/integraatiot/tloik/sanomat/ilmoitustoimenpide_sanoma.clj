@@ -2,8 +2,7 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [hiccup.core :refer [html]])
-  (:import (java.text SimpleDateFormat)
-           (java.util UUID)))
+  (:import (java.text SimpleDateFormat)))
 
 (def +xsd-polku+ "xsd/tloik/")
 
@@ -27,10 +26,10 @@
      [:nimi (:organisaatio data)]
      [:ytunnus (:ytunnus data)]]))
 
-(defn muodosta-viesti [data]
+(defn muodosta-viesti [data viesti-id]
   [:harja:toimenpide
    {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
-   [:viestiId (str (UUID/randomUUID))]
+   [:viestiId viesti-id]
    [:ilmoitusId (:ilmoitusid data)]
    [:tyyppi (:kuittaustyyppi data)]
    [:aika (formatoi-paivamaara (:kuitattu data))]
@@ -42,8 +41,8 @@
     (muodosta-henkilo (:kuittaaja data))
     (muodosta-organisaatio (:kuittaaja data))]])
 
-(defn muodosta [data]
-  (let [sisalto (muodosta-viesti data)
+(defn muodosta [data viesti-id]
+  (let [sisalto (muodosta-viesti data viesti-id)
         xml (tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
       xml

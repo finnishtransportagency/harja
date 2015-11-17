@@ -106,3 +106,11 @@
   (when aika
     (joda-time->xml-xs-date
       (json-date-time->joda-time aika))))
+
+(defn parsi-paivamaara [teksti]
+  (if teksti
+    (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") teksti)))
+         (catch ParseException e
+           (log/error e "Virhe parsiessa päivämäärää: " teksti)
+           nil))
+    nil))
