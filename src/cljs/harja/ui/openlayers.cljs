@@ -94,6 +94,9 @@
 
 (def ^:export the-kartta (atom nil))
 
+(defn set-map-size! [w h]
+  (.setSize @the-kartta (clj->js [w h])))
+
 (defn keskita-kartta-pisteeseen! [keskipiste]
   (when-let [ol3 @the-kartta]
     (.setCenter (.getView ol3) (clj->js keskipiste))))

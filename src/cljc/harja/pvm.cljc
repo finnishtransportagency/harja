@@ -311,7 +311,8 @@
 
   
 #?(:cljs
-   (defn kuukauden-aikavali
+   (defn
+     kuukauden-aikavali
      "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
   kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      [dt]

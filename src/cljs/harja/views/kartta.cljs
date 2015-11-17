@@ -51,13 +51,15 @@
         (set! (.-left tyyli) (fmt/pikseleina x))
         (set! (.-top tyyli) "0px")
         (set! (.-width tyyli) (fmt/pikseleina w))
-        (set! (.-height tyyli) (fmt/pikseleina h)))
+        (set! (.-height tyyli) (fmt/pikseleina h))
+        (openlayers/set-map-size! w h))
       (do
         (set! (.-position tyyli) "absolute")
         (set! (.-left tyyli) (fmt/pikseleina x))
         (set! (.-top tyyli) (fmt/pikseleina y))
         (set! (.-width tyyli) (fmt/pikseleina w))
-        (set! (.-height tyyli) (fmt/pikseleina h))))
+        (set! (.-height tyyli) (fmt/pikseleina h))
+        (openlayers/set-map-size! w h)))
     ;; jotta vältetään muiden kontrollien hautautuminen float:right Näytä kartta alle, kavenna kartta-container
     (when (= :S @nav/kartan-koko)
       (set! (.-left tyyli) "")

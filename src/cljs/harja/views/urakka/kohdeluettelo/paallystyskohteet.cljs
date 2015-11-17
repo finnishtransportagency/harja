@@ -76,6 +76,7 @@
                               sijainnit @tr-sijainnit
                               osat (into []
                                          (map (fn [osa]
+                                                (log "OSA: " (pr-str osa) " => SIJAINTI: " (pr-str (sijainnit (tr-osoite osa))))
                                                 (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                          %)
                               vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) osat))]
@@ -90,10 +91,11 @@
                        (if (:poistettu rivi)
                          (swap! tr-virheet dissoc id)
                          (let [osoite (tr-osoite rivi)]
-                           (when (not (haetut osoite))
+                           (when (and osoite (not (haetut osoite)))
                              (go
                                (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
                                (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
+                                 (log "SIJAINTI: " (pr-str sijainti))
                                  (when (= (get (grid/hae-muokkaustila g) id) rivi) ;; ettei rivi ole uudestaan muuttunut
                                    (if-let [virhe (and (vkm/virhe? sijainti)
                                                        "Virheellinen TR-osoite")]
@@ -104,9 +106,7 @@
                                          (doseq [kentta [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys]]
                                            (grid/poista-virhe! g id kentta))
                                          (log "sain sijainnin " (clj->js sijainti))
-                                         (swap! tr-sijainnit assoc osoite sijainti))))))))))))
-         
-         }
+                                         (swap! tr-sijainnit assoc osoite sijainti))))))))))))}
         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna nimi"]]}
          {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Anna tienumero"]]}
          {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :positiivinen-numero  :leveys "10%" :validoi [[:ei-tyhja "Anna alkuosa"]]}

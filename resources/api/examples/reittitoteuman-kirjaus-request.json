@@ -23,31 +23,31 @@
       },
       "sopimusId": 1,
       "alkanut": "2016-01-30T12:00:00Z",
-      "paattynyt": "2016-01-30T12:00:00Z",
+      "paattynyt": "2016-02-01T12:00:00Z",
       "toteumatyyppi": "kokonaishintainen",
       "tehtavat": [
         {
           "tehtava": {
-            "id": 1,
+            "id": 1359,
             "maara": {
               "yksikko": "km",
-              "maara": 10.12
+              "maara": 123
             }
           }
         },
         {
           "tehtava": {
-            "id": 2,
+            "id": 1360,
             "maara": {
               "yksikko": "km",
-              "maara": 10.12
+              "maara": 123
             }
           }
         }
       ],
       "materiaalit": [
         {
-          "materiaali": "talvisuolaliuosNaCl",
+          "materiaali": "Talvisuolaliuos NaCl",
           "maara": {
             "yksikko": "kg",
             "maara": 4.62
@@ -66,18 +66,18 @@
           "tehtavat": [
             {
               "tehtava": {
-                "id": 1
+                "id": 1359
               }
             },
             {
               "tehtava": {
-                "id": 2
+                "id": 1360
               }
             }
           ],
           "materiaalit": [
             {
-              "materiaali": "talvisuolaliuosNaCl",
+              "materiaali": "Talvisuolaliuos NaCl",
               "maara": {
                 "yksikko": "kg",
                 "maara": 1.32
@@ -96,18 +96,18 @@
           "tehtavat": [
             {
               "tehtava": {
-                "id": 1
+                "id": 1359
               }
             },
             {
               "tehtava": {
-                "id": 2
+                "id": 1360
               }
             }
           ],
           "materiaalit": [
             {
-              "materiaali": "talvisuolaliuosNaCl",
+              "materiaali": "Talvisuolaliuos NaCl",
               "maara": {
                 "yksikko": "kg",
                 "maara": 0.9
@@ -126,18 +126,18 @@
           "tehtavat": [
             {
               "tehtava": {
-                "id": 1
+                "id": 1359
               }
             },
             {
               "tehtava": {
-                "id": 2
+                "id": 1360
               }
             }
           ],
           "materiaalit": [
             {
-              "materiaali": "talvisuolaliuosNaCl",
+              "materiaali": "Talvisuolaliuos NaCl",
               "maara": {
                 "yksikko": "kg",
                 "maara": 2.4
