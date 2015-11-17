@@ -64,7 +64,7 @@ BEGIN
     RETURN (summa, summa * tulosrivi.kerroin, summa * tulosrivi.kerroin - summa);
   ELSE
     RAISE NOTICE 'Asiakastyytyväisyysbonusta ei voitu laskea koska indeksilukuja indeksillä % hoitokaudelle %-% löytyi vain : %', indeksinimi, alkuv, loppuv, tulosrivi.indeksilukujen_lkm;
-    RETURN NULL;
+    RETURN (summa, NULL::NUMERIC, NULL::NUMERIC);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
