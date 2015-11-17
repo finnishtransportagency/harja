@@ -1,4 +1,51 @@
+-- name: hae-urakan-maksueratiedot
+-- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
+-- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
+-- eri maksuerätyypeille.
+SELECT tpi_id,
+       SUM(kokonaishintaisten_summa) AS kokonaishintainen,
+       SUM(yksikkohintaisten_summa) AS yksikkohintainen,
+       SUM(sakot_summa) AS sakko,
+       SUM(muutostyot_summa) AS muutostyot_summa, -- todo lisää loput tyypit
+       SUM(akilliset_hoitotyot_summa) AS "akillinen-hoitotyo",
+       SUM(lisatyot_summa) AS lisatyo
+  FROM (SELECT SUM((laskutusyhteenveto).kht_laskutettu_ind_korotettuna +
+                   (laskutusyhteenveto).kht_laskutetaan_ind_korotettuna) AS kokonaishintaisten_summa,
+               SUM((laskutusyhteenveto).yht_laskutettu_ind_korotettuna +
+                   (laskutusyhteenveto).yht_laskutetaan_ind_korotettuna) AS yksikkohintaisten_summa,
+	       SUM((laskutusyhteenveto).sakot_laskutettu_ind_korotettuna +
+	           (laskutusyhteenveto).sakot_laskutetaan_ind_korotettuna) AS sakot_summa,
+	       SUM((laskutusyhteenveto).muutostyot_laskutettu_ind_korotettuna +
+	           (laskutusyhteenveto).muutostyot_laskutetaan_ind_korotettuna) AS muutostyot_summa,
+	       SUM((laskutusyhteenveto).akilliset_hoitotyot_laskutettu_ind_korotettuna +
+	           (laskutusyhteenveto).akilliset_hoitotyot_laskutetaan_ind_korotettuna) AS akilliset_hoitotyot_summa,
+	       SUM((laskutusyhteenveto).muutostyot_laskutettu_ind_korotettuna + 
+	           (laskutusyhteenveto).muutostyot_laskutetaan_ind_korotettuna) AS lisatyot_summa,
+		   
+               (laskutusyhteenveto).tpi AS tpi_id,
+               lyht.alkupvm, lyht.loppupvm
+          FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+                SELECT hk.alkupvm, hk.loppupvm,
+                       laskutusyhteenveto(hk.alkupvm, hk.loppupvm,
+                                          date_trunc('month', hk.loppupvm) :: DATE,
+                                          (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
+					  :urakka_id::INTEGER, :indeksi)
+                  FROM (SELECT * FROM urakan_hoitokaudet(:urakka_id::INTEGER)
+                         WHERE loppupvm < now()) AS hk
+                UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+                SELECT hk.alkupvm, hk.loppupvm,
+                       laskutusyhteenveto(hk.alkupvm, hk.loppupvm,
+                                          date_trunc('month', now()) :: DATE,
+                                          (date_trunc('month', now()) + INTERVAL '1 month') :: DATE, :urakka_id::INTEGER, :indeksi)
+                  FROM (SELECT * FROM urakan_hoitokaudet(:urakka_id::INTEGER)
+                         WHERE alkupvm < now() AND loppupvm > now()) AS hk
+               ) AS lyht
+        GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
+GROUP BY tpi_id;
+
+
 -- name: hae-urakan-maksuerat
+-- FIXME: poista tämä kun laskutusyhteenvetoa käyttävä versio yllä on valmis.
 -- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot
 SELECT
   m.numero     AS numero,

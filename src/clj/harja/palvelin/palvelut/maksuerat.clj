@@ -37,14 +37,33 @@
     (log/debug "Maksuerän tilat" tilat)
     tilat))
 
+(comment
+  ;; Maksuerä rivi esimerkki:
+  {:toimenpideinstanssi_nimi "Oulu Sorateiden hoito TP 2014-2019",
+   :numero 40,
+   :toimenpideinstanssi_loppupvm #inst "2019-09-29T21:00:00.000-00:00",
+   :maksuera_tyyppi "muu",
+   :sopimus_sampoid "2H16339/01",
+   :maksuera_lahetetty nil,
+   :maksuera_tila nil,
+   :kustannussuunnitelma_tila nil,
+   :kustannussuunnitelma_summa 1M,
+   :toimenpideinstanssi_alkupvm #inst "2014-09-30T21:00:00.000-00:00",
+   :maksuera_nimi "Oulu Sorateiden hoito TP ME 2014-2019",
+   :kustannussuunnitelma_lahetetty nil,
+   :toimenpideinstanssi_id 6,
+   :maksuera_summa 0M})
+
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
-  (into []
-        maksuera-xf
-        (q/hae-urakan-maksuerat db urakka-id)))
+  (let [tulos (into []
+                    maksuera-xf
+                    (q/hae-urakan-maksuerat db urakka-id))]
+    (log/info "TULOS: " (pr-str tulos))
+    tulos))
 
 (defn laheta-maksuerat-sampoon
   "Palvelu, joka lähettää annetut maksuerät Sampoon. Ei vaadi erillisoikeuksia."
