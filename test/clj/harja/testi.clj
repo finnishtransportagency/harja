@@ -380,3 +380,8 @@
                                        " AND tyyppi='hoito'::urakkatyyppi")))))
      (testit#)
      (alter-var-root #'jarjestelma component/stop)))
+
+(defn =marginaalissa?
+  "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan tulosten vertailussa."
+  [eka toka marginaali]
+  (< (Math/abs (double (- eka toka))) marginaali))

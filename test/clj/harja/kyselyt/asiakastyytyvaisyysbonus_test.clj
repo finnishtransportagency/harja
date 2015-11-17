@@ -7,6 +7,7 @@
             [clj-time.core :as t]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.palvelin.palvelut.indeksit :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.testi :refer :all]
@@ -19,7 +20,10 @@
                     (component/start
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)))))
+                        :http-palvelin (testi-http-palvelin)
+                        :indeksit (component/using
+                                    (->Indeksit)
+                                    [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -54,7 +58,7 @@
       (is (= 1000M (first bonarit)) "bonari ilman korotusta")
       (is (= 1050.1666666666667000M (second bonarit)) "bonari korotuksen kera")
       (is (= 50.1666666666667000M (nth bonarit 2)) "bonarin korotus")
-      (is (= [nil nil nil] bonarit-jos-indekseja-ei-ole-syotetty)))))
+      (is (= [1000M nil nil] bonarit-jos-indekseja-ei-ole-syotetty)))))
 
 
 
@@ -70,35 +74,69 @@
 (defspec muuta-bonuksen-maaraa
          100
          ;; Muuta bonuksen laskennassa käytettyjä arvoja
-         ;; - maksupvm
-         ;; - sakko per ylittävä tonni
-         ;; - indeksinimi
          ;; - summa
-         ;; varmista, että sakko on aina oikein laskettu
-         (prop/for-all [summa (gen/fmap #(BigDecimal. %) (gen/double* {:min 10000 :max 500000 :NaN? false}))
-                        indeksinimi (gen/elements ["MAKU 2005" "MAKU 2010" nil])
-                        maksupvm (gen/elements [(pvm/->pvm "01.12.2015") (pvm/->pvm "01.12.2014") (pvm/->pvm "01.7.2014")
-                                                (pvm/->pvm "01.12.2016") (pvm/->pvm "01.12.2017") (pvm/->pvm "01.12.2018")])]
+         ;; - indeksinimi
+         ;; - maksupvm
+         (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :indeksit +kayttaja-tero+)
+               double-laskujen-tarkkuus 0.015]
 
-                       (let [bonus (laske-bonus maksupvm
-                                                indeksinimi
-                                                summa)
-                             kyselyn-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
-                                              (:db jarjestelma)
-                                              {:maksupvm    maksupvm
-                                               :indeksinimi indeksinimi
-                                               :summa       summa})]
-                         (if (and (or
+           (prop/for-all [summa (gen/fmap #(BigDecimal. %) (gen/double* {:min 100 :max 500000 :NaN? false}))
+                          indeksinimi (gen/elements ["MAKU 2005" "MAKU 2010" nil])
+                          maksupvm (gen/elements [(pvm/->pvm "01.12.2015") (pvm/->pvm "01.12.2014") (pvm/->pvm "01.7.2014")
+                                                  (pvm/->pvm "01.12.2016") (pvm/->pvm "01.12.2017") (pvm/->pvm "01.12.2018")])]
+
+                         (let [bonus (laske-bonus maksupvm
+                                                  indeksinimi
+                                                  summa)
+                               kyselyn-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
+                                                (:db jarjestelma)
+                                                {:maksupvm    maksupvm
+                                                 :indeksinimi indeksinimi
+                                                 :summa       summa})
+                               hk-alkuvuosi (if (or (= 10 (pvm/kuukausi maksupvm))
+                                                    (= 11 (pvm/kuukausi maksupvm))
+                                                    (= 12 (pvm/kuukausi maksupvm)))
+                                              (- (pvm/vuosi maksupvm) 1)
+                                              (- (pvm/vuosi maksupvm) 2))
+                               indeksit-alkuvuonna (vec (vals
+                                                          (select-keys
+                                                            (get indeksit [indeksinimi hk-alkuvuosi])
+                                                            [10 11 12])))
+
+                               indeksit-loppuvuonna (vec (vals (select-keys
+                                                                 (get indeksit [indeksinimi (inc hk-alkuvuosi)])
+                                                                 [1 2 3 4 5 6 7 8 9])))
+                               indeksilukujen-lkm (count (concat indeksit-alkuvuonna indeksit-loppuvuonna))
+                               indeksiluvut-loytyy-koko-hoitokaudelle? (= 12 indeksilukujen-lkm)
+                               indeksilukujen-ka-hoitokaudella (when indeksiluvut-loytyy-koko-hoitokaudelle?
+                                                                 (/ (apply + (concat indeksit-alkuvuonna indeksit-loppuvuonna)) indeksilukujen-lkm))
+
+                               korotettuna (when indeksiluvut-loytyy-koko-hoitokaudelle?
+                                         (* summa (/ indeksilukujen-ka-hoitokaudella 100)))
+                               kasin-laskettuna {:summa       summa
+                                                 :korotettuna (if-not indeksinimi
+                                                                summa
+                                                                korotettuna)
+                                                 :korotus     (if-not indeksinimi
+                                                                0
+                                                              (when korotettuna (- korotettuna summa)))}]
+                           (if
+                             (and (or
+                                    (not indeksiluvut-loytyy-koko-hoitokaudelle?)
                                     (= maksupvm (pvm/->pvm "01.12.2016"))
                                     (= maksupvm (pvm/->pvm "01.12.2017"))
                                     (= maksupvm (pvm/->pvm "01.12.2018")))
                                   (some? indeksinimi))
-                           ;; jos indeksilukuja ei löydy kaikille kuukausille, odotetaankin paluuarvoksi nil
-                           (do
-                             (is (= (nth bonus 0) (:summa kyselyn-kautta) nil) "summa")
-                             (is (= (nth bonus 1) (:korotettuna kyselyn-kautta) nil) "korotettuna")
-                             (is (= (nth bonus 2) (:korotus kyselyn-kautta) nil) "korotus"))
-                           (do
-                             (is (= (nth bonus 0) (:summa kyselyn-kautta)) "summa")
-                             (is (= (nth bonus 1) (:korotettuna kyselyn-kautta)) "korotettuna")
-                             (is (= (nth bonus 2) (:korotus kyselyn-kautta)) "korotus"))))))
+                             ;; jos indeksilukuja ei löydy kaikille kuukausille, odotetaan summa = summa, korotettuna ja korotus = nil
+                             (do
+                               (is (= (nth bonus 0) (:summa kyselyn-kautta) (:summa kasin-laskettuna)) "summa")
+                               (is (= (nth bonus 1) (:korotettuna kyselyn-kautta) nil) "korotettuna")
+                               (is (= (nth bonus 2) (:korotus kyselyn-kautta) nil) "korotus"))
+                             (do
+                               (is (= (nth bonus 0) (:summa kyselyn-kautta) (:summa kasin-laskettuna)) "summa")
+                               (is (= (nth bonus 1) (:korotettuna kyselyn-kautta)) "korotettuna")
+                               (is (= (nth bonus 2) (:korotus kyselyn-kautta)) "korotus")
+                               ;; double epätarkkuus sallitaan käsin laskettuihin verratessa
+                               (is (=marginaalissa? (:korotettuna kasin-laskettuna) (:korotettuna kyselyn-kautta) double-laskujen-tarkkuus) "korotettuna")
+                               (is (=marginaalissa? (:korotus kasin-laskettuna) (:korotus kyselyn-kautta) double-laskujen-tarkkuus) "korotus")))))))
