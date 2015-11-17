@@ -59,18 +59,13 @@
 
 
 (defn laske-bonus [maksupvm indeksinimi summa]
-  (log/debug "laske-bonus " maksupvm "i: " indeksinimi)
-  (first (q (if indeksinimi
-              (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('"
-                   maksupvm "'::DATE, '"
-                   ;; FIXME_ tähän injektoitava NULL sql:ään asti
-                   (or indeksinimi "'null'") "', '"
-                   summa "'::NUMERIC);")
-              (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('"
-                   maksupvm "'::DATE, null, '"
-                   summa "'::NUMERIC);")
-              ))))
-
+  (first (q
+           (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('"
+                maksupvm "'::DATE,"
+                (if indeksinimi
+                  (str "'" indeksinimi "', '")
+                  (str "null, '"))
+                summa "');"))))
 
 (defspec muuta-bonuksen-maaraa
          100
@@ -92,10 +87,7 @@
                                               (:db jarjestelma)
                                               {:maksupvm    maksupvm
                                                :indeksinimi indeksinimi
-                                               :summa       summa})
-                             _ (log/debug "summa " summa)
-                             _ (log/debug "bonus " bonus)
-                             _ (log/debug "kyselyn kautta " kyselyn-kautta)]
+                                               :summa       summa})]
                          (if (and (or
                                     (= maksupvm (pvm/->pvm "01.12.2016"))
                                     (= maksupvm (pvm/->pvm "01.12.2017"))
