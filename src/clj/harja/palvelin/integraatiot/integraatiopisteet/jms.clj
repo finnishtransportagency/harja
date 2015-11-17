@@ -40,12 +40,13 @@
     (sonja/kuuntele sonja jono
                     (fn [viesti]
                       (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
-                      (let [data (viestiparseri viesti)
+                      (let [viestin-sisalto (.getText viesti)
+                            data (viestiparseri viestin-sisalto)
                             viesti-id (viesti->id data)
                             onnistunut (onnistunut? data)]
                         (if viesti-id
-                          (lokittaja :saapunut-jms-kuittaus viesti-id viesti onnistunut)
+                          (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut)
                           (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))
-                        (kasittelija onnistunut data))))
+                        (kasittelija data viesti-id onnistunut))))
     (catch Exception e
       (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))

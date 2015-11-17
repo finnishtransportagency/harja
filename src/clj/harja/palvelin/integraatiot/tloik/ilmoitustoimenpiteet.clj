@@ -28,7 +28,7 @@
       (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id))))
 
-(defn vastaanota-kuittaus [db viesti-id _ onnistunut]
+(defn vastaanota-kuittaus [db viesti-id onnistunut]
   (if onnistunut
     (do
       (log/debug (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta onnistuneeksi viesti-id:llä: %s" viesti-id))

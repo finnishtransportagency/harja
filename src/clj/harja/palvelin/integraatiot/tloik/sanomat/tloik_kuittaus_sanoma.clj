@@ -12,6 +12,6 @@
         kuittaus {:aika           (xml/parsi-paivamaara (z/xml1-> data :aika z/text))
                   :kuittaustyyppi (z/xml1-> data :kuittaustyyppi z/text)
                   :viesti-id      (z/xml1-> data :viestiId z/text)
-                  ;; todo: virheen parsinta
+                  :virhe          (z/xml1-> data :virhe z/text)
                   }]
     kuittaus))

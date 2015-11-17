@@ -25,11 +25,11 @@
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
     (jms/kuittausjonokuuntelija (tee-lokittaja this) (:sonja this) toimenpidekuittausjono
-                                (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus (.getText kuittaus)))
+                                (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
                                 :viesti-id
                                 (comp not :virhe)
-                                (fn [kuittaus viesti-id onnistunut]
-                                  (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) kuittaus viesti-id onnistunut)))))
+                                (fn [_ viesti-id onnistunut]
+                                  (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
 (defrecord Tloik [ilmoitusviestijono ilmoituskuittausjono toimenpidejono toimenpidekuittausjono]
   component/Lifecycle
