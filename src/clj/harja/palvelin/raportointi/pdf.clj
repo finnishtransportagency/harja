@@ -15,8 +15,8 @@
                  (pr-str elementti)))
     (first elementti)))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto? nayta-otsikko?] :as optiot} sarakkeet data]]
-  [:fo:block {} (when nayta-otsikko? otsikko)
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
+  [:fo:block {} otsikko
    [:fo:table {:border "solid 0.1mm black"}
     (for [{:keys [otsikko leveys]} sarakkeet]
       [:fo:table-column {:column-width leveys}])
@@ -137,12 +137,7 @@
                  (keep identity
                        (mapcat #(when %
                                  (if (seq? %)
-                                   (map (fn [sisalto]
-                                          ; Raportin sisältö koostuu useammasta kuin yhdestä elementistä, näytetään
-                                          ; gridien otsikot. Sisällön ollessa yksi grid raportin otsikko kertoo sisällön.
-                                          (if (= (first sisalto) :taulukko)
-                                            (muodosta-pdf (assoc sisalto 1 (assoc (second sisalto) :nayta-otsikko? true)))
-                                            (muodosta-pdf sisalto))) %)
+                                   (map muodosta-pdf %)
                                    [(muodosta-pdf %)]))
                                sisalto))
                  [[:fo:block {:id "raportti-loppu"}]])))
