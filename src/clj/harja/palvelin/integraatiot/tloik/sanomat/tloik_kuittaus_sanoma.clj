@@ -11,5 +11,7 @@
   (let [data (xml/lue viesti)
         kuittaus {:aika           (xml/parsi-paivamaara (z/xml1-> data :aika z/text))
                   :kuittaustyyppi (z/xml1-> data :kuittaustyyppi z/text)
-                  :viesti-id      (z/xml1-> data :viestiId z/text)}]
+                  :viesti-id      (z/xml1-> data :viestiId z/text)
+                  ;; todo: virheen parsinta
+                  }]
     kuittaus))

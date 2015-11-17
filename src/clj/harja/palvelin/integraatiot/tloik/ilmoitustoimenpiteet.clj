@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet
   (:require [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as toimenpide-sanoma]
@@ -29,14 +28,13 @@
       (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id))))
 
-(defn vastaanota-kuittaus [lokittaja db viesti]
-  (log/debug (format "Vastaanotettiin ilmoitustoimenpiteelle T-LOIK:sta ilmoitustoimenpiteelle kuittaus: %s " viesti))
-  (let [kuittaus-xml (.getText viesti)
-        kuittaus (tloik-kuittaus-sanoma/lue-kuittaus kuittaus-xml)
-        onnistunut? (not (contains? kuittaus :virhe))]
-    (log/debug (format "Kuittauksen sisältö: %s" kuittaus))
-    (if-let [viesti-id (:viesti-id kuittaus)]
-      (do
-        (lokittaja :saapunut-jms-kuittaus viesti-id kuittaus-xml onnistunut?)
-        (when onnistunut? (ilmoitukset/merkitse-ilmoitustoimenpide-lahetetyksi! db viesti-id)))
-      (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))))
+(defn vastaanota-kuittaus [db viesti-id _ onnistunut]
+  (if onnistunut
+    (do
+      (log/debug (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta onnistuneeksi viesti-id:llä: %s" viesti-id))
+      (ilmoitukset/merkitse-ilmoitustoimenpide-lahetetyksi! db viesti-id))
+
+    (do
+      (log/error (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
+      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db viesti-id))))
+

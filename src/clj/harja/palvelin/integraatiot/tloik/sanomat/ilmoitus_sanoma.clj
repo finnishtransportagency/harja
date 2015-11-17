@@ -69,6 +69,5 @@
                   :sijainti           (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
                                         (if (empty? sijainti) nil sijainti))
                   :vastaanottaja      (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
-                                        (if (empty? vastaanottaja) nil vastaanottaja))
-                  }]
+                                        (if (empty? vastaanottaja) nil vastaanottaja))}]
     ilmoitus))
