@@ -227,7 +227,7 @@
                         "Alkupvm ei voi olla lopun jälkeen.")))
                   ]}
        {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
-        :pvm-sijainti :ylos
+        :pvm-sijainti :ylos-vasen
         :validoi [[:ei-tyhja "Aseta loppupvm"]
                   (fn [loppu rivi]
                     (let [alku (:alku rivi)]

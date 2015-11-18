@@ -459,7 +459,8 @@
             (when @auki
               [:div.aikavalinta {:style (case pvm-sijainti
                                           :alas {:top 0 :left 0}
-                                          :ylos {:bottom "310px" :left 0})}
+                                          :ylos {:bottom "310px" :left 0}
+                                          :ylos-vasen {:bottom "310px" :right 0})}
                [pvm-valinta/pvm {:valitse        #(do (reset! auki false)
                                                       (reset! data %)
                                                       (reset! teksti (pvm/pvm %)))
