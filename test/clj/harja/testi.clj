@@ -166,6 +166,7 @@
 (def oulun-alueurakan-2014-2019-id (atom nil))
 (def oulun-alueurakan-lampotila-hk-2014-2015 (atom nil))
 (def oulun-alueurakan-2005-2010-paasopimuksen-id (atom nil))
+(def oulun-alueurakan-2014-2019-paasopimuksen-id (atom nil))
 (def pudasjarven-alueurakan-id (atom nil))
 (def muhoksen-paallystysurakan-id (atom nil))
 (def muhoksen-paallystysurakan-paasopimuksen-id (atom nil))
@@ -220,6 +221,9 @@
 (defn hae-oulun-alueurakan-2005-2010-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null)"))))
+(defn hae-oulun-alueurakan-2014-2019-paasopimuksen-id []
+  (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
+                           (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)"))))
 
 (defn hae-muhoksen-paallystysurakan-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
@@ -248,6 +252,7 @@
   (reset! muhoksen-paikkausurakan-id (hae-muhoksen-paikkausurakan-id))
   (reset! muhoksen-paikkausurakan-paasopimuksen-id (hae-muhoksen-paikkausurakan-paasopimuksen-id))
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id (hae-oulun-alueurakan-2005-2010-paasopimuksen-id))
+  (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
   (testit)
   (reset! oulun-alueurakan-2005-2010-id nil)
@@ -375,3 +380,8 @@
                                        " AND tyyppi='hoito'::urakkatyyppi")))))
      (testit#)
      (alter-var-root #'jarjestelma component/stop)))
+
+(defn =marginaalissa?
+  "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan tulosten vertailussa."
+  [eka toka marginaali]
+  (< (Math/abs (double (- eka toka))) marginaali))
