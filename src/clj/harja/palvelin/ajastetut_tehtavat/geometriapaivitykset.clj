@@ -23,20 +23,24 @@
   (:import (java.net URI)
            (java.sql Timestamp)))
 
-(defn aja-alk-paivitys [alk db paivitystunnus kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
+(defn aja-alk-paivitys [integraatioloki db paivitystunnus kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
   (log/debug "Geometria-aineisto: " paivitystunnus " on muuttunut ja tarvitaan päivittää")
-  (kansio/poista-tiedostot kohdepolku)
-  (alk/hae-tiedosto alk (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
+  (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
+  (alk/hae-tiedosto integraatioloki (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
   (arkisto/pura-paketti kohdetiedoston-polku)
   (paivitys)
   (geometriapaivitykset/paivita-viimeisin-paivitys<! db tiedoston-muutospvm paivitystunnus)
   (log/debug "Geometriapäivitys: " paivitystunnus " onnistui"))
 
-(defn onko-kohdetiedosto-ok? [kohdepolku kohdetiedoston-nimi]
-  (and
-    (not (empty kohdepolku))
-    (not (empty kohdetiedoston-nimi))
-    (.isDirectory (clojure.java.io/file kohdepolku))))
+(defn onko-kohdetiedosto-ok? [kohdepolku]
+  (let [file (io/file kohdepolku)
+        kansio (.getParent file)
+        tiedosto (.getName file)]
+    (if (and (not (empty kansio)) (not (empty tiedosto)))
+      (do
+        (kansio/luo-jos-ei-olemassa kansio)
+        true)
+      false)))
 
 (defn pitaako-paivittaa? [db paivitystunnus tiedoston-muutospvm]
   (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db paivitystunnus))
@@ -63,28 +67,27 @@
       (log/warn "Tarkistettaessa paikallista ajoa geometriapäivitykselle: " paivitystunnus ", tapahtui poikkeus: " e)
       false)))
 
-(defn kaynnista-alk-paivitys [alk db paivitystunnus tiedostourl kohdepolku kohdetiedoston-nimi paivitys]
+(defn kaynnista-alk-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku paivitys]
   (log/debug "Tarkistetaan onko geometria-aineisto: " paivitystunnus " päivittynyt ALK:ssa.")
-  (let [kohdetiedoston-polku (str kohdepolku kohdetiedoston-nimi)]
-    ;; todo: tarvii todennäköisesti tehdä tarkempi tarkastus kohdetiedostolle
-    (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdepolku kohdetiedoston-nimi))
-      (try+
-        (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara alk (str paivitystunnus "-muutospaivamaaran-haku") tiedostourl)
-              alk-paivitys (fn [] (aja-alk-paivitys alk db paivitystunnus kohdepolku kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys))]
-          (if (pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm)
-            (lukko/aja-lukon-kanssa db paivitystunnus alk-paivitys)
-            (log/debug "Geometria-aineisto: " paivitystunnus ", ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä.")))
-        (catch Exception e
-          (log/error "Geometria-aineiston päivityksessä: " paivitystunnus ", tapahtui poikkeus: " e))))))
+  ;; todo: tarvii todennäköisesti tehdä tarkempi tarkastus kohdetiedostolle
+  (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdetiedoston-polku))
+    (try+
+      (let [tiedoston-muutospvm (alk/hae-tiedoston-muutospaivamaara integraatioloki (str paivitystunnus "-muutospaivamaaran-haku") tiedostourl)
+            alk-paivitys (fn [] (aja-alk-paivitys integraatioloki db paivitystunnus kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys))]
+        (if (pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm)
+          (lukko/aja-lukon-kanssa db paivitystunnus alk-paivitys)
+          (log/debug "Geometria-aineisto: " paivitystunnus ", ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä.")))
+      (catch Exception e
+        (log/error "Geometria-aineiston päivityksessä: " paivitystunnus ", tapahtui poikkeus: " e)))))
 
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
 
-(defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdepolku kohdetiedosto paivitys]
+(defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku paivitys]
   (log/debug " Ajastetaan geometria-aineiston " paivitystunnus " päivitys ajettavaksi " tuontivali "minuutin välein ")
   (chime-at (periodic-seq (time/now) (-> tuontivali time/minutes))
             (fn [_]
-              (kaynnista-alk-paivitys (:alk this) (:db this) paivitystunnus osoite kohdepolku kohdetiedosto paivitys))))
+              (kaynnista-alk-paivitys (:integraatioloki this) (:db this) paivitystunnus osoite kohdetiedoston-polku paivitys))))
 
 (defn tee-tieverkon-alk-paivitystehtava
   [this {:keys [tuontivali
@@ -100,40 +103,7 @@
                      tuontivali
                      tieosoiteverkon-alk-osoite
                      tieosoiteverkon-alk-tuontikohde
-                     "tieosoiteverkko.zip"
                      (fn [] (tieverkon-tuonti/vie-tieverkko-kantaan (:db this) tieosoiteverkon-shapefile)))))
-
-
-
-(comment
-  ;; ylempi yleiseen muotoon ilman makroja =>
-
-  (defn maarittele-alk-paivitystehtava
-    [nimi alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitysfunktio]
-    (fn [this {:keys [tuontivali] :as asetukset}]
-      (let [alk-osoite (get asetukset alk-osoite-avain)
-            alk-tuontikohde (get asetukset alk-tuontikohde-avain)
-            shapefile (get asetukset shapefile-avain)]
-        (when (and tuontivali
-                   alk-osoite
-                   alk-tuontikohde
-                   shapefile)
-          (ajasta-paivitys this
-                           nimi
-                           tuontivali
-                           alk-osoite
-                           alk-tuontikohde
-                           (str nimi ".zip") ;; FIXME: esim "tieverkko" vs "tieosoiteverkko.zip" ei ihan sama
-                           (fn [] (paivitysfunktio (:db this) shapefile)))))))
-
-  (def tieverkon-alk-paivitystehtava
-    (maarittele-alk-paivitystehtava "tieosoiteverkko"
-                                    :tieosoiteverkon-alk-osoite :tieosoiteverkon-alk-tuontikohde
-                                    :tieosoiteverkon-shapefile
-                                    tieverkon-tuonti/vie-tieverkko-kantaan))
-  
-;; vastaava muunnos paikalliselle päivitystehtävälle
-)
 
 (defn tee-tieverkon-paikallinen-paivitystehtava
   [{:keys [db]}
@@ -167,7 +137,6 @@
                      tuontivali
                      pohjavesialueen-alk-osoite
                      pohjavesialueen-alk-tuontikohde
-                     "pohjavesialue.zip"
                      (fn [] (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan (:db this) pohjavesialueen-shapefile)))))
 
 (defn tee-pohjavesialueiden-paikallinen-paivitystehtava
@@ -202,7 +171,6 @@
                      tuontivali
                      siltojen-alk-osoite
                      siltojen-alk-tuontikohde
-                     "sillat.zip"
                      (fn [] (siltojen-tuonti/vie-sillat-kantaan (:db this) siltojen-shapefile)))))
 
 (defn tee-siltojen-paikallinen-paivitystehtava
@@ -237,7 +205,6 @@
                      tuontivali
                      talvihoidon-hoitoluokkien-alk-osoite
                      talvihoidon-hoitoluokkien-alk-tuontikohde
-                     "talvihoidon-hoitoluokat.tgz"
                      (fn [] (talvihoidon-tuonti/vie-hoitoluokat-kantaan (:db this) talvihoidon-hoitoluokkien-shapefile)))))
 
 (defn tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava
@@ -271,7 +238,6 @@
                      tuontivali
                      soratien-hoitoluokkien-alk-osoite
                      soratien-hoitoluokkien-alk-tuontikohde
-                     "soratien-hoitoluokat.tgz"
                      (fn [] (soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan (:db this) soratien-hoitoluokkien-shapefile)))))
 
 (defn tee-soratien-hoitoluokkien-paikallinen-paivitystehtava
@@ -293,7 +259,7 @@
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
-  (start [this] ; FIXME Kaikissa näissä on miltei identtinen pohja, voisi ehkä yleistää yhdeksi funktioksi tai multimethodiksi
+  (start [this]  ; FIXME Kaikissa näissä on miltei identtinen pohja, voisi ehkä yleistää yhdeksi funktioksi tai multimethodiksi
     (assoc this :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
     (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
     (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
@@ -312,3 +278,34 @@
     (apply (:tieverkon-paivitystehtava this) [])
     (apply (:soratien-hoitoluokkien-paivitystehtava this) [])
     this))
+
+
+(comment
+  ;; ylempi yleiseen muotoon ilman makroja =>
+
+  (defn maarittele-alk-paivitystehtava
+    [nimi alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitysfunktio]
+    (fn [this {:keys [tuontivali] :as asetukset}]
+      (let [alk-osoite (get asetukset alk-osoite-avain)
+            alk-tuontikohde (get asetukset alk-tuontikohde-avain)
+            shapefile (get asetukset shapefile-avain)]
+        (when (and tuontivali
+                   alk-osoite
+                   alk-tuontikohde
+                   shapefile)
+          (ajasta-paivitys this
+                           nimi
+                           tuontivali
+                           alk-osoite
+                           alk-tuontikohde
+                           (str nimi ".zip")                ;; FIXME: esim "tieverkko" vs "tieosoiteverkko.zip" ei ihan sama
+                           (fn [] (paivitysfunktio (:db this) shapefile)))))))
+
+  (def tieverkon-alk-paivitystehtava
+    (maarittele-alk-paivitystehtava "tieosoiteverkko"
+                                    :tieosoiteverkon-alk-osoite :tieosoiteverkon-alk-tuontikohde
+                                    :tieosoiteverkon-shapefile
+                                    tieverkon-tuonti/vie-tieverkko-kantaan))
+
+  ;; vastaava muunnos paikalliselle päivitystehtävälle
+  )

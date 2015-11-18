@@ -1,10 +1,10 @@
 {
  :kehitysmoodi         true
 
- :testikayttajat [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
-                  {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
-                  {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
- 
+ :testikayttajat       [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
+                        {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
+                        {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
+
  :http-palvelin        {:threads 16}
  :tietokanta           {:palvelin          "localhost"
                         :tietokanta        "harja"
@@ -50,21 +50,34 @@
 
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali                                     5000
-                        :tieosoiteverkon-shapefile                      "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
-                        ;; :tieosoiteverkon-alk-osoite                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/Tieosoiteverkko.shz"
-                        ;; :tieosoiteverkon-alk-tuontikohde             "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
-                        :pohjavesialueen-shapefile                      "file://shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shp"
-                        ;; :pohjavesialueen-alk-osoite                  "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_POHJAVESIALUE.shz"
-                        ;; :pohjavesialueen-alk-tuontikohde             "./shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shz"
-                        :talvihoidon-hoitoluokkien-shapefile            "file://shp/Talvihoitoluokat/tl132.shp"
-                        ;; talvihoidon-hoitoluokkien-alk-osoite         "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/tl132.shz"
-                        ;; talvihoidon-hoitoluokkien-alk-tuontikohde    "./shp/Talvihoitoluokat/tl132.shz"
-                        :soratien-hoitoluokkien-shapefile               "file://shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shp"
-                        ;; :soratien-hoitoluokkien-alk-osoite           "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_SORATIELUOKKA.shz"
-                        ;; :soratien-hoitoluokkien-alk-tuontikohde      "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
-                        :siltojen-shapefile                             "file://shp/Sillat/PTV_silta.shp"
-                        ;; :siltojen-alk-osoite                         "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/Sillat.shz"
-                        ;; :siltojen-alk-tuontikohde                    "./shp/Sillat/Sillat.shz"
+ :geometriapaivitykset {:tuontivali                                1
+
+                        :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko/PTK_osoite1.shp"
+                        :tieosoiteverkon-alk-osoite                "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTK_osoite1.shz"
+                        :tieosoiteverkon-alk-tuontikohde           "./shp/Tieosoiteverkko/PTK_osoite1.shz"
+
+                        :pohjavesialueen-shapefile                 "file://shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shp"
+                        :pohjavesialueen-alk-osoite                "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_POHJAVESIALUE.shz"
+                        :pohjavesialueen-alk-tuontikohde           "./shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shz"
+
+                        :talvihoidon-hoitoluokkien-shapefile       "file://shp/Talvihoitoluokat/PTV_tl132.shp"
+                        :talvihoidon-hoitoluokkien-alk-osoite      "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl132.shz"
+                        :talvihoidon-hoitoluokkien-alk-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
+
+                        :soratien-hoitoluokkien-shapefile          "file://shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shp"
+                        :soratien-hoitoluokkien-alk-osoite         "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_SORATIELUOKKA.shz"
+                        :soratien-hoitoluokkien-alk-tuontikohde    "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
+
+                        :siltojen-shapefile                        "file://shp/Sillat/PTV_silta.shp"
+                        :siltojen-alk-osoite                       "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
+                        :siltojen-alk-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
+
+                        ;; :urakkojen-shapefile                       "file://shp/Urakat/PTV_tl312.shp"
+                        ;; :urakkojen-alk-osoite                      "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl312.shz"
+                        ;; :urakkojen-alk-tuontikohde                 "./shp/Urakat/PTV_tl312.shz"
+
+                        ;; :ely-alueiden-shapefile                    "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
+                        ;; :ely-alueiden-alk-osoite                   "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
+                        ;; :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
                         }
  }
