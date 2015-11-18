@@ -6,7 +6,6 @@
 (defn- laske-pisteiden-extent
   "Laskee pisteiden alueen."
   [pisteet]
-  (log "Lasketaan pisteet: " (pr-str pisteet))
   (let [[ensimmainen-x ensimmainen-y] (first pisteet)
         pisteet (rest pisteet)]
     (loop [minx ensimmainen-x
