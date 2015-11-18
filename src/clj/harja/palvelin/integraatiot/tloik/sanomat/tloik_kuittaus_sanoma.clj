@@ -9,9 +9,8 @@
   (when (not (xml/validoi +xsd-polku+ "harja-tloik.xsd" viesti))
     (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman harja-tloik.xsd mukaan validi.")))
   (let [data (xml/lue viesti)
-        kuittaus {:aika           (xml/parsi-paivamaara (z/xml1-> data :aika z/text))
+        kuittaus {:aika           (xml/parsi-aikaleima (z/xml1-> data :aika z/text) "yyyy-MM-dd'T'HH:mm:ss")
                   :kuittaustyyppi (z/xml1-> data :kuittaustyyppi z/text)
                   :viesti-id      (z/xml1-> data :viestiId z/text)
-                  :virhe          (z/xml1-> data :virhe z/text)
-                  }]
+                  :virhe          (z/xml1-> data :virhe z/text)}]
     kuittaus))
