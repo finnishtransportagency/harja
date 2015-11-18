@@ -11,6 +11,7 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
+            [goog.string :as gstr]
             [cljs.core.async :refer [<! >! chan] :as async]
 
             [harja.views.kartta :as kartta]
@@ -179,7 +180,7 @@
                   ;; numeron syöttö (esim. "4,") ennen desimaalin kirjoittamista ylikirjoittuu
                   ;; Lisäksi esim. "4,0" parsitaan float-arvona kokonaisluvuksi 4, jolloin lukua "4,01" ei voi kirjoittaa.
                   (let [uusi (str @data)]
-                    (if (or (and (.startsWith olemassaoleva-teksti uusi)
+                    (if (or (and (gstr/startsWith olemassaoleva-teksti uusi)
                                  (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi))))
                             (when-not (:vaadi-ei-negatiivinen? kentta)
                               (= olemassaoleva-teksti (str "-" uusi))))

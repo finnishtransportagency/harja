@@ -10,18 +10,18 @@
 
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
-  {:http-palvelin                         {:portti s/Int
-                                           :url    s/Str
-                                           (s/optional-key :threads) s/Int
+  {:http-palvelin                         {:portti                         s/Int
+                                           :url                            s/Str
+                                           (s/optional-key :threads)       s/Int
                                            (s/optional-key :max-body-size) s/Int}
    :kehitysmoodi                          Boolean
-   (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
-   :tietokanta                            {:palvelin   s/Str
-                                           :tietokanta s/Str
-                                           :portti     s/Int
+   (s/optional-key :testikayttajat)       [{:kayttajanimi s/Str :kuvaus s/Str}]
+   :tietokanta                            {:palvelin                           s/Str
+                                           :tietokanta                         s/Str
+                                           :portti                             s/Int
                                            (s/optional-key :yhteyspoolin-koko) s/Int
-                                           :kayttaja   s/Str
-                                           :salasana   s/Str}
+                                           :kayttaja                           s/Str
+                                           :salasana                           s/Str}
    :fim                                   {:url s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
@@ -40,8 +40,10 @@
                                            :lahetysjono-ulos         s/Str
                                            :kuittausjono-ulos        s/Str
                                            :paivittainen-lahetysaika [s/Num]}
-   (s/optional-key :tloik)                {:ilmoitusviestijono   s/Str
-                                           :ilmoituskuittausjono s/Str}
+   (s/optional-key :tloik)                {:ilmoitusviestijono     s/Str
+                                           :ilmoituskuittausjono   s/Str
+                                           :toimenpideviestijono   s/Str
+                                           :toimenpidekuittausjono s/Str}
    (s/optional-key :tierekisteri)         {:url s/Str}
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
@@ -63,16 +65,16 @@
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
-  {:http-palvelin        {:portti 3000 :url "http://localhost:3000/"
-                          :threads 64
+  {:http-palvelin        {:portti        3000 :url "http://localhost:3000/"
+                          :threads       64
                           :max-body-size (* 1024 1024 16)}
    :kehitysmoodi         true
-   :tietokanta           {:palvelin   "localhost"
-                          :tietokanta "harja"
-                          :portti     5432
+   :tietokanta           {:palvelin          "localhost"
+                          :tietokanta        "harja"
+                          :portti            5432
                           :yhteyspoolin-koko 64
-                          :kayttaja   "harja"
-                          :salasana   ""}
+                          :kayttaja          "harja"
+                          :salasana          ""}
 
    :log                  {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
    :geometriapaivitykset {:tuontivali 1}
@@ -104,7 +106,7 @@
 
 (defn konfiguroi-lokitus [asetukset]
   (log/set-config! [:middleware] [crlf-filter])
-  
+
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))

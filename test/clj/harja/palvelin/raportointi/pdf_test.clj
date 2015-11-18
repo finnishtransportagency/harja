@@ -32,7 +32,7 @@
          (muodosta-pdf [:teksti "TEKSTIÄ"]))))
 
 (deftest taulukko
-  (let [fo (muodosta-pdf [:taulukko {}
+  (let [fo (muodosta-pdf [:taulukko {:otsikko "Taulukko"}
                           [{:otsikko "Eka" :leveys "10%"}
                            {:otsikko "Toka" :leveys "60%"}
                            {:otsikko "Kolmas" :leveys "30%"}]
@@ -40,22 +40,22 @@
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
-    (is (= fo '[:fo:table {:border "solid 0.1mm black"}
-                ([:fo:table-column {:column-width "10%"}]
-                 [:fo:table-column {:column-width "60%"}]
-                 [:fo:table-column {:column-width "30%"}])
-                [:fo:table-header
-                 [:fo:table-row
-                  ([:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Eka"]]
-                   [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Toka"]]
-                   [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Kolmas"]])]]
-                [:fo:table-body
-                 ([:fo:table-row
-                   ([:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "eka"]]
-                    [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "toka"]]
-                    [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "kolmas"]])])]]))))
-
-
+    (is (= fo '[:fo:block {} "Taulukko"
+                [:fo:table {:border "solid 0.1mm black"}
+                 ([:fo:table-column {:column-width "10%"}]
+                   [:fo:table-column {:column-width "60%"}]
+                   [:fo:table-column {:column-width "30%"}])
+                 [:fo:table-header
+                  [:fo:table-row
+                   ([:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Eka"]]
+                     [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Toka"]]
+                     [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Kolmas"]])]]
+                 [:fo:table-body
+                  ([:fo:table-row
+                    ([:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "eka"]]
+                      [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "toka"]]
+                      [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "kolmas"]])])]]
+                [:fo:block {:space-after "1em"}]]))))
 
 (deftest pylvaat
   (let [fo (muodosta-pdf [:pylvaat {:otsikko "Mun pylväät"}

@@ -133,7 +133,9 @@
 
      ;; T-LOIK
      :tloik (component/using (tloik/->Tloik (:ilmoitusviestijono (:tloik asetukset))
-                                            (:ilmoituskuittausjono (:tloik asetukset)))
+                                            (:ilmoituskuittausjono (:tloik asetukset))
+                                            (:toimenpideviestijono (:tloik asetukset))
+                                            (:toimenpidekuittausjono (:tloik asetukset)))
                              [:sonja :db :integraatioloki])
 
      ;; Tierekisteri

@@ -66,7 +66,11 @@
      :alue {:type        :tack-icon
             :scale       (if (valittu? havainto) 1.5 1)
             :img         "kartta-havainto-violetti.svg"
-            :coordinates (get-in havainto [:sijainti :coordinates])})])
+            :coordinates (if (= :line (get-in havainto [:sijainti :type]))
+                           ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
+                           (first (get-in havainto [:sijainti :points]))
+
+                           (get-in havainto [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :pistokoe [tarkastus valittu?]
   [(assoc tarkastus
@@ -77,18 +81,27 @@
      :alue {:type        :tack-icon
             :scale       (if (valittu? tarkastus) 1.5 1)
             :img         "kartta-tarkastus-violetti.svg"
-            :coordinates (get-in tarkastus [:sijainti :coordinates])})])
+            :coordinates (if (= :line (get-in tarkastus [:sijainti :type]))
+                           (first (get-in tarkastus [:sijainti :points]))
 
-(defmethod asia-kartalle :laaduntarkastus [tarkastus valittu?]
+                           (get-in tarkastus [:sijainti :coordinates]))})])
+
+(defmethod asia-kartalle :laatu [tarkastus valittu?]
+  (log "Piirretään laaduntarkastus: " (pr-str tarkastus))
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
      :selite {:teksti "Laaduntarkastus"
               :img    "kartta-tarkastus-violetti.svg"}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? tarkastus) 1.5 1)
-            :img         "kartta-tarkastus-violetti.svg"
-            :coordinates (get-in tarkastus [:sijainti :coordinates])})])
+     :alue (if (= :line (get-in tarkastus [:sijainti :type]))
+             {:type  :tack-icon-line
+              :scale (if (valittu? tarkastus) 1.5 1)
+              :img   "kartta-tarkastus-violetti.svg"
+              :points (get-in tarkastus [:sijainti :points])}
+             {:type  :tack-icon
+              :scale (if (valittu? tarkastus) 1.5 1)
+              :img   "kartta-tarkastus-violetti.svg"
+              :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
   [(assoc varustetoteuma
@@ -125,7 +138,7 @@
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)
-     ["kartta-turvallisuuspoikkeama-avoin-oranssi.svg" "Turvallisuuspoikkeama, avoin"]
+      ["kartta-turvallisuuspoikkeama-avoin-oranssi.svg" "Turvallisuuspoikkeama, avoin"]
 
       (if (some (comp nil? :suoritettu) kt)
         ["kartta-turvallisuuspoikkeama-ei-toteutettu-punainen.svg" "Turvallisuuspoikkeama, ei korjauksia"]
@@ -135,14 +148,14 @@
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
   (let [[ikoni selite] (paattele-turpon-ikoni tp)]
     [(assoc tp
-      :type :turvallisuuspoikkeama
-      :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-      :selite {:teksti selite
-               :img    ikoni}
-      :alue {:type        :tack-icon
-             :scale       (if (valittu? tp) 1.5 1)
-             :img         ikoni
-             :coordinates (get-in tp [:sijainti :coordinates])})]))
+       :type :turvallisuuspoikkeama
+       :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
+       :selite {:teksti selite
+                :img    ikoni}
+       :alue {:type        :tack-icon
+              :scale       (if (valittu? tp) 1.5 1)
+              :img         ikoni
+              :coordinates (get-in tp [:sijainti :coordinates])})]))
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv
@@ -171,34 +184,34 @@
   ;; Voisi kuvitella että jotkut tehtävät ovat luonnostaan kiinnostavampia,
   ;; Esim jos talvella aurataan paljon mutta suolataan vain vähän (ja yleensä aurataan kun suolataan),
   ;; niin silloin pitäisi näyttää suolauksen ikoni silloin harvoin kun sitä tehdään.
-  (let [ikonikartta {"auraus ja sohjonpoisto" ["talvihoito" "Talvihoito"]
-                     "suolaus" ["talvihoito" "Talvihoito"]
-                     "pistehiekoitus" ["talvihoito" "Talvihoito"]
-                     "linjahiekoitus" ["talvihoito" "Talvihoito"]
-                     "lumivallien madaltaminen" ["talvihoito" "Talvihoito"]
+  (let [ikonikartta {"auraus ja sohjonpoisto"          ["talvihoito" "Talvihoito"]
+                     "suolaus"                         ["talvihoito" "Talvihoito"]
+                     "pistehiekoitus"                  ["talvihoito" "Talvihoito"]
+                     "linjahiekoitus"                  ["talvihoito" "Talvihoito"]
+                     "lumivallien madaltaminen"        ["talvihoito" "Talvihoito"]
                      "sulamisveden haittojen torjunta" ["talvihoito" "Talvihoito"]
-                     "kelintarkastus" ["talvihoito" "Talvihoito"]
+                     "kelintarkastus"                  ["talvihoito" "Talvihoito"]
 
-                     "tiestotarkastus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
-                     "koneellinen niitto" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
-                     "koneellinen vesakonraivaus" ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+                     "tiestotarkastus"                 ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+                     "koneellinen niitto"              ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
+                     "koneellinen vesakonraivaus"      ["liikenneympariston-hoito" "Liikenneympäristön hoito"]
 
-                     "liikennemerkkien puhdistus" ["varusteet-ja-laitteet" "Varusteet ja laitteet"]
+                     "liikennemerkkien puhdistus"      ["varusteet-ja-laitteet" "Varusteet ja laitteet"]
 
-                     "sorateiden muokkaushoylays" ["sorateiden-hoito" "Sorateiden hoito"]
-                     "sorateiden polynsidonta" ["sorateiden-hoito" "Sorateiden hoito"]
-                     "sorateiden tasaus" ["sorateiden-hoito" "Sorateiden hoito"]
-                     "sorastus" ["sorateiden-hoito" "Sorateiden hoito"]
+                     "sorateiden muokkaushoylays"      ["sorateiden-hoito" "Sorateiden hoito"]
+                     "sorateiden polynsidonta"         ["sorateiden-hoito" "Sorateiden hoito"]
+                     "sorateiden tasaus"               ["sorateiden-hoito" "Sorateiden hoito"]
+                     "sorastus"                        ["sorateiden-hoito" "Sorateiden hoito"]
 
-                     "harjaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
-                     "pinnan tasaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
-                     "paallysteiden paikkaus" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
-                     "paallysteiden juotostyot" ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                     "harjaus"                         ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                     "pinnan tasaus"                   ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                     "paallysteiden paikkaus"          ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
+                     "paallysteiden juotostyot"        ["paallysteiden-yllapito" "Päällysteiden ylläpito"]
 
-                     "siltojen puhdistus" ["sillat" "Sillat"]
+                     "siltojen puhdistus"              ["sillat" "Sillat"]
 
-                     "l- ja p-alueiden puhdistus" ["hairion-hallinta" "Häiriön hallinta"] ;; En tiedä yhtään mikä tämä on
-                     "muu" ["hairion-hallinta" "Häiriön hallinta"]}
+                     "l- ja p-alueiden puhdistus"      ["hairion-hallinta" "Häiriön hallinta"] ;; En tiedä yhtään mikä tämä on
+                     "muu"                             ["hairion-hallinta" "Häiriön hallinta"]}
         tila (cond
                valittu? "valittu"
                (and lahetetty (t/before? lahetetty (t/now)) (> 20 (t/in-minutes (t/interval lahetetty (t/now)))))

@@ -2,12 +2,14 @@
 SELECT
   i.id,
   i.urakka,
-  (SELECT hallintayksikko FROM urakka WHERE id = i.urakka) AS hallintayksikko,
+  (SELECT hallintayksikko
+   FROM urakka
+   WHERE id = i.urakka)               AS hallintayksikko,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
-  i.vapaateksti,
+  i.lyhytselite                       AS vapaateksti,
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
@@ -32,30 +34,30 @@ SELECT
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
 
-  k.id                               AS kuittaus_id,
-  k.kuitattu                         AS kuittaus_kuitattu,
-  k.vapaateksti                      AS kuittaus_vapaateksti,
-  k.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
+  it.id                               AS kuittaus_id,
+  it.kuitattu                         AS kuittaus_kuitattu,
+  it.vapaateksti                      AS kuittaus_vapaateksti,
+  it.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
 
-  k.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
-  k.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,
-  k.kuittaaja_henkilo_matkapuhelin   AS kuittaus_kuittaaja_matkapuhelin,
-  k.kuittaaja_henkilo_tyopuhelin     AS kuittaus_kuittaaja_tyopuhelin,
-  k.kuittaaja_henkilo_sahkoposti     AS kuittaus_kuittaaja_sahkoposti,
-  k.kuittaaja_organisaatio_nimi      AS kuittaus_kuittaaja_organisaatio,
-  k.kuittaaja_organisaatio_ytunnus   AS kuittaus_kuittaaja_ytunnus,
+  it.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,
+  it.kuittaaja_henkilo_matkapuhelin   AS kuittaus_kuittaaja_matkapuhelin,
+  it.kuittaaja_henkilo_tyopuhelin     AS kuittaus_kuittaaja_tyopuhelin,
+  it.kuittaaja_henkilo_sahkoposti     AS kuittaus_kuittaaja_sahkoposti,
+  it.kuittaaja_organisaatio_nimi      AS kuittaus_kuittaaja_organisaatio,
+  it.kuittaaja_organisaatio_ytunnus   AS kuittaus_kuittaaja_ytunnus,
 
-  k.kasittelija_henkilo_etunimi      AS kuittaus_kasittelija_etunimi,
-  k.kasittelija_henkilo_sukunimi     AS kuittaus_kasittelija_sukunimi,
-  k.kasittelija_henkilo_matkapuhelin AS kuittaus_kasittelija_matkapuhelin,
-  k.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
-  k.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
-  k.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
-  k.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_henkilo_etunimi      AS kuittaus_kasittelija_etunimi,
+  it.kasittelija_henkilo_sukunimi     AS kuittaus_kasittelija_sukunimi,
+  it.kasittelija_henkilo_matkapuhelin AS kuittaus_kasittelija_matkapuhelin,
+  it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
+  it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
+  it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
 
 
 FROM ilmoitus i
-  LEFT JOIN kuittaus k ON k.ilmoitus = i.id
+  LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE
   -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
   (
@@ -73,7 +75,7 @@ WHERE
     -- Tai urakan tasolla..
     -- Joko ilmoituksen urakka-id osuu valittuun urakkaan..
     (i.urakka = :urakka OR
-    -- Tai ilmoitukselle ei ole annettu urakka-id:tä, mutta se on urakan alueella
+     -- Tai ilmoitukselle ei ole annettu urakka-id:tä, mutta se on urakan alueella
      (i.urakka IS NULL AND
       st_contains((SELECT alue
                    FROM urakoiden_alueet
@@ -97,7 +99,9 @@ WHERE
   -- Tarkasta vapaatekstihakuehto
   (
     :teksti_annettu IS FALSE OR
-    i.vapaateksti LIKE :teksti
+    i.otsikko LIKE :teksti OR
+    i.lyhytselite LIKE :teksti OR
+    i.pitkaselite LIKE :teksti
   ) AND
 
   -- Tarkasta ilmoituksen tilat
@@ -107,7 +111,7 @@ WHERE
     (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
     (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
   )
-ORDER BY i.ilmoitettu ASC, k.kuitattu ASC;
+ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 
 -- name: hae-id-ilmoitus-idlla
@@ -124,59 +128,55 @@ INSERT INTO ilmoitus
  ilmoitettu,
  valitetty,
  yhteydenottopyynto,
- vapaateksti,
+ otsikko,
+ lyhytselite,
+ pitkaselite,
  ilmoitustyyppi,
  selitteet,
- urakkatyyppi,
- ilmoittaja_etunimi,
- ilmoittaja_sukunimi,
- ilmoittaja_tyopuhelin,
- ilmoittaja_matkapuhelin,
- ilmoittaja_sahkoposti,
- ilmoittaja_tyyppi,
- lahettaja_etunimi,
- lahettaja_sukunimi,
- lahettaja_puhelinnumero,
- lahettaja_sahkoposti)
+ urakkatyyppi)
 VALUES
   (:urakka,
-   :ilmoitusid,
-   :ilmoitettu,
-   :valitetty,
-   :yhteydenottopyynto,
-   :vapaateksti,
-   :ilmoitustyyppi :: ilmoitustyyppi,
-   :selitteet :: ilmoituksenselite [],
-   :urakkatyyppi :: urakkatyyppi,
-   :ilmoittaja_etunimi,
-   :ilmoittaja_sukunimi,
-   :ilmoittaja_tyopuhelin,
-   :ilmoittaja_matkapuhelin,
-   :ilmoittaja_sahkoposti,
-   :ilmoittaja_tyyppi :: ilmoittajatyyppi,
-   :lahettaja_etunimi,
-   :lahettaja_sukunimi,
-   :lahettaja_puhelinnumero,
-   :lahettaja_sahkoposti);
+    :ilmoitusid,
+    :ilmoitettu,
+    :valitetty,
+    :yhteydenottopyynto,
+    :otsikko,
+    :lyhytselite,
+    :pitkaselite,
+    :ilmoitustyyppi :: ilmoitustyyppi,
+    :selitteet :: ilmoituksenselite [],
+    :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
 -- Päivittää havainnon
 UPDATE ilmoitus
 SET
-  urakka                  = :urakka,
-  ilmoitusid              = :ilmoitusid,
-  ilmoitettu              = :ilmoitettu,
-  valitetty               = :valitetty,
-  yhteydenottopyynto      = :yhteydenottopyynto,
-  vapaateksti             = :vapaateksti,
-  ilmoitustyyppi          = :ilmoitustyyppi :: ilmoitustyyppi,
-  selitteet               = :selitteet :: ilmoituksenselite [],
+  urakka             = :urakka,
+  ilmoitusid         = :ilmoitusid,
+  ilmoitettu         = :ilmoitettu,
+  valitetty          = :valitetty,
+  yhteydenottopyynto = :yhteydenottopyynto,
+  otsikko            = :otsikko,
+  lyhytselite        = :lyhytselite,
+  pitkaselite        = :pitkaselite,
+  ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
+  selitteet          = :selitteet :: ilmoituksenselite []
+WHERE id = :id;
+
+-- name: paivita-ilmoittaja-ilmoitukselle!
+UPDATE ilmoitus
+SET
   ilmoittaja_etunimi      = :ilmoittaja_etunimi,
   ilmoittaja_sukunimi     = :ilmoittaja_sukunimi,
   ilmoittaja_tyopuhelin   = :ilmoittaja_tyopuhelin,
   ilmoittaja_matkapuhelin = :ilmoittaja_matkapuhelin,
   ilmoittaja_sahkoposti   = :ilmoittaja_sahkoposti,
-  ilmoittaja_tyyppi       = :ilmoittaja_tyyppi :: ilmoittajatyyppi,
+  ilmoittaja_tyyppi       = :ilmoittaja_tyyppi :: ilmoittajatyyppi
+WHERE id = :id;
+
+-- name: paivita-lahettaja-ilmoitukselle!
+UPDATE ilmoitus
+SET
   lahettaja_etunimi       = :lahettaja_etunimi,
   lahettaja_sukunimi      = :lahettaja_sukunimi,
   lahettaja_puhelinnumero = :lahettaja_puhelinnumero,
@@ -188,7 +188,7 @@ WHERE id = :id;
 UPDATE ilmoitus
 SET
   tr_numero = :tr_numero,
-  sijainti  = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY
+  sijainti  = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY
 WHERE id = :id;
 
 -- name: hae-ilmoituksen-urakka
@@ -200,3 +200,42 @@ WHERE
   ua.tyyppi = :urakkatyyppi :: urakkatyyppi AND
   (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
   (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
+
+-- name: hae-ilmoitustoimenpide
+SELECT
+  id                               AS id,
+  ilmoitusid                       AS ilmoitusid,
+  kuitattu                         AS kuitattu,
+  vapaateksti                      AS vapaateksti,
+  kuittaustyyppi                   AS kuittaustyyppi,
+  kuittaaja_henkilo_etunimi        AS kuittaaja_etunimi,
+  kuittaaja_henkilo_sukunimi       AS kuittaaja_sukunimi,
+  kuittaaja_henkilo_matkapuhelin   AS kuittaaja_matkapuhelin,
+  kuittaaja_henkilo_tyopuhelin     AS kuittaaja_tyopuhelin,
+  kuittaaja_henkilo_sahkoposti     AS kuittaaja_sahkoposti,
+  kuittaaja_organisaatio_nimi      AS kuittaaja_organisaatio,
+  kuittaaja_organisaatio_ytunnus   AS kuittaaja_ytunnus,
+  kasittelija_henkilo_etunimi      AS kasittelija_etunimi,
+  kasittelija_henkilo_sukunimi     AS kasittelija_sukunimi,
+  kasittelija_henkilo_matkapuhelin AS kasittelija_matkapuhelin,
+  kasittelija_henkilo_tyopuhelin   AS kasittelija_tyopuhelin,
+  kasittelija_henkilo_sahkoposti   AS kasittelija_sahkoposti,
+  kasittelija_organisaatio_nimi    AS kasittelija_organisaatio,
+  kasittelija_organisaatio_ytunnus AS kasittelija_ytunnus
+FROM ilmoitustoimenpide
+WHERE id = :id;
+
+-- name: merkitse-ilmoitustoimenpide-odottamaan-vastausta!
+UPDATE ilmoitustoimenpide
+SET lahetysid = :lahetysid, tila = 'odottaa_vastausta'
+WHERE id = :id;
+
+-- name: merkitse-ilmoitustoimenpide-lahetetyksi!
+UPDATE ilmoitustoimenpide
+SET lahetetty = current_timestamp, tila = 'lahetetty'
+WHERE lahetysid = :lahetysid;
+
+-- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe!
+UPDATE ilmoitustoimenpide
+SET tila = 'virhe'
+WHERE id = :id;

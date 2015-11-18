@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.kohdeluettelo.paallystys
-  "Tämä nimiavaruus hallinnoi urakan päällystystietoja."
+  "Tämä nimiavaruus hallinnoi urakan päällystys - ja paikkaustietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]

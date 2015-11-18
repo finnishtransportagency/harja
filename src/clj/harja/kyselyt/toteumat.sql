@@ -225,6 +225,7 @@ SELECT
   t.suorittajan_nimi,
   t.suorittajan_ytunnus,
   t.lisatieto,
+  k.jarjestelma AS jarjestelmanlisaama,
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide
@@ -237,7 +238,8 @@ FROM toteuma_tehtava tt
                           AND tyyppi = :tyyppi :: toteumatyyppi
                           AND toimenpidekoodi = :toimenpidekoodi
                           AND tt.poistettu IS NOT TRUE
-                          AND t.poistettu IS NOT TRUE;
+                          AND t.poistettu IS NOT TRUE
+  JOIN kayttaja k ON k.id = t.luoja;
 
 -- name: hae-toteumat-historiakuvaan
 -- Hakee toteumat historiakuvaan toimenpidekoodin perusteella.

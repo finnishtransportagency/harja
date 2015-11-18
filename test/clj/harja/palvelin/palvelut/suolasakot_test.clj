@@ -14,12 +14,6 @@
                       (component/system-map
                         :db (apply tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :tallenna-suolasakko-ja-pohjavesialueet  (component/using
-                                                                   (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
-                                                                   [:http-palvelin :db])
-                        :hae-urakan-suolasakot-ja-lampotilat (component/using
-                                                               (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
-                                                               [:http-palvelin :db])
                         :lampotilat (component/using
                                       (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
                                       [:http-palvelin :db])))))
@@ -55,11 +49,6 @@
 
   (testing "suolasakon luonti ja päivitys"
     (let [urakka-id @oulun-alueurakan-2014-2019-id
-          hoitokauden-alkupvm (java.sql.Date. 115 9 1)        ;;1.10.2015
-          hoitokauden-loppupvm (java.sql.Date. 116 8 30)      ;;30.9.2016
-          hoitokauden-alkupvm-2014 (java.sql.Date. 114 9 1)
-          hoitokauden-loppupvm-2014 (java.sql.Date. 115 8 30)
-
           lisattava-suolasakko {:hoitokauden-alkuvuosi 2015
                                 :urakka urakka-id
                                 :suolasakko {:maksukuukausi 6
