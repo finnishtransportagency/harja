@@ -7,7 +7,6 @@
   (:import (java.util UUID)))
 
 (defn laheta [jms-lahettaja db id]
-  (log/debug (format "Lähetetään ilmoitustoimenpide (id: %s) T-LOIK:n" id))
   (let [viesti-id (str (UUID/randomUUID))
         data (konversio/alaviiva->rakenne (first (ilmoitukset/hae-ilmoitustoimenpide db id)))
         xml (toimenpide-sanoma/muodosta data viesti-id)]

@@ -9,7 +9,6 @@ SELECT
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
-  -- todo: tämä täytyy korjata hakemaan oikeat tiedot
   i.lyhytselite                       AS vapaateksti,
   i.ilmoitustyyppi,
   i.selitteet,
