@@ -124,7 +124,7 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
      ;; 1. Kaiva esiin uniikit rivit poistamalla ensin lapsirivit kokonaan
      (set (map #(apply dissoc % (map key sarake-vektori)) kaikki-rivit))))
 
-(defn  alaviiva->rakenne
+(defn alaviiva->rakenne
   "Muuntaa mäpin avaimet alaviivalla sisäiseksi rakenteeksi, esim. 
   {:id 1 :urakka_hallintayksikko_nimi \"POP ELY\"} => {:id 1 :urakka {:hallintayksikko {:nimi \"POP ELY\"}}}"
   [m]
