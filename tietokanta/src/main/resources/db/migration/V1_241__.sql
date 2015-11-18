@@ -1,6 +1,3 @@
-INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'talvihoitoluokat-haku');
-INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'talvihoitoluokat-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'urakat-haku');
-INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'urakat-muutospaivamaaran-haku');
-INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'elyt-haku');
-INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'elyt-muutospaivamaaran-haku');
+-- Raportille urakkatyyppi
+ALTER TABLE raportti ADD COLUMN urakkatyyppi urakkatyyppi;
+UPDATE raportti SET urakkatyyppi = 'hoito'::urakkatyyppi
