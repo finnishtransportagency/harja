@@ -116,7 +116,8 @@
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-tekninen-osa
           :tyyppi      :pvm
-          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
+          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]
+                        [:pvm-toisen-pvmn-jalkeen (:valmispvm_kohde @paallystysilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
 
          {:otsikko       "Päätös"
           :nimi          :paatos-tekninen
@@ -145,7 +146,8 @@
         [{:otsikko     "Käsitelty"
           :nimi        :kasittelyaika-taloudellinen-osa
           :tyyppi      :pvm
-          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
+          :validoi     [[:ei-tyhja "Anna käsittelypäivämäärä"]
+                        [:pvm-toisen-pvmn-jalkeen (:valmispvm_kohde @paallystysilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
 
          {:otsikko       "Päätös"
           :nimi          :paatos-taloudellinen
