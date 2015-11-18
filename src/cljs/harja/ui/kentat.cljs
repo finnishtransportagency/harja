@@ -17,7 +17,7 @@
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
 
-            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -161,7 +161,7 @@
                      :on-focus    on-focus
                      :cols        (or koko-sarakkeet 80)
                      :rows        @rivit
-                     :class (when lomake? "form-control")
+                     :class       (when lomake? "form-control")
                      :placeholder placeholder}]
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
@@ -288,15 +288,15 @@
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [:span.livicon-check " Valitse kaikki"]])
      (doall
-      (for [v vaihtoehdot]
-        ^{:key (str "boolean-group-" (name v))}
-        [:div.checkbox
-         [:label
-          [:input {:type      "checkbox" :checked (if (valitut v) true false)
-                   :on-change #(let [valittu? (-> % .-target .-checked)]
+       (for [v vaihtoehdot]
+         ^{:key (str "boolean-group-" (name v))}
+         [:div.checkbox
+          [:label
+           [:input {:type      "checkbox" :checked (if (valitut v) true false)
+                    :on-change #(let [valittu? (-> % .-target .-checked)]
                                  (reset! data
                                          ((if valittu? conj disj) valitut v)))}
-           (vaihtoehto-nayta v)]]]))]))
+            (vaihtoehto-nayta v)]]]))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus jos-tyhja]} data]
@@ -458,13 +458,13 @@
                                         (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
               [:div.aikavalinta
-               [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
-                                                (reset! data %)
-                                                (reset! teksti (pvm/pvm %)))
-                                 :pvm      naytettava-pvm
-                                 :sijainti @sijainti
+               [pvm-valinta/pvm {:valitse        #(do (reset! auki false)
+                                                      (reset! data %)
+                                                      (reset! teksti (pvm/pvm %)))
+                                 :pvm            naytettava-pvm
+                                 :sijainti       @sijainti
                                  :absoluuttinen? absoluuttinen?
-                                 :leveys   pvm-leveys}]])]))})))
+                                 :leveys         pvm-leveys}]])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]
@@ -524,8 +524,8 @@
 
               muuta-pvm! (fn [t]
                            (when (or
-                                  (str/blank? t)
-                                  (re-matches +pvm-regex+ t))
+                                   (str/blank? t)
+                                   (re-matches +pvm-regex+ t))
                              (reset! pvm-teksti t)))
 
               muuta-aika! (fn [t]
@@ -541,9 +541,9 @@
               nykyinen-aika-teksti @aika-teksti
               pvm-tyhjana (or pvm-tyhjana (constantly nil))
               naytettava-pvm (or
-                              (pvm/->pvm nykyinen-pvm-teksti)
-                              nykyinen-pvm
-                              (pvm-tyhjana rivi))]
+                               (pvm/->pvm nykyinen-pvm-teksti)
+                               nykyinen-pvm
+                               (pvm-tyhjana rivi))]
           [:span.pvm-kentta
            [:table
             [:tbody
@@ -560,8 +560,8 @@
                             :on-change   #(muuta-pvm! (-> % .-target .-value))
                             ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                            (reset! auki false)
-                                            %)
+                                           (reset! auki false)
+                                           %)
                             :on-blur     #(do (koske-pvm!) (aseta!))}]
                (when (and (#{:oikea :ylos} pvm-sijainti) @auki)
                  (let [[x y w h] @sijainti]
@@ -611,6 +611,8 @@
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
+        alkuperainen-sijainti @sijainti
+
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
 
@@ -618,13 +620,15 @@
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (kartta/poista-geometria! :tr-valittu-osoite)
-                           (do (kartta/nayta-geometria! :tr-valittu-osoite
-                                                        {:alue (assoc arvo
-                                                                      :stroke {:width 4})
-                                                         :type :tr-valittu-osoite})
-                               (let [e (geo/extent arvo)]
-                                 #_(kartta/keskita-kartta-alueeseen! e)
-                                 (reset! edellinen-extent e)))))]
+                           (when-not (= arvo alkuperainen-sijainti)
+                             (do (kartta/nayta-geometria! :tr-valittu-osoite
+                                                          {:alue (assoc arvo
+                                                                   :stroke {:width 4
+                                                                            :color "gray"})
+                                                           :type :tr-valittu-osoite})
+                                 (let [e (geo/extent arvo)]
+                                   #_(kartta/keskita-kartta-alueeseen! e)
+                                   (reset! edellinen-extent e))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go (loop []
@@ -636,12 +640,12 @@
                     (recur)))))))
 
     (komp/luo
-     {:component-will-update
-      (fn [_ _ {sijainti :sijainti}]
-        (when sijainti
-          (nayta-kartalla @sijainti)))}
+      {:component-will-update
+       (fn [_ _ {sijainti :sijainti}]
+         (when sijainti
+           (nayta-kartalla @sijainti)))}
 
-     (komp/ulos #(do
+      (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
                    (kartta/poista-geometria! :tr-valittu-osoite)))
@@ -656,7 +660,7 @@
                                    (swap! data assoc kentta nil))]))
               blur (when hae-sijainti
                      #(when osoite
-                        (go (>! tr-osoite-ch osoite))))
+                       (go (>! tr-osoite-ch osoite))))
               kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta
            [:table
@@ -666,37 +670,37 @@
                                          :size        5 :max-length 10
                                          :placeholder "Tie#"
                                          :value       numero
-                                         :disabled kartta?
+                                         :disabled    kartta?
                                          :on-change   (muuta! :numero)
-                                         :on-blur blur}]]
+                                         :on-blur     blur}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "aosa"
                                          :value       alkuosa
-                                         :disabled kartta?
+                                         :disabled    kartta?
                                          :on-change   (muuta! :alkuosa)
-                                         :on-blur blur}]]
+                                         :on-blur     blur}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "aet"
                                          :value       alkuetaisyys
-                                         :disabled kartta?
+                                         :disabled    kartta?
                                          :on-change   (muuta! :alkuetaisyys)
-                                         :on-blur blur}]]
+                                         :on-blur     blur}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "losa"
                                          :value       loppuosa
-                                         :disabled kartta?
+                                         :disabled    kartta?
                                          :on-change   (muuta! :loppuosa)
-                                         :on-blur blur}]]
+                                         :on-blur     blur}]]
               [:td [:input.tierekisteri {:class       (when lomake? "form-control")
                                          :size        5 :max-length 10
                                          :placeholder "let"
                                          :value       loppuetaisyys
-                                         :disabled kartta?
+                                         :disabled    kartta?
                                          :on-change   (muuta! :loppuetaisyys)
-                                         :on-blur blur}]]
+                                         :on-blur     blur}]]
               (if-not @karttavalinta-kaynnissa
                 [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
                                                                  (reset! osoite-ennen-karttavalintaa osoite)
@@ -704,10 +708,10 @@
                                                                  (reset! karttavalinta-kaynnissa true))}
                       (ikonit/map-marker) " Valitse kartalta"]]
                 [tr/karttavalitsin {:kun-peruttu #(do
-                                                    (reset! data @osoite-ennen-karttavalintaa)
-                                                    (reset! karttavalinta-kaynnissa false))
-                                    :paivita #(swap! data merge %)
-                                    :kun-valmis #(do
+                                                   (reset! data @osoite-ennen-karttavalintaa)
+                                                   (reset! karttavalinta-kaynnissa false))
+                                    :paivita     #(swap! data merge %)
+                                    :kun-valmis  #(do
                                                    (reset! data %)
                                                    (reset! karttavalinta-kaynnissa false)
                                                    (log "Saatiin tr-osoite! " (pr-str %))
