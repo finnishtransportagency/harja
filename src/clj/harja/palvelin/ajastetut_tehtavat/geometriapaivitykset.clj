@@ -83,7 +83,7 @@
   (time/plus- (time/now) (time/seconds 10)))
 
 (defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku paivitys]
-  (log/debug " Ajastetaan geometria-aineiston " paivitystunnus " päivitys ajettavaksi " tuontivali "minuutin välein ")
+  (log/debug (format " Ajastetaan geometria-aineiston %s päivitys ajettavaksi %s minuutin välein." paivitystunnus tuontivali))
   (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
             (fn [_]
               (kaynnista-alk-paivitys (:integraatioloki this) (:db this) paivitystunnus osoite kohdetiedoston-polku paivitys))))
