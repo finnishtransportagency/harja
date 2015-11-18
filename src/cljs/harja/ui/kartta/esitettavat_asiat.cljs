@@ -66,7 +66,11 @@
      :alue {:type        :tack-icon
             :scale       (if (valittu? havainto) 1.5 1)
             :img         "kartta-havainto-violetti.svg"
-            :coordinates (get-in havainto [:sijainti :coordinates])})])
+            :coordinates (if (= :line (get-in havainto [:sijainti :type]))
+                           ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
+                           (first (get-in havainto [:sijainti :points]))
+
+                           (get-in havainto [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :pistokoe [tarkastus valittu?]
   [(assoc tarkastus
@@ -77,9 +81,13 @@
      :alue {:type        :tack-icon
             :scale       (if (valittu? tarkastus) 1.5 1)
             :img         "kartta-tarkastus-violetti.svg"
-            :coordinates (get-in tarkastus [:sijainti :coordinates])})])
+            :coordinates (if (= :line (get-in tarkastus [:sijainti :type]))
+                           (first (get-in tarkastus [:sijainti :points]))
+
+                           (get-in tarkastus [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :laatu [tarkastus valittu?]
+  (log "Piirretään laaduntarkastus: " (pr-str tarkastus))
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
@@ -88,7 +96,10 @@
      :alue {:type        :tack-icon
             :scale       (if (valittu? tarkastus) 1.5 1)
             :img         "kartta-tarkastus-violetti.svg"
-            :coordinates (get-in tarkastus [:sijainti :coordinates])})])
+            :coordinates (if (= :line (get-in tarkastus [:sijainti :type]))
+                           (first (get-in tarkastus [:sijainti :points]))
+
+                           (get-in tarkastus [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
   [(assoc varustetoteuma
