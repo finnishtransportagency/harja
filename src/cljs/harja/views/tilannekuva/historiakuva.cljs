@@ -26,11 +26,11 @@
 
 (defn pitkasuodatin []
   [:span
-   [kentat/tee-kentta {:tyyppi :pvm :absoluuttinen? true}
+   [kentat/tee-kentta {:tyyppi :pvm}
     (r/wrap (:alku @tiedot/pitkan-suodattimen-asetukset)
             (fn [u] (swap! tiedot/pitkan-suodattimen-asetukset assoc :alku u)))]
 
-   [kentat/tee-kentta {:tyyppi :pvm :absoluuttinen? true}
+   [kentat/tee-kentta {:tyyppi :pvm}
     (r/wrap (:loppu @tiedot/pitkan-suodattimen-asetukset)
             (fn [u] (swap! tiedot/pitkan-suodattimen-asetukset assoc :loppu u)))]])
 

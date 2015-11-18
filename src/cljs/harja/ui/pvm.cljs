@@ -66,20 +66,11 @@ Seuraavat optiot ovat mahdollisia:
 
 
        :reagent-render
-       (fn [{:keys [pvm valitse sijainti leveys absoluuttinen?] :as optiot}]
+       (fn [{:keys [pvm valitse sijainti leveys] :as optiot}]
          (let [[vuosi kk] @nayta
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-           [:table.pvm-valinta (if absoluuttinen?
-                                 {:style {:position "absolute"
-                                          :z-index 100}}
-
-                                 (if sijainti
-                                  (let [[x y w] sijainti]
-                                    {:style {:width    w
-                                             :position "absolute"
-                                             :z-index  100}})
-                                  (when leveys {:style {:width leveys}})))
+           [:table.pvm-valinta (when leveys {:style {:width leveys}})
             [:tbody.pvm-kontrollit
              [:tr
               [:td.pvm-edellinen-kuukausi.klikattava
