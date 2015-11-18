@@ -26,13 +26,10 @@
 (defn aja-alk-paivitys [integraatioloki db paivitystunnus kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
   (log/debug "Geometria-aineisto: " paivitystunnus " on muuttunut ja tarvitaan päivittää")
   (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
-  (println "------> Haetaan kama polkuun:" kohdetiedoston-polku)
   (alk/hae-tiedosto integraatioloki (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
-  (println "------> Puretaan paketti:" kohdetiedoston-polku)
   (arkisto/pura-paketti kohdetiedoston-polku)
   (paivitys)
-  (geometriapaivitykset/paivita-viimeisin-paivitys<! db tiedoston-muutospvm paivitystunnus)
-  (log/debug "Geometriapäivitys: " paivitystunnus " onnistui"))
+  (geometriapaivitykset/paivita-viimeisin-paivitys<! db tiedoston-muutospvm paivitystunnus))
 
 (defn onko-kohdetiedosto-ok? [kohdepolku]
   (let [file (io/file kohdepolku)
@@ -45,11 +42,8 @@
       false)))
 
 (defn pitaako-paivittaa? [db paivitystunnus tiedoston-muutospvm]
-  (println "------> Katotaan pittääkö päivittää:")
-  (println "------> tiedoston-muutospvm:" tiedoston-muutospvm)
   (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db paivitystunnus))
         viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)]
-    (println "------> viimeisin-paivitys:" viimeisin-paivitys)
     (or (nil? viimeisin-paivitys)
         (pvm/jalkeen?
           (time-coerce/from-sql-time tiedoston-muutospvm)
