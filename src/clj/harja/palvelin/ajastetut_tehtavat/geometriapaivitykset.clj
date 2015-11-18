@@ -26,7 +26,9 @@
 (defn aja-alk-paivitys [integraatioloki db paivitystunnus kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
   (log/debug "Geometria-aineisto: " paivitystunnus " on muuttunut ja tarvitaan päivittää")
   (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
+  (println "------> Haetaan kama polkuun:" kohdetiedoston-polku)
   (alk/hae-tiedosto integraatioloki (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
+  (println "------> Puretaan paketti:" kohdetiedoston-polku)
   (arkisto/pura-paketti kohdetiedoston-polku)
   (paivitys)
   (geometriapaivitykset/paivita-viimeisin-paivitys<! db tiedoston-muutospvm paivitystunnus)
@@ -43,8 +45,11 @@
       false)))
 
 (defn pitaako-paivittaa? [db paivitystunnus tiedoston-muutospvm]
+  (println "------> Katotaan pittääkö päivittää:")
+  (println "------> tiedoston-muutospvm:" tiedoston-muutospvm)
   (let [paivityksen-tiedot (first (geometriapaivitykset/hae-paivitys db paivitystunnus))
         viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)]
+    (println "------> viimeisin-paivitys:" viimeisin-paivitys)
     (or (nil? viimeisin-paivitys)
         (pvm/jalkeen?
           (time-coerce/from-sql-time tiedoston-muutospvm)
@@ -85,7 +90,7 @@
 
 (defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku paivitys]
   (log/debug " Ajastetaan geometria-aineiston " paivitystunnus " päivitys ajettavaksi " tuontivali "minuutin välein ")
-  (chime-at (periodic-seq (time/now) (-> tuontivali time/minutes))
+  (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
             (fn [_]
               (kaynnista-alk-paivitys (:integraatioloki this) (:db this) paivitystunnus osoite kohdetiedoston-polku paivitys))))
 
@@ -259,7 +264,7 @@
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
-  (start [this]  ; FIXME Kaikissa näissä on miltei identtinen pohja, voisi ehkä yleistää yhdeksi funktioksi tai multimethodiksi
+  (start [this]                                             ; FIXME Kaikissa näissä on miltei identtinen pohja, voisi ehkä yleistää yhdeksi funktioksi tai multimethodiksi
     (assoc this :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
     (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
     (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))

@@ -10,4 +10,4 @@
 (defn luo-jos-ei-olemassa [polku]
   (let [kansio (clojure.java.io/file polku)]
     (when (not (.exists kansio))
-      (.mkdir kansio))))
+      (.mkdirs kansio))))
