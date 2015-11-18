@@ -79,7 +79,7 @@
             :img         "kartta-tarkastus-violetti.svg"
             :coordinates (get-in tarkastus [:sijainti :coordinates])})])
 
-(defmethod asia-kartalle :laaduntarkastus [tarkastus valittu?]
+(defmethod asia-kartalle :laatu [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
