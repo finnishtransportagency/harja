@@ -4,12 +4,15 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "id": {
+      "id": "urn:harja/id",
+      "type": "integer"
+    },
     "urakkatyyppi": {
       "id": "urn:harja/urakkatyyppi",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json"
     },
     "alkaen": {
       "id": "urn:harja/alkaen",
@@ -23,8 +26,11 @@
       "id": "urn:harja/koordinaatit",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
+    },
+    "puhelinnumero": {
+      "id": "urn:harja/puhelinnumero",
+      "type": "string"
     }
   }
 }

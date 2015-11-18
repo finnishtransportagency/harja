@@ -1,5 +1,5 @@
-<kuittaus>
-<aika>2015-09-29T15:49:45</aika>
-<kuittaustyyppi>vastaanotettu</kuittaustyyppi>
-<viestiId>14324234</viestiId>
-</kuittaus>
+<harja:tloik-kuittaus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
+    <aika>2015-09-29T15:49:45</aika>
+    <kuittaustyyppi>vastaanotettu</kuittaustyyppi>
+    <viestiId>14324234</viestiId>
+</harja:tloik-kuittaus>

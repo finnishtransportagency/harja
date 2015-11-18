@@ -7,7 +7,6 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
             [harja.kyselyt.toimenpideinstanssit :as toimenpideinstanssit]
-            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit]
             [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat])
   (:import (java.util UUID)))

@@ -82,8 +82,9 @@
            (log/error e "Virhe parsiessa päivämäärää: " data ", formaatilla: " formaatti)
            nil))))
 
-(defn parsi-aikaleima [teksti]
-  (parsi-aika "yyyy-MM-dd'T'HH:mm:ss.SSS" teksti))
+(defn parsi-aikaleima
+  ([teksti] (parsi-aika teksti "yyyy-MM-dd'T'HH:mm:ss.SSS" ))
+  ([teksti formaatti] (parsi-aika formaatti teksti)))
 
 (defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
