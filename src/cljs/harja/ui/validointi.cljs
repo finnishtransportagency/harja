@@ -88,6 +88,12 @@
           (pvm/ennen? data (avain rivi)))
     viesti))
 
+(defmethod validoi-saanto :pvm-toisen-pvmn-jalkeen [_ _ data rivi _ & [vertailtava-pvm viesti]]
+  (when (and
+          vertailtava-pvm
+          (pvm/ennen? data vertailtava-pvm))
+    viesti))
+
 (defmethod validoi-saanto :pvm-ei-annettu-ennen-toista [_ _ data rivi _ & [avain viesti]]
   (when (and
             (not (nil? data))

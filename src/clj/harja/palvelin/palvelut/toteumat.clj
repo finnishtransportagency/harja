@@ -228,7 +228,7 @@
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
   "Tallentaa toteuman. Palauttaa sen ja tehtävien summat."
   [db user toteuma]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus (:urakka toteuma))
+  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [c db]
     (let [id
