@@ -43,8 +43,10 @@
                         :kuittausjono-ulos        "Harja17.SampoToHarja.Ack"
                         :paivittainen-lahetysaika nil
                         }
- :tloik                {:ilmoitusviestijono   "tloik-ilmoitukset"
-                        :ilmoituskuittausjono "tloik-ilmoituskuittaukset"}
+ :tloik                {:ilmoitusviestijono     "Harja.T-LOIKToHarja.Msg"
+                        :ilmoituskuittausjono   "Harja.T-LOIKToHarja.Ack"
+                        :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
+                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}
  :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
  :integraatiot         {:paivittainen-lokin-puhdistusaika nil}
 

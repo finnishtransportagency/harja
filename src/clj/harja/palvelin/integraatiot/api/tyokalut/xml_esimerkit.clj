@@ -14,5 +14,5 @@
 (def +virhe-vastaus-tietuetta-ei-loydy-response+ "xsd/tierekisteri/examples/virhe-vastaus-tietuetta-ei-loydy-response.xml")
 (def +ilmoitus+ "xsd/tloik/esimerkit/ilmoitus.xml")
 (def +ilmoitustoimenpide+ "xsd/tloik/esimerkit/ilmoitustoimenpide.xml")
-(def +valityskuittaus+ "xsd/tloik/esimerkit/harja-kuittaus.xml")
+(def +harja-kuittaus+ "xsd/tloik/esimerkit/harja-kuittaus.xml")
 (def +vastaanottokuittus+ "xsd/tloik/esimerkit/tloik-kuittaus.xml")

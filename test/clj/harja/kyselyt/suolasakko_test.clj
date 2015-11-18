@@ -44,8 +44,8 @@
                             (>= erotus 3) (* sallittu-maara 1.20)
                             (> erotus 2) (* sallittu-maara 1.10)
                             :default sallittu-maara)]
-                  (< (Math/abs (double
-                                (- (if (> kaytetty-maara (* sal 1.05))
+                  (=marginaalissa?
+                                (if (> kaytetty-maara (* sal 1.05))
                                     (* sakko-per-tonni (- kaytetty-maara (* sal 1.05)))
                                     0.0)
                                   (suolasakko @oulun-alueurakan-2014-2019-id
@@ -53,7 +53,7 @@
                                               lampotila-pitka
                                               sakko-per-tonni
                                               sallittu-maara
-                                              kaytetty-maara))))
-                     0.01))))
+                                              kaytetty-maara)
+                                0.01))))
 
 

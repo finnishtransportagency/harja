@@ -40,8 +40,10 @@
                                            :lahetysjono-ulos         s/Str
                                            :kuittausjono-ulos        s/Str
                                            :paivittainen-lahetysaika [s/Num]}
-   (s/optional-key :tloik)                {:ilmoitusviestijono   s/Str
-                                           :ilmoituskuittausjono s/Str}
+   (s/optional-key :tloik)                {:ilmoitusviestijono     s/Str
+                                           :ilmoituskuittausjono   s/Str
+                                           :toimenpideviestijono   s/Str
+                                           :toimenpidekuittausjono s/Str}
    (s/optional-key :tierekisteri)         {:url s/Str}
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
