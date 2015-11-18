@@ -218,6 +218,7 @@
        {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"
         :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
        {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
+        :pvm-sijainti :ylos
         :validoi [[:ei-tyhja "Aseta alkupvm"]
                   (fn [alku rivi]
                     (let [loppu (:loppu rivi)]
@@ -226,6 +227,7 @@
                         "Alkupvm ei voi olla lopun jälkeen.")))
                   ]}
        {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
+        :pvm-sijainti :ylos
         :validoi [[:ei-tyhja "Aseta loppupvm"]
                   (fn [loppu rivi]
                     (let [alku (:alku rivi)]

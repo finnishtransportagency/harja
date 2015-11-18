@@ -377,11 +377,11 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-leveys absoluuttinen?]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-leveys absoluuttinen? pvm-sijainti]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
-
+        pvm-sijainti (or pvm-sijainti :alas)
         teksti (atom (if p
                        (pvm/pvm p)
                        ""))
@@ -457,14 +457,16 @@
                          :on-blur     #(do
                                         (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
-              [:div.aikavalinta
-               [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
-                                                (reset! data %)
-                                                (reset! teksti (pvm/pvm %)))
-                                 :pvm      naytettava-pvm
-                                 :sijainti @sijainti
+              [:div.aikavalinta {:style (case pvm-sijainti
+                                          :alas {:top 0 :left 0}
+                                          :ylos {:bottom "310px" :left 0})}
+               [pvm-valinta/pvm {:valitse        #(do (reset! auki false)
+                                                      (reset! data %)
+                                                      (reset! teksti (pvm/pvm %)))
+                                 :pvm            naytettava-pvm
+                                 :sijainti       @sijainti
                                  :absoluuttinen? absoluuttinen?
-                                 :leveys   pvm-leveys}]])]))})))
+                                 :leveys         pvm-leveys}]])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]
@@ -565,10 +567,9 @@
                             :on-blur     #(do (koske-pvm!) (aseta!))}]
                (when (and (#{:oikea :ylos} pvm-sijainti) @auki)
                  (let [[x y w h] @sijainti]
-                   [:div.aikavalinta {:style (merge {:position "absolute" :z-index 100}
-                                                    (case pvm-sijainti
-                                                      :oikea {:top 0 :left w}
-                                                      :ylos {:bottom h :left x}))}
+                   [:div.aikavalinta {:style (case pvm-sijainti
+                                               :oikea {:top 0 :left w}
+                                               :ylos {:bottom h :left x})}
                     [pvm-valinta/pvm {:valitse #(do (reset! auki false)
                                                     (muuta-pvm! (pvm/pvm %))
                                                     (koske-pvm!)
