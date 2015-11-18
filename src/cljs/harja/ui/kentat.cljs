@@ -607,7 +607,7 @@
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
-        hae-sijainti (not (nil? sijainti))
+        hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
         osoite-ennen-karttavalintaa (atom nil)
@@ -709,6 +709,7 @@
                                     :kun-valmis #(do
                                                    (reset! data %)
                                                    (reset! karttavalinta-kaynnissa false)
+                                                   (log "Saatiin tr-osoite! " (pr-str %))
                                                    (go (>! tr-osoite-ch %)))}])
 
               (when-let [sijainti (and hae-sijainti @sijainti)]
