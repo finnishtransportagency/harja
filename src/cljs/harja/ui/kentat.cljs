@@ -622,10 +622,19 @@
                            (kartta/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo alkuperainen-sijainti)
                              (do (kartta/nayta-geometria! :tr-valittu-osoite
-                                                          {:alue (assoc arvo
-                                                                   :stroke {:width 4
-                                                                            :color "gray"})
-                                                           :type :tr-valittu-osoite})
+                                                          (if (= :line (:type arvo))
+                                                            {:alue (assoc arvo
+                                                                     :type :tack-icon-line
+                                                                     :img "kartta-tr-piste-harmaa.svg"
+                                                                     :zindex 6
+                                                                     :color "gray")
+                                                             :type :tr-valittu-osoite}
+
+                                                            {:alue (assoc arvo
+                                                                     :type :tack-icon
+                                                                     :img "kartta-tr-piste-harmaa.svg"
+                                                                     :zindex 6)
+                                                             :type :tr-valittu-osoite}))
                                  (let [e (geo/extent arvo)]
                                    #_(kartta/keskita-kartta-alueeseen! e)
                                    (reset! edellinen-extent e))))))]

@@ -95,6 +95,7 @@
               :img    "kartta-tarkastus-violetti.svg"}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line
+              :color "black"
               :scale (if (valittu? tarkastus) 1.5 1)
               :img   "kartta-tarkastus-violetti.svg"
               :points (get-in tarkastus [:sijainti :points])}
