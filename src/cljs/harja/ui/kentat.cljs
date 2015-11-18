@@ -458,7 +458,7 @@
                                         (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
               [:div.aikavalinta {:style (case pvm-sijainti
-                                          :alas {:top 0 :left 0}
+                                          :alas {:bottom 0 :left 0}
                                           :ylos {:bottom "310px" :left 0}
                                           :ylos-vasen {:bottom "310px" :right 0})}
                [pvm-valinta/pvm {:valitse        #(do (reset! auki false)
@@ -565,18 +565,16 @@
                                             (reset! auki false)
                                             %)
                             :on-blur     #(do (koske-pvm!) (aseta!))}]
-               (when (and (#{:oikea :ylos} pvm-sijainti) @auki)
-                 (let [[x y w h] @sijainti]
-                   [:div.aikavalinta {:style (case pvm-sijainti
-                                               :oikea {:top 0 :left w}
-                                               :ylos {:bottom h :left x})}
-                    [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                                    (muuta-pvm! (pvm/pvm %))
-                                                    (koske-pvm!)
-                                                    (aseta!))
-                                      :leveys  (when (= :ylos pvm-sijainti) w)
-
-                                      :pvm     naytettava-pvm}]]))]
+               (when @auki
+                 [:div.aikavalinta {:style (case pvm-sijainti
+                                             :oikea {:top 0 :right 0}
+                                             :ylos {:bottom "310px" :left 0}
+                                             :alas {:bottom 0 :left 0})}
+                  [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                                  (muuta-pvm! (pvm/pvm %))
+                                                  (koske-pvm!)
+                                                  (aseta!))
+                                    :pvm     naytettava-pvm}]])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
