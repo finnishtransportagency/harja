@@ -377,7 +377,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-leveys pvm-sijainti]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-sijainti]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -457,16 +457,16 @@
                          :on-blur     #(do
                                         (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
-              [:div.aikavalinta {:style (case pvm-sijainti
-                                          :alas {:bottom 0 :left 0}
-                                          :ylos {:bottom "310px" :left 0}
-                                          :ylos-vasen {:bottom "310px" :right 0})}
-               [pvm-valinta/pvm {:valitse        #(do (reset! auki false)
-                                                      (reset! data %)
-                                                      (reset! teksti (pvm/pvm %)))
-                                 :pvm            naytettava-pvm
-                                 :sijainti       @sijainti
-                                 :leveys         pvm-leveys}]])]))})))
+              [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                              (reset! data %)
+                                              (reset! teksti (pvm/pvm %)))
+                                :style   (case pvm-sijainti
+                                           :oikea  {:top 0 :left"100%"}
+                                           :ylos {:bottom "100%" :left 0}
+                                           :ylos-vasen {:bottom "100%" :right 0}
+                                           :alas {:top "100%" :left 0})
+                                :pvm     naytettava-pvm
+                                :sijainti @sijainti}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]
@@ -566,15 +566,16 @@
                                             %)
                             :on-blur     #(do (koske-pvm!) (aseta!))}]
                (when @auki
-                 [:div.aikavalinta {:style (case pvm-sijainti
-                                             :oikea {:top 0 :right 0}
-                                             :ylos {:bottom "310px" :left 0}
-                                             :alas {:bottom 0 :left 0})}
-                  [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                                  (muuta-pvm! (pvm/pvm %))
-                                                  (koske-pvm!)
-                                                  (aseta!))
-                                    :pvm     naytettava-pvm}]])]
+                 [pvm-valinta/pvm {:valitse #(do (reset! auki false)
+                                                 (muuta-pvm! (pvm/pvm %))
+                                                 (koske-pvm!)
+                                                 (aseta!))
+                                   :style (case pvm-sijainti
+                                            :oikea {:top 0 :left "100%"}
+                                            :ylos {:bottom "100%" :left 0}
+                                            :ylos-vasen {:bottom "100%" :right 0}
+                                            :alas {:top "100%" :left 0})
+                                   :pvm     naytettava-pvm}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))

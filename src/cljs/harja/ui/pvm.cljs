@@ -49,7 +49,6 @@ Seuraavat optiot ovat mahdollisia:
 :kuukausi näytettävä kuukausi (0 - 11)
 :valitse  funktio, jota kutsutaan kun päivämäärä valitaan
 :sijainti optionaalinen [x y w] vasen ylänurkka
-:leveys   suoraan leveys jos ei anneta sijaintia
 
   ...muita tarpeen mukaan..."
   [optiot]
@@ -66,11 +65,11 @@ Seuraavat optiot ovat mahdollisia:
 
 
        :reagent-render
-       (fn [{:keys [pvm valitse sijainti leveys] :as optiot}]
+       (fn [{:keys [pvm valitse style] :as optiot}]
          (let [[vuosi kk] @nayta
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-           [:table.pvm-valinta (when leveys {:style {:width leveys}})
+           [:table.pvm-valinta {:style (when style style)}
             [:tbody.pvm-kontrollit
              [:tr
               [:td.pvm-edellinen-kuukausi.klikattava
