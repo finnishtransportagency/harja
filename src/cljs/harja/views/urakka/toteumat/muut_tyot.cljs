@@ -287,8 +287,9 @@
                     :hae           #(get-in % [:tehtava :paivanhinta])
                     :yksikko       "€"
                     :aseta         (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
-                    :tyyppi        :positiivinen-numero :validoi [[:ei-tyhja "Anna rahamäärä"]] :leveys-col 3
-                    :validoi-heti? true})
+                    :tyyppi        :positiivinen-numero
+                    :validoi [[:ei-tyhja "Anna rahamäärä"]]
+                    :leveys-col 3})
                  (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                    {:otsikko     "Sopimushinta" :nimi :yksikkohinta
                     :tyyppi      :positiivinen-numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
