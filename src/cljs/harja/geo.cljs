@@ -6,6 +6,7 @@
 (defn- laske-pisteiden-extent
   "Laskee pisteiden alueen."
   [pisteet]
+  (log "Lasketaan pisteet: " (pr-str pisteet))
   (let [[ensimmainen-x ensimmainen-y] (first pisteet)
         pisteet (rest pisteet)]
     (loop [minx ensimmainen-x
@@ -36,7 +37,9 @@
     :point [(:coordinates g)]
     :icon [(:coordinates g)]
     :tack-icon [(:coordinates g)]
+    :tack-icon-line (:points g)
     :sticker-icon [(:coordinates g)]
+    :sticker-icon-line (:points g)
     :circle [(:coordinates g)]))
 
 (defn keskipiste
@@ -86,8 +89,14 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod extent :tack-icon [{c :coordinates}]
   (extent-point-circle c))
 
+(defmethod extent :tack-icon-line [{points :points}]
+  (laske-pisteiden-extent points))
+
 (defmethod extent :sticker-icon [{c :coordinates}]
   (extent-point-circle c))
+
+(defmethod extent :sticker-icon-line [{points :points}]
+  (laske-pisteiden-extent points))
 
 (defmethod extent :multipolygon [{polygons :polygons}]
   (laske-pisteiden-extent (mapcat :coordinates polygons)))
