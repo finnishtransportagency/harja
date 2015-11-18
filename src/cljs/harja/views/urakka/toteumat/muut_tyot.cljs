@@ -271,6 +271,7 @@
                   :valinnat      [[:yksikkohinta "Muutoshinta"] [:paivanhinta "Päivän hinta"]]
                   :leveys-col    3}
                  {:otsikko     "Määrä" :nimi :maara :tyyppi :positiivinen-numero
+                  :arvon-polku-datassa [:tehtava :maara]
                   :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
                   :hae         #(get-in % [:tehtava :maara])
                   :vihje       (if (= :paivanhinta (:hinnoittelu @muokattu))
@@ -282,7 +283,9 @@
                                  [[:ei-tyhja "Määrä antamatta."]])
                   :yksikko     (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
                  (when (= (:hinnoittelu @muokattu) :paivanhinta)
-                   {:otsikko       "Päivän hinta" :nimi :paivanhinta
+                   {:otsikko       "Päivän hinta"
+                    :nimi :paivanhinta
+                    :arvon-polku-datassa [:tehtava :paivanhinta]
                     :pakollinen? (= :paivanhinta (:hinnoittelu @muokattu))
                     :hae           #(get-in % [:tehtava :paivanhinta])
                     :yksikko       "€"
