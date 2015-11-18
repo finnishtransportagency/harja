@@ -63,6 +63,7 @@
     viesti))
 
 (defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
+  (log (pr-str nimi) " on: " (pr-str data))
   (when (str/blank? data)
     viesti))
 
