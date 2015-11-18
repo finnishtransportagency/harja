@@ -11,6 +11,7 @@ SELECT * FROM laskutusyhteenveto(
 -- Laskee hoitourakoissa käytettävän asiakastyytyväisyysbonuksen indeksitarkistuksen
 
 SELECT * FROM laske_hoitokauden_asiakastyytyvaisyysbonus(
+    :urakka_id,
     :maksupvm::DATE,
     :indeksinimi,
     :summa);

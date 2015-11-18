@@ -33,9 +33,15 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(deftest laske-hoitourakan-indeksilaskennan-perusluku
+  (let [ur @oulun-alueurakan-2014-2019-id
+
+        perusluku (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", 'MAKU 2010');")))]
+    (is (= 125.1000000000000000M perusluku))))
 
 (deftest laske-hoitokauden-asiakastyytyvaisyysbonus
-  (let [sop @oulun-alueurakan-2014-2019-paasopimuksen-id
+  (let [ur @oulun-alueurakan-2014-2019-id
+        sop @oulun-alueurakan-2014-2019-paasopimuksen-id
         maksupvm (ffirst (q (str "select pvm from erilliskustannus
         where tyyppi  = 'asiakastyytyvaisyysbonus' AND sopimus = " sop)))
         ind_nimi (ffirst (q (str "select indeksin_nimi from erilliskustannus
@@ -44,27 +50,30 @@
         where tyyppi  = 'asiakastyytyvaisyysbonus' AND sopimus = " sop)))
         kyselyn-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
                          (:db jarjestelma)
-                         {:maksupvm    maksupvm
+                         {:urakka-id   ur
+                          :maksupvm    maksupvm
                           :indeksinimi ind_nimi
                           :summa       summa})
-        bonarit (first (q (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('2015-11-15'::DATE, '"
+        bonarit (first (q (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus(" ur ",'2015-11-15'::DATE, '"
                                ind_nimi "', '"
                                summa "');")))
-        bonarit-jos-indekseja-ei-ole-syotetty (first (q (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('2025-11-15'::DATE, '"
+        bonarit-jos-indekseja-ei-ole-syotetty (first (q (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus(" ur ",'2025-11-15'::DATE, '"
                                                              ind_nimi "', '"
                                                              summa "');")))]
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
       (is {:summa 1000M, :korotettuna 1050.1666666666667000M, :korotus 50.1666666666667000M} kyselyn-kautta)
       (is (= 1000M (first bonarit)) "bonari ilman korotusta")
-      (is (= 1050.1666666666667000M (second bonarit)) "bonari korotuksen kera")
-      (is (= 50.1666666666667000M (nth bonarit 2)) "bonarin korotus")
+      (is (= 839.46176392219557714000M (second bonarit)) "bonari korotuksen kera")
+      (is (= -160.53823607780442286000M (nth bonarit 2)) "bonarin korotus")
       (is (= [1000M nil nil] bonarit-jos-indekseja-ei-ole-syotetty)))))
 
 
 
-(defn laske-bonus [maksupvm indeksinimi summa]
+(defn laske-bonus [urakka-id maksupvm indeksinimi summa]
   (first (q
-           (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus('"
+           (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus("
+                urakka-id ",
+                '"
                 maksupvm "'::DATE,"
                 (if indeksinimi
                   (str "'" indeksinimi "', '")
@@ -77,7 +86,8 @@
          ;; - summa
          ;; - indeksinimi
          ;; - maksupvm
-         (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
+         (let [ur @oulun-alueurakan-2014-2019-id
+               indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :indeksit +kayttaja-tero+)
                double-laskujen-tarkkuus 0.015]
 
@@ -86,14 +96,18 @@
                           maksupvm (gen/elements [(pvm/->pvm "01.12.2015") (pvm/->pvm "01.12.2014") (pvm/->pvm "01.7.2014")
                                                   (pvm/->pvm "01.12.2016") (pvm/->pvm "01.12.2017") (pvm/->pvm "01.12.2018")])]
 
-                         (let [bonus (laske-bonus maksupvm
+                         (let [bonus (laske-bonus ur
+                                                  maksupvm
                                                   indeksinimi
                                                   summa)
-                               kyselyn-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
-                                                (:db jarjestelma)
-                                                {:maksupvm    maksupvm
-                                                 :indeksinimi indeksinimi
-                                                 :summa       summa})
+                               perusluku (when indeksinimi
+                                           (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", '" indeksinimi "');"))))
+                               palvelun-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
+                                                 (:db jarjestelma)
+                                                 {:urakka-id   ur
+                                                  :maksupvm    maksupvm
+                                                  :indeksinimi indeksinimi
+                                                  :summa       summa})
                                hk-alkuvuosi (if (or (= 10 (pvm/kuukausi maksupvm))
                                                     (= 11 (pvm/kuukausi maksupvm))
                                                     (= 12 (pvm/kuukausi maksupvm)))
@@ -109,18 +123,18 @@
                                                                  [1 2 3 4 5 6 7 8 9])))
                                indeksilukujen-lkm (count (concat indeksit-alkuvuonna indeksit-loppuvuonna))
                                indeksiluvut-loytyy-koko-hoitokaudelle? (= 12 indeksilukujen-lkm)
-                               indeksilukujen-ka-hoitokaudella (when indeksiluvut-loytyy-koko-hoitokaudelle?
-                                                                 (/ (apply + (concat indeksit-alkuvuonna indeksit-loppuvuonna)) indeksilukujen-lkm))
+                               vertailuluku (when indeksiluvut-loytyy-koko-hoitokaudelle?
+                                              (/ (apply + (concat indeksit-alkuvuonna indeksit-loppuvuonna)) indeksilukujen-lkm))
 
-                               korotettuna (when indeksiluvut-loytyy-koko-hoitokaudelle?
-                                         (* summa (/ indeksilukujen-ka-hoitokaudella 100)))
+                               korotettuna (when (and indeksiluvut-loytyy-koko-hoitokaudelle? perusluku)
+                                             (* summa (/ vertailuluku perusluku)))
                                kasin-laskettuna {:summa       summa
                                                  :korotettuna (if-not indeksinimi
                                                                 summa
                                                                 korotettuna)
                                                  :korotus     (if-not indeksinimi
                                                                 0
-                                                              (when korotettuna (- korotettuna summa)))}]
+                                                                (when korotettuna (- korotettuna summa)))}]
                            (if
                              (and (or
                                     (not indeksiluvut-loytyy-koko-hoitokaudelle?)
@@ -130,13 +144,17 @@
                                   (some? indeksinimi))
                              ;; jos indeksilukuja ei löydy kaikille kuukausille, odotetaan summa = summa, korotettuna ja korotus = nil
                              (do
-                               (is (= (nth bonus 0) (:summa kyselyn-kautta) (:summa kasin-laskettuna)) "summa")
-                               (is (= (nth bonus 1) (:korotettuna kyselyn-kautta) nil) "korotettuna")
-                               (is (= (nth bonus 2) (:korotus kyselyn-kautta) nil) "korotus"))
+                               (is (= (nth bonus 0) (:summa palvelun-kautta) (:summa kasin-laskettuna)) "summa")
+                               (is (= (nth bonus 1) (:korotettuna palvelun-kautta) nil) "korotettuna")
+                               (is (= (nth bonus 2) (:korotus palvelun-kautta) nil) "korotus"))
                              (do
-                               (is (= (nth bonus 0) (:summa kyselyn-kautta) (:summa kasin-laskettuna)) "summa")
-                               (is (= (nth bonus 1) (:korotettuna kyselyn-kautta)) "korotettuna")
-                               (is (= (nth bonus 2) (:korotus kyselyn-kautta)) "korotus")
+                               (is (= (nth bonus 0) (:summa palvelun-kautta) (:summa kasin-laskettuna)) "summa")
+                               (is (= (nth bonus 1) (:korotettuna palvelun-kautta)) "korotettuna")
+
+                               ;; jos indeksinimi on nil, korotus on 0M tai 0, emme vertaile sitä
+                               (if indeksinimi
+                                 (do
+                                   (is (= (nth bonus 2) (:korotus palvelun-kautta)) "korotus")
+                                   (is (=marginaalissa? (:korotus kasin-laskettuna) (:korotus palvelun-kautta) double-laskujen-tarkkuus) "korotus")))
                                ;; double epätarkkuus sallitaan käsin laskettuihin verratessa
-                               (is (=marginaalissa? (:korotettuna kasin-laskettuna) (:korotettuna kyselyn-kautta) double-laskujen-tarkkuus) "korotettuna")
-                               (is (=marginaalissa? (:korotus kasin-laskettuna) (:korotus kyselyn-kautta) double-laskujen-tarkkuus) "korotus")))))))
+                               (is (=marginaalissa? (:korotettuna kasin-laskettuna) (:korotettuna palvelun-kautta) double-laskujen-tarkkuus) "korotettuna")))))))
