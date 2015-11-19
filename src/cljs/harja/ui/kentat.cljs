@@ -17,20 +17,22 @@
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
 
-            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
-            [harja.atom :refer [paivittaja]])
+            [harja.atom :refer [paivittaja]]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
 
 ;; r/wrap skeeman arvolle
 (defn atomina [{:keys [nimi hae aseta]} data vaihda!]
-  (let [hae (or hae #(get % nimi))]
-    (r/wrap (hae data)
+  (let [hae (or hae #(get % nimi))
+        arvo (hae data)]
+    (r/wrap arvo
             (fn [uusi]
               ;; Resetoi data, jos uusi data annettu
-              (when (not= uusi (nimi data))
+              (when (not= uusi arvo)
                 (if aseta
                   (vaihda! (aseta data uusi))
                   (vaihda! (assoc data nimi uusi))))))))
@@ -168,7 +170,11 @@
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defmethod tee-kentta :numero [kentta data]
-  (let [teksti (atom (str @data))]
+  (let [fmt (or
+              (when-let [tarkkuus (:desimaalien-maara kentta)]
+                #(fmt/desimaaliluku-opt % tarkkuus))
+              (:fmt kentta) str)
+        teksti (atom (fmt @data))]
     (r/create-class
       {:component-will-receive-props
        (fn [_ [_ _ data]]
