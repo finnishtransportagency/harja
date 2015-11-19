@@ -4,7 +4,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.testi :as testi]
-    [harja.palvelin.integraatiot.paikkatietojarjestelma.alk-komponentti :as alk]))
+    [harja.palvelin.integraatiot.paikkatietojarjestelma.alk :as alk]))
 
 (defn aja-tiedoston-muutospaivamaara-kysely []
   "REPL-testiajofunktio"
