@@ -13,15 +13,13 @@
   [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm] :as tiedot}]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [urakan-indeksi "MAKU 2010"] ;; indeksi jolla kok. ja yks. hint. työt korotetaan. Implementoidaan tässä tuki jos eri urakkatyyppi tarvii eri indeksiä
-    (into []
-          (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                     (konv/sql-date hk-alkupvm)
-                                                     (konv/sql-date hk-loppupvm)
-                                                     (konv/sql-date aikavali-alkupvm)
-                                                     (konv/sql-date aikavali-loppupvm)
-                                                     urakka-id
-                                                     urakan-indeksi))))
+  (into []
+        (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                   (konv/sql-date hk-alkupvm)
+                                                   (konv/sql-date hk-loppupvm)
+                                                   (konv/sql-date aikavali-alkupvm)
+                                                   (konv/sql-date aikavali-loppupvm)
+                                                   urakka-id)))
 
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]
