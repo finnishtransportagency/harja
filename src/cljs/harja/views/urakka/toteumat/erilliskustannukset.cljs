@@ -27,7 +27,8 @@
             [cljs-time.core :as t]
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]])
+            [harja.domain.skeema :refer [+tyotyypit+]]
+            [harja.domain.roolit :as roolit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -157,7 +158,9 @@
                                                  (reset! tallennus-kaynnissa false)
                                                  (reset! valittu-kustannus nil)))
                                :kun-virhe    (reset! tallennus-kaynnissa false)}]
-                             (when (:id @muokattu)
+                             (when (and
+                                     (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur))
+                                     (:id @muokattu))
                                [:button.nappi-kielteinen
                                 {:class (when @tallennus-kaynnissa "disabled")
                                  :on-click
