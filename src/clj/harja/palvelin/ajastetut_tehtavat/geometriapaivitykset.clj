@@ -80,7 +80,7 @@
 
 (def tee-tieverkon-alk-paivitystehtava
   (maarittele-alk-paivitystehtava
-    "tieosoiteverkko"
+    "tieverkko"
     :tieosoiteverkon-alk-osoite
     :tieosoiteverkon-alk-tuontikohde
     :tieosoiteverkon-shapefile
@@ -88,7 +88,7 @@
 
 (def tee-tieverkon-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
-    "tieosoiteverkko"
+    "tieoverkko"
     :tieosoiteverkon-alk-osoite
     :tieosoiteverkon-alk-tuontikohde
     :tieosoiteverkon-shapefile
