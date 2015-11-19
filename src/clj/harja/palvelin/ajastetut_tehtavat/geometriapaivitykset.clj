@@ -161,16 +161,17 @@
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
-    (assoc this :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
-    (assoc this :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
-    (assoc this :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
-    (assoc this :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset))
-    (assoc this :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-alk-paivitystehtava this asetukset))
-    (assoc this :talvihoidon-hoitoluokkien-paivitystehtava (tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
-    (assoc this :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset))
-    (assoc this :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
-    (assoc this :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))
-    (assoc this :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset)))
+    (-> this
+        (assoc :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
+        (assoc :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
+        (assoc :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
+        (assoc :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset))
+        (assoc :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-alk-paivitystehtava this asetukset))
+        (assoc :talvihoidon-hoitoluokkien-paivitystehtava (tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
+        (assoc :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset))
+        (assoc :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
+        (assoc :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))
+        (assoc :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset))))
   (stop [this]
     (apply (:tieverkon-hakutehtava this) [])
     (apply (:soratien-hoitoluokkien-hakutehtava this) [])
