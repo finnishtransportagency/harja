@@ -68,8 +68,4 @@
           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
            :hae #(if (muokattava? %) (:lisatieto %) "Koneellisesti raportoitu")}]
 
-         @toteumat]])
-     )))
-
-
-
+         @toteumat]]))))
