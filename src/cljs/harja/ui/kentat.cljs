@@ -27,11 +27,12 @@
 
 ;; r/wrap skeeman arvolle
 (defn atomina [{:keys [nimi hae aseta]} data vaihda!]
-  (let [hae (or hae #(get % nimi))]
-    (r/wrap (hae data)
+  (let [hae (or hae #(get % nimi))
+        arvo (hae data)]
+    (r/wrap arvo
             (fn [uusi]
               ;; Resetoi data, jos uusi data annettu
-              (when (not= uusi (nimi data))
+              (when (not= uusi arvo)
                 (if aseta
                   (vaihda! (aseta data uusi))
                   (vaihda! (assoc data nimi uusi))))))))
