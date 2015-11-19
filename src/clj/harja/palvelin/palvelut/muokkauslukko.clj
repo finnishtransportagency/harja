@@ -28,9 +28,14 @@
   (log/debug "Virkistetään lukko")
   (q/virkista-lukko<! db id (:id user)))
 
-(defn vapauta-lukko [db user {:keys [id]}]
-  (log/debug "Vapautetaan lukko")
-  (q/vapauta-lukko! db id (:id user))
+(defn vapauta-lukko [db lukko-id]
+  (log/debug "Vapautetaan lukko " lukko-id)
+  (q/vapauta-lukko! db lukko-id)
+  (log/debug "Lukko vapautettu"))
+
+(defn vapauta-kayttajan-lukko [db user lukko-id]
+  (log/debug "Vapautetaan käyttäjän " (:kayttajanimi user) " lukko " lukko-id)
+  (q/vapauta-kayttajan-lukko! db lukko-id (:id user))
   (log/debug "Lukko vapautettu"))
 
 (defn hae-lukko-idlla
@@ -46,7 +51,7 @@
       (if lukko
         (if (lukko-vanhentunut? lukko)
           (do
-            (vapauta-lukko db user {:id (:id lukko)})
+            (vapauta-lukko db (:id lukko))
             nil)
           lukko)))))
 
@@ -67,8 +72,8 @@
           (log/debug "Vanha lukko löytyi. Tarkistetaan sen ikä.")
           (if (lukko-vanhentunut? lukko)
             (do
-              (log/debug "Vanha lukko on vanhentunut. Poistetaan se ja luodaan uusi..")
-              (vapauta-lukko db user {:id (:id lukko)})
+              (log/debug "Edellinen lukko on vanhentunut. Poistetaan se ja luodaan uusi..")
+              (vapauta-lukko db (:id lukko))
               (q/luo-lukko<! c id (:id user)))
             (do (log/debug "Ei voida lukita " id " koska on jo lukittu!")
                 nil)))))))
@@ -86,7 +91,7 @@
                           (lukitse db user tiedot)))
       (julkaise-palvelu http :vapauta-lukko
                         (fn [user tiedot]
-                          (vapauta-lukko db user tiedot)))
+                          (vapauta-kayttajan-lukko db user (:id tiedot))))
       (julkaise-palvelu http :virkista-lukko
                         (fn [user tiedot]
                           (virkista-lukko db user tiedot)))
