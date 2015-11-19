@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.integraatioloki
   (:require [taoensso.timbre :as log]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.kyselyt.integraatioloki :as integraatiloki]
+            [harja.kyselyt.integraatioloki :as integraatioloki]
             [clj-time.core :refer [months ago]]
             [harja.kyselyt.konversio :as konversio]
             [com.stuartsierra.component :as component]))
@@ -26,7 +26,7 @@
         (fn [_]
           (let [aikarajaus (konversio/sql-timestamp (.toDate (-> 1 months ago)))]
             (log/debug "Poistetaan kaikki integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus)
-            (integraatiloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus)))))
+            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus)))))
     (fn [] ())))
 
 (defn tee-jms-lokiviesti [suunta sisalto otsikko]
@@ -56,10 +56,10 @@
    :parametrit    nil})
 
 (defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit]}]
-  (integraatiloki/luo-integraatioviesti<! db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
+  (integraatioloki/luo-integraatioviesti<! db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
 
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
-  (let [tapahtumaid (:id (integraatiloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
+  (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
     (when viesti
       (kirjaa-viesti db tapahtumaid viesti))
     tapahtumaid))
@@ -68,9 +68,9 @@
   (let [kasitellyn-tapahtuman-id
         (if tapahtuma-id
           (do
-            (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi! db onnistunut lisatietoja tapahtuma-id)
+            (integraatioloki/merkitse-integraatiotapahtuma-paattyneeksi! db onnistunut lisatietoja tapahtuma-id)
             tapahtuma-id)
-          (:id (integraatiloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<! db onnistunut lisatietoja ulkoinen-id)))]
+          (:id (integraatioloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<! db onnistunut lisatietoja ulkoinen-id)))]
     (when (and viesti kasitellyn-tapahtuman-id)
       (kirjaa-viesti db kasitellyn-tapahtuman-id viesti))))
 
@@ -78,7 +78,7 @@
   (let [otsikko {:message-id viesti-id}
         lokiviesti (tee-jms-lokiviesti suunta sisalto otsikko)]
     (kirjaa-viesti db tapahtuma-id lokiviesti)
-    (integraatiloki/aseta-ulkoinen-id-integraatiotapahtumalle! db viesti-id tapahtuma-id)))
+    (integraatioloki/aseta-ulkoinen-id-integraatiotapahtumalle! db viesti-id tapahtuma-id)))
 
 (defn lokita-rest-viesti [db tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit]
   (let [lokiviesti (tee-rest-lokiviesti suunta osoite sisaltotyyppi sisalto otsikko parametrit)]
@@ -124,3 +124,35 @@
   (kirjaa-lahteva-jms-kuittaus [this kuittaus tapahtuma-id onnistunut lisatietoja] (lokita-lahteva-jms-kuittaus this kuittaus tapahtuma-id onnistunut lisatietoja))
   (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut] (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut))
   (kirjaa-alkanut-tiedoston-haku [this jarjestelma integraatio lahde] (lokita-alkanut-tiedoston-haku this jarjestelma integraatio lahde)))
+
+(defn lokittaja [integraatioloki db jarjestelma integraation-nimi]
+  (fn [operaatio & argumentit]
+    (let [integraatio (integraatioloki/hae-integraation-id db jarjestelma integraation-nimi)]
+      (case operaatio
+        :alkanut
+        (let [[ulkoinen-id viesti] argumentit]
+          (kirjaa-alkanut-integraatio integraatioloki jarjestelma integraation-nimi ulkoinen-id viesti))
+
+        :onnistunut
+        (let [[viesti lisatietoja tapahtumaid ulkoinen-id] argumentit]
+          (kirjaa-onnistunut-integraatio integraatioloki viesti lisatietoja tapahtumaid ulkoinen-id))
+
+        :epaonnistunut
+        (let [[viesti lisatietoja tapahtumaid ulkoinen-id] argumentit]
+          (kirjaa-epaonnistunut-integraatio integraatioloki viesti lisatietoja tapahtumaid ulkoinen-id))
+
+        :saapunut-jms-kuittaus
+        (let [[ulkoinen-id kuittaus onnistunut] argumentit]
+          (kirjaa-saapunut-jms-kuittaus integraatioloki kuittaus ulkoinen-id integraatio onnistunut))
+
+        :saapunut-jms-viesti
+        (let [[viesti-id viesti] argumentit]
+          (kirjaa-saapunut-jms-viesti integraatioloki jarjestelma integraation-nimi viesti-id viesti))
+
+        :lahteva-jms-kuittaus
+        (let [[kuittaus tapahtuma-id onnistunut lisatietoja] argumentit]
+          (kirjaa-lahteva-jms-kuittaus integraatioloki kuittaus tapahtuma-id onnistunut lisatietoja))
+
+        :jms-viesti
+        (let [[tapahtuma-id viesti-id suunta sisalto]argumentit]
+          (kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id suunta sisalto))))))

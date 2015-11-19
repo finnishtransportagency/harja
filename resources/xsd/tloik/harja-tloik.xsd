@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--Created with Liquid XML Studio Developer Edition 9.1.11.3570 (http://www.liquid-technologies.com)-->
+<xs:schema 
+    targetNamespace="http://www.liikennevirasto.fi/xsd/harja" 
+    version="1.0" 
+    xmlns="http://www.liikennevirasto.fi/xsd/harja"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="ilmoitus">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="viestiId" type="xs:string" minOccurs="1" maxOccurs="1" />
+                <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1" />
+                <xs:element name="versionumero" type="xs:int" minOccurs="1" maxOccurs="1" />
+                <xs:element name="ilmoitustyyppi" type="ilmoitustyyppi" minOccurs="1" maxOccurs="1" />
+                <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
+                <xs:element name="urakkatyyppi" type="urakkatyyppi" minOccurs="1" maxOccurs="1" />
+                <xs:element name="otsikko" type="xs:string" minOccurs="0" />
+                <xs:element name="lyhytSelite" type="xs:string" minOccurs="0" />
+                <xs:element name="pitkaSelite" type="xs:string" minOccurs="0" />
+                <xs:element name="yhteydenottopyynto" type="xs:boolean" minOccurs="0" />
+                <xs:element name="sijainti" type="sijainti" minOccurs="1" maxOccurs="1" />
+                <xs:element name="ilmoittaja" type="ilmoittaja" minOccurs="0" />
+                <xs:element name="lahettaja" type="henkilo" minOccurs="0" />
+                <xs:element name="seliteet" type="selitteet" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="harja-kuittaus">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
+                <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1" />
+                <xs:element name="viestiId" type="xs:string" minOccurs="1" />
+                <xs:element name="virhe" type="xs:string" minOccurs="0" />
+                <xs:element name="valitystiedot" minOccurs="0" maxOccurs="1">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="ilmoitusId" type="xs:int" minOccurs="0" />
+                            <xs:element name="urakka" type="urakka" minOccurs="0" />
+                            <xs:element name="urakoitsija" type="organisaatio" minOccurs="0" />
+                            <xs:element name="paivystaja" type="henkilo" minOccurs="0" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="tloik-kuittaus">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
+                <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1" />
+                <xs:element name="viestiId" type="xs:string" minOccurs="1" />
+                <xs:element name="virhe" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="toimenpide">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="viestiId" type="xs:string" minOccurs="1" />
+                <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" />
+                <xs:element name="tyyppi" type="toimenpidetyyppi" minOccurs="1" />
+                <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
+                <xs:element name="vapaateksti" type="xs:string" minOccurs="0" />
+                <xs:element name="kasittelija" type="kasittelija" minOccurs="0" />
+                <xs:element name="ilmoittaja" type="kasittelija" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="ilmoittaja">
+        <xs:complexContent>
+            <xs:extension base="henkilo">
+                <xs:sequence>
+                    <xs:element name="tyyppi" type="ilmoittajatyyppi" minOccurs="1" maxOccurs="1" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="henkilo">
+        <xs:sequence>
+            <xs:element name="etunimi" type="xs:string" minOccurs="0" />
+            <xs:element name="sukunimi" type="xs:string" minOccurs="0" />
+            <xs:element name="matkapuhelin" type="xs:string" minOccurs="0" />
+            <xs:element name="tyopuhelin" type="xs:string" minOccurs="0" />
+            <xs:element name="sahkoposti" type="xs:string" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="selitteet">
+        <xs:sequence>
+            <xs:element name="selite" type="selite" minOccurs="1" maxOccurs="unbounded" nillable="true" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="sijainti">
+        <xs:sequence>
+            <xs:element name="tienumero" type="xs:integer" minOccurs="1" />
+            <xs:element name="x" type="xs:integer" minOccurs="1" />
+            <xs:element name="y" type="xs:integer" minOccurs="1" />
+            <xs:element name="tieosa" type="xs:integer" minOccurs="0" />
+            <xs:element name="etaisyys" type="xs:integer" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="ilmoittajatyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="viranomainen" />
+            <xs:enumeration value="muu" />
+            <xs:enumeration value="asukas" />
+            <xs:enumeration value="tienkayttaja" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="ilmoitustyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="kysely" />
+            <xs:enumeration value="tiedoitus" />
+            <xs:enumeration value="toimenpidepyynto" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="selite">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="tyomaajarjestelyihinLiittyvaIlmoitus" />
+            <xs:enumeration value="kuoppiaTiessa" />
+            <xs:enumeration value="kelikysely" />
+            <xs:enumeration value="soratienKuntoHuono" />
+            <xs:enumeration value="saveaTiella" />
+            <xs:enumeration value="liikennettaVaarantavaEsteTiella" />
+            <xs:enumeration value="irtokiviaTiella" />
+            <xs:enumeration value="kevyenLiikenteenVaylaanLiittyvaIlmoitus" />
+            <xs:enumeration value="raivausJaKorjaustoita" />
+            <xs:enumeration value="auraustarve" />
+            <xs:enumeration value="kaivonKansiRikki" />
+            <xs:enumeration value="kevyenLiikenteenVaylatOvatLiukkaita" />
+            <xs:enumeration value="routaheitto" />
+            <xs:enumeration value="avattavatPuomit" />
+            <xs:enumeration value="tievalaistusVioittunutOnnettomuudessa" />
+            <xs:enumeration value="muuKyselyTaiNeuvonta" />
+            <xs:enumeration value="soratienTasaustarve" />
+            <xs:enumeration value="tieTaiTienReunaOnPainunut" />
+            <xs:enumeration value="siltaanLiittyvaIlmoitus" />
+            <xs:enumeration value="polynsidontatarve" />
+            <xs:enumeration value="liikennevalotEivatToimi" />
+            <xs:enumeration value="kunnossapitoJaHoitotyo" />
+            <xs:enumeration value="vettaTiella" />
+            <xs:enumeration value="aurausvallitNakemaesteena" />
+            <xs:enumeration value="ennakoivaVaroitus" />
+            <xs:enumeration value="levahdysalueeseenLiittyvaIlmoitus" />
+            <xs:enumeration value="sohjonPoisto" />
+            <xs:enumeration value="liikennekeskusKuitannutLoppuneeksi" />
+            <xs:enumeration value="muuToimenpidetarve" />
+            <xs:enumeration value="hiekoitustarve" />
+            <xs:enumeration value="tietOvatJaatymassa" />
+            <xs:enumeration value="jaatavaaSadetta" />
+            <xs:enumeration value="tienvarsilaitteisiinLiittyvaIlmoitus" />
+            <xs:enumeration value="oljyaTiella" />
+            <xs:enumeration value="sahkojohtoOnPudonnutTielle" />
+            <xs:enumeration value="tieOnSortunut" />
+            <xs:enumeration value="tievalaistusVioittunut" />
+            <xs:enumeration value="testilahetys" />
+            <xs:enumeration value="tievalaistuksenLamppujaPimeana" />
+            <xs:enumeration value="virkaApupyynto" />
+            <xs:enumeration value="tiemerkintoihinLiittyvaIlmoitus" />
+            <xs:enumeration value="tulvavesiOnNoussutTielle" />
+            <xs:enumeration value="niittotarve" />
+            <xs:enumeration value="kuormaOnLevinnytTielle" />
+            <xs:enumeration value="tieOnLiukas" />
+            <xs:enumeration value="tiellaOnEste" />
+            <xs:enumeration value="harjaustarve" />
+            <xs:enumeration value="hoylaystarve" />
+            <xs:enumeration value="tietyokysely" />
+            <xs:enumeration value="paallystevaurio" />
+            <xs:enumeration value="rikkoutunutAjoneuvoTiella" />
+            <xs:enumeration value="mustaaJaataTiella" />
+            <xs:enumeration value="kevyenLiikenteenVaylillaOnLunta" />
+            <xs:enumeration value="hirviaitaVaurioitunut" />
+            <xs:enumeration value="korvauskysely" />
+            <xs:enumeration value="puitaOnKaatunutTielle" />
+            <xs:enumeration value="rumpuunLiittyvaIlmoitus" />
+            <xs:enumeration value="lasiaTiella" />
+            <xs:enumeration value="liukkaudentorjuntatarve" />
+            <xs:enumeration value="alikulkukaytavassaVetta" />
+            <xs:enumeration value="tievalaistuksenLamppuPimeana" />
+            <xs:enumeration value="kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita" />
+            <xs:enumeration value="kuoppa" />
+            <xs:enumeration value="toimenpidekysely" />
+            <xs:enumeration value="pysakkiinLiittyvaIlmoitus" />
+            <xs:enumeration value="nakemaalueenRaivaustarve" />
+            <xs:enumeration value="vesakonraivaustarve" />
+            <xs:enumeration value="muuttuvatOpasteetEivatToimi" />
+            <xs:enumeration value="tievalaistus" />
+            <xs:enumeration value="vesiSyovyttanytTienReunaa" />
+            <xs:enumeration value="raskasAjoneuvoJumissa" />
+            <xs:enumeration value="myrskyvaurioita" />
+            <xs:enumeration value="kaidevaurio" />
+            <xs:enumeration value="liikennemerkkeihinLiittyvaIlmoitus" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="urakkatyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="tiemerkinta" />
+            <xs:enumeration value="valaistus" />
+            <xs:enumeration value="paallystys" />
+            <xs:enumeration value="hoito" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="organisaatio">
+        <xs:sequence>
+            <xs:element name="nimi" type="xs:string" minOccurs="0" />
+            <xs:element name="ytunnus" type="xs:string" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="kuittaustyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="virhe" />
+            <xs:enumeration value="valitetty" />
+            <xs:enumeration value="vastaanotettu" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="valitystiedot">
+        <xs:sequence>
+            <xs:element name="ilmoitusId" type="xs:int" minOccurs="0" />
+            <xs:element name="urakka" type="urakka" minOccurs="0" />
+            <xs:element name="urakoitsija" type="organisaatio" minOccurs="0" />
+            <xs:element name="paivystaja" type="henkilo" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="urakka">
+        <xs:sequence>
+            <xs:element name="id" type="xs:int" minOccurs="0" />
+            <xs:element name="nimi" type="xs:string" minOccurs="0" />
+            <xs:element name="tyyppi" type="xs:string" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="toimenpidetyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="vastaanotto" />
+            <xs:enumeration value="aloitus" />
+            <xs:enumeration value="lopetus" />
+            <xs:enumeration value="vastaus" />
+            <xs:enumeration value="muutos" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="kasittelija">
+        <xs:sequence>
+            <xs:element name="henkilo" type="henkilo" minOccurs="0" />
+            <xs:element name="organisaatio" type="organisaatio" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

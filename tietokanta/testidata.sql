@@ -585,7 +585,7 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Ilmoitukset ja kuittaukset
 -- Ensimmäinen ilmoitus: Oulun alueella, kysely
 INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
@@ -595,7 +595,7 @@ ST_MakePoint(452935, 7186873)::GEOMETRY, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi
 'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas'::ilmoittajatyyppi,
 'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
@@ -603,7 +603,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, '2005-10-01 10:
 'Mikael', 'Pöytä', '04428671283', '0509288383', 'mikael.poyta@valittavaurakoitsija.fi',
 'Välittävä Urakoitsija', 'Y1234');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -615,7 +615,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, '2005-10-01 10:
 'Usko', 'Untamo', '04428121283', '0509288383', 'usko.untamo@valittavaurakoitsija.fi',
 'Välittävä Urakoitsija', 'Y1234');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -627,7 +627,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, '2005-10-02 11:
 'Usko', 'Untamo', '04428121283', '0509288383', 'usko.untamo@valittavaurakoitsija.fi',
 'Välittävä Urakoitsija', 'Y1234');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -642,7 +642,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12345), 12345, '2005-10-02 12:
 
 -- Toinen ilmoitus: Oulun alueella, toimenpidepyynto
 INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
@@ -653,7 +653,7 @@ ARRAY['kaivonKansiRikki', 'vettaTiella']::ilmoituksenselite[],
 'Yrjö', 'Mestari', '0441271234', '0441233424', 'tyonvalvonta@isoveli.com', 'muu'::ilmoittajatyyppi,
 'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
@@ -661,7 +661,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12346), 12346, '2005-10-11 06:
 'Mikael', 'Pöytä', '04428671283', '0509288383', 'mikael.poyta@valittavaurakoitsija.fi',
 'Välittävä Urakoitsija', 'Y1234');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -671,7 +671,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12346), 12346, '2005-10-11 14:
 'Välittävä Urakoitsija', 'Y1234',
 'Veljekset Ukkola Huoltoyritys', 'Y8172');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -684,7 +684,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12346), 12346, '2005-10-11 19:
 
 -- Kolmas ilmoitus: Pudasjärvi, toimenpidepyynto, avoin
 INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
@@ -696,7 +696,7 @@ ARRAY['kuoppiaTiessa', 'vettaTiella']::ilmoituksenselite[],
 'Paavo', 'Poliisimies', '086727461', '0448261234', 'paavo.poliisimies@poliisi.fi', 'viranomainen'::ilmoittajatyyppi,
 'Mika', 'Vaihdemies', '085612567', 'vaihde@valituspalvelu.fi');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
@@ -704,7 +704,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12347), 12347, '2007-12-07 08:
 'Merituuli', 'Salmela', '04020671222', '081234512', 'merituuli.salmela@vainamoinen.fi',
 'Väinämöinen', 'Y72787');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
@@ -712,7 +712,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12347), 12347, '2007-12-07 08:
 'vastaus'::kuittaustyyppi, 'Merituuli', 'Salmela', '04020671222', '081234512', 'merituuli.salmela@vainamoinen.fi',
 'Väinämöinen', 'Y72787');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -723,7 +723,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12347), 12347, '2007-12-07 11:
 'Väinämöinen', 'Y72787',
 'Veljekset Ukkola Huoltoyritys', 'Y8172');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -734,7 +734,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12347), 12347, '2007-12-07 15:
 'Väinämöinen', 'Y72787',
 'Veljekset Ukkola Huoltoyritys', 'Y8172');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -745,7 +745,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12347), 12347, '2007-12-17 09:
 'Väinämöinen', 'Y72787',
 'Väinämöinen', 'Y72787');
 
-INSERT INTO kuittaus
+INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, vapaateksti, kuittaustyyppi,
 kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
 kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus,
@@ -759,7 +759,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12347), 12347, '2007-12-18 19:
 
 -- Neljäs ilmoitus: Turun alueella, tiedoitus. Ei kuittauksia!
 INSERT INTO ilmoitus
-(ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, vapaateksti, sijainti,
+(ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
 tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet,
 ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
 lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)

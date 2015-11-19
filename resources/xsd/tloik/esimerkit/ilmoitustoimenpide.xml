@@ -1,31 +1,31 @@
-<toimenpide>
-  <viestiId>123412343</viestiId>
-  <ilmoitusId>3213123</ilmoitusId>
-  <tyyppi>vastaus</tyyppi>
-  <aika>2015-09-29T04:49:45</aika>
-  <vapaateksti>Antin Auraus Oy hoitaa auraustyön.</vapaateksti>
-  <kasittelija>
-    <henkilo>
-      <etunimi>Antti</etunimi>
-      <sukunimi>Auraaja</sukunimi>
-      <matkapuhelin>09823489</matkapuhelin>
-      <sahkoposti>antti.auraaja@antinauraus.fi</sahkoposti>
-    </henkilo>
-    <organisaatio>
-      <nimi>Antin Auraus Oy</nimi>
-      <ytunnus>8765432-1</ytunnus>
-    </organisaatio>
-  </kasittelija>
-  <ilmoittaja>
-    <henkilo>
-      <etunimi>Urho</etunimi>
-      <sukunimi>Urakoitsija</sukunimi>
-      <matkapuhelin>923458973</matkapuhelin>
-      <sahkoposti>urho.urakoitsija@puulaaki.fi</sahkoposti>
-    </henkilo>
-    <organisaatio>
-      <nimi>Puulaaki Oy</nimi>
-      <ytunnus>1234567-8</ytunnus>
-    </organisaatio>
-  </ilmoittaja>
-</toimenpide>
+<harja:toimenpide xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
+<viestiId>123412343</viestiId>
+<ilmoitusId>3213123</ilmoitusId>
+<tyyppi>vastaus</tyyppi>
+<aika>2015-09-29T04:49:45</aika>
+<vapaateksti>Antin Auraus Oy hoitaa auraustyön.</vapaateksti>
+<kasittelija>
+  <henkilo>
+    <etunimi>Antti</etunimi>
+    <sukunimi>Auraaja</sukunimi>
+    <matkapuhelin>09823489</matkapuhelin>
+    <sahkoposti>antti.auraaja@antinauraus.fi</sahkoposti>
+  </henkilo>
+  <organisaatio>
+    <nimi>Antin Auraus Oy</nimi>
+    <ytunnus>8765432-1</ytunnus>
+  </organisaatio>
+</kasittelija>
+<ilmoittaja>
+  <henkilo>
+    <etunimi>Urho</etunimi>
+    <sukunimi>Urakoitsija</sukunimi>
+    <matkapuhelin>923458973</matkapuhelin>
+    <sahkoposti>urho.urakoitsija@puulaaki.fi</sahkoposti>
+  </henkilo>
+  <organisaatio>
+    <nimi>Puulaaki Oy</nimi>
+    <ytunnus>1234567-8</ytunnus>
+  </organisaatio>
+</ilmoittaja>
+</harja:toimenpide>
