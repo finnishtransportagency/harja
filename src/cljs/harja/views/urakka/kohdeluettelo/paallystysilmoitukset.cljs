@@ -339,7 +339,7 @@
               :virheet alikohteet-virheet
               :rivinumerot? true
               :uusi-id (inc (count @toteutuneet-osoitteet))}
-             [{:otsikko     "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
+             [{:otsikko     "Tie#" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]
                :muokattava? (fn [rivi index] (if (> index 0) false true))}
               {:otsikko       "Ajorata"
                :nimi          :ajorata
@@ -365,10 +365,10 @@
                :valinnat      pot/+kaistat+
                :leveys        "20%"
                :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alku\u00ADtieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alku\u00ADetäi\u00ADsyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADetäi\u00ADsyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alku\u00ADtieosa" :nimi :aosa :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alku\u00ADetäi\u00ADsyys" :nimi :aet :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADetäi\u00ADsyys" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri/laske-tien-pituus rivi))}]
              toteutuneet-osoitteet]
 
@@ -395,7 +395,7 @@
                :leveys        "30%"
                :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko       "Pääll. työ\u00ADmenetelmä"
                :nimi          :tyomenetelma
@@ -408,9 +408,9 @@
                :valinnat      pot/+tyomenetelmat+
                :leveys        "30%"
                :validoi       [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko       "Edellinen päällyste"
                :nimi          :edellinen-paallystetyyppi
                :tyyppi        :valinta
@@ -446,10 +446,10 @@
                                  (false? @lomake-lukittu-muokkaukselta?))
               :uusi-id (inc (count @alustalle-tehdyt-toimet))
               :virheet alustalle-tehdyt-toimet-virheet}
-             [{:otsikko "Alku\u00ADtieosa" :nimi :aosa :tyyppi :numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alku\u00ADetäisyys" :nimi :aet :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+             [{:otsikko "Alku\u00ADtieosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alku\u00ADetäisyys" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri/laske-tien-pituus rivi))}
               {:otsikko       "Käsittely\u00ADmenetelmä"
                :nimi          :kasittelymenetelma
@@ -461,7 +461,7 @@
                                   "- Valitse menetelmä -"))
                :valinnat      pot/+alustamenetelmat+
                :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko       "Verkko\u00ADtyyppi"
                :nimi          :verkkotyyppi
                :tyyppi        :valinta
@@ -498,10 +498,10 @@
                :leveys        "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :numero :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-              {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :muokattava? (constantly false) :tyyppi :numero :hae (fn [rivi] (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
              toteutuneet-maarat]]
 
