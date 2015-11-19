@@ -168,7 +168,8 @@
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defmethod tee-kentta :numero [kentta data]
-  (let [teksti (atom (str @data))]
+  (let [fmt (or (:fmt kentta) str)
+        teksti (atom (fmt @data))]
     (r/create-class
       {:component-will-receive-props
        (fn [_ [_ _ data]]
