@@ -244,7 +244,7 @@
                                  (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
                                  (= :hoito (:tyyppi ur)))
                            "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan automaattisesti laskutusyhteenvedossa.
-                   Käytettävä indeksi on määritelty urakan kilpailuttamisajan perusteella eikä sitä voi muuttaa.")
+                   Käytettävä indeksi on määritelty urakan kilpailuttamisajankohdan perusteella eikä sitä voi muuttaa.")
             }
            {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
             :pakollinen?   true
