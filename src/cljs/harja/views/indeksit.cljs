@@ -12,6 +12,11 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (declare tallenna-indeksi)
+
+(defn formatoi-indeksi [luku]
+  (if (integer? luku)
+    (str luku ".0")
+    luku))
  
  (defn indeksi-grid [indeksin-nimi]
    (let [indeksit @i/indeksit
@@ -35,18 +40,18 @@
              :validoi [[:ei-tyhja  "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
              :muokattava? #(not (:kannassa? %))}
             
-            {:otsikko "tammi" :nimi 1 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "helmi" :nimi 2 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "maalis" :nimi 3 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "huhti" :nimi 4 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "touko" :nimi 5 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "kesä" :nimi 6 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "heinä" :nimi 7 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "elo" :nimi 8 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "syys" :nimi 9 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "loka" :nimi 10 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "marras" :nimi 11 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}
-            {:otsikko "joulu" :nimi 12 :tyyppi :positiivinen-numero :desimaalien-maara 1 :leveys "7%"}]
+            {:otsikko "tammi" :nimi 1 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi  :leveys "7%"}
+            {:otsikko "helmi" :nimi 2 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "maalis" :nimi 3 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "huhti" :nimi 4 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "touko" :nimi 5 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "kesä" :nimi 6 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "heinä" :nimi 7 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "elo" :nimi 8 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "syys" :nimi 9 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "loka" :nimi 10 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "marras" :nimi 11 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}
+            {:otsikko "joulu" :nimi 12 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatoi-indeksi :leveys "7%"}]
            rivit]))
  
 (defn indeksit-elementti []
