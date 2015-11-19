@@ -65,8 +65,6 @@ AS (nimi VARCHAR, tuotekoodi VARCHAR, tpi INTEGER,
     bonukset_laskutettu NUMERIC, bonukset_laskutettu_ind_korotettuna NUMERIC, bonukset_laskutettu_ind_korotus NUMERIC,
     bonukset_laskutetaan NuMERIC, bonukset_laskutetaan_ind_korotettuna NUMERIC, bonukset_laskutetaan_ind_korotus NUMERIC);
 
-DROP FUNCTION laskutusyhteenveto(DATE,DATE,DATE,DATE,INTEGER,VARCHAR(128));
-
 CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
   ur         INTEGER)
