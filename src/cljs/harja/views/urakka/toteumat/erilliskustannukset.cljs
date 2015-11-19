@@ -108,7 +108,9 @@
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen ja lisääminen"
   []
-  (let [muokattu (atom (if (:id @valittu-kustannus)
+  (let [ur @nav/valittu-urakka
+        urakan-indeksi @u/urakassa-kaytetty-indeksi
+        muokattu (atom (if (:id @valittu-kustannus)
                          (assoc @valittu-kustannus
                            :sopimus @u/valittu-sopimusnumero
                            :toimenpideinstanssi @u/valittu-toimenpideinstanssi
@@ -131,7 +133,7 @@
         tallennus-kaynnissa (atom false)]
 
     (komp/luo
-      (fn [ur]
+      (fn []
         [:div.erilliskustannuksen-tiedot
          [:button.nappi-toissijainen {:on-click #(reset! valittu-kustannus nil)}
           (ikonit/chevron-left) " Takaisin kustannusluetteloon"]
@@ -191,27 +193,34 @@
             :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta second
-            :valinnat      (:sopimukset @nav/valittu-urakka)
+            :valinnat      (:sopimukset ur)
             :fmt           second
-            :leveys-col    3}
+            :leveys-col    4}
            {:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
             :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta #(:tpi_nimi %)
             :valinnat      @u/urakan-toimenpideinstanssit
             :fmt           #(:tpi_nimi %)
-            :leveys-col    3}
+            :leveys-col    4}
            {:otsikko       "Tyyppi" :nimi :tyyppi
             :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
-            :valinnat      (luo-kustannustyypit (:tyyppi @nav/valittu-urakka))
+            :valinnat      (luo-kustannustyypit (:tyyppi ur))
             :fmt           #(erilliskustannustyypin-teksti %)
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
-            :leveys-col    3}
+            :leveys-col    4
+            :aseta         (fn [rivi arvo]
+                             (assoc (if (and
+                                          urakan-indeksi
+                                      (= :asiakastyytyvaisyysbonus arvo))
+                               (assoc rivi :indeksin_nimi urakan-indeksi)
+                               rivi)
+                             :tyyppi arvo))}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :pakollinen?   true
-            :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 3
+            :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 4
             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
            {:otsikko     "Rahamäärä"
             :nimi        :rahasumma
@@ -219,20 +228,30 @@
             :yksikko     "€"
             :tyyppi      :positiivinen-numero
             :validoi     [[:ei-tyhja "Anna rahamäärä"]]
-            :leveys-col  3}
-           {:otsikko       "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
-            :pakollinen?   true
-            :valinta-nayta str
-            :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
-            :fmt           #(if (nil? %) yleiset/+valitse-indeksi+ str)
-            :leveys-col    3
+            :leveys-col  4}
+           {:otsikko     "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
+            :pakollinen? true
+            ;; hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan
+            :muokattava? #(not (and
+                                 (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+                                 (= :hoito (:tyyppi ur))))
+            :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
+            :fmt         #(if (nil? %)
+                           yleiset/+valitse-indeksi+
+                           (str %))
+            :leveys-col  4
+            :vihje       (when (and
+                                 (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+                                 (= :hoito (:tyyppi ur)))
+                           "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan automaattisesti laskutusyhteenvedossa.
+                   Käytettävä indeksi on määritelty urakan kilpailuttamisajan perusteella eikä sitä voi muuttaa.")
             }
            {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
             :pakollinen?   true
             :valinta-nayta #(maksajavalinnan-teksti %)
             :valinnat      +maksajavalinnat+
             :fmt           #(maksajavalinnan-teksti %)
-            :leveys-col    3
+            :leveys-col    4
             }
            {:otsikko     "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
             :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}

@@ -297,3 +297,11 @@
   (k/post! :tallenna-urakan-tyyppi
            {:urakka-id    urakka-id
             :urakkatyyppi uusi-urakkatyyppi}))
+
+(def urakassa-kaytetty-indeksi
+  (reaction (when-let [ur @nav/valittu-urakka]
+              (when (= :hoito (:tyyppi ur))
+                (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm ur))]
+                  (if (< urakan-alkuvuosi 2017)
+                    "MAKU 2005"
+                    "MAKU 2010"))))))
