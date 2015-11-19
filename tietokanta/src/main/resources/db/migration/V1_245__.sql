@@ -1,4 +1,42 @@
--- Kuvaus: Maksuerien tarvitesemat tiedot laskutusyhteenvetoon
+-- Kuvaus: Maksuerien tarvitsemat tiedot laskutusyhteenvetoon
+
+-- Pudotetaan vanha rajapinta 
+DROP FUNCTION laske_kuukauden_indeksikorotus(INTEGER, INTEGER, VARCHAR, NUMERIC);
+
+-- Laske kuukauden indeksikorotus
+-- indeksikorotus lasketaan yleensä (aina?) (vertailuluku/perusluku) * summa
+-- esim. indeksin arvo 105.0, perusluku 103.2, summa 1000e:
+-- summa indeksillä korotettuna 1 000 € * (105/103.2) = 1 017,44 €
+CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus(
+  v          INTEGER,
+  kk          INTEGER,
+  indeksinimi VARCHAR,
+  summa      NUMERIC,
+  perusluku  NUMERIC)
+
+  RETURNS kuukauden_indeksikorotus_rivi AS $$
+DECLARE
+  kerroin      NUMERIC;
+  vertailuluku NUMERIC;
+
+BEGIN
+  -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
+  IF perusluku IS NULL THEN
+    RAISE NOTICE 'Kuukauden indeksikorotusta ei voitu laskea koska peruslukua ei ole';
+    RETURN NULL;
+  END IF;
+  SELECT
+    INTO vertailuluku arvo
+  FROM indeksi
+  WHERE nimi = indeksinimi
+        AND vuosi = v AND kuukausi = kk;
+  -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
+  -- tämä lasku palauttaa NULL.
+  kerroin := (vertailuluku / perusluku);
+  RETURN (summa, summa * kerroin, summa * kerroin - summa);
+END;
+$$ LANGUAGE plpgsql;
+
 
 DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE,
 aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER, ind VARCHAR(128));
@@ -23,14 +61,22 @@ AS (nimi VARCHAR, tuotekoodi VARCHAR, tpi INTEGER,
     akilliset_hoitotyot_laskutettu NUMERIC, akilliset_hoitotyot_laskutettu_ind_korotettuna NUMERIC, akilliset_hoitotyot_laskutettu_ind_korotus NUMERIC,
     akilliset_hoitotyot_laskutetaan NUMERIC, akilliset_hoitotyot_laskutetaan_ind_korotettuna NUMERIC, akilliset_hoitotyot_laskutetaan_ind_korotus NUMERIC,
     erilliskustannukset_laskutettu NUMERIC, erilliskustannukset_laskutettu_ind_korotettuna NUMERIC, erilliskustannukset_laskutettu_ind_korotus NUMERIC,
-    erilliskustannukset_laskutetaan NUMERIC, erilliskustannukset_laskutetaan_ind_korotettuna NUMERIC, erilliskustannukset_laskutetaan_ind_korotus NUMERIC);
+    erilliskustannukset_laskutetaan NUMERIC, erilliskustannukset_laskutetaan_ind_korotettuna NUMERIC, erilliskustannukset_laskutetaan_ind_korotus NUMERIC,
+    bonukset_laskutettu NUMERIC, bonukset_laskutettu_ind_korotettuna NUMERIC, bonukset_laskutettu_ind_korotus NUMERIC,
+    bonukset_laskutetaan NuMERIC, bonukset_laskutetaan_ind_korotettuna NUMERIC, bonukset_laskutetaan_ind_korotus NUMERIC);
+
+DROP FUNCTION laskutusyhteenveto(DATE,DATE,DATE,DATE,INTEGER,VARCHAR(128));
 
 CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
-  ur         INTEGER, ind VARCHAR(128))
+  ur         INTEGER)
   RETURNS SETOF laskutusyhteenveto_rivi AS $$
 DECLARE
   t                                      RECORD;
+  urakan_alkuvuosi INTEGER;
+  ind VARCHAR; -- hoitourakassa käytettävä indeksi
+  perusluku NUMERIC; -- urakan indeksilaskennan perusluku (urakkasopimusta edeltävän vuoden joulukuusta 3kk ka)
+  
   kaikki_paitsi_kht_laskutettu_ind_korotus NUMERIC;
   kaikki_laskutettu_ind_korotus NUMERIC;
   kaikki_paitsi_kht_laskutetaan_ind_korotus NUMERIC;
@@ -127,8 +173,29 @@ DECLARE
   erilliskustannukset_laskutetaan_rivi                  RECORD;
   eki_laskutetaan RECORD;
 
-
+  bonukset_laskutettu NUMERIC;
+  bonukset_laskutettu_ind_korotettuna NUMERIC;
+  bonukset_laskutettu_ind_korotus NUMERIC;
+  bonukset_laskutettu_rivi RECORD;
+  bi_laskutettu RECORD;
+  bonukset_laskutetaan NUMERIC;
+  bonukset_laskutetaan_ind_korotettuna NUMERIC;
+  bonukset_laskutetaan_ind_korotus NUMERIC;
+  bonukset_laskutetaan_rivi RECORD;
+  bi_laskutetaan RECORD;
+  
 BEGIN
+  -- Päätellään indeksilaskennan perustiedot
+  SELECT INTO urakan_alkuvuosi EXTRACT(year from alkupvm) FROM urakka WHERE id = ur;
+  
+  IF urakan_alkuvuosi < 2017 THEN
+     ind := 'MAKU 2005';
+  ELSE
+     ind := 'MAKU 2010';
+  END IF;
+  
+  perusluku := hoitourakan_indeksilaskennan_perusluku(ur, ind);
+  
   -- Loopataan urakan toimenpideinstanssien läpi
   FOR t IN SELECT
              tpk2.nimi AS nimi,
@@ -149,10 +216,10 @@ BEGIN
     FOR khti IN SELECT
                   (SELECT korotus
                    FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                       kht.summa)) AS ind,
+                                                       kht.summa, perusluku)) AS ind,
                   (SELECT korotettuna
                    FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                       kht.summa)) AS kor,
+                                                       kht.summa, perusluku)) AS kor,
                   kht.summa                                        AS kht_summa
                 FROM kokonaishintainen_tyo kht
                 WHERE toimenpideinstanssi = t.tpi
@@ -172,10 +239,10 @@ BEGIN
     FOR khti_laskutetaan IN SELECT
                               (SELECT korotus
                                FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                                   kht.summa)) AS ind,
+                                                                   kht.summa, perusluku)) AS ind,
                               (SELECT korotettuna
                                FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                                   kht.summa)) AS kor,
+                                                                   kht.summa, perusluku)) AS kor,
                               kht.summa                                        AS kht_summa
                             FROM kokonaishintainen_tyo kht
                             WHERE toimenpideinstanssi = t.tpi
@@ -214,7 +281,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti.tot_alkanut) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM yhti.tot_alkanut) :: INTEGER),
-                                          ind, yhti.yht_summa)
+                                          ind, yhti.yht_summa, perusluku)
       INTO yht_laskutettu_rivi;
       RAISE NOTICE 'yht_laskutettu_rivi: %', yht_laskutettu_rivi;
       yht_laskutettu :=  yht_laskutettu + yht_laskutettu_rivi.summa;
@@ -253,7 +320,7 @@ BEGIN
     SELECT *
     FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti_laskutetaan.tot_alkanut) :: INTEGER),
                                         (SELECT EXTRACT(MONTH FROM yhti_laskutetaan.tot_alkanut) :: INTEGER),
-                                        ind, yhti_laskutetaan.yht_summa)
+                                        ind, yhti_laskutetaan.yht_summa, perusluku)
     INTO yht_laskutetaan_rivi;
       RAISE NOTICE 'yht_laskutetaan_rivi: %', yht_laskutetaan_rivi;
       yht_laskutetaan := yht_laskutetaan + COALESCE(yht_laskutetaan_rivi.summa, 0.0);
@@ -280,8 +347,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM sanktiorivi.perintapvm) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM sanktiorivi.perintapvm) :: INTEGER),
-                                          sanktiorivi.indeksi,
-                                          sanktiorivi.maara)
+                                          sanktiorivi.indeksi, sanktiorivi.maara, perusluku)
       INTO sakot_laskutettu_rivi;
       sakot_laskutettu := sakot_laskutettu + COALESCE(sakot_laskutettu_rivi.summa, 0.0);
       sakot_laskutettu_ind_korotettuna := sakot_laskutettu_ind_korotettuna + COALESCE(sakot_laskutettu_rivi.korotettuna, sakot_laskutettu_rivi.summa);
@@ -311,8 +377,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM sanktiorivi.perintapvm) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM sanktiorivi.perintapvm) :: INTEGER),
-                                          sanktiorivi.indeksi,
-                                          sanktiorivi.maara)
+                                          sanktiorivi.indeksi, sanktiorivi.maara, perusluku)
       INTO sakot_laskutetaan_rivi;
       sakot_laskutetaan := sakot_laskutetaan + sakot_laskutetaan_rivi.summa;
       sakot_laskutetaan_ind_korotettuna := sakot_laskutetaan_ind_korotettuna + COALESCE(sakot_laskutetaan_rivi.korotettuna, sakot_laskutetaan_rivi.summa);
@@ -386,7 +451,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM mhti.tot_alkanut) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM mhti.tot_alkanut) :: INTEGER),
-                                          ind, mhti.mht_summa)
+                                          ind, mhti.mht_summa, perusluku)
       INTO muutostyot_laskutettu_rivi;
       muutostyot_laskutettu :=  muutostyot_laskutettu + COALESCE(muutostyot_laskutettu_rivi.summa, 0.0);
       muutostyot_laskutettu_ind_korotettuna :=  muutostyot_laskutettu_ind_korotettuna + COALESCE(muutostyot_laskutettu_rivi.korotettuna, muutostyot_laskutettu);
@@ -440,7 +505,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM mhti_aikavalilla.tot_alkanut) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM mhti_aikavalilla.tot_alkanut) :: INTEGER),
-                                          ind, mhti_aikavalilla.mht_summa)
+                                          ind, mhti_aikavalilla.mht_summa, perusluku)
       INTO muutostyot_laskutetaan_rivi;
 
       muutostyot_laskutetaan := muutostyot_laskutetaan + COALESCE(muutostyot_laskutetaan_rivi.summa, 0.0);
@@ -502,7 +567,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM akhti.tot_alkanut) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM akhti.tot_alkanut) :: INTEGER),
-                                          ind, akhti.mht_summa)
+                                          ind, akhti.mht_summa, perusluku)
       INTO akilliset_hoitotyot_laskutettu_rivi;
       akilliset_hoitotyot_laskutettu :=  akilliset_hoitotyot_laskutettu + COALESCE(akilliset_hoitotyot_laskutettu_rivi.summa, 0.0);
       akilliset_hoitotyot_laskutettu_ind_korotettuna :=  akilliset_hoitotyot_laskutettu_ind_korotettuna + COALESCE(akilliset_hoitotyot_laskutettu_rivi.korotettuna, akilliset_hoitotyot_laskutettu);
@@ -556,7 +621,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM akhti_aikavalilla.tot_alkanut) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM akhti_aikavalilla.tot_alkanut) :: INTEGER),
-                                          ind, akhti_aikavalilla.mht_summa)
+                                          ind, akhti_aikavalilla.mht_summa, perusluku)
       INTO akilliset_hoitotyot_laskutetaan_rivi;
 
       akilliset_hoitotyot_laskutetaan := akilliset_hoitotyot_laskutetaan + COALESCE(akilliset_hoitotyot_laskutetaan_rivi.summa, 0.0);
@@ -590,12 +655,11 @@ BEGIN
     akilliset_hoitotyot_laskutetaan := akilliset_hoitotyot_laskutetaan + akilliset_hoitotyot_laskutetaan_paivanhinnalla;
     akilliset_hoitotyot_laskutetaan_ind_korotettuna := akilliset_hoitotyot_laskutetaan_ind_korotettuna + akilliset_hoitotyot_laskutetaan_paivanhinnalla;
 
-
+    -- ERILLISKUSTANNUKSET (muut kuin asiakastyytyväisyysbonus)
     -- Hoitokaudella ennen aikaväliä laskutetut erilliskustannukset
     erilliskustannukset_laskutettu := 0.0;
     erilliskustannukset_laskutettu_ind_korotettuna := 0.0;
     erilliskustannukset_laskutettu_ind_korotus := 0.0;
-
 
     FOR eki_laskutettu
     IN SELECT
@@ -603,7 +667,8 @@ BEGIN
          ek.rahasumma,
          ek.indeksin_nimi
        FROM erilliskustannus ek
-       WHERE ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur)
+       WHERE ek.tyyppi != 'asiakastyytyvaisyysbonus'
+             AND ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur)
              AND ek.toimenpideinstanssi = t.tpi
              AND ek.pvm >= hk_alkupvm AND ek.pvm <= hk_loppupvm
              AND ek.pvm < aikavali_alkupvm
@@ -611,7 +676,7 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki_laskutettu.pvm) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM eki_laskutettu.pvm) :: INTEGER),
-                                          eki_laskutettu.indeksin_nimi, eki_laskutettu.rahasumma)
+                                          eki_laskutettu.indeksin_nimi, eki_laskutettu.rahasumma, perusluku)
       INTO erilliskustannukset_laskutettu_rivi;
       erilliskustannukset_laskutettu :=  erilliskustannukset_laskutettu + COALESCE(erilliskustannukset_laskutettu_rivi.summa, 0.0);
       erilliskustannukset_laskutettu_ind_korotettuna :=  erilliskustannukset_laskutettu_ind_korotettuna + COALESCE(erilliskustannukset_laskutettu_rivi.korotettuna, erilliskustannukset_laskutettu);
@@ -629,7 +694,8 @@ BEGIN
          ek.rahasumma,
          ek.indeksin_nimi
        FROM erilliskustannus ek
-       WHERE ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur)
+       WHERE ek.tyyppi != 'asiakastyytyvaisyysbonus'
+             AND ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur)
              AND ek.toimenpideinstanssi = t.tpi
              AND ek.pvm >= hk_alkupvm AND ek.pvm <= hk_loppupvm
              AND ek.pvm >= aikavali_alkupvm AND ek.pvm <= aikavali_loppupvm
@@ -637,13 +703,65 @@ BEGIN
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki_laskutetaan.pvm) :: INTEGER),
                                           (SELECT EXTRACT(MONTH FROM eki_laskutetaan.pvm) :: INTEGER),
-                                          eki_laskutetaan.indeksin_nimi, eki_laskutetaan.rahasumma)
+                                          eki_laskutetaan.indeksin_nimi, eki_laskutetaan.rahasumma, perusluku)
       INTO erilliskustannukset_laskutetaan_rivi;
       erilliskustannukset_laskutetaan :=  erilliskustannukset_laskutetaan + COALESCE(erilliskustannukset_laskutetaan_rivi.summa, 0.0);
       erilliskustannukset_laskutetaan_ind_korotettuna :=  erilliskustannukset_laskutetaan_ind_korotettuna + COALESCE(erilliskustannukset_laskutetaan_rivi.korotettuna, erilliskustannukset_laskutetaan);
       erilliskustannukset_laskutetaan_ind_korotus :=  erilliskustannukset_laskutetaan_ind_korotus + COALESCE(erilliskustannukset_laskutetaan_rivi.korotus, 0.0);
     END LOOP;
     RAISE NOTICE 'Erilliskustannuksia laskutetaan: %', erilliskustannukset_laskutetaan;
+
+    -- BONUKSET
+    -- Hoitokaudella ennen aikaväliä laskutetut bonukset
+    bonukset_laskutettu := 0.0;
+    bonukset_laskutettu_ind_korotettuna := 0.0;
+    bonukset_laskutettu_ind_korotus := 0.0;
+
+    FOR bi_laskutettu
+    IN SELECT
+         b.pvm,
+         b.rahasumma,
+         b.indeksin_nimi
+       FROM erilliskustannus b
+       WHERE b.tyyppi = 'asiakastyytyvaisyysbonus'
+             AND b.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur)
+             AND b.toimenpideinstanssi = t.tpi
+             AND b.pvm >= hk_alkupvm AND b.pvm <= hk_loppupvm
+             AND b.pvm < aikavali_alkupvm
+    LOOP
+      SELECT *
+      FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutettu.pvm, ind, bi_laskutettu.rahasumma)
+      INTO bonukset_laskutettu_rivi;
+      bonukset_laskutettu :=  bonukset_laskutettu + COALESCE(bonukset_laskutettu_rivi.summa, 0.0);
+      bonukset_laskutettu_ind_korotettuna :=  bonukset_laskutettu_ind_korotettuna + COALESCE(bonukset_laskutettu_rivi.korotettuna, bonukset_laskutettu);
+      bonukset_laskutettu_ind_korotus :=  bonukset_laskutettu_ind_korotus + COALESCE(bonukset_laskutettu_rivi.korotus, 0.0);
+    END LOOP;
+    RAISE NOTICE 'Bonuksia laskutettu: %', bonukset_laskutettu;
+
+    -- Bonukset aikavälillä
+    bonukset_laskutetaan := 0.0;
+    bonukset_laskutetaan_ind_korotettuna := 0.0;
+    bonukset_laskutetaan_ind_korotus := 0.0;
+    FOR bi_laskutetaan
+    IN SELECT
+         b.pvm,
+         b.rahasumma,
+         b.indeksin_nimi
+       FROM erilliskustannus b
+       WHERE b.tyyppi = 'asiakastyytyvaisyysbonus'
+             AND b.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur)
+             AND b.toimenpideinstanssi = t.tpi
+             AND b.pvm >= hk_alkupvm AND b.pvm <= hk_loppupvm
+             AND b.pvm >= aikavali_alkupvm AND b.pvm <= aikavali_loppupvm
+    LOOP
+      SELECT *
+      FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutetaan.pvm, ind, bi_laskutetaan.rahasumma)
+      INTO bonukset_laskutetaan_rivi;
+      bonukset_laskutetaan :=  bonukset_laskutetaan + COALESCE(bonukset_laskutetaan_rivi.summa, 0.0);
+      bonukset_laskutetaan_ind_korotettuna :=  bonukset_laskutetaan_ind_korotettuna + COALESCE(bonukset_laskutetaan_rivi.korotettuna, bonukset_laskutetaan);
+      bonukset_laskutetaan_ind_korotus :=  bonukset_laskutetaan_ind_korotus + COALESCE(bonukset_laskutetaan_rivi.korotus, 0.0);
+    END LOOP;
+    RAISE NOTICE 'Bonuksia laskutetaan: %', bonukset_laskutetaan;
 
     -- Indeksisummat
     kaikki_paitsi_kht_laskutettu_ind_korotus := 0.0;
@@ -652,11 +770,11 @@ BEGIN
     kaikki_laskutetaan_ind_korotus := 0.0;
 
     kaikki_paitsi_kht_laskutettu_ind_korotus := yht_laskutettu_ind_korotus + sakot_laskutettu_ind_korotus + suolasakot_laskutettu_ind_korotus +
-                                                muutostyot_laskutettu_ind_korotus + akilliset_hoitotyot_laskutettu_ind_korotus + erilliskustannukset_laskutettu_ind_korotus;
+                                                muutostyot_laskutettu_ind_korotus + akilliset_hoitotyot_laskutettu_ind_korotus + erilliskustannukset_laskutettu_ind_korotus + bonukset_laskutettu_ind_korotus;
     kaikki_laskutettu_ind_korotus := kaikki_paitsi_kht_laskutettu_ind_korotus + kht_laskutettu_ind_korotus;
 
     kaikki_paitsi_kht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + sakot_laskutetaan_ind_korotus + suolasakot_laskutetaan_ind_korotus +
-                                                 muutostyot_laskutetaan_ind_korotus + akilliset_hoitotyot_laskutetaan_ind_korotus  + erilliskustannukset_laskutetaan_ind_korotus;
+                                                 muutostyot_laskutetaan_ind_korotus + akilliset_hoitotyot_laskutetaan_ind_korotus  + erilliskustannukset_laskutetaan_ind_korotus + bonukset_laskutetaan_ind_korotus;
     kaikki_laskutetaan_ind_korotus := kaikki_paitsi_kht_laskutetaan_ind_korotus + kht_laskutetaan_ind_korotus;
 
 
@@ -668,7 +786,8 @@ BEGIN
 
     kaikki_paitsi_kht_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
                                     suolasakot_laskutettu_ind_korotettuna + muutostyot_laskutettu_ind_korotettuna +
-                                    akilliset_hoitotyot_laskutettu_ind_korotettuna + erilliskustannukset_laskutettu_ind_korotettuna
+                                    akilliset_hoitotyot_laskutettu_ind_korotettuna + erilliskustannukset_laskutettu_ind_korotettuna +
+				    bonukset_laskutettu_ind_korotettuna
                                     --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
                                     + kht_laskutettu_ind_korotus;
 
@@ -676,7 +795,8 @@ BEGIN
 
     kaikki_paitsi_kht_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
                                      suolasakot_laskutetaan_ind_korotettuna + muutostyot_laskutetaan_ind_korotettuna +
-                                     akilliset_hoitotyot_laskutetaan_ind_korotettuna + erilliskustannukset_laskutetaan_ind_korotettuna
+                                     akilliset_hoitotyot_laskutetaan_ind_korotettuna + erilliskustannukset_laskutetaan_ind_korotettuna +
+				     bonukset_laskutetaan_ind_korotettuna
                                      --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
                                      + kht_laskutetaan_ind_korotus;
     kaikki_laskutetaan := kaikki_paitsi_kht_laskutetaan + kht_laskutetaan;
@@ -695,6 +815,8 @@ BEGIN
     RAISE NOTICE 'muutostyot_laskutettu_ind_korotettuna: %', muutostyot_laskutettu_ind_korotettuna;
     RAISE NOTICE 'erilliskustannukset_laskutettu: %', erilliskustannukset_laskutettu;
     RAISE NOTICE 'erilliskustannukset_laskutettu_ind_korotettuna: %', erilliskustannukset_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'bonukset_laskutettu: %', bonukset_laskutettu;
+    RAISE NOTICE 'bonukset_laskutettu_ind_korotettuna: %', bonukset_laskutettu_ind_korotettuna;
 
     RAISE NOTICE 'kht_laskutetaan: %', kht_laskutetaan;
     RAISE NOTICE 'kht_laskutetaan_ind_korotettuna: %', kht_laskutetaan_ind_korotettuna;
@@ -710,6 +832,8 @@ BEGIN
     RAISE NOTICE 'akilliset_hoitotyot_laskutetaan_ind_korotettuna: %', akilliset_hoitotyot_laskutetaan_ind_korotettuna;
     RAISE NOTICE 'erilliskustannukset_laskutetaan: %', erilliskustannukset_laskutetaan;
     RAISE NOTICE 'erilliskustannukset_laskutetaan_ind_korotettuna: %', erilliskustannukset_laskutetaan_ind_korotettuna;
+    RAISE NOTICE 'bonukset_laskutetaan: %', bonukset_laskutetaan;
+    RAISE NOTICE 'bonukset_laskutetaan_ind_korotettuna: %', bonukset_laskutetaan_ind_korotettuna;
 
     RAISE NOTICE 'kaikki_paitsi_kht_laskutettu_ind_korotus: %', kaikki_paitsi_kht_laskutettu_ind_korotus;
     RAISE NOTICE 'kaikki_laskutettu_ind_korotus: %', kaikki_laskutettu_ind_korotus;
@@ -743,7 +867,10 @@ BEGIN
                    akilliset_hoitotyot_laskutettu, akilliset_hoitotyot_laskutettu_ind_korotettuna, akilliset_hoitotyot_laskutettu_ind_korotus,
                    akilliset_hoitotyot_laskutetaan, akilliset_hoitotyot_laskutetaan_ind_korotettuna, akilliset_hoitotyot_laskutetaan_ind_korotus,
                    erilliskustannukset_laskutettu, erilliskustannukset_laskutettu_ind_korotettuna, erilliskustannukset_laskutettu_ind_korotus,
-                   erilliskustannukset_laskutetaan, erilliskustannukset_laskutetaan_ind_korotettuna, erilliskustannukset_laskutetaan_ind_korotus);
+                   erilliskustannukset_laskutetaan, erilliskustannukset_laskutetaan_ind_korotettuna, erilliskustannukset_laskutetaan_ind_korotus,
+		   bonukset_laskutettu, bonukset_laskutettu_ind_korotettuna, bonukset_laskutettu_ind_korotus,
+                   bonukset_laskutetaan, bonukset_laskutetaan_ind_korotettuna, bonukset_laskutetaan_ind_korotus
+		   );
 
 
     END LOOP;

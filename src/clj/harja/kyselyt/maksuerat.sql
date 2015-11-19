@@ -6,22 +6,26 @@ SELECT tpi_id,
        SUM(kokonaishintaisten_summa) AS kokonaishintainen,
        SUM(yksikkohintaisten_summa) AS yksikkohintainen,
        SUM(sakot_summa) AS sakko,
-       SUM(muutostyot_summa) AS muutostyot_summa, -- todo lisää loput tyypit
        SUM(akilliset_hoitotyot_summa) AS "akillinen-hoitotyo",
-       SUM(lisatyot_summa) AS lisatyo
-  FROM (SELECT SUM((laskutusyhteenveto).kht_laskutettu_ind_korotettuna +
-                   (laskutusyhteenveto).kht_laskutetaan_ind_korotettuna) AS kokonaishintaisten_summa,
-               SUM((laskutusyhteenveto).yht_laskutettu_ind_korotettuna +
-                   (laskutusyhteenveto).yht_laskutetaan_ind_korotettuna) AS yksikkohintaisten_summa,
-	       SUM((laskutusyhteenveto).sakot_laskutettu_ind_korotettuna +
-	           (laskutusyhteenveto).sakot_laskutetaan_ind_korotettuna) AS sakot_summa,
-	       SUM((laskutusyhteenveto).muutostyot_laskutettu_ind_korotettuna +
-	           (laskutusyhteenveto).muutostyot_laskutetaan_ind_korotettuna) AS muutostyot_summa,
-	       SUM((laskutusyhteenveto).akilliset_hoitotyot_laskutettu_ind_korotettuna +
-	           (laskutusyhteenveto).akilliset_hoitotyot_laskutetaan_ind_korotettuna) AS akilliset_hoitotyot_summa,
-	       SUM((laskutusyhteenveto).muutostyot_laskutettu_ind_korotettuna + 
-	           (laskutusyhteenveto).muutostyot_laskutetaan_ind_korotettuna) AS lisatyot_summa,
-		   
+       SUM(lisatyot_summa) AS lisatyo,
+       SUM(bonukset_summa) AS bonukset,
+       SUM(indeksit_summa) AS indeksit
+  FROM (SELECT SUM((laskutusyhteenveto).kht_laskutettu +
+                   (laskutusyhteenveto).kht_laskutetaan) AS kokonaishintaisten_summa,
+               SUM((laskutusyhteenveto).yht_laskutettu +
+                   (laskutusyhteenveto).yht_laskutetaan) AS yksikkohintaisten_summa,
+	       SUM((laskutusyhteenveto).sakot_laskutettu +
+	           (laskutusyhteenveto).sakot_laskutetaan +
+		   (laskutusyhteenveto).suolasakot_laskutettu +
+		   (laskutusyhteenveto).suolasakot_laskutetaan) AS sakot_summa,
+	       SUM((laskutusyhteenveto).akilliset_hoitotyot_laskutettu +
+	           (laskutusyhteenveto).akilliset_hoitotyot_laskutetaan) AS akilliset_hoitotyot_summa,
+	       SUM((laskutusyhteenveto).muutostyot_laskutettu + 
+	           (laskutusyhteenveto).muutostyot_laskutetaan) AS lisatyot_summa,
+	       SUM((laskutusyhteenveto).bonukset_laskutettu +
+	           (laskutusyhteenveto).bonukset_laskutetaan) as bonukset_summa,
+	       SUM((laskutusyhteenveto).kaikki_laskutettu_ind_korotus +
+	           (laskutusyhteenveto).kaikki_laskutetaan_ind_korotus) AS indeksit_summa,
                (laskutusyhteenveto).tpi AS tpi_id,
                lyht.alkupvm, lyht.loppupvm
           FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
@@ -29,14 +33,14 @@ SELECT tpi_id,
                        laskutusyhteenveto(hk.alkupvm, hk.loppupvm,
                                           date_trunc('month', hk.loppupvm) :: DATE,
                                           (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
-					  :urakka_id::INTEGER, :indeksi)
+					  :urakka_id::INTEGER)
                   FROM (SELECT * FROM urakan_hoitokaudet(:urakka_id::INTEGER)
                          WHERE loppupvm < now()) AS hk
                 UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
                 SELECT hk.alkupvm, hk.loppupvm,
                        laskutusyhteenveto(hk.alkupvm, hk.loppupvm,
                                           date_trunc('month', now()) :: DATE,
-                                          (date_trunc('month', now()) + INTERVAL '1 month') :: DATE, :urakka_id::INTEGER, :indeksi)
+                                          (date_trunc('month', now()) + INTERVAL '1 month') :: DATE, :urakka_id::INTEGER)
                   FROM (SELECT * FROM urakan_hoitokaudet(:urakka_id::INTEGER)
                          WHERE alkupvm < now() AND loppupvm > now()) AS hk
                ) AS lyht
