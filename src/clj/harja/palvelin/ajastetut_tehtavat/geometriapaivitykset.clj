@@ -126,7 +126,6 @@
     :siltojen-shapefile
     siltojen-tuonti/vie-sillat-kantaan))
 
-
 (def tee-talvihoidon-hoitoluokkien-alk-paivitystehtava
   (maarittele-alk-paivitystehtava
     "talvihoitoluokat"
