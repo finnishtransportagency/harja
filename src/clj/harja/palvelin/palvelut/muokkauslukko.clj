@@ -43,7 +43,7 @@
   Jos lukko löytyy, palauttaa sen.
   Jos lukko löytyy, mutta se on vanhentunut, poistaa sen ja palauttaa nil
   Jos lukkoa ei löydy, palauttaa nil."
-  [db user {:keys [id]}]
+  [db {:keys [id]}]
   (jdbc/with-db-transaction [c db]
     (log/debug "Haetaan lukko id:llä " id)
     (let [lukko (first (q/hae-lukko-idlla c id))]
@@ -85,7 +85,7 @@
           db (:db this)]
       (julkaise-palvelu http :hae-lukko-idlla
                         (fn [user tiedot]
-                          (hae-lukko-idlla db user tiedot)))
+                          (hae-lukko-idlla db tiedot)))
       (julkaise-palvelu http :lukitse
                         (fn [user tiedot]
                           (lukitse db user tiedot)))
