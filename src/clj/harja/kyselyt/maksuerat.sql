@@ -66,7 +66,23 @@ SELECT
   tpi.loppupvm AS toimenpideinstanssi_loppupvm,
   s.sampoid    AS sopimus_sampoid,
   k.tila       AS kustannussuunnitelma_tila,
-  k.lahetetty  AS kustannussuunnitelma_lahetetty
+  k.lahetetty  AS kustannussuunnitelma_lahetetty,
+   -- Tuotenumero
+  (SELECT emo.tuotenumero
+    FROM toimenpidekoodi emo
+   WHERE emo.id = tpk.emo) AS tuotenumero,
+   
+  -- Kustannussuunnitelman summa
+  CASE WHEN m.tyyppi = 'kokonaishintainen'
+       THEN (SELECT SUM(kht.summa)
+	       FROM kokonaishintainen_tyo kht
+	      WHERE kht.toimenpideinstanssi = tpi.id)
+       WHEN m.tyyppi = 'yksikkohintainen'
+       THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+	       FROM yksikkohintainen_tyo yht
+	      WHERE yht.tehtava IN (SELECT id FROM toimenpidekoodi WHERE emo = tpk.id))
+       ELSE 1
+  END AS kustannussuunnitelma_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
