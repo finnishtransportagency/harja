@@ -25,20 +25,16 @@
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
 
 ;; r/wrap skeeman arvolle
-(defn atomina [{:keys [nimi hae aseta arvon-polku-datassa]} data vaihda!]
+(defn atomina [{:keys [nimi hae aseta]} data vaihda!]
   (let [hae (or hae #(get % nimi))
-        vanha-arvo (if arvon-polku-datassa
-                     (get-in data arvon-polku-datassa)
-                     (nimi data))]
-    (r/wrap (hae data)
+        arvo (hae data)]
+    (r/wrap arvo
             (fn [uusi]
               ;; Resetoi data, jos uusi data annettu
-              (when (not= uusi vanha-arvo)
+              (when (not= uusi arvo)
                 (if aseta
                   (vaihda! (aseta data uusi))
-                  (if arvon-polku-datassa
-                    (vaihda! (assoc-in data arvon-polku-datassa uusi))
-                    (vaihda! (assoc data nimi uusi)))))))))
+                  (vaihda! (assoc data nimi uusi))))))))
 
 (defn vain-luku-atomina [arvo]
   (r/wrap arvo
