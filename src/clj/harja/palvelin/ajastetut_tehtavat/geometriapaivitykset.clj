@@ -148,7 +148,7 @@
     :soratien-hoitoluokkien-alk-osoite
     :soratien-hoitoluokkien-alk-tuontikohde
     :soratien-hoitoluokkien-shapefile
-    talvihoidon-tuonti/vie-hoitoluokat-kantaan))
+    soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan))
 
 (def tee-soratien-hoitoluokkien-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
@@ -156,7 +156,7 @@
     :soratien-hoitoluokkien-alk-osoite
     :soratien-hoitoluokkien-alk-tuontikohde
     :soratien-hoitoluokkien-shapefile
-    talvihoidon-tuonti/vie-hoitoluokat-kantaan))
+    soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan))
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
@@ -173,10 +173,10 @@
         (assoc :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))
         (assoc :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset))))
   (stop [this]
-    (apply (:tieverkon-hakutehtava this) [])
-    (apply (:soratien-hoitoluokkien-hakutehtava this) [])
-    (apply (:pohjavesialueiden-hakutehtava this) [])
-    (apply (:pohjavesialueiden-paivitystehtava this) [])
-    (apply (:tieverkon-paivitystehtava this) [])
-    (apply (:soratien-hoitoluokkien-paivitystehtava this) [])
+    ((:tieverkon-hakutehtava this))
+    ((:soratien-hoitoluokkien-hakutehtava this))
+    ((:pohjavesialueiden-hakutehtava this))
+    ((:pohjavesialueiden-paivitystehtava this))
+    ((:tieverkon-paivitystehtava this))
+    ((:soratien-hoitoluokkien-paivitystehtava this))
     this))
