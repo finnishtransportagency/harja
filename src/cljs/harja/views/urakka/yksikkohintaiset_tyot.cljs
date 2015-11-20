@@ -81,6 +81,9 @@
       :yhteensa-kkt-1-9 yht-1-9
       :yhteensa (and yht-10-12 yht-1-9 (+ yht-10-12 yht-1-9)))))
 
+(defn paivita-yllapitorivin-summat [{:keys [maara yksikkohinta] :as rivi}]
+  (assoc rivi
+      :yhteensa (and maara yksikkohinta (* maara yksikkohinta))))
 
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot
@@ -209,11 +212,15 @@
                                       #(swap! tuleville? not)
                                       [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                       @varoita-ylikirjoituksesta?])
-           :prosessoi-muutos       (when (= :hoito (:tyyppi ur))
+           :prosessoi-muutos       (if (= :hoito (:tyyppi ur))
                                      (fn [rivit]
                                        (let [rivit (seq rivit)]
                                          (zipmap (map first rivit)
-                                                 (map (comp paivita-hoitorivin-summat second) rivit)))))}
+                                                 (map (comp paivita-hoitorivin-summat second) rivit))))
+                                     (fn [rivit]
+                                       (let [rivit (seq rivit)]
+                                         (zipmap (map first rivit)
+                                                 (map (comp paivita-yllapitorivin-summat second) rivit)))))}
 
           ;; sarakkeet
           (if (= :hoito (:tyyppi ur))

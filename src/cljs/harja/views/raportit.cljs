@@ -47,10 +47,12 @@
                   mahdolliset-kontekstit (into #{"koko maa"}
                                                (keep identity [(when v-ur "urakka")
                                                                (when v-hal "hallintayksikko")]))
-                  tyypit (vals @raporttityypit)]
+                  urakkatyypin-raportit (filter
+                                          #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
+                                          (vals @raporttityypit))]
               (into []
                     (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                    tyypit))))
+                    urakkatyypin-raportit))))
 
 (defonce poista-ei-mahdollinen-raporttityyppivalinta
   (run! (let [mahdolliset (into #{} @mahdolliset-raporttityypit)

@@ -126,8 +126,8 @@
                                       :kun-onnistuu #(do
                                                       (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                       (reset! suolasakot-ja-lampotilat %))}]]])])}
-          [
-           {:otsikko "Talvisuolan käyttöraja" :pakollinen? true :nimi :talvisuolaraja :tyyppi :positiivinen-numero :leveys-col 2
+          [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
+            :tyyppi :positiivinen-numero :leveys-col 2
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
 
            (when-not (empty? pohjavesialueet)
@@ -140,17 +140,23 @@
                             [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}
                              {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
                              {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero 
-                              :placeholder "Ei rajoitusta" :leveys "30%"}]
+                              :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
                             (pohjavesialueet-muokkausdata)]})
            
-           {:otsikko "Suolasakko" :pakollinen? true :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
+           {:otsikko "Suolasakko" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
             :valinta-arvo  first
-            :valinta-nayta #(if (nil? %) yleiset/+valitse-kuukausi+ (second %))
+            :muokattava?   (constantly saa-muokata?)
+            :valinta-nayta #(if (not saa-muokata?)
+                             ""
+                             (if (nil? %) yleiset/+valitse-kuukausi+ (second %)))
             :valinnat      [[5 "Toukokuu"] [6 "Kesäkuu"] [7 "Heinäkuu"]
                             [8 "Elokuu"] [9 "Syyskuu"]]}
            {:otsikko       "Indeksi" :nimi :indeksi :tyyppi :valinta
-            :valinta-nayta #(if (nil? %) yleiset/+valitse-indeksi+ (str %))
+            :muokattava?   (constantly saa-muokata?)
+            :valinta-nayta #(if (not saa-muokata?)
+                             ""
+                             (if (nil? %) yleiset/+valitse-indeksi+ (str %)))
             :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
 
             :leveys-col    2}
@@ -172,12 +178,8 @@
                              (assoc hk
                                     :id 1
                                     :erotus (and keskilampotila pitkakeskilampotila
-                                                 (.toFixed (- keskilampotila pitkakeskilampotila) 1))))]]}
-                 
-           ]
-          (:suolasakko @hoitokauden-tiedot)]
-         ]))))
-
+                                                 (.toFixed (- keskilampotila pitkakeskilampotila) 1))))]]}]
+          (:suolasakko @hoitokauden-tiedot)]]))))
 
 (defn suola []
   (komp/luo

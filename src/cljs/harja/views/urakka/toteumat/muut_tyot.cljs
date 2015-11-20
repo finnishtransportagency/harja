@@ -282,7 +282,8 @@
                                  [[:ei-tyhja "Määrä antamatta."]])
                   :yksikko     (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
                  (when (= (:hinnoittelu @muokattu) :paivanhinta)
-                   {:otsikko       "Päivän hinta" :nimi :paivanhinta
+                   {:otsikko       "Päivän hinta"
+                    :nimi :paivanhinta
                     :pakollinen? (= :paivanhinta (:hinnoittelu @muokattu))
                     :hae           #(get-in % [:tehtava :paivanhinta])
                     :yksikko       "€"

@@ -102,7 +102,8 @@
         [{:otsikko "Käsitelty"
           :nimi    :kasittelyaika
           :tyyppi  :pvm
-          :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
+          :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]
+                    [:pvm-toisen-pvmn-jalkeen (:valmispvm_kohde @paallystys/paikkausilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
 
          {:otsikko       "Päätös"
           :nimi          :paatos

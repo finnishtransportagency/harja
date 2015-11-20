@@ -75,7 +75,7 @@
           ;; FIXME Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
           nil)
         otsikko (str (case konteksti
-                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                       :urakka (log/debug "Haetaan urakka id:llä " (pr-str urakka-id) (pr-str (first (urakat-q/hae-urakka db urakka-id))))
                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                        :koko-maa "KOKO MAA")
                      ", Materiaaliraportti "

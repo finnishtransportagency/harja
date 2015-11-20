@@ -19,6 +19,7 @@
                   (dissoc r :id)
                   (assoc r
                          :nimi (keyword (:nimi r))
+                         :urakkatyyppi (keyword (:urakkatyyppi r))
                          :parametrit (map #(dissoc % :id) (:parametrit r))))))
          (map (juxt (comp keyword :nimi)
                     (fn [raportti]

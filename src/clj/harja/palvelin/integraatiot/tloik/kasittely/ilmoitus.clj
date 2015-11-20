@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [clj-time.core :as time]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [harja.palvelin.integraatiot.tloik.sanomat.kuittaus-sanoma :as kuittaus]
+            [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
             [harja.kyselyt.urakat :as urakat]))
 
 (defn paattele-urakka [db urakkatyyppi sijainti]
@@ -14,7 +14,26 @@
 (defn hae-urakoitsija [db urakka-id]
   (first (urakat/hae-urakan-organisaatio db urakka-id)))
 
-(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi vapaateksti yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn paivita-ilmoittaja [db id ilmoittaja]
+  (ilmoitukset/paivita-ilmoittaja-ilmoitukselle!
+    db
+    (:etunimi ilmoittaja)
+    (:sukunimi ilmoittaja)
+    (:tyopuhelin ilmoittaja)
+    (:matkapuhelin ilmoittaja)
+    (:sahkoposti ilmoittaja)
+    (:tyyppi ilmoittaja)
+    id))
+
+(defn paivita-lahettaja [db id lahettaja]
+  (ilmoitukset/paivita-lahettaja-ilmoitukselle!
+    db (:etunimi lahettaja)
+    (:sukunimi lahettaja)
+    (:puhelinnumero lahettaja)
+    (:sahkoposti lahettaja)
+    id))
+
+(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   ;; todo tallenna välitystiedot ja vastaanottaja, jos on jo välitetty
   (ilmoitukset/paivita-ilmoitus!
     db
@@ -23,23 +42,17 @@
     ilmoitettu
     valitettu
     yhteydenottopyynto
-    vapaateksti
+    otsikko
+    lyhytselite
+    pitkaselite
     ilmoitustyyppi
     (str "{" (clojure.string/join "," (map name selitteet)) "}")
-    (:etunimi ilmoittaja)
-    (:sukunimi ilmoittaja)
-    (:tyopuhelin ilmoittaja)
-    (:matkapuhelin ilmoittaja)
-    (:sahkoposti ilmoittaja)
-    (:tyyppi ilmoittaja)
-    (:etunimi lahettaja)
-    (:sukunimi lahettaja)
-    (:puhelinnumero lahettaja)
-    (:sahkoposti lahettaja)
     id)
+  (paivita-ilmoittaja db id ilmoittaja)
+  (paivita-lahettaja db id lahettaja)
   (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id))
 
-(defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi vapaateksti yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   ;; todo tallenna vastaanottaja, jos on jo välitetty
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
@@ -48,20 +61,14 @@
                   ilmoitettu
                   valitettu
                   yhteydenottopyynto
-                  vapaateksti
+                  otsikko
+                  lyhytselite
+                  pitkaselite
                   ilmoitustyyppi
                   (str "{" (clojure.string/join "," (map name selitteet)) "}")
-                  urakkatyyppi
-                  (:etunimi ilmoittaja)
-                  (:sukunimi ilmoittaja)
-                  (:tyopuhelin ilmoittaja)
-                  (:matkapuhelin ilmoittaja)
-                  (:sahkoposti ilmoittaja)
-                  (:tyyppi ilmoittaja)
-                  (:etunimi lahettaja)
-                  (:sukunimi lahettaja)
-                  (:puhelinnumero lahettaja)
-                  (:sahkoposti lahettaja)))]
+                  urakkatyyppi))]
+    (paivita-ilmoittaja db id ilmoittaja)
+    (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)))
 
 (defn kasittele-ilmoitus [db ilmoitus]

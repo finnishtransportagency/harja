@@ -91,7 +91,7 @@
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.4"]
 
-                 [org.clojure/test.check "0.7.0"]
+                 [org.clojure/test.check "0.9.0"]
 
                  [prismatic/dommy "1.1.0"]
 
