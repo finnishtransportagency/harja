@@ -226,7 +226,7 @@
 (defonce urakan-valittu-valilehti (atom :yleiset))
 (defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
 (defonce toteumat-valilehti (atom :kokonaishintaiset-tyot))
-(defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
+(defonce laskutus-valittu-valilehti (atom :maksuerat))
 (defonce hallinnan-valittu-valilehti (atom :kayttajat))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
@@ -297,3 +297,11 @@
   (k/post! :tallenna-urakan-tyyppi
            {:urakka-id    urakka-id
             :urakkatyyppi uusi-urakkatyyppi}))
+
+(def urakassa-kaytetty-indeksi
+  (reaction (when-let [ur @nav/valittu-urakka]
+              (when (= :hoito (:tyyppi ur))
+                (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm ur))]
+                  (if (< urakan-alkuvuosi 2017)
+                    "MAKU 2005"
+                    "MAKU 2010"))))))
