@@ -174,7 +174,8 @@
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
               (:fmt kentta) str)
-        teksti (atom (fmt @data))]
+        teksti (atom (fmt @data))
+        kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
     (r/create-class
       {:component-will-receive-props
        (fn [_ [_ _ data]]
@@ -197,8 +198,8 @@
        (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
          (let [nykyinen-teksti @teksti
                vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
-               kokonaisluku-re-pattern #"-?\d{1,10}"
-               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1,10}((\\.|,)\\d{0,"
+               kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
                                                          (or (:desimaalien-maara kentta) 2)
                                                          "})?"))]
            [:input {:class       (when lomake? "form-control")
