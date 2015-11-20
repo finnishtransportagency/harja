@@ -68,7 +68,6 @@ SELECT
   s.sampoid    AS sopimus_sampoid,
   k.tila       AS kustannussuunnitelma_tila,
   k.lahetetty  AS kustannussuunnitelma_lahetetty,
-  tpi.urakka   AS "urakka-id",
    -- Tuotenumero
   (SELECT emo.tuotenumero
     FROM toimenpidekoodi emo
@@ -116,6 +115,7 @@ SELECT
   u.sampoid                AS urakka_sampoid,
   k.tila                   AS kustannussuunnitelma_tila,
   k.lahetetty              AS kustannussuunnitelma_lahetetty,
+  tpi.urakka               AS "urakka-id",
 
   -- Tuotenumero
   (SELECT emo.tuotenumero
