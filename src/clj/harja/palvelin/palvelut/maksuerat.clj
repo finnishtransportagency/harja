@@ -51,12 +51,10 @@
                               (map (fn [maksuera]
                                      (let [tpi (get-in maksuera [:toimenpideinstanssi :id])
                                            tyyppi (get-in maksuera [:maksuera :tyyppi])]
-                                       (log/info "MAKSIERA: " maksuera " TPI: " tpi)
                                        (assoc-in maksuera
                                                  [:maksuera :summa]
                                                  (get-in summat [tpi tyyppi]))))))
                         (q/hae-urakan-maksuerat db urakka-id))]
-    (log/info "MAKSUERAT: " (pr-str maksuerat))
     maksuerat))
 
 (defn laheta-maksuerat-sampoon
