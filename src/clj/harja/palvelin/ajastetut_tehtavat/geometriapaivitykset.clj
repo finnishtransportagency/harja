@@ -88,7 +88,7 @@
 
 (def tee-tieverkon-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
-    "tieoverkko"
+    "tieverkko"
     :tieosoiteverkon-alk-osoite
     :tieosoiteverkon-alk-tuontikohde
     :tieosoiteverkon-shapefile
