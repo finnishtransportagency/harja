@@ -450,7 +450,6 @@
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                (reset! data %)
                                                                (reset! teksti (pvm/pvm %)))
-                                :suunta-atom              kalenteri-suunta
                                 :pvm                      naytettava-pvm}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
@@ -540,8 +539,7 @@
                                                                   (muuta-pvm! (pvm/pvm %))
                                                                   (koske-pvm!)
                                                                   (aseta!))
-                                   :pvm                      naytettava-pvm
-                                   :suunta-atom              kalenteri-suunta}])]
+                                   :pvm                      naytettava-pvm}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
