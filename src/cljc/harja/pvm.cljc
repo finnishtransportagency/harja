@@ -170,12 +170,16 @@
   (formatoi kuukausi-ja-vuosi-fmt pvm))
 
  (defn ->pvm-aika [teksti]
-   "Jäsentää tekstistä d.M.yyyy H:mm muodossa olevan päivämäärän ja ajan. Jos teksti ei ole oikeaa muotoa, palauta nil."
-   (try
-     (parsi fi-pvm-aika (str/trim teksti))
-     (catch #?(:cljs js/Error
-               :clj Exception) e
-       nil)))
+   "Jäsentää tekstistä d.M.yyyy H:mm tai d.M.yyyy H muodossa olevan päivämäärän ja ajan.
+   Jos teksti ei ole oikeaa muotoa, palauta nil."
+   (let [teksti-kellonaika-korjattu (if (not= -1 (.indexOf teksti ":"))
+                                      teksti
+                                      (str teksti ":00"))]
+     (try
+       (parsi fi-pvm-aika (str/trim teksti-kellonaika-korjattu))
+       (catch #?(:cljs js/Error
+                 :clj  Exception) e
+         nil))))
 
  (defn ->pvm-aika-sek [teksti]
    "Jäsentää tekstistä dd.MM.yyyy HH:mm:ss muodossa olevan päivämäärän ja ajan. Tämä on koneellisesti formatoitua päivämäärää varten, älä käytä ihmisen syöttämän tekstin jäsentämiseen!"
@@ -311,7 +315,8 @@
 
   
 #?(:cljs
-   (defn kuukauden-aikavali
+   (defn
+     kuukauden-aikavali
      "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
   kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      [dt]

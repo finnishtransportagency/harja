@@ -102,7 +102,8 @@
         [{:otsikko "Käsitelty"
           :nimi    :kasittelyaika
           :tyyppi  :pvm
-          :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]]}
+          :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]
+                    [:pvm-toisen-pvmn-jalkeen (:valmispvm_kohde @paallystys/paikkausilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
 
          {:otsikko       "Päätös"
           :nimi          :paatos
@@ -230,8 +231,8 @@
                                  (:valmispvm_kohde @paallystys/paikkausilmoitus-lomakedata)
                                  (= :aloitettu (:tila @paallystys/paikkausilmoitus-lomakedata)))
                            "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
-                :tyyppi  :pvm :validoi [[:pvm-annettu-toisen-jalkeen :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
-               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
+                :tyyppi  :pvm :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
+               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :positiivinen-numero :leveys-col 2 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
                (when (or (= :valmis (:tila @paallystys/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paallystys/paikkausilmoitus-lomakedata)))
                  {:otsikko     "Kommentit" :nimi :kommentit
@@ -261,17 +262,17 @@
                                    (false? @lomake-lukittu-muokkaukselta?)))
               :virheet      toteutuneet-osoitteet-virheet
               :uusi-id      (inc (count @toteutuneet-osoitteet))}
-             [{:otsikko "Tie#" :nimi :tie :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alku\u00ADtieosa" :nimi :aosa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alku\u00ADetäisyys" :nimi :aet :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi]
+             [{:otsikko "Tie#" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alku\u00ADtieosa" :nimi :aosa :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Alku\u00ADetäisyys" :nimi :aet :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :positiivinen-numero :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                         (tierekisteri/laske-tien-pituus rivi))}
-              {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen_leveys :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen_neliot :tyyppi :numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
+              {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen_leveys :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen_neliot :tyyppi :positiivinen-numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                                (laske-tienpaallysteen-neliot (tierekisteri/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
-              {:otsikko "Paik\u00ADkaus\u00ADneliöt" :nimi :paikkausneliot :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Paik\u00ADkaus\u00ADneliöt" :nimi :paikkausneliot :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Paik\u00ADkaus-%" :nimi :paikkausprosentti :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                    (laske-paikkausprosentti (:paikkausneliot rivi)
                                                                                                                                                             (laske-tienpaallysteen-neliot (tierekisteri/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
@@ -290,10 +291,10 @@
              [{:otsikko "Suorite" :nimi :suorite :tyyppi :string :leveys "10%" :pituus-max 256
                :hae     (fn [rivi] (minipot/hae-paikkaustyo-koodilla (:suorite rivi))) :muokattava? (constantly false)}
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256}
-              {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "10%"}
-              {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0 :tyyppi :numero :leveys "10%"}
-              {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tyon-alv (:yks_hint_alv_0 rivi) 24))}
-              {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :numero :muokattava? (constantly false)
+              {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "10%" :kokonaisosan-maara 6}
+              {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0 :tyyppi :positiivinen-numero :leveys "10%" :kokonaisosan-maara 4}
+              {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24 :leveys "10%" :tyyppi :positiivinen-numero :muokattava? (constantly false) :hae (fn [rivi] (laske-tyon-alv (:yks_hint_alv_0 rivi) 24))}
+              {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :positiivinen-numero :muokattava? (constantly false)
                :hae     (fn [rivi] (* (:yks_hint_alv_0 rivi) (:maara rivi)))}
               {:otsikko "Takuupvm" :nimi :takuupvm :leveys "10%" :tyyppi :pvm}]
              toteutuneet-maarat]]

@@ -13,14 +13,17 @@
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
-(def +testi-ilmoitus-sanoma+ "<ilmoitus>
+(def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
+(def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
+(def +testi-ilmoitus-sanoma+ "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
   <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
-  <vapaateksti>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</vapaateksti>
+  <otsikko>Korkeat vallit</otsikko>
+  <pitkaSelite>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</pitkaSelite>
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>
   <tienumero>4</tienumero>
@@ -44,7 +47,7 @@
   <selite>auraustarve</selite>
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
-  </ilmoitus>
+  </harja:ilmoitus>
 ")
 
 (defn tuo-ilmoitus []

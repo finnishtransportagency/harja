@@ -47,8 +47,8 @@
    :ytunnus (z/xml1-> vastaanottaja :ytunnus z/text)})
 
 (defn lue-viesti [viesti]
-  (when (not (xml/validoi +xsd-polku+ "ilmoitus.xsd" viesti))
-    (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman ilmoitus.xsd mukaan validi.")))
+  (when (not (xml/validoi +xsd-polku+ "harja-tloik.xsd" viesti))
+    (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman harja-tloik.xsd mukaan validi.")))
 
   (let [data (xml/lue viesti)
         ilmoitus {:ilmoitettu         (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))
@@ -56,7 +56,9 @@
                   :ilmoitustyyppi     (z/xml1-> data :ilmoitustyyppi z/text)
                   :valitettu          (parsi-paivamaara (z/xml1-> data :valitettu z/text))
                   :urakkatyyppi       (z/xml1-> data :urakkatyyppi z/text)
-                  :vapaateksti        (z/xml1-> data :vapaateksti z/text)
+                  :otsikko            (z/xml1-> data :otsikko z/text)
+                  :lyhytselite        (z/xml1-> data :lyhytSelite z/text)
+                  :pitkaselite        (z/xml1-> data :pitkaSelite z/text)
                   :viesti-id          (z/xml1-> data :viestiId z/text)
                   :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :viestiId z/text)))
                   :ilmoittaja         (when-let [ilmoittaja (into {} (z/xml-> data :ilmoittaja lue-ilmoittaja))]
@@ -67,6 +69,5 @@
                   :sijainti           (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
                                         (if (empty? sijainti) nil sijainti))
                   :vastaanottaja      (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
-                                        (if (empty? vastaanottaja) nil vastaanottaja))
-                  }]
+                                        (if (empty? vastaanottaja) nil vastaanottaja))}]
     ilmoitus))

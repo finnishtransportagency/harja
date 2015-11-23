@@ -1,4 +1,4 @@
-<kuittaus>
+<harja:harja-kuittaus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
     <aika>2015-09-29T15:49:45</aika>
     <kuittaustyyppi>valitetty</kuittaustyyppi>
     <viestiId>14324234</viestiId>
@@ -16,8 +16,8 @@
         <paivystaja>
             <etunimi>Päivi</etunimi>
             <sukunimi>Päivystäjä</sukunimi>
-            <puhelinnumero>0986578749309</puhelinnumero>
-            <sahkopostiosoite>paivi.paivystaja@puulaaki.fi</sahkopostiosoite>
+            <matkapuhelin>0986578749309</matkapuhelin>
+            <sahkoposti>paivi.paivystaja@puulaaki.fi</sahkoposti>
         </paivystaja>
     </valitystiedot>
-</kuittaus>
+</harja:harja-kuittaus>

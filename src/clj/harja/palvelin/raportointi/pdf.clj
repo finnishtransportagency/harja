@@ -16,26 +16,28 @@
     (first elementti)))
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
-  [:fo:table {:border "solid 0.1mm black"}
-   (for [{:keys [otsikko leveys]} sarakkeet]
-     [:fo:table-column {:column-width leveys}])
-   [:fo:table-header
-    [:fo:table-row
-     (for [otsikko (map :otsikko sarakkeet)]
-       [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
-        [:fo:block otsikko]])]]
-   [:fo:table-body
-    (let [viimeinen-rivi (last data)]
-      (for [rivi data]
-        (let [korosta? (when (and viimeinen-rivi-yhteenveto?
-                                  (= viimeinen-rivi rivi))
-                         {:font-weight "bold"})]
-          [:fo:table-row
-           (for [i (range (count sarakkeet))
-                 :let [arvo (nth rivi i)]]
-             [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
-                                    korosta?)
-              [:fo:block (str arvo)]])])))]])
+  [:fo:block {} otsikko
+   [:fo:table {:border "solid 0.1mm black"}
+    (for [{:keys [otsikko leveys]} sarakkeet]
+      [:fo:table-column {:column-width leveys}])
+    [:fo:table-header
+     [:fo:table-row
+      (for [otsikko (map :otsikko sarakkeet)]
+        [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
+         [:fo:block otsikko]])]]
+    [:fo:table-body
+     (let [viimeinen-rivi (last data)]
+       (for [rivi data]
+         (let [korosta? (when (and viimeinen-rivi-yhteenveto?
+                                   (= viimeinen-rivi rivi))
+                          {:font-weight "bold"})]
+           [:fo:table-row
+            (for [i (range (count sarakkeet))
+                  :let [arvo (nth rivi i)]]
+              [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
+                                     korosta?)
+               [:fo:block (str arvo)]])])))]]
+   [:fo:block {:space-after "1em"}]])
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
@@ -91,14 +93,7 @@
                           [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (- y 1) :text-anchor "end"} (str value)]
                           [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (+ 4 (+ y bar-height)) :text-anchor "end"}
                            label]]))
-                     data)
-        
-        
-        
-        ])]]])
-
-
-
+                     data)])]]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)
@@ -141,8 +136,8 @@
                      (muodosta-pdf [:yhteenveto tiedot])])]
                  (keep identity
                        (mapcat #(when %
-                                  (if (seq? %)
-                                    (map muodosta-pdf %)
-                                    [(muodosta-pdf %)]))
+                                 (if (seq? %)
+                                   (map muodosta-pdf %)
+                                   [(muodosta-pdf %)]))
                                sisalto))
                  [[:fo:block {:id "raportti-loppu"}]])))

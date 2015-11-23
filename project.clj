@@ -91,7 +91,7 @@
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.4"]
 
-                 [org.clojure/test.check "0.7.0"]
+                 [org.clojure/test.check "0.9.0"]
 
                  [prismatic/dommy "1.1.0"]
 
@@ -127,7 +127,7 @@
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/archiva/repository/solita/"]
-                 ["harja-data" "http://185.26.50.104/mvn/"]
+                 ;["harja-data" "http://185.26.50.104/mvn/"]
                  ]
 
 

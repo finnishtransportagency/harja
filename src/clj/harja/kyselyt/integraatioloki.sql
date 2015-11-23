@@ -96,7 +96,6 @@ WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 
 -- name: hae-integraatiotapahtumien-maarat
 -- Hakee annetun integraation tapahtumien määrät päivittäin ryhmiteltynä
-
 SELECT
   date_trunc('day', it.alkanut) as pvm,
   it.integraatio as integraatio,
@@ -109,3 +108,8 @@ WHERE (:jarjestelma_annettu = false OR i.jarjestelma ILIKE :jarjestelma)
       AND (:integraatio_annettu = false OR i.nimi ILIKE :integraatio)
 GROUP BY pvm, integraatio, jarjestelma, nimi
 ORDER BY pvm;
+
+-- name: hae-integraation-id
+SELECT id
+FROM integraatio
+WHERE jarjestelma = :jarjestelma AND nimi = :integraatio;

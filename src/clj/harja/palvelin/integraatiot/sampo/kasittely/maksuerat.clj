@@ -7,7 +7,6 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
             [harja.kyselyt.toimenpideinstanssit :as toimenpideinstanssit]
-            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit]
             [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat])
   (:import (java.util UUID)))
@@ -20,7 +19,16 @@
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
 (defn hae-maksuera [db numero]
-  (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero))))
+  (let [{urakka-id :urakka-id :as maksuera} (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
+        tpi (get-in maksuera [:toimenpideinstanssi :id])
+        tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
+
+        ;; Haetaan maksuerätiedot ja valitaan niistä tämän toimenpideinstanssin rivi
+        summat (first (filter #(= (:tpi_id %) tpi)
+                              (qm/hae-urakan-maksueratiedot db urakka-id)))]
+    (assoc-in maksuera
+              [:maksuera :summa]
+              (get summat tyyppi))))
 
 (defn hae-maksueranumero [db lahetys-id]
   (:numero (first (qm/hae-maksueranumero-lahetys-idlla db lahetys-id))))

@@ -7,15 +7,16 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn vie-hoitoluokka-entry [db soratie]
+  ;; todo: Dimentec muuntaa jatkossa et_loppu ja et_alku -elementit integreiksi, joten parsinta täytyy pudottaa, kun tämä tehdään.
   (if (:the_geom soratie)
     (hoitoluokat/vie-hoitoluokkatauluun! db
                                          (:ajorata soratie)
                                          (:alkutieo soratie)
                                          (:tienro soratie)
                                          (:piirinro soratie)
-                                         (:et_loppu soratie)
+                                         (Integer/parseInt (:et_loppu soratie))
                                          (:loppu_tieo soratie)
-                                         (:et_alku soratie)
+                                         (Integer/parseInt (:et_alku soratie))
                                          (:lopputieo soratie)
                                          (Integer/parseInt (:soratlk_ko soratie))
                                          (.toString (:the_geom soratie))
