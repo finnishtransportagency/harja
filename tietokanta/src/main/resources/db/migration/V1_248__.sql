@@ -186,7 +186,6 @@ BEGIN
                       AND maksupvm < aikavali_alkupvm LOOP
       kht_laskutettu := kht_laskutettu + COALESCE(khti.kht_summa, 0.0);
       kht_laskutettu_ind_korotettuna := kht_laskutettu_ind_korotettuna + khti.kor;
-      RAISE NOTICE '\n\n** * ** * * Onko nullit käytettävissä? laskutettu korotettuna: %  korotus: %\n\n', khti.kor, khti.ind;
       kht_laskutettu_ind_korotus := kht_laskutettu_ind_korotus + khti.ind;
     END LOOP;
 
@@ -211,7 +210,6 @@ BEGIN
                                   AND maksupvm <= aikavali_loppupvm LOOP
       kht_laskutetaan := kht_laskutetaan + COALESCE(khti_laskutetaan.kht_summa, 0.0);
       kht_laskutetaan_ind_korotettuna := kht_laskutetaan_ind_korotettuna + khti_laskutetaan.kor;
-      RAISE NOTICE '\n\n** * ** * * Onko nullit käytettävissä? laskutetaan korotettuna: %  korotus: %\n\n', khti_laskutetaan.kor, khti_laskutetaan.ind;
       kht_laskutetaan_ind_korotus := kht_laskutetaan_ind_korotus + khti_laskutetaan.ind;
     END LOOP;
 
@@ -284,8 +282,8 @@ BEGIN
       INTO yht_laskutetaan_rivi;
       RAISE NOTICE 'yht_laskutetaan_rivi: %', yht_laskutetaan_rivi;
       yht_laskutetaan := yht_laskutetaan + COALESCE(yht_laskutetaan_rivi.summa, 0.0);
-      yht_laskutetaan_ind_korotettuna := yht_laskutetaan_ind_korotettuna + COALESCE(yht_laskutetaan_rivi.korotettuna, yht_laskutetaan_rivi.summa);
-      yht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + COALESCE(yht_laskutetaan_rivi.korotus, 0.0);
+      yht_laskutetaan_ind_korotettuna := yht_laskutetaan_ind_korotettuna + yht_laskutetaan_rivi.korotettuna;
+      yht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + yht_laskutetaan_rivi.korotus;
     END LOOP;
 
     -- Hoitokaudella ennen aikaväliä laskutetut sanktiot
