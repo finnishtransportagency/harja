@@ -14,14 +14,12 @@
             [goog.string :as gstr]
             [cljs.core.async :refer [<! >! chan] :as async]
 
-            [goog.events :as events]
-            [goog.events.EventType :as EventType]
             [harja.ui.yleiset :as yleiset]
 
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
 
-    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt])
@@ -385,18 +383,6 @@
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
 (def +aika-regex+ #"\d{1,2}(:\d*)?")
 
-(defn selvita-kalenterin-suunta [komponentti suunta-atom]
-                                  (let [dom-solmu (r/dom-node komponentti)
-                                        r (.getBoundingClientRect dom-solmu)
-                                        etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
-                                        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
-                                        uusi-suunta (if (< etaisyys-alareunaan 250)
-                                                      (if (< etaisyys-oikeaan-reunaan 100)
-                                                        :ylos-vasen
-                                                        :ylos-oikea)
-                                                      :alas)]
-                                    (reset! suunta-atom uusi-suunta)))
-
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
@@ -437,16 +423,6 @@
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))
-
-       :component-did-mount
-       (fn [this _]
-         (events/listen js/window
-                        EventType/SCROLL
-                        #(selvita-kalenterin-suunta this kalenteri-suunta)))
-
-       :component-will-unmount
-       (fn [this _]
-         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this kalenteri-suunta)))
 
        :reagent-render
        (fn [_ data]
@@ -492,7 +468,6 @@
         aika-teksti (atom (if p
                             (pvm/aika p)
                             ""))
-        kalenteri-suunta (atom :alas)
         ;; picker auki?
         auki (atom false)
         pvm-aika-koskettu (atom [(not
@@ -507,17 +482,7 @@
            (reset! auki false))
          (swap! pvm-teksti #(if-let [p @data]
                              (pvm/pvm p)
-                             %)))
-
-       :component-did-mount
-       (fn [this _]
-         (events/listen js/window
-                        EventType/SCROLL
-                        #(selvita-kalenterin-suunta this kalenteri-suunta)))
-
-       :component-will-unmount
-       (fn [this _]
-         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this kalenteri-suunta)))}
+                             %)))}
 
       (fn [_ data]
         (let [aseta! (fn []

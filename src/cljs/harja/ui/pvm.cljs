@@ -5,12 +5,26 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.ui.ikonit :as ikonit]
+            [goog.events :as events]
+            [goog.events.EventType :as EventType]
             [harja.ui.yleiset :as yleiset]))
 
 (def +paivat+ ["Ma" "Ti" "Ke" "To" "Pe" "La" "Su"])
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
+
+(defn selvita-kalenterin-suunta [pvm-komponentti suunta-atom]
+  (let [pvm-input-solmu (.-parentNode (r/dom-node pvm-komponentti))
+        r (.getBoundingClientRect pvm-input-solmu)
+        etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
+        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
+        uusi-suunta (if (< etaisyys-alareunaan 250)
+                      (if (< etaisyys-oikeaan-reunaan 100)
+                        :ylos-vasen
+                        :ylos-oikea)
+                      :alas)]
+    (reset! suunta-atom uusi-suunta)))
 
 (defn- pilko-viikoiksi [vuosi kk]
   ;;(.log js/console "vuosi: " vuosi ", kk: " kk)
@@ -52,7 +66,7 @@ Seuraavat optiot ovat mahdollisia:
 
   ...muita tarpeen mukaan..."
   [optiot]
-  (let [suunta-atom (:suunta-atom optiot)
+  (let [suunta-atom (atom :alas)
         nyt (or (:pvm optiot) (t/now))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])]
     (r/create-class
@@ -64,10 +78,20 @@ Seuraavat optiot ovat mahdollisia:
              ;; päivitetään näytä vuosi ja kk
              (reset! nayta [(.getYear pvm) (.getMonth pvm)]))))
 
+       :component-did-mount
+       (fn [this _]
+         (selvita-kalenterin-suunta this suunta-atom)
+         (events/listen js/window
+                        EventType/SCROLL
+                        #(selvita-kalenterin-suunta this suunta-atom)))
 
+       :component-will-unmount
+       (fn [this _]
+         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this suunta-atom)))
 
        :reagent-render
        (fn [{:keys [pvm valitse style] :as optiot}]
+
          (let [[vuosi kk] @nayta
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
