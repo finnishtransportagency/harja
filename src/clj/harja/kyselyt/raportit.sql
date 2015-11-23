@@ -1,6 +1,6 @@
 -- name: hae-raportit
 -- Hakee kaikki raportit
-SELECT r.nimi, r.kuvaus, r.konteksti, r.koodi,
+SELECT r.nimi, r.kuvaus, r.konteksti, r.koodi, r.urakkatyyppi,
        r.nimi as id,             -- raportin ja sen 
        r.nimi as parametri_id,   -- parametrien yhdistämistä varten
        (unnest(parametrit)).nimi as parametri_nimi,

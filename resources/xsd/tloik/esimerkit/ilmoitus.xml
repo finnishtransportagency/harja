@@ -1,11 +1,13 @@
-<ilmoitus>
+<harja:ilmoitus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
     <viestiId>14324234</viestiId>
     <ilmoitusId>3213123</ilmoitusId>
     <versionumero>1</versionumero>
     <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
     <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
     <urakkatyyppi>hoito</urakkatyyppi>
-    <vapaateksti>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</vapaateksti>
+    <otsikko>Korkeat vallit</otsikko>
+    <lyhytSelite>Kuusamontien risteyksessä korkeat vallit.</lyhytSelite>
+    <pitkaSelite>Kuusamontien risteyksessä vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</pitkaSelite>
     <yhteydenottopyynto>false</yhteydenottopyynto>
     <sijainti>
         <tienumero>4</tienumero>
@@ -29,4 +31,4 @@
         <selite>auraustarve</selite>
         <selite>aurausvallitNakemaesteena</selite>
     </seliteet>
-</ilmoitus>
+</harja:ilmoitus>

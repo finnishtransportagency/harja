@@ -299,7 +299,7 @@
         mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
         geometry-layer (ol.layer.Vector. #js {:source (ol.source.Vector.)})
         interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom false
-                                                                  :dragPan false})]
+                                                                  :dragPan        false})]
                       (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
                       oletukset)
         map-optiot (clj->js {:layers       [mml geometry-layer]
@@ -452,13 +452,13 @@
 (defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
-                 #js {:fill    (when fill (ol.style.Fill. #js {:color   (or color "red")}))
-                      :stroke  (ol.style.Stroke. #js {:color (or (:color stroke) "black")
-                                                      :width (or (:width stroke) 1)})
+                 #js {:fill   (when fill (ol.style.Fill. #js {:color (or color "red")}))
+                      :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
+                                                     :width (or (:width stroke) 1)})
                       ;; Default zindex asetetaan harja.views.kartta:ssa.
                       ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
                       ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
-                      :zIndex  (or zindex 0)}))))
+                      :zIndex (or zindex 0)}))))
 
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
@@ -491,6 +491,23 @@
 
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
+
+(defmethod luo-feature :tack-icon-line [{:keys [points img scale width] :as spec}]
+  (assert (not (nil? points)) "Viivalla pitää olla pisteitä")
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
+        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
+                                                                     :width (or width 2)})
+                                      :zIndex 4})
+
+                (ol.style.Style.
+                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
+                       :image    (ol.style.Icon. #js {:src     (str +karttaikonipolku+ img)
+                                                      :anchor  #js [0.5 1]
+                                                      :opacity 1
+                                                      :scale   (or scale 1)})
+                       :zIndex   5})]]
+    (doto feature
+      (.setStyle (clj->js tyylit)))))
 
 (defn- tee-kaksiosainen-ikoni [coordinates pohja img rotation anchor]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -600,7 +617,8 @@
                               (.addFeature features new-shape)
 
                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :sticker-icon :clickable-area})
+                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
+                                                        :sticker-icon :sticker-icon-line :clickable-area})
                                 (aseta-tyylit new-shape geom))
 
                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?

@@ -83,3 +83,15 @@
   (if vali
     (pvm-vali vali)
     ""))
+
+(defn desimaaliluku
+  ([luku] (desimaaliluku luku 2))
+  ([luku tarkkuus]
+   (.toFixed luku tarkkuus)))
+
+(defn desimaaliluku-opt
+  ([luku] (desimaaliluku-opt luku 2))
+  ([luku tarkkuus]
+   (if luku
+     (.toFixed luku tarkkuus)
+     "")))

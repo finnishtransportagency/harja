@@ -107,7 +107,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
           (reset! yhteys-ok? true)
           (assoc tila :yhteys yhteys :istunto istunto))
         (do
-          (log/warn (format "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan %smillisekunnin päästä." aika))
+          (log/warn (format "Ei saatu yhteyttä Sonjan JMS-brokeriin. Yritetään uudestaan %s millisekunnin päästä." aika))
           (Thread/sleep aika)
           (recur (min (* 2 aika) 600000)))))))
 
