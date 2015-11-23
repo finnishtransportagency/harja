@@ -13,15 +13,13 @@
   [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm] :as tiedot}]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [urakan-indeksi "MAKU 2010"] ;; indeksi jolla kok. ja yks. hint. työt korotetaan. Implementoidaan tässä tuki jos eri urakkatyyppi tarvii eri indeksiä
-    (into []
-          (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                     (konv/sql-date hk-alkupvm)
-                                                     (konv/sql-date hk-loppupvm)
-                                                     (konv/sql-date aikavali-alkupvm)
-                                                     (konv/sql-date aikavali-loppupvm)
-                                                     urakka-id
-                                                     urakan-indeksi))))
+  (into []
+        (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                   (konv/sql-date hk-alkupvm)
+                                                   (konv/sql-date hk-loppupvm)
+                                                   (konv/sql-date aikavali-alkupvm)
+                                                   (konv/sql-date aikavali-loppupvm)
+                                                   urakka-id)))
 
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]
@@ -95,7 +93,9 @@
                :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
               ["Äkilliset hoitotyöt" "Ei äkillisiä hoitotöitä"
                :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
-              ["Erilliskustannukset" "Ei erilliskustannuksia"
+              ["Bonukset" "Ei bonuksia"
+               :bonukset_laskutettu :bonukset_laskutetaan tiedot]
+              ["Erilliskustannukset (muut kuin bonukset)" "Ei erilliskustannuksia"
                :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
               ["Kokonaishintaisten töiden indeksitarkistukset" "Ei indeksitarkistuksia"
                :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot]
@@ -109,7 +109,9 @@
                :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
               ["Äkillisten hoitotöiden indeksitarkistukset" "Ei indeksitarkistuksia"
                :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot]
-              ["Erilliskustannusten indeksitarkistukset" "Ei indeksitarkistuksia"
+              ["Bonusten indeksitarkistukset" "Ei indeksitarkistuksia"
+               :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus tiedot]
+              ["Erilliskustannusten indeksitarkistukset (muut kuin bonukset)" "Ei indeksitarkistuksia"
                :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
               ["Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä" "Ei indeksitarkistuksia"
                :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot]
