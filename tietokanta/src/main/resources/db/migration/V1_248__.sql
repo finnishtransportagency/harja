@@ -308,8 +308,8 @@ BEGIN
                                           sanktiorivi.indeksi, sanktiorivi.maara, perusluku)
       INTO sakot_laskutettu_rivi;
       sakot_laskutettu := sakot_laskutettu + COALESCE(sakot_laskutettu_rivi.summa, 0.0);
-      sakot_laskutettu_ind_korotettuna := sakot_laskutettu_ind_korotettuna + COALESCE(sakot_laskutettu_rivi.korotettuna, sakot_laskutettu_rivi.summa);
-      sakot_laskutettu_ind_korotus := sakot_laskutettu_ind_korotus + COALESCE(sakot_laskutettu_rivi.korotus, 0.0);
+      sakot_laskutettu_ind_korotettuna := sakot_laskutettu_ind_korotettuna + sakot_laskutettu_rivi.korotettuna;
+      sakot_laskutettu_ind_korotus := sakot_laskutettu_ind_korotus + sakot_laskutettu_rivi.korotus;
 
 
     END LOOP;
@@ -338,8 +338,8 @@ BEGIN
                                           sanktiorivi.indeksi, sanktiorivi.maara, perusluku)
       INTO sakot_laskutetaan_rivi;
       sakot_laskutetaan := sakot_laskutetaan + sakot_laskutetaan_rivi.summa;
-      sakot_laskutetaan_ind_korotettuna := sakot_laskutetaan_ind_korotettuna + COALESCE(sakot_laskutetaan_rivi.korotettuna, sakot_laskutetaan_rivi.summa);
-      sakot_laskutetaan_ind_korotus := sakot_laskutetaan_ind_korotus + COALESCE(sakot_laskutetaan_rivi.korotus, 0.0);
+      sakot_laskutetaan_ind_korotettuna := sakot_laskutetaan_ind_korotettuna + sakot_laskutetaan_rivi.korotettuna;
+      sakot_laskutetaan_ind_korotus := sakot_laskutetaan_ind_korotus + sakot_laskutetaan_rivi.korotus;
     END LOOP;
 
     suolasakot_laskutettu := 0.0;
@@ -370,12 +370,12 @@ BEGIN
         RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
         suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutettu_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
-        suolasakot_laskutettu_ind_korotus := COALESCE(hoitokauden_laskettu_suolasakko_rivi.korotus, 0.0);
+        suolasakot_laskutettu_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
       ELSIF hoitokauden_suolasakko_rivi.maksukuukausi = (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) THEN
         RAISE NOTICE 'Suolasakko laskutetaan tässä kuussa %', hoitokauden_suolasakko_rivi.maksukuukausi;
         suolasakot_laskutetaan := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutetaan_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
-        suolasakot_laskutetaan_ind_korotus := COALESCE(hoitokauden_laskettu_suolasakko_rivi.korotus, 0.0);
+        suolasakot_laskutetaan_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
       ELSE
         RAISE NOTICE 'Suolasakkoa ei vielä laskutettu, maksukuukauden arvo: %', hoitokauden_suolasakko_rivi.maksukuukausi;
       END IF;
@@ -412,8 +412,8 @@ BEGIN
                                           ind, mhti.mht_summa, perusluku)
       INTO muutostyot_laskutettu_rivi;
       muutostyot_laskutettu :=  muutostyot_laskutettu + COALESCE(muutostyot_laskutettu_rivi.summa, 0.0);
-      muutostyot_laskutettu_ind_korotettuna :=  muutostyot_laskutettu_ind_korotettuna + COALESCE(muutostyot_laskutettu_rivi.korotettuna, muutostyot_laskutettu);
-      muutostyot_laskutettu_ind_korotus :=  muutostyot_laskutettu_ind_korotus + COALESCE(muutostyot_laskutettu_rivi.korotus, 0.0);
+      muutostyot_laskutettu_ind_korotettuna :=  muutostyot_laskutettu_ind_korotettuna + muutostyot_laskutettu_rivi.korotettuna;
+      muutostyot_laskutettu_ind_korotus :=  muutostyot_laskutettu_ind_korotus + muutostyot_laskutettu_rivi.korotus;
     END LOOP;
 
     -- Päivän hinnalla laskutetut muutostyöt hoitokaudella ennen aikaväliä
@@ -467,8 +467,8 @@ BEGIN
       INTO muutostyot_laskutetaan_rivi;
 
       muutostyot_laskutetaan := muutostyot_laskutetaan + COALESCE(muutostyot_laskutetaan_rivi.summa, 0.0);
-      muutostyot_laskutetaan_ind_korotettuna := muutostyot_laskutetaan_ind_korotettuna + COALESCE(muutostyot_laskutetaan_rivi.korotettuna, muutostyot_laskutetaan);
-      muutostyot_laskutetaan_ind_korotus := muutostyot_laskutetaan_ind_korotus + COALESCE(muutostyot_laskutetaan_rivi.korotus, 0.0);
+      muutostyot_laskutetaan_ind_korotettuna := muutostyot_laskutetaan_ind_korotettuna + muutostyot_laskutetaan_rivi.korotettuna;
+      muutostyot_laskutetaan_ind_korotus := muutostyot_laskutetaan_ind_korotus + muutostyot_laskutetaan_rivi.korotus;
     END LOOP;
 
     -- Päivän hinnalla laskutetut muutostyöt aikavälillä
@@ -528,8 +528,8 @@ BEGIN
                                           ind, akhti.mht_summa, perusluku)
       INTO akilliset_hoitotyot_laskutettu_rivi;
       akilliset_hoitotyot_laskutettu :=  akilliset_hoitotyot_laskutettu + COALESCE(akilliset_hoitotyot_laskutettu_rivi.summa, 0.0);
-      akilliset_hoitotyot_laskutettu_ind_korotettuna :=  akilliset_hoitotyot_laskutettu_ind_korotettuna + COALESCE(akilliset_hoitotyot_laskutettu_rivi.korotettuna, akilliset_hoitotyot_laskutettu);
-      akilliset_hoitotyot_laskutettu_ind_korotus :=  akilliset_hoitotyot_laskutettu_ind_korotus + COALESCE(akilliset_hoitotyot_laskutettu_rivi.korotus, 0.0);
+      akilliset_hoitotyot_laskutettu_ind_korotettuna :=  akilliset_hoitotyot_laskutettu_ind_korotettuna + akilliset_hoitotyot_laskutettu_rivi.korotettuna;
+      akilliset_hoitotyot_laskutettu_ind_korotus :=  akilliset_hoitotyot_laskutettu_ind_korotus + akilliset_hoitotyot_laskutettu_rivi.korotus;
     END LOOP;
 
     -- Päivän hinnalla laskutetut äkilliset hoitotyöt hoitokaudella ennen aikaväliä
@@ -583,8 +583,8 @@ BEGIN
       INTO akilliset_hoitotyot_laskutetaan_rivi;
 
       akilliset_hoitotyot_laskutetaan := akilliset_hoitotyot_laskutetaan + COALESCE(akilliset_hoitotyot_laskutetaan_rivi.summa, 0.0);
-      akilliset_hoitotyot_laskutetaan_ind_korotettuna := akilliset_hoitotyot_laskutetaan_ind_korotettuna + COALESCE(akilliset_hoitotyot_laskutetaan_rivi.korotettuna, akilliset_hoitotyot_laskutetaan);
-      akilliset_hoitotyot_laskutetaan_ind_korotus := akilliset_hoitotyot_laskutetaan_ind_korotus + COALESCE(akilliset_hoitotyot_laskutetaan_rivi.korotus, 0.0);
+      akilliset_hoitotyot_laskutetaan_ind_korotettuna := akilliset_hoitotyot_laskutetaan_ind_korotettuna + akilliset_hoitotyot_laskutetaan_rivi.korotettuna;
+      akilliset_hoitotyot_laskutetaan_ind_korotus := akilliset_hoitotyot_laskutetaan_ind_korotus + akilliset_hoitotyot_laskutetaan_rivi.korotus;
     END LOOP;
 
     -- Päivän hinnalla laskutetut äkilliset hoitotyöt aikavälillä
@@ -637,8 +637,8 @@ BEGIN
                                           eki_laskutettu.indeksin_nimi, eki_laskutettu.rahasumma, perusluku)
       INTO erilliskustannukset_laskutettu_rivi;
       erilliskustannukset_laskutettu :=  erilliskustannukset_laskutettu + COALESCE(erilliskustannukset_laskutettu_rivi.summa, 0.0);
-      erilliskustannukset_laskutettu_ind_korotettuna :=  erilliskustannukset_laskutettu_ind_korotettuna + COALESCE(erilliskustannukset_laskutettu_rivi.korotettuna, erilliskustannukset_laskutettu);
-      erilliskustannukset_laskutettu_ind_korotus :=  erilliskustannukset_laskutettu_ind_korotus + COALESCE(erilliskustannukset_laskutettu_rivi.korotus, 0.0);
+      erilliskustannukset_laskutettu_ind_korotettuna :=  erilliskustannukset_laskutettu_ind_korotettuna + erilliskustannukset_laskutettu_rivi.korotettuna;
+      erilliskustannukset_laskutettu_ind_korotus :=  erilliskustannukset_laskutettu_ind_korotus + erilliskustannukset_laskutettu_rivi.korotus;
     END LOOP;
     RAISE NOTICE 'Erilliskustannuksia laskutettu: %', erilliskustannukset_laskutettu;
 
@@ -664,8 +664,8 @@ BEGIN
                                           eki_laskutetaan.indeksin_nimi, eki_laskutetaan.rahasumma, perusluku)
       INTO erilliskustannukset_laskutetaan_rivi;
       erilliskustannukset_laskutetaan :=  erilliskustannukset_laskutetaan + COALESCE(erilliskustannukset_laskutetaan_rivi.summa, 0.0);
-      erilliskustannukset_laskutetaan_ind_korotettuna :=  erilliskustannukset_laskutetaan_ind_korotettuna + COALESCE(erilliskustannukset_laskutetaan_rivi.korotettuna, erilliskustannukset_laskutetaan);
-      erilliskustannukset_laskutetaan_ind_korotus :=  erilliskustannukset_laskutetaan_ind_korotus + COALESCE(erilliskustannukset_laskutetaan_rivi.korotus, 0.0);
+      erilliskustannukset_laskutetaan_ind_korotettuna :=  erilliskustannukset_laskutetaan_ind_korotettuna + erilliskustannukset_laskutetaan_rivi.korotettuna;
+      erilliskustannukset_laskutetaan_ind_korotus :=  erilliskustannukset_laskutetaan_ind_korotus + erilliskustannukset_laskutetaan_rivi.korotus;
     END LOOP;
     RAISE NOTICE 'Erilliskustannuksia laskutetaan: %', erilliskustannukset_laskutetaan;
 
@@ -691,8 +691,8 @@ BEGIN
       FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutettu.pvm, ind, bi_laskutettu.rahasumma)
       INTO bonukset_laskutettu_rivi;
       bonukset_laskutettu :=  bonukset_laskutettu + COALESCE(bonukset_laskutettu_rivi.summa, 0.0);
-      bonukset_laskutettu_ind_korotettuna :=  bonukset_laskutettu_ind_korotettuna + COALESCE(bonukset_laskutettu_rivi.korotettuna, bonukset_laskutettu);
-      bonukset_laskutettu_ind_korotus :=  bonukset_laskutettu_ind_korotus + COALESCE(bonukset_laskutettu_rivi.korotus, 0.0);
+      bonukset_laskutettu_ind_korotettuna :=  bonukset_laskutettu_ind_korotettuna + bonukset_laskutettu_rivi.korotettuna;
+      bonukset_laskutettu_ind_korotus :=  bonukset_laskutettu_ind_korotus + bonukset_laskutettu_rivi.korotus;
     END LOOP;
     RAISE NOTICE 'Bonuksia laskutettu: %', bonukset_laskutettu;
 
@@ -716,8 +716,8 @@ BEGIN
       FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutetaan.pvm, ind, bi_laskutetaan.rahasumma)
       INTO bonukset_laskutetaan_rivi;
       bonukset_laskutetaan :=  bonukset_laskutetaan + COALESCE(bonukset_laskutetaan_rivi.summa, 0.0);
-      bonukset_laskutetaan_ind_korotettuna :=  bonukset_laskutetaan_ind_korotettuna + COALESCE(bonukset_laskutetaan_rivi.korotettuna, bonukset_laskutetaan);
-      bonukset_laskutetaan_ind_korotus :=  bonukset_laskutetaan_ind_korotus + COALESCE(bonukset_laskutetaan_rivi.korotus, 0.0);
+      bonukset_laskutetaan_ind_korotettuna :=  bonukset_laskutetaan_ind_korotettuna + bonukset_laskutetaan_rivi.korotettuna;
+      bonukset_laskutetaan_ind_korotus :=  bonukset_laskutetaan_ind_korotus + bonukset_laskutetaan_rivi.korotus;
     END LOOP;
     RAISE NOTICE 'Bonuksia laskutetaan: %', bonukset_laskutetaan;
 
