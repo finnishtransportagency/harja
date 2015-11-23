@@ -388,7 +388,6 @@
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
-        pvm-id (str (rand-int 9999999999))
         p @data
         teksti (atom (if p
                        (pvm/pvm p)
