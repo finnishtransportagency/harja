@@ -379,9 +379,21 @@
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
 (def +aika-regex+ #"\d{1,2}(:\d*)?")
 
+(defn selvita-kalenterin-suunta [komponentti suunta-atom]
+                                  (let [dom-solmu (r/dom-node komponentti)
+                                        r (.getBoundingClientRect dom-solmu)
+                                        etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
+                                        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
+                                        uusi-suunta (if (< etaisyys-alareunaan 250)
+                                                      (if (< etaisyys-oikeaan-reunaan 100)
+                                                        :ylos-vasen
+                                                        :ylos-oikea)
+                                                      :alas)]
+                                    (reset! suunta-atom uusi-suunta)))
+
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen?]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         pvm-id (str (rand-int 9999999999))
@@ -391,17 +403,6 @@
                        ""))
 
         kalenteri-suunta (atom :alas)
-        selvita-suunta (fn [this]
-                         (let [dom-solmu (r/dom-node this)
-                               r (.getBoundingClientRect dom-solmu)
-                               etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
-                               etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
-                               uusi-suunta (if (< etaisyys-alareunaan 200)
-                                             (if (< etaisyys-oikeaan-reunaan 100)
-                                               :ylos-vasen
-                                               :ylos-oikea)
-                                             :alas)]
-                           (reset! kalenteri-suunta uusi-suunta)))
 
         ;; picker auki?
         auki (atom false)
@@ -435,11 +436,11 @@
        (fn [this _]
          (events/listen js/window
                         EventType/SCROLL
-                        #(selvita-suunta this)))
+                        #(selvita-kalenterin-suunta this kalenteri-suunta)))
 
        :component-will-unmount
        (fn [this _]
-         (events/unlisten js/window EventType/SCROLL #(selvita-suunta this)))
+         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this kalenteri-suunta)))
 
        :reagent-render
        (fn [_ data]
@@ -475,7 +476,7 @@
            (pvm/pvm p)
            "")])
 
-(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? leveys pvm-sijainti]} data]
+(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -485,14 +486,13 @@
         aika-teksti (atom (if p
                             (pvm/aika p)
                             ""))
+        kalenteri-suunta (atom :alas)
         ;; picker auki?
         auki (atom false)
         pvm-aika-koskettu (atom [(not
                                    (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
                                  (not
-                                   (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])
-        sijainti (atom nil)
-        pvm-sijainti (or pvm-sijainti :alas)]
+                                   (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-will-receive-props
@@ -504,17 +504,14 @@
                              %)))
 
        :component-did-mount
-       (when lomake? (fn [this]
-                       (let [sij (some-> this
-                                         r/dom-node
-                                         (.getElementsByTagName "input")
-                                         (aget 0)
-                                         yleiset/sijainti-sailiossa)
-                             [x y w h] sij]
-                         (when x
-                           ;; PENDIN: kovakoodattua asemointia!
-                           (reset! sijainti [15 (+ y h (if (= lomake? :rivi) 39))
-                                             w h])))))}
+       (fn [this _]
+         (events/listen js/window
+                        EventType/SCROLL
+                        #(selvita-kalenterin-suunta this kalenteri-suunta)))
+
+       :component-will-unmount
+       (fn [this _]
+         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this kalenteri-suunta)))}
 
       (fn [_ data]
         (let [aseta! (fn []
@@ -572,12 +569,8 @@
                                                  (muuta-pvm! (pvm/pvm %))
                                                  (koske-pvm!)
                                                  (aseta!))
-                                   :style (case pvm-sijainti
-                                            :oikea {:top 0 :left "100%"}
-                                            :ylos {:bottom "100%" :left 0}
-                                            :ylos-vasen {:bottom "100%" :right 0}
-                                            :alas {:top "100%" :left 0})
-                                   :pvm     naytettava-pvm}])]
+                                   :pvm     naytettava-pvm
+                                   :suunta-atom kalenteri-suunta}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
@@ -587,19 +580,7 @@
                         :size        5 :max-length 5
                         :value       nykyinen-aika-teksti
                         :on-change   #(muuta-aika! (-> % .-target .-value))
-                        :on-blur     #(do (koske-aika!) (aseta!))}]
-
-               ]]]]
-
-           (when (and (= :alas pvm-sijainti) @auki)
-             [:div.aikavalinta
-              [pvm-valinta/pvm {:valitse  #(do (reset! auki false)
-                                               (muuta-pvm! (pvm/pvm %))
-                                               (koske-pvm!)
-                                               (aseta!))
-                                :pvm      naytettava-pvm
-                                :sijainti @sijainti
-                                :leveys   leveys}]])])))))
+                        :on-blur     #(do (koske-aika!) (aseta!))}]]]]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   [:span (if-let [p @data]
