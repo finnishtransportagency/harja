@@ -66,6 +66,7 @@
           alk-tuontikohde (get asetukset alk-tuontikohde-avain)
           shapefile (get asetukset shapefile-avain)
           db (:db this)]
+      (log/debug "Paikallinen päivitystehtävä: " paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys)
       (when (not (and alk-osoite alk-tuontikohde))
         (chime-at
           (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
