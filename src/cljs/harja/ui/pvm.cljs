@@ -4,7 +4,8 @@
             [cljs-time.core :as t]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.yleiset :as yleiset]))
 
 (def +paivat+ ["Ma" "Ti" "Ke" "To" "Pe" "La" "Su"])
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
@@ -51,7 +52,8 @@ Seuraavat optiot ovat mahdollisia:
 
   ...muita tarpeen mukaan..."
   [optiot]
-  (let [nyt (or (:pvm optiot) (t/now))
+  (let [suunta-atom (:suunta-atom optiot)
+        nyt (or (:pvm optiot) (t/now))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])]
     (r/create-class
       {:component-will-receive-props
@@ -63,13 +65,14 @@ Seuraavat optiot ovat mahdollisia:
              (reset! nayta [(.getYear pvm) (.getMonth pvm)]))))
 
 
+
        :reagent-render
        (fn [{:keys [pvm valitse style] :as optiot}]
          (let [[vuosi kk] @nayta
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-           [:table.pvm-valinta {:style (case :alas
-                                         :oikea  {:top 0 :left"100%"}
+           [:table.pvm-valinta {:style (case @suunta-atom
+                                         :oikea  {:top 0 :left "100%" }
                                          :ylos-oikea {:bottom "100%" :left 0}
                                          :ylos-vasen {:bottom "100%" :right 0}
                                          :alas {:top "100%" :left 0})}

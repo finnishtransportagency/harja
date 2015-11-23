@@ -14,6 +14,10 @@
             [goog.string :as gstr]
             [cljs.core.async :refer [<! >! chan] :as async]
 
+            [goog.events :as events]
+            [goog.events.EventType :as EventType]
+            [harja.ui.yleiset :as yleiset]
+
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
 
@@ -380,10 +384,24 @@
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
+        pvm-id (str (rand-int 9999999999))
         p @data
         teksti (atom (if p
                        (pvm/pvm p)
                        ""))
+
+        kalenteri-suunta (atom :alas)
+        selvita-suunta (fn [this]
+                         (let [dom-solmu (r/dom-node this)
+                               r (.getBoundingClientRect dom-solmu)
+                               etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
+                               etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
+                               uusi-suunta (if (< etaisyys-alareunaan 200)
+                                             (if (< etaisyys-oikeaan-reunaan 100)
+                                               :ylos-vasen
+                                               :ylos-oikea)
+                                             :alas)]
+                           (reset! kalenteri-suunta uusi-suunta)))
 
         ;; picker auki?
         auki (atom false)
@@ -413,6 +431,16 @@
                             (pvm/pvm p)
                             ""))))
 
+       :component-did-mount
+       (fn [this _]
+         (events/listen js/window
+                        EventType/SCROLL
+                        #(selvita-suunta this)))
+
+       :component-will-unmount
+       (fn [this _]
+         (events/unlisten js/window EventType/SCROLL #(selvita-suunta this)))
+
        :reagent-render
        (fn [_ data]
          (let [nykyinen-pvm @data
@@ -439,6 +467,7 @@
               [pvm-valinta/pvm {:valitse #(do (reset! auki false)
                                               (reset! data %)
                                               (reset! teksti (pvm/pvm %)))
+                                :suunta-atom kalenteri-suunta
                                 :pvm     naytettava-pvm}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
