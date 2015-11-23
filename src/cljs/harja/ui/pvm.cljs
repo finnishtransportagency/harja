@@ -68,7 +68,10 @@ Seuraavat optiot ovat mahdollisia:
   [optiot]
   (let [sijainti-atom (atom nil)
         nyt (or (:pvm optiot) (t/now))
-        nayta (atom [(.getYear nyt) (.getMonth nyt)])]
+        nayta (atom [(.getYear nyt) (.getMonth nyt)])
+        tama (atom nil)
+        scroll-kuuntelija (fn []
+                            (selvita-kalenterin-suunta @tama sijainti-atom))]
     (r/create-class
       {:component-will-receive-props
        (fn [this new-argv]
@@ -80,14 +83,16 @@ Seuraavat optiot ovat mahdollisia:
 
        :component-did-mount
        (fn [this _]
+         (reset! tama this)
          (selvita-kalenterin-suunta this sijainti-atom)
          (events/listen js/window
                         EventType/SCROLL
-                        #(selvita-kalenterin-suunta this sijainti-atom)))
+                        scroll-kuuntelija))
 
        :component-will-unmount
        (fn [this _]
-         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this sijainti-atom)))
+         (reset! tama this)
+         (events/unlisten js/window EventType/SCROLL scroll-kuuntelija))
 
        :reagent-render
        (fn [{:keys [pvm valitse style] :as optiot}]
