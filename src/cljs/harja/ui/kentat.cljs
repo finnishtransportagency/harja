@@ -393,8 +393,6 @@
                        (pvm/pvm p)
                        ""))
 
-        kalenteri-suunta (atom :alas)
-
         ;; picker auki?
         auki (atom false)
 
