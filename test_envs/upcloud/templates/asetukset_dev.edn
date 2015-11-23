@@ -1,8 +1,16 @@
 {
  :kehitysmoodi         false
+
+ :testikayttajat       [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
+                        {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
+                        {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
+
+ :http-palvelin        {:threads 32}
+
  :tietokanta           {:palvelin   "localhost"
                         :tietokanta "harja"
                         :portti     5432
+                        :yhteyspoolin-koko 32
                         :kayttaja   "harja"
                         :salasana   "harja123"}
  :fim                  {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
@@ -37,7 +45,9 @@
                         :paivittainen-lahetysaika nil
                         }
  :tloik                {:ilmoitusviestijono   "tloik-ilmoitukset"
-                        :ilmoituskuittausjono "tloik-ilmoituskuittaukset"}
+                        :ilmoituskuittausjono "tloik-ilmoituskuittaukset"
+                        :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
+                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}
  :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
  :integraatiot         {:paivittainen-lokin-puhdistusaika nil}
 
