@@ -14,8 +14,8 @@
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
 
-(defn selvita-kalenterin-suunta [pvm-komponentti suunta-atom]
-  (let [pvm-input-solmu (.-parentNode (r/dom-node pvm-komponentti))
+(defn selvita-kalenterin-suunta [kalenteri-komponentti suunta-atom]
+  (let [pvm-input-solmu (.-parentNode (r/dom-node kalenteri-komponentti))
         r (.getBoundingClientRect pvm-input-solmu)
         etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
         etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
@@ -55,7 +55,7 @@
                (t/plus p (t/days 1)))))))
     
     
-(defn pvm
+(defn pvm-valintakalenteri
   "Luo uuden päivämäärävalinnan.
 Seuraavat optiot ovat mahdollisia:
 

@@ -447,11 +447,11 @@
                          :on-blur     #(do
                                         (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
-              [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                              (reset! data %)
-                                              (reset! teksti (pvm/pvm %)))
-                                :suunta-atom kalenteri-suunta
-                                :pvm     naytettava-pvm}])]))})))
+              [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
+                                                               (reset! data %)
+                                                               (reset! teksti (pvm/pvm %)))
+                                :suunta-atom              kalenteri-suunta
+                                :pvm                      naytettava-pvm}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]
@@ -536,12 +536,12 @@
                                             %)
                             :on-blur     #(do (koske-pvm!) (aseta!))}]
                (when @auki
-                 [pvm-valinta/pvm {:valitse #(do (reset! auki false)
-                                                 (muuta-pvm! (pvm/pvm %))
-                                                 (koske-pvm!)
-                                                 (aseta!))
-                                   :pvm     naytettava-pvm
-                                   :suunta-atom kalenteri-suunta}])]
+                 [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
+                                                                  (muuta-pvm! (pvm/pvm %))
+                                                                  (koske-pvm!)
+                                                                  (aseta!))
+                                   :pvm                      naytettava-pvm
+                                   :suunta-atom              kalenteri-suunta}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
