@@ -1,3 +1,45 @@
+-- Laske kuukauden indeksikorotus
+-- indeksikorotus lasketaan yleensä (aina?) (vertailuluku/perusluku) * summa
+-- esim. indeksin arvo 105.0, perusluku 103.2, summa 1000e:
+-- summa indeksillä korotettuna 1 000 € * (105/103.2) = 1 017,44 €
+CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus(
+  v          INTEGER,
+  kk          INTEGER,
+  indeksinimi VARCHAR,
+  summa      NUMERIC,
+  perusluku  NUMERIC)
+
+  RETURNS kuukauden_indeksikorotus_rivi AS $$
+DECLARE
+  kerroin      NUMERIC;
+  vertailuluku NUMERIC;
+
+BEGIN
+  -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
+  IF perusluku IS NULL THEN
+    RAISE NOTICE 'Kuukauden indeksikorotusta ei voitu laskea koska peruslukua ei ole';
+    RETURN NULL;
+  END IF;
+
+  -- jos maksu on päätetty olla sitomatta indeksiin, palautetaan (summa, summa, 0)
+  IF indeksinimi IS NULL
+  THEN
+    RAISE NOTICE 'Indeksiä ei käytetty tässä maksussa.';
+    RETURN (summa, summa, 0 :: NUMERIC);
+  END IF;
+
+  SELECT
+    INTO vertailuluku arvo
+  FROM indeksi
+  WHERE nimi = indeksinimi
+        AND vuosi = v AND kuukausi = kk;
+  -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
+  -- tämä lasku palauttaa NULL.
+  kerroin := (vertailuluku / perusluku);
+  RETURN (summa, summa * kerroin, summa * kerroin - summa);
+END;
+$$ LANGUAGE plpgsql;
+
 DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE,
 aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER);
 DROP TYPE laskutusyhteenveto_rivi;
