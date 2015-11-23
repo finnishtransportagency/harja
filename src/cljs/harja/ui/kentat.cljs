@@ -377,11 +377,10 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen? pvm-sijainti]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? irrallinen?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
-        pvm-sijainti (or pvm-sijainti :alas)
         teksti (atom (if p
                        (pvm/pvm p)
                        ""))
@@ -404,9 +403,7 @@
                      (str/blank? t))
                    (reset! teksti t))
                  (if (str/blank? t)
-                   (reset! data nil)))
-
-        sijainti (atom nil)]
+                   (reset! data nil)))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-will-receive-props
@@ -415,24 +412,6 @@
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))
-
-       :component-did-mount
-       (when (or lomake? irrallinen?)
-         (fn [this]
-           (let [sij (some-> this
-                             r/dom-node
-                             (.getElementsByTagName "input")
-                             (aget 0)
-                             yleiset/sijainti-sailiossa)
-                 [x y w h] sij]
-             (when x
-               (if lomake?
-                 ;; asemointi, koska col-sm-* divissä
-                 (reset! sijainti [15 (+ y h (if (= lomake? :rivi) 39 0)) w])
-
-                 ;; irrallinen suoraan sijainnin mukaan
-                 (reset! sijainti [(- w) (+ y h) w]))))))
-
 
        :reagent-render
        (fn [_ data]
@@ -460,13 +439,7 @@
               [pvm-valinta/pvm {:valitse #(do (reset! auki false)
                                               (reset! data %)
                                               (reset! teksti (pvm/pvm %)))
-                                :style   (case pvm-sijainti
-                                           :oikea  {:top 0 :left"100%"}
-                                           :ylos {:bottom "100%" :left 0}
-                                           :ylos-vasen {:bottom "100%" :right 0}
-                                           :alas {:top "100%" :left 0})
-                                :pvm     naytettava-pvm
-                                :sijainti @sijainti}])]))})))
+                                :pvm     naytettava-pvm}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]

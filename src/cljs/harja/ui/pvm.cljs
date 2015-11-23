@@ -48,7 +48,6 @@ Seuraavat optiot ovat mahdollisia:
 :vuosi    näytettävä vuosi, oletus nykyinen
 :kuukausi näytettävä kuukausi (0 - 11)
 :valitse  funktio, jota kutsutaan kun päivämäärä valitaan
-:sijainti optionaalinen [x y w] vasen ylänurkka
 
   ...muita tarpeen mukaan..."
   [optiot]
@@ -69,7 +68,11 @@ Seuraavat optiot ovat mahdollisia:
          (let [[vuosi kk] @nayta
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-           [:table.pvm-valinta {:style (when style style)}
+           [:table.pvm-valinta {:style (case :alas
+                                         :oikea  {:top 0 :left"100%"}
+                                         :ylos-oikea {:bottom "100%" :left 0}
+                                         :ylos-vasen {:bottom "100%" :right 0}
+                                         :alas {:top "100%" :left 0})}
             [:tbody.pvm-kontrollit
              [:tr
               [:td.pvm-edellinen-kuukausi.klikattava
@@ -116,9 +119,9 @@ Seuraavat optiot ovat mahdollisia:
             [:tbody.pvm-tanaan
              [:tr [:td {:colSpan 7}
                    [:a {:on-click #(do
-                                     (.preventDefault %)
-                                     (.stopPropagation %)
-                                     (valitse (pvm/nyt)))}
+                                    (.preventDefault %)
+                                    (.stopPropagation %)
+                                    (valitse (pvm/nyt)))}
                     "Tänään"]]]]]))})))
 
 

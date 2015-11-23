@@ -312,7 +312,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
             [(when-not osa-tarkastusta?
                {:otsikko     "Havainnon pvm ja aika"
-                :pvm-sijainti :oikea
                 :pakollinen? true
                 :nimi        :aika
                 :validoi     [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
