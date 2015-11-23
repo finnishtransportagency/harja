@@ -53,8 +53,8 @@
         (vec (partition 7 7 [] paivat))
         (recur (conj paivat p)
                (t/plus p (t/days 1)))))))
-    
-    
+
+
 (defn pvm-valintakalenteri
   "Luo uuden päivämäärävalinnan.
 Seuraavat optiot ovat mahdollisia:
@@ -66,7 +66,7 @@ Seuraavat optiot ovat mahdollisia:
 
   ...muita tarpeen mukaan..."
   [optiot]
-  (let [suunta-atom (atom :alas)
+  (let [suunta-atom (atom nil)
         nyt (or (:pvm optiot) (t/now))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])]
     (r/create-class
@@ -95,11 +95,13 @@ Seuraavat optiot ovat mahdollisia:
          (let [[vuosi kk] @nayta
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-           [:table.pvm-valinta {:style (case @suunta-atom
-                                         :oikea  {:top 0 :left "100%" }
-                                         :ylos-oikea {:bottom "100%" :left 0}
-                                         :ylos-vasen {:bottom "100%" :right 0}
-                                         :alas {:top "100%" :left 0})}
+           [:table.pvm-valinta {:style (merge
+                                         {:display (if @suunta-atom "block" "none")}
+                                         (case @suunta-atom
+                                           :oikea {:top 0 :left "100%"}
+                                           :ylos-oikea {:bottom "100%" :left 0}
+                                           :ylos-vasen {:bottom "100%" :right 0}
+                                           {:top "100%" :left 0}))} ; Oletusarvo, alas
             [:tbody.pvm-kontrollit
              [:tr
               [:td.pvm-edellinen-kuukausi.klikattava
