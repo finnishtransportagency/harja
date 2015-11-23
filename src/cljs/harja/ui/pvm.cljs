@@ -14,7 +14,7 @@
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
 
-(defn selvita-kalenterin-suunta [kalenteri-komponentti suunta-atom]
+(defn selvita-kalenterin-suunta [kalenteri-komponentti sijainti-atom]
   (let [pvm-input-solmu (.-parentNode (r/dom-node kalenteri-komponentti))
         r (.getBoundingClientRect pvm-input-solmu)
         etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
@@ -24,7 +24,7 @@
                         :ylos-vasen
                         :ylos-oikea)
                       :alas)]
-    (reset! suunta-atom uusi-suunta)))
+    (reset! sijainti-atom uusi-suunta)))
 
 (defn- pilko-viikoiksi [vuosi kk]
   ;;(.log js/console "vuosi: " vuosi ", kk: " kk)
@@ -66,7 +66,7 @@ Seuraavat optiot ovat mahdollisia:
 
   ...muita tarpeen mukaan..."
   [optiot]
-  (let [suunta-atom (atom nil)
+  (let [sijainti-atom (atom nil)
         nyt (or (:pvm optiot) (t/now))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])]
     (r/create-class
@@ -80,14 +80,14 @@ Seuraavat optiot ovat mahdollisia:
 
        :component-did-mount
        (fn [this _]
-         (selvita-kalenterin-suunta this suunta-atom)
+         (selvita-kalenterin-suunta this sijainti-atom)
          (events/listen js/window
                         EventType/SCROLL
-                        #(selvita-kalenterin-suunta this suunta-atom)))
+                        #(selvita-kalenterin-suunta this sijainti-atom)))
 
        :component-will-unmount
        (fn [this _]
-         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this suunta-atom)))
+         (events/unlisten js/window EventType/SCROLL #(selvita-kalenterin-suunta this sijainti-atom)))
 
        :reagent-render
        (fn [{:keys [pvm valitse style] :as optiot}]
@@ -96,8 +96,8 @@ Seuraavat optiot ovat mahdollisia:
                naytettava-kk (t/date-time vuosi (inc kk) 1)
                naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
            [:table.pvm-valinta {:style (merge
-                                         {:display (if @suunta-atom "block" "none")}
-                                         (case @suunta-atom
+                                         {:display (if @sijainti-atom "block" "none")}
+                                         (case @sijainti-atom
                                            :oikea {:top 0 :left "100%"}
                                            :ylos-oikea {:bottom "100%" :left 0}
                                            :ylos-vasen {:bottom "100%" :right 0}
