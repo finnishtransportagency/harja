@@ -23,6 +23,13 @@
       (aget 0)
       (.getAttribute "data-anti-csrf-token")))
 
+(defn csrf-token []
+  (go (loop [token (get-csrf-token)]
+        (if token
+          token
+          (do (<! (timeout 100))
+              (recur (get-csrf-token)))))))
+
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
@@ -31,18 +38,18 @@
              (close! chan))]
 
     ;(log "X-XSRF-Token on " (.-anti_csrf_token js/window))
-    
-    (ajax-request {:uri             (str (polku) (name palvelu))
-                   :method          metodi
-                   :params          parametrit
-                   :headers         {"X-CSRF-Token" (get-csrf-token)}
-                   :format          (transit-request-format transit/write-optiot)
-                   :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                              :raw    true})
-                   :handler         cb
-                   :error-handler   (fn [[_ error]]
-                                      (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                                      (close! chan))})
+    (go
+     (ajax-request {:uri             (str (polku) (name palvelu))
+                    :method          metodi
+                    :params          parametrit
+                    :headers         {"X-CSRF-Token" (<! (csrf-token))}
+                    :format          (transit-request-format transit/write-optiot)
+                    :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                               :raw    true})
+                    :handler         cb
+                    :error-handler   (fn [[_ error]]
+                                       (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                                       (close! chan))}))
     chan))
 
 (defn post!
