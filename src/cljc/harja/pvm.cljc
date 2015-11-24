@@ -164,6 +164,9 @@
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
 
+(defn pudota-aika [pvm]
+  (t/local-date (t/year pvm) (t/month pvm) (t/day pvm)))
+
 (defn kuukausi-ja-vuosi
   "Formatoi MM/yy lyhyen vuosi ja kuukausi tekstin. Esim \"01/15\" tammikuulle 2015."
   [pvm]
