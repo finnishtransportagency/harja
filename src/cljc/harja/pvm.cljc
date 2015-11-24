@@ -46,6 +46,9 @@
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj (Date. (- vuosi 1900) kk pv)))
 
+(defn luo-pvm-aika [vuosi kk pv tt mm ss ms]
+  (DateTime. vuosi kk pv tt mm ss ms))
+
 (defn sama-pvm? [eka toka]
   (and (= (t/year eka) (t/year toka))
        (= (t/month eka) (t/month toka))
@@ -265,7 +268,7 @@
  (defn hoitokauden-loppupvm
    "Palauttaa hoitokauden loppupvm:n 30.9.vuosi"
    [vuosi]
-   (luo-pvm vuosi 8 30))
+   (luo-pvm-aika vuosi 8 30 23 59 59 999))
 
 (defn- d [x]
   #?(:cljs x
