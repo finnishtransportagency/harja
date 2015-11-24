@@ -1,7 +1,7 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
-            [cljs.core.async :refer [put! close! chan]]
+            [cljs.core.async :refer [put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
             [cognitect.transit :as t]
