@@ -20,7 +20,8 @@
     ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
@@ -615,7 +616,7 @@
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
-        hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
+        hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
         alkuperainen-sijainti @sijainti
@@ -668,6 +669,7 @@
 
       (fn [{:keys [lomake? sijainti]} data]
         (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
+              virheet (atom nil)
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
                               tr (if (and (not (= "" v))
@@ -675,10 +677,26 @@
                                    (swap! data assoc kentta (js/parseInt (-> % .-target .-value)))
                                    (swap! data assoc kentta nil))]))
               blur (when hae-sijainti
-                     #(when osoite
-                       (go (>! tr-osoite-ch osoite))))
+                     (fn []
+                       (log "Haetaan ehkä viiva osoitteelle: " (pr-str osoite)
+                            (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys])
+                            (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
+                       (cond
+                         (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
+                         (go (let [tulos (<! (vkm/tieosoite->viiva osoite))]
+                               (log "Saatiin tulos: " (pr-str tulos))
+                               (if-not (or (nil? tulos) (k/virhe? tulos))
+                                 (>! tr-osoite-ch tulos)
+                                 (reset! virheet "Reitille ei löydy tietä."))))
+
+                         (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys])
+                         (go (let [tulos (<! (vkm/tieosoite->piste osoite))]
+                               (log "Saatiin tulos: " (pr-str tulos))
+                               (if-not (or (nil? tulos) (k/virhe? tulos))
+                                 (>! tr-osoite-ch tulos)
+                                 (reset! virheet "Pisteelle ei löydy tietä.")))))))
               kartta? @karttavalinta-kaynnissa]
-          [:span.tierekisteriosoite-kentta
+          [:span.tierekisteriosoite-kentta (when )
            [:table
             [:tbody
              [:tr
