@@ -28,7 +28,9 @@
          (muodosta-pdf [:otsikko "TÄMÄ ON OTSIKKO"]))))
 
 (deftest teksti
-  (is (= [:fo:block {} "TEKSTIÄ"]
+  (is (= [:fo:block
+          {:color nil}
+          "TEKSTIÄ"]
          (muodosta-pdf [:teksti "TEKSTIÄ"]))))
 
 (deftest taulukko
