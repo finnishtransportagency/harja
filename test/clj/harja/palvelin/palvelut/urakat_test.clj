@@ -2,11 +2,12 @@
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
-            [harja.palvelin.palvelut.urakat  :refer :all]
+            [harja.palvelin.palvelut.urakat :refer :all]
             [harja.kyselyt.urakat :as urk-q]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -55,4 +56,4 @@
     (is (= toka-sopimuksen-id 3) "haetun urakan sopimustesti")
     (is (= toka-sopimuksen-sampoid "2H05228/10") "haetun urakan sopimustesti")
     (is (= (:alkupvm haettu-urakka) (java.sql.Date. 105 9 1)) "haetun urakan alkupvm")
-    (is (= (:loppupvm haettu-urakka) (java.sql.Date. 110 8 30)) "haetun urakan loppupvm")))
+    (is (= (:loppupvm haettu-urakka) (pvm/aikana (java.sql.Date. 110 8 30) 23 59 59 999) "haetun urakan loppupvm"))))
