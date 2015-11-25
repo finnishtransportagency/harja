@@ -57,18 +57,37 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     (tee-onnistunut-vastaus)))
 
 (defn muodosta-vastaus-paivystajatietojen-haulle [paivystajatiedot]
-  {:paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
-                                    sukunimi sahkoposti tyopuhelin matkapuhelin]}]
-                         {:paivystys {:paivystaja    {:id            id
-                                                      :etunimi       etunimi
-                                                      :sukunimi      sukunimi
-                                                      :email         sahkoposti
-                                                      :puhelinnumero tyopuhelin}
-                                      :alku          alku
-                                      :loppu         loppu
-                                      :vastuuhenkilo vastuuhenkilo
-                                      :varahenkilo   varahenkilo}})
-                       paivystajatiedot)})
+  (let [urakkaryhmat (keys (group-by :urakka_id paivystajatiedot))
+        vastaus {:urakat (mapv
+                           (fn [urakka-id]
+                             (let [urakan-paivystykset (filter
+                                                         #(= (:urakka_id %) urakka-id)
+                                                         paivystajatiedot)
+                                   {:keys [urakka_id urakka_nimi urakka_alkupvm
+                                            urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
+                                   {:keys [organisaatio_nimi organisaatio_ytunnus]} (first urakan-paivystykset)]
+                               {:urakka {:tiedot {:id urakka_id
+                                                  :nimi urakka_nimi
+                                                  :urakoitsija {:ytunnus organisaatio_ytunnus
+                                                                :nimi organisaatio_nimi }
+                                                  :vaylamuoto "tie" ; FIXME Urakoiden haussa tehtyyn hardcoodattu assoc, onko oikein?
+                                                  :tyyppi urakka_tyyppi
+                                                  :alkupvm urakka_alkupvm
+                                                  :loppupvm urakka_loppupvm}
+                                         :paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
+                                                                          sukunimi sahkoposti tyopuhelin matkapuhelin]}]
+                                                               {:paivystys {:paivystaja    {:id            id
+                                                                                            :etunimi       etunimi
+                                                                                            :sukunimi      sukunimi
+                                                                                            :email         sahkoposti
+                                                                                            :puhelinnumero tyopuhelin}
+                                                                            :alku          alku
+                                                                            :loppu         loppu
+                                                                            :vastuuhenkilo vastuuhenkilo
+                                                                            :varahenkilo   varahenkilo}})
+                                                             urakan-paivystykset)}}))
+                           urakkaryhmat)}]
+    vastaus))
 
 (defn hae-paivystajatiedot-urakan-idlla [db {:keys [id]} kayttaja]
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " id)
@@ -85,8 +104,14 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
 (defn hae-paivystajatiedot-puhelinnumerolla [db {:keys [puhelinnumero]} data kayttaja]
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
-  (let [paivystajatiedot (some->> urakka-id (yhteyshenkilot/hae-urakan-paivystajat db))
-        vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
+  (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db)
+        paivystajatiedot-puhelinnumerolla (filter (fn [paivystys]
+                                                    ; TODO Filtteröi
+                                                    ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
+                                                    ; kirjoitusasu voi vaihdella.
+                                                    paivystys)
+                                                  kaikki-paivystajatiedot)
+        vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
 (def hakutyypit
