@@ -137,14 +137,14 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/sijainnilla"
     :tyyppi         :POST
-    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-sijainnilla++
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-sijainnilla+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
     :tyyppi         :POST
-    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-puhelinnumerolla++
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-puhelinnumerolla+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}
