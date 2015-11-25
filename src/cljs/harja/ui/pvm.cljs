@@ -7,7 +7,8 @@
             [harja.ui.ikonit :as ikonit]
             [goog.events :as events]
             [goog.events.EventType :as EventType]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.komponentti :as komp]))
 
 (def +paivat+ ["Ma" "Ti" "Ke" "To" "Pe" "La" "Su"])
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
@@ -69,93 +70,81 @@ Seuraavat optiot ovat mahdollisia:
   (let [sijainti-atom (atom nil)
         nyt (or (:pvm optiot) (t/now))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])
-        tama (atom nil)
-        scroll-kuuntelija (fn []
-                            (selvita-kalenterin-suunta @tama sijainti-atom))]
-    (r/create-class
-      {:component-will-receive-props
-       (fn [this new-argv]
-         (let [optiot (second new-argv)
-               pvm (:pvm optiot)]
-           (when pvm
-             ;; päivitetään näytä vuosi ja kk
-             (reset! nayta [(.getYear pvm) (.getMonth pvm)]))))
+        scroll-kuuntelija (fn [this _]
+                            (selvita-kalenterin-suunta this sijainti-atom))]
+    (komp/luo
+     {:component-will-receive-props
+      (fn [this & [_ optiot]]
+        (when-let [pvm (:pvm optiot)]
+          ;; päivitetään näytä vuosi ja kk
+          (reset! nayta [(.getYear pvm) (.getMonth pvm)])))
+      :component-did-mount
+      (fn [this _]
+        (selvita-kalenterin-suunta this sijainti-atom))}
 
-       :component-did-mount
-       (fn [this _]
-         (reset! tama this)
-         (selvita-kalenterin-suunta this sijainti-atom)
-         (events/listen js/window
-                        EventType/SCROLL
-                        scroll-kuuntelija))
+     (komp/dom-kuuntelija js/window
+                          EventType/SCROLL scroll-kuuntelija)
+     
+     (fn [{:keys [pvm valitse style] :as optiot}]
+       (let [[vuosi kk] @nayta
+             naytettava-kk (t/date-time vuosi (inc kk) 1)
+             naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
+         [:table.pvm-valinta {:style (merge
+                                      {:display (if @sijainti-atom "block" "none")}
+                                      (case @sijainti-atom
+                                        :oikea {:top 0 :left "100%"}
+                                        :ylos-oikea {:bottom "100%" :left 0}
+                                        :ylos-vasen {:bottom "100%" :right 0}
+                                        {:top "100%" :left 0}))} ; Oletusarvo, alas
+          [:tbody.pvm-kontrollit
+           [:tr
+            [:td.pvm-edellinen-kuukausi.klikattava
+             {:on-click #(do (.preventDefault %)
+                             (swap! nayta
+                                    (fn [[vuosi kk]]
+                                      (if (= kk 0)
+                                        [(dec vuosi) 11]
+                                        [vuosi (dec kk)])))
+                             nil)}
+             (ikonit/chevron-left)]
+            [:td {:col-span 5} [:span.pvm-kuukausi (nth +kuukaudet+ kk)] " " [:span.pvm-vuosi vuosi]]
+            [:td.pvm-seuraava-kuukausi.klikattava
+             {:on-click #(do (.preventDefault %)
+                             (swap! nayta
+                                    (fn [[vuosi kk]]
+                                      (if (= kk 11)
+                                        [(inc vuosi) 0]
+                                        [vuosi (inc kk)])))
+                             nil)}
+             (ikonit/chevron-right)]]
+           [:tr.pvm-viikonpaivat
+            (for [paiva +paivat+]
+              ^{:key paiva}
+              [:td paiva])]]
 
-       :component-will-unmount
-       (fn [this _]
-         (reset! tama this)
-         (events/unlisten js/window EventType/SCROLL scroll-kuuntelija))
-
-       :reagent-render
-       (fn [{:keys [pvm valitse style] :as optiot}]
-
-         (let [[vuosi kk] @nayta
-               naytettava-kk (t/date-time vuosi (inc kk) 1)
-               naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
-           [:table.pvm-valinta {:style (merge
-                                         {:display (if @sijainti-atom "block" "none")}
-                                         (case @sijainti-atom
-                                           :oikea {:top 0 :left "100%"}
-                                           :ylos-oikea {:bottom "100%" :left 0}
-                                           :ylos-vasen {:bottom "100%" :right 0}
-                                           {:top "100%" :left 0}))} ; Oletusarvo, alas
-            [:tbody.pvm-kontrollit
+          [:tbody.pvm-paivat
+           (for [paivat (pilko-viikoiksi vuosi kk)]
+             ^{:key (pvm/millisekunteina (first paivat))}
              [:tr
-              [:td.pvm-edellinen-kuukausi.klikattava
-               {:on-click #(do (.preventDefault %)
-                               (swap! nayta
-                                      (fn [[vuosi kk]]
-                                        (if (= kk 0)
-                                          [(dec vuosi) 11]
-                                          [vuosi (dec kk)])))
-                               nil)}
-               (ikonit/chevron-left)]
-              [:td {:col-span 5} [:span.pvm-kuukausi (nth +kuukaudet+ kk)] " " [:span.pvm-vuosi vuosi]]
-              [:td.pvm-seuraava-kuukausi.klikattava
-               {:on-click #(do (.preventDefault %)
-                               (swap! nayta
-                                      (fn [[vuosi kk]]
-                                        (if (= kk 11)
-                                          [(inc vuosi) 0]
-                                          [vuosi (inc kk)])))
-                               nil)}
-               (ikonit/chevron-right)]]
-             [:tr.pvm-viikonpaivat
-              (for [paiva +paivat+]
-                ^{:key paiva}
-                [:td paiva])]]
+              (for [paiva paivat]
+                ^{:key (pvm/millisekunteina paiva)}
+                [:td.pvm-paiva.klikattava {:class    (str
+                                                      (when (and pvm
+                                                                 (= (t/day paiva) (t/day pvm))
+                                                                 (= (t/month paiva) (t/month pvm))
+                                                                 (= (t/year paiva) (t/year pvm)))
+                                                        "pvm-valittu ")
+                                                      (if (naytettava-kk-paiva? paiva)
+                                                        "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
-            [:tbody.pvm-paivat
-             (for [paivat (pilko-viikoiksi vuosi kk)]
-               ^{:key (pvm/millisekunteina (first paivat))}
-               [:tr
-                (for [paiva paivat]
-                  ^{:key (pvm/millisekunteina paiva)}
-                  [:td.pvm-paiva.klikattava {:class    (str
-                                                         (when (and pvm
-                                                                    (= (t/day paiva) (t/day pvm))
-                                                                    (= (t/month paiva) (t/month pvm))
-                                                                    (= (t/year paiva) (t/year pvm)))
-                                                           "pvm-valittu ")
-                                                         (if (naytettava-kk-paiva? paiva)
-                                                           "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
-
-                                             :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
-                   (t/day paiva)])])]
-            [:tbody.pvm-tanaan
-             [:tr [:td {:colSpan 7}
-                   [:a {:on-click #(do
-                                    (.preventDefault %)
-                                    (.stopPropagation %)
-                                    (valitse (pvm/nyt)))}
-                    "Tänään"]]]]]))})))
+                                           :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
+                 (t/day paiva)])])]
+          [:tbody.pvm-tanaan
+           [:tr [:td {:colSpan 7}
+                 [:a {:on-click #(do
+                                   (.preventDefault %)
+                                   (.stopPropagation %)
+                                   (valitse (pvm/nyt)))}
+                  "Tänään"]]]]])))))
 
 
