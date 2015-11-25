@@ -4,6 +4,9 @@
   tasks:
     - name: Varmistetaan, että Harjan sovellushakemisto on olemassa
       file: path=/opt/harja state=directory owner=harja group=harja mode="u=rwx,g=rwx,o=rx"
+
+    - name: Varmistetaan, että Harjan shapefilehakemisto on olemassa
+      file: path=/opt/harja/shp/Tieosoiteverkko state=directory owner=harja group=harja mode="u=rwx,g=rwx,o=rx"
       
     - name: kirjoita serviced konfiguraatio
       template: src=templates/centos7-service-template.j2 dest=/etc/systemd/system/harja.service mode=755

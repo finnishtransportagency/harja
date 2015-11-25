@@ -40,7 +40,6 @@ AS $$
 DECLARE
    alkuosa RECORD;
    alkuet NUMERIC;
-   palojenpit NUMERIC;
 BEGIN
    SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
       FROM tieverkko_paloina
@@ -51,18 +50,8 @@ BEGIN
    INTO alkuosa;
    
    SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_Line_Locate_Point(alkuosa.geom, piste))) INTO alkuet;
-   SELECT SUM(ST_Length(geom)) 
-     FROM tieverkko_paloina 
-    WHERE tie=alkuosa.tie 
-      AND osa=alkuosa.osa 
-      AND ajorata=alkuosa.ajorata 
-   INTO palojenpit;
    
-   IF palojenpit IS NULL THEN
-     palojenpit := 0;
-   END IF;
-   
-   RETURN (palojenpit+alkuet)::INTEGER;
+   RETURN alkuet::INTEGER;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -198,4 +187,3 @@ BEGIN
     RETURN result;
 END;
 $$ LANGUAGE plpgsql;
-

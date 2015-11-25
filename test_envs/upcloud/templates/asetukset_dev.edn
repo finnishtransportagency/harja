@@ -54,7 +54,11 @@
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
  :geometriapaivitykset {:tuontivali 60
-                        :tieosoiteverkon-shapefile  "http://10.1.0.96/Tieosoiteverkko.shp"
+                        :tieosoiteverkon-shapefile       "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
+                        :tieosoiteverkon-alk-osoite      "http://10.1.0.96/Tieosoiteverkko.zip"
+                        :tieosoiteverkon-alk-tuontikohde "./shp/Tieosoiteverkko/Tieosoiteverkko.zip"
+
+                        ;:tieosoiteverkon-shapefile  "http://10.1.0.96/Tieosoiteverkko.shp"
                         :soratien-hoitoluokkien-shapefile    "http://10.1.0.96/tl132.shp"
                         :pohjavesialueen-shapefile "http://10.1.0.96/PTV_TIIRA_KP_POHJAVESIALUE.shp"}
  }
