@@ -101,18 +101,33 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   ; TODO
   )
 
+(defn trimmaa-puhelinnumero
+  "Ottaa suomalaisen puhelinnumeron teksimuodossa ja palauttaa sen yksinkertaistetussa numeromuodossa ilman etuliitettä
+  Esim. +358400-123-456 -> 0400123456
+        +358500123123 -> 0500123123
+        0400-123123 -> 0400123123"
+  [numero-string]
+  (let [puhdas-numero (apply str (filter
+                                   #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9, \+} %)
+                                   numero-string))
+        siivottu-etuliite (if (= (str (first puhdas-numero)) "+")
+                            (str "0" (subs puhdas-numero 4 (count puhdas-numero)))
+                            puhdas-numero)]
+    siivottu-etuliite))
+
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero]} kayttaja]
   (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!")
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
   (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db)
         paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
-                                                             ; TODO Filtteröi
                                                              ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
                                                              ; kirjoitusasu voi vaihdella.
-                                                             paivystys)
+                                                             (or (= (trimmaa-puhelinnumero (:tyopuhelin paivystys))
+                                                                    (trimmaa-puhelinnumero puhelinnumero))
+                                                                 (= (trimmaa-puhelinnumero (:matkapuhelin paivystys))
+                                                                    (trimmaa-puhelinnumero puhelinnumero))))
                                                            kaikki-paivystajatiedot))
-        _ (log/debug "Päivystäjätiedot on nyt: " (pr-str paivystajatiedot-puhelinnumerolla))
         vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
