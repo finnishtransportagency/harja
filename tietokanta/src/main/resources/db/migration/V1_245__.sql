@@ -1,4 +1,7 @@
--- Lisää päivystäjän haun integraatiot
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-paivystajatiedot-urakka-idlla');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-paivystajatiedot-sijainnilla');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-paivystajatiedot-puhelinnumerolla');
+INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'talvihoitoluokat-haku');
+INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'talvihoitoluokat-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'urakat-haku');
+INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'urakat-muutospaivamaaran-haku');
+INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'elyt-haku');
+INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'elyt-muutospaivamaaran-haku');
+

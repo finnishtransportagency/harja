@@ -37,14 +37,25 @@
     (log/debug "Maksuerän tilat" tilat)
     tilat))
 
+
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
-  (into []
-        maksuera-xf
-        (q/hae-urakan-maksuerat db urakka-id)))
+  (let [summat (into {}
+                     (map (juxt :tpi_id identity))
+                     (q/hae-urakan-maksueratiedot db urakka-id))
+        maksuerat (into []
+                        (comp maksuera-xf
+                              (map (fn [maksuera]
+                                     (let [tpi (get-in maksuera [:toimenpideinstanssi :id])
+                                           tyyppi (get-in maksuera [:maksuera :tyyppi])]
+                                       (assoc-in maksuera
+                                                 [:maksuera :summa]
+                                                 (get-in summat [tpi tyyppi]))))))
+                        (q/hae-urakan-maksuerat db urakka-id))]
+    maksuerat))
 
 (defn laheta-maksuerat-sampoon
   "Palvelu, joka lähettää annetut maksuerät Sampoon. Ei vaadi erillisoikeuksia."
