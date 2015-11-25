@@ -101,7 +101,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   ; TODO
   )
 
-(defn hae-paivystajatiedot-puhelinnumerolla [db {:keys [puhelinnumero]} data kayttaja]
+(defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero]} kayttaja]
   (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!")
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
