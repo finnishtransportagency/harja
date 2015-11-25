@@ -98,15 +98,15 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
           vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus)))
 
-(defn hae-paivystajatiedot-sijainnilla [db parametrit data kayttaja]
-  ; TODO
+(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja]
+  (log/debug "Haetaan päivystäjätiedot sijainnilla " (pr-str koordinaatit))
   )
 
-(defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero]} kayttaja]
+(defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
   (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!")
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
-  (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db)
+  (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db alkaen paattyen)
         paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
                                                              ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
                                                              ; kirjoitusasu voi vaihdella.

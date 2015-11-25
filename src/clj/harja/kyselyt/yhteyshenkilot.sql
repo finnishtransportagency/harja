@@ -75,6 +75,8 @@ FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
   LEFT JOIN urakka u ON p.urakka = u.id;
+  WHERE p.alku >= :alkaen
+  AND p.alku <= :paattyen;
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
