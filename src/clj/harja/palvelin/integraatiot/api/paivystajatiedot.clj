@@ -126,21 +126,21 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/tyypilla"
     :tyyppi         :POST
-    :pyynto-skeema  json-skeemat/+paivystajatietojen-haku+
+    :kutsu-skeema  json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
     :tyyppi         :POST
-    :pyynto-skeema  json-skeemat/+paivystajatietojen-haku+
+    :kutsu-skeema  json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}
    {:palvelu        :lisaa-paivystajatiedot
     :polku          "/api/urakat/:id/paivystajatiedot"
     :tyyppi         :POST
-    :pyynto-skeema  json-skeemat/+paivystajatietojen-kirjaus+
+    :kutsu-skeema  json-skeemat/+paivystajatietojen-kirjaus+
     :vastaus-skeema json-skeemat/+kirjausvastaus+
     :kasittely-fn   (fn [parametrit data kayttaja db]
                       (kirjaa-paivystajatiedot db parametrit data kayttaja))}])
@@ -148,17 +148,17 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
 (defrecord Paivystajatiedot []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :GET)]
+    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :GET)]
       (julkaise-reitti
         http palvelu
         (GET polku request
-          (kasittele-kutsu db integraatioloki palvelu request pyynto-skeema vastaus-skeema kasittely-fn))))
+          (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
 
-    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :POST)]
+    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :POST)]
       (julkaise-reitti
         http palvelu
         (POST polku request
-          (kasittele-kutsu db integraatioloki palvelu request pyynto-skeema vastaus-skeema kasittely-fn))))
+          (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
 
     this)
   (stop [{http :http-palvelin :as this}]
