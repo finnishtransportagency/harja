@@ -47,19 +47,19 @@
                     (fmt/euro (+ laskutettu-yht laskutetaan-yht))]]
     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
      [{:otsikko "Toimenpide" :leveys "40%"}
-      {:otsikko laskutettu-teksti :leveys "20%"} ;; FIXME: format ja tasaus
-      {:otsikko  laskutetaan-teksti :leveys "20%"}
+      {:otsikko laskutettu-teksti :leveys "20%"}            ;; FIXME: format ja tasaus
+      {:otsikko laskutetaan-teksti :leveys "20%"}
       {:otsikko "Hoitokaudella yhteensä" :leveys "20%"}]
 
      (into []
            (concat
-            (map (fn [rivi]
-                   [(:nimi rivi)
-                    (fmt/euro-indeksikorotus (rivi laskutettu-kentta))
-                    (fmt/euro-indeksikorotus (rivi laskutetaan-kentta))
-                    (fmt/euro-indeksikorotus (+ (or (rivi laskutettu-kentta) 0)
-                                     (or (rivi laskutetaan-kentta) 0)))]) tiedot)
-            [yhteenveto]))]))
+             (map (fn [rivi]
+                    [(:nimi rivi)
+                     (fmt/euro-indeksikorotus (rivi laskutettu-kentta))
+                     (fmt/euro-indeksikorotus (rivi laskutetaan-kentta))
+                     (fmt/euro-indeksikorotus (+ (or (rivi laskutettu-kentta) 0)
+                                                 (or (rivi laskutetaan-kentta) 0)))]) tiedot)
+             [yhteenveto]))]))
 
 (defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
@@ -76,16 +76,20 @@
         indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (some nil? (vals (select-keys (first tiedot) laskutettu-korotus-kentat)))
         indeksiarvo-puuttuu-valitulta-kklta? (some nil? (vals (select-keys (first tiedot) laskutetaan-korotus-kentat)))
         vain-jvh-viesti "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja Harjaan."
+        perusluku-puuttuu? (not (:perusluku (first tiedot)))
         mahdollinen-varoitus-indeksiarvojen-puuttumisesta
-        (if (and indeksiarvo-puuttuu-jo-laskutetulta-ajalta? indeksiarvo-puuttuu-valitulta-kklta?)
-          [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu sekä valitulta kuukaudelta että ajalta ennen sitä. "
+        (if perusluku-puuttuu?
+          [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittava urakan indeksiarvojen perusluku puuttuu tältä urakalta puutteellisten indeksitietojen vuoksi. "
                                 vain-jvh-viesti)]
-          (if indeksiarvo-puuttuu-jo-laskutetulta-ajalta?
-            [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu ajalta ennen valittua kuukautta. "
+          (if (and indeksiarvo-puuttuu-jo-laskutetulta-ajalta? indeksiarvo-puuttuu-valitulta-kklta?)
+            [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu sekä valitulta kuukaudelta että ajalta ennen sitä. "
                                   vain-jvh-viesti)]
-            (if indeksiarvo-puuttuu-valitulta-kklta?
-              [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittava valitun kuukauden indeksiarvo puuttuu. "
-                                    vain-jvh-viesti)])))]
+            (if indeksiarvo-puuttuu-jo-laskutetulta-ajalta?
+              [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu ajalta ennen valittua kuukautta. "
+                                    vain-jvh-viesti)]
+              (if indeksiarvo-puuttuu-valitulta-kklta?
+                [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittava valitun kuukauden indeksiarvo puuttuu. "
+                                      vain-jvh-viesti)]))))]
 
     [:raportti {:nimi "Laskutusyhteenveto"}
      mahdollinen-varoitus-indeksiarvojen-puuttumisesta
