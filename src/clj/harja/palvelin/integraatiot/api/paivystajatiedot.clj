@@ -97,7 +97,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
           vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus)))
 
-(defn hae-paivystajatiedot-tyypilla-ja-sijainnilla [db parametrit data kayttaja]
+(defn hae-paivystajatiedot-sijainnilla [db parametrit data kayttaja]
   ; TODO
   )
 
@@ -120,14 +120,15 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
                       (hae-paivystajatiedot-urakan-idlla db parametrit kayttaja-id))}
-   {:palvelu        :hae-paivystajatiedot-tyypilla-ja-sijainnilla
+   {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/tyypilla-ja-sijainnilla"
     :pyynto-skeema  json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
-                      (hae-paivystajatiedot-tyypilla-ja-sijainnilla db parametrit data kayttaja-id))}
+                      (hae-paivystajatiedot-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
-    :polku          "/api/paivystajatiedot/haku/:puhelinnumero"
+    :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
+    :pyynto-skeema  json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}])
