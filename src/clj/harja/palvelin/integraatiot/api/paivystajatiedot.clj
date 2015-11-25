@@ -92,7 +92,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                            urakkaryhmat)}]
     vastaus))
 
-(defn hae-paivystajatiedot-urakan-idlla [db {:keys [id]} kayttaja]
+(defn hae-paivystajatiedot-urakan-idlla [db id kayttaja]
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " id)
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -100,11 +100,13 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
           vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus)))
 
-(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja]
+(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja] ; FIXME Alkaen & päättyen mukaan?
   (log/debug "Haetaan päivystäjätiedot sijainnilla " (pr-str koordinaatit))
   (let [urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi koordinaatit)]
     (if urakka-id
-      (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja)
+      (do
+        (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-id))
+        (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja))
       (throw+ {:type    virheet/+urakkaa-ei-loydy+
                :virheet [{:koodi  virheet/+virheellinen-sijainti+
                           :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
@@ -131,7 +133,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-paivystajatiedot-urakan-idlla db parametrit kayttaja-id))}
+                      (hae-paivystajatiedot-urakan-idlla db (:id parametrit) kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/sijainnilla"
     :tyyppi         :POST
