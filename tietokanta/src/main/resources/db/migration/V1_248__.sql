@@ -2,7 +2,9 @@
 
 DROP MATERIALIZED VIEW tieverkko_paloina;
 
-CREATE MATERIALIZED VIEW tieverkko_paloina AS SELECT osoite3, tie, ajorata, osa, tiepiiri, ST_LineMerge(ST_SnapToGrid(geometria,0.00001)) AS geom FROM tieverkko;
+CREATE MATERIALIZED VIEW tieverkko_paloina AS
+  SELECT osoite3,tie,ajorata,osa,tiepiiri,(ST_Dump(geom)).geom AS geom, tr_pituus
+  FROM (SELECT osoite3, tie, ajorata, osa, tiepiiri, ST_LineMerge(ST_SnapToGrid(geometria,0.0001)) AS geom, tr_pituus FROM tieverkko) AS f;
 
 CREATE INDEX tieverkko_paloina_geom_index ON tieverkko_paloina USING GIST (geom);
 CREATE INDEX tieverkko_paloina_tieosa_index ON tieverkko_paloina (tie,osa);
@@ -191,5 +193,20 @@ BEGIN
    END IF;
 
    RETURN rval;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_piste(
+  tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER)
+  RETURNS geometry
+AS $$
+DECLARE
+   result geometry;
+   suhde float;
+BEGIN
+   SELECT ST_Line_Interpolate_Point(geom, LEAST(1, (aet_::float)/tr_pituus))
+    FROM tieverkko_paloina WHERE tie=tie_ AND osa=aosa_ LIMIT 1 INTO result;
+
+    RETURN result;
 END;
 $$ LANGUAGE plpgsql;
