@@ -1,5 +1,60 @@
+-- name: hae-urakan-maksueratiedot
+-- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
+-- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
+-- eri maksuerätyypeille.
+SELECT tpi_id,
+       SUM(kokonaishintaisten_summa) AS kokonaishintainen,
+       SUM(yksikkohintaisten_summa) AS yksikkohintainen,
+       SUM(sakot_summa) AS sakko,
+       SUM(akilliset_hoitotyot_summa) AS "akillinen-hoitotyo",
+       SUM(lisatyot_summa) AS lisatyo,
+       SUM(bonukset_summa) AS bonus,
+       SUM(indeksit_summa) AS indeksi,
+       SUM(muut_summa) AS muu
+  FROM (SELECT SUM((laskutusyhteenveto).kht_laskutettu +
+                   (laskutusyhteenveto).kht_laskutetaan) AS kokonaishintaisten_summa,
+               SUM((laskutusyhteenveto).yht_laskutettu +
+                   (laskutusyhteenveto).yht_laskutetaan) AS yksikkohintaisten_summa,
+	       SUM((laskutusyhteenveto).sakot_laskutettu +
+	           (laskutusyhteenveto).sakot_laskutetaan +
+		   (laskutusyhteenveto).suolasakot_laskutettu +
+		   (laskutusyhteenveto).suolasakot_laskutetaan) AS sakot_summa,
+	       SUM((laskutusyhteenveto).akilliset_hoitotyot_laskutettu +
+	           (laskutusyhteenveto).akilliset_hoitotyot_laskutetaan) AS akilliset_hoitotyot_summa,
+	       SUM((laskutusyhteenveto).muutostyot_laskutettu + 
+	           (laskutusyhteenveto).muutostyot_laskutetaan) AS lisatyot_summa,
+	       SUM((laskutusyhteenveto).bonukset_laskutettu +
+	           (laskutusyhteenveto).bonukset_laskutetaan) as bonukset_summa,
+	       SUM((laskutusyhteenveto).kaikki_laskutettu_ind_korotus +
+	           (laskutusyhteenveto).kaikki_laskutetaan_ind_korotus) AS indeksit_summa,
+	       SUM((laskutusyhteenveto).erilliskustannukset_laskutettu +
+	           (laskutusyhteenveto).erilliskustannukset_laskutetaan) AS muut_summa,
+               (laskutusyhteenveto).tpi AS tpi_id,
+               lyht.alkupvm, lyht.loppupvm
+          FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+                SELECT hk.alkupvm, hk.loppupvm,
+                       laskutusyhteenveto(hk.alkupvm, hk.loppupvm,
+                                          date_trunc('month', hk.loppupvm) :: DATE,
+                                          (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
+					  :urakka_id::INTEGER)
+                  FROM (SELECT * FROM urakan_hoitokaudet(:urakka_id::INTEGER)
+                         WHERE loppupvm < now()) AS hk
+                UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
+                SELECT hk.alkupvm, hk.loppupvm,
+                       laskutusyhteenveto(hk.alkupvm, hk.loppupvm,
+                                          date_trunc('month', now()) :: DATE,
+                                          (date_trunc('month', now()) + INTERVAL '1 month') :: DATE, :urakka_id::INTEGER)
+                  FROM (SELECT * FROM urakan_hoitokaudet(:urakka_id::INTEGER)
+                         WHERE alkupvm < now() AND loppupvm > now()) AS hk
+               ) AS lyht
+        GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
+GROUP BY tpi_id;
+
+
 -- name: hae-urakan-maksuerat
--- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot
+-- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
+-- Huom! Maksuerän summat haetaan hae-urakan-maksueratiedot kyselyllä, joka
+-- muodostaa ne laskutusyhteenvetoa kutsumalla.
 SELECT
   m.numero     AS numero,
   m.tyyppi     AS maksuera_tyyppi,
@@ -13,125 +68,22 @@ SELECT
   s.sampoid    AS sopimus_sampoid,
   k.tila       AS kustannussuunnitelma_tila,
   k.lahetetty  AS kustannussuunnitelma_lahetetty,
-
+   -- Tuotenumero
+  (SELECT emo.tuotenumero
+    FROM toimenpidekoodi emo
+   WHERE emo.id = tpk.emo) AS tuotenumero,
+   
   -- Kustannussuunnitelman summa
-  CASE
-
-  WHEN m.tyyppi = 'kokonaishintainen'
-    THEN
-      (SELECT SUM(kht.summa)
-       FROM kokonaishintainen_tyo kht
-       WHERE kht.toimenpideinstanssi = tpi.id)
-
-  WHEN m.tyyppi = 'yksikkohintainen'
-    THEN
-      (SELECT SUM(yht.maara * yht.yksikkohinta)
-       FROM yksikkohintainen_tyo yht
-       WHERE yht.tehtava IN (SELECT id
-                             FROM toimenpidekoodi
-                             WHERE emo = tpk.id) AND
-             yht.urakka = u.id)
-
-  ELSE 1
-
-  END          AS kustannussuunnitelma_summa,
-
-  -- Maksuerän summa
-  CASE
-
-  WHEN m.tyyppi = 'kokonaishintainen'
-    THEN
-      (SELECT SUM(kht.summa)
-       FROM kokonaishintainen_tyo kht
-       WHERE kht.toimenpideinstanssi = tpi.id)
-
-  WHEN m.tyyppi = 'yksikkohintainen'
-    THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
-              t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'yksikkohintainen' AND NOT t.poistettu)
-
-  WHEN m.tyyppi = 'lisatyo'
-    THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
-              t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'lisatyo' AND NOT t.poistettu)
-
-  WHEN m.tyyppi = 'akillinen-hoitotyo'
-    THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
-              t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'akillinen-hoitotyo' AND NOT t.poistettu)
-
-  WHEN m.tyyppi = 'sakko'
-    THEN
-      -- Normaalit sakot
-      coalesce((SELECT (sum(sa.maara))
-                FROM sanktio sa
-                WHERE sa.toimenpideinstanssi = tpi.id),
-               0)
-      +
-      -- Suolasakot
-
-
-      coalesce((SELECT *
-                FROM urakan_suolasakot(CAST(:urakkaid AS INTEGER))
-                WHERE tpk.koodi = '23104'),
-               0)
-
-  WHEN m.tyyppi = 'muu'
-    THEN
-      (SELECT
-         -- Muutostyo
-         coalesce((SELECT (sum(tt.maara * yt.yksikkohinta))
-                   FROM toteuma t
-                     JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-                     JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                                 (tpk.emo IN (SELECT id
-                                                              FROM toimenpidekoodi emo
-                                                              WHERE emo.id = tpi.toimenpide))
-                     JOIN yksikkohintainen_tyo yt
-                       ON u.id = yt.urakka AND yt.tehtava = tpk.id AND
-                          t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-                   WHERE t.tyyppi IN ('muutostyo', 'vahinkojen-korjaukset') AND NOT t.poistettu),
-                  0)
-         +
-         -- Erilliskustannukset
-           -- Fixme: indeksien laskenta!
-         coalesce((SELECT (sum(ek.rahasumma))
-                   FROM erilliskustannus ek
-                   WHERE ek.toimenpideinstanssi = tpi.id AND NOT ek.poistettu),
-                  0))
-
-  -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
-  ELSE 0
-
-  END          AS maksuera_summa
-
+  CASE WHEN m.tyyppi = 'kokonaishintainen'
+       THEN (SELECT SUM(kht.summa)
+	       FROM kokonaishintainen_tyo kht
+	      WHERE kht.toimenpideinstanssi = tpi.id)
+       WHEN m.tyyppi = 'yksikkohintainen'
+       THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+	       FROM yksikkohintainen_tyo yht
+	      WHERE yht.tehtava IN (SELECT id FROM toimenpidekoodi WHERE emo = tpk.id))
+       ELSE 1
+  END AS kustannussuunnitelma_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
@@ -163,6 +115,7 @@ SELECT
   u.sampoid                AS urakka_sampoid,
   k.tila                   AS kustannussuunnitelma_tila,
   k.lahetetty              AS kustannussuunnitelma_lahetetty,
+  tpi.urakka               AS "urakka-id",
 
   -- Tuotenumero
   (SELECT emo.tuotenumero
@@ -170,113 +123,16 @@ SELECT
    WHERE emo.id = tpk.emo) AS tuotenumero,
 
   -- Kustannussuunnitelman summa
-  CASE
-  WHEN m.tyyppi = 'kokonaishintainen'
-    THEN
-      (SELECT SUM(kht.summa)
-       FROM kokonaishintainen_tyo kht
-       WHERE kht.toimenpideinstanssi = tpi.id)
-  WHEN m.tyyppi = 'yksikkohintainen'
-    THEN
-      (SELECT SUM(yht.maara * yht.yksikkohinta)
-       FROM yksikkohintainen_tyo yht
-       WHERE yht.tehtava IN (SELECT id
-                             FROM toimenpidekoodi
-                             WHERE emo = tpk.id))
-  ELSE 1
-  END                      AS kustannussuunnitelma_summa,
-
-  -- Maksuerän summa
-  CASE
-
-  WHEN m.tyyppi = 'kokonaishintainen'
-    THEN
-      (SELECT SUM(kht.summa)
-       FROM kokonaishintainen_tyo kht
-       WHERE kht.toimenpideinstanssi = tpi.id)
-
-  WHEN m.tyyppi = 'yksikkohintainen'
-    THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'yksikkohintainen' AND NOT t.poistettu)
-
-  WHEN m.tyyppi = 'lisatyo'
-    THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'lisatyo' AND NOT t.poistettu)
-
-  WHEN m.tyyppi = 'akillinen-hoitotyo'
-    THEN
-      (SELECT (sum(tt.maara * yt.yksikkohinta))
-       FROM toteuma t
-         JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-         JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                     (tpk.emo IN (SELECT id
-                                                  FROM toimenpidekoodi emo
-                                                  WHERE emo.id = tpi.toimenpide))
-         JOIN yksikkohintainen_tyo yt
-           ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND t.alkanut <= yt.loppupvm
-       WHERE t.tyyppi = 'akillinen-hoitotyo' AND NOT t.poistettu)
-
-  WHEN m.tyyppi = 'sakko'
-    THEN
-      -- Normaalisakot
-      coalesce((SELECT (sum(sa.maara))
-                FROM sanktio sa
-                WHERE sa.toimenpideinstanssi = tpi.id),
-               0)
-      +
-      -- Suolasakot
-      coalesce((SELECT *
-                FROM urakan_suolasakot(CAST(u.id AS INTEGER))
-                WHERE tpk.koodi = '23104'),
-               0)
-
-  WHEN m.tyyppi = 'muu'
-    THEN
-
-      (SELECT (
-        -- Muutostyöt
-        coalesce((SELECT (sum(tt.maara * yt.yksikkohinta))
-                  FROM toteuma t
-                    JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-                    JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi AND
-                                                (tpk.emo IN (SELECT id
-                                                             FROM toimenpidekoodi emo
-                                                             WHERE emo.id = tpi.toimenpide))
-                    JOIN yksikkohintainen_tyo yt
-                      ON u.id = yt.urakka AND yt.tehtava = tpk.id AND t.alkanut >= yt.alkupvm AND
-                         t.alkanut <= yt.loppupvm
-                  WHERE t.tyyppi IN ('muutostyo', 'vahinkojen-korjaukset') AND NOT t.poistettu),
-                 0)
-        +
-        -- Erilliskustannukset
-        coalesce((SELECT (sum(ek.rahasumma))
-                  FROM erilliskustannus ek
-                  WHERE ek.toimenpideinstanssi = tpi.id AND NOT ek.poistettu)
-        , 0)))
-
-  -- TODO: Lisättävä bonusten, sakkojen & indeksien maksuerien summien haku
-  ELSE 0
-
-  END                      AS maksuera_summa
-
+  CASE WHEN m.tyyppi = 'kokonaishintainen'
+       THEN (SELECT SUM(kht.summa)
+               FROM kokonaishintainen_tyo kht
+              WHERE kht.toimenpideinstanssi = tpi.id)
+       WHEN m.tyyppi = 'yksikkohintainen'
+       THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+               FROM yksikkohintainen_tyo yht
+              WHERE yht.tehtava IN (SELECT id FROM toimenpidekoodi WHERE emo = tpk.id))
+       ELSE 1
+  END AS kustannussuunnitelma_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka

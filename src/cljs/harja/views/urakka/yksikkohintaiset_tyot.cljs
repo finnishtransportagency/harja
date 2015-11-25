@@ -57,18 +57,18 @@
 (defn hoidon-sarakkeet []
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "30%"}
    {:otsikko (str "Määrä 10-12/" (.getYear (first @u/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :positiivinen-numero :leveys "10%"}
-   {:otsikko (str "Yhteensä " (.getYear (first @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-10-12 :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "10%" :fmt fmt/euro-opt}
+   {:otsikko (str "Yhteen\u00ADsä " (.getYear (first @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-10-12 :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "10%" :fmt fmt/euro-opt}
    {:otsikko (str "Määrä 1-9/" (.getYear (second @u/valittu-hoitokausi))) :nimi :maara-kkt-1-9 :tyyppi :positiivinen-numero :leveys "10%"}
-   {:otsikko (str "Yhteensä " (.getYear (second @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-1-9 :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "10%" :fmt fmt/euro-opt}
+   {:otsikko (str "Yhteen\u00ADsä " (.getYear (second @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-1-9 :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "10%" :fmt fmt/euro-opt}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "7%"}
-   {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys "10%"}
+   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys "10%"}
    {:otsikko "Kausi yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "13%" :fmt fmt/euro-opt}])
 
 (defn yllapidon-sarakkeet []
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
    {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "15%"}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
-   {:otsikko (str "Yksikköhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
+   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
 
 (defn paivita-hoitorivin-summat [{:keys [maara-kkt-10-12 maara-kkt-1-9 yksikkohinta] :as rivi}]
@@ -81,6 +81,9 @@
       :yhteensa-kkt-1-9 yht-1-9
       :yhteensa (and yht-10-12 yht-1-9 (+ yht-10-12 yht-1-9)))))
 
+(defn paivita-yllapitorivin-summat [{:keys [maara yksikkohinta] :as rivi}]
+  (assoc rivi
+      :yhteensa (and maara yksikkohinta (* maara yksikkohinta))))
 
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot
@@ -209,11 +212,15 @@
                                       #(swap! tuleville? not)
                                       [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                       @varoita-ylikirjoituksesta?])
-           :prosessoi-muutos       (when (= :hoito (:tyyppi ur))
+           :prosessoi-muutos       (if (= :hoito (:tyyppi ur))
                                      (fn [rivit]
                                        (let [rivit (seq rivit)]
                                          (zipmap (map first rivit)
-                                                 (map (comp paivita-hoitorivin-summat second) rivit)))))}
+                                                 (map (comp paivita-hoitorivin-summat second) rivit))))
+                                     (fn [rivit]
+                                       (let [rivit (seq rivit)]
+                                         (zipmap (map first rivit)
+                                                 (map (comp paivita-yllapitorivin-summat second) rivit)))))}
 
           ;; sarakkeet
           (if (= :hoito (:tyyppi ur))

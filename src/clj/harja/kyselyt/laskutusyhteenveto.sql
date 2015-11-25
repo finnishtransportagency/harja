@@ -4,7 +4,7 @@
 SELECT * FROM laskutusyhteenveto(
     :hk_alkupvm::DATE, :hk_loppupvm::DATE,
     :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
-    :urakka::INTEGER, :indeksin_nimi);
+    :urakka::INTEGER);
 
 
 -- name: laske-asiakastyytyvaisyysbonus
