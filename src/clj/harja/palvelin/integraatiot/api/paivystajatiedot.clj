@@ -81,7 +81,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                                                                             :etunimi       etunimi
                                                                                             :sukunimi      sukunimi
                                                                                             :email         sahkoposti
-                                                                                            :puhelinnumero tyopuhelin}
+                                                                                            :puhelinnumero tyopuhelin} ; FIXME Kumpi puh. numero palautetaan?
                                                                             :alku          alku
                                                                             :loppu         loppu
                                                                             :vastuuhenkilo vastuuhenkilo
@@ -103,7 +103,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   )
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
-  (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!")
+  (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!") ; FIXME Pitäisikö kuitenkin olla oma tiukka skeema molemmille hakutyypeille?
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
   (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db alkaen paattyen)

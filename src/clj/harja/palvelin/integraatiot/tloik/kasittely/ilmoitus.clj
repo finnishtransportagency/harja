@@ -3,13 +3,8 @@
             [clj-time.core :as time]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
-            [harja.kyselyt.urakat :as urakat]))
-
-(defn paattele-urakka [db urakkatyyppi sijainti]
-  (let [urakka-id (:id (first (ilmoitukset/hae-ilmoituksen-urakka db urakkatyyppi (:x sijainti) (:y sijainti))))]
-    (if (and (not urakka-id) (not (= "hoito" urakkatyyppi)))
-      (:id (first (ilmoitukset/hae-ilmoituksen-urakka db "hoito" (:x sijainti) (:y sijainti))))
-      urakka-id)))
+            [harja.kyselyt.urakat :as urakat]
+            [harja.palvelin.palvelut.urakat :as urakkapalavelu]))
 
 (defn hae-urakoitsija [db urakka-id]
   (first (urakat/hae-urakan-organisaatio db urakka-id)))
@@ -74,7 +69,7 @@
 (defn kasittele-ilmoitus [db ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db (:ilmoitus-id ilmoitus))))
-        urakka-id (paattele-urakka db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
+        urakka-id (urakkapalavelu/hae-urakka-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
         urakoitsija (hae-urakoitsija db urakka-id)]
     (if id
       (paivita-ilmoitus db id urakka-id ilmoitus)
