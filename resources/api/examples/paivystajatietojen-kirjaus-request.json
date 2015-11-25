@@ -20,7 +20,8 @@
           "etunimi": "Päivi",
           "sukunimi": "Päivystäjä",
           "email": "paivi.paivystaja@test.i",
-          "puhelinnumero": "7849885769",
+          "matkapuhelin": "7849885769",
+          "tyopuhelin": "73553",
           "liviTunnus":"LX1234345"
         },
         "alku": "2015-01-30T12:00:00Z",
@@ -36,7 +37,8 @@
           "etunimi": "Pertti",
           "sukunimi": "Päivystäjä",
           "email": "pertti.paivystaja@foo.bar",
-          "puhelinnumero": "0287445698"
+          "matkapuhelin": "0287445698",
+          "tyopuhelin": "73553"
         },
         "alku": "2015-01-30T12:00:00Z",
         "loppu": "2016-01-30T12:00:00Z",
