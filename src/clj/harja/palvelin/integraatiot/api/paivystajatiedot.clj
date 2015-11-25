@@ -27,23 +27,34 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (let [vastauksen-data {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu]} paivystaja-id]
+(defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
     (do
       (log/debug "Päivitetään päivystäjään liittyvän päivystyksen tiedot.")
-      (yhteyshenkilot/paivita-paivystys-yhteyshenkilon-idlla<! db (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu) paivystaja-id))
+      (yhteyshenkilot/paivita-paivystys-yhteyshenkilon-idlla<! db
+                                                               (pvm-string->java-sql-date alku)
+                                                               (pvm-string->java-sql-date loppu)
+                                                               varahenkilo
+                                                               vastuuhenkilo
+                                                               paivystaja-id))
     (do
       (log/debug "Päivystäjällä ei ole päivystystä. Luodaan uusi päivystys.")
-      (yhteyshenkilot/luo-paivystys<! db (pvm-string->java-sql-date alku) (pvm-string->java-sql-date loppu) urakka-id paivystaja-id))))
+      (yhteyshenkilot/luo-paivystys<! db
+                                      (pvm-string->java-sql-date alku)
+                                      (pvm-string->java-sql-date loppu)
+                                      urakka-id
+                                      paivystaja-id
+                                      varahenkilo
+                                      vastuuhenkilo))))
 
-(defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email puhelinnumero liviTunnus]}]
+(defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]}]
   (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
     (do
       (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
-      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi nil puhelinnumero email nil (str id))))
+      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email nil (str id))))
     (do
       (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
-      (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi nil puhelinnumero email nil nil liviTunnus (str id))))))
+      (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email nil nil liviTunnus (str id))))))
 
 (defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")

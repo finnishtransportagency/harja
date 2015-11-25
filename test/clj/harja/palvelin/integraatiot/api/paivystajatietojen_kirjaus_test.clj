@@ -34,6 +34,7 @@
         vastaus (q (str "SELECT * FROM yhteyshenkilo WHERE ulkoinen_id = '" id "';"))]
     (if (empty? vastaus) id (recur))))
 
+; FIXME Testaa haut sekä se, että boolean-arvot tallentuu oikein (vastuuhenkilo, varahenkilo)
 (deftest tallenna-paivystajatiedot
   (let [ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
@@ -43,13 +44,14 @@
                                                    (.replace "__ETUNIMI__" "Päivi")
                                                    (.replace "__SUKUNIMI__" "Päivystäjä")
                                                    (.replace "__EMAIL__" "paivi.paivystaja@sahkoposti.com")
-                                                   (.replace "__PUHELIN__" "04001234567")))]
+                                                   (.replace "__MATKAPUHELIN__" "04001234567")
+                                                   (.replace "__TYOPUHELIN__" "04005555555")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [paivystaja-id (ffirst (q (str "SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id)"';")))
-          paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi ,sahkoposti, matkapuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
-          paivystys (first (q (str "SELECT yhteyshenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
-      (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä" "paivi.paivystaja@sahkoposti.com" "04001234567"]))
-      (is (= paivystys [paivystaja-id]))
+          paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi, sahkoposti, matkapuhelin, tyopuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
+          paivystys (first (q (str "SELECT yhteyshenkilo, vastuuhenkilo, varahenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
+      (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä" "paivi.paivystaja@sahkoposti.com" "04001234567" "04005555555"]))
+      (is (= paivystys [paivystaja-id true true]))
 
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
                                                     (-> "test/resurssit/api/paivystajatiedot.json"
@@ -58,7 +60,7 @@
                                                         (.replace "__ETUNIMI__" "Taneli")
                                                         (.replace "__SUKUNIMI__" "Tähystäjä")
                                                         (.replace "__EMAIL__" "taneli.tahystaja@gmail.com")
-                                                        (.replace "__PUHELIN__" "05001234567")))]
+                                                        (.replace "__MATKAPUHELIN__" "05001234567")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi, sahkoposti, matkapuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
               paivystys (first (q (str "SELECT yhteyshenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]

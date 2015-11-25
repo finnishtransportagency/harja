@@ -21,7 +21,7 @@
           "sukunimi": "__SUKUNIMI__",
           "email": "__EMAIL__",
           "matkapuhelin": "__MATKAPUHELIN__",
-          "tyopuhelin": "5454646",
+          "tyopuhelin": "__TYOPUHELIN__",
           "liviTunnus":"LX1234345"
         },
         "alku": "2015-01-30T12:00:00Z",
@@ -42,7 +42,7 @@
         },
         "alku": "2015-01-30T12:00:00Z",
         "loppu": "2016-01-30T12:00:00Z",
-        "vastuuhenkilo": false,
+        "vastuuhenkilo": true,
         "varahenkilo": true
       }
     }

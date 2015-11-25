@@ -151,8 +151,8 @@ WHERE id = (SELECT yhteyshenkilo
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
 INSERT INTO paivystys
-(vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo)
-VALUES (TRUE, FALSE, :alku, :loppu, :urakka, :yhteyshenkilo);
+(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
+VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo);
 
 -- name: hae-paivystyksen-yhteyshenkilo-id
 -- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
@@ -169,7 +169,10 @@ WHERE id = :id AND urakka = :urakka;
 -- name: paivita-paivystys-yhteyshenkilon-idlla<!
 -- Päivittää päivystyksen tiedot
 UPDATE paivystys
-SET alku = :alku, loppu = :loppu
+SET alku = :alku,
+loppu = :loppu,
+varahenkilo = :varahenkilo,
+vastuuhenkilo = :vastuuhenkilo
 WHERE yhteyshenkilo = :yhteyshenkilo_id
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
