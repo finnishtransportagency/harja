@@ -4,10 +4,10 @@
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.ilmoitusnotifikaatiot :as notifikaatiot]
+            [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as notifikaatiot]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.palvelin.main])
@@ -20,31 +20,34 @@
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja]
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja))
 
-(defn hae-ilmoitus [db ilmoitus-id]
-  ;; todo: hae ilmoitus kannasta ja muodosta json
-  )
+(defn hae-ilmoitus [db integraatiotapahtuma-id ilmoitus-id]
+  (aja-virhekasittelyn-kanssa #(
+                                ;; todo: hae ilmoitus kannasta ja muodosta json
+                                ;; validoi
+                                ;; tee response
+                                ;; lokita response
+                                ;; palauta response
 
-(defn odota-ilmoituksia [tapahtumat kanava urakka-id]
-  (notifikaatiot/kuuntele-urakan-ilmoituksia
-    tapahtumat
-    urakka-id
-    (fn [ilmoitus-id] (send! kanava (hae-ilmoitus db ilmoitus-id)))))
+                                )))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [urakka-id (:id (:params request))
         tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
     (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle: %s" urakka-id))
-    (try
-      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (with-channel request kanava
-                    (let [vastaus-data (odota-ilmoituksia tapahtumat kanava urakka-id)
-                          vastaus (tee-vastaus json-skeemat vastaus-data)]
-                      (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
-                      vastaus)))
-    (catch Exception e
-      ;; todo: palauta hallittu response
-      (log/error e "Poikkeus ilmoituskuuntelussa!"))))
+    (aja-virhekasittelyn-kanssa
+      (do
+        (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+        (with-channel request kanava
+                      (notifikaatiot/kuuntele-urakan-ilmoituksia
+                        tapahtumat
+                        urakka-id
+                        (fn [ilmoitus-id]
+                          (send! kanava
+                                 (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
+                                       vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
+                                   (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id))))))
+        (on-close kanava #((notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
