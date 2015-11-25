@@ -106,13 +106,13 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
   (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db)
-        paivystajatiedot-puhelinnumerolla (filter (fn [paivystys]
-                                                    ; TODO Filtteröi)
-                                                    ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
-                                                    ; kirjoitusasu voi vaihdella.
-                                                    (log/debug "Löytyi: " (pr-str (:tyopuhelin paivystys)) " & " (pr-str (:matkapuhelin paivystys)))
-                                                    paivystys)
-                                                  kaikki-paivystajatiedot)
+        paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
+                                                             ; TODO Filtteröi
+                                                             ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
+                                                             ; kirjoitusasu voi vaihdella.
+                                                             paivystys)
+                                                           kaikki-paivystajatiedot))
+        _ (log/debug "Päivystäjätiedot on nyt: " (pr-str paivystajatiedot-puhelinnumerolla))
         vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
@@ -126,21 +126,21 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/tyypilla"
     :tyyppi         :POST
-    :kutsu-skeema  json-skeemat/+paivystajatietojen-haku+
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
     :tyyppi         :POST
-    :kutsu-skeema  json-skeemat/+paivystajatietojen-haku+
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}
    {:palvelu        :lisaa-paivystajatiedot
     :polku          "/api/urakat/:id/paivystajatiedot"
     :tyyppi         :POST
-    :kutsu-skeema  json-skeemat/+paivystajatietojen-kirjaus+
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-kirjaus+
     :vastaus-skeema json-skeemat/+kirjausvastaus+
     :kasittely-fn   (fn [parametrit data kayttaja db]
                       (kirjaa-paivystajatiedot db parametrit data kayttaja))}])

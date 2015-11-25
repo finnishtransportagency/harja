@@ -64,10 +64,17 @@ SELECT
   y.organisaatio,
   org.id     AS organisaatio_id,
   org.nimi   AS organisaatio_nimi,
-  org.tyyppi AS organisaatio_tyyppi
+  org.tyyppi AS organisaatio_tyyppi,
+  org.ytunnus AS organisaatio_ytunnus,
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  u.alkupvm AS urakka_alkupvm,
+  u.loppupvm AS urakka_loppupvm,
+  u.tyyppi AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
+  LEFT JOIN urakka u ON p.urakka = u.id;
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
