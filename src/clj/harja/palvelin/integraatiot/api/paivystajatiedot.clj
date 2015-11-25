@@ -116,13 +116,6 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
         (kasittele-kutsu db integraatioloki :lisaa-paivystajatiedot request json-skeemat/+paivystajatietojen-kirjaus+ json-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db]
                            (kirjaa-paivystajatiedot db parametrit data kayttaja)))))
-
-    (julkaise-reitti
-      http :hae-paivystajatiedot
-      (POST "/api/urakat/:id/paivystajatiedot" request
-        (kasittele-kutsu db integraatioloki :lisaa-paivystajatiedot request json-skeemat/+paivystajatietojen-kirjaus+ json-skeemat/+kirjausvastaus+
-                         (fn [parametrit data kayttaja db]
-                           (kirjaa-paivystajatiedot db parametrit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-paivystajatiedot)
