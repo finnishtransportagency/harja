@@ -4,44 +4,18 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "urakat": {
-      "id": "urn:harja/urakat",
+    "paivystykset": {
+      "id": "urn:harja/urakat/0/urakka/paivystykset",
       "type": "array",
-      "maxItems" : 100,
+      "maxItems": 1000,
       "items": {
-        "id": "urn:harja/urakat/0",
+        "id": "urn:harja/urakat/0/urakka/paivystykset/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "urakka": {
-            "id": "urn:harja/urakat/0/urakka",
-            "type": "object",
-            "required": true,
-            "properties": {
-              "tiedot": {
-                "id": "urn:harja/urakat/0/urakka/tiedot",
-                "type": "object",
-                "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
-                "required": true
-              },
-              "paivystykset": {
-                "id": "urn:harja/urakat/0/urakka/paivystykset",
-                "type": "array",
-                "maxItems" : 1000,
-                "items": {
-                  "id": "urn:harja/urakat/0/urakka/paivystykset/0",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "paivystys": {
-                      "$ref": "file:resources/api/schemas/entities/paivystys.schema.json",
-                      "required": true
-                    }
-                  }
-                }
-              }
-            }
+          "paivystys": {
+            "$ref": "file:resources/api/schemas/entities/paivystys.schema.json",
+            "required": true
           }
         }
       }

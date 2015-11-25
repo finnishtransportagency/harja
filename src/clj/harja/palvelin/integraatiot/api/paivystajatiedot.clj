@@ -12,7 +12,8 @@
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+]]))
 
 "NOTE: Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
@@ -55,6 +56,20 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     (tallenna-paivystajatiedot db urakka-id data)
     (tee-onnistunut-vastaus)))
 
+(defn muodosta-vastaus-paivystajatietojen-haulle [paivystajatiedot]
+  {:paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
+                                    sukunimi sahkoposti tyopuhelin matkapuhelin]}]
+                         {:paivystys {:paivystaja    {:id            id
+                                                      :etunimi       etunimi
+                                                      :sukunimi      sukunimi
+                                                      :email         sahkoposti
+                                                      :puhelinnumero tyopuhelin}
+                                      :alku          alku
+                                      :loppu         loppu
+                                      :vastuuhenkilo vastuuhenkilo
+                                      :varahenkilo   varahenkilo}})
+                       paivystajatiedot)})
+
 (defn hae-paivystajatiedot [db parametrit data kayttaja]
   ;; dummytoteutus t-loik testiä varten
   ;; todo: tee käyttäjärajaus
@@ -62,9 +77,13 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   ;; todo: tee oikea haku
   {"otsikko" {"lahettaja" {"jarjestelma" "Urakoitsijan järjestelmä", "organisaatio" {"nimi" "Urakoitsija", "ytunnus" "1234567-8"}}, "viestintunniste" {"id" 123}, "lahetysaika" "2015-01-03T12:00:00Z"}, "paivystykset" [{"paivystys" {"paivystaja" {"id" 454653434, "etunimi" "Päivi", "sukunimi" "Päivystäjä", "email" "paivi.paivystaja@test.i", "puhelinnumero" "7849885769", "liviTunnus" "LX1234345"}, "alku" "2015-01-30T12:00:00Z", "loppu" "2016-01-30T12:00:00Z", "vastuuhenkilo" true, "yhteyshenkilo" true, "varahenkilo" true}} {"paivystys" {"paivystaja" {"id" 1123588, "etunimi" "Pertti", "sukunimi" "Päivystäjä", "email" "pertti.paivystaja@foo.bar", "puhelinnumero" "0287445698"}, "alku" "2015-01-30T12:00:00Z", "loppu" "2016-01-30T12:00:00Z", "vastuuhenkilo" false, "yhteyshenkilo" false, "varahenkilo" true}}]})
 
-(defn hae-paivystajatiedot-urakan-idlla [db parametrit kayttaja]
-  ; TODO
-  )
+(defn hae-paivystajatiedot-urakan-idlla [db {:keys [id]} kayttaja]
+  (log/debug "Haetaan päivystäjätiedot urakan id:llä: " id)
+  (let [urakka-id (Integer/parseInt id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [paivystajatiedot (some->> urakka-id (yhteyshenkilot/hae-urakan-paivystajat db))
+          vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
+    vastaus)))
 
 (defn hae-paivystajatiedot-tyypilla-ja-sijainnilla [db parametrit data kayttaja]
   ; TODO

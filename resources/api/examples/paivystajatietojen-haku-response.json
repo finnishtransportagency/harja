@@ -1,37 +1,18 @@
 {
-  "urakat": [
+  "paivystykset": [
     {
-      "urakka": {
-        "tiedot": {
-          "id": 123456789,
-          "nimi": "Oulun alueurakka",
-          "urakoitsija": {
-            "ytunnus": "123456-8",
-            "nimi": "Asfaltia"
-          },
-          "vaylamuoto": "tie",
-          "tyyppi": "hoito",
-          "alkupvm": "2016-01-30T12:00:00Z",
-          "loppupvm": "2016-01-30T12:00:00Z"
+      "paivystys": {
+        "paivystaja": {
+          "id": 454653434,
+          "etunimi": "Päivi",
+          "sukunimi": "Päivystäjä",
+          "email": "paivi.paivystaja@test.i",
+          "puhelinnumero": "7849885769"
         },
-        "paivystykset": [
-          {
-            "paivystys": {
-              "paivystaja": {
-                "id": 454653434,
-                "etunimi": "Päivi",
-                "sukunimi": "Päivystäjä",
-                "email": "paivi.paivystaja@test.i",
-                "puhelinnumero": "7849885769"
-              },
-              "alku": "2015-01-30T12:00:00Z",
-              "loppu": "2016-01-30T12:00:00Z",
-              "vastuuhenkilo": true,
-              "yhteyshenkilo": true,
-              "varahenkilo": true
-            }
-          }
-        ]
+        "alku": "2015-01-30T12:00:00Z",
+        "loppu": "2016-01-30T12:00:00Z",
+        "vastuuhenkilo": true,
+        "varahenkilo": true
       }
     }
   ]
