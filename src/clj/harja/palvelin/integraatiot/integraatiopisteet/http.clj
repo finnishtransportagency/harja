@@ -25,19 +25,15 @@
           {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
            :virheet [{:koodi :tuntematon-http-metodi :viesti (str "Tuntematon HTTP metodi:" metodi)}]})))
     (catch Exception e
-      (log/error " HTTP-kutsukäsittelyssä tapahtui poikkeus: " e " (järjestelmä: " jarjestelma ", integraatio: " integraatio ", URL: " url ") ")
+      (log/error e (format "HTTP-kutsukäsittelyssä tapahtui poikkeus.  (järjestelmä: %s, integraatio: %s, URL: %s)" jarjestelma integraatio url))
       (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki nil (str " Tapahtui poikkeus: " e) tapahtuma-id nil)
       (throw+
         {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
          :virheet [{:koodi :poikkeus :viesti (str "Poikkeus :" (.getMessage e))}]}))))
 
 (defn laheta-kutsu [integraatioloki integraatio jarjestelma url metodi otsikot parametrit kutsudata kasittele-vastaus]
-  (log/debug " Lähetetään HTTP " metodi "-kutsu integraatiolle: " integraatio ", järjestelmään: " jarjestelma " : "
-             "\n - osoite: " url ", "
-             "\n - metodi: " metodi ", "
-             "\n - data: " kutsudata ", "
-             "\n - otsikkot: " otsikot
-             "\n - parametrit: " parametrit)
+  (log/debug (format "Lähetetään HTTP %s -kutsu integraatiolle: %s, järjestelmään: %s, osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s "
+                     metodi integraatio jarjestelma url metodi kutsudata otsikot parametrit))
 
   (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki jarjestelma integraatio nil nil)
         sisaltotyyppi (get otsikot " Content-Type ")]
@@ -45,20 +41,17 @@
     (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot nil)
     (let [{:keys [status body error headers]} (tee-http-kutsu integraatioloki jarjestelma integraatio tapahtuma-id url metodi otsikot parametrit kutsudata)
           lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
-      (log/debug " Palvelu palautti: ")
-      (log/debug " - tila: " status)
-      (log/debug " - otsikot: " headers)
-      (log/debug " - data: " body)
+      (log/debug (format " Palvelu palautti: tila: %s , otsikot: %s , data: %s" status headers body))
 
       (if (or error (not (= 200 status)))
         (do
-          (log/error " Kutsu palveluun: " url " epäonnistui virhe: " error)
+          (log/error (format "Kutsu palveluun: %s epäonnistui. Virhe: %s " url error))
           (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
           (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
                    :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]}))
         (do
           (let [vastausdata (kasittele-vastaus body headers)]
-            (log/debug " Kutsu palveluun: " url " onnistui. ")
+            (log/debug (format "Kutsu palveluun: %s onnistui." url))
             (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki lokiviesti nil tapahtuma-id nil)
             vastausdata))))))
 

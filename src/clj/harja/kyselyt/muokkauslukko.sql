@@ -22,4 +22,10 @@ UPDATE muokkauslukko
 -- Vapauttaa lukon
 DELETE FROM muokkauslukko
 WHERE id = :id
+
+-- name: vapauta-kayttajan-lukko!
+-- Vapauttaa käyttäjän lukon
+DELETE FROM muokkauslukko
+WHERE id = :id
 AND kayttaja = :kayttaja
+

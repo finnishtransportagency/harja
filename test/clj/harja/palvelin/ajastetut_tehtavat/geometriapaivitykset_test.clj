@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [clj-time.periodic :refer [periodic-seq]]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.alk-komponentti :as alk]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.alk :as alk]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -10,25 +10,21 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [clj-time.core :as t]
             [clj-time.coerce :as time-coerce])
-  (:use org.httpkit.fake))
+  (:use org.httpkit.fake)
+  (:import (java.util Date)))
 
 (defn aja-tieverkon-paivitys []
   "REPL-testiajofunktio"
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
-    (component/start alk)
-    (geometriapaivitykset/kaynnista-alk-paivitys
-      alk
+    (alk/kaynnista-paivitys
+      integraatioloki
       testitietokanta
       "tieverkko"
       "http://185.26.50.104/Tieosoiteverkko.zip"
       "/Users/mikkoro/Desktop/Tieverkko-testi/"
-      "Tieosoiteverkko.zip"
       (fn []
         (tieverkon-tuonti/vie-tieverkko-kantaan
           testitietokanta
@@ -37,17 +33,14 @@
 (defn aja-pohjavesialueen-paivitys []
   "REPL-testiajofunktio"
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
-    (component/start alk)
-    (geometriapaivitykset/kaynnista-alk-paivitys
-      alk
+    (alk/kaynnista-paivitys
+      integraatioloki
       testitietokanta
       "pohjavesialue"
       "http://185.26.50.104/Pohjavesialue.zip"
       "/Users/jarihan/Desktop/Pohjavesialue-testi/"
-      "Pohjavesialue.zip"
       (fn []
         (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan
           testitietokanta
@@ -56,17 +49,14 @@
 (defn aja-siltojen-paivitys []
   "REPL-testiajofunktio"
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
-    (component/start alk)
-    (geometriapaivitykset/kaynnista-alk-paivitys
-      alk
+    (alk/kaynnista-paivitys
+      integraatioloki
       testitietokanta
       "sillat"
       "http://185.26.50.104/Sillat.zip"
       "/Users/jarihan/Desktop/Sillat-testi/"
-      "Sillat.zip"
       (fn []
         (siltojen-tuonti/vie-sillat-kantaan
           testitietokanta
@@ -75,17 +65,14 @@
 (defn aja-soratien-hoitoluokkien-paivitys []
   "REPL-testiajofunktio"
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)]
+        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
-    (component/start alk)
-    (geometriapaivitykset/kaynnista-alk-paivitys
-      alk
+    (alk/kaynnista-paivitys
+      integraatioloki
       testitietokanta
       "tieverkko"
       "http://185.26.50.104/tl132.tgz"
       "/Users/mikkoro/Desktop/Soratiehoitoluokat-testi/"
-      "Sorateiden-hoitoluokat.tgz"
       (fn []
         (tieverkon-tuonti/vie-tieverkko-kantaan
           testitietokanta
@@ -96,27 +83,23 @@
 (deftest testaa-tiedoston-muokkausajan-selvitys-alk-alustalla
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)
         fake-tiedosto-url "http://www.example.com/file.zip"
         fake-muokkausaika "Tue, 15 Nov 1994 12:45:26 GMT"
         fake-vastaus {:status 200 :headers {:last-modified fake-muokkausaika} :body "ok"}]
     (component/start integraatioloki)
-    (component/start alk)
 
     (with-fake-http
       [{:url fake-tiedosto-url :method :head} fake-vastaus]
-      (let [muokkausaika (alk/hae-tiedoston-muutospaivamaara alk "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
-        (is (= muokkausaika (time-coerce/to-sql-time (java.util.Date. fake-muokkausaika))))))))
+      (let [muokkausaika (alk/hae-tiedoston-muutospaivamaara integraatioloki "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
+        (is (= muokkausaika (time-coerce/to-sql-time (Date. fake-muokkausaika))))))))
 
 (deftest testaa-tiedoston-lataus-alk-alustalla
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        alk (assoc (alk/->Alk) :db testitietokanta :integraatioloki integraatioloki)
         lahdetiedosto "test/resurssit/arkistot/test_zip.zip"
         kohdetiedosto "test/resurssit/download_test.zip"]
     (component/start integraatioloki)
-    (component/start alk)
 
-    (alk/hae-tiedosto alk "tieverkko-haku" lahdetiedosto kohdetiedosto)
+    (alk/hae-tiedosto integraatioloki "tieverkko-haku" lahdetiedosto kohdetiedosto)
     (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
     (clojure.java.io/delete-file kohdetiedosto)))
