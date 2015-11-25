@@ -70,13 +70,6 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                       :varahenkilo   varahenkilo}})
                        paivystajatiedot)})
 
-(defn hae-paivystajatiedot [db parametrit data kayttaja]
-  ;; dummytoteutus t-loik testiä varten
-  ;; todo: tee käyttäjärajaus
-  ;; todo: validoi parametrit
-  ;; todo: tee oikea haku
-  {"otsikko" {"lahettaja" {"jarjestelma" "Urakoitsijan järjestelmä", "organisaatio" {"nimi" "Urakoitsija", "ytunnus" "1234567-8"}}, "viestintunniste" {"id" 123}, "lahetysaika" "2015-01-03T12:00:00Z"}, "paivystykset" [{"paivystys" {"paivystaja" {"id" 454653434, "etunimi" "Päivi", "sukunimi" "Päivystäjä", "email" "paivi.paivystaja@test.i", "puhelinnumero" "7849885769", "liviTunnus" "LX1234345"}, "alku" "2015-01-30T12:00:00Z", "loppu" "2016-01-30T12:00:00Z", "vastuuhenkilo" true, "yhteyshenkilo" true, "varahenkilo" true}} {"paivystys" {"paivystaja" {"id" 1123588, "etunimi" "Pertti", "sukunimi" "Päivystäjä", "email" "pertti.paivystaja@foo.bar", "puhelinnumero" "0287445698"}, "alku" "2015-01-30T12:00:00Z", "loppu" "2016-01-30T12:00:00Z", "vastuuhenkilo" false, "yhteyshenkilo" false, "varahenkilo" true}}]})
-
 (defn hae-paivystajatiedot-urakan-idlla [db {:keys [id]} kayttaja]
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " id)
   (let [urakka-id (Integer/parseInt id)]
@@ -102,13 +95,13 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
    {:palvelu        :hae-paivystajatiedot-tyypilla-ja-sijainnilla
     :polku          "/api/paivystajatiedot/haku/tyypilla-ja-sijainnilla"
     :pyynto-skeema  nil ; FIXME Tee tämä
-    :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+ ; FIXME Sopiiko tähän?
+    :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-tyypilla-ja-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
     :pyynto-skeema  nil ; FIXME Tee tämä
-    :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+ ; FIXME Sopiiko tähän?
+    :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}])
 
@@ -120,14 +113,6 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
         http palvelu
         (GET polku request
           (kasittele-kutsu db integraatioloki palvelu request pyynto-skeema vastaus-skeema kasittely-fn))))
-
-    ; FIXME Poista dummy-toteutus kun oikea toteutus on kasassa
-    (julkaise-reitti
-      http :hae-paivystajatiedot
-      (GET "/api/paivystajatiedot" request
-        (kasittele-kutsu db integraatioloki :hae-paivystajatiedot request json-skeemat/+paivystajatietojen-haku+ json-skeemat/+paivystajatietojen-kirjaus+
-                         (fn [parametit data kayttaja db]
-                           (hae-paivystajatiedot db parametit data kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-paivystajatiedot
