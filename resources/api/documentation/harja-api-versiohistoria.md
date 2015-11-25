@@ -2,6 +2,8 @@
 <b>Julkaistu: 2.9.2015</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.6. Julkaistu: - . Muutokset:
+    - Päivystäjätietojen haku toteutettu kolmena eri GET-palveluna: hae-paivystajatiedot-urakka-idlla, hae-paivystajatiedot-sijainnilla ja hae-paivystajatiedot-puhelinnumerolla
 - Versionumero: 0.0.5. Julkaistu: - . Muutokset:
     - Toteumalle merkitty pakolliseksi alkamis- ja päättymisaika
     - Reittipisteelle merkitty pakolliseksi antaa aika
