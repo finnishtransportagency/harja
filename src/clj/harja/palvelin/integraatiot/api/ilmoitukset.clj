@@ -1,34 +1,28 @@
 (ns harja.palvelin.integraatiot.api.ilmoitukset
   "Ilmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [org.httpkit.server :refer [with-channel on-close send!]]
+            [compojure.core :refer [PUT GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as notifikaatiot]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [harja.palvelin.main])
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 
-(defn hae-viimeksi-haetun-ilmoituksen-jalkeen-saapuneet [db parametrit kayttaja]
-  (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja))
+(defn hae-viimeksi-haetun-ilmoituksen-jalkeen-saapuneet [db [:keys id] kayttaja]
+  (validointi/tarkista-onko-kayttaja-organisaatiossa db id kayttaja))
 
-(defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja]
-  (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja))
+(defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
 (defn hae-ilmoitus [db integraatiotapahtuma-id ilmoitus-id]
   (aja-virhekasittelyn-kanssa #(
-                                ;; todo: hae ilmoitus kannasta ja muodosta json
-                                ;; validoi
-                                ;; tee response
-                                ;; lokita response
-                                ;; palauta response
-
-                                )))
+                                ;; todo: hae ilmoitus kannasta
+                                [:jeejee "nyt pitäs kärähtää!"])))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [urakka-id (:id (:params request))
@@ -46,8 +40,9 @@
                           (send! kanava
                                  (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
                                        vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
-                                   (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id))))))
-        (on-close kanava #((notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))))))
+                                   (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
+                                   vastaus))))
+                      (on-close kanava #((notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle

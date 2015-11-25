@@ -68,7 +68,6 @@
     [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
     [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
-    [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as ilmoitusnotifikaatio]
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
 
     ;; Ajastetut tehtävät
@@ -292,9 +291,9 @@
       :api-varusteet (component/using (api-varusteet/->Varusteet)
                                       [:http-palvelin :db :integraatioloki :tierekisteri])
       :api-ilmoitukset (component/using (api-ilmoitukset/->Ilmoitukset)
-                                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat]))))
+                                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])))
 
-(defonce harja-jarjestelma nil)
+  (defonce harja-jarjestelma nil))
 
 (defn kaynnista-jarjestelma [asetusfile]
   (Locale/setDefault (Locale. "fi" "FI"))
