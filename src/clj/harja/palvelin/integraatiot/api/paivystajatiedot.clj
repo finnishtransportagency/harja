@@ -102,52 +102,64 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   )
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db {:keys [puhelinnumero]} data kayttaja]
+  (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!")
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
   (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db)
         paivystajatiedot-puhelinnumerolla (filter (fn [paivystys]
-                                                    ; TODO Filtteröi
+                                                    ; TODO Filtteröi)
                                                     ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
                                                     ; kirjoitusasu voi vaihdella.
+                                                    (log/debug "Löytyi: " (pr-str (:tyopuhelin paivystys)) " & " (pr-str (:matkapuhelin paivystys)))
                                                     paivystys)
                                                   kaikki-paivystajatiedot)
         vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
-(def hakutyypit
+(def palvelutyypit
   [{:palvelu        :hae-paivystajatiedot-urakka-idlla
     :polku          "/api/urakat/:id/paivystajatiedot"
+    :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
                       (hae-paivystajatiedot-urakan-idlla db parametrit kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-sijainnilla
-    :polku          "/api/paivystajatiedot/haku/tyypilla-ja-sijainnilla"
+    :polku          "/api/paivystajatiedot/haku/tyypilla"
+    :tyyppi         :POST
     :pyynto-skeema  json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
+    :tyyppi         :POST
     :pyynto-skeema  json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
-                      (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}])
+                      (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}
+   {:palvelu        :lisaa-paivystajatiedot
+    :polku          "/api/urakat/:id/paivystajatiedot"
+    :tyyppi         :POST
+    :pyynto-skeema  json-skeemat/+paivystajatietojen-kirjaus+
+    :vastaus-skeema json-skeemat/+kirjausvastaus+
+    :kasittely-fn   (fn [parametrit data kayttaja db]
+                      (kirjaa-paivystajatiedot db parametrit data kayttaja))}])
 
 (defrecord Paivystajatiedot []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku vastaus-skeema pyynto-skeema kasittely-fn]} hakutyypit]
+    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :while (= tyyppi :GET)]
       (julkaise-reitti
         http palvelu
         (GET polku request
           (kasittele-kutsu db integraatioloki palvelu request pyynto-skeema vastaus-skeema kasittely-fn))))
 
-    (julkaise-reitti
-      http :lisaa-paivystajatiedot
-      (POST "/api/urakat/:id/paivystajatiedot" request
-        (kasittele-kutsu db integraatioloki :lisaa-paivystajatiedot request json-skeemat/+paivystajatietojen-kirjaus+ json-skeemat/+kirjausvastaus+
-                         (fn [parametrit data kayttaja db]
-                           (kirjaa-paivystajatiedot db parametrit data kayttaja)))))
+    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :while (= tyyppi :POST)]
+      (julkaise-reitti
+        http palvelu
+        (POST polku request
+          (kasittele-kutsu db integraatioloki palvelu request pyynto-skeema vastaus-skeema kasittely-fn))))
+
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-paivystajatiedot)
