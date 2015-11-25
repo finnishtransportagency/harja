@@ -73,7 +73,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                                   :nimi urakka_nimi
                                                   :urakoitsija {:ytunnus organisaatio_ytunnus
                                                                 :nimi organisaatio_nimi }
-                                                  :vaylamuoto "tie" ; FIXME Urakoiden haussa tehtyyn hardcoodattu assoc, onko oikein?
+                                                  :vaylamuoto "tie"
                                                   :tyyppi urakka_tyyppi
                                                   :alkupvm urakka_alkupvm
                                                   :loppupvm urakka_loppupvm}
@@ -83,7 +83,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                                                                             :etunimi       etunimi
                                                                                             :sukunimi      sukunimi
                                                                                             :email         sahkoposti
-                                                                                            :puhelinnumero tyopuhelin} ; FIXME Kumpi puh. numero palautetaan?
+                                                                                            :puhelinnumero tyopuhelin} ; FIXME Henkilö-skeemaan: tyopuhelin ja matkapuhelin
                                                                             :alku          alku
                                                                             :loppu         loppu
                                                                             :vastuuhenkilo vastuuhenkilo
@@ -100,7 +100,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
           vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus)))
 
-(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja] ; FIXME Alkaen & päättyen mukaan?
+(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja] ; FIXME Alkaen & päättyen päivystykseen?
   (log/debug "Haetaan päivystäjätiedot sijainnilla " (pr-str koordinaatit))
   (let [urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi koordinaatit)]
     (if urakka-id
@@ -112,7 +112,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                           :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
-  (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!") ; FIXME Pitäisikö kuitenkin olla oma tiukka skeema molemmille hakutyypeille?
+  (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!") ; FIXME Molemmille oma skeema
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
   (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db alkaen paattyen)
@@ -137,14 +137,14 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/sijainnilla"
     :tyyppi         :POST
-    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku+
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-sijainnilla++
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
     :tyyppi         :POST
-    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku+
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-puhelinnumerolla++
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}

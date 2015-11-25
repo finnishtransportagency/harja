@@ -36,7 +36,8 @@
 (def +talvihoitotarkastuksen-kirjaus+ "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json")
 
 (def +paivystajatietojen-kirjaus+ "api/schemas/paivystajatietojen-kirjaus-request.schema.json")
-(def +paivystajatietojen-haku+ "api/schemas/paivystajatietojen-haku-request.schema.json")
+(def +paivystajatietojen-haku-sijainnilla+ "api/schemas/paivystajatietojen-haku-sijainnilla-request.schema.json")
+(def +paivystajatietojen-haku-puhelinnumerolla+ "api/schemas/paivystajatietojen-haku-puhelinnumerolla-request.schema.json")
 (def +paivystajatietojen-haku-vastaus+ "api/schemas/paivystajatietojen-haku-response.schema.json")
 
 (def +tyokoneenseuranta-kirjaus+ "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json")
