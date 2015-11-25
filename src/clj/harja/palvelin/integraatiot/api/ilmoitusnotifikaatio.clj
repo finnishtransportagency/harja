@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.api.ilmoitusnotifikaatio
-  (:require [com.stuartsierra.component :as component]
-            [clojure.core.async :refer [thread]]
+  (:require [clojure.core.async :refer [thread]]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [taoensso.timbre :as log]))
 

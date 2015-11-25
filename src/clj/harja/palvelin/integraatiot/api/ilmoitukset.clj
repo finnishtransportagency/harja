@@ -20,9 +20,7 @@
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
 (defn hae-ilmoitus [db integraatiotapahtuma-id ilmoitus-id]
-  (aja-virhekasittelyn-kanssa #(
-                                ;; todo: hae ilmoitus kannasta
-                                [:jeejee "nyt pitäs kärähtää!"])))
+  (aja-virhekasittelyn-kanssa (constantly [:jeejee "nyt pitäs kärähtää!"])))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [urakka-id (:id (:params request))
@@ -30,19 +28,19 @@
         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
     (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle: %s" urakka-id))
     (aja-virhekasittelyn-kanssa
-      (do
+      (fn []
         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
         (with-channel request kanava
-                      (notifikaatiot/kuuntele-urakan-ilmoituksia
-                        tapahtumat
-                        urakka-id
-                        (fn [ilmoitus-id]
-                          (send! kanava
-                                 (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
-                                       vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
-                                   (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
-                                   vastaus))))
-                      (on-close kanava #((notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
+          (notifikaatiot/kuuntele-urakan-ilmoituksia
+            tapahtumat
+            urakka-id
+            (fn [ilmoitus-id]
+              (send! kanava
+                     (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
+                           vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
+                       (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
+                       vastaus))))
+          (on-close kanava #(notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
@@ -61,8 +59,8 @@
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
-           (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoituskuittauksen-kirjaaminen+ json-skeemat/+kirjausvastaus+
-                            (fn [parametrit data kayttaja db] (kirjaa-ilmoitustoimenpide db parametrit data kayttaja)))))
+        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoituskuittauksen-kirjaaminen+ json-skeemat/+kirjausvastaus+
+                         (fn [parametrit data kayttaja db] (kirjaa-ilmoitustoimenpide db parametrit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
