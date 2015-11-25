@@ -26,7 +26,6 @@
         "alku": "2015-01-30T12:00:00Z",
         "loppu": "2016-01-30T12:00:00Z",
         "vastuuhenkilo": true,
-        "yhteyshenkilo": true,
         "varahenkilo": true
       }
     },
@@ -42,7 +41,6 @@
         "alku": "2015-01-30T12:00:00Z",
         "loppu": "2016-01-30T12:00:00Z",
         "vastuuhenkilo": false,
-        "yhteyshenkilo": false,
         "varahenkilo": true
       }
     }

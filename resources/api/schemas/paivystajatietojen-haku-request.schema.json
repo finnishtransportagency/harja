@@ -16,11 +16,13 @@
     },
     "alkaen": {
       "id": "urn:harja/alkaen",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "paattyen": {
       "id": "urn:harja/paattyen",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "koordinaatit": {
       "id": "urn:harja/koordinaatit",
