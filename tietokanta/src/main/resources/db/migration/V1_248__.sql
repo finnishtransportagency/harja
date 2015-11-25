@@ -2,9 +2,7 @@
 
 DROP MATERIALIZED VIEW tieverkko_paloina;
 
-CREATE MATERIALIZED VIEW tieverkko_paloina AS
-  SELECT osoite3,tie,ajorata,osa,tiepiiri,(ST_Dump(geom)).geom AS geom, tr_pituus
-  FROM (SELECT osoite3, tie, ajorata, osa, tiepiiri, ST_LineMerge(ST_SnapToGrid(geometria,0.0001)) AS geom, tr_pituus FROM tieverkko) AS f;
+CREATE MATERIALIZED VIEW tieverkko_paloina AS SELECT osoite3,tie,ajorata,osa,tiepiiri,(ST_Dump(geom)).geom AS geom, tr_pituus FROM (SELECT osoite3, tie, ajorata, osa, tiepiiri, ST_LineMerge(ST_SnapToGrid(geometria,0.0001)) AS geom, tr_pituus FROM tieverkko) AS f;
 
 CREATE INDEX tieverkko_paloina_geom_index ON tieverkko_paloina USING GIST (geom);
 CREATE INDEX tieverkko_paloina_tieosa_index ON tieverkko_paloina (tie,osa);
@@ -30,18 +28,8 @@ BEGIN
    END IF;
    
    SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_Line_Locate_Point(alkuosa.geom, piste))) INTO alkuet;
-   SELECT SUM(ST_Length(geom)) 
-     FROM tieverkko_paloina 
-    WHERE tie=alkuosa.tie 
-      AND osa=alkuosa.osa 
-      AND ajorata=alkuosa.ajorata 
-   INTO palojenpit;
    
-   IF palojenpit IS NULL THEN
-     palojenpit := 0;
-   END IF;
-   
-   RETURN ROW(alkuosa.tie, alkuosa.osa, (palojenpit+alkuet)::INTEGER, 0, 0, NULL::geometry);
+   RETURN ROW(alkuosa.tie, alkuosa.osa, alkuet::INTEGER, 0, 0, NULL::geometry);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -210,3 +198,4 @@ BEGIN
     RETURN result;
 END;
 $$ LANGUAGE plpgsql;
+
