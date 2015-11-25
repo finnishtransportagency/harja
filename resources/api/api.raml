@@ -274,7 +274,6 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
-
       /siltatarkastus:
         post:
           is: [secured]
@@ -375,6 +374,47 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
+    /ilmoitukset:
+        get:
+         is: [secured]
+         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin.
+         queryParameters:
+          urakoitsijaId:
+            description: Urakoitsijan id, jolle haetaan ilmoituset
+            type: integer
+            required: true
+            example: 1
+          viimeisinHaettuId:
+            description: Viimeisen onnistuneesti haetun ilmoituksen id
+            type: integer
+            required: false
+            example: 12
+         responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/ilmoitusten-haku-response.json
+                schema: ilmoitusten-haku-response
+          400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
+        /{viimeksiHaettuId}:
+          get:
+           is: [secured]
+           description: Palauttaa kaikki urakan ilmoitukset, jotka ovat saapuneet parametrinä saapuneen id:n jälkeen
+           responses:
+            200:
+             body:
+               application/json:
+                 example: !include examples/ilmoitusten-haku-response.json
+                 schema: ilmoitusten-haku-response
+            400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
     /tietyoilmoitus:
         description: Tietyöilmoituksen kirjaus
         post:
@@ -418,17 +458,17 @@ documentation:
           required: true
           example: 1
         alkuosa:
-          description: Alkuosa 
+          description: Alkuosa
           type: integer
           required: true
           example: 12
         alkuetaisyys:
-          description: Alkuetaisyys 
+          description: Alkuetaisyys
           type: integer
           required: true
           example: 12
         loppuosa:
-          description: Loppuosa 
+          description: Loppuosa
           type: integer
           required: true
           example: 12
@@ -525,7 +565,7 @@ documentation:
       is: [secured]
       description: Uuden varusteen lisääminen. Päivittää tiedon tierekisteriin.
       body:
-        application/json: 
+        application/json:
           example: !include examples/varusteen-lisays-request.json
           schema: varusteen-lisays-request
       responses:
@@ -599,42 +639,17 @@ documentation:
       description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mieluusti 5-15 sekunnin intervalilla ja otoskoolla.
       body:
         application/json:
-          example: !include examples/tyokoneenseurannan-kirjaus-request.json     
+          example: !include examples/tyokoneenseurannan-kirjaus-request.json
           schema: tyokoneenseurannan-kirjaus-request
-          
+
 /ilmoitukset:
   is: [secured]
-  description: Ilmoitusten massahaku.
-  get:
-    is: [secured]
-    description: Ilmoitusten haku urakoitsijan id:n avulla. Palauttaa listan nimetylle urakoitsijalle listattuja ilmoituksia. Tämän lisäksi voidaan antaa viimeisimmän onnistuneesti haetun ilmoituksen id, jolloin palautetaan kaikki ilmoitukset, jotka ovat kirjattu tämän jälkeen. Muussa tapauksessa palautetaan kaikki urakoitsijalle kirjatut ilmoitukset. 
-    queryParameters:
-      urakoitsijaId: 
-        description: Urakoitsijan id, jolle haetaan ilmoituset
-        type: integer
-        required: true
-        example: 1
-      viimeisinHaettuId: 
-        description: Viimeisen onnistuneesti haetun ilmoituksen id
-        type: integer
-        required: false
-        example: 12
-    responses:
-      200:
-        body:
-          application/json:
-            example: !include examples/ilmoitusten-haku-response.json      
-            schema: ilmoitusten-haku-response
-      400:
-        body:
-          application/json:
-            example: !include examples/virhe-response.json
-            schema: virhe-response
+  description: Ilmoitusten hallinta.
   /{id}:
       description: Yksittäisen ilmoituksen hallinta.
       put:
         is: [secured]
-        description: Ilmoituksen kuittaaminen. Käytetään kirjaamaan eri kuittaukset ilmoituksille, kuten vastaanotto, muutos, aloitus, lopetus.
+        description: Ilmoitustoimenpiteen eli kuittauksen kirjaus. Käytetään kirjaamaan eri toimenpiteet ilmoituksille, kuten vastaanotto, muutos, aloitus, lopetus.
         body:
           application/json:
             example: !include examples/ilmoituskuittauksen-kirjaaminen-request.json
