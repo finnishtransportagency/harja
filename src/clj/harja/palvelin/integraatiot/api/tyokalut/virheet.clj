@@ -12,6 +12,7 @@
 (def +virheellinen-liite-koodi+ "virheellinen-liite")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
 (def +tuntematon-sopimus-koodi+ "tuntematon-sopimus")
+(def +urakkaa-ei-loydy+ "urakkaa-ei-loydy")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
@@ -21,6 +22,7 @@
 (def +tyhja-vastaus+ "tyhja-vastaus")
 (def +kayttajalla-puutteelliset-oikeudet+ "kayttajalla-puutteelliset-oikeudet")
 (def +puutteelliset-parametrit+ "puutteelliset-parametrit")
+(def +virheellinen-sijainti+ "virheellinen-sijainti")
 
 (defn heita-poikkeus [tyyppi virheet]
   (throw+

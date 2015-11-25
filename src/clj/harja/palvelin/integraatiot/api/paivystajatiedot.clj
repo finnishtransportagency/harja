@@ -14,7 +14,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.konversio :as konv]
-            [harja.fmt :as fmt])
+            [harja.palvelin.palvelut.urakat :as urakat]
+            [harja.fmt :as fmt]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 "NOTE: Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
@@ -100,7 +102,12 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
 
 (defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja]
   (log/debug "Haetaan päivystäjätiedot sijainnilla " (pr-str koordinaatit))
-  )
+  (let [urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi koordinaatit)]
+    (if urakka-id
+      (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja)
+      (throw+ {:type    virheet/+urakkaa-ei-loydy+
+               :virheet [{:koodi  virheet/+virheellinen-sijainti+
+                          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
   (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!") ; FIXME Pitäisikö kuitenkin olla oma tiukka skeema molemmille hakutyypeille?

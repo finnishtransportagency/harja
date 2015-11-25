@@ -69,7 +69,7 @@
 (defn kasittele-ilmoitus [db ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db (:ilmoitus-id ilmoitus))))
-        urakka-id (urakkapalavelu/hae-urakka-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
+        urakka-id (urakkapalavelu/hae-urakka-id-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
         urakoitsija (hae-urakoitsija db urakka-id)]
     (if id
       (paivita-ilmoitus db id urakka-id ilmoitus)
