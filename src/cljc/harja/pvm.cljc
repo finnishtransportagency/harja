@@ -47,7 +47,7 @@
      :clj (Date. (- vuosi 1900) kk pv)))
 
 (defn luo-pvm-aika [vuosi kk pv tt mm ss ms]
-  (DateTime. vuosi kk pv tt mm ss ms))
+  #?(:cljs (DateTime. vuosi kk pv tt mm ss ms)))
 
 (defn sama-pvm? [eka toka]
   (and (= (t/year eka) (t/year toka))
