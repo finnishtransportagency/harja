@@ -68,7 +68,8 @@
    [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
    [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
-
+   [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as ilmoitusnotifikaatio]
+   
    ;; Ajastetut tehtävät
    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
    [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
