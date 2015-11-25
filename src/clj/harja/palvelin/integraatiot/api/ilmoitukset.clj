@@ -23,7 +23,7 @@
   (aja-virhekasittelyn-kanssa (constantly [:jeejee "nyt pitäs kärähtää!"])))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
-  (let [urakka-id (:id (:params request))
+  (let [urakka-id (Integer/parseInt (:id (:params request)))
         tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
     (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle: %s" urakka-id))

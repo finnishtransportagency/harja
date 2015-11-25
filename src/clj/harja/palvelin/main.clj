@@ -291,9 +291,9 @@
       :api-varusteet (component/using (api-varusteet/->Varusteet)
                                       [:http-palvelin :db :integraatioloki :tierekisteri])
       :api-ilmoitukset (component/using (api-ilmoitukset/->Ilmoitukset)
-                                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])))
+                                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat]))))
 
-  (defonce harja-jarjestelma nil))
+(defonce harja-jarjestelma nil)
 
 (defn kaynnista-jarjestelma [asetusfile]
   (Locale/setDefault (Locale. "fi" "FI"))
