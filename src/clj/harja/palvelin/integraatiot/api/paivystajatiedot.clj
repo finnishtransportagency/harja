@@ -13,7 +13,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.fmt :as fmt])
   (:use [slingshot.slingshot :only [throw+]]))
 
 "NOTE: Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
@@ -101,20 +102,6 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   ; TODO
   )
 
-(defn trimmaa-puhelinnumero
-  "Ottaa suomalaisen puhelinnumeron teksimuodossa ja palauttaa sen yksinkertaistetussa numeromuodossa ilman etuliitettä
-  Esim. +358400-123-456 -> 0400123456
-        +358500123123 -> 0500123123
-        0400-123123 -> 0400123123"
-  [numero-string]
-  (let [puhdas-numero (apply str (filter
-                                   #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9, \+} %)
-                                   numero-string))
-        siivottu-etuliite (if (= (str (first puhdas-numero)) "+")
-                            (str "0" (subs puhdas-numero 4 (count puhdas-numero)))
-                            puhdas-numero)]
-    siivottu-etuliite))
-
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero]} kayttaja]
   (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!")
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
@@ -123,10 +110,10 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
         paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
                                                              ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
                                                              ; kirjoitusasu voi vaihdella.
-                                                             (or (= (trimmaa-puhelinnumero (:tyopuhelin paivystys))
-                                                                    (trimmaa-puhelinnumero puhelinnumero))
-                                                                 (= (trimmaa-puhelinnumero (:matkapuhelin paivystys))
-                                                                    (trimmaa-puhelinnumero puhelinnumero))))
+                                                             (or (= (fmt/trimmaa-puhelinnumero (:tyopuhelin paivystys))
+                                                                    (fmt/trimmaa-puhelinnumero puhelinnumero))
+                                                                 (= (fmt/trimmaa-puhelinnumero (:matkapuhelin paivystys))
+                                                                    (fmt/trimmaa-puhelinnumero puhelinnumero))))
                                                            kaikki-paivystajatiedot))
         vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
@@ -139,7 +126,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
                       (hae-paivystajatiedot-urakan-idlla db parametrit kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-sijainnilla
-    :polku          "/api/paivystajatiedot/haku/tyypilla"
+    :polku          "/api/paivystajatiedot/haku/sijainnilla"
     :tyyppi         :POST
     :kutsu-skeema   json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
