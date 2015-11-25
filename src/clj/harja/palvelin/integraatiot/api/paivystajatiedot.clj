@@ -148,13 +148,13 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
 (defrecord Paivystajatiedot []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :while (= tyyppi :GET)]
+    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :GET)]
       (julkaise-reitti
         http palvelu
         (GET polku request
           (kasittele-kutsu db integraatioloki palvelu request pyynto-skeema vastaus-skeema kasittely-fn))))
 
-    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :while (= tyyppi :POST)]
+    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema pyynto-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :POST)]
       (julkaise-reitti
         http palvelu
         (POST polku request
