@@ -377,7 +377,7 @@ documentation:
     /ilmoitukset:
         get:
          is: [secured]
-         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan kuittauksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin.
+         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin.
          queryParameters:
           urakoitsijaId:
             description: Urakoitsijan id, jolle haetaan ilmoituset
@@ -649,7 +649,7 @@ documentation:
       description: Yksittäisen ilmoituksen hallinta.
       put:
         is: [secured]
-        description: Ilmoituksen kuittaaminen. Käytetään kirjaamaan eri kuittaukset ilmoituksille, kuten vastaanotto, muutos, aloitus, lopetus.
+        description: Ilmoitustoimenpiteen eli kuittauksen kirjaus. Käytetään kirjaamaan eri toimenpiteet ilmoituksille, kuten vastaanotto, muutos, aloitus, lopetus.
         body:
           application/json:
             example: !include examples/ilmoituskuittauksen-kirjaaminen-request.json

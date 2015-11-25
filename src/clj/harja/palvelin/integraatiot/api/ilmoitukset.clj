@@ -17,15 +17,36 @@
 (defn kaynnista-ilmoitusten-haku [db parametrit data kayttaja]
   )
 
+(defn hae-viimeksi-haetun-ilmoituksen-jalkeen-saapuneet [db parametrit data kayttaja]
+  )
+
+(defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja]
+  )
+
 (defrecord Havainnot []
   component/Lifecycle
-  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :hae-ilmoitukset
-      (POST "/api/urakat/:id/ilmoitukset" request
+      (GET "/api/urakat/:id/ilmoitukset" request
         (kasittele-kutsu db integraatioloki :hae-ilmoitukset request xml-skeemat/+havainnon-kirjaus+ xml-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db] (kaynnista-ilmoitusten-haku db parametrit data kayttaja)))))
+
+    (julkaise-reitti
+      http :hae-ilmoitukset-viimeisen-onnistuneen-jalkeen
+      (GET "/api/urakat/:id/ilmoitukset/:viimeksi-haettu-id" request
+        (kasittele-kutsu db integraatioloki :hae-ilmoitukset-viimeisen-jalkeen request xml-skeemat/+havainnon-kirjaus+ xml-skeemat/+kirjausvastaus+
+                         (fn [parametrit data kayttaja db] (hae-viimeksi-haetun-ilmoituksen-jalkeen-saapuneet db parametrit data kayttaja)))))
+
+    (julkaise-reitti
+      http :kirjaa-ilmoitustoimenpide
+      (PUT "/api/ilmoitukset/:id/" request
+        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request xml-skeemat/+havainnon-kirjaus+ xml-skeemat/+kirjausvastaus+
+                         (fn [parametrit data kayttaja db] (kirjaa-ilmoitustoimenpide db parametrit data kayttaja)))))
+
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
+    (poista-palvelut http :hae-ilmoitukset-viimeisen-jalkeen)
+    (poista-palvelut http :kirjaa-ilmoitustoimenpide)
     this))
