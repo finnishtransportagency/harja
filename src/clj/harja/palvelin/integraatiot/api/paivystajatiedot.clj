@@ -82,9 +82,12 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   ; TODO
   )
 
-(defn hae-paivystajatiedot-puhelinnumerolla [db parametrit data kayttaja]
-  ; TODO
-  )
+(defn hae-paivystajatiedot-puhelinnumerolla [db {:keys [puhelinnumero]} data kayttaja]
+  (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
+  ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
+  (let [paivystajatiedot (some->> urakka-id (yhteyshenkilot/hae-urakan-paivystajat db))
+        vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
+    vastaus))
 
 (def hakutyypit
   [{:palvelu        :hae-paivystajatiedot-urakka-idlla
@@ -94,13 +97,12 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                       (hae-paivystajatiedot-urakan-idlla db parametrit kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-tyypilla-ja-sijainnilla
     :polku          "/api/paivystajatiedot/haku/tyypilla-ja-sijainnilla"
-    :pyynto-skeema  nil ; FIXME Tee tämä
+    :pyynto-skeema  json-skeemat/+paivystajatietojen-haku+
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-tyypilla-ja-sijainnilla db parametrit data kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
-    :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
-    :pyynto-skeema  nil ; FIXME Tee tämä
+    :polku          "/api/paivystajatiedot/haku/:puhelinnumero"
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit data kayttaja-id db]
                       (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}])

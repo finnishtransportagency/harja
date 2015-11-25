@@ -41,6 +41,27 @@ FROM paivystys p
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE p.urakka = :urakka;
 
+-- name: hae-kaikki-paivystajat
+-- Hakee kaikki päivystykset
+SELECT
+  p.id,
+  p.vastuuhenkilo,
+  p.varahenkilo,
+  p.alku,
+  p.loppu,
+  y.etunimi,
+  y.sukunimi,
+  y.sahkoposti,
+  y.tyopuhelin,
+  y.matkapuhelin,
+  y.organisaatio,
+  org.id     AS organisaatio_id,
+  org.nimi   AS organisaatio_nimi,
+  org.tyyppi AS organisaatio_tyyppi
+FROM paivystys p
+  LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
+  LEFT JOIN organisaatio org ON y.organisaatio = org.id
+
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
 SELECT
