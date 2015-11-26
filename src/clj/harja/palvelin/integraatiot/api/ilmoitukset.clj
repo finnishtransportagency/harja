@@ -53,7 +53,10 @@
                   }]})
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
-  (let [urakka-id (Integer/parseInt (:id (:params request)))
+  (let [parametrit (:params request)
+        urakka-id (when (:id parametrit) (Integer/parseInt (:id parametrit)))
+        viimeisin-id (when (:viimeisinId parametrit) (Integer/parseInt (:viimeisinId parametrit)))
+        stream (if (get parametrit "stream") (not (Boolean/valueOf (get parametrit "stream"))) true)
         tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
     (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s." urakka-id))
@@ -67,12 +70,14 @@
             (fn [ilmoitus-id]
               (log/debug (format "Vastaanotettiin ilmoitus id:llä %s urakalle id:llä %s." ilmoitus-id urakka-id))
               (send! kanava
+                     ;; todo: pitää hakea kaikki ilmoituksen, jotka ovat saapuneet viimeksi haetun jälkeen
                      (aja-virhekasittelyn-kanssa
                        (fn []
                          (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
                                vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
                            (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
-                           vastaus))))))
+                           vastaus)))
+                     stream)))
           (on-close kanava
                     (fn [_]
                       (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
