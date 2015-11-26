@@ -13,10 +13,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
   (:use [slingshot.slingshot :only [throw+]]))
 
-
-(defn hae-viimeksi-haetun-ilmoituksen-jalkeen-saapuneet [db [:keys id] kayttaja]
-  (validointi/tarkista-onko-kayttaja-organisaatiossa db id kayttaja))
-
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
 (defn hae-ilmoitus [db integraatiotapahtuma-id ilmoitus-id]
@@ -92,12 +88,6 @@
         (kaynnista-ilmoitusten-kuuntelu db integraatioloki klusterin-tapahtumat request)))
 
     (julkaise-reitti
-      http :hae-ilmoitukset-viimeisen-onnistuneen-jalkeen
-      (GET "/api/urakat/:id/ilmoitukset/:viimeksi-haettu-id" request
-        (kasittele-kutsu db integraatioloki :hae-ilmoitukset-viimeisen-jalkeen request nil json-skeemat/+ilmoitusten-haku+
-                         (fn [parametrit _ kayttaja db] (hae-viimeksi-haetun-ilmoituksen-jalkeen-saapuneet db parametrit kayttaja)))))
-
-    (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
         (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoituskuittauksen-kirjaaminen+ json-skeemat/+kirjausvastaus+
@@ -105,6 +95,5 @@
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
-    (poista-palvelut http :hae-ilmoitukset-viimeisen-jalkeen)
     (poista-palvelut http :kirjaa-ilmoitustoimenpide)
     this))

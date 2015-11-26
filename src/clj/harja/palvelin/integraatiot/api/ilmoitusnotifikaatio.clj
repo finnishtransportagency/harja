@@ -7,11 +7,11 @@
   (str "urakan_" urakka-id "_tapahtumat"))
 
 (defn kuuntele-urakan-ilmoituksia [tapahtumat urakka-id callback]
-  (log/debug (format "Kuunnellaan urakan id: %s ilmoituksia."))
+  (log/debug (format "Kuunnellaan urakan id: %s ilmoituksia." urakka-id))
   (tapahtumat/kuuntele! tapahtumat (kanavan-nimi urakka-id) callback))
 
 (defn lopeta-ilmoitusten-kuuntelu [tapahtumat urakka-id]
-  (log/debug (format "Lopetetaan urakan id: %s ilmoitusten kuuntelu."))
+  (log/debug (format "Lopetetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
   (tapahtumat/kuuroudu! tapahtumat (kanavan-nimi urakka-id)))
 
 (defn notifioi-urakan-ilmoitus [tapahtumat urakka-id ilmoitus-id]
