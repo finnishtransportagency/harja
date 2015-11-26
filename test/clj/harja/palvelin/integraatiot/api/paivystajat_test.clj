@@ -89,7 +89,10 @@
   (is (= (fmt/trimmaa-puhelinnumero "0400-123123") (fmt/trimmaa-puhelinnumero "0400 123 123")))
   (is (= (fmt/trimmaa-puhelinnumero "040-123123") (fmt/trimmaa-puhelinnumero "+35840123123")))
   (is (= (fmt/trimmaa-puhelinnumero "050 675 436") (fmt/trimmaa-puhelinnumero "+35850-675-436")))
-  (is (= (fmt/trimmaa-puhelinnumero "0400-123-123") (fmt/trimmaa-puhelinnumero "0400 123 123"))))
+  (is (= (fmt/trimmaa-puhelinnumero "0400-123-123") (fmt/trimmaa-puhelinnumero "0400 123 123")))
+  (is (not= (fmt/trimmaa-puhelinnumero "+3580400-123-123") (fmt/trimmaa-puhelinnumero "+358400 123 123")))
+  (is (not= (fmt/trimmaa-puhelinnumero "+358500-123-123") (fmt/trimmaa-puhelinnumero "+358400 123 123")))
+  (is (not= (fmt/trimmaa-puhelinnumero "+0400-123-123") (fmt/trimmaa-puhelinnumero "358400 123 123"))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
   (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla"] kayttaja portti
