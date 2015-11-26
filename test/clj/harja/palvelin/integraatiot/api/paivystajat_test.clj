@@ -15,7 +15,8 @@
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-            [cheshire.core :as cheshire])
+            [cheshire.core :as cheshire]
+            [harja.fmt :as fmt])
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
@@ -77,6 +78,18 @@
   (is (= 200 (:status vastaus)))
   (is (= (count (:urakat encoodattu-body)) 1))
   (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 3))))
+
+(deftest testaa-puhelinnumeron-trimmaus
+  (is (= (fmt/trimmaa-puhelinnumero "0400123123") (fmt/trimmaa-puhelinnumero "+358400123123")))
+  (is (= (fmt/trimmaa-puhelinnumero "0400-123123") (fmt/trimmaa-puhelinnumero "+358400123123")))
+  (is (= (fmt/trimmaa-puhelinnumero "0400 123 123") (fmt/trimmaa-puhelinnumero "+358400123123")))
+  (is (= (fmt/trimmaa-puhelinnumero "+358400-123-123") (fmt/trimmaa-puhelinnumero "+358400123123")))
+  (is (= (fmt/trimmaa-puhelinnumero "+358400-123-123") (fmt/trimmaa-puhelinnumero "+358400 123 123")))
+  (is (= (fmt/trimmaa-puhelinnumero "+358400 123 123") (fmt/trimmaa-puhelinnumero "+358400123123")))
+  (is (= (fmt/trimmaa-puhelinnumero "0400-123123") (fmt/trimmaa-puhelinnumero "0400 123 123")))
+  (is (= (fmt/trimmaa-puhelinnumero "040-123123") (fmt/trimmaa-puhelinnumero "+35840123123")))
+  (is (= (fmt/trimmaa-puhelinnumero "050 675 436") (fmt/trimmaa-puhelinnumero "+35850-675-436")))
+  (is (= (fmt/trimmaa-puhelinnumero "0400-123-123") (fmt/trimmaa-puhelinnumero "0400 123 123"))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
   (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla"] kayttaja portti
