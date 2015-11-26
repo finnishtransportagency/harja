@@ -198,8 +198,8 @@
                   "id": "urn:harja/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/yksiAjorataSuljettu",
                   "type": "boolean"
                 },
-                "tieSuljettuLiikenteeltä": {
-                  "id": "urn:harja/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/tieSuljettuLiikenteeltä",
+                "tieSuljettuLiikenteelta": {
+                  "id": "urn:harja/tietyoilmoitus/tyo/vaikutuksetLiikenteelle/tieSuljettuLiikenteelta",
                   "type": "boolean"
                 },
                 "nopeusrajoitus": {
