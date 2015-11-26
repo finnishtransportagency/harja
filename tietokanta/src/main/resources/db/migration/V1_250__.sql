@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+-- Lisää päivystäjän haun integraatiot
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-paivystajatiedot-urakka-idlla');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-paivystajatiedot-sijainnilla');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-paivystajatiedot-puhelinnumerolla');
+=======
 -- Laske kuukauden indeksikorotus
 -- indeksikorotus lasketaan yleensä (aina?) (vertailuluku/perusluku) * summa
 -- esim. indeksin arvo 105.0, perusluku 103.2, summa 1000e:
@@ -880,3 +886,4 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+>>>>>>> develop
