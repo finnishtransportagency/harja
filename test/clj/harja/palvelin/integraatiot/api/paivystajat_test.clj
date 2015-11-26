@@ -71,9 +71,12 @@
         (u (str "DELETE FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))))))
 
 (deftest hae-paivystajatiedot-urakan-idlla
-  (let [urakka-id @oulun-alueurakan-2014-2019-id
-        vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja portti)]
-  (is (= 200 (:status vastaus)))))
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+  (is (= 200 (:status vastaus)))
+  (is (= (count (:urakat encoodattu-body)) 1))
+  (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 3))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
   (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla"] kayttaja portti
@@ -81,7 +84,8 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (log/debug (:body vastaus))
-    (is (= (count (:urakat encoodattu-body)) 1))))
+    (is (= (count (:urakat encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 1))))
 
 ; FIXME Etsii sijainnilla aktiivisista urakoista. Mitä tapahtuu kun Oulun alueurakka 2014-2019 päättyy?
 (deftest hae-paivystajatiedot-sijainnilla
@@ -89,4 +93,5 @@
                                          (slurp "test/resurssit/api/hae_paivystajatiedot_sijainnilla.json"))
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (is (not (empty? (:urakat encoodattu-body))))))
+    (is (= (count (:urakat encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 3))))
