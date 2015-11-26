@@ -19,7 +19,7 @@
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
 
-            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
@@ -449,7 +449,7 @@
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                (reset! data %)
                                                                (reset! teksti (pvm/pvm %)))
-                                :pvm                      naytettava-pvm}])]))})))
+                                                 :pvm     naytettava-pvm}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]
@@ -538,7 +538,7 @@
                                                                   (muuta-pvm! (pvm/pvm %))
                                                                   (koske-pvm!)
                                                                   (aseta!))
-                                   :pvm                      naytettava-pvm}])]
+                                                    :pvm     naytettava-pvm}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
@@ -561,6 +561,8 @@
 
         hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
+
+        virheet (atom nil)
 
         alkuperainen-sijainti @sijainti
 
@@ -592,12 +594,16 @@
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go (loop []
-            (let [arvo (<! tr-osoite-ch)]
+            (when-let [arvo (<! tr-osoite-ch)]
               (log "VKM/TR: " (pr-str arvo))
-              (when arvo
+              (if-not (= arvo :virhe)
                 (do (reset! sijainti (:geometria arvo))
                     (nayta-kartalla (:geometria arvo))
-                    (recur)))))))
+                    (recur))
+
+                (do
+                  (reset! sijainti nil)
+                  (recur)))))))
 
     (komp/luo
       {:component-will-update
@@ -612,7 +618,6 @@
 
       (fn [{:keys [lomake? sijainti]} data]
         (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
-              virheet (atom nil)
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
                               tr (if (and (not (= "" v))
@@ -621,25 +626,43 @@
                                    (swap! data assoc kentta nil))]))
               blur (when hae-sijainti
                      (fn []
-                       (log "Haetaan ehkä viiva osoitteelle: " (pr-str osoite)
-                            (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys])
-                            (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
                        (cond
-                         (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
-                         (go (let [tulos (<! (vkm/tieosoite->viiva osoite))]
-                               (log "Saatiin tulos: " (pr-str tulos))
-                               (if-not (or (nil? tulos) (k/virhe? tulos))
-                                 (>! tr-osoite-ch tulos)
-                                 (reset! virheet "Reitille ei löydy tietä."))))
+                         (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
+                         (go
+                           (log "Haetaan viiva osoitteelle: " (pr-str osoite))
+                           (let [tulos (<! (vkm/tieosoite->viiva osoite))]
+                             (log "Saatiin tulos: " (pr-str tulos))
+                             (if-not (or (nil? tulos) (k/virhe? tulos))
+                               (do
+                                 (reset! virheet nil)
+                                 (>! tr-osoite-ch tulos))
+                               (do
+                                 (>! tr-osoite-ch :virhe)
+                                 (reset! virheet "Reitille ei löydy tietä.")))))
 
-                         (every? #(contains? osoite %) [:numero :alkuosa :alkuetaisyys])
-                         (go (let [tulos (<! (vkm/tieosoite->piste osoite))]
-                               (log "Saatiin tulos: " (pr-str tulos))
-                               (if-not (or (nil? tulos) (k/virhe? tulos))
-                                 (>! tr-osoite-ch tulos)
-                                 (reset! virheet "Pisteelle ei löydy tietä.")))))))
+                         (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys])
+                         (go
+                           (log "Haetaan piste osoitteelle: " (pr-str osoite))
+                           (let [tulos (<! (vkm/tieosoite->piste osoite))]
+                             (log "Saatiin tulos: " (pr-str tulos))
+                             (if-not (or (nil? tulos) (k/virhe? tulos))
+                               (do
+                                 (reset! virheet nil)
+                                 (>! tr-osoite-ch tulos))
+                               (do
+                                 (reset! virheet "Pisteelle ei löydy tietä.")
+                                 (>! tr-osoite-ch :virhe)))))
+
+                         :else
+                         (do
+                           (log )
+                           (reset! virheet nil)))))
               kartta? @karttavalinta-kaynnissa]
-          [:span.tierekisteriosoite-kentta (when )
+          [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
+           (when @virheet
+             [:div {:class "virheet"}
+              [:div {:class "virhe"}
+               [:span (ikonit/warning-sign) [:span @virheet]]]])
            [:table
             [:tbody
              [:tr
