@@ -164,6 +164,14 @@ insert into yhteyshenkilo (etunimi,sukunimi,sahkoposti,matkapuhelin,kayttajatunn
 insert into yhteyshenkilo (etunimi,sukunimi,sahkoposti,matkapuhelin,kayttajatunnus) values('Pirkka','Holmen','PirkkaHolmen@teleworm.us','041 606 7533','Fularks');
 insert into yhteyshenkilo (etunimi,sukunimi,sahkoposti,matkapuhelin,kayttajatunnus, sampoid) values('Sampo','Testi','sampo.testi@foo.bar','041 606 7533','sampotesti', 'sampotesti');
 
+-- Luodaan urakalle päivystys ja sille yhteyshenkilöt
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, kayttajatunnus, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, ulkoinen_id) VALUES ('Ismo', '', null, '000', '0400123456', 'ismo@harja.fi', 11, null, null);
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, kayttajatunnus, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, ulkoinen_id) VALUES ('Seppo', '', null, '0505555555', '044', 'seppo@harja.fi', 11, null, null);
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, kayttajatunnus, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, ulkoinen_id) VALUES ('Kyösti', '', null, '', '', 'kyosti@livi.fi', 11, null, null);
+INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-11-01 00:00:00.000000', '2015-11-11 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismo@harja.fi'));
+INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-11-13 00:00:00.000000', '2015-11-30 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'seppo@harja.fi'));
+INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-12-01 00:00:00.000000', '2015-12-06 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'kyosti@livi.fi'));
+
 -- Liitetään urakoihin pari yhteyshenkilöä, FIXME: enum eri rooleista
 INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES (1, 1, 'Urakanvastuuhenkilö');
 INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES (2, 1, 'Tilaajan edustaja');
