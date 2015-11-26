@@ -20,13 +20,43 @@
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
 (defn hae-ilmoitus [db integraatiotapahtuma-id ilmoitus-id]
-  (aja-virhekasittelyn-kanssa (constantly [:jeejee "nyt pitäs kärähtää!"])))
+  {
+   :ilmoitukset [{:ilmoitus {
+                             :ilmoitusId         "3213123"
+                             :ilmoitettu         (harja.pvm/nyt)
+                             :ilmoitustyyppi     "toimenpidepyynto"
+                             :yhteydenottopyynto "false"
+                             :ilmoittaja         {
+                                                  :etunimi       "Matti"
+                                                  :sukunimi      "Meikäläinen"
+                                                  :puhelinnumero "08023394852"
+                                                  :email         "matti.meikalainen@palvelu.fi"
+                                                  }
+                             :lahettaja          {
+                                                  :etunimi       "Pekka"
+                                                  :sukunimi      "Päivystäjä"
+                                                  :puhelinnumero "929304449282"
+                                                  :email         "pekka.paivystaja@livi.fi"
+                                                  }
+                             :seliteet           {:selite [
+                                                           {:koodi "auraustarve"}
+                                                           :koodi "aurausvallitNakemaesteena "
+                                                           ]}
+
+                             :sijainti           {
+                                                  :koordinaatit {
+                                                                 :x 41.40338
+                                                                 :y 2.17403
+                                                                 }
+                                                  }
+                             :vapaateksti        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."}
+                  }]})
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [urakka-id (Integer/parseInt (:id (:params request)))
         tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
-    (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle: %s" urakka-id))
+    (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s." urakka-id))
     (aja-virhekasittelyn-kanssa
       (fn []
         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -35,12 +65,18 @@
             tapahtumat
             urakka-id
             (fn [ilmoitus-id]
+              (log/debug (format "Vastaanotettiin ilmoitus id:llä %s urakalle id:llä %s." ilmoitus-id urakka-id))
               (send! kanava
-                     (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
-                           vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
-                       (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
-                       vastaus))))
-          (on-close kanava #(notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))))))
+                     (aja-virhekasittelyn-kanssa
+                       (fn []
+                         (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
+                               vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
+                           (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
+                           vastaus))))))
+          (on-close kanava
+                    (fn [_]
+                      (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
+                      (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
