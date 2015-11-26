@@ -618,7 +618,7 @@
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
-        alkuperainen-sijainti @sijainti
+        alkuperainen-sijainti (atom @sijainti)
 
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
@@ -627,7 +627,7 @@
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (kartta/poista-geometria! :tr-valittu-osoite)
-                           (when-not (= arvo alkuperainen-sijainti)
+                           (when-not (= arvo @alkuperainen-sijainti)
                              (do (kartta/nayta-geometria! :tr-valittu-osoite
                                                           (if (= :line (:type arvo))
                                                             {:alue (assoc arvo
@@ -659,6 +659,7 @@
       {:component-will-update
        (fn [_ _ {sijainti :sijainti}]
          (when sijainti
+           (reset! alkuperainen-sijainti @sijainti)
            (nayta-kartalla @sijainti)))}
 
       (komp/ulos #(do
