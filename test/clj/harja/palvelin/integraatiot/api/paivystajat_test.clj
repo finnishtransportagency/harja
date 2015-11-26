@@ -37,7 +37,7 @@
 (deftest tallenna-paivystajatiedot
   (let [ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
-                                               (-> "test/resurssit/api/paivystajatiedot.json"
+                                               (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
                                                    slurp
                                                    (.replace "__ID__" (str ulkoinen-id))
                                                    (.replace "__ETUNIMI__" "Päivi")
@@ -53,7 +53,7 @@
       (is (= paivystys [paivystaja-id true false]))
 
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
-                                                    (-> "test/resurssit/api/paivystajatiedot.json"
+                                                    (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
                                                         slurp
                                                         (.replace "__ID__" (str ulkoinen-id))
                                                         (.replace "__ETUNIMI__" "Taneli")
@@ -68,3 +68,18 @@
 
         (u (str "DELETE FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';"))
         (u (str "DELETE FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))))))
+
+(deftest hae-paivystajatiedot-urakan-idlla
+  (let [urakka-id @oulun-alueurakan-2014-2019-id
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja portti)]
+  (is (= 200 (:status vastaus)))))
+
+(deftest hae-paivystajatiedot-puhelinnumerolla
+  (let [vastaus (api-tyokalut/post-kutsu ["api/paivystajatiedot/haku/puhelinnumerolla"] kayttaja portti
+                                         (slurp "test/resurssit/api/hae_paivystajatiedot_puhelinnumerolla.json"))]
+    (is (= 200 (:status vastaus)))))
+
+(deftest hae-paivystajatiedot-sijainnilla
+  (let [vastaus (api-tyokalut/post-kutsu ["api/paivystajatiedot/haku/sijainnilla"] kayttaja portti
+                                         (slurp "test/resurssit/api/hae_paivystajatiedot_sijainnilla.json"))]
+    (is (= 200 (:status vastaus)))))
