@@ -34,7 +34,6 @@
         vastaus (q (str "SELECT * FROM yhteyshenkilo WHERE ulkoinen_id = '" id "';"))]
     (if (empty? vastaus) id (recur))))
 
-; FIXME Testaa haut sekä se, että boolean-arvot tallentuu oikein (vastuuhenkilo, varahenkilo)
 (deftest tallenna-paivystajatiedot
   (let [ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
@@ -51,7 +50,7 @@
           paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi, sahkoposti, matkapuhelin, tyopuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
           paivystys (first (q (str "SELECT yhteyshenkilo, vastuuhenkilo, varahenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
       (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä" "paivi.paivystaja@sahkoposti.com" "04001234567" "04005555555"]))
-      (is (= paivystys [paivystaja-id true true]))
+      (is (= paivystys [paivystaja-id true false]))
 
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
                                                     (-> "test/resurssit/api/paivystajatiedot.json"
