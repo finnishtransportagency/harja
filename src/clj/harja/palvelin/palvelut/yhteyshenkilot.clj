@@ -140,7 +140,7 @@
                                         :id org-id
                                         :nimi (:organisaatio_nimi %)})
                 %))
-        (q/hae-urakan-paivystajat db urakka-id)))
+        (q/hae-urakan-paivystajat db urakka-id false nil false nil)))
                                
 
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]

@@ -108,7 +108,12 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " id)
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db urakka-id alkaen paattyen)
+    (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
+                                                                  urakka-id
+                                                                  (not (nil? alkaen))
+                                                                  alkaen
+                                                                  (not (nil? paattyen))
+                                                                  paattyen)
           vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus)))
 
