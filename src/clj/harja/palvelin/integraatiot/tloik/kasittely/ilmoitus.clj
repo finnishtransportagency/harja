@@ -3,7 +3,8 @@
             [clj-time.core :as time]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
-            [harja.kyselyt.urakat :as urakat]))
+            [harja.kyselyt.urakat :as urakat]
+            [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as notifikaatiot]))
 
 (defn paattele-urakka [db urakkatyyppi sijainti]
   (let [urakka-id (:id (first (ilmoitukset/hae-ilmoituksen-urakka db urakkatyyppi (:x sijainti) (:y sijainti))))]
@@ -69,18 +70,25 @@
                   urakkatyyppi))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
-    (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)))
+    (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
+    id))
 
-(defn kasittele-ilmoitus [db ilmoitus]
+(defn luo-tai-paivita-ilmoitus [db id urakka-id ilmoitus]
+  (if id
+    (do (paivita-ilmoitus db id urakka-id ilmoitus)
+        id)
+    (luo-ilmoitus db urakka-id ilmoitus)))
+
+(defn kasittele-ilmoitus [db tapahtumat ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db (:ilmoitus-id ilmoitus))))
         urakka-id (paattele-urakka db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
-        urakoitsija (hae-urakoitsija db urakka-id)]
-    (if id
-      (paivita-ilmoitus db id urakka-id ilmoitus)
-      (luo-ilmoitus db urakka-id ilmoitus))
-    (log/debug "Ilmoitus käsitelty onnistuneesti")
+        urakoitsija (hae-urakoitsija db urakka-id)
+        kasitelty-ilmoitus-id (luo-tai-paivita-ilmoitus db id urakka-id ilmoitus)]
+    (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" kasitelty-ilmoitus-id))
+    (notifikaatiot/notifioi-urakan-ilmoitus tapahtumat urakka-id kasitelty-ilmoitus-id)
     (kuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil)))
+
 
 
 

@@ -12,7 +12,7 @@
   (lokittaja :lahteva-jms-kuittaus kuittaus tapahtuma-id onnistunut lisatietoja)
   (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
 
-(defn vastaanota-ilmoitus [sonja lokittaja db kuittausjono viesti]
+(defn vastaanota-ilmoitus [sonja lokittaja tapahtuma db kuittausjono viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
@@ -22,7 +22,7 @@
     (try
       (jdbc/with-db-transaction [transaktio db]
         (let [ilmoitus (ilmoitus-sanoma/lue-viesti viestin-sisalto)
-              kuittaus (ilmoitus/kasittele-ilmoitus transaktio ilmoitus)]
+              kuittaus (ilmoitus/kasittele-ilmoitus transaktio tapahtuma ilmoitus)]
           (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
       (catch Exception e
         (log/error e "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta.")
