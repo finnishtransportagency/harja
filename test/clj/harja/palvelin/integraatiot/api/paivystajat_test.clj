@@ -83,6 +83,7 @@
     (log/debug (:body vastaus))
     (is (= (count (:urakat encoodattu-body)) 1))))
 
+; FIXME Etsii sijainnilla aktiivisista urakoista. Mitä tapahtuu kun Oulun alueurakka 2014-2019 päättyy?
 (deftest hae-paivystajatiedot-sijainnilla
   (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/sijainnilla"] kayttaja portti
                                          (slurp "test/resurssit/api/hae_paivystajatiedot_sijainnilla.json"))
