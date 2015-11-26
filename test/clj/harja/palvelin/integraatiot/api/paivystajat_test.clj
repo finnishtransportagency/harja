@@ -14,7 +14,8 @@
             [clojure.data.json :as json]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma])
+            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
+            [cheshire.core :as cheshire])
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
@@ -75,11 +76,16 @@
   (is (= 200 (:status vastaus)))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
-  (let [vastaus (api-tyokalut/post-kutsu ["api/paivystajatiedot/haku/puhelinnumerolla"] kayttaja portti
-                                         (slurp "test/resurssit/api/hae_paivystajatiedot_puhelinnumerolla.json"))]
-    (is (= 200 (:status vastaus)))))
+  (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla"] kayttaja portti
+                                         (slurp "test/resurssit/api/hae_paivystajatiedot_puhelinnumerolla.json"))
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (log/debug (:body vastaus))
+    (is (= (count (:urakat encoodattu-body)) 1))))
 
 (deftest hae-paivystajatiedot-sijainnilla
-  (let [vastaus (api-tyokalut/post-kutsu ["api/paivystajatiedot/haku/sijainnilla"] kayttaja portti
-                                         (slurp "test/resurssit/api/hae_paivystajatiedot_sijainnilla.json"))]
-    (is (= 200 (:status vastaus)))))
+  (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/sijainnilla"] kayttaja portti
+                                         (slurp "test/resurssit/api/hae_paivystajatiedot_sijainnilla.json"))
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (not (empty? (:urakat encoodattu-body))))))
