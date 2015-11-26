@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.170"]
+                 [org.clojure/clojurescript "1.7.48"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "0.4.3"]
@@ -64,9 +64,9 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.3.13"]
-                 [figwheel "0.5.0-2"]
+                 [figwheel "0.4.1"]
 
-                 [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
+                 [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
 
                  [alandipert/storage-atom "1.2.4"]
@@ -131,10 +131,10 @@
                  ]
 
 
-  :plugins [[lein-cljsbuild "1.1.1"]
+  :plugins [[lein-cljsbuild "1.0.5"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.5.0-2"]
+            [lein-figwheel "0.4.1"]
             [cider/cider-nrepl "0.9.1"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]
