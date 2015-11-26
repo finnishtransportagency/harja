@@ -162,7 +162,7 @@
                                          nil)]
           (q/luo-paivystys<! c
                              (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
-                             urakka-id (:id yht) ))
+                             urakka-id (:id yht) true false))
 
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
         (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p) urakka-id)))]
