@@ -46,7 +46,9 @@ FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
   LEFT JOIN urakka u ON p.urakka = u.id
-WHERE p.urakka = :urakka;
+WHERE p.urakka = :urakka
+AND :alkaen IS NULL OR p.alku >= :alkaen
+AND :paattyen IS NULL OR p.alku <= :paattyen;
 
 -- name: hae-kaikki-paivystajat
 -- Hakee kaikki päivystykset
@@ -74,7 +76,7 @@ SELECT
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
-  LEFT JOIN urakka u ON p.urakka = u.id;
+  LEFT JOIN urakka u ON p.urakka = u.id
   WHERE p.alku >= :alkaen
   AND p.alku <= :paattyen;
 
