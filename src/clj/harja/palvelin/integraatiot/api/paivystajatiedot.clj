@@ -78,23 +78,24 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                                          #(= (:urakka_id %) urakka-id)
                                                          paivystajatiedot)
                                    {:keys [urakka_id urakka_nimi urakka_alkupvm
-                                            urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
+                                           urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
                                    {:keys [organisaatio_nimi organisaatio_ytunnus]} (first urakan-paivystykset)]
-                               {:urakka {:tiedot {:id urakka_id
-                                                  :nimi urakka_nimi
-                                                  :urakoitsija {:ytunnus organisaatio_ytunnus
-                                                                :nimi organisaatio_nimi }
-                                                  :vaylamuoto "tie"
-                                                  :tyyppi urakka_tyyppi
-                                                  :alkupvm urakka_alkupvm
-                                                  :loppupvm urakka_loppupvm}
+                               {:urakka {:tiedot       {:id          urakka_id
+                                                        :nimi        urakka_nimi
+                                                        :urakoitsija {:ytunnus organisaatio_ytunnus
+                                                                      :nimi    organisaatio_nimi}
+                                                        :vaylamuoto  "tie"
+                                                        :tyyppi      urakka_tyyppi
+                                                        :alkupvm     urakka_alkupvm
+                                                        :loppupvm    urakka_loppupvm}
                                          :paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
                                                                           sukunimi sahkoposti tyopuhelin matkapuhelin]}]
-                                                               {:paivystys {:paivystaja    {:id            id
-                                                                                            :etunimi       etunimi
-                                                                                            :sukunimi      sukunimi
-                                                                                            :email         sahkoposti
-                                                                                            :puhelinnumero tyopuhelin} ; FIXME Henkilö-skeemaan: tyopuhelin ja matkapuhelin
+                                                               {:paivystys {:paivystaja    {:id           id
+                                                                                            :etunimi      etunimi
+                                                                                            :sukunimi     sukunimi
+                                                                                            :email        sahkoposti
+                                                                                            :tyopuhelin   tyopuhelin
+                                                                                            :matkapuhelin matkapuhelin}
                                                                             :alku          alku
                                                                             :loppu         loppu
                                                                             :vastuuhenkilo vastuuhenkilo
@@ -123,7 +124,6 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                           :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
-  (assert puhelinnumero "Ei voida hakea ilman puhelinnumeroa!") ; FIXME Molemmille oma skeema
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
   (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db alkaen paattyen)
