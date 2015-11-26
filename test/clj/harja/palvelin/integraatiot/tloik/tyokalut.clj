@@ -52,14 +52,14 @@
 
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma+)]
-    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) nil ilmoitus)))
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma+
                                        "<urakkatyyppi>hoito</urakkatyyppi>"
                                        "<urakkatyyppi>paallystys</urakkatyyppi>")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
-    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) nil ilmoitus)))
 
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))

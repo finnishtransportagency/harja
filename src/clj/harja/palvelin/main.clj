@@ -137,7 +137,7 @@
                                              (:ilmoituskuittausjono (:tloik asetukset))
                                              (:toimenpideviestijono (:tloik asetukset))
                                              (:toimenpidekuittausjono (:tloik asetukset)))
-                              [:sonja :db :integraatioloki])
+                              [:sonja :db :integraatioloki :klusterin-tapahtumat])
 
       ;; Tierekisteri
       :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))

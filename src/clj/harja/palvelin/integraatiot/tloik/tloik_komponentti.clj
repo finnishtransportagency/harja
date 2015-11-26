@@ -20,7 +20,11 @@
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
     (sonja/kuuntele (:sonja this) ilmoitusviestijono
                     (fn [viesti]
-                      (ilmoitukset/vastaanota-ilmoitus (:sonja this) (tee-lokittaja this) (:db this) ilmoituskuittausjono viesti)))))
+                      (ilmoitukset/vastaanota-ilmoitus (:sonja this)
+                                                       (tee-lokittaja this)
+                                                       (:klusterin-tapahtumat this)
+                                                       (:db this)
+                                                       ilmoituskuittausjono viesti)))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))

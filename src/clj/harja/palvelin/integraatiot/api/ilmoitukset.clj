@@ -49,7 +49,7 @@
                                                                  :y 2.17403
                                                                  }
                                                   }
-                             :vapaateksti        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."}
+                             :vapaateksti        "Testi on tämä vain!"}
                   }]})
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]

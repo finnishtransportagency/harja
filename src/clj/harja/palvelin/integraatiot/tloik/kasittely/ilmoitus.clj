@@ -85,8 +85,8 @@
         urakka-id (paattele-urakka db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
         urakoitsija (hae-urakoitsija db urakka-id)
         kasitelty-ilmoitus-id (luo-tai-paivita-ilmoitus db id urakka-id ilmoitus)]
+    (when tapahtumat (notifikaatiot/notifioi-urakan-ilmoitus tapahtumat urakka-id kasitelty-ilmoitus-id))
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" kasitelty-ilmoitus-id))
-    (notifikaatiot/notifioi-urakan-ilmoitus tapahtumat urakka-id kasitelty-ilmoitus-id)
     (kuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil)))
 
 
