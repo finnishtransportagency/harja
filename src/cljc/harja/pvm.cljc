@@ -35,6 +35,25 @@
          (throw (js/Error. (str "Ei voi verrata " x " (goog.date.DateTime) ja " y " (" (type y) ")")))))
      ))
 
+(defn aikana [dt tunnit minuutit sekunnit millisekunnit]
+  #?(:cljs
+     (doto (goog.date.DateTime.)
+       (.setYear (.getYear dt))
+       (.setMonth (.getMonth dt))
+       (.setDate (.getDate dt))
+       (.setHours tunnit)
+       (.setMinutes minuutit)
+       (.setSeconds sekunnit)
+       (.setMilliseconds millisekunnit))
+
+     :clj
+     (.getTime (doto (Calendar/getInstance)
+                 (.setTime dt)
+                 (.set Calendar/HOUR_OF_DAY tunnit)
+                 (.set Calendar/MINUTE minuutit)
+                 (.set Calendar/SECOND sekunnit)
+                 (.set Calendar/MILLISECOND millisekunnit)))))
+
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
 
@@ -192,25 +211,6 @@
     (catch #?(:cljs js/Error
               :clj Exception) e
       nil)))
-
-(defn aikana [dt tunnit minuutit sekunnit millisekunnit]
-  #?(:cljs 
-     (doto (goog.date.DateTime.)
-       (.setYear (.getYear dt))
-       (.setMonth (.getMonth dt))
-       (.setDate (.getDate dt))
-       (.setHours tunnit)
-       (.setMinutes minuutit)
-       (.setSeconds sekunnit)
-       (.setMilliseconds millisekunnit))
-
-     :clj
-     (.getTime (doto (Calendar/getInstance)
-                 (.setTime dt)
-                 (.set Calendar/HOUR_OF_DAY tunnit)
-                 (.set Calendar/MINUTE minuutit)
-                 (.set Calendar/SECOND sekunnit)
-                 (.set Calendar/MILLISECOND millisekunnit)))))
 
 (defn paivan-alussa [dt]
   (aikana dt 0 0 0 0))

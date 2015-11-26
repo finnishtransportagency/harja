@@ -62,7 +62,7 @@
       "vaikutuksetLiikenteelle": {
         "yksiAjokaistaSuljettu": true,
         "yksiAjorataSuljettu": false,
-        "tieSuljettuLiikenteeltä": false,
+        "tieSuljettuLiikenteelta": false,
         "nopeusrajoitus": "30",
         "liikennevalot": true,
         "liikenteenOhjaaja": "liikenne-ohjataan-vuorotellen-tapahtumapaikan-ohi",
