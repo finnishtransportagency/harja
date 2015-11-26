@@ -111,9 +111,9 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
                                                                   urakka-id
                                                                   (not (nil? alkaen))
-                                                                  alkaen
+                                                                  (konv/sql-timestamp alkaen)
                                                                   (not (nil? paattyen))
-                                                                  paattyen)
+                                                                  (konv/sql-timestamp paattyen))
           vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus)))
 
@@ -129,9 +129,13 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                           :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
-  (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero)
+  (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
-  (let [kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db alkaen paattyen)
+  (let [alkaen (pvm-string->java-sql-date alkaen)
+        paattyen (pvm-string->java-sql-date paattyen)
+        kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db
+                                                                       alkaen
+                                                                       paattyen)
         paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
                                                              ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
                                                              ; kirjoitusasu voi vaihdella.
