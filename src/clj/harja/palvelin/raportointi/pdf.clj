@@ -43,8 +43,11 @@
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size "16pt"} teksti])
 
-(defmethod muodosta-pdf :teksti [[_ teksti]]
-  [:fo:block {} teksti])
+(defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari]}]]
+  [:fo:block {:color (when vari vari)} teksti])
+
+(defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
+  (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
