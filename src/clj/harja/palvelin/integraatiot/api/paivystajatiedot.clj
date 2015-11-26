@@ -71,43 +71,46 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
     (tee-onnistunut-vastaus)))
 
 (defn muodosta-vastaus-paivystajatietojen-haulle [paivystajatiedot]
-  (let [urakkaryhmat (keys (group-by :urakka_id paivystajatiedot))
-        vastaus {:urakat (mapv
-                           (fn [urakka-id]
-                             (let [urakan-paivystykset (filter
-                                                         #(= (:urakka_id %) urakka-id)
-                                                         paivystajatiedot)
-                                   {:keys [urakka_id urakka_nimi urakka_alkupvm
-                                           urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
-                                   {:keys [organisaatio_nimi organisaatio_ytunnus]} (first urakan-paivystykset)]
-                               {:urakka {:tiedot       {:id          urakka_id
-                                                        :nimi        urakka_nimi
-                                                        :urakoitsija {:ytunnus organisaatio_ytunnus
-                                                                      :nimi    organisaatio_nimi}
-                                                        :vaylamuoto  "tie"
-                                                        :tyyppi      urakka_tyyppi
-                                                        :alkupvm     urakka_alkupvm
-                                                        :loppupvm    urakka_loppupvm}
-                                         :paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
-                                                                          sukunimi sahkoposti tyopuhelin matkapuhelin]}]
-                                                               {:paivystys {:paivystaja    {:id           id
-                                                                                            :etunimi      etunimi
-                                                                                            :sukunimi     sukunimi
-                                                                                            :email        sahkoposti
-                                                                                            :tyopuhelin   tyopuhelin
-                                                                                            :matkapuhelin matkapuhelin}
-                                                                            :alku          alku
-                                                                            :loppu         loppu
-                                                                            :vastuuhenkilo vastuuhenkilo
-                                                                            :varahenkilo   varahenkilo}})
-                                                             urakan-paivystykset)}}))
-                           urakkaryhmat)}]
-    vastaus))
+  (if (empty? paivystajatiedot)
+    (throw+ {:type    virheet/+paivystajia-ei-loydy+
+             :virheet [{:koodi  virheet/+paivystajia-ei-loydy+
+                        :viesti "Päivystäjiä ei löydy."}]})
+    (let [urakkaryhmat (keys (group-by :urakka_id paivystajatiedot))
+          vastaus {:urakat (mapv
+                             (fn [urakka-id]
+                               (let [urakan-paivystykset (filter
+                                                           #(= (:urakka_id %) urakka-id)
+                                                           paivystajatiedot)
+                                     {:keys [urakka_id urakka_nimi urakka_alkupvm
+                                             urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
+                                     {:keys [organisaatio_nimi organisaatio_ytunnus]} (first urakan-paivystykset)]
+                                 {:urakka {:tiedot       {:id          urakka_id
+                                                          :nimi        urakka_nimi
+                                                          :urakoitsija {:ytunnus organisaatio_ytunnus
+                                                                        :nimi    organisaatio_nimi}
+                                                          :vaylamuoto  "tie"
+                                                          :tyyppi      urakka_tyyppi
+                                                          :alkupvm     urakka_alkupvm
+                                                          :loppupvm    urakka_loppupvm}
+                                           :paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
+                                                                            sukunimi sahkoposti tyopuhelin matkapuhelin]}]
+                                                                 {:paivystys {:paivystaja    {:id           id
+                                                                                              :etunimi      etunimi
+                                                                                              :sukunimi     sukunimi
+                                                                                              :email        sahkoposti
+                                                                                              :tyopuhelin   tyopuhelin
+                                                                                              :matkapuhelin matkapuhelin}
+                                                                              :alku          alku
+                                                                              :loppu         loppu
+                                                                              :vastuuhenkilo vastuuhenkilo
+                                                                              :varahenkilo   varahenkilo}})
+                                                               urakan-paivystykset)}}))
+                             urakkaryhmat)}]
+      vastaus)))
 
-(defn hae-paivystajatiedot-urakan-idlla [db id kayttaja alkaen paattyen]
-  (log/debug "Haetaan päivystäjätiedot urakan id:llä: " id)
-  (let [urakka-id (Integer/parseInt id)]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+(defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja alkaen paattyen]
+  (log/debug "Haetaan päivystäjätiedot urakan id:llä: " urakka-id " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
+  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
                                                                   urakka-id
                                                                   (not (nil? alkaen))
@@ -115,18 +118,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                                                   (not (nil? paattyen))
                                                                   (konv/sql-timestamp paattyen))
           vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
-    vastaus)))
-
-(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja]
-  (log/debug "Haetaan päivystäjätiedot sijainnilla " (pr-str koordinaatit))
-  (let [urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi koordinaatit)]
-    (if urakka-id
-      (do
-        (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-id))
-        (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja alkaen paattyen))
-      (throw+ {:type    virheet/+urakkaa-ei-loydy+
-               :virheet [{:koodi  virheet/+virheellinen-sijainti+
-                          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
+    vastaus))
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
@@ -147,13 +139,27 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
         vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
+(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja]
+  (log/debug "Haetaan päivystäjätiedot sijainnilla " (pr-str koordinaatit) " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
+  (let [alkaen (pvm-string->java-sql-date alkaen)
+        paattyen (pvm-string->java-sql-date paattyen)
+        urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi koordinaatit)]
+    (if urakka-id
+      (do
+        (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-id))
+        (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja alkaen paattyen))
+      (throw+ {:type    virheet/+urakkaa-ei-loydy+
+               :virheet [{:koodi  virheet/+virheellinen-sijainti+
+                          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
+
 (def palvelutyypit
   [{:palvelu        :hae-paivystajatiedot-urakka-idlla
     :polku          "/api/urakat/:id/paivystajatiedot"
     :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-paivystajatiedot-urakan-idlla db (:id parametrit) kayttaja-id nil nil))}
+                      (let [urakka-id (Integer/parseInt (:id parametrit))]
+                        (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja-id nil nil)))}
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/sijainnilla"
     :tyyppi         :POST

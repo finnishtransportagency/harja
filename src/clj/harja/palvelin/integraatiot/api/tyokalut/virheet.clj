@@ -13,6 +13,7 @@
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
 (def +tuntematon-sopimus-koodi+ "tuntematon-sopimus")
 (def +urakkaa-ei-loydy+ "urakkaa-ei-loydy")
+(def +paivystajia-ei-loydy+ "paivystajia-ei-loydy")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
