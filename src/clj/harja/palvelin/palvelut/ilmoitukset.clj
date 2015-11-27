@@ -70,18 +70,18 @@
         tulos (mapv
                 #(assoc % :uusinkuittaus
                           (when-not (empty? (:kuittaukset %))
-                            (reduce
-                              (fn [a b]
-                                (if-not (:kuitattu a)
-                                  (:kuitattu b)
-
-                                  (if-not (:kuitattu b)
-                                    (:kuitattu a)
-
-                                    (if (t/after? (from-sql-time (:kuitattu a)) (from-sql-time (:kuitattu b)))
+                            (if (= 1 (count (:kuittaukset %)))
+                              (:kuitattu (first (:kuittaukset %)))
+                              (reduce
+                                (fn [a b]
+                                  (if-not (:kuitattu a)
+                                    (:kuitattu b)
+                                    (if-not (:kuitattu b)
                                       (:kuitattu a)
-                                      (:kuitattu b)))))
-                              (:kuittaukset %))))
+                                      (if (t/after? (from-sql-time (:kuitattu a)) (from-sql-time (:kuitattu b)))
+                                        (:kuitattu a)
+                                        (:kuitattu b)))))
+                                (:kuittaukset %)))))
                 mankeloitu)]
     (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
     (log/debug "Joiden kuittaukset ovat tulleet: " (map :uusinkuittaus tulos))
