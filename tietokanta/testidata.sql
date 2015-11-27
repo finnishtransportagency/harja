@@ -109,6 +109,7 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Ilmoitukset ja kuittaukset
 \i testidata/ilmoitukset.sql
 
+
 -- Turvallisuuspoikkeama
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
