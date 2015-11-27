@@ -502,10 +502,12 @@ jatkon. Oletuksena tekstistä"
           [:span.piilossa
            (.substring teksti 0 80)
            (when (> (count teksti) 80)
-             [:button.btn.btn-primary.btn-xs.nayta-tai-piilota {:on-click #(swap! piilossa? not)}
-              "Näytä kaikki"])]
+             [:a.nayta-tai-piilota {:href "#" :on-click #(do (.preventDefault %)
+                                                             (swap! piilossa? not))}
+              "Lisää..."])]
           [:span.naytetaan
            teksti
-           [:button.btn.btn-primary.btn-xs.nayta-tai-piilota {:on-click #(swap! piilossa? not)}
+           [:a.nayta-tai-piilota {:href "#" :on-click #(do (.preventDefault %)
+                                                           (swap! piilossa? not))}
             "Piilota"]])])))))
 
