@@ -60,41 +60,6 @@
     (println "-----> DATA" data)
     {:ilmoitukset [(rakenna-ilmoitus data)]}))
 
-#_{:ilmoitukset [{:ilmoitus {
-                             :ilmoitusId         "3213123"
-                             :ilmoitettu         (harja.pvm/nyt)
-                             :ilmoitustyyppi     "toimenpidepyynto"
-                             :yhteydenottopyynto "false"
-                             :ilmoittaja         {
-                                                  :etunimi       "Matti"
-                                                  :sukunimi      "Meikäläinen"
-                                                  :puhelinnumero "08023394852"
-                                                  :email         "matti.meikalainen@palvelu.fi"
-                                                  }
-                             :lahettaja          {
-                                                  :etunimi       "Pekka"
-                                                  :sukunimi      "Päivystäjä"
-                                                  :puhelinnumero "929304449282"
-                                                  :email         "pekka.paivystaja@livi.fi"
-                                                  }
-                             :seliteet           {:selite [
-                                                           {:koodi "auraustarve"}
-                                                           :koodi "aurausvallitNakemaesteena "
-                                                           ]}
-
-                             :sijainti           {
-                                                  :koordinaatit {
-                                                                 :x 41.40338
-                                                                 :y 2.17403
-                                                                 }
-                                                  :tie          {
-                                                                 :aosa 234234
-                                                                 }
-                                                  }
-                             :vapaateksti        "Testi on tämä vain!"}
-                  }]}
-
-
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [parametrit (:params request)
         urakka-id (when (:id parametrit) (Integer/parseInt (:id parametrit)))
