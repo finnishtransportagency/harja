@@ -17,3 +17,17 @@
        (catch :default e#
          [harja.virhekasittely/rendaa-virhe e#]))))
 
+(defn with-loop-from-channel
+  "Makro joka lukee loopissa viestejä annetusta kanavasta kunnes kanava menee kiinni.
+   Viestin käsittelypoikkeukset napataan kiinni, logitetaan ja viestien lukeminen 
+   jatkuu normaalisti"
+  [chan binding & body]
+  (assert (symbol? binding) "binding must be a symbol")
+  `(cljs.core.async.macros/go-loop [c# ~chan]
+     (let [~binding (cljs.core.async/<! c#)]
+       (when (not (nil? ~binding))
+         (try
+           ~@body
+           (catch :default e#
+             (harja.loki/log "VIRHE GO-blokissa: " e#)))
+         (recur c#)))))
