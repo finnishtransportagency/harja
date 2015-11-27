@@ -18,9 +18,9 @@
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
 (defn rakenna-sijanti [ilmoitus]
-  (let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti testidata)))
+  (let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti ilmoitus)))
         tierekisteriosoite (:tr ilmoitus)]
-    (-> testidata
+    (-> ilmoitus
         (dissoc :sijainti)
         (dissoc :tr)
         (assoc-in [:sijainti :koordinaatit]
@@ -33,15 +33,32 @@
                                     :losa   (:loppuosa tierekisteriosoite)}))))
 
 (defn rakenna-selitteet [ilmoitus]
-  (let [selitteet ()])
-  )
+  (let [selitteet-kannassa (vec (.getArray (:selitteet ilmoitus)))
+        selitteet-vastauksessa (mapv (fn [selite] {:selite selite}) selitteet-kannassa)]
+    (println "---> SELITTEET:" selitteet-vastauksessa)
+    (update ilmoitus :selitteet (constantly selitteet-vastauksessa))))
+
+(defn rakenna-henkilo [ilmoitus henkiloavain]
+  (let [henkilo (henkiloavain ilmoitus)]
+    (-> ilmoitus
+        (update-in [henkiloavain] dissoc :matkapuhelin)
+        (update-in [henkiloavain] dissoc :tyopuhelin)
+        (update-in [henkiloavain] dissoc :sahkoposti)
+        (assoc-in [henkiloavain :matkapuhelinnumero] (:matkapuhelin henkilo))
+        (assoc-in [henkiloavain :tyopuhelinnumero] (:tyopuhelin henkilo))
+        (assoc-in [henkiloavain :email] (:sahkoposti henkilo)))))
+
+(defn rakenna-ilmoitus [ilmoitus]
+  {:ilmoitus (-> ilmoitus
+                 rakenna-selitteet
+                 (rakenna-henkilo :ilmoittaja)
+                 (rakenna-henkilo :lahettaja)
+                 rakenna-sijanti)})
 
 (defn hae-ilmoitus [db ilmoitus-id]
   (let [data (some->> ilmoitus-id (ilmoitukset/hae-ilmoitus db) first konversio/alaviiva->rakenne)]
     (println "-----> DATA" data)
-    {:ilmoitukset [{:ilmoitus (-> data
-                                  rakenna-selitteet
-                                  rakenna-sijanti)}]}))
+    {:ilmoitukset [(rakenna-ilmoitus data)]}))
 
 #_{:ilmoitukset [{:ilmoitus {
                              :ilmoitusId         "3213123"

@@ -1,7 +1,5 @@
 -- name: hae-ilmoitus
 SELECT
-  id,
-  urakka,
   ilmoitusid,
   ilmoitettu,
   yhteydenottopyynto,
@@ -10,8 +8,6 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
-  urakkatyyppi,
-  suljettu,
   sijainti,
   tr_numero,
   tr_alkuosa,

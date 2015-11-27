@@ -20,7 +20,7 @@
             "properties": {
               "ilmoitusid": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitusid",
-                "type": "string",
+                "type": "integer",
                 "required": true
               },
               "ilmoitettu": {
@@ -56,7 +56,7 @@
                 "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
                 "required": true
               },
-              "seliteet": {
+              "selitteet": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet",
                 "type": "array",
                 "maxItems": 10,
@@ -74,27 +74,27 @@
                     }
                   }
                 ]
+              },
+              "sijainti": {
+                "id": "urn:harja/ilmoitukset/0/sijainti",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+                "required": true
+              },
+              "otsikko": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
+                "type": "string"
+              },
+              "lyhytselite": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/lyhytselite",
+                "type": "string"
+              },
+              "pitkaselite": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/pitkaselite",
+                "type": "string"
               }
             }
-          },
-          "sijainti": {
-            "id": "urn:harja/ilmoitukset/0/sijainti",
-            "type": "object",
-            "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-            "required": true
-          },
-          "otsikko": {
-            "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
-            "type": "string"
-          },
-          "lyhytselite": {
-            "id": "urn:harja/ilmoitukset/0/ilmoitus/lyhytselite",
-            "type": "string"
-          },
-          "pitkaselite": {
-            "id": "urn:harja/ilmoitukset/0/ilmoitus/pitkaselite",
-            "type": "string"
           }
         }
       }
