@@ -12,6 +12,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.talvihoidon-hoitoluokat :as talvihoidon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.urakat :as urakoiden-tuonti]
             [clojure.java.io :as io]
             [clj-time.coerce :as coerce])
   (:use [slingshot.slingshot :only [try+ throw+]])
@@ -164,7 +165,7 @@
     :urakoiden-alk-osoite
     :urakoiden-alk-tuontikohde
     :urakoiden-shapefile
-    soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan))
+    urakoiden-tuonti/vie-urakat-kantaan))
 
 (def tee-urakoiden-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
@@ -172,7 +173,7 @@
     :urakoiden-alk-osoite
     :urakoiden-alk-tuontikohde
     :urakoiden-shapefile
-    soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan))
+    urakoiden-tuonti/vie-urakat-kantaan))
 
 
 (defrecord Geometriapaivitykset [asetukset]
