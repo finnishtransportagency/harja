@@ -22,9 +22,9 @@
   (o/paivita-ely! db
                   (:nimi ely)
                   (ely-lyhennetaulukko (:lyhenne ely))
-                  "T")
+                  "T"
                   (:numero ely)
-                  (.toString (:the_geom ely)))
+                  (.toString (:the_geom ely))))
 
 (defn luo-ely [db ely]
   (o/luo-ely<! db
