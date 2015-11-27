@@ -1,10 +1,11 @@
 (ns harja.ui.yleiset
   "Yleisiä UI komponentteja ja apureita"
-  (:require [reagent.core :refer [atom] :as reagent]
-            [harja.loki :refer [log tarkkaile!]]
+  (:require [clojure.string :as str]
             [harja.asiakas.tapahtumat :as t]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [reagent.core :refer [atom] :as reagent])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -487,3 +488,23 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (str " " teksti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
+
+(defn pitka-teksti
+  "Näyttää pitkän tekstin, josta näytetään oletuksena vain ensimmäinen rivi. Käyttäjä voi näyttää/piilottaa 
+jatkon. Oletuksena tekstistä"
+  ([teksti] (pitka-teksti teksti true))
+  ([teksti piilotettu?]
+   (let [piilossa? (atom piilotettu?)]
+     (fn [teksti _]
+       [:span.pitka-teksti
+        (if @piilossa?
+          [:span.piilossa
+           (.substring teksti 0 80)
+           (when (> (count teksti) 80)
+             [:button.btn.btn-primary.btn-xs.nayta-tai-piilota {:on-click #(swap! piilossa? not)}
+              "Näytä kaikki"])]
+          [:span.naytetaan
+           teksti
+           [:button.btn.btn-primary.btn-xs.nayta-tai-piilota {:on-click #(swap! piilossa? not)}
+            "Piilota"]])]))))
+
