@@ -41,13 +41,13 @@ SELECT * FROM organisaatio WHERE elynumero = :elynumero;
 
 -- name: luo-ely<!
 INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, alue, tyyppi)
-VALUES (:nimi, :lyhenne, :liikennemuoto::liikennemuoto, :elynumero, :alue, 'hallintayksikko'::organisaatiotyyppi)
+VALUES (:nimi, :lyhenne, :liikennemuoto::liikennemuoto, :elynumero, ST_GeomFromText(:alue)::geometry, 'hallintayksikko'::organisaatiotyyppi)
 
 -- name: paivita-ely!
 UPDATE organisaatio SET
 nimi = :nimi,
 lyhenne = :lyhenne,
-liikennemuoto = :liikennemuoto,
+liikennemuoto = :liikennemuoto::liikennemuoto,
 elynumero = :elynumero,
-alue = :alue
+alue = ST_GeomFromText(:alue)::geometry
 WHERE elynumero = :elynumero;

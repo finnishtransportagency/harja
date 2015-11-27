@@ -19,23 +19,25 @@
    "Lappi" "LAP"})
 
 (defn paivita-ely [db ely]
+  (log/debug "Päivitetään ELY " (:nimi ely))
   (o/paivita-ely! db
                   (:nimi ely)
-                  (ely-lyhennetaulukko (:lyhenne ely))
+                  (ely-lyhennetaulukko (:nimi ely))
                   "T"
                   (:numero ely)
                   (.toString (:the_geom ely))))
 
 (defn luo-ely [db ely]
+  (log/debug "Luodaan uusi ELY " (:nimi ely))
   (o/luo-ely<! db
               (:nimi ely)
-              (ely-lyhennetaulukko (:lyhenne ely))
+              (ely-lyhennetaulukko (:nimi ely))
               "T"
               (:numero ely)
               (.toString (:the_geom ely))))
 
 (defn luo-tai-paivita-ely [db ely]
-  (if-let [ely (first (o/hae-ely db (:numero ely)))]
+  (if-let [ely-kannassa (first (o/hae-ely db (:numero ely)))]
     (paivita-ely db ely)
     (luo-ely db ely)))
 
@@ -52,6 +54,6 @@
       (jdbc/with-db-transaction [transaktio db]
                                 (doseq [ely (shapefile/tuo shapefile)]
                                   (vie-ely-entry transaktio (-> ely ; FIXME: Shape-filessä numero on string, pitäisikö olla int?
-                                                                (assoc :numero (Integer. (:numero ely)))))
+                                                                (assoc :numero (Integer. (:numero ely))))))
                                 (log/debug "ELYjen tuonti kantaan valmis")))
-    (log/debug "ELYjen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta."))))
+    (log/debug "ELYjen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
