@@ -19,7 +19,6 @@
    "Lappi" "LAP"})
 
 (defn paivita-ely [db ely]
-  (log/debug "Päivitetään ELY " (:nimi ely))
   (o/paivita-ely! db
                   (:nimi ely)
                   (ely-lyhennetaulukko (:nimi ely))
@@ -28,7 +27,6 @@
                   (.toString (:the_geom ely))))
 
 (defn luo-ely [db ely]
-  (log/debug "Luodaan uusi ELY " (:nimi ely))
   (o/luo-ely<! db
               (:nimi ely)
               (ely-lyhennetaulukko (:nimi ely))

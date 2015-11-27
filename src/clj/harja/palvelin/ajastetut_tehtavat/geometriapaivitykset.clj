@@ -161,7 +161,7 @@
 
 (def tee-elyjen-alk-paivitystehtava
   (maarittele-alk-paivitystehtava
-    "elyt"
+    "ely-alueet"
     :ely-alueiden-alk-osoite
     :ely-alueiden-alk-tuontikohde
     :ely-alueiden-shapefile
