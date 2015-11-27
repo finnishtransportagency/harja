@@ -41,7 +41,7 @@ SELECT * FROM organisaatio WHERE elynumero = :elynumero;
 
 -- name: luo-ely<!
 INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, alue, tyyppi)
-VALUES (:nimi, :lyhenne, :liikennemuoto, :elynumero, :alue, 'hallintayksikko'::organisaatiotyyppi)
+VALUES (:nimi, :lyhenne, :liikennemuoto::liikennemuoto, :elynumero, :alue, 'hallintayksikko'::organisaatiotyyppi)
 
 -- name: paivita-ely!
 UPDATE organisaatio SET
