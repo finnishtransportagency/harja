@@ -54,7 +54,7 @@
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader nil))
   ([viesti]
-   [:div.ajax-loader
+   [:div.ajax-loader.ladataan-harjaa
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       [:div.viesti viesti])]))
