@@ -18,53 +18,64 @@
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
 (defn rakenna-sijanti [ilmoitus]
-  #_(->
-    assoc-in )
-  )
+  (let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti testidata)))
+        tierekisteriosoite (:tr ilmoitus)]
+    (-> testidata
+        (dissoc :sijainti)
+        (dissoc :tr)
+        (assoc-in [:sijainti :koordinaatit]
+                  {:x (first koordinaatit)
+                   :y (second koordinaatit)})
+        (assoc-in [:sijainti :tie] {:numero (:numero tierekisteriosoite)
+                                    :aet    (:alkuetaisyys tierekisteriosoite)
+                                    :aosa   (:alkuosa tierekisteriosoite)
+                                    :let    (:loppuetaisyys tierekisteriosoite)
+                                    :losa   (:loppuosa tierekisteriosoite)}))))
 
 (defn rakenna-selitteet [ilmoitus]
+  (let [selitteet ()])
   )
 
 (defn hae-ilmoitus [db ilmoitus-id]
   (let [data (some->> ilmoitus-id (ilmoitukset/hae-ilmoitus db) first konversio/alaviiva->rakenne)]
-    (println "-----> DATA" data))
-  {:ilmoitukset [{:ilmoitus {(-> data
-                                 rakenna-selitteet
-                                 rakenna-sijanti)}}]})
+    (println "-----> DATA" data)
+    {:ilmoitukset [{:ilmoitus (-> data
+                                  rakenna-selitteet
+                                  rakenna-sijanti)}]}))
 
 #_{:ilmoitukset [{:ilmoitus {
-                           :ilmoitusId         "3213123"
-                           :ilmoitettu         (harja.pvm/nyt)
-                           :ilmoitustyyppi     "toimenpidepyynto"
-                           :yhteydenottopyynto "false"
-                           :ilmoittaja         {
-                                                :etunimi       "Matti"
-                                                :sukunimi      "Meikäläinen"
-                                                :puhelinnumero "08023394852"
-                                                :email         "matti.meikalainen@palvelu.fi"
-                                                }
-                           :lahettaja          {
-                                                :etunimi       "Pekka"
-                                                :sukunimi      "Päivystäjä"
-                                                :puhelinnumero "929304449282"
-                                                :email         "pekka.paivystaja@livi.fi"
-                                                }
-                           :seliteet           {:selite [
-                                                         {:koodi "auraustarve"}
-                                                         :koodi "aurausvallitNakemaesteena "
-                                                         ]}
+                             :ilmoitusId         "3213123"
+                             :ilmoitettu         (harja.pvm/nyt)
+                             :ilmoitustyyppi     "toimenpidepyynto"
+                             :yhteydenottopyynto "false"
+                             :ilmoittaja         {
+                                                  :etunimi       "Matti"
+                                                  :sukunimi      "Meikäläinen"
+                                                  :puhelinnumero "08023394852"
+                                                  :email         "matti.meikalainen@palvelu.fi"
+                                                  }
+                             :lahettaja          {
+                                                  :etunimi       "Pekka"
+                                                  :sukunimi      "Päivystäjä"
+                                                  :puhelinnumero "929304449282"
+                                                  :email         "pekka.paivystaja@livi.fi"
+                                                  }
+                             :seliteet           {:selite [
+                                                           {:koodi "auraustarve"}
+                                                           :koodi "aurausvallitNakemaesteena "
+                                                           ]}
 
-                           :sijainti           {
-                                                :koordinaatit {
-                                                               :x 41.40338
-                                                               :y 2.17403
-                                                               }
-                                                :tie {
-                                                      :aosa 234234
-                                                      }
-                                                }
-                           :vapaateksti        "Testi on tämä vain!"}
-                }]}
+                             :sijainti           {
+                                                  :koordinaatit {
+                                                                 :x 41.40338
+                                                                 :y 2.17403
+                                                                 }
+                                                  :tie          {
+                                                                 :aosa 234234
+                                                                 }
+                                                  }
+                             :vapaateksti        "Testi on tämä vain!"}
+                  }]}
 
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
