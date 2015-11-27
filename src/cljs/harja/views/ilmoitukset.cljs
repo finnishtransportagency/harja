@@ -113,40 +113,43 @@
 
 (defn ilmoituksen-tiedot
   []
-  [:div
-   [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
-   (urakan-sivulle-nappi @tiedot/valittu-ilmoitus)
-   (pollauksen-merkki)
-   [bs/panel {}
-    (luo-ilmoituksen-otsikko @tiedot/valittu-ilmoitus)
-    [:span
-     [yleiset/tietoja {}
-      "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu @tiedot/valittu-ilmoitus))
-      "Sijainti: " (nayta-tierekisteriosoite (:tr @tiedot/valittu-ilmoitus))
-      "Lisätiedot: " (:vapaateksti @tiedot/valittu-ilmoitus)]
-
-     [:br]
-     [yleiset/tietoja {}
-      "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja @tiedot/valittu-ilmoitus))
-                          tyyppi (capitalize (name (get-in @tiedot/valittu-ilmoitus [:ilmoittaja :tyyppi])))]
-                      (if (and henkilo tyyppi)
-                        (str henkilo ", " tyyppi)
-                        (str (or henkilo tyyppi))))
-      "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja @tiedot/valittu-ilmoitus))
-      "Sähköposti: " (get-in @tiedot/valittu-ilmoitus [:ilmoittaja :sahkoposti])]
-
-     [:br]
-     [yleiset/tietoja {}
-      "Lähettäjä:" (nayta-henkilo (:lahettaja @tiedot/valittu-ilmoitus))
-      "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja @tiedot/valittu-ilmoitus))
-      "Sähköposti: " (get-in @tiedot/valittu-ilmoitus [:lahettaja :sahkoposti])]]]
-
-   (when-not (empty? (:kuittaukset @tiedot/valittu-ilmoitus))
+  (let [ilmoitus @tiedot/valittu-ilmoitus]
+    [:div
+     [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
+     (urakan-sivulle-nappi ilmoitus)
+     (pollauksen-merkki)
      [bs/panel {}
-      "Kuittaukset"
-      [:div
-       (for [kuittaus (:kuittaukset @tiedot/valittu-ilmoitus)]
-         (kuittauksen-tiedot kuittaus))]])])
+      (luo-ilmoituksen-otsikko ilmoitus)
+      [:span
+       [yleiset/tietoja {}
+        "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+        "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
+        "Otsikko: " (:otsikko ilmoitus)
+        "Lyhyt selite: " (:lyhytselite ilmoitus)
+        "Pitkä selite: " (:pitkaselite ilmoitus)]
+
+       [:br]
+       [yleiset/tietoja {}
+        "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
+                            tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
+                        (if (and henkilo tyyppi)
+                          (str henkilo ", " tyyppi)
+                          (str (or henkilo tyyppi))))
+        "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
+        "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+
+       [:br]
+       [yleiset/tietoja {}
+        "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
+        "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
+        "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
+
+     (when-not (empty? (:kuittaukset ilmoitus))
+       [bs/panel {}
+        "Kuittaukset"
+        [:div
+         (for [kuittaus (:kuittaukset ilmoitus)]
+           (kuittauksen-tiedot kuittaus))]])]))
 
 (defn ilmoitusten-paanakyma
   []
