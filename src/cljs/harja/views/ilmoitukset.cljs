@@ -126,7 +126,8 @@
         "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
         "Otsikko: " (:otsikko ilmoitus)
         "Lyhyt selite: " (:lyhytselite ilmoitus)
-        "Pitkä selite: " [yleiset/pitka-teksti (:pitkaselite ilmoitus)]]
+        "Pitkä selite: " (when (:pitkaselite ilmoitus)
+                           [yleiset/pitka-teksti (:pitkaselite ilmoitus)])]
 
        [:br]
        [yleiset/tietoja {}
