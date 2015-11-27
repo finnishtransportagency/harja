@@ -2,7 +2,7 @@
   "ilmoitukset": [
     {
       "ilmoitus": {
-        "ilmoitusId": "3213123",
+        "ilmoitusid": "3213123",
         "ilmoitettu": "2015-09-29T14:49:45",
         "ilmoitustyyppi": "toimenpidepyynto",
         "yhteydenottopyynto": "false",
@@ -18,20 +18,23 @@
           "puhelinnumero": "929304449282",
           "email": "pekka.paivystaja@livi.fi"
         },
-        "seliteet": {
-          "selite": [
-            {"koodi": "auraustarve"},
-            {"koodi": "aurausvallitNakemaesteena"}
-          ]
-        },
-        "sijainti": {
-          "koordinaatit": {
-            "x": 41.40338,
-            "y": 2.17403
+        "seliteet": [
+          {
+            "selite": "auraustarve"
+          },
+          {
+            "selite": "aurausvallitNakemaesteena"
           }
-        },
-        "vapaateksti": "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."
-      }
+        ]
+      },
+      "sijainti": {
+        "koordinaatit": {
+          "x": 41.40338,
+          "y": 2.17403
+        }
+      },
+      "otsikko": "Vallien tasausta tarvitaan",
+      "lyhytselite": "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."
     }
   ]
 }

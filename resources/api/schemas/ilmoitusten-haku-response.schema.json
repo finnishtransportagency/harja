@@ -58,53 +58,48 @@
               },
               "seliteet": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet",
-                "type": "object",
+                "type": "array",
+                "maxItems": 10,
                 "additionalProperties": false,
-                "required": true,
-                "properties": {
-                  "selite": {
-                    "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite",
-                    "type": "array",
-                    "maxItems": 10,
-                    "items": [
-                      {
-                        "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite/0",
-                        "type": "object",
-                        "additionalProperties": false,
-                        "properties": {
-                          "koodi": {
-                            "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite/0/koodi",
-                            "type": "string"
-                          }
-                        }
+                "items": [
+                  {
+                    "id": "http://jsonschema.net/seliteet/0",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "selite": {
+                        "id": "http://jsonschema.net/seliteet/0/selite",
+                        "type": "string"
                       }
-                    ]
+                    }
                   }
-                }
-              },
-              "sijainti": {
-                "id": "urn:harja/ilmoitukset/0/sijainti",
-                "type": "object",
-                "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-                "required": true
-              },
-              "otsikko": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
-                "type": "string"
-              },
-              "lyhytselite": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/lyhytselite",
-                "type": "string"
-              },
-              "pitkaselite": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/pitkaselite",
-                "type": "string"
+                ]
               }
             }
+          },
+          "sijainti": {
+            "id": "urn:harja/ilmoitukset/0/sijainti",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+            "required": true
+          },
+          "otsikko": {
+            "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
+            "type": "string"
+          },
+          "lyhytselite": {
+            "id": "urn:harja/ilmoitukset/0/ilmoitus/lyhytselite",
+            "type": "string"
+          },
+          "pitkaselite": {
+            "id": "urn:harja/ilmoitukset/0/ilmoitus/pitkaselite",
+            "type": "string"
           }
         }
       }
     }
   }
+}
+}
 }
