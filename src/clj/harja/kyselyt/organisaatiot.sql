@@ -36,4 +36,18 @@ SELECT id, nimi, lyhenne, ytunnus, liikennemuoto, katuosoite, postinumero,
   FROM organisaatio
  WHERE id = :id;
 
+-- name: hae-ely
+SELECT * FROM organisaatio WHERE elynumero = :elynumero;
 
+-- name: luo-ely<!
+INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, alue, tyyppi)
+VALUES (:nimi, :lyhenne, :liikennemuoto, :elynumero, :alue, 'hallintayksikko'::organisaatiotyyppi)
+
+-- name: paivita-ely!
+UPDATE organisaatio SET
+nimi = :nimi,
+lyhenne = :lyhenne,
+liikennemuoto = :liikennemuoto,
+elynumero = :elynumero,
+alue = :alue
+WHERE elynumero = :elynumero;
