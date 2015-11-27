@@ -12,6 +12,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.talvihoidon-hoitoluokat :as talvihoidon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.elyt :as elyjen-tuonti]
             [clojure.java.io :as io]
             [clj-time.coerce :as coerce])
   (:use [slingshot.slingshot :only [try+ throw+]])
@@ -158,6 +159,23 @@
     :soratien-hoitoluokkien-shapefile
     soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan))
 
+(def tee-elyjen-alk-paivitystehtava
+  (maarittele-alk-paivitystehtava
+    "elyt"
+    :ely-alueiden-alk-osoite
+    :ely-alueiden-alk-tuontikohde
+    :ely-alueiden-shapefile
+    elyjen-tuonti/vie-elyt-kantaan))
+
+(def tee-elyjen-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "elyt"
+    :ely-alueiden-alk-osoite
+    :ely-alueiden-alk-tuontikohde
+    :ely-alueiden-shapefile
+    elyjen-tuonti/vie-elyt-kantaan))
+
+
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
@@ -171,7 +189,9 @@
         (assoc :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset))
         (assoc :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
         (assoc :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))
-        (assoc :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset))))
+        (assoc :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset))
+        (assoc :elyjen-hakutehtava (tee-elyjen-alk-paivitystehtava this asetukset))
+        (assoc :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset))))
   (stop [this]
     ((:tieverkon-hakutehtava this))
     ((:soratien-hoitoluokkien-hakutehtava this))
