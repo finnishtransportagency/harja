@@ -490,7 +490,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (defn pitka-teksti
   "Näyttää pitkän tekstin, josta näytetään oletuksena vain ensimmäinen rivi. Käyttäjä voi näyttää/piilottaa 
-jatkon. Oletuksena tekstistä"
+jatkon."
   ([teksti] (pitka-teksti teksti true))
   ([teksti piilotettu?]
    (let [piilossa? (atom piilotettu?)]
