@@ -10,43 +10,62 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as notifikaatiot]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]])
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [harja.kyselyt.konversio :as konversio])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
-(defn hae-ilmoitus [db integraatiotapahtuma-id ilmoitus-id]
-  {
-   :ilmoitukset [{:ilmoitus {
-                             :ilmoitusId         "3213123"
-                             :ilmoitettu         (harja.pvm/nyt)
-                             :ilmoitustyyppi     "toimenpidepyynto"
-                             :yhteydenottopyynto "false"
-                             :ilmoittaja         {
-                                                  :etunimi       "Matti"
-                                                  :sukunimi      "Meikäläinen"
-                                                  :puhelinnumero "08023394852"
-                                                  :email         "matti.meikalainen@palvelu.fi"
-                                                  }
-                             :lahettaja          {
-                                                  :etunimi       "Pekka"
-                                                  :sukunimi      "Päivystäjä"
-                                                  :puhelinnumero "929304449282"
-                                                  :email         "pekka.paivystaja@livi.fi"
-                                                  }
-                             :seliteet           {:selite [
-                                                           {:koodi "auraustarve"}
-                                                           :koodi "aurausvallitNakemaesteena "
-                                                           ]}
+(defn rakenna-sijanti [ilmoitus]
+  #_(->
+    assoc-in )
+  )
 
-                             :sijainti           {
-                                                  :koordinaatit {
-                                                                 :x 41.40338
-                                                                 :y 2.17403
-                                                                 }
-                                                  }
-                             :vapaateksti        "Testi on tämä vain!"}
-                  }]})
+(defn rakenna-selitteet [ilmoitus]
+  )
+
+(defn hae-ilmoitus [db ilmoitus-id]
+  (let [data (some->> ilmoitus-id (ilmoitukset/hae-ilmoitus db) first konversio/alaviiva->rakenne)]
+    (println "-----> DATA" data))
+  {:ilmoitukset [{:ilmoitus {(-> data
+                                 rakenna-selitteet
+                                 rakenna-sijanti)}}]})
+
+#_{:ilmoitukset [{:ilmoitus {
+                           :ilmoitusId         "3213123"
+                           :ilmoitettu         (harja.pvm/nyt)
+                           :ilmoitustyyppi     "toimenpidepyynto"
+                           :yhteydenottopyynto "false"
+                           :ilmoittaja         {
+                                                :etunimi       "Matti"
+                                                :sukunimi      "Meikäläinen"
+                                                :puhelinnumero "08023394852"
+                                                :email         "matti.meikalainen@palvelu.fi"
+                                                }
+                           :lahettaja          {
+                                                :etunimi       "Pekka"
+                                                :sukunimi      "Päivystäjä"
+                                                :puhelinnumero "929304449282"
+                                                :email         "pekka.paivystaja@livi.fi"
+                                                }
+                           :seliteet           {:selite [
+                                                         {:koodi "auraustarve"}
+                                                         :koodi "aurausvallitNakemaesteena "
+                                                         ]}
+
+                           :sijainti           {
+                                                :koordinaatit {
+                                                               :x 41.40338
+                                                               :y 2.17403
+                                                               }
+                                                :tie {
+                                                      :aosa 234234
+                                                      }
+                                                }
+                           :vapaateksti        "Testi on tämä vain!"}
+                }]}
+
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [parametrit (:params request)
@@ -69,7 +88,7 @@
                      ;; todo: pitää hakea kaikki ilmoituksen, jotka ovat saapuneet viimeksi haetun jälkeen
                      (aja-virhekasittelyn-kanssa
                        (fn []
-                         (let [data (hae-ilmoitus db tapahtuma-id ilmoitus-id)
+                         (let [data (hae-ilmoitus db ilmoitus-id)
                                vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
                            (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
                            vastaus)))

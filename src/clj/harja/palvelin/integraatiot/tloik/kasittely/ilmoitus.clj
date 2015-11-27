@@ -73,23 +73,15 @@
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
     id))
 
-(defn luo-tai-paivita-ilmoitus [db id urakka-id ilmoitus]
-  (if id
-    (do (paivita-ilmoitus db id urakka-id ilmoitus)
-        id)
-    (luo-ilmoitus db urakka-id ilmoitus)))
 
 (defn kasittele-ilmoitus [db tapahtumat ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db (:ilmoitus-id ilmoitus))))
         urakka-id (paattele-urakka db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
-        urakoitsija (hae-urakoitsija db urakka-id)
-        kasitelty-ilmoitus-id (luo-tai-paivita-ilmoitus db id urakka-id ilmoitus)]
-    (when tapahtumat (notifikaatiot/notifioi-urakan-ilmoitus tapahtumat urakka-id kasitelty-ilmoitus-id))
+        urakoitsija (hae-urakoitsija db urakka-id)]
+    (if id
+      (paivita-ilmoitus db id urakka-id ilmoitus)
+      (luo-ilmoitus db urakka-id ilmoitus))
+    (when tapahtumat (notifikaatiot/notifioi-urakan-ilmoitus tapahtumat urakka-id (:ilmoitus-id ilmoitus)))
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" kasitelty-ilmoitus-id))
     (kuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil)))
-
-
-
-
-

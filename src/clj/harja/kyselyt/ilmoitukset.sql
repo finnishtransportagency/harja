@@ -1,3 +1,35 @@
+-- name: hae-ilmoitus
+SELECT
+  id,
+  urakka,
+  ilmoitusid,
+  ilmoitettu,
+  yhteydenottopyynto,
+  lyhytselite,
+  pitkaselite,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  urakkatyyppi,
+  suljettu,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE ilmoitusid = :ilmoitusid;
+
 -- name: hae-ilmoitukset
 SELECT
   i.id,

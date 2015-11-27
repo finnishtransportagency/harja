@@ -7,7 +7,7 @@
     "ilmoitukset": {
       "id": "urn:harja/ilmoitukset",
       "type": "array",
-      "maxItems" : 1000,
+      "maxItems": 1000,
       "items": {
         "id": "urn:harja/ilmoitukset/0",
         "type": "object",
@@ -18,8 +18,8 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "ilmoitusId": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitusId",
+              "ilmoitusid": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitusid",
                 "type": "string",
                 "required": true
               },
@@ -65,7 +65,7 @@
                   "selite": {
                     "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite",
                     "type": "array",
-                    "maxItems" : 10,
+                    "maxItems": 10,
                     "items": [
                       {
                         "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite/0",
@@ -89,8 +89,16 @@
                 "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
                 "required": true
               },
-              "vapaateksti": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/vapaateksti",
+              "otsikko": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
+                "type": "string"
+              },
+              "lyhytselite": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/lyhytselite",
+                "type": "string"
+              },
+              "pitkaselite": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/pitkaselite",
                 "type": "string"
               }
             }
