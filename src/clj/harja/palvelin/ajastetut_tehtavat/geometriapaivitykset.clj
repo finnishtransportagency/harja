@@ -175,7 +175,6 @@
     :ely-alueiden-shapefile
     elyjen-tuonti/vie-elyt-kantaan))
 
-
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
@@ -199,4 +198,6 @@
     ((:pohjavesialueiden-paivitystehtava this))
     ((:tieverkon-paivitystehtava this))
     ((:soratien-hoitoluokkien-paivitystehtava this))
+    ((:elyjen-hakutehtava this))
+    ((:elyjen-paivitystehtava this))
     this))
