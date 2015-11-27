@@ -344,6 +344,7 @@ Optiot on mappi optioita:
         varoitukset (atom {})                               ;; validointivaroitukset: (:id rivi) => [varoitukset]
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
+        kysely-kaynnissa (atom false)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
@@ -494,7 +495,8 @@ Optiot on mappi optioita:
                                  (reset! jarjestys nil)
                                  (reset! historia nil)
                                  (reset! viime-assoc nil)
-                                 (reset! uusi-id 0))
+                                 (reset! uusi-id 0)
+                                 (reset! kysely-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
                            (nollaa-muokkaustiedot!)
                            (reset! gridia-muokataan? true)
@@ -571,13 +573,15 @@ Optiot on mappi optioita:
 
                                      (when-not muokkaa-aina
                                        [:button.nappi-myonteinen.grid-tallenna
-                                        {:disabled (not (empty? @virheet))
+                                        {:disabled (or (not (empty? @virheet))
+                                                       @kysely-kaynnissa)
                                          :on-click #(let [kaikki-rivit (mapv second @muokatut)
                                                           tallennettavat
                                                           (if tallenna-vain-muokatut
                                                             (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
                                                             kaikki-rivit)]
                                                      (do (.preventDefault %)
+                                                         (reset! kysely-kaynnissa true)
                                                          (go (if (<! (tallenna tallennettavat)))
                                                              (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
                                         [:span.livicon-check " Tallenna"]])
