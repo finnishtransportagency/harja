@@ -77,7 +77,7 @@
 (defn kasittele-ilmoitus [db tapahtumat ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
-        id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id ilmoitus)))
+        id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
         urakka-id (paattele-urakka db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
         urakoitsija (hae-urakoitsija db urakka-id)]
 
@@ -86,7 +86,7 @@
       (luo-ilmoitus db urakka-id ilmoitus))
 
     (when tapahtumat
-      (notifikaatiot/notifioi-urakan-ilmoitus tapahtumat urakka-id ilmoitus-id))
+      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id))
 
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" ilmoitus))
     (kuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil)))

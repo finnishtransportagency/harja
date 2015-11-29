@@ -82,6 +82,11 @@
                 "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
                 "required": true
               },
+              "tienumero": {
+                "id": "urn:harja/ilmoitukset/0/tienumero",
+                "type": "integer",
+                "minimum": 0
+              },
               "otsikko": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
                 "type": "string"
@@ -100,6 +105,4 @@
       }
     }
   }
-}
-}
 }

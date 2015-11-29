@@ -12,53 +12,15 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [harja.kyselyt.konversio :as konversio])
+            [harja.kyselyt.konversio :as konversio]
+            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
-(defn rakenna-sijanti [ilmoitus]
-  (let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti ilmoitus)))
-        tierekisteriosoite (:tr ilmoitus)]
-    (-> ilmoitus
-        (dissoc :sijainti)
-        (dissoc :tr)
-        (assoc-in [:sijainti :koordinaatit]
-                  {:x (first koordinaatit)
-                   :y (second koordinaatit)})
-        (assoc-in [:sijainti :tie] {:numero (:numero tierekisteriosoite)
-                                    :aet    (:alkuetaisyys tierekisteriosoite)
-                                    :aosa   (:alkuosa tierekisteriosoite)
-                                    :let    (:loppuetaisyys tierekisteriosoite)
-                                    :losa   (:loppuosa tierekisteriosoite)}))))
-
-(defn rakenna-selitteet [ilmoitus]
-  (let [selitteet-kannassa (vec (.getArray (:selitteet ilmoitus)))
-        selitteet-vastauksessa (mapv (fn [selite] {:selite selite}) selitteet-kannassa)]
-    (println "---> SELITTEET:" selitteet-vastauksessa)
-    (update ilmoitus :selitteet (constantly selitteet-vastauksessa))))
-
-(defn rakenna-henkilo [ilmoitus henkiloavain]
-  (let [henkilo (henkiloavain ilmoitus)]
-    (-> ilmoitus
-        (update-in [henkiloavain] dissoc :matkapuhelin)
-        (update-in [henkiloavain] dissoc :tyopuhelin)
-        (update-in [henkiloavain] dissoc :sahkoposti)
-        (assoc-in [henkiloavain :matkapuhelinnumero] (:matkapuhelin henkilo))
-        (assoc-in [henkiloavain :tyopuhelinnumero] (:tyopuhelin henkilo))
-        (assoc-in [henkiloavain :email] (:sahkoposti henkilo)))))
-
-(defn rakenna-ilmoitus [ilmoitus]
-  {:ilmoitus (-> ilmoitus
-                 rakenna-selitteet
-                 (rakenna-henkilo :ilmoittaja)
-                 (rakenna-henkilo :lahettaja)
-                 rakenna-sijanti)})
-
 (defn hae-ilmoitus [db ilmoitus-id]
   (let [data (some->> ilmoitus-id (ilmoitukset/hae-ilmoitus db) first konversio/alaviiva->rakenne)]
-    (println "-----> DATA" data)
-    {:ilmoitukset [(rakenna-ilmoitus data)]}))
+    {:ilmoitukset [(sanomat/rakenna-ilmoitus data)]}))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [parametrit (:params request)
@@ -78,11 +40,13 @@
             (fn [ilmoitus-id]
               (log/debug (format "Vastaanotettiin ilmoitus id:llä %s urakalle id:llä %s." ilmoitus-id urakka-id))
               (send! kanava
-                     ;; todo: pitää hakea kaikki ilmoituksen, jotka ovat saapuneet viimeksi haetun jälkeen
+                     ;; todo: jos viimeisin haettu id annettu, pitää hakea kaikki ilmoitukset, jotka ovat saapuneet viimeksi haetun jälkeen
                      (aja-virhekasittelyn-kanssa
                        (fn []
-                         (let [data (hae-ilmoitus db ilmoitus-id)
+                         (let [ilmoitus-id (Integer/parseInt ilmoitus-id)
+                               data (hae-ilmoitus db ilmoitus-id)
                                vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
+                           ;; todo: merkitse ilmoitus välitetyksi ja lähetä t-loik:n välitystiedot
                            (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
                            vastaus)))
                      stream)))

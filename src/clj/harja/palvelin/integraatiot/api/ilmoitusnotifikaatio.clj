@@ -14,6 +14,6 @@
   (log/debug (format "Lopetetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
   (tapahtumat/kuuroudu! tapahtumat (kanavan-nimi urakka-id)))
 
-(defn notifioi-urakan-ilmoitus [tapahtumat urakka-id ilmoitus-id]
+(defn ilmoita-saapuneesta-ilmoituksesta [tapahtumat urakka-id ilmoitus-id]
   (log/debug (format "Ilmoitetaan urakan id: %s uudesta ilmoituksesta id: %s." urakka-id ilmoitus-id))
   (tapahtumat/julkaise! tapahtumat (kanavan-nimi urakka-id) ilmoitus-id))
