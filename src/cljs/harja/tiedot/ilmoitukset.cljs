@@ -1,6 +1,6 @@
 (ns harja.tiedot.ilmoitukset
   (:require [reagent.core :refer [atom]]
-
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
@@ -18,17 +18,6 @@
 ;; FILTTERIT
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
-
-(def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
-
-(defn ilmoitustyypin-nimi
-  [tyyppi]
-  (case tyyppi
-    :kysely "Kysely"
-    :toimenpidepyynto "Toimenpidepyyntö"
-    :tiedoitus "Tiedoksi"))
-
-(def +ilmoitustilat+ #{:suljetut :avoimet})
 
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)

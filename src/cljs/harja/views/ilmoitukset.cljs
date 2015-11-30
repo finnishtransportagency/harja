@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
+
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -203,7 +204,7 @@
                        {:nimi             :tyypit :otsikko "Tyyppi"
                         :tyyppi           :boolean-group
                         :vaihtoehdot      [:kysely :toimenpidepyynto :tiedoitus]
-                        :vaihtoehto-nayta tiedot/ilmoitustyypin-nimi})]
+                        :vaihtoehto-nayta ilmoitustyypin-nimi})]
 
         @tiedot/valinnat
         ]
@@ -216,7 +217,7 @@
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
-          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(tiedot/ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}
+          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}
           {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "20%"}
           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
            :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}

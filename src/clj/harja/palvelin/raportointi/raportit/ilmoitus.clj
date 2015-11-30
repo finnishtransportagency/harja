@@ -2,29 +2,28 @@
   "Materiaaliraportti"
   (:require [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
             [harja.pvm :as pvm]))
 
 
 (defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan ilmoitukset raporttia varten: " urakka-id alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [parametrit [db
-                            urakka-id
-                            (konv/sql-timestamp alkupvm)
-                            (konv/sql-timestamp loppupvm)]
-        ilmoitukset (into []
-                                      (apply ilmoitukset-q/hae-ilmoitukset parametrit))
+  (let [;; [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
+        ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
+                      db user nil urakka-id +ilmoitustilat+ +ilmoitustyypit+
+                      [alkupvm loppupvm] "")
         _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)
 
         lopullinen-tulos (mapv
                            (fn [ilmoitus]
-                             (if (nil? (:kokonaismaara ilmoitus))
-                               (assoc ilmoitus :kokonaismaara 0)
+                             (if true
                                ilmoitus))
                            ilmoitukset)]
     lopullinen-tulos))
@@ -32,27 +31,26 @@
 (defn muodosta-ilmoitusraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteutuneet-materiaalit (into []
-                                      (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
-                                                                                                            (konv/sql-timestamp alkupvm)
-                                                                                                            (konv/sql-timestamp loppupvm)
-                                                                                                            hallintayksikko-id))]
-    toteutuneet-materiaalit))
+  (let [ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
+                      db user hallintayksikko-id nil +ilmoitustilat+ +ilmoitustyypit+
+                      [alkupvm loppupvm] "")
+        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
+    ilmoitukset))
 
 (defn muodosta-ilmoitusraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
   (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [toteutuneet-materiaalit (into []
-                                      (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
-                                                                                                      (konv/sql-timestamp alkupvm)
-                                                                                                      (konv/sql-timestamp loppupvm)))]
-    toteutuneet-materiaalit))
+  (let [ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
+                      db user nil nil +ilmoitustilat+ +ilmoitustyypit+
+                      [alkupvm loppupvm] "")
+        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
+    ilmoitukset))
 
 
 
 (defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm
                                hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (let [[konteksti toteumat]
+  (let [[konteksti ilmoitukset]
         (cond
           (and urakka-id hk-alkupvm hk-loppupvm)
           [:urakka (muodosta-ilmoitusraportti-urakalle db user {:urakka-id urakka-id
@@ -68,40 +66,40 @@
           [:koko-maa (muodosta-ilmoitusraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
 
           :default
-          ;; FIXME Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
-          nil)
+          (throw (Exception. "Tuntematon raportin konteksti")))
         otsikko (str (case konteksti
-                       :urakka (log/debug "Haetaan urakka id:llä " (pr-str urakka-id) (pr-str (first (urakat-q/hae-urakka db urakka-id))))
+                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                        :koko-maa "KOKO MAA")
                      ", Ilmoitusraportti "
                      (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))
-        materiaalit (distinct (map :materiaali_nimi toteumat))
-        toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
-    (println "TOTEUMAT: " toteumat)
+        ilmoitukset-urakan-mukaan (group-by :urakka ilmoitukset)
+        _ (log/debug "ilmoitukset " ilmoitukset)
+        _ (log/debug "ilmoitukset-urakan-mukaan " ilmoitukset-urakan-mukaan)]
     [:raportti {:nimi otsikko}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat 
              [{:otsikko "Urakka"}]
-             (map (fn [mat]
-                    {:otsikko mat}) materiaalit)))
+             (map (fn [ilmoitus]
+                    {:ilmoitustyyppi ilmoitus}) ilmoitukset)))
       (into
        []
        (concat
-        ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut toteumat
-        (for [[urakka toteumat] toteumat-urakan-mukaan]
-          (into []
-                (concat [urakka]
-                        (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
-                          (for [m materiaalit]
-                            (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
+        ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut ilmoitukset
+        (for [[urakka ilmoitukset] ilmoitukset-urakan-mukaan]
 
-        ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
+          (do
+            (log/debug "ilmoitukset urakan " urakka " mukaan:" ilmoitukset)
+            (into []
+                 (concat [urakka]
+                         (let [ilm (group-by :ilmoitustyyppi ilmoitukset-urakan-mukaan)]
+                           [(count ilm)])))))
+
+        ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
         [(concat ["Yhteensä"]
-                 (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
-                   (for [m materiaalit]
-                     (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))]]))
+                 (let [ilm (group-by :ilmoitustyyppi ilmoitukset-urakan-mukaan)]
+                   [(count ilm)]))]))]]))
 
     
