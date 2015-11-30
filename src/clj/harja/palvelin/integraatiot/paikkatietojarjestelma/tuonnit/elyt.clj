@@ -3,25 +3,14 @@
             [clojure.java.jdbc :as jdbc]
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]
+            [harja.tyokalut.elyt :as elyt]
             [harja.kyselyt.organisaatiot :as o]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
-
-(def ely-lyhennetaulukko
-  {"Uusimaa" "UUD"
-   "Varsinais-Suomi" "VAR"
-   "Kaakkois-Suomi" "KAS"
-   "Pirkanmaa" "PIR"
-   "Pohjois-Savo" "POS"
-   "Keski-Suomi" "KES"
-   "Etelä-Pohjanmaa" "EPO"
-   "Pohjois-Pohjanmaa" "POP"
-   "Pohjois-Pohjanmaa ja Kainuu" "POP"
-   "Lappi" "LAP"})
 
 (defn paivita-ely [db ely]
   (o/paivita-ely! db
                   (:nimi ely)
-                  (ely-lyhennetaulukko (:nimi ely))
+                  (elyt/lyhenteet (:nimi ely))
                   "T"
                   (:numero ely)
                   (.toString (:the_geom ely))))
@@ -29,7 +18,7 @@
 (defn luo-ely [db ely]
   (o/luo-ely<! db
               (:nimi ely)
-              (ely-lyhennetaulukko (:nimi ely))
+              (elyt/lyhenteet (:nimi ely))
               "T"
               (:numero ely)
               (.toString (:the_geom ely))))
@@ -51,7 +40,6 @@
       (log/debug (str "Tuodaan ELYt kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [transaktio db]
                                 (doseq [ely (shapefile/tuo shapefile)]
-                                  (vie-ely-entry transaktio (-> ely ; FIXME: Shape-filessä numero on string, pitäisikö olla int?
-                                                                (assoc :numero (Integer. (:numero ely))))))
+                                  (vie-ely-entry transaktio (-> ely (assoc :numero (Integer. (:numero ely))))))
                                 (log/debug "ELYjen tuonti kantaan valmis")))
     (log/debug "ELYjen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
