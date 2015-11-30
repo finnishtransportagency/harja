@@ -1,0 +1,44 @@
+.harja-checkbox {
+    margin-right: 10px;
+}
+
+.harja-checkbox-laatikko {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 1px solid black;
+    background: #cccccc; /* Old browsers */
+    background: -moz-linear-gradient(-45deg, #cccccc 0%, #ffffff 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#cccccc), color-stop(100%,#ffffff)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(-45deg, #cccccc 0%,#ffffff 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(-45deg, #cccccc 0%,#ffffff 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(-45deg, #cccccc 0%,#ffffff 100%); /* IE10+ */
+    background: linear-gradient(135deg, #cccccc 0%,#ffffff 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cccccc', endColorstr='#ffffff',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+}
+
+.harja-checkbox-teksti {
+    display: inline-block;
+    padding-left: 4px;
+    position: relative;
+    top: -5px;
+}
+
+/* Checkbox-tilat */
+.harja-checkbox-laatikko-sisalto {
+    width: 24px;
+    height: 24px;
+}
+
+.harja-checkbox-valittu > .harja-checkbox-laatikko-sisalto {
+    background-image: url("../images/rasti.svg");
+}
+
+.harja-checkbox-osittain-valittu > .harja-checkbox-laatikko-sisalto {
+    background-color: #009838;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 2px;
+    left: 2px;
+}
