@@ -150,7 +150,7 @@ DECLARE
    rval geometry;
 BEGIN
    IF aosa_ = losa_ THEN
-	SELECT ST_Line_Substring(geom, aet_/tr_pituus, let_/tr_pituus)
+	SELECT ST_Line_Substring(geom, aet_/tr_pituus::FLOAT, let_/tr_pituus::FLOAT)
 	FROM tieverkko_paloina
 	WHERE tie=tie_
 	  AND osa=aosa_
