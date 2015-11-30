@@ -18,7 +18,8 @@
             [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot-sanoma]
-            [harja.utils :as utils])
+            [harja.utils :as utils]
+            [harja.domain.roolit :as roolit])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
@@ -83,7 +84,7 @@
 (defn hae-paivystajatiedot-puhelinnumerolla [db {:keys [puhelinnumero alkaen paattyen]} kayttaja]
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
   (assert (not (nil? puhelinnumero)) "Puhelinnumero puuttuu!")
-  ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
+  (roolit/vaadi-rooli kayttaja roolit/liikennepaivystaja)
   (let [alkaen (pvm-string->java-sql-date alkaen)
         paattyen (pvm-string->java-sql-date paattyen)
         kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db
