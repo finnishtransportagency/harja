@@ -6,6 +6,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.yleiset :as yleiset]
             [goog.events :as events]
+            [harja.virhekasittely :as virhekasittely]
             [goog.events.EventType :as EventType]))
 
 (defn luo
@@ -30,7 +31,10 @@ metodina. Muut toteutusten antamat lifecycle metodit yhdistetään siten, että 
         component-will-unmount (keep :component-will-unmount toteutukset)]
     
     (r/create-class
-     {:reagent-render render
+     {:reagent-render (fn [& args] (try
+                                     (apply render args)
+                                     (catch :default e
+                                       [virhekasittely/rendaa-virhe e])))
       :get-initial-state (fn [this]
                            (reduce merge (map #(% this) get-initial-state)))
       :component-will-receive-props (fn [this new-argv]
