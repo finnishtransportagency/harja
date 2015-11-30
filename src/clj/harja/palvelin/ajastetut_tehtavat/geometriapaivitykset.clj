@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.talvihoidon-hoitoluokat :as talvihoidon-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.urakat :as urakoiden-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.alueurakat :as urakoiden-tuonti]
             [clojure.java.io :as io]
             [clj-time.coerce :as coerce])
   (:use [slingshot.slingshot :only [try+ throw+]])

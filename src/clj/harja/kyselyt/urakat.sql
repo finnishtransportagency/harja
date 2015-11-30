@@ -344,3 +344,15 @@ SELECT EXISTS(
     WHERE
       tpi.urakka = :urakkaid AND
       tpk.id = :tehtavaid);
+
+-- name luo-alueurakka<!
+INSERT INTO alueurakka (alueurakkanro, alue, elynumero) VALUES (:alueurakkanro, ST_GeomFromText(:alue)::geometry, :elynumero);
+
+-- name paivita-alueurakka!
+UPDATE alueurakka
+SET alueurakkanro = :alueurakkanro,
+    alue = ST_GeomFromText(:alue)::geometry,
+    elynumero = :elynumero;
+
+-- name: hae-alueurakka-numerolla
+SELECT * FROM alueurakka WHERE alueurakkanro = :alueurakkanro;
