@@ -647,5 +647,6 @@
       :tallenna-toteuma-ja-toteumamateriaalit
       :poista-toteuma!
       :poista-tehtava!
-      :hae-toteumat-tilannekuvaan)
+      :hae-toteumat-tilannekuvaan
+      :urakan-varustetoteumat)
     this))
