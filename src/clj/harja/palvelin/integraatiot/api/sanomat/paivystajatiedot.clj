@@ -4,9 +4,7 @@
 
 (defn muodosta-vastaus-paivystajatietojen-haulle [paivystajatiedot]
   (if (empty? paivystajatiedot)
-    (throw+ {:type    virheet/+paivystajia-ei-loydy+
-             :virheet [{:koodi  virheet/+paivystajia-ei-loydy+
-                        :viesti "Päivystäjiä ei löydy."}]})
+    {:urakat []}
     (let [urakkaryhmat (keys (group-by :urakka_id paivystajatiedot))
           muodosta-paivystykset (fn [paivystykset]
                                   (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
