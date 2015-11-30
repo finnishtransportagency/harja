@@ -120,7 +120,7 @@
 
 (deftest esta-hae-paivystajatiedot-puhelinnumerolla-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-yit portti)]
-    (is (= 500 (:status vastaus)))))
+    (is (= 400 (:status vastaus)))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
