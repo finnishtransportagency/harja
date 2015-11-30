@@ -16,16 +16,9 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.fmt :as fmt]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot])
   (:use [slingshot.slingshot :only [throw+]]))
-
-"NOTE: Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
-ilman ulkoista id:tä olevat lisätään Harjaan. Harjan käyttöliittymästä lisätyillä päivystäjillä
-ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
-
-(defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}]
-    vastauksen-data))
 
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
@@ -63,50 +56,16 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
       (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
         (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
 
-(defn kirjaa-paivystajatiedot [db {id :id} data kirjaaja]
+(defn kirjaa-paivystajatiedot
+  "Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
+  ilman ulkoista id:tä olevat lisätään Harjaan. Harjan käyttöliittymästä lisätyillä päivystäjillä
+  ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
+  [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan päivystäjätiedot urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-paivystajatiedot db urakka-id data)
-    (tee-onnistunut-vastaus)))
-
-(defn muodosta-vastaus-paivystajatietojen-haulle [paivystajatiedot]
-  (if (empty? paivystajatiedot)
-    (throw+ {:type    virheet/+paivystajia-ei-loydy+
-             :virheet [{:koodi  virheet/+paivystajia-ei-loydy+
-                        :viesti "Päivystäjiä ei löydy."}]})
-    (let [urakkaryhmat (keys (group-by :urakka_id paivystajatiedot))
-          vastaus {:urakat (mapv
-                             (fn [urakka-id]
-                               (let [urakan-paivystykset (filter
-                                                           #(= (:urakka_id %) urakka-id)
-                                                           paivystajatiedot)
-                                     {:keys [urakka_id urakka_nimi urakka_alkupvm
-                                             urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
-                                     {:keys [organisaatio_nimi organisaatio_ytunnus]} (first urakan-paivystykset)]
-                                 {:urakka {:tiedot       {:id          urakka_id
-                                                          :nimi        urakka_nimi
-                                                          :urakoitsija {:ytunnus organisaatio_ytunnus
-                                                                        :nimi    organisaatio_nimi}
-                                                          :vaylamuoto  "tie"
-                                                          :tyyppi      urakka_tyyppi
-                                                          :alkupvm     urakka_alkupvm
-                                                          :loppupvm    urakka_loppupvm}
-                                           :paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
-                                                                            sukunimi sahkoposti tyopuhelin matkapuhelin]}]
-                                                                 {:paivystys {:paivystaja    {:id           id
-                                                                                              :etunimi      etunimi
-                                                                                              :sukunimi     sukunimi
-                                                                                              :email        sahkoposti
-                                                                                              :tyopuhelin   tyopuhelin
-                                                                                              :matkapuhelin matkapuhelin}
-                                                                              :alku          alku
-                                                                              :loppu         loppu
-                                                                              :vastuuhenkilo vastuuhenkilo
-                                                                              :varahenkilo   varahenkilo}})
-                                                               urakan-paivystykset)}}))
-                             urakkaryhmat)}]
-      vastaus)))
+    (paivystajatiedot/tee-onnistunut-kirjaus-vastaus)))
 
 (defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja alkaen paattyen]
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " urakka-id " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
@@ -117,7 +76,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                                                   (konv/sql-timestamp alkaen)
                                                                   (not (nil? paattyen))
                                                                   (konv/sql-timestamp paattyen))
-          vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
+          vastaus (paivystajatiedot/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus))
 
 (defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
@@ -136,7 +95,7 @@ ei ole ulkoista id:tä, joten ne ovat Harjan itse ylläpitämiä."
                                                                  (= (fmt/trimmaa-puhelinnumero (:matkapuhelin paivystys))
                                                                     (fmt/trimmaa-puhelinnumero puhelinnumero))))
                                                            kaikki-paivystajatiedot))
-        vastaus (muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
+        vastaus (paivystajatiedot/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
 (defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja]
