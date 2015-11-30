@@ -9,7 +9,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
-            [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
@@ -123,7 +122,7 @@
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-id))
         (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja alkaen paattyen))
-      (throw+ {:type    virheet/+urakkaa-ei-loydy+
+      (throw+ {:type    virheet/+viallinen-kutsu+
                :virheet [{:koodi  virheet/+virheellinen-sijainti+
                           :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
 
