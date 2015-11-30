@@ -54,9 +54,6 @@
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
  :geometriapaivitykset {:tuontivali 60
-                        :tieosoiteverkon-shapefile       "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
-                        :tieosoiteverkon-alk-osoite      "http://10.1.0.96/PTK_tieosoiteverkko.shz"
-                        :tieosoiteverkon-alk-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
                         :tieosoiteverkon-shapefile       "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
                         :tieosoiteverkon-alk-osoite      "http://10.1.0.96/PTK_tieosoiteverkko.shz"
