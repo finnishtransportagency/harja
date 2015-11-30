@@ -8,19 +8,30 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as notifikaatiot]
+            [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat])
+            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
+            [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
 
-(defn hae-ilmoitus [db ilmoitus-id]
-  (let [data (some->> ilmoitus-id (ilmoitukset/hae-ilmoitus db) first konversio/alaviiva->rakenne)]
-    {:ilmoitukset [(sanomat/rakenna-ilmoitus data)]}))
+(defn hae-ilmoituksen-jalkeen-saapuneet-idt [db viimeisin-id]
+  (when viimeisin-id
+    (ilmoitukset/hae-ilmoituksen-jalkeen-saapuneet-ilmoitukset db viimeisin-id)))
+
+(defn hae-ilmoitukset [db ilmoitus-id viimeisin-id]
+  ;; todo: jos viimeisin haettu id annettu, pitää hakea kaikki ilmoitukset, jotka ovat saapuneet viimeksi haetun jälkeen
+  (let [jalkeen-saapuneet-id (hae-ilmoituksen-jalkeen-saapuneet-idt db viimeisin-id)
+        ilmoitus-idt (if (empty? jalkeen-saapuneet-id)
+                       (vector ilmoitus-id)
+                       (vec (conj jalkeen-saapuneet-id ilmoitus-id)))
+        data (ilmoitukset/hae-ilmoitukset-idlla db ilmoitus-idt )
+        ilmoitukset (mapv (fn [ilmoitus] (sanomat/rakenna-ilmoitus (konversio/alaviiva->rakenne ilmoitus))) data)]
+    {:ilmoitukset [ilmoitukset]}))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [parametrit (:params request)
@@ -34,26 +45,25 @@
       (fn []
         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
         (with-channel request kanava
-          (notifikaatiot/kuuntele-urakan-ilmoituksia
-            tapahtumat
-            urakka-id
-            (fn [ilmoitus-id]
-              (log/debug (format "Vastaanotettiin ilmoitus id:llä %s urakalle id:llä %s." ilmoitus-id urakka-id))
-              (send! kanava
-                     ;; todo: jos viimeisin haettu id annettu, pitää hakea kaikki ilmoitukset, jotka ovat saapuneet viimeksi haetun jälkeen
-                     (aja-virhekasittelyn-kanssa
-                       (fn []
-                         (let [ilmoitus-id (Integer/parseInt ilmoitus-id)
-                               data (hae-ilmoitus db ilmoitus-id)
-                               vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
-                           ;; todo: merkitse ilmoitus välitetyksi ja lähetä t-loik:n välitystiedot
-                           (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
-                           vastaus)))
-                     stream)))
-          (on-close kanava
-                    (fn [_]
-                      (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
-                      (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
+                      (notifikaatiot/kuuntele-urakan-ilmoituksia
+                        tapahtumat
+                        urakka-id
+                        (fn [ilmoitus-id]
+                          (log/debug (format "Vastaanotettiin ilmoitus id:llä %s urakalle id:llä %s." ilmoitus-id urakka-id))
+                          (send! kanava
+                                 (aja-virhekasittelyn-kanssa
+                                   (fn []
+                                     (let [ilmoitus-id (Integer/parseInt ilmoitus-id)
+                                           data (hae-ilmoitukset db ilmoitus-id viimeisin-id)
+                                           vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
+                                       ;; todo: merkitse ilmoitus välitetyksi ja lähetä t-loik:n välitystiedot
+                                       (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
+                                       vastaus)))
+                                 stream)))
+                      (on-close kanava
+                                (fn [_]
+                                  (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
+                                  (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle

@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.ilmoitusnotifikaatio
+(ns harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot
   (:require [clojure.core.async :refer [thread]]
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [taoensso.timbre :as log]))

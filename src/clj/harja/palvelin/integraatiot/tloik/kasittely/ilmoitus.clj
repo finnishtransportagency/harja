@@ -4,7 +4,7 @@
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
             [harja.kyselyt.urakat :as urakat]
-            [harja.palvelin.integraatiot.api.ilmoitusnotifikaatio :as notifikaatiot]))
+            [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]))
 
 (defn paattele-urakka [db urakkatyyppi sijainti]
   (let [urakka-id (:id (first (ilmoitukset/hae-ilmoituksen-urakka db urakkatyyppi (:x sijainti) (:y sijainti))))]
