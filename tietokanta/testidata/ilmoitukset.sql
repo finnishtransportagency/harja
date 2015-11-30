@@ -328,7 +328,7 @@ INSERT INTO ilmoitus
  ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), 12377, '2011-10-26 06:05:32', '2011-10-26 06:06:32', true, 'Tiedotus: Kuorma-auton rengas keskellä tietä, en tohtinut poimia kyytiin.',
-                                                                         ST_MakePoint(227110, 6820660)::GEOMETRY, null, null, null, null, null, 'tiedoitus'::ilmoitustyyppi,
+                                                                         ST_MakePoint(224238, 6834028)::GEOMETRY, null, null, null, null, null, 'tiedoitus'::ilmoitustyyppi,
                                                                                                                                           ARRAY['tiellaOnEste']::ilmoituksenselite[],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Porin alueurakka 2007-2012'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
