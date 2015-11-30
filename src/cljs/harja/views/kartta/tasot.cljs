@@ -10,8 +10,7 @@
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
-            [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
-            [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne]
+            [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
@@ -35,8 +34,7 @@
                                          @tierekisteri/tr-alkupiste-kartalla
                                          @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
                                          @varusteet/varusteet-kartalla
-                                         @historiakuva/historiakuvan-asiat-kartalla
-                                         @nykytilanne/nykytilanteen-asiat-kartalla
+                                         @tilannekuva/tilannekuvan-asiat-kartalla
                                          @paallystys/paallystyskohteet-kartalla
                                          @paallystys/paikkauskohteet-kartalla
                                          @muut-tyot/muut-tyot-kartalla)]
@@ -51,11 +49,10 @@
     :tarkastukset laadunseuranta/karttataso-tarkastukset
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
-    :historiakuva historiakuva/karttataso-historiakuva
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
     :kokonaishintainen-toteuma kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
     :varusteet varusteet/karttataso-varustetoteuma
-    :nykytilanne nykytilanne/karttataso-nykytilanne
+    :tilannekuva tilannekuva/karttataso-tilannekuva
     :paallystyskohteet paallystys/karttataso-paallystyskohteet
     :tr-alkupiste tierekisteri/karttataso-tr-alkuosoite
     :muut-tyot muut-tyot/karttataso-muut-tyot))
