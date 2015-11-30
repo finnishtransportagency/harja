@@ -8,7 +8,7 @@
 
 ; FIXME Kesken...
 
-(defn paivita-silta [db silta]
+#_(defn paivita-silta [db silta]
   (s/paivita-silta-siltanumerolla! db
                        (:siltatyy silta)
                        (int (:nro silta))
@@ -18,7 +18,7 @@
                        (:aosa silta)
                        (:aet silta)))
 
-(defn luo-silta [db silta]
+#_(defn luo-silta [db silta]
   (s/vie-siltatauluun! db
                        (:siltatyy silta)
                        (int (:nro silta))
@@ -28,12 +28,12 @@
                        (:aosa silta)
                        (:aet silta)))
 
-(defn luo-tai-paivita-urakka [db urakka]
+#_(defn luo-tai-paivita-urakka [db urakka]
   (if-let [urakka-kannassa (first (s/hae-silta-numerolla db (:nro urakka)))]
     (paivita-silta db urakka)
     (luo-silta db urakka)))
 
-(defn vie-urakka-entry [db urakka]
+#_(defn vie-urakka-entry [db urakka]
   (if (:the_geom urakka)
     (luo-tai-paivita-urakka db urakka)
     (log/warn "Urakka ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error urakka))))
@@ -44,6 +44,6 @@
       (log/debug (str "Tuodaan urakat kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [transaktio db]
                                 (doseq [urakka (shapefile/tuo shapefile)]
-                                  (vie-urakka-entry transaktio urakka)))
+                                  #_(vie-urakka-entry transaktio urakka)))
       (log/debug "Urakoiden tuonti kantaan valmis."))
     (log/debug "Urakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
