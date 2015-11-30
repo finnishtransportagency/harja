@@ -19,9 +19,8 @@
             [harja.views.ilmoitukset :as ilmoitukset]
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
-            [harja.views.about :as about]))
-
-
+            [harja.views.about :as about]
+            [harja.virhekasittely :as virhekasittely]))
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja

@@ -57,7 +57,12 @@
                                                       (update-in [:tilat]
                                                                  #(if (empty? %) +ilmoitustilat+ %)))))]
                            (when-not (k/virhe? tulos)
+                             (when @valittu-ilmoitus ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
+                               (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
+                                 (reset! valittu-ilmoitus nil)))
                              (jarjesta-ilmoitukset tulos)))))))
+
+
 
 (defonce karttataso-ilmoitukset (atom false))
 
