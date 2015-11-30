@@ -13,8 +13,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
-            [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset])
+            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
