@@ -7,12 +7,8 @@
             [harja.shp :as shp])
   (:gen-class))
 
-
-
 (defn testaa [^ShapefileDataStore shp]
   (.getCo shp))
-
-
     
 (defn- lue-elyt
   "Lukee LiVin Elyt_infra.shp tiedostosta ELYt (ent. tiepiirit) ja palauttaa niiden tiedot mäppinä."
@@ -36,11 +32,6 @@
                 "Varsinais-Suomi" "VAR"
                 "Uusimaa" "UUD"})
 
-
-
-                     
-                   
-
 (defn elyt->sql
   "Muodostaa SHP:sta luetuista ELYista SQL INSERT lauseet hallintayksikkötauluun"
   [elyt]
@@ -48,7 +39,6 @@
     (str "\nINSERT INTO hallintayksikko (liikennemuoto, nimi, lyhenne, alue) VALUES ('T', '" nimi "', '" (lyhenteet nimi) "', "
          (shp/geom->pg alue) ");")))
 
-    
 (defn -main [& args]
   (assert (= 2 (count args)) "Anna 2 parametrita: ELY SHP tiedosto ja tehtävä SQL tiedosto")
   (let [[tiedosto tulos] args]
@@ -60,4 +50,3 @@
            elyt->sql
            (reduce str)
            (spit tulos)))))
-  
