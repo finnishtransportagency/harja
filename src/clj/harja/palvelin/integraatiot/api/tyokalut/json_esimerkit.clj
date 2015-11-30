@@ -40,8 +40,6 @@
 (def +soratietarkastuksen-kirjaus+ "api/examples/soratietarkastuksen-kirjaus-request.json")
 (def +talvihoitotarkastuksen-kirjaus+ "api/examples/talvihoitotarkastuksen-kirjaus-request.json")
 
-(def +paivystajatietojen-haku-sijainnilla+ "api/examples/paivystajatietojen-haku-sijainnilla-request.json")
-(def +paivystajatietojen-haku-puhelinnumerolla+ "api/examples/paivystajatietojen-haku-puhelinnumerolla-request.json")
 (def +paivystajatietojen-haku-vastaus+ "api/examples/paivystajatietojen-haku-response.json")
 (def +paivystajatietojen-kirjaus+ "api/examples/paivystajatietojen-kirjaus-request.json")
 

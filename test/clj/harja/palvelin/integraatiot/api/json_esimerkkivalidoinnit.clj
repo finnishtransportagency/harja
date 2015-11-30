@@ -42,8 +42,6 @@
   (is (nil? (validoi json-skeemat/+talvihoitotarkastuksen-kirjaus+ json-esimerkit/+talvihoitotarkastuksen-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/+paivystajatietojen-kirjaus+ json-esimerkit/+paivystajatietojen-kirjaus+)))
-  (is (nil? (validoi json-skeemat/+paivystajatietojen-haku-sijainnilla+ json-esimerkit/+paivystajatietojen-haku-sijainnilla+)))
-  (is (nil? (validoi json-skeemat/+paivystajatietojen-haku-puhelinnumerolla+ json-esimerkit/+paivystajatietojen-haku-puhelinnumerolla+)))
   (is (nil? (validoi json-skeemat/+paivystajatietojen-haku-vastaus+ json-esimerkit/+paivystajatietojen-haku-vastaus+)))
 
   (is (nil? (validoi json-skeemat/+tyokoneenseuranta-kirjaus+ json-esimerkit/+tyokoneenseuranta-kirjaus+))))

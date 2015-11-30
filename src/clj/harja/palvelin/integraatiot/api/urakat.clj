@@ -57,6 +57,7 @@
       (muodosta-vastaus-urakan-haulle db urakka-id urakka))))
 
 (defn hae-urakka-ytunnuksella [db {:keys [ytunnus]} kayttaja]
+  (assert (not (nil? ytunnus)) "Ytunnus puuttuu!")
   (log/debug "Haetaan urakat y-tunnuksella: " ytunnus)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]

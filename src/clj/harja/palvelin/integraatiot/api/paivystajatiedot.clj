@@ -17,7 +17,8 @@
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot])
+            [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot-sanoma]
+            [harja.utils :as utils])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
@@ -65,7 +66,7 @@
     (log/debug "Kirjataan päivystäjätiedot urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (tallenna-paivystajatiedot db urakka-id data)
-    (paivystajatiedot/tee-onnistunut-kirjaus-vastaus)))
+    (paivystajatiedot-sanoma/tee-onnistunut-kirjaus-vastaus)))
 
 (defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja alkaen paattyen]
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " urakka-id " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
@@ -76,11 +77,12 @@
                                                                   (konv/sql-timestamp alkaen)
                                                                   (not (nil? paattyen))
                                                                   (konv/sql-timestamp paattyen))
-          vastaus (paivystajatiedot/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
+          vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus))
 
-(defn hae-paivystajatiedot-puhelinnumerolla [db _ {:keys [puhelinnumero alkaen paattyen]} kayttaja]
+(defn hae-paivystajatiedot-puhelinnumerolla [db {:keys [puhelinnumero alkaen paattyen]} kayttaja]
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
+  (assert (not (nil? puhelinnumero)) "Puhelinnumero puuttuu!")
   ; (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja) FIXME Mites oikeustarkistus?
   (let [alkaen (pvm-string->java-sql-date alkaen)
         paattyen (pvm-string->java-sql-date paattyen)
@@ -95,14 +97,19 @@
                                                                  (= (fmt/trimmaa-puhelinnumero (:matkapuhelin paivystys))
                                                                     (fmt/trimmaa-puhelinnumero puhelinnumero))))
                                                            kaikki-paivystajatiedot))
-        vastaus (paivystajatiedot/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
+        vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
-(defn hae-paivystajatiedot-sijainnilla [db _ {:keys [urakkatyyppi alkaen paattyen koordinaatit]} kayttaja]
-  (log/debug "Haetaan päivystäjätiedot sijainnilla " (pr-str koordinaatit) " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
-  (let [alkaen (pvm-string->java-sql-date alkaen)
+(defn hae-paivystajatiedot-sijainnilla [db {:keys [urakkatyyppi alkaen paattyen x y]} kayttaja]
+  (log/debug "Haetaan päivystäjätiedot sijainnilla x: " (pr-str x) " y: " (pr-str y) " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
+  (assert (not (nil? urakkatyyppi)) "Urakkatyyppi puuttuu!")
+  (assert (not (nil? x)) "Koordinaatti x puuttuu!")
+  (assert (not (nil? y)) "Koordinaatti y puuttuu!")
+  (let [x (Double. x)
+        y (Double. y)
+        alkaen (pvm-string->java-sql-date alkaen)
         paattyen (pvm-string->java-sql-date paattyen)
-        urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi koordinaatit)]
+        urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi {:x x :y y})]
     (if urakka-id
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-id))
@@ -121,18 +128,16 @@
                         (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja-id nil nil)))}
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/sijainnilla"
-    :tyyppi         :POST
-    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-sijainnilla+
+    :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
-    :kasittely-fn   (fn [parametrit data kayttaja-id db]
-                      (hae-paivystajatiedot-sijainnilla db parametrit data kayttaja-id))}
+    :kasittely-fn   (fn [parametrit _ kayttaja-id db]
+                      (hae-paivystajatiedot-sijainnilla db (utils/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
-    :tyyppi         :POST
-    :kutsu-skeema   json-skeemat/+paivystajatietojen-haku-puhelinnumerolla+
+    :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
-    :kasittely-fn   (fn [parametrit data kayttaja-id db]
-                      (hae-paivystajatiedot-puhelinnumerolla db parametrit data kayttaja-id))}
+    :kasittely-fn   (fn [parametrit _ kayttaja-id db]
+                      (hae-paivystajatiedot-puhelinnumerolla db (utils/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
    {:palvelu        :lisaa-paivystajatiedot
     :polku          "/api/urakat/:id/paivystajatiedot"
     :tyyppi         :POST
