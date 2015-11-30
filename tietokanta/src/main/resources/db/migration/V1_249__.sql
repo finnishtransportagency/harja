@@ -18,7 +18,7 @@ BEGIN
   -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
   IF perusluku IS NULL THEN
     RAISE NOTICE 'Kuukauden indeksikorotusta ei voitu laskea koska peruslukua ei ole';
-    RETURN NULL;
+    RETURN (summa, NULL :: NUMERIC, NULL :: NUMERIC);
   END IF;
 
   -- jos maksu on päätetty olla sitomatta indeksiin, palautetaan (summa, summa, 0)
@@ -45,7 +45,7 @@ aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER);
 DROP TYPE laskutusyhteenveto_rivi;
 
 CREATE TYPE laskutusyhteenveto_rivi
-AS (nimi VARCHAR, tuotekoodi VARCHAR, tpi INTEGER,
+AS (nimi VARCHAR, tuotekoodi VARCHAR, tpi INTEGER, perusluku NUMERIC,
     kaikki_paitsi_kht_laskutettu_ind_korotus NUMERIC, kaikki_laskutettu_ind_korotus NUMERIC,
     kaikki_paitsi_kht_laskutetaan_ind_korotus NUMERIC, kaikki_laskutetaan_ind_korotus NUMERIC,
     kaikki_paitsi_kht_laskutettu NUMERIC, kaikki_laskutettu NUMERIC,
@@ -852,7 +852,7 @@ BEGIN
     ', t.nimi;
 
 
-    RETURN NEXT (t.nimi, t.tuotekoodi, t.tpi,
+    RETURN NEXT (t.nimi, t.tuotekoodi, t.tpi, perusluku,
                          kaikki_paitsi_kht_laskutettu_ind_korotus, kaikki_laskutettu_ind_korotus,
                          kaikki_paitsi_kht_laskutetaan_ind_korotus, kaikki_laskutetaan_ind_korotus,
                          kaikki_paitsi_kht_laskutettu, kaikki_laskutettu,

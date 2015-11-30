@@ -325,3 +325,21 @@ line.ei-aktiiviset-paivat {
 .sisaltaa-virheen-tai-varoituksen (@vari) {
     border-bottom: solid 2px @vari !important;
 }
+
+.crash-component {
+  background: yellow;
+  border: 5px dashed black;
+  padding: 5px;
+  span {
+    color: red;
+    font-weight: bold;
+  }
+  .crash-details {
+    display: none;
+    color: black;
+    font-size: 10px;
+  }
+  .details-open {
+    display: block;
+  }
+}

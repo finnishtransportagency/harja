@@ -4,7 +4,10 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [goog.events :as events]
+            [harja.virhekasittely :as virhekasittely]
+            [goog.events.EventType :as EventType]))
 
 (defn luo
   "Luo uuden komponentin instanssin annetuista toteutuksista.
@@ -28,7 +31,10 @@ metodina. Muut toteutusten antamat lifecycle metodit yhdistetään siten, että 
         component-will-unmount (keep :component-will-unmount toteutukset)]
     
     (r/create-class
-     {:reagent-render render
+     {:reagent-render (fn [& args] (try
+                                     (apply render args)
+                                     (catch :default e
+                                       [virhekasittely/rendaa-virhe e])))
       :get-initial-state (fn [this]
                            (reduce merge (map #(% this) get-initial-state)))
       :component-will-receive-props (fn [this new-argv]
@@ -73,6 +79,27 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai vektori avainsano
                                 (let [kuuntelijat (-> this r/state ::kuuntelijat)]
                                   (doseq [k kuuntelijat]
                                     (k))))}))
+
+(defn dom-kuuntelija
+  "Mixin DOM tapahtumien kuuntelemiseen annetussa elementissä.
+Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.
+aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation arvo) ja käsittelyfunktio,
+  jolle annetaan kaksi parametria: komponentti ja tapahtuma."
+  [dom-node & aiheet-ja-kasittelijat]
+  (let [kuuntelijat (partition 2 aiheet-ja-kasittelijat)]
+    {:component-did-mount (fn [this _]
+                            (loop [kahvat []
+                                   [[aihe kasittelija] & kuuntelijat] kuuntelijat]
+                              (if-not aihe
+                                (r/set-state this {::dom-kuuntelijat kahvat})
+                                (let [kuuntelija-fn (fn [tapahtuma] (kasittelija this tapahtuma))]
+                                  (events/listen dom-node aihe kuuntelija-fn)
+                                  (recur (conj kahvat [aihe kuuntelija-fn]) kuuntelijat)))))
+     
+     :component-will-unmount (fn [this _]                                
+                               (let [kuuntelijat (-> this r/state ::dom-kuuntelijat)]
+                                 (doseq [[aihe kuuntelija-fn] kuuntelijat]
+                                   (events/unlisten dom-node aihe kuuntelija-fn))))}))
 
 (defn sisaan-ulos
   "Mixin, joka käsittelee component-will-mount ja component-will-unmount elinkaaret. Tällä voi kätevästi tehdä jotain

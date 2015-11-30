@@ -79,6 +79,7 @@
                                :muutostyot_laskutettu_ind_korotettuna           1014.04404723906800000M
                                :muutostyot_laskutettu_ind_korotus               14.04404723906800000M
                                :nimi                                            "Talvihoito"
+                               :perusluku                                       104.4333333333333333M
                                :sakot_laskutetaan                               0.0M
                                :sakot_laskutetaan_ind_korotettuna               0.0M
                                :sakot_laskutetaan_ind_korotus                   0.0M
@@ -139,6 +140,7 @@
                                       :muutostyot_laskutettu_ind_korotettuna           3014.04404723906800000M
                                       :muutostyot_laskutettu_ind_korotus               14.04404723906800000M
                                       :nimi                                            "Liikenneympäristön hoito"
+                                      :perusluku                                       104.4333333333333333M
                                       :sakot_laskutetaan                               0.0M
                                       :sakot_laskutetaan_ind_korotettuna               0.0M
                                       :sakot_laskutetaan_ind_korotus                   0.0M
@@ -199,6 +201,7 @@
                              :muutostyot_laskutettu_ind_korotettuna           0.0M
                              :muutostyot_laskutettu_ind_korotus               0.0M
                              :nimi                                            "Soratien hoito"
+                             :perusluku                                       104.4333333333333333M
                              :sakot_laskutetaan                               1800.0M
                              :sakot_laskutetaan_ind_korotettuna               1830.4500478774338000M
                              :sakot_laskutetaan_ind_korotus                   30.4500478774338000M
