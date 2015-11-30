@@ -88,8 +88,10 @@
   (let [alkaen (pvm-string->java-sql-date alkaen)
         paattyen (pvm-string->java-sql-date paattyen)
         kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db
-                                                                       alkaen
-                                                                       paattyen)
+                                                                       (not (nil? alkaen))
+                                                                       (konv/sql-timestamp alkaen)
+                                                                       (not (nil? paattyen))
+                                                                       (konv/sql-timestamp paattyen))
         paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
                                                              ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
                                                              ; kirjoitusasu voi vaihdella.

@@ -95,8 +95,16 @@
   (is (not= (fmt/trimmaa-puhelinnumero "+358500-123-123") (fmt/trimmaa-puhelinnumero "+358400 123 123")))
   (is (not= (fmt/trimmaa-puhelinnumero "+0400-123-123") (fmt/trimmaa-puhelinnumero "358400 123 123"))))
 
-(deftest hae-paivystajatiedot-puhelinnumerolla
+(deftest hae-paivystajatiedot-puhelinnumerolla-kayttaen-aikavalia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-jvh portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (log/debug (:body vastaus))
+    (is (= (count (:urakat encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 1))))
+
+(deftest hae-paivystajatiedot-puhelinnumerolla
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (log/debug (:body vastaus))
@@ -108,8 +116,16 @@
     (is (= 500 (:status vastaus)))))
 
 ; FIXME Etsii sijainnilla aktiivisista urakoista. Mitä tapahtuu kun Oulun alueurakka 2014-2019 päättyy?
-(deftest hae-paivystajatiedot-sijainnilla
+(deftest hae-paivystajatiedot-sijainnilla-kayttaen-aikavalia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (= (count (:urakat encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 3))))
+
+; FIXME Etsii sijainnilla aktiivisista urakoista. Mitä tapahtuu kun Oulun alueurakka 2014-2019 päättyy?
+(deftest hae-paivystajatiedot-sijainnilla
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:urakat encoodattu-body)) 1))
