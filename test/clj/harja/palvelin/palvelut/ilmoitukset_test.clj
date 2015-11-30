@@ -29,7 +29,7 @@
 (deftest hae-ilmoitukset-sarakkeet
   (let []
     (is (oikeat-sarakkeet-palvelussa?
-          [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :vapaateksti
+          [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :lyhytselite :pitkaselite
            :ilmoitustyyppi :selitteet :urakkatyyppi :suljettu :sijainti :uusinkuittaus
 
            [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]
