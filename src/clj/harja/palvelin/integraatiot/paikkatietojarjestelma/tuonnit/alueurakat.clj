@@ -8,18 +8,18 @@
 
 (defn paivita-alueurakka [db urakka]
   (u/paivita-alueurakka! db
-                         (:gridcode urakka)
+                         (str (:gridcode urakka))
                          (.toString (:the_geom urakka))
                          0)) ; FIXME Selvitä
 
 (defn luo-alueurakka [db urakka]
   (u/luo-alueurakka<! db
-                       (:gridcode urakka)
+                      (str (:gridcode urakka))
                        (.toString (:the_geom urakka))
                        0)) ; FIXME Selvitä
 
 (defn luo-tai-paivita-urakka [db urakka]
-  (if-let [urakka-kannassa (first (u/hae-alueurakka-numerolla db (:gridcode urakka)))]
+  (if-let [urakka-kannassa (first (u/hae-alueurakka-numerolla db (str (:gridcode urakka))))]
     (paivita-alueurakka db urakka)
     (luo-alueurakka db urakka)))
 
@@ -35,5 +35,5 @@
       (jdbc/with-db-transaction [transaktio db]
                                 (doseq [urakka (shapefile/tuo shapefile)]
                                   (vie-urakka-entry transaktio urakka)))
-      (log/debug "Urakoiden tuonti kantaan valmis."))
-    (log/debug "Urakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+      (log/debug "Alueurakoiden tuonti kantaan valmis."))
+    (log/debug "Alueurakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
