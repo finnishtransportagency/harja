@@ -39,11 +39,11 @@ schemas:
 securitySchemes:
  - basic:
     type: Basic Authentication
-    
+
 traits:
   - secured:
       description: Vaatii Basic HTTP autentikaation
-      
+
 documentation:
  - title: Versiohistoria
    content: !include documentation/harja-api-versiohistoria.md
@@ -418,17 +418,17 @@ documentation:
           required: true
           example: 1
         alkuosa:
-          description: Alkuosa 
+          description: Alkuosa
           type: integer
           required: true
           example: 12
         alkuetaisyys:
-          description: Alkuetaisyys 
+          description: Alkuetaisyys
           type: integer
           required: true
           example: 12
         loppuosa:
-          description: Loppuosa 
+          description: Loppuosa
           type: integer
           required: true
           example: 12
@@ -503,7 +503,7 @@ documentation:
             example: Livi956991
           tietolajitunniste:
             description: Haettavan tietueen tietolajin tunniste
-            type: date
+            type: string
             example: tl506
       responses:
         200:
@@ -525,7 +525,7 @@ documentation:
       is: [secured]
       description: Uuden varusteen lisääminen. Päivittää tiedon tierekisteriin.
       body:
-        application/json: 
+        application/json:
           example: !include examples/varusteen-lisays-request.json
           schema: varusteen-lisays-request
       responses:
@@ -599,22 +599,22 @@ documentation:
       description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mieluusti 5-15 sekunnin intervalilla ja otoskoolla.
       body:
         application/json:
-          example: !include examples/tyokoneenseurannan-kirjaus-request.json     
+          example: !include examples/tyokoneenseurannan-kirjaus-request.json
           schema: tyokoneenseurannan-kirjaus-request
-          
+
 /ilmoitukset:
   is: [secured]
   description: Ilmoitusten massahaku.
   get:
     is: [secured]
-    description: Ilmoitusten haku urakoitsijan id:n avulla. Palauttaa listan nimetylle urakoitsijalle listattuja ilmoituksia. Tämän lisäksi voidaan antaa viimeisimmän onnistuneesti haetun ilmoituksen id, jolloin palautetaan kaikki ilmoitukset, jotka ovat kirjattu tämän jälkeen. Muussa tapauksessa palautetaan kaikki urakoitsijalle kirjatut ilmoitukset. 
+    description: Ilmoitusten haku urakoitsijan id:n avulla. Palauttaa listan nimetylle urakoitsijalle listattuja ilmoituksia. Tämän lisäksi voidaan antaa viimeisimmän onnistuneesti haetun ilmoituksen id, jolloin palautetaan kaikki ilmoitukset, jotka ovat kirjattu tämän jälkeen. Muussa tapauksessa palautetaan kaikki urakoitsijalle kirjatut ilmoitukset.
     queryParameters:
-      urakoitsijaId: 
+      urakoitsijaId:
         description: Urakoitsijan id, jolle haetaan ilmoituset
         type: integer
         required: true
         example: 1
-      viimeisinHaettuId: 
+      viimeisinHaettuId:
         description: Viimeisen onnistuneesti haetun ilmoituksen id
         type: integer
         required: false
@@ -623,7 +623,7 @@ documentation:
       200:
         body:
           application/json:
-            example: !include examples/ilmoitusten-haku-response.json      
+            example: !include examples/ilmoitusten-haku-response.json
             schema: ilmoitusten-haku-response
       400:
         body:
@@ -680,7 +680,7 @@ documentation:
           application/json:
             example: !include examples/virhe-response.json
             schema: virhe-response
-  /{diaarinumero}:   
+  /{diaarinumero}:
     get:
       is: [secured]
       description: Yksittäisen tieluvan haku diaarinumeron avulla.
@@ -701,26 +701,85 @@ documentation:
               example: !include examples/virhe-response.json
               schema: virhe-response
 /paivystajatiedot:
-  get:
+  is: [secured]
+  description: Päivystäjätietojen hallinta
+  /haku:
     is: [secured]
-    description: Päivystäjätietojen haku.
-    body:
-      application/json:
-        example: !include examples/paivystajatietojen-haku-request.json
-        schema: paivystajatietojen-haku-request
-    responses:
-      200:
-        body:
-          application/json:
-            example: !include examples/paivystajatietojen-haku-response.json
-            schema: paivystajatietojen-haku-response
-      400:
-        body:
-          application/json:
-            example: !include examples/virhe-response.json
-            schema: virhe-response
-      500:
-        body:
-          application/json:
-            example: !include examples/virhe-response.json
-            schema: virhe-response
+    description: Päivystäjätietojen haku
+    /puhelinnumerolla:
+      get:
+        is: [secured]
+        description: Päivystäjätietojen haku puhelinnumerolla.
+        queryParameters:
+          puhelinnumero:
+            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta.
+            type: string
+            required: true
+            example: +358 41 433 21 19
+          alkaen:
+            description: Päivystykset alkaen
+            type: date
+            example: 2015-01-01
+          paattyen:
+            description: Päivystykset päättyen
+            type: date
+            example: 2015-01-01
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/paivystajatietojen-haku-response.json
+                schema: paivystajatietojen-haku-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+    /sijainnilla:
+      get:
+        is: [secured]
+        description: Päivystäjätietojen haku sijainnilla.
+        queryParameters:
+          urakkatyyppi:
+            description: Urakkatyyppi (hoito, päällystys, paikkaus, valaisu) jolle päivystykset haetaan
+            type: string
+            required: true
+            example: +358 41 433 21 19
+          x:
+            description: Sijainnin X-koordinaatti
+            type: integer
+            required: true
+            example: 428699
+          y:
+            description: Sijainnin Y-koordinaatti
+            type: integer
+            required: true
+            example: 7210782
+          alkaen:
+            description: Päivystykset alkaen
+            type: integer
+            example: 2015-01-01
+          paattyen:
+            description: Päivystykset päättyen
+            type: date
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/paivystajatietojen-haku-response.json
+                schema: paivystajatietojen-haku-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
