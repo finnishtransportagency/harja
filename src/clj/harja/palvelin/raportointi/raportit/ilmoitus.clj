@@ -16,14 +16,8 @@
         ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
                       db user nil urakka-id +ilmoitustilat+ +ilmoitustyypit+
                       [alkupvm loppupvm] "")
-        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)
-
-        lopullinen-tulos (mapv
-                           (fn [ilmoitus]
-                             (if true
-                               ilmoitus))
-                           ilmoitukset)]
-    lopullinen-tulos))
+        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
+    ilmoitukset))
 
 (defn muodosta-ilmoitusraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
