@@ -14,4 +14,11 @@
     :toimenpidepyynto "Toimenpidepyyntö"
     :tiedoitus "Tiedoksi"))
 
+(defn ilmoitustyypin-lyhenne
+  [tyyppi]
+  (case tyyppi
+    :kysely "URK"
+    :toimenpidepyynto "TPP"
+    :tiedoitus "TUR"))
+
 (def +ilmoitustilat+ #{:suljetut :avoimet})

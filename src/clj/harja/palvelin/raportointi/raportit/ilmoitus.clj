@@ -2,12 +2,9 @@
   "Materiaaliraportti"
   (:require [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
-            [harja.kyselyt.materiaalit :as materiaalit-q]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne +ilmoitustilat+]]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
             [harja.pvm :as pvm]))
 
@@ -61,7 +58,7 @@
           [:hallintayksikko (muodosta-ilmoitusraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
                                                                                     :alkupvm alkupvm
                                                                                     :loppupvm loppupvm})]
-          
+
           (and alkupvm loppupvm)
           [:koko-maa (muodosta-ilmoitusraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
 
@@ -73,33 +70,35 @@
                        :koko-maa "KOKO MAA")
                      ", Ilmoitusraportti "
                      (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))
-        ilmoitukset-urakan-mukaan (group-by :urakka ilmoitukset)
-        _ (log/debug "ilmoitukset " ilmoitukset)
-        _ (log/debug "ilmoitukset-urakan-mukaan " ilmoitukset-urakan-mukaan)]
+        ilmoitukset-urakan-mukaan (group-by :urakka ilmoitukset)]
     [:raportti {:nimi otsikko}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []
-            (concat 
-             [{:otsikko "Urakka"}]
-             (map (fn [ilmoitus]
-                    {:ilmoitustyyppi ilmoitus}) ilmoitukset)))
+            (concat
+              [{:otsikko "Urakka"}]
+              (map (fn [ilmoitustyyppi]
+                     {:otsikko (str (ilmoitustyypin-lyhenne ilmoitustyyppi)
+                                    " ("
+                                    (ilmoitustyypin-nimi ilmoitustyyppi)
+                                    ")")})
+                   [:toimenpidepyynto :kysely :tiedoitus])))
       (into
-       []
-       (concat
-        ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut ilmoitukset
-        (for [[urakka ilmoitukset] ilmoitukset-urakan-mukaan]
+        []
+        (concat
+          ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
+          (for [[urakka ilmoitukset] ilmoitukset-urakan-mukaan]
+            (let [urakan-nimi (:nimi (first (urakat-q/hae-urakka db urakka)))
+                  tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
+                  urk (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
+                  tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]
+              [urakan-nimi tpp urk tur]))
 
-          (do
-            (log/debug "ilmoitukset urakan " urakka " mukaan:" ilmoitukset)
-            (into []
-                 (concat [urakka]
-                         (let [ilm (group-by :ilmoitustyyppi ilmoitukset-urakan-mukaan)]
-                           [(count ilm)])))))
-
-        ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
-        [(concat ["Yhteensä"]
-                 (let [ilm (group-by :ilmoitustyyppi ilmoitukset-urakan-mukaan)]
-                   [(count ilm)]))]))]]))
+          ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
+          (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
+                urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
+                tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]
+            [(concat ["Yhteensä"]
+                     [tpp-yht urk-yht tur-yht])])))]]))
 
     
