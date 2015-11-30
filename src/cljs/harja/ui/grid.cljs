@@ -575,15 +575,16 @@ Optiot on mappi optioita:
                                        [:button.nappi-myonteinen.grid-tallenna
                                         {:disabled (or (not (empty? @virheet))
                                                        @kysely-kaynnissa)
-                                         :on-click #(let [kaikki-rivit (mapv second @muokatut)
-                                                          tallennettavat
-                                                          (if tallenna-vain-muokatut
-                                                            (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
-                                                            kaikki-rivit)]
-                                                     (do (.preventDefault %)
-                                                         (reset! kysely-kaynnissa true)
-                                                         (go (if (<! (tallenna tallennettavat)))
-                                                             (nollaa-muokkaustiedot!))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                                         :on-click #(when-not @kysely-kaynnissa
+                                                     (let [kaikki-rivit (mapv second @muokatut)
+                                                           tallennettavat
+                                                           (if tallenna-vain-muokatut
+                                                             (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
+                                                             kaikki-rivit)]
+                                                       (do (.preventDefault %)
+                                                           (reset! kysely-kaynnissa true)
+                                                           (go (if (<! (tallenna tallennettavat)))
+                                                               (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
                                         [:span.livicon-check " Tallenna"]])
 
                                      (when-not muokkaa-aina
