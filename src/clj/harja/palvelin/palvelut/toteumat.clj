@@ -171,7 +171,6 @@
         (log/debug "Löydettiin" (count tulos) "toteumaa tilannekuvaan.")
 
         tulos))))
->>>>>>> a738bde... Päivitä maininnat historiakuvasta tilannekuvaksi
 
 (defn hae-urakan-toteuma-paivat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteumapäivän: " urakka-id)
@@ -648,10 +647,5 @@
       :tallenna-toteuma-ja-toteumamateriaalit
       :poista-toteuma!
       :poista-tehtava!
-<<<<<<< HEAD
-      :hae-toteumat-historiakuvaan
-      :urakan-varustetoteumat)
-=======
       :hae-toteumat-tilannekuvaan)
->>>>>>> a738bde... Päivitä maininnat historiakuvasta tilannekuvaksi
     this))
