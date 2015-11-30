@@ -20,10 +20,11 @@
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
-(def kayttaja "jvh")
+(def kayttaja-yit "yit-rakennus")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
+  (laajenna-integraatiojarjestelmafixturea kayttaja-yit
                                            :api-paivystajatiedot
                                            (component/using
                                             (api-paivystajatiedot/->Paivystajatiedot)
@@ -38,8 +39,8 @@
 
 (deftest tallenna-paivystajatiedot
   (let [ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
-                                               (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja-yit portti
+                                                (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
                                                    slurp
                                                    (.replace "__ID__" (str ulkoinen-id))
                                                    (.replace "__ETUNIMI__" "Päivi")
@@ -54,8 +55,8 @@
       (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä" "paivi.paivystaja@sahkoposti.com" "04001234567" "04005555555"]))
       (is (= paivystys [paivystaja-id true false]))
 
-      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja portti
-                                                    (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja-yit portti
+                                                      (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
                                                         slurp
                                                         (.replace "__ID__" (str ulkoinen-id))
                                                         (.replace "__ETUNIMI__" "Taneli")
@@ -73,7 +74,7 @@
 
 (deftest hae-paivystajatiedot-urakan-idlla
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja portti)
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
   (is (= 200 (:status vastaus)))
   (is (= (count (:urakat encoodattu-body)) 1))
@@ -95,16 +96,20 @@
   (is (not= (fmt/trimmaa-puhelinnumero "+0400-123-123") (fmt/trimmaa-puhelinnumero "358400 123 123"))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja portti)
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (log/debug (:body vastaus))
     (is (= (count (:urakat encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 1))))
 
+(deftest esta-hae-paivystajatiedot-puhelinnumerolla-ilman-oikeuksia
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-yit portti)]
+    (is (= 500 (:status vastaus)))))
+
 ; FIXME Etsii sijainnilla aktiivisista urakoista. Mitä tapahtuu kun Oulun alueurakka 2014-2019 päättyy?
 (deftest hae-paivystajatiedot-sijainnilla
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja portti)
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:urakat encoodattu-body)) 1))
