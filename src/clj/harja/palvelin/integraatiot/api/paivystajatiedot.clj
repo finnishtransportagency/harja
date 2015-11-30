@@ -84,7 +84,7 @@
 (defn hae-paivystajatiedot-puhelinnumerolla [db parametrit kayttaja]
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla parametreillä: " parametrit)
   (parametrivalidointi/tarkista-parametrit parametrit {:puhelinnumero "Puhelinnumero puuttuu"})
-  (roolit/vaadi-rooli kayttaja roolit/liikennepaivystaja)
+  (validointi/tarkista-rooli kayttaja roolit/liikennepaivystaja)
   (let [{puhelinnumero :puhelinnumero alkaen :alkaen paattyen :paattyen} parametrit
         alkaen (pvm-string->java-sql-date alkaen)
         paattyen (pvm-string->java-sql-date paattyen)
