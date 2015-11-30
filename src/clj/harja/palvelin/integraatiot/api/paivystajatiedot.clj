@@ -19,7 +19,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot-sanoma]
             [harja.utils :as utils]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
@@ -54,9 +55,9 @@
 (defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
-    (doseq [paivystys (:paivystykset data)]
-      (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
-        (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
+                            (doseq [paivystys (:paivystykset data)]
+                              (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
+                                (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
 
 (defn kirjaa-paivystajatiedot
   "Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
@@ -72,20 +73,21 @@
 (defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja alkaen paattyen]
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " urakka-id " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
   (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
-                                                                  urakka-id
-                                                                  (not (nil? alkaen))
-                                                                  (konv/sql-timestamp alkaen)
-                                                                  (not (nil? paattyen))
-                                                                  (konv/sql-timestamp paattyen))
-          vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
+  (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
+                                                                urakka-id
+                                                                (not (nil? alkaen))
+                                                                (konv/sql-timestamp alkaen)
+                                                                (not (nil? paattyen))
+                                                                (konv/sql-timestamp paattyen))
+        vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus))
 
-(defn hae-paivystajatiedot-puhelinnumerolla [db {:keys [puhelinnumero alkaen paattyen]} kayttaja]
-  (log/debug "Haetaan päivystäjätiedot puhelinnumerolla: " puhelinnumero " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
-  (assert (not (nil? puhelinnumero)) "Puhelinnumero puuttuu!")
+(defn hae-paivystajatiedot-puhelinnumerolla [db parametrit kayttaja]
+  (log/debug "Haetaan päivystäjätiedot puhelinnumerolla parametreillä: " parametrit)
+  (parametrivalidointi/tarkista-parametrit parametrit {:puhelinnumero "Puhelinnumero puuttuu"})
   (roolit/vaadi-rooli kayttaja roolit/liikennepaivystaja)
-  (let [alkaen (pvm-string->java-sql-date alkaen)
+  (let [{puhelinnumero :puhelinnumero alkaen :alkaen paattyen :paattyen} parametrit
+        alkaen (pvm-string->java-sql-date alkaen)
         paattyen (pvm-string->java-sql-date paattyen)
         kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db
                                                                        (not (nil? alkaen))
@@ -103,16 +105,20 @@
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
-(defn hae-paivystajatiedot-sijainnilla [db {:keys [urakkatyyppi alkaen paattyen x y]} kayttaja]
-  (log/debug "Haetaan päivystäjätiedot sijainnilla x: " (pr-str x) " y: " (pr-str y) " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
-  (assert (not (nil? urakkatyyppi)) "Urakkatyyppi puuttuu!")
-  (assert (not (nil? x)) "Koordinaatti x puuttuu!")
-  (assert (not (nil? y)) "Koordinaatti y puuttuu!")
-  (let [x (Double. x)
-        y (Double. y)
-        alkaen (pvm-string->java-sql-date alkaen)
-        paattyen (pvm-string->java-sql-date paattyen)
-        urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi {:x x :y y})]
+(defn hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]
+  (log/debug "Haetaan päivystäjätiedot sijainnilla parametreillä: " parametrit)
+  (parametrivalidointi/tarkista-parametrit
+    parametrit
+    {:x            "Koordinaatti X puuttuu"
+     :y            "Koordinaatti Y puuttuu"
+     :urakkatyyppi "Urakkatyyppi puuttuu"})
+  (let
+    [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
+     x (Double. x)
+     y (Double. y)
+     alkaen (pvm-string->java-sql-date alkaen)
+     paattyen (pvm-string->java-sql-date paattyen)
+     urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi {:x x :y y})]
     (if urakka-id
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-id))
