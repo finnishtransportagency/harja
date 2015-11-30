@@ -10,13 +10,13 @@
   (u/paivita-alueurakka! db
                          (:gridcode urakka)
                          (.toString (:the_geom urakka))
-                         nil))
+                         0)) ; FIXME Selvitä
 
 (defn luo-alueurakka [db urakka]
   (u/luo-alueurakka<! db
                        (:gridcode urakka)
                        (.toString (:the_geom urakka))
-                       nil))
+                       0)) ; FIXME Selvitä
 
 (defn luo-tai-paivita-urakka [db urakka]
   (if-let [urakka-kannassa (first (u/hae-alueurakka-numerolla db (:gridcode urakka)))]
