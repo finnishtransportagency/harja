@@ -20,7 +20,7 @@
   (:import (java.util Date)
            (java.text SimpleDateFormat)))
 
-(def kayttaja "yit-rakennus")
+(def kayttaja "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja
@@ -95,8 +95,7 @@
   (is (not= (fmt/trimmaa-puhelinnumero "+0400-123-123") (fmt/trimmaa-puhelinnumero "358400 123 123"))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
-  (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla"] kayttaja portti
-                                         (slurp "test/resurssit/api/hae_paivystajatiedot_puhelinnumerolla.json"))
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (log/debug (:body vastaus))
@@ -105,8 +104,7 @@
 
 ; FIXME Etsii sijainnilla aktiivisista urakoista. Mitä tapahtuu kun Oulun alueurakka 2014-2019 päättyy?
 (deftest hae-paivystajatiedot-sijainnilla
-  (let [vastaus (api-tyokalut/post-kutsu ["/api/paivystajatiedot/haku/sijainnilla"] kayttaja portti
-                                         (slurp "test/resurssit/api/hae_paivystajatiedot_sijainnilla.json"))
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:urakat encoodattu-body)) 1))
