@@ -8,6 +8,21 @@
              :virheet [{:koodi  virheet/+paivystajia-ei-loydy+
                         :viesti "Päivystäjiä ei löydy."}]})
     (let [urakkaryhmat (keys (group-by :urakka_id paivystajatiedot))
+          muodosta-paivystykset (fn [paivystykset]
+                                  (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
+                                                     sukunimi sahkoposti tyopuhelin matkapuhelin]}]
+                                          {:paivystys {:paivystaja    {:id           id
+                                                                       :etunimi      etunimi
+                                                                       :sukunimi     sukunimi
+                                                                       :email        sahkoposti
+                                                                       :tyopuhelin   tyopuhelin
+                                                                       :matkapuhelin matkapuhelin}
+                                                       :alku          alku
+                                                       :loppu         loppu
+                                                       :vastuuhenkilo vastuuhenkilo
+                                                       :varahenkilo   varahenkilo}})
+                                        paivystykset))
+
           vastaus {:urakat (mapv
                              (fn [urakka-id]
                                (let [urakan-paivystykset (filter
@@ -24,19 +39,7 @@
                                                           :tyyppi      urakka_tyyppi
                                                           :alkupvm     urakka_alkupvm
                                                           :loppupvm    urakka_loppupvm}
-                                           :paivystykset (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
-                                                                            sukunimi sahkoposti tyopuhelin matkapuhelin]}]
-                                                                 {:paivystys {:paivystaja    {:id           id
-                                                                                              :etunimi      etunimi
-                                                                                              :sukunimi     sukunimi
-                                                                                              :email        sahkoposti
-                                                                                              :tyopuhelin   tyopuhelin
-                                                                                              :matkapuhelin matkapuhelin}
-                                                                              :alku          alku
-                                                                              :loppu         loppu
-                                                                              :vastuuhenkilo vastuuhenkilo
-                                                                              :varahenkilo   varahenkilo}})
-                                                               urakan-paivystykset)}}))
+                                           :paivystykset (muodosta-paivystykset urakan-paivystykset)}}))
                              urakkaryhmat)}]
       vastaus)))
 
