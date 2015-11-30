@@ -75,10 +75,11 @@ SELECT
   u.tyyppi AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
-  LEFT JOIN organisaatio org ON y.organisaatio = org.id
   LEFT JOIN urakka u ON p.urakka = u.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   WHERE (:alkaen_annettu = FALSE OR p.alku >= :alkaen)
   AND (:paattyen_annettu = FALSE OR p.alku <= :paattyen);
+
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
 SELECT
