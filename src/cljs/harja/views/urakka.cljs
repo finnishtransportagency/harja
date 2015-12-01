@@ -12,7 +12,7 @@
             [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kok-hint-tyot]
-            [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]

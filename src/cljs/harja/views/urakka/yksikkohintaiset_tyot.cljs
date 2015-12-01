@@ -10,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
-            [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
 
             [harja.loki :refer [log logt tarkkaile!]]

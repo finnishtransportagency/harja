@@ -17,7 +17,7 @@
             [harja.ui.grid :as grid]
             [cljs.core.async :refer [<! >! chan]]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.views.urakka.valinnat :as valinnat]
