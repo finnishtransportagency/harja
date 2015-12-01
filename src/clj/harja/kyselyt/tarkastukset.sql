@@ -4,8 +4,10 @@ SELECT id, sopimus, aika,
        tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
        sijainti,
        tarkastaja, mittaaja,
-       tyyppi -- tähän myös havainnon kuvaus
-  FROM tarkastus
+       tyyppi, -- tähän myös havainnon kuvaus
+      rooli AS luoja_rooli
+  FROM tarkastus t
+  LEFT JOIN kayttaja_rooli ON t.luoja = kayttaja_rooli.kayttaja
  WHERE urakka = :urakka
    AND (aika >= :alku AND aika <= :loppu)
    AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)

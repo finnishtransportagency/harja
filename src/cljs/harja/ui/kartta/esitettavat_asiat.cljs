@@ -2,7 +2,8 @@
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.loki :refer [log]]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [harja.domain.roolit :as roolit]))
 
 (defn- oletusalue [asia valittu?]
   (merge
@@ -73,6 +74,8 @@
                            (get-in havainto [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :pistokoe [tarkastus valittu?]
+  (log "Tarkastus: " (pr-str (:rooli (:luoja tarkastus))))
+  (log (= roolit/tilaajan-kayttaja (:rooli (:luoja tarkastus))))
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
@@ -80,7 +83,11 @@
               :img    "kartta-tarkastus-violetti.svg"}
      :alue {:type        :tack-icon
             :scale       (if (valittu? tarkastus) 1.5 1)
-            :img         "kartta-tarkastus-violetti.svg"
+            :img         (case (:rooli (:luoja tarkastus))
+                           "urakoitsijan kayttaja" "kartta-tarkastus-urakoitsija-violetti.svg"
+                           "tilaajan kayttaja" "kartta-tarkastus-tilaaja-violetti.svg"
+                           "tilaajan laadunvalvontakonsultti" "kartta-tarkastus-konsultti-violetti.svg"
+                           "kartta-tarkastus-violetti.svg")
             :coordinates (if (= :line (get-in tarkastus [:sijainti :type]))
                            (first (get-in tarkastus [:sijainti :points]))
 
