@@ -73,6 +73,13 @@
 
                            (get-in havainto [:sijainti :coordinates]))})])
 
+(defn selvita-tarkastuksen-ikoni [rooli]
+  (case rooli
+    "urakoitsijan kayttaja" "kartta-tarkastus-urakoitsija-violetti.svg"
+    "tilaajan kayttaja" "kartta-tarkastus-tilaaja-violetti.svg"
+    "tilaajan laadunvalvontakonsultti" "kartta-tarkastus-konsultti-violetti.svg"
+    "kartta-tarkastus-violetti.svg"))
+
 (defmethod asia-kartalle :pistokoe [tarkastus valittu?]
   (log "Tarkastus: " (pr-str (:rooli (:luoja tarkastus))))
   (log (= roolit/tilaajan-kayttaja (:rooli (:luoja tarkastus))))
@@ -83,11 +90,7 @@
               :img    "kartta-tarkastus-violetti.svg"}
      :alue {:type        :tack-icon
             :scale       (if (valittu? tarkastus) 1.5 1)
-            :img         (case (:rooli (:luoja tarkastus))
-                           "urakoitsijan kayttaja" "kartta-tarkastus-urakoitsija-violetti.svg"
-                           "tilaajan kayttaja" "kartta-tarkastus-tilaaja-violetti.svg"
-                           "tilaajan laadunvalvontakonsultti" "kartta-tarkastus-konsultti-violetti.svg"
-                           "kartta-tarkastus-violetti.svg")
+            :img         (selvita-tarkastuksen-ikoni (:rooli (:luoja tarkastus)))
             :coordinates (if (= :line (get-in tarkastus [:sijainti :type]))
                            (first (get-in tarkastus [:sijainti :points]))
 
@@ -99,15 +102,15 @@
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Laaduntarkastus")
      :selite {:teksti "Laaduntarkastus"
-              :img    "kartta-tarkastus-violetti.svg"}
+              :img    (selvita-tarkastuksen-ikoni (:rooli (:luoja tarkastus)))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line
               :scale (if (valittu? tarkastus) 1.5 1)
-              :img   "kartta-tarkastus-violetti.svg"
+              :img   (selvita-tarkastuksen-ikoni (:rooli (:luoja tarkastus)))
               :points (get-in tarkastus [:sijainti :points])}
              {:type  :tack-icon
               :scale (if (valittu? tarkastus) 1.5 1)
-              :img   "kartta-tarkastus-violetti.svg"
+              :img   (selvita-tarkastuksen-ikoni (:rooli (:luoja tarkastus)))
               :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
