@@ -3,8 +3,8 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs-time.core :as t]
-            [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.views.urakka.laadunseuranta.havainnot :as havainnot]))
+            [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]))
 
 (defn- oletusalue [asia valittu?]
   (merge

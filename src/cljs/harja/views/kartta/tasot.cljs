@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]

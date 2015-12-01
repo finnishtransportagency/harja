@@ -1,7 +1,7 @@
 (ns harja.ui.kommentit
   "Kommentit-komponentti"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]

@@ -1,7 +1,8 @@
 (ns harja.views.urakka.laadunseuranta.havainnot
   "Listaa urakan havainnot, jotka voivat olla joko tarkastukseen liittyviä tai irrallisia."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
@@ -62,45 +63,12 @@
                                  (assoc :sanktiot (into {}
                                                         (map (juxt :id identity) (:sanktiot havainto))))))))))
 
-(defn kuvaile-kasittelytapa [kasittelytapa]
-  (case kasittelytapa
-    :tyomaakokous "Työmaakokous"
-    :puhelin "Puhelimitse"
-    :kommentit "Harja-kommenttien perusteella"
-    :muu "Muu tapa"
-    nil))
-
-(defn kuvaile-paatostyyppi [paatos]
-  (case paatos
-    :sanktio "Sanktio"
-    :ei_sanktiota "Ei sanktiota"
-    :hylatty "Hylätty"))
-
-(defn kuvaile-paatos [{:keys [kasittelyaika paatos kasittelytapa]}]
-  (when paatos
-    (str
-      (pvm/pvm kasittelyaika)
-      " "
-      (kuvaile-paatostyyppi paatos)
-      " ("
-      (kuvaile-kasittelytapa kasittelytapa) ")")))
-
-(defn kuvaile-tekija [tekija]
-  (case tekija
-    :tilaaja "Tilaaja"
-    :urakoitsija "Urakoitsija"
-    :konsultti "Konsultti"
-    "Ei tiedossa"))
-
-
 (defn havaintolistaus
   "Listaa urakan havainnot"
   []
 
   [:div.havainnot
-
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-
    [yleiset/pudotusvalikko
     "Näytä havainnot"
     {:valinta    @listaus
@@ -124,12 +92,9 @@
     [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
      {:otsikko "Kohde" :nimi :kohde :leveys 1}
      {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
-     {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt kuvaile-tekija}
-     {:otsikko "Päätös" :nimi :paatos :fmt kuvaile-paatos :leveys 2} ;; Päätös
-     ]
-
-    @urakan-havainnot
-    ]])
+     {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt havainnot/kuvaile-tekija}
+     {:otsikko "Päätös" :nimi :paatos :fmt havainnot/kuvaile-paatos :leveys 2}]  ;; Päätös
+    @urakan-havainnot]])
 
 (defn paatos?
   "Onko annetussa havainnossa päätös?"
@@ -386,7 +351,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   :aseta         #(assoc-in %1 [:paatos :kasittelytapa] %2)
                   :tyyppi        :valinta
                   :valinnat      [:tyomaakokous :puhelin :kommentit :muu]
-                  :valinta-nayta #(if % (kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
+                  :valinta-nayta #(if % (havainnot/kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
                   :leveys-col    4
                   :muokattava?   muokattava?}
 
@@ -407,7 +372,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   :valinnat      [:sanktio :ei_sanktiota :hylatty]
                   :hae           (comp :paatos :paatos)
                   :aseta         #(assoc-in %1 [:paatos :paatos] %2)
-                  :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- valitse päätös -")
+                  :valinta-nayta #(if % (havainnot/kuvaile-paatostyyppi %) "- valitse päätös -")
                   :leveys-col    4
                   :muokattava?   muokattava?}
 

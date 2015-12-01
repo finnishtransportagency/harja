@@ -4,7 +4,7 @@
 
             [harja.views.urakka.valinnat :as urakka-valinnat]
 
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.sanktiot :as tiedot]
             [harja.tiedot.navigaatio :as nav]

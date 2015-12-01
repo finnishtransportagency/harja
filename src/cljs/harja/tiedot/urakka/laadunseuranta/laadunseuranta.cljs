@@ -1,5 +1,5 @@
-(ns harja.tiedot.urakka.laadunseuranta
-  "Urakan tarkastukset: tiestötarkastukset, talvihoitotarkastukset sekä soratietarkastukset."
+(ns harja.tiedot.urakka.laadunseuranta.laadunseuranta
+  "Tämä nimiavaruus hallinnoi laadunseurantaa sekä havaintoja ja tarkastuksia"
   (:require [harja.asiakas.kommunikaatio :as k]
             [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka :as tiedot-urakka]
