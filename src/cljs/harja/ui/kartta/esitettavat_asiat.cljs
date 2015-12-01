@@ -79,14 +79,14 @@
      :selite {:teksti "Tarkastus"
               :img    "kartta-tarkastus-violetti.svg"}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
-             {:type  :tack-icon-line
-              :color "black"
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   "kartta-tarkastus-violetti.svg"
+             {:type   :tack-icon-line
+              :color  "black"
+              :scale  (if (valittu? tarkastus) 1.5 1)
+              :img    "kartta-tarkastus-violetti.svg"
               :points (get-in tarkastus [:sijainti :points])}
-             {:type  :tack-icon
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   "kartta-tarkastus-violetti.svg"
+             {:type        :tack-icon
+              :scale       (if (valittu? tarkastus) 1.5 1)
+              :img         "kartta-tarkastus-violetti.svg"
               :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
@@ -138,10 +138,16 @@
        :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
        :selite {:teksti selite
                 :img    ikoni}
-       :alue {:type        :tack-icon
-              :scale       (if (valittu? tp) 1.5 1)
-              :img         ikoni
-              :coordinates (get-in tp [:sijainti :coordinates])})]))
+       :alue (if (= :line (get-in tp [:sijainti :type]))
+               {:type   :tack-icon-line
+                :color  "black"
+                :scale  (if (valittu? tp) 1.5 1)
+                :img    ikoni
+                :points (get-in tp [:sijainti :points])}
+               {:type        :tack-icon
+                :scale       (if (valittu? tp) 1.5 1)
+                :img         ikoni
+                :coordinates (get-in tp [:sijainti :coordinates])}))]))
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv
