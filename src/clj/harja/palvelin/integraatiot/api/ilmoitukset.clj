@@ -29,20 +29,20 @@
                        (vec (conj jalkeen-saapuneet-id ilmoitus-id)))
         data (ilmoitukset/hae-ilmoitukset-idlla db ilmoitus-idt)
         ilmoitukset (mapv (fn [ilmoitus] (sanomat/rakenna-ilmoitus (konversio/alaviiva->rakenne ilmoitus))) data)]
-    {:ilmoitukset ilmoitukset})
+    {:ilmoitukset ilmoitukset}))
 
-  (defn vastaanota-ilmoitus [integraatioloki db kanava tapahtuma-id urakka-id ilmoitus-id viimeisin-id sulje-lahetyksen-jalkeen?]
-    (log/debug (format "Vastaanotettiin ilmoitus id:llä %s urakalle id:llä %s." ilmoitus-id urakka-id))
-    (send! kanava
-           (aja-virhekasittelyn-kanssa
-             (fn []
-               (let [ilmoitus-id (Integer/parseInt ilmoitus-id)
-                     data (hae-ilmoitukset db ilmoitus-id viimeisin-id)
-                     vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
-                 ;; todo: merkitse ilmoitus välitetyksi ja lähetä t-loik:n välitystiedot
-                 (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
-                 vastaus)))
-           sulje-lahetyksen-jalkeen?)))
+(defn vastaanota-ilmoitus [integraatioloki db kanava tapahtuma-id urakka-id ilmoitus-id viimeisin-id sulje-lahetyksen-jalkeen?]
+  (log/debug (format "Vastaanotettiin ilmoitus id:llä %s urakalle id:llä %s." ilmoitus-id urakka-id))
+  (send! kanava
+         (aja-virhekasittelyn-kanssa
+           (fn []
+             (let [ilmoitus-id (Integer/parseInt ilmoitus-id)
+                   data (hae-ilmoitukset db ilmoitus-id viimeisin-id)
+                   vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
+               ;; todo: merkitse ilmoitus välitetyksi ja lähetä t-loik:n välitystiedot
+               (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
+               vastaus)))
+         sulje-lahetyksen-jalkeen?))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [parametrit (:params request)

@@ -73,7 +73,6 @@
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
     id))
 
-
 (defn kasittele-ilmoitus [db tapahtumat ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
