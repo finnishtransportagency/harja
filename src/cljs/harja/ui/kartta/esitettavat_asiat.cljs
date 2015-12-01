@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs-time.core :as t]
-            [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]))
+            [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.views.urakka.laadunseuranta.havainnot :as havainnot]))
 
 (defn- oletusalue [asia valittu?]
   (merge
@@ -60,9 +61,9 @@
 
 (defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
   (case tekija
-    "urakoitsija" (str "kartta-" ikonityyppi "-urakoitsija-violetti.svg")
-    "tilaaja" (str "kartta-" ikonityyppi "-tilaaja-violetti.svg")
-    "konsultti" (str "kartta-" ikonityyppi "-konsultti-violetti.svg")
+    :urakoitsija (str "kartta-" ikonityyppi "-urakoitsija-violetti.svg")
+    :tilaaja (str "kartta-" ikonityyppi "-tilaaja-violetti.svg")
+    :konsultti (str "kartta-" ikonityyppi "-konsultti-violetti.svg")
     (str "kartta-" ikonityyppi "-violetti.svg")))
 
 (defn selvita-tarkastuksen-ikoni [tekija]
@@ -75,8 +76,8 @@
   [(assoc havainto
      :type :havainto
      :nimi (or (:nimi havainto) "Havainto")
-     :selite {:teksti "Havainto"
-              :img    "kartta-havainto-violetti.svg"}
+     :selite {:teksti (str "Havainto" " (" (havainnot/kuvaile-tekija (:tekija havainto)) ")")
+              :img    (selvita-havainnon-ikoni (:tekija havainto))}
      :alue {:type        :tack-icon
             :scale       (if (valittu? havainto) 1.5 1)
             :img         (selvita-havainnon-ikoni (:tekija havainto))
@@ -86,27 +87,12 @@
 
                            (get-in havainto [:sijainti :coordinates]))})])
 
-(defmethod asia-kartalle :pistokoe [tarkastus valittu?]
+(defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   (log "Tarkastus: " (pr-str tarkastus))
   [(assoc tarkastus
      :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Pistokoe")
-     :selite {:teksti (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (:tekija tarkastus) ")")
-              :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? tarkastus) 1.5 1)
-            :img         (selvita-tarkastuksen-ikoni (:tekija tarkastus))
-            :coordinates (if (= :line (get-in tarkastus [:sijainti :type]))
-                           (first (get-in tarkastus [:sijainti :points]))
-
-                           (get-in tarkastus [:sijainti :coordinates]))})])
-
-(defmethod asia-kartalle :laatu [tarkastus valittu?]
-  (log "Piirretään laaduntarkastus: " (pr-str tarkastus))
-  [(assoc tarkastus
-     :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Laaduntarkastus")
-     :selite {:teksti "Laaduntarkastus"
+     :nimi (or (:nimi tarkastus) "Tarkastus")
+     :selite {:teksti (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line
