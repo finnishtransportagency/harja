@@ -142,7 +142,7 @@
       .list-group-item:hover {
         background-color: #f5f5f5;
       }
-    </style></head><body data-spy="scroll" data-target="#sidebar"><div class="container"><div class="row"><div class="col-md-9" role="main"><div class="page-header"><h1>Harja API API documentation <small>version 0.0.5</small></h1><p>https://harja/api/0.0.5</p><h3 id="Versiohistoria"><a href="#Versiohistoria">Versiohistoria</a></h3><p><b>Nykyinen versio: 0.0.5</b> <b>Julkaistu: 2.9.2015</b></p><p><b>Versiohistoria:</b></p><ul><li>Versionumero: 0.0.5. Julkaistu: - . Muutokset:<ul><li>Päivystäjätietojen haku toteutettu kolmena eri GET-palveluna: haku urakka id:llä, sijainnilla tai puhelinnumerolla</li><li>Toteumalle merkitty pakolliseksi alkamis- ja päättymisaika</li><li>Reittipisteelle merkitty pakolliseksi antaa aika</li><li>Totemien kirjaamisesta muutettu materiaalien ja tehtävien yksiköt enumin sijasta tekstiksi. Käytettävät arvot yksiköille &amp; materiaaleille otetaan jatkossa urakan tietojen hausta.</li><li>Lisätty urakoiden haun vastaukseen kirjausyksiköt tehtäville &amp; kaikki materiaalit</li><li>Lisätty uusi toteumatyyppi vahingonkorvaus reitti, piste &amp; varustetoteumille</li><li>Tyokoneseurannasta poistettu sopimus id.</li><li>Varusterajapinta päivitetty vastaamaan tierekisterin rajapintaa</li><li>Urakoiden hakuun lisätty alueurakkanumero</li><li>Tarkennettu urakan haun vastausta. Kertoo nyt urakan sopimusten yksikkö- ja kokonaishintaiset tehtävät listassa, joita voidaan käyttää kirjaaman toteumia.</li><li>Kirjattu tarkennuksia API:n operaatioiden kuvauksiin.</li><li>Suunta lisätty työkone seurantaan. Suunta annetaan astelukuna.</li><li>Tietolajien haku varusteille päivitetty. Tietolajit haetaan yksi kerrallaan Tierekisteristä.</li><li>Poikkeamat poistetu rajapinnasta</li><li>Muutoksia varusterajapintaan</li><li>Haetaan vain yksi tietolaji kerrallaan</li></ul></li><li>Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:<ul><li>Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia</li></ul></li><li>Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:<ul><li>Tiestö-, soratie- ja talvihoitotarkastusten payloadit yksinkertaistettu</li></ul></li><li>Versionumero: 0.0.2. Julkaistu: 10.6.2015. Muutokset:<ul><li>Poistettu päivystäjätietojen haku</li><li>Lisätty tielupien haku</li><li>Lisätty tietyö ilmoituksen kirjaus</li></ul></li><li>Versionumero: 0.0.1. Julkaistu: 9.6.2015. Muutokset:<ul><li>Ensimmäinen versio julkaistu</li></ul></li></ul><h3 id="Kuvaus"><a href="#Kuvaus">Kuvaus</a></h3><p>Harja -järjestelmän julkinen API</p><p>API on jaettu neljään pääosioon:</p><ol><li>urakat:<ul><li>Urakoiden perustietojen haku joko urakoitsijan id:llä tai yksittäisen urakan id:llä</li><li>Urakan seurantatietojen kirjaus: toteumat, poikkeukset, tarkastukset ja havainnot</li></ul></li><li>varusteet:<ul><li>Varustetietojen haku Tierekisteristä</li><li>Varustetietojen päivitys Tierekisteriin.</li></ul></li><li>seuranta:<ul><li>Reaaliaikaisten seurantatietojen, kuten esim. aura-auton liikkeiden kirjaus</li></ul></li><li>ilmoitukset:<ul><li>Ilmoitusten haku urakoitsijakohtaisesti</li><li>Ilmoitusten ilmoitusten kuittaaminen</li></ul><br></li></ol><h3 id="Tekninen-kuvaus"><a href="#Tekninen-kuvaus">Tekninen kuvaus</a></h3><p>Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa.</p><p>Tietoliikenne Harjan palvelimille kulkee Liikenneviraston keskitetyn gatewayn kautta (Oracle Enterprice Gateway). Siirtoprotokollana käytetään HTTPS. Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Liikennevirasto hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.</p><a href="documentation/Harja%20API%20liikennekuva.png"><img width="850" src="documentation/Harja%20API%20liikennekuva.png"></a><h3 id="Sijaintitiedot"><a href="#Sijaintitiedot">Sijaintitiedot</a></h3><p>Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.</p><h3 id="Tierekisteriurakkakoodit-selitteineen"><a href="#Tierekisteriurakkakoodit-selitteineen">Tierekisteriurakkakoodit selitteineen</a></h3><p>Tierekisteriurakkakoodit:</p><p>urakka 100 yrittäjä Paikallinen yrittäjä hoitaa urakka 400 Kunta Paikallinen kunta hoitaa urakka 2062 Ke-Suomi Keski-Suomen valaistusurakka urakka 3001 betonitie Betonitie urakka 3002 HTU PPS HTU-piirien pääteiden päällysteiden palvelusopimus urakka 3003 Opäälpa1 Oulun päälllystepalvelu 1 urakka 3004 Opäälpa2 Oulun päälllystepalvelu 2 urakka 3005 KaS PS Kaakkois-Suomen päällystepalvelusopimus urakka 3006 P_Kimppa Pirkanmaan Kimppa 2013-17 urakka 4001 U-tm Uudenmaan tiemerkinnät urakka 4002 T-tm Turun tiemerkinnät urakka 4003 KaS-tm Kaakkois-Suomen tiemerkinnät urakka 4004 H-tm Hämeen tiemerkinnät urakka 4005 SK-tm Savo-Karjalan tiemerkinnät urakka 4006 KeS-tm Keski-Suomen tiemerkinnät urakka 4007 V-tm Vaasan tiemerkinnät urakka 4008 O-tm Oulun tiemerkinnät urakka 4009 L-tm Lapin tiemerkinnät urakka 5001 OSiltopa1 Oulun siltojen palvelusopimus 1 urakka 5002 OSiltopa2 Oulun siltojen palvelusopimus 2 urakka 5003 KaSSiltopa Kaakkois-Suomen siltojen palvelusopimus urakka 6001 U-telemat Uudenmaan tiepiirin telematiikan hoito 2009-2012 urakka 6002 Nevia Valtakunnallinen matka-ajan seurantasopimus urakka 9001 JCDeaux JCDeauxin mainossoppari</p></div><div class="panel panel-default"><div class="panel-heading"><h3 id="urakat" class="panel-title">/urakat</h3></div><div class="panel-body"><div class="top-resource-description"><p>Urakoiden tietojen hallinta.</p></div><div class="panel-group"><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_urakat_haku"><span class="parent">/urakat</span>/haku</a> <span class="methods"></span></h4></div><div id="panel_urakat_haku" class="panel-collapse collapse"><div class="panel-body"><div class="resource-description"><p>Urakoiden massahaku.</p></div><div class="list-group"></div></div></div></div><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_urakat_haku__ytunnus_"><span class="parent">/urakat/haku</span>/{ytunnus}</a> <span class="methods"><a href="#urakat_haku__ytunnus__get"><span class="badge badge_get">get</span></a></span></h4></div><div id="panel_urakat_haku__ytunnus_" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#urakat_haku__ytunnus__get'" class="list-group-item"><span class="badge badge_get">get</span><div class="method_description"><p>Palauttaa kaikki urakoitsijan Y-tunnuksen mukaisen urakoitsijan urakoiden otsikkotason tiedot. Urakan täydet tiedot haetaan erikseen urakan id:n avulla (/urakka/id).</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="urakat_haku__ytunnus__get"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_get">get</span> <span class="parent">/urakat/haku</span>/{ytunnus}</h4></div><div class="modal-body"><div class="alert alert-info"><p>Palauttaa kaikki urakoitsijan Y-tunnuksen mukaisen urakoitsijan urakoiden otsikkotason tiedot. Urakan täydet tiedot haetaan erikseen urakan id:n avulla (/urakka/id).</p></div><ul class="nav nav-tabs"><li class="active"><a href="#urakat_haku__ytunnus__get_request" data-toggle="tab">Request</a></li><li><a href="#urakat_haku__ytunnus__get_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="urakat_haku__ytunnus__get_request"><h3>URI Parameters</h3><ul><li><strong>ytunnus</strong>: <em>required (string)</em></li></ul></div><div class="tab-pane" id="urakat_haku__ytunnus__get_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+    </style></head><body data-spy="scroll" data-target="#sidebar"><div class="container"><div class="row"><div class="col-md-9" role="main"><div class="page-header"><h1>Harja API API documentation <small>version 0.0.5</small></h1><p>https://harja/api/0.0.5</p><h3 id="Kuvaus"><a href="#Kuvaus">Kuvaus</a></h3><p>Harja -järjestelmän julkinen API</p><p>API on jaettu neljään pääosioon:</p><ol><li>urakat:<ul><li>Urakoiden perustietojen haku joko urakoitsijan id:llä tai yksittäisen urakan id:llä</li><li>Urakan seurantatietojen kirjaus: toteumat, poikkeukset, tarkastukset ja havainnot</li></ul></li><li>varusteet:<ul><li>Varustetietojen haku Tierekisteristä</li><li>Varustetietojen päivitys Tierekisteriin.</li></ul></li><li>seuranta:<ul><li>Reaaliaikaisten seurantatietojen, kuten esim. aura-auton liikkeiden kirjaus</li></ul></li><li>ilmoitukset:<ul><li>Ilmoitusten haku urakoitsijakohtaisesti</li><li>Ilmoitusten ilmoitusten kuittaaminen</li></ul><br></li></ol><h3 id="Tekninen-kuvaus"><a href="#Tekninen-kuvaus">Tekninen kuvaus</a></h3><p>Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa.</p><p>Tietoliikenne Harjan palvelimille kulkee Liikenneviraston keskitetyn gatewayn kautta (Oracle Enterprice Gateway). Siirtoprotokollana käytetään HTTPS. Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Liikennevirasto hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.</p><a href="documentation/Harja%20API%20liikennekuva.png"><img width="850" src="documentation/harja-api-liikennekuva.png"></a><h3 id="Sijaintitiedot"><a href="#Sijaintitiedot">Sijaintitiedot</a></h3><p>Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.</p><h3 id="Tierekisteriurakkakoodit-selitteineen"><a href="#Tierekisteriurakkakoodit-selitteineen">Tierekisteriurakkakoodit selitteineen</a></h3><p>Tierekisteriurakkakoodit:</p><p>urakka 100 yrittäjä Paikallinen yrittäjä hoitaa urakka 400 Kunta Paikallinen kunta hoitaa urakka 2062 Ke-Suomi Keski-Suomen valaistusurakka urakka 3001 betonitie Betonitie urakka 3002 HTU PPS HTU-piirien pääteiden päällysteiden palvelusopimus urakka 3003 Opäälpa1 Oulun päälllystepalvelu 1 urakka 3004 Opäälpa2 Oulun päälllystepalvelu 2 urakka 3005 KaS PS Kaakkois-Suomen päällystepalvelusopimus urakka 3006 P_Kimppa Pirkanmaan Kimppa 2013-17 urakka 4001 U-tm Uudenmaan tiemerkinnät urakka 4002 T-tm Turun tiemerkinnät urakka 4003 KaS-tm Kaakkois-Suomen tiemerkinnät urakka 4004 H-tm Hämeen tiemerkinnät urakka 4005 SK-tm Savo-Karjalan tiemerkinnät urakka 4006 KeS-tm Keski-Suomen tiemerkinnät urakka 4007 V-tm Vaasan tiemerkinnät urakka 4008 O-tm Oulun tiemerkinnät urakka 4009 L-tm Lapin tiemerkinnät urakka 5001 OSiltopa1 Oulun siltojen palvelusopimus 1 urakka 5002 OSiltopa2 Oulun siltojen palvelusopimus 2 urakka 5003 KaSSiltopa Kaakkois-Suomen siltojen palvelusopimus urakka 6001 U-telemat Uudenmaan tiepiirin telematiikan hoito 2009-2012 urakka 6002 Nevia Valtakunnallinen matka-ajan seurantasopimus urakka 9001 JCDeaux JCDeauxin mainossoppari</p><h3 id="Versiohistoria"><a href="#Versiohistoria">Versiohistoria</a></h3><p><b>Nykyinen versio: 0.0.5</b> <b>Julkaistu: 2.9.2015</b></p><p><b>Versiohistoria:</b></p><ul><li>Versionumero: 0.0.5. Julkaistu: - . Muutokset:<ul><li>Päivystäjätietojen haku toteutettu kolmena eri GET-palveluna: haku urakka id:llä, sijainnilla tai puhelinnumerolla</li><li>Toteumalle merkitty pakolliseksi alkamis- ja päättymisaika</li><li>Reittipisteelle merkitty pakolliseksi antaa aika</li><li>Totemien kirjaamisesta muutettu materiaalien ja tehtävien yksiköt enumin sijasta tekstiksi. Käytettävät arvot yksiköille &amp; materiaaleille otetaan jatkossa urakan tietojen hausta.</li><li>Lisätty urakoiden haun vastaukseen kirjausyksiköt tehtäville &amp; kaikki materiaalit</li><li>Lisätty uusi toteumatyyppi vahingonkorvaus reitti, piste &amp; varustetoteumille</li><li>Tyokoneseurannasta poistettu sopimus id.</li><li>Varusterajapinta päivitetty vastaamaan tierekisterin rajapintaa</li><li>Urakoiden hakuun lisätty alueurakkanumero</li><li>Tarkennettu urakan haun vastausta. Kertoo nyt urakan sopimusten yksikkö- ja kokonaishintaiset tehtävät listassa, joita voidaan käyttää kirjaaman toteumia.</li><li>Kirjattu tarkennuksia API:n operaatioiden kuvauksiin.</li><li>Suunta lisätty työkone seurantaan. Suunta annetaan astelukuna.</li><li>Tietolajien haku varusteille päivitetty. Tietolajit haetaan yksi kerrallaan Tierekisteristä.</li><li>Poikkeamat poistetu rajapinnasta</li><li>Muutoksia varusterajapintaan</li><li>Haetaan vain yksi tietolaji kerrallaan</li></ul></li><li>Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:<ul><li>Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia</li></ul></li><li>Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:<ul><li>Tiestö-, soratie- ja talvihoitotarkastusten payloadit yksinkertaistettu</li></ul></li><li>Versionumero: 0.0.2. Julkaistu: 10.6.2015. Muutokset:<ul><li>Poistettu päivystäjätietojen haku</li><li>Lisätty tielupien haku</li><li>Lisätty tietyö ilmoituksen kirjaus</li></ul></li><li>Versionumero: 0.0.1. Julkaistu: 9.6.2015. Muutokset:<ul><li>Ensimmäinen versio julkaistu</li></ul></li></ul></div><div class="panel panel-default"><div class="panel-heading"><h3 id="urakat" class="panel-title">/urakat</h3></div><div class="panel-body"><div class="top-resource-description"><p>Urakoiden tietojen hallinta.</p></div><div class="panel-group"><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_urakat_haku"><span class="parent">/urakat</span>/haku</a> <span class="methods"></span></h4></div><div id="panel_urakat_haku" class="panel-collapse collapse"><div class="panel-body"><div class="resource-description"><p>Urakoiden massahaku.</p></div><div class="list-group"></div></div></div></div><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_urakat_haku__ytunnus_"><span class="parent">/urakat/haku</span>/{ytunnus}</a> <span class="methods"><a href="#urakat_haku__ytunnus__get"><span class="badge badge_get">get</span></a></span></h4></div><div id="panel_urakat_haku__ytunnus_" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#urakat_haku__ytunnus__get'" class="list-group-item"><span class="badge badge_get">get</span><div class="method_description"><p>Palauttaa kaikki urakoitsijan Y-tunnuksen mukaisen urakoitsijan urakoiden otsikkotason tiedot. Urakan täydet tiedot haetaan erikseen urakan id:n avulla (/urakka/id).</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="urakat_haku__ytunnus__get"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_get">get</span> <span class="parent">/urakat/haku</span>/{ytunnus}</h4></div><div class="modal-body"><div class="alert alert-info"><p>Palauttaa kaikki urakoitsijan Y-tunnuksen mukaisen urakoitsijan urakoiden otsikkotason tiedot. Urakan täydet tiedot haetaan erikseen urakan id:n avulla (/urakka/id).</p></div><ul class="nav nav-tabs"><li class="active"><a href="#urakat_haku__ytunnus__get_request" data-toggle="tab">Request</a></li><li><a href="#urakat_haku__ytunnus__get_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="urakat_haku__ytunnus__get_request"><h3>URI Parameters</h3><ul><li><strong>ytunnus</strong>: <em>required (string)</em></li></ul></div><div class="tab-pane" id="urakat_haku__ytunnus__get_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "type": "object",
@@ -4224,33 +4224,33 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "urakat": {
-      "id": "urn:harja/urakat",
+    "paivystajatiedot": {
+      "id": "urn:harja/paivystajatiedot",
       "type": "array",
       "maxItems" : 100,
       "items": {
-        "id": "urn:harja/urakat/0",
+        "id": "urn:harja/paivystajatiedot/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "urakka": {
-            "id": "urn:harja/urakat/0/urakka",
+            "id": "urn:harja/paivystajatiedot/0/urakka",
             "type": "object",
             "required": true,
             "properties": {
               "tiedot": {
-                "id": "urn:harja/urakat/0/urakka/tiedot",
+                "id": "urn:harja/paivystajatiedot/0/urakka/tiedot",
                 "type": "object",
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
                 "required": true
               },
               "paivystykset": {
-                "id": "urn:harja/urakat/0/urakka/paivystykset",
+                "id": "urn:harja/paivystajatiedot/0/urakka/paivystykset",
                 "type": "array",
                 "maxItems" : 1000,
                 "items": {
-                  "id": "urn:harja/urakat/0/urakka/paivystykset/0",
+                  "id": "urn:harja/paivystajatiedot/0/urakka/paivystykset/0",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
@@ -4268,7 +4268,7 @@
     }
   }
 }</code></pre><p><strong>Example</strong>:</p><pre><code>{
-  "urakat": [
+  "paivystajatiedot": [
     {
       "urakka": {
         "tiedot": {
@@ -7452,33 +7452,33 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "urakat": {
-      "id": "urn:harja/urakat",
+    "paivystajatiedot": {
+      "id": "urn:harja/paivystajatiedot",
       "type": "array",
       "maxItems" : 100,
       "items": {
-        "id": "urn:harja/urakat/0",
+        "id": "urn:harja/paivystajatiedot/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "urakka": {
-            "id": "urn:harja/urakat/0/urakka",
+            "id": "urn:harja/paivystajatiedot/0/urakka",
             "type": "object",
             "required": true,
             "properties": {
               "tiedot": {
-                "id": "urn:harja/urakat/0/urakka/tiedot",
+                "id": "urn:harja/paivystajatiedot/0/urakka/tiedot",
                 "type": "object",
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
                 "required": true
               },
               "paivystykset": {
-                "id": "urn:harja/urakat/0/urakka/paivystykset",
+                "id": "urn:harja/paivystajatiedot/0/urakka/paivystykset",
                 "type": "array",
                 "maxItems" : 1000,
                 "items": {
-                  "id": "urn:harja/urakat/0/urakka/paivystykset/0",
+                  "id": "urn:harja/paivystajatiedot/0/urakka/paivystykset/0",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
@@ -7496,7 +7496,7 @@
     }
   }
 }</code></pre><p><strong>Example</strong>:</p><pre><code>{
-  "urakat": [
+  "paivystajatiedot": [
     {
       "urakka": {
         "tiedot": {
@@ -7624,33 +7624,33 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "urakat": {
-      "id": "urn:harja/urakat",
+    "paivystajatiedot": {
+      "id": "urn:harja/paivystajatiedot",
       "type": "array",
       "maxItems" : 100,
       "items": {
-        "id": "urn:harja/urakat/0",
+        "id": "urn:harja/paivystajatiedot/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "urakka": {
-            "id": "urn:harja/urakat/0/urakka",
+            "id": "urn:harja/paivystajatiedot/0/urakka",
             "type": "object",
             "required": true,
             "properties": {
               "tiedot": {
-                "id": "urn:harja/urakat/0/urakka/tiedot",
+                "id": "urn:harja/paivystajatiedot/0/urakka/tiedot",
                 "type": "object",
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
                 "required": true
               },
               "paivystykset": {
-                "id": "urn:harja/urakat/0/urakka/paivystykset",
+                "id": "urn:harja/paivystajatiedot/0/urakka/paivystykset",
                 "type": "array",
                 "maxItems" : 1000,
                 "items": {
-                  "id": "urn:harja/urakat/0/urakka/paivystykset/0",
+                  "id": "urn:harja/paivystajatiedot/0/urakka/paivystykset/0",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
@@ -7668,7 +7668,7 @@
     }
   }
 }</code></pre><p><strong>Example</strong>:</p><pre><code>{
-  "urakat": [
+  "paivystajatiedot": [
     {
       "urakka": {
         "tiedot": {
