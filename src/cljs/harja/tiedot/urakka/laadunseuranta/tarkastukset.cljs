@@ -15,6 +15,9 @@
                               :laatu "Laaduntarkastus"
                               :pistokoe "Pistokoe"})
 
+(defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
+(defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie
+
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy havainnot sekä niiden reklamaatiot."
   [urakka-id tarkastus-id]
@@ -27,20 +30,26 @@
   (k/post! :tallenna-tarkastus {:urakka-id urakka-id
                                 :tarkastus tarkastus}))
 
+(defn hae-urakan-tarkastukset
+  "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."
+  [urakka-id alkupvm loppupvm tienumero tyyppi]
+  (k/post! :hae-urakan-tarkastukset {:urakka-id urakka-id
+                                     :alkupvm   alkupvm
+                                     :loppupvm  loppupvm
+                                     :tienumero tienumero
+                                     :tyyppi    tyyppi}))
+
 (defonce urakan-tarkastukset
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       [alku loppu] @tiedot-urakka/valittu-aikavali
                       laadunseurannassa? @laadunseuranta/laadunseurannassa?
-                      valilehti @valittu-valilehti
+                      valilehti @laadunseuranta/valittu-valilehti
                       tienumero @tienumero
                       tyyppi @tarkastustyyppi]
                      {:odota 500}
                      (when (and laadunseurannassa? (= :tarkastukset valilehti)
                                 urakka-id alku loppu)
                        (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
-
-;; Urakan tarkastusten karttataso
-(defonce karttataso-tarkastukset (atom false))
 
 (defonce valittu-tarkastus (atom nil))
 
@@ -76,12 +85,3 @@
                                      (into []
                                            (remove #(= (:id %) id))
                                            tarkastukset)))))))
-
-(defn hae-urakan-tarkastukset
-  "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."
-  [urakka-id alkupvm loppupvm tienumero tyyppi]
-  (k/post! :hae-urakan-tarkastukset {:urakka-id urakka-id
-                                     :alkupvm   alkupvm
-                                     :loppupvm  loppupvm
-                                     :tienumero tienumero
-                                     :tyyppi    tyyppi}))

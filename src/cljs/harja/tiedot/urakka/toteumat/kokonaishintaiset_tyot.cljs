@@ -5,7 +5,9 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -64,3 +66,42 @@
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
                  @haetut-reitit)))))
+
+
+(defn aseta-hoitokausi [hoitokaudet rivi]
+  (let [p (pvm/luo-pvm (:vuosi rivi) (dec (:kuukausi rivi)) 1)]
+    (loop [[hk & hoitokaudet] hoitokaudet]
+      (if (nil? hk)
+        ;; Ei löytynyt hoitokautta, palautetaan rivi
+        (do (log "kokonaishintaiselle työlle ei löytynyt hoitokautta: " (pr-str rivi))
+            nil)
+
+        (let [[alkupvm loppupvm] hk]
+          ;;(log "TESTAA ONKO " (pr-str p) " HOITOKAUDESSA " (pr-str hk) "? " (and (or (pvm/sama-pvm? alkupvm p)
+          ;;                                                                           (pvm/jalkeen? p alkupvm))
+          ;;                                                                       (or (pvm/sama-pvm? loppupvm p)
+          ;;                                                                           (pvm/ennen? p loppupvm))))
+          (if (and (or (pvm/sama-pvm? alkupvm p)
+                       (pvm/jalkeen? p alkupvm))
+                   (or (pvm/sama-pvm? loppupvm p)
+                       (pvm/ennen? p loppupvm)))
+            (assoc rivi
+              :alkupvm alkupvm
+              :loppupvm loppupvm)
+
+            (recur hoitokaudet)))))))
+
+
+(defn hae-urakan-kokonaishintaiset-tyot [{:keys [tyyppi id] :as ur}]
+  (go (let [res (<! (k/post! :kokonaishintaiset-tyot id))
+            hoitokaudet (u/hoitokaudet ur)]
+        (keep #(aseta-hoitokausi hoitokaudet %) res))))
+
+
+(defn tallenna-kokonaishintaiset-tyot
+  "Tallentaa urakan yksikköhintaiset työt, palauttaa kanavan, josta vastauksen voi lukea."
+  [urakka-id sopimusnumero tyot]
+  (k/post! :tallenna-kokonaishintaiset-tyot
+           {:urakka-id     urakka-id
+            :sopimusnumero (first sopimusnumero)
+            :tyot          (into [] tyot)}))

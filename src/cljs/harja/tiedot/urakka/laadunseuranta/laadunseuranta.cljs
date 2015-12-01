@@ -9,6 +9,3 @@
 
 (defonce laadunseurannassa? (atom false))                   ; jos true, laadunseurantaosio nyt käytössä
 (defonce valittu-valilehti (atom :tarkastukset))
-
-(defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
-(defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie

@@ -15,6 +15,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.toteumat.muut-tyot :as muut-tyot]
+            [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot-kartalla]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.views.urakka.valinnat :as valinnat]
 
@@ -430,7 +431,7 @@
 
 (defn muut-tyot-toteumat []
   (komp/luo
-    (komp/lippu muut-tyot/karttataso-muut-tyot)
+    (komp/lippu muut-tyot-kartalla/karttataso-muut-tyot)
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
     (komp/ulos (kartta/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
     (fn []

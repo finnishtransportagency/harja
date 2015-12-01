@@ -42,7 +42,7 @@
                      (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
                      (when (and laadunseurannassa? (= :havainnot valilehti)
                                 urakka-id alku loppu)
-                       (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu))))
+                       (havainnot/hae-urakan-havainnot listaus urakka-id alku loppu))))
 
 
 (defonce valittu-havainto-id (atom nil))

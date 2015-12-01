@@ -19,7 +19,7 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.suunnittelu :as s]
-            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
+            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]

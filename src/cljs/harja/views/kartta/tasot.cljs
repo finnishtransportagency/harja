@@ -15,7 +15,7 @@
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
-            [harja.tiedot.urakka.toteumat.muut-tyot :as muut-tyot])
+            [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 

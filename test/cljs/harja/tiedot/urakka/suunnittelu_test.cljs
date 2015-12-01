@@ -2,7 +2,7 @@
   (:require [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as ykshint-tyot]
-            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kokhint-tyot]
+            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokhint-tyot]
             [cljs-time.core :as t]
             [cljs.test :as test :refer-macros [deftest is]]
             [harja.loki :refer [log]]

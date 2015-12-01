@@ -6,9 +6,7 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
 
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.istunto :as istunto]
 
@@ -27,6 +25,7 @@
             [clojure.string :as str]
             [harja.domain.roolit :as roolit]
             [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset-kartalla]
             [harja.tiedot.urakka.laadunseuranta.havainnot :as tiedot-havainnot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
@@ -71,7 +70,7 @@
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/aikavali urakka]
 
-         [valinnat/tienumero laadunseuranta/tienumero]
+         [valinnat/tienumero tarkastukset/tienumero]
 
          [:span.label-ja-kentta
           [:span.kentan-otsikko "Tyyppi"]
@@ -84,7 +83,7 @@
                                           :soratie "Soratien tarkastukset"
                                           :laatu "Laaduntarkastus"
                                           :pistokoe "Pistokoe")}
-            laadunseuranta/tarkastustyyppi]]]]
+            tarkastukset/tarkastustyyppi]]]]
 
         (when @tiedot-havainnot/voi-kirjata?
           [napit/uusi "Uusi tarkastus"
@@ -237,7 +236,7 @@
 
     ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
     ;; tarkastuslistauksessa
-    (komp/lippu tarkastukset/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
+    (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
     (komp/kuuntelija :tarkastus-klikattu #(reset! tarkastukset/valittu-tarkastus %2))
     (komp/ulos (kartta/kuuntele-valittua! tarkastukset/valittu-tarkastus))
     (komp/sisaan-ulos #(do
