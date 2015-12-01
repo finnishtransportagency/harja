@@ -156,12 +156,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            #(swap! vapaa-aikavali? not)
            nil false]
           (when @vapaa-aikavali?
-            [ui-valinnat/aikavali vapaa-aikavali])]
-
-         
-         ;; TODO: vapaa aikavälivalinta
-         ;; tallenna valittu aikaväli jonnekin!
-         ]))))
+            [ui-valinnat/aikavali vapaa-aikavali])]]))))
 
      
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
@@ -169,13 +164,14 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                     (reset! arvo (if tpi
                                    {:toimenpide-id (:id tpi)}
                                    {:virhe "Ei tpi valintaa"})))]
-    (aseta-tpi @u/valittu-toimenpideinstanssi)
-    (reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"})
     (komp/luo
      (komp/watcher u/valittu-toimenpideinstanssi
                    (fn [_ _ tpi]
                      (aseta-tpi tpi)))
+     (komp/piirretty #(reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"}))
+     
      (fn [_ _]
+       @u/valittu-toimenpideinstanssi
        [valinnat/urakan-toimenpide+kaikki]))))
 
 

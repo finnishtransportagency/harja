@@ -117,6 +117,11 @@ aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation a
   {:component-will-mount (fn [& _]
                            (sisaan))})
 
+(defn piirretty
+  "Mixin, joka kutsutaan kun komponentti on oikeasti DOMissa asti (component-did-mount)"
+  [piirretty]
+  {:component-did-mount (fn [& _]
+                          (piirretty))})
 (defn lippu
   "Mixin, joka asettaa annetun atomin tilan joko true tai false sen mukaan onko komponentti näkyvissä."
   [& lippu-atomit]
