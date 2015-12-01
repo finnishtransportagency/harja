@@ -163,3 +163,24 @@ Callbackille annetaan samat parametrit kuin render funktiolle."
    (fn [_]
      (funktio))})
   
+(defn watcher
+  "Komponentti mixin atomin add-watch/remove-watch tekemiseen kun component-did-mount ja component-will-unmount 
+elinkaaritapahtumien yhteydessä.
+  atomit-ja-kasittelijat on vuorotellen atomi ja käsittelyfunktio,
+  jolle annetaan kolme parametria: komponentti, vanha arvo ja uusi arvo."
+  [& atomit-ja-kasittelijat]
+  (let [kasittelijat (partition 2 atomit-ja-kasittelijat)
+        key (gensym "komponenttiwatch")]
+    {:component-did-mount (fn [this _]
+                            (loop [kahvat []
+                                   [[atomi kasittelija] & kasittelijat] kasittelijat]
+                              (if-not atomi
+                                (r/set-state this {::atomien-watcherit kahvat})
+                                (do (add-watch atomi key (fn [_ _ vanha uusi]
+                                                           (kasittelija this vanha uusi)))
+                                    (recur (conj kahvat atomi)
+                                           kasittelijat)))))
+     :component-will-unmount (fn [this _]                                
+                               (let [atomit (-> this r/state ::atomien-watcherit)]
+                                 (doseq [a atomit]
+                                   (remove-watch a key))))}))
