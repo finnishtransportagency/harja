@@ -39,7 +39,7 @@
               },
               "yhteydenottopyynto": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/yhteydenottopyynto",
-                "type": "string",
+                "type": "boolean",
                 "required": true
               },
               "ilmoittaja": {
