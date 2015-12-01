@@ -52,7 +52,7 @@
      [:taulukko {:otsikko "Turvallisuuspoikkemat tyypeittäin" :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat (when urakoittain?
-                      {:otsikko "Urakka"})
+                      [{:otsikko "Urakka"}])
                     [{:otsikko "Tyyppi"}
                      {:otsikko "Määrä"}]))
       
@@ -66,26 +66,32 @@
                         [[nil turpot]]))
               [(rivi (when urakoittain? "") "Yhteensä: " (count turpot))])]
      
-     (when-not (= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+     (when-not (and (= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+                    (> (count turpot) 0))
        [:pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"}
         (into []
               (map (juxt identity #(or (turpo-maarat-kuukausittain %) 0)))
               (kuukaudet alkupvm loppupvm))])
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
-      [{:otsikko "Pvm"}
-       {:otsikko "Tyyppi"}
-       {:otsikko "Ammatti"}
-       {:otsikko "Työtehtävä"}
-       {:otsikko "Sairaala\u00advuorokaudet"}
-       {:otsikko "Sairaus\u00adpoissaolot\u00adpäivät"}]
-      (conj (mapv (juxt (comp pvm/pvm-aika :tapahtunut)
-                        (comp #(str/join ", " %) #(map turvallisuuspoikkeama-tyyppi %) :tyyppi)
-                        :tyontekijanammatti :tyotehtava
-                        :sairaalavuorokaudet :sairauspoissaolopaivat)
+      (into []
+            (concat (when urakoittain?
+                      [{:otsikko "Urakka"}])
+                    [{:otsikko "Pvm"}
+                     {:otsikko "Tyyppi"}
+                     {:otsikko "Ammatti"}
+                     {:otsikko "Työtehtävä"}
+                     {:otsikko "Sairaala\u00advuorokaudet"}
+                     {:otsikko "Sairaus\u00adpoissaolot\u00adpäivät"}]))
+      
+      (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
+                         (pvm/pvm-aika (:tapahtunut %))
+                         (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
+                         (:tyontekijanammatti %) (:tyotehtava %)
+                         (:sairaalavuorokaudet %) (:sairauspoissaolopaivat %))
                   
                   turpot)
-            [nil nil nil "Yhteensä: "
-             (reduce + 0 (keep :sairaalavuorokaudet turpot))
-             (reduce + 0 (keep :sairauspoissaolopaivat turpot))])]
+            (rivi (if urakoittain? "" nil) "" "" "" "Yhteensä: "
+                  (reduce + 0 (keep :sairaalavuorokaudet turpot))
+                  (reduce + 0 (keep :sairauspoissaolopaivat turpot))))]
      [:teksti (pr-str turpot)]]))
