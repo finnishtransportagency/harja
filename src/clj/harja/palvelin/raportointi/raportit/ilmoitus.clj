@@ -9,10 +9,13 @@
             [harja.pvm :as pvm]))
 
 
-(defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan ilmoitukset raporttia varten: " urakka-id alkupvm loppupvm)
+(defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id hk-alkupvm hk-loppupvm alkupvm loppupvm]}]
+  (log/debug "Haetaan urakan ilmoitukset raporttia varten. Urakka-id: " urakka-id
+             " hk-alkupvm " hk-alkupvm "hk-loppupvm:" hk-loppupvm
+             " alkupvm: " alkupvm " loppupvm: " loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [;; [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
+        ;; haetaan urakan konttekstissa aina kuukauden tiedot. Sopii yhteen työmaakokouskäytännön kanssa.
         ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
                       db user nil urakka-id +ilmoitustilat+ +ilmoitustyypit+
                       [alkupvm loppupvm] "")
@@ -39,14 +42,16 @@
 
 
 
-(defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm
+(defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm
                                hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [[konteksti ilmoitukset]
         (cond
           (and urakka-id hk-alkupvm hk-loppupvm)
           [:urakka (muodosta-ilmoitusraportti-urakalle db user {:urakka-id urakka-id
-                                                                  :alkupvm hk-alkupvm
-                                                                  :loppupvm hk-loppupvm})]
+                                                                ;:hk-alkupvm hk-alkupvm
+                                                                ;:hk-loppupvm hk-loppupvm
+                                                                :alkupvm aikavali-alkupvm
+                                                                :loppupvm aikavali-loppupvm})]
 
           (and hallintayksikko-id alkupvm loppupvm)
           [:hallintayksikko (muodosta-ilmoitusraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
@@ -58,12 +63,16 @@
 
           :default
           (throw (Exception. "Tuntematon raportin konteksti")))
-        otsikko (str (case konteksti
-                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                       :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                       :koko-maa "KOKO MAA")
-                     ", Ilmoitusraportti "
-                     (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))
+        otsikko (str "Ilmoitusraportti, "
+                     (case konteksti
+                       :urakka (str (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
+                                    (pvm/pvm aikavali-alkupvm) " \u2010 " (pvm/pvm aikavali-loppupvm))
+                       :hallintayksikko (str (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                                             ", "
+                                             (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))
+                       :koko-maa (str "KOKO MAA"
+                                      ", "
+                                      (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))))
         ilmoitukset-urakan-mukaan (group-by :urakka ilmoitukset)]
     [:raportti {:nimi otsikko}
      [:taulukko {:otsikko otsikko
@@ -83,6 +92,7 @@
           ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
           (for [[urakka ilmoitukset] ilmoitukset-urakan-mukaan]
             (let [urakan-nimi (:nimi (first (urakat-q/hae-urakka db urakka)))
+                  _ (log/debug "urakan nimi" urakan-nimi " urakka "urakka)
                   tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
                   urk (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
                   tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]
