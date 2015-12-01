@@ -88,10 +88,10 @@
                            (get-in havainto [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
-  (log "Tarkastus: " (pr-str tarkastus))
   [(assoc tarkastus
      :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Tarkastus")
+     :nimi (or (:nimi tarkastus)
+               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")"))
      :selite {:teksti (str "Tarkastus (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
