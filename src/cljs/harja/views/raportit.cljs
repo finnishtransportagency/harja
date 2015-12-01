@@ -132,17 +132,19 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            2010 (pvm/vuosi (pvm/nyt)) valittu-vuosi
            #(do
               (reset! valittu-vuosi %)
-              (reset! valittu-hoitokausi nil))]
+              (reset! valittu-hoitokausi nil)
+              (reset! valittu-kuukausi nil))]
           (when (or hoitourakassa? (nil? ur))
             [ui-valinnat/hoitokausi
              {:disabled @vapaa-aikavali?}
              (if hoitourakassa?
                (u/hoitokaudet ur)
-               (u/edelliset-hoitokaudet 5))
+               (u/edelliset-hoitokaudet 5 true))
              valittu-hoitokausi
              #(do
                 (reset! valittu-hoitokausi %)
-                (reset! valittu-vuosi nil))])
+                (reset! valittu-vuosi nil)
+                (reset! valittu-kuukausi nil))])
           [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
                                  :nil-valinta (if @valittu-vuosi
                                                 "Koko vuosi"
