@@ -160,6 +160,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                                    {:toimenpide-id (:id tpi)}
                                    {:virhe "Ei tpi valintaa"})))]
     (aseta-tpi @u/valittu-toimenpideinstanssi)
+    (reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"})
     (komp/luo
      (komp/watcher u/valittu-toimenpideinstanssi
                    (fn [_ _ tpi]
