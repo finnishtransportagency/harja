@@ -76,7 +76,7 @@
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Tarkastus")
-     :selite {:teksti "Laaduntarkastus"
+     :selite {:teksti "Tarkastus"
               :img    "kartta-tarkastus-violetti.svg"}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line
