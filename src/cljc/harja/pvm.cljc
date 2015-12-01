@@ -342,6 +342,19 @@
                   (t/plus kk (t/months 1))))))))
 
 #?(:cljs
+   (defn vuoden-kuukausivalit
+     "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
+     [alkuvuosi]
+     (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
+       (loop [kkt [(kuukauden-aikavali alku)]
+              kk (t/plus alku (t/months 1))]
+         (if (not= (vuosi kk) alkuvuosi)
+           kkt
+           (recur (conj kkt
+                        (kuukauden-aikavali kk))
+                  (t/plus kk (t/months 1))))))))
+
+#?(:cljs
    (defn ed-kk-aikavalina
      [p]
      (let [pvm-ed-kkna (t/minus p (t/months 1))]

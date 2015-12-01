@@ -21,6 +21,7 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.views.urakka.valinnat :as valinnat]
+            [harja.ui.valinnat :as ui-valinnat]
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
@@ -81,7 +82,7 @@
     {:hk-alkupvm alku
      :hk-loppupvm loppu}))
 
-(defmethod raportin-parametri "kontekstin_hoitokausi" [p]
+#_(defmethod raportin-parametri "kontekstin_hoitokausi" [p]
   [valinnat/kontekstin-hoitokaudet @nav/hallintayksikon-urakkalista])
 
 (defmethod raportin-parametri-arvo "kontekstin_hoitokausi" [p]
@@ -100,7 +101,70 @@
      :aikavali-loppupvm loppu}))
 
 (defmethod raportin-parametri "aikavali" [p]
-  [valinnat/aikavali @nav/valittu-urakka])
+  ;; Näytetään seuraavat valinnat
+  ;; vuosi (joko urakkavuodet tai generoitu lista)
+  ;; hoitokaudet (joko urakan hoitokaudet tai generoitu lista)
+  ;; kuukausi (valitun urakan tai hoitokauden kuukaudet, tai kaikki)
+  ;; vapaa tekstisyöttö aikavälille
+  ;;
+  ;; Jos valittuna on urakka, joka ei ole tyyppiä hoito,
+  ;; ei näytetä hoitokausivalintaa.
+
+  (let [ur (reaction @nav/valittu-urakka)
+        hoitourakassa? (reaction (= :hoito (:tyyppi @ur)))
+        valittu-vuosi (reaction (when-not @hoitourakassa? (pvm/vuosi (pvm/nyt))))
+        valittu-hoitokausi (reaction (when @hoitourakassa?
+                                       @u/valittu-hoitokausi))
+        kuukaudet (reaction
+                   (let [hk @valittu-hoitokausi
+                         vuosi @valittu-vuosi]
+                     (cond
+                       hk
+                       (pvm/hoitokauden-kuukausivalit hk)
+
+                       vuosi
+                       (pvm/vuoden-kuukausivalit vuosi)
+
+                       :default
+                       [])))
+        valittu-kuukausi (atom nil)
+        vapaa-aikavali? (atom false)
+        vapaa-aikavali (atom [nil nil])]
+    (fn [_]
+      (let [ur @ur
+            hoitourakassa? @hoitourakassa?
+            hal @nav/valittu-hallintayksikko]
+        [:span
+         [:div 
+          [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
+           2010 (pvm/vuosi (pvm/nyt)) valittu-vuosi
+           #(do
+              (reset! valittu-vuosi %)
+              (reset! valittu-hoitokausi nil))]
+          (when (or hoitourakassa? (nil? ur))
+            [ui-valinnat/hoitokausi
+             {:disabled @vapaa-aikavali?}
+             (if hoitourakassa?
+               (u/hoitokaudet ur)
+               (u/edelliset-hoitokaudet 5))
+             valittu-hoitokausi
+             #(do
+                (reset! valittu-hoitokausi %)
+                (reset! valittu-vuosi nil))])
+          [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?}
+           @kuukaudet valittu-kuukausi]]
+
+         [:div
+          [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
+           #(swap! vapaa-aikavali? not)
+           nil false]
+          (when @vapaa-aikavali?
+            [ui-valinnat/aikavali vapaa-aikavali])]
+
+         
+         ;; TODO: vapaa aikavälivalinta
+         ;; tallenna valittu aikaväli jonnekin!
+         ]))))
 
 (defmethod raportin-parametri-arvo "aikavali" [p]
   (let [[alku loppu] @u/valittu-aikavali]
@@ -108,7 +172,7 @@
       {:alkupvm alku
        :loppupvm loppu}
       {:virhe "Aseta alku ja loppupäivä"})))
-
+     
 (defmethod raportin-parametri "urakan-toimenpide" [p]
   [valinnat/urakan-toimenpide+kaikki])
 
@@ -121,9 +185,10 @@
 
 (defmethod raportin-parametri "urakoittain" [p]
   [:div.urakoittain
-   [:input {:type "checkbox" :checked @urakoittain?
-            :on-change #(swap! urakoittain? not)}]
-   [:span {:on-click #(swap! urakoittain? not)} " " (:nimi p)]])
+   [yleiset/raksiboksi (:nimi p)
+    @urakoittain?
+    #(swap! urakoittain? not)
+    nil false]])
 
 (defmethod raportin-parametri-arvo "urakoittain" [p]
   {:urakoittain? @urakoittain?})
@@ -167,6 +232,8 @@
    "hoitokauden-kuukausi" 2
    "urakan-toimenpide" 3})
 
+(def omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
+
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
                                  100)
@@ -193,10 +260,14 @@
              [p & parametrit] parametrit]
         (if-not p
           (conj rows row)
-          (let [par ^{:key (:nimi p)} [:div.col-md-4 [raportin-parametri p]]]
+          (let [par ^{:key (:nimi p)} [:div
+                                       {:class (if (omalle-riville? (:tyyppi p))
+                                                 "col-md-12"
+                                                 "col-md-4")}
+                                       [raportin-parametri p]]]
             (cond
-              ;; checkboxit aina omalle riville
-              (= "checkbox" (:tyyppi p))
+              ;; checkboxit ja aikaväli aina omalle riville
+              (omalle-riville? (:tyyppi p))
               (recur (conj (if row
                              (conj rows row)
                              rows)

@@ -33,16 +33,36 @@
                          }
     @hoitokaudet]])
 
-(defn kontekstin-hoitokaudet
-  [hoitokaudet valittu-hoitokausi-atom valitse-fn]
+(defn hoitokausi
+  ([hoitokaudet valittu-hoitokausi-atom]
+   (hoitokausi {} hoitokaudet valittu-hoitokausi-atom #(reset! valittu-hoitokausi-atom %)))
+  ([hoitokaudet valittu-hoitokausi-atom valitse-fn]
+   (hoitokausi {} hoitokaudet valittu-hoitokausi-atom valitse-fn))
+  ([{:keys [disabled]} hoitokaudet valittu-hoitokausi-atom valitse-fn]
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Hoitokausi"]
+    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
+                          :disabled disabled
+                          :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
+                          :valitse-fn valitse-fn
+                          :class      "suunnittelu-alasveto"
+                          }
+     hoitokaudet]]))
+
+(defn kuukausi [{:keys [disabled]} kuukaudet valittu-kuukausi-atom]
   [:div.label-ja-alasveto
-   [:span.alasvedon-otsikko "Hoitokausi"]
-   [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
-                         :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
-                         :valitse-fn valitse-fn
+   [:span.alasvedon-otsikko "Kuukausi"]
+   [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
+                         :disabled disabled
+                         :format-fn  #(if %
+                                       (let [[alkupvm _] %
+                                             kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
+                                         (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
+                                       "Kaikki")
+                         :valitse-fn #(reset! valittu-kuukausi-atom %)
                          :class      "suunnittelu-alasveto"
                          }
-    hoitokaudet]])
+    kuukaudet]])
 
 (defn hoitokauden-kuukausi
   [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]
@@ -205,3 +225,18 @@
    [aikavali valittu-aikavali-atom]
 
    [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
+
+(defn vuosi
+  ([ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]
+   (vuosi {}
+          ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom
+          #(reset! valittu-vuosi-atom %)))
+  ([{:keys [disabled]} ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom valitse-fn]
+   [:span.label-ja-aikavali-lyhyt
+   [:span.alasvedon-otsikko "Vuosi"]
+    [livi-pudotusvalikko {:valinta @valittu-vuosi-atom
+                          :disabled disabled
+                          :valitse-fn valitse-fn
+                          :format-fn #(if % (str %) "Valitse")
+                          :class "alasveto-vuosi"}
+    (range ensimmainen-vuosi (inc viimeinen-vuosi))]]))
