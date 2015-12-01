@@ -41,8 +41,7 @@
    "yhteydenottopyynto" false,
    "sijainti"           {"koordinaatit" {"x" 452935.0, "y" 7186873.0}},
    "lahettaja"
-                        {"puhelinnumero"      nil,
-                         "etunimi"            "Pekka",
+                        {"etunimi"            "Pekka",
                          "sukunimi"           "Päivystäjä",
                          "matkapuhelinnumero" nil,
                          "tyopuhelinnumero"   nil,

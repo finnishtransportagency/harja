@@ -4,17 +4,8 @@
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
             [harja.kyselyt.urakat :as urakat]
-<<<<<<< HEAD
-            [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]))
-
-(defn paattele-urakka [db urakkatyyppi sijainti]
-  (let [urakka-id (:id (first (ilmoitukset/hae-ilmoituksen-urakka db urakkatyyppi (:x sijainti) (:y sijainti))))]
-    (if (and (not urakka-id) (not (= "hoito" urakkatyyppi)))
-      (:id (first (ilmoitukset/hae-ilmoituksen-urakka db "hoito" (:x sijainti) (:y sijainti))))
-      urakka-id)))
-=======
-            [harja.palvelin.palvelut.urakat :as urakkapalavelu]))
->>>>>>> develop
+            [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
+            [harja.palvelin.palvelut.urakat :as urakkapalvelu]))
 
 (defn hae-urakoitsija [db urakka-id]
   (first (urakat/hae-urakan-organisaatio db urakka-id)))
@@ -81,9 +72,8 @@
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
-        urakka-id (paattele-urakka db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
+        urakka-id (urakkapalvelu/hae-urakka-id-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
         urakoitsija (hae-urakoitsija db urakka-id)]
-
     (if id
       (paivita-ilmoitus db id urakka-id ilmoitus)
       (luo-ilmoitus db urakka-id ilmoitus))

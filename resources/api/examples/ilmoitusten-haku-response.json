@@ -5,7 +5,7 @@
         "ilmoitusid": 3213123,
         "ilmoitettu": "2015-09-29T14:49:45",
         "ilmoitustyyppi": "toimenpidepyynto",
-        "yhteydenottopyynto": "false",
+        "yhteydenottopyynto": false,
         "ilmoittaja": {
           "etunimi": "Matti",
           "sukunimi": "Meikäläinen",

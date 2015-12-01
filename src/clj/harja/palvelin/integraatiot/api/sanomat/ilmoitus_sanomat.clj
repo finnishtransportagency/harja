@@ -1,4 +1,5 @@
-(ns harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat)
+(ns harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat
+  (:require [harja.geo :as geo]))
 
 (defn rakenna-tierekisteriosoite [ilmoitus tierekisteriosoite]
   (if (and (:numero tierekisteriosoite)
@@ -15,7 +16,7 @@
     ilmoitus))
 
 (defn rakenna-sijanti [ilmoitus]
-  (let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti ilmoitus)))
+  (let [koordinaatit (:coordinates (geo/pg->clj (:sijainti ilmoitus)))
         tierekisteriosoite (:tr ilmoitus)]
     (-> ilmoitus
         (dissoc :sijainti)
@@ -34,6 +35,7 @@
 (defn rakenna-henkilo [ilmoitus henkiloavain]
   (let [henkilo (henkiloavain ilmoitus)]
     (-> ilmoitus
+        (update-in [henkiloavain] dissoc :puhelinnumero)
         (update-in [henkiloavain] dissoc :matkapuhelin)
         (update-in [henkiloavain] dissoc :tyopuhelin)
         (update-in [henkiloavain] dissoc :sahkoposti)
