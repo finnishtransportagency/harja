@@ -261,6 +261,10 @@
    [vuosi]
    (luo-pvm vuosi 11 31))
 
+(defn vuoden-aikavali [vuosi]
+  [(paivan-alussa (vuoden-eka-pvm vuosi))
+   (paivan-lopussa (vuoden-viim-pvm vuosi))])
+
  (defn hoitokauden-alkupvm
    "Palauttaa hoitokauden alkupvm:n 1.10.vuosi"
    [vuosi]
