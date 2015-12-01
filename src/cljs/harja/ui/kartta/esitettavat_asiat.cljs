@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs-time.core :as t]
-            [harja.domain.roolit :as roolit]))
+            [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]))
 
 (defn- oletusalue [asia valittu?]
   (merge
@@ -65,13 +65,6 @@
     "konsultti" (str "kartta-" ikonityyppi "-konsultti-violetti.svg")
     (str "kartta-" ikonityyppi "-violetti.svg")))
 
-(defn selvita-laadunseurannan-ikoninin-selite [tekija]
-  (case tekija
-    "urakoitsija" "Pistokoe (urakoitsija)"
-    "tilaaja" "Pistokoe (tilaaja)"
-    "konsultti" "Pistokoe (konsultti)"
-    "Pistokoe"))
-
 (defn selvita-tarkastuksen-ikoni [tekija]
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
 
@@ -98,7 +91,7 @@
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
-     :selite {:teksti (selvita-laadunseurannan-ikoninin-selite (:tekija tarkastus))
+     :selite {:teksti (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (:tekija tarkastus) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue {:type        :tack-icon
             :scale       (if (valittu? tarkastus) 1.5 1)
