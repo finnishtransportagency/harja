@@ -65,6 +65,13 @@
     "konsultti" (str "kartta-" ikonityyppi "-konsultti-violetti.svg")
     (str "kartta-" ikonityyppi "-violetti.svg")))
 
+(defn selvita-laadunseurannan-ikoninin-selite [tekija]
+  (case tekija
+    "urakoitsija" "Pistokoe (urakoitsija)"
+    "tilaaja" "Pistokoe (tilaaja)"
+    "konsultti" "Pistokoe (konsultti)"
+    "Pistokoe"))
+
 (defn selvita-tarkastuksen-ikoni [tekija]
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
 
@@ -91,8 +98,8 @@
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Pistokoe")
-     :selite {:teksti "Pistokoe"
-              :img    "kartta-tarkastus-violetti.svg"}
+     :selite {:teksti (selvita-laadunseurannan-ikoninin-selite (:tekija tarkastus))
+              :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue {:type        :tack-icon
             :scale       (if (valittu? tarkastus) 1.5 1)
             :img         (selvita-tarkastuksen-ikoni (:tekija tarkastus))
