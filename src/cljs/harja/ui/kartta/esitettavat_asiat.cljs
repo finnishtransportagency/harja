@@ -75,7 +75,8 @@
 (defmethod asia-kartalle :havainto [havainto valittu?]
   [(assoc havainto
      :type :havainto
-     :nimi (or (:nimi havainto) "Havainto")
+     :nimi (or (:nimi havainto)
+               (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")"))
      :selite {:teksti (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")")
               :img    (selvita-havainnon-ikoni (:tekija havainto))}
      :alue {:type        :tack-icon
