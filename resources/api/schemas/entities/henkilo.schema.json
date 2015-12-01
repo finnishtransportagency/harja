@@ -23,8 +23,12 @@
       "id": "urn:harja/paivystykset/0/paivystys/email",
       "type": "string"
     },
-    "puhelinnumero": {
-      "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
+    "matkapuhelin": {
+      "id": "urn:harja/paivystykset/0/paivystys/matkapuhelin",
+      "type": "string"
+    },
+    "tyopuhelin": {
+      "id": "urn:harja/paivystykset/0/paivystys/tyopuhelin",
       "type": "string"
     },
     "matkapuhelinnumero": {

@@ -27,10 +27,6 @@
       "id": "urn:harja/paivystys/vastuuhenkilo",
       "type": "boolean"
     },
-    "yhteyshenkilo": {
-      "id": "urn:harja/paivystys/yhteyshenkilo",
-      "type": "boolean"
-    },
     "varahenkilo": {
       "id": "urn:harja/paivystys/varahenkilo",
       "type": "boolean"

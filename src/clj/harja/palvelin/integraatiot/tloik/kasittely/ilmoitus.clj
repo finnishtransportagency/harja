@@ -4,6 +4,7 @@
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
             [harja.kyselyt.urakat :as urakat]
+<<<<<<< HEAD
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]))
 
 (defn paattele-urakka [db urakkatyyppi sijainti]
@@ -11,6 +12,9 @@
     (if (and (not urakka-id) (not (= "hoito" urakkatyyppi)))
       (:id (first (ilmoitukset/hae-ilmoituksen-urakka db "hoito" (:x sijainti) (:y sijainti))))
       urakka-id)))
+=======
+            [harja.palvelin.palvelut.urakat :as urakkapalavelu]))
+>>>>>>> develop
 
 (defn hae-urakoitsija [db urakka-id]
   (first (urakat/hae-urakan-organisaatio db urakka-id)))
