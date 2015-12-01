@@ -30,6 +30,8 @@
       (do (<! (timeout 100))
           (recur (get-csrf-token))))))
 
+(def testmode {})
+
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
@@ -39,17 +41,19 @@
 
     ;(log "X-XSRF-Token on " (.-anti_csrf_token js/window))
     (go
-     (ajax-request {:uri             (str (polku) (name palvelu))
-                    :method          metodi
-                    :params          parametrit
-                    :headers         {"X-CSRF-Token" (<! (csrf-token))}
-                    :format          (transit-request-format transit/write-optiot)
-                    :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                               :raw    true})
-                    :handler         cb
-                    :error-handler   (fn [[_ error]]
-                                       (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                                       (close! chan))}))
+      (if (testmode palvelu)
+        (>! chan (testmode palvelu))
+        (ajax-request {:uri             (str (polku) (name palvelu))
+                       :method          metodi
+                       :params          parametrit
+                       :headers         {"X-CSRF-Token" (<! (csrf-token))}
+                       :format          (transit-request-format transit/write-optiot)
+                       :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                                  :raw    true})
+                       :handler         cb
+                       :error-handler   (fn [[_ error]]
+                                          (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                                          (close! chan))})))
     chan))
 
 (defn post!
