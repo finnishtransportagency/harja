@@ -35,11 +35,50 @@ SELECT
   y.organisaatio,
   org.id     AS organisaatio_id,
   org.nimi   AS organisaatio_nimi,
-  org.tyyppi AS organisaatio_tyyppi
+  org.tyyppi AS organisaatio_tyyppi,
+  org.ytunnus AS organisaatio_ytunnus,
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  u.alkupvm AS urakka_alkupvm,
+  u.loppupvm AS urakka_loppupvm,
+  u.tyyppi AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
-WHERE p.urakka = :urakka;
+  LEFT JOIN urakka u ON p.urakka = u.id
+WHERE p.urakka = :urakka
+AND (:alkaen_annettu = FALSE OR p.alku >= :alkaen)
+AND (:paattyen_annettu = FALSE OR p.alku <= :paattyen);
+
+-- name: hae-kaikki-paivystajat
+-- Hakee kaikki päivystykset
+SELECT
+  p.id,
+  p.vastuuhenkilo,
+  p.varahenkilo,
+  p.alku,
+  p.loppu,
+  y.etunimi,
+  y.sukunimi,
+  y.sahkoposti,
+  y.tyopuhelin,
+  y.matkapuhelin,
+  y.organisaatio,
+  org.id     AS organisaatio_id,
+  org.nimi   AS organisaatio_nimi,
+  org.tyyppi AS organisaatio_tyyppi,
+  org.ytunnus AS organisaatio_ytunnus,
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  u.alkupvm AS urakka_alkupvm,
+  u.loppupvm AS urakka_loppupvm,
+  u.tyyppi AS urakka_tyyppi
+FROM paivystys p
+  LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
+  LEFT JOIN urakka u ON p.urakka = u.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
+  WHERE (:alkaen_annettu = FALSE OR p.alku >= :alkaen)
+  AND (:paattyen_annettu = FALSE OR p.alku <= :paattyen);
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
@@ -114,8 +153,8 @@ WHERE id = (SELECT yhteyshenkilo
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
 INSERT INTO paivystys
-(vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo)
-VALUES (TRUE, FALSE, :alku, :loppu, :urakka, :yhteyshenkilo);
+(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
+VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo);
 
 -- name: hae-paivystyksen-yhteyshenkilo-id
 -- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
@@ -132,7 +171,10 @@ WHERE id = :id AND urakka = :urakka;
 -- name: paivita-paivystys-yhteyshenkilon-idlla<!
 -- Päivittää päivystyksen tiedot
 UPDATE paivystys
-SET alku = :alku, loppu = :loppu
+SET alku = :alku,
+loppu = :loppu,
+varahenkilo = :varahenkilo,
+vastuuhenkilo = :vastuuhenkilo
 WHERE yhteyshenkilo = :yhteyshenkilo_id
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!

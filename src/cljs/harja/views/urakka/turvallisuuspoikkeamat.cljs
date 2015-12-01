@@ -16,10 +16,11 @@
             [harja.geo :as geo]
             [harja.views.kartta :as kartta])
   (:require-macros [harja.atom :refer [reaction<!]]
+                   [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn korjaavattoimenpiteet
+(defc korjaavattoimenpiteet
   [toimenpiteet]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
@@ -37,7 +38,7 @@
                                    (= (count @lomakkeen-virheet) 0)
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
-    (fn []
+    (fnc []
       (log "MUOKATTU: " (pr-str @muokattu))
       [:div
        [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
@@ -111,7 +112,7 @@
                                                         uusi)))))]}]
         @muokattu]])))
 
-(defn turvallisuuspoikkeamalistaus
+(defc turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
     [:div.sanktiot

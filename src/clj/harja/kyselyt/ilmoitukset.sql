@@ -9,7 +9,7 @@ SELECT
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
-  i.lyhytselite                       AS vapaateksti,
+  i.otsikko, i.lyhytselite, i.pitkaselite, -- selitteet
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
@@ -91,18 +91,10 @@ WHERE
   ) AND
 
   -- Tarkasta ilmoituksen tyypit
-  (
-    :tyypit_annettu IS FALSE OR
-    i.ilmoitustyyppi :: TEXT IN (:tyypit)
-  ) AND
+  (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
   -- Tarkasta vapaatekstihakuehto
-  (
-    :teksti_annettu IS FALSE OR
-    i.otsikko LIKE :teksti OR
-    i.lyhytselite LIKE :teksti OR
-    i.pitkaselite LIKE :teksti
-  ) AND
+  (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
 
   -- Tarkasta ilmoituksen tilat
   (
@@ -191,15 +183,6 @@ SET
   sijainti  = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY
 WHERE id = :id;
 
--- name: hae-ilmoituksen-urakka
--- Hakee sijainnin ja urakan tyypin perusteella urakan, johon ilmoitus liittyy. Urakan täytyy myös olla käynnissä.
-SELECT u.id
-FROM urakoiden_alueet ua
-  JOIN urakka u ON ua.id = u.id
-WHERE
-  ua.tyyppi = :urakkatyyppi :: urakkatyyppi AND
-  (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
-  (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
 
 -- name: hae-ilmoitustoimenpide
 SELECT

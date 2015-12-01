@@ -19,9 +19,8 @@
             [harja.views.ilmoitukset :as ilmoitukset]
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
-            [harja.views.about :as about]))
-
-
+            [harja.views.about :as about]
+            [harja.virhekasittely :as virhekasittely]))
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
@@ -84,7 +83,7 @@
 (defn ladataan []
   [:div {:style {:position "absolute" :top "50%" :left "50%"}}
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
-    [yleiset/ajax-loader "Ladataan..."]]])
+    [yleiset/ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
 (defn main
   "Harjan UI:n pääkomponentti"
