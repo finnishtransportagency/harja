@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.suunnittelu.muut-tyot-kartalla
+(ns harja.tiedot.urakka.toteumat.muut-tyot-kartalla
   (:require [reagent.core :refer [atom]]
             [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [cljs.core.async :refer [<! >! chan]]

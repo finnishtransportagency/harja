@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.suunnittelu.suunnittelu :as s]
             [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]

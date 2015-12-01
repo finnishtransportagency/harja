@@ -6,7 +6,7 @@
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.suunnittelu.suunnittelu :as s]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]

@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.suunnittelu
+(ns harja.tiedot.urakka.suunnittelu.suunnittelu
   "Tämä nimiavaruus hallinnoi urakan suunnittelun tietoja"
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as time]
