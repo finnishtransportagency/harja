@@ -16,7 +16,7 @@
   (u/luo-alueurakka<! (db)
                       (str (:gridcode urakka))
                       (.toString (:the_geom urakka))
-                      (int (:piirinro urakka)))
+                      (int (:piirinro urakka))))
 
 (defn luo-tai-paivita-urakka [db urakka]
   (if-let [urakka-kannassa (first (u/hae-alueurakka-numerolla db (str (:gridcode urakka))))]

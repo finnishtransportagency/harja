@@ -63,7 +63,11 @@
                                            (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde)    s/Str
                                            (s/optional-key :siltojen-shapefile)                        s/Str
                                            (s/optional-key :siltojen-alk-osoite)                       s/Str
-                                           (s/optional-key :siltojen-alk-tuontikohde)                  s/Str}
+                                           (s/optional-key :siltojen-alk-tuontikohde)                  s/Str
+                                           (s/optional-key :urakoiden-shapefile)                       s/Str
+                                           (s/optional-key :urakoiden-alk-osoite)                      s/Str
+                                           (s/optional-key :urakoiden-alk-tuontikohde)                 s/Str
+                                           }
    })
 
 (def oletusasetukset
