@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.suola
+(ns harja.tiedot.urakka.toteumat.suola
   "Tämän nimiavaruuden avulla voidaan hakea urakan suola- ja lämpötilatietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]

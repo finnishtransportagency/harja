@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.yksikkohintaiset-tyot
+(ns harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot
   "Tämä nimiavaruus hallinnoi urakan yksikköhintaisia töitä."
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]

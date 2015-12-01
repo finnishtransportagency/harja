@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.sanktiot
+(ns harja.tiedot.urakka.laadunseuranta.sanktiot
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
@@ -7,7 +7,8 @@
 
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -62,3 +63,12 @@
      (reset! haetut-sanktiot
              (into [] (concat @haetut-sanktiot [(assoc sanktio :id palautettu-id)]))))))
 
+
+(defonce sanktiotyypit
+         (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
+                     (when laadunseurannassa?
+                       (k/get! :hae-sanktiotyypit))))
+
+(defn lajin-sanktiotyypit
+  [laji]
+  (filter #((:laji %) laji) @sanktiotyypit))

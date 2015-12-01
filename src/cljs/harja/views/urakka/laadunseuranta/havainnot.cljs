@@ -16,6 +16,7 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [harja.domain.roolit :as roolit]
@@ -54,7 +55,7 @@
                      (when id
                        (go (let [havainto (if (= :uusi id)
                                             (uusi-havainto)
-                                            (<! (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))]
+                                            (<! (havainnot/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))]
                              (-> havainto
 
                                  ;; Tarvitsemme urakan liitteen linkitystä varten
@@ -83,7 +84,7 @@
 
    [urakka-valinnat/aikavali @nav/valittu-urakka]
 
-   (when @laadunseuranta/voi-kirjata?
+   (when @havainnot/voi-kirjata?
      [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)])
 
    [grid/grid
@@ -109,7 +110,7 @@
   (let [havainto (-> havainto
                      (assoc :sanktiot (vals (:sanktiot havainto))))]
     (go
-      (let [tulos (<! (laadunseuranta/tallenna-havainto havainto))]
+      (let [tulos (<! (havainnot/tallenna-havainto havainto))]
         (if (k/virhe? tulos)
           ;; Palautetaan virhe, jotta nappi näyttää virheviestin
           tulos
@@ -230,7 +231,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                              :toimenpideinstanssi (:tpi_id (first (filter #(= (:toimenpidekoodi tyyppi)
                                                                               (:id %))
                                                                           @tiedot-urakka/urakan-toimenpideinstanssit)))))
-          :valinnat-fn   #(laadunseuranta/lajin-sanktiotyypit (:laji %))
+          :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
           :valinta-nayta :nimi
           :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]
           }
@@ -257,7 +258,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
            [lomake/lomake
             {:muokkaa!     #(reset! havainto %)
              :luokka       :horizontal
-             :voi-muokata? @laadunseuranta/voi-kirjata?
+             :voi-muokata? @havainnot/voi-kirjata?
              :footer       (when-not osa-tarkastusta?
                              [napit/palvelinkutsu-nappi
                               ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,

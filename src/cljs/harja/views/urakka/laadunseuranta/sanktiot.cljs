@@ -6,7 +6,7 @@
 
             [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.sanktiot :as tiedot]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.navigaatio :as nav]
 
             [harja.ui.grid :as grid]

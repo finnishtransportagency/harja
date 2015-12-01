@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.muut-tyot
+(ns harja.tiedot.urakka.toteumat.muut-tyot
   "Tämä nimiavaruus hallinnoi urakan yksikköhintaisia töitä."
   (:require [harja.asiakas.kommunikaatio :as k]
             [reagent.core :refer [atom]]

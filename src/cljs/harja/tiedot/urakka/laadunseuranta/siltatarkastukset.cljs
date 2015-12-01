@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.siltatarkastukset
+(ns harja.tiedot.urakka.laadunseuranta.siltatarkastukset
   "Tämä nimiavaruus hallinnoi urakan siltatarkastuksien tietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
@@ -7,7 +7,8 @@
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    ))

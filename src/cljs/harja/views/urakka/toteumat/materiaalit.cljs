@@ -12,9 +12,9 @@
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
 
-            [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.toteumat.toteumat :as toteumat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.materiaalit :as materiaali-tiedot]
+            [harja.tiedot.urakka.toteumat.materiaalit :as materiaali-tiedot]
 
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta])
