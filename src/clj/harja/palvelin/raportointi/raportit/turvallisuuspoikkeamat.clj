@@ -6,7 +6,8 @@
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
-            [clj-time.format :as tf]))
+            [clj-time.format :as tf]
+            [harja.pvm :as pvm]))
 
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
 

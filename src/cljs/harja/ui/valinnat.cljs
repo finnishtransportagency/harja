@@ -49,7 +49,7 @@
                           }
      hoitokaudet]]))
 
-(defn kuukausi [{:keys [disabled]} kuukaudet valittu-kuukausi-atom]
+(defn kuukausi [{:keys [disabled nil-valinta]} kuukaudet valittu-kuukausi-atom]
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
@@ -58,7 +58,7 @@
                                        (let [[alkupvm _] %
                                              kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
                                          (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
-                                       "Kaikki")
+                                       (or nil-valinta "Kaikki"))
                          :valitse-fn #(reset! valittu-kuukausi-atom %)
                          :class      "suunnittelu-alasveto"
                          }
