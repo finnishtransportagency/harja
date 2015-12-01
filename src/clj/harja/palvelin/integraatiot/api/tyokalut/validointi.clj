@@ -54,6 +54,14 @@
   (tarkista-urakka db urakka-id)
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
+(defn tarkista-rooli [kayttaja rooli]
+  (when-not
+    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
+        (roolit/roolissa? kayttaja rooli))
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
+                        :viesti (str "Käyttäjällä ei oikeutta resurssiin.")}]})))
+
 (defn tarkista-urakka-sopimus-ja-kayttaja [db urakka-id sopimus-id kayttaja]
   (tarkista-urakka db urakka-id)
   (tarkista-sopimus db urakka-id sopimus-id)

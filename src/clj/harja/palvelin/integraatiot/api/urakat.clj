@@ -12,7 +12,8 @@
             [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn muodosta-tehtavat [tehtavat]
@@ -56,11 +57,15 @@
     (let [urakka (some->> urakka-id (urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus-urakan-haulle db urakka-id urakka))))
 
-(defn hae-urakka-ytunnuksella [db {:keys [ytunnus]} kayttaja]
-  (log/debug "Haetaan urakat y-tunnuksella: " ytunnus)
-  (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
-  (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]
-    (muodosta-vastaus-organisaation-urakoiden-haulle urakat)))
+(defn hae-urakka-ytunnuksella [db parametrit kayttaja]
+  (parametrivalidointi/tarkista-parametrit
+    parametrit
+    {:ytunnus "Y-tunnus puuttuu"})
+  (let [{ytunnus :ytunnus} parametrit]
+        (log/debug "Haetaan urakat y-tunnuksella: " ytunnus)
+        (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
+        (let [urakat (some->> ytunnus (urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]
+          (muodosta-vastaus-organisaation-urakoiden-haulle urakat))))
 
 (def hakutyypit
   [{:palvelu        :hae-urakka

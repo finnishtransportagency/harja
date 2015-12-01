@@ -9,19 +9,14 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
-(defn heita-virheelliset-parametrit-poikkeus [selite]
-  (throw+ {:type    virheet/+viallinen-kutsu+
-           :virheet [{:koodi  virheet/+puutteelliset-parametrit+
-                      :viesti selite}]}))
 
 (defn tarkista-parametrit [saadut vaaditut]
   (doseq [{:keys [parametri selite]} vaaditut]
     (when (not (get saadut parametri))
-      (heita-virheelliset-parametrit-poikkeus selite))))
+      (validointi/heita-virheelliset-parametrit-poikkeus selite))))
 
 (defn tarkista-tietolajihaun-parametrit [parametrit]
   (tarkista-parametrit
