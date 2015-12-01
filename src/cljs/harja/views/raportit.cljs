@@ -182,13 +182,15 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 (defonce urakoittain? (atom false))
 
 (defmethod raportin-parametri "urakoittain" [p arvo]
-  [:div.urakoittain
-   [yleiset/raksiboksi (:nimi p)
-    @urakoittain?
-    #(do (swap! urakoittain? not)
-         (reset! arvo
-                 {:urakoittain? @urakoittain?}))
-    nil false]])
+  (if @nav/valittu-urakka
+    [:span]
+    [:div.urakoittain
+     [yleiset/raksiboksi (:nimi p)
+      @urakoittain?
+      #(do (swap! urakoittain? not)
+           (reset! arvo
+                   {:urakoittain? @urakoittain?}))
+      nil false]]))
 
 (def tyomaakokousraportit
   {"Laskutusyhteenveto" :laskutusyhteenveto
