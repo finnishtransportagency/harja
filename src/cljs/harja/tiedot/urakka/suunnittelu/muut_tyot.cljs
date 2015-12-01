@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.toteumat.muut-tyot
+(ns harja.tiedot.urakka.suunnittelu.muut-tyot
   (:require [harja.asiakas.kommunikaatio :as k]
             [reagent.core :refer [atom]]
             [harja.asiakas.tapahtumat :as t]

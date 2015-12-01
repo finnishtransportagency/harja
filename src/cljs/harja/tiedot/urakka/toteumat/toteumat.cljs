@@ -11,9 +11,6 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-; FIXME Tämä nimiavaruus hallinoi kaikkia Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
-; jokaisella näkymällä olisi oma tiedot-namespace kaverina (kuten esim. kokonaishintaisilla nyt on).
-
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))
 

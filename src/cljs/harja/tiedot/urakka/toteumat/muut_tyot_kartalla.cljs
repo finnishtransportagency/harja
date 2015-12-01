@@ -1,6 +1,6 @@
-(ns harja.tiedot.urakka.toteumat.muut-tyot-kartalla
+(ns harja.tiedot.urakka.suunnittelu.muut-tyot-kartalla
   (:require [reagent.core :refer [atom]]
-            [harja.tiedot.urakka.toteumat.muut-tyot :as muut-tyot]
+            [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
