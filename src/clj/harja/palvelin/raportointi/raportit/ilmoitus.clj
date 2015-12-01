@@ -1,5 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.ilmoitus
-  "Materiaaliraportti"
+  "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne +ilmoitustilat+]]
@@ -9,9 +9,8 @@
             [harja.pvm :as pvm]))
 
 
-(defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id hk-alkupvm hk-loppupvm alkupvm loppupvm]}]
+(defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan ilmoitukset raporttia varten. Urakka-id: " urakka-id
-             " hk-alkupvm " hk-alkupvm "hk-loppupvm:" hk-loppupvm
              " alkupvm: " alkupvm " loppupvm: " loppupvm)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [;; [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
@@ -42,37 +41,22 @@
 
 
 
-(defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm
-                               hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (let [[konteksti ilmoitukset]
-        (cond
-          (and urakka-id hk-alkupvm hk-loppupvm)
-          [:urakka (muodosta-ilmoitusraportti-urakalle db user {:urakka-id urakka-id
-                                                                ;:hk-alkupvm hk-alkupvm
-                                                                ;:hk-loppupvm hk-loppupvm
-                                                                :alkupvm aikavali-alkupvm
-                                                                :loppupvm aikavali-loppupvm})]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
+                     db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
+                     [alkupvm loppupvm] "")
 
-          (and hallintayksikko-id alkupvm loppupvm)
-          [:hallintayksikko (muodosta-ilmoitusraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
-                                                                                    :alkupvm alkupvm
-                                                                                    :loppupvm loppupvm})]
-
-          (and alkupvm loppupvm)
-          [:koko-maa (muodosta-ilmoitusraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
-
-          :default
-          (throw (Exception. "Tuntematon raportin konteksti")))
+        aikavali (str (pvm/pvm alkupvm) " \u2010 " (pvm/pvm loppupvm))
         otsikko (str "Ilmoitusraportti, "
                      (case konteksti
                        :urakka (str (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
-                                    (pvm/pvm aikavali-alkupvm) " \u2010 " (pvm/pvm aikavali-loppupvm))
+                                    aikavali)
                        :hallintayksikko (str (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                                             ", "
-                                             (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))
-                       :koko-maa (str "KOKO MAA"
-                                      ", "
-                                      (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))))
+                                             ", " aikavali)
+                       :koko-maa (str "KOKO MAA, " aikavali)))
         ilmoitukset-urakan-mukaan (group-by :urakka ilmoitukset)]
     [:raportti {:nimi otsikko}
      [:taulukko {:otsikko otsikko
