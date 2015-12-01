@@ -2,23 +2,11 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
-            [harja.palvelin.komponentit.todennus :as todennus]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [com.stuartsierra.component :as component]
-            [org.httpkit.client :as http]
             [taoensso.timbre :as log]
-            [clojure.data.json :as json]
-            [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
-            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [cheshire.core :as cheshire]
-            [harja.fmt :as fmt])
-  (:import (java.util Date)
-           (java.text SimpleDateFormat)))
+            [harja.fmt :as fmt]))
 
 (def kayttaja-yit "yit-rakennus")
 (def kayttaja-jvh "jvh")
@@ -77,8 +65,8 @@
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
   (is (= 200 (:status vastaus)))
-  (is (= (count (:urakat encoodattu-body)) 1))
-  (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 3))))
+  (is (= (count (:paivystajatiedot encoodattu-body)) 1))
+  (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
 
 (deftest testaa-puhelinnumeron-trimmaus
   (is (= (fmt/trimmaa-puhelinnumero "0400123123") (fmt/trimmaa-puhelinnumero "+358400123123")))
@@ -100,23 +88,23 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (log/debug (:body vastaus))
-    (is (= (count (:urakat encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 1))))
+    (is (= (count (:paivystajatiedot encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla-kayttaen-lyhytta-aikavalia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (log/debug (:body vastaus))
-    (is (= (count (:urakat encoodattu-body)) 0))))
+    (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (log/debug (:body vastaus))
-    (is (= (count (:urakat encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 1))))
+    (is (= (count (:paivystajatiedot encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (deftest esta-hae-paivystajatiedot-puhelinnumerolla-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-yit portti)]
@@ -126,18 +114,18 @@
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (is (= (count (:urakat encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 3))))
+    (is (= (count (:paivystajatiedot encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-pitkaa-aikavalia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (is (= (count (:urakat encoodattu-body)) 0))))
+    (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-sijainnilla
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (is (= (count (:urakat encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:urakat encoodattu-body))))) 3))))
+    (is (= (count (:paivystajatiedot encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))

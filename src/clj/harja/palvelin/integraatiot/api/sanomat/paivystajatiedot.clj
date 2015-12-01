@@ -1,6 +1,4 @@
-(ns harja.palvelin.integraatiot.api.sanomat.paivystajatiedot
-  (:require [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+(ns harja.palvelin.integraatiot.api.sanomat.paivystajatiedot)
 
 (defn muodosta-paivystykset [paivystykset]
   (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
@@ -18,7 +16,7 @@
         paivystykset))
 
 (defn muodosta-hakusanoma [urakkaryhmat paivystajatiedot]
-  {:urakat (mapv
+  {:paivystajatiedot (mapv
              (fn [urakka-id]
                (let [urakan-paivystykset (filter
                                            #(= (:urakka_id %) urakka-id)
@@ -39,7 +37,7 @@
 
 (defn muodosta-vastaus-paivystajatietojen-haulle [paivystajatiedot]
   (if (empty? paivystajatiedot)
-    {:urakat []}
+    {:paivystajatiedot []}
     (let [urakkaryhmat (keys (group-by :urakka_id paivystajatiedot))]
       (muodosta-hakusanoma urakkaryhmat paivystajatiedot))))
 
