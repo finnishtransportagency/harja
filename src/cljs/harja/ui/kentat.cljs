@@ -603,6 +603,7 @@
 
                 (do
                   (reset! sijainti nil)
+                  (kartta/poista-geometria! :tr-valittu-osoite)
                   (recur)))))))
 
     (komp/luo
@@ -635,7 +636,7 @@
                              (if-not (or (nil? tulos) (k/virhe? tulos))
                                (do
                                  (reset! virheet nil)
-                                 (>! tr-osoite-ch tulos))
+                                 (>! tr-osoite-ch (assoc osoite :geometria tulos)))
                                (do
                                  (>! tr-osoite-ch :virhe)
                                  (reset! virheet "Reitille ei löydy tietä.")))))
@@ -648,14 +649,14 @@
                              (if-not (or (nil? tulos) (k/virhe? tulos))
                                (do
                                  (reset! virheet nil)
-                                 (>! tr-osoite-ch tulos))
+                                 (>! tr-osoite-ch (assoc osoite :geometria tulos)))
                                (do
                                  (reset! virheet "Pisteelle ei löydy tietä.")
                                  (>! tr-osoite-ch :virhe)))))
 
                          :else
                          (do
-                           (log )
+                           (kartta/poista-geometria! :tr-valittu-osoite)
                            (reset! virheet nil)))))
               kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
