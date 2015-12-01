@@ -39,8 +39,11 @@
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti]]
-  [:p teksti])
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari]}]]
+  [:p {:style {:color (when vari vari)}} teksti])
+
+(defmethod muodosta-html :varoitusteksti [[_ teksti]]
+  (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
 (defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari]} pylvaat]]
   (let [w (int (* 0.85 @yleiset/leveys))

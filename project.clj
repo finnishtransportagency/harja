@@ -126,8 +126,8 @@
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
-                 ["solita" "http://mvn.solita.fi/archiva/repository/solita/"]
-                 ;["harja-data" "http://185.26.50.104/mvn/"]
+                 ["solita" "http://mvn.solita.fi/repository/solita/"]
+                 ["harja-data" "http://185.26.50.104/mvn/"]
                  ]
 
 

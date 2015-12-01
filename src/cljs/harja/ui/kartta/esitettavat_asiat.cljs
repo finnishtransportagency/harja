@@ -72,26 +72,11 @@
 
                            (get-in havainto [:sijainti :coordinates]))})])
 
-(defmethod asia-kartalle :pistokoe [tarkastus valittu?]
+(defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Pistokoe")
-     :selite {:teksti "Pistokoe"
-              :img    "kartta-tarkastus-violetti.svg"}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? tarkastus) 1.5 1)
-            :img         "kartta-tarkastus-violetti.svg"
-            :coordinates (if (= :line (get-in tarkastus [:sijainti :type]))
-                           (first (get-in tarkastus [:sijainti :points]))
-
-                           (get-in tarkastus [:sijainti :coordinates]))})])
-
-(defmethod asia-kartalle :laatu [tarkastus valittu?]
-  (log "Piirretään laaduntarkastus: " (pr-str tarkastus))
-  [(assoc tarkastus
-     :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Laaduntarkastus")
-     :selite {:teksti "Laaduntarkastus"
+     :nimi (or (:nimi tarkastus) "Tarkastus")
+     :selite {:teksti "Tarkastus"
               :img    "kartta-tarkastus-violetti.svg"}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line

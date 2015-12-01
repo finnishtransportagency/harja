@@ -6,7 +6,15 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
+
+(defn hae-urakka-id-sijainnilla [db urakkatyyppi sijainti]
+  (let [urakka-id (:id (first (q/hae-urakka-sijainnilla db urakkatyyppi (:x sijainti) (:y sijainti))))]
+    (if (and (not urakka-id)
+             (not (= "hoito" urakkatyyppi)))
+      (:id (first (q/hae-urakka-sijainnilla  db "hoito" (:x sijainti) (:y sijainti))))
+      urakka-id)))
 
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
@@ -21,6 +29,8 @@
         (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                      :nimi (:urakoitsija_nimi %)
                                      :ytunnus (:urakoitsija_ytunnus %)}))
+
+        (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
         
         ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja 
         ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"}
