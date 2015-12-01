@@ -223,8 +223,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
   ;; Koska parametreillä ei ole mitään järjestysnumeroa
   ;; annetaan osalle sellainen, että esim. kuukauden hoitokausi
   ;; ei tule hoitokausivalinnan yläpuolelle.
-  {"hoitokausi" 1
-   "hoitokauden-kuukausi" 2
+  {"aikavali" 1
    "urakan-toimenpide" 3})
 
 (def omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
