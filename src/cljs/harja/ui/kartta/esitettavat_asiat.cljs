@@ -76,7 +76,7 @@
   [(assoc havainto
      :type :havainto
      :nimi (or (:nimi havainto) "Havainto")
-     :selite {:teksti (str "Havainto" " (" (havainnot/kuvaile-tekija (:tekija havainto)) ")")
+     :selite {:teksti (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")")
               :img    (selvita-havainnon-ikoni (:tekija havainto))}
      :alue {:type        :tack-icon
             :scale       (if (valittu? havainto) 1.5 1)
@@ -92,7 +92,7 @@
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus) "Tarkastus")
-     :selite {:teksti (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
+     :selite {:teksti (str "Tarkastus (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line
