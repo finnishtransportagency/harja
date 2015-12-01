@@ -9,7 +9,7 @@
             [harja.transit :as transit]
             [harja.domain.roolit :as roolit]
             [clojure.string :as str])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def +polku+ (let [host (.-host js/location)]
                (if (#{"localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host)
@@ -24,11 +24,11 @@
       (.getAttribute "data-anti-csrf-token")))
 
 (defn csrf-token []
-  (go (loop [token (get-csrf-token)]
-        (if token
-          token
-          (do (<! (timeout 100))
-              (recur (get-csrf-token)))))))
+  (go-loop [token (get-csrf-token)]
+    (if token
+      token
+      (do (<! (timeout 100))
+          (recur (get-csrf-token))))))
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)

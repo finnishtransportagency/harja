@@ -14,7 +14,8 @@
 
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
-    [cljs.core.async.macros :refer [go]]))
+    [harja.makrot :refer [nappaa-virhe]]
+    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn laske-tien-pituus [{alkuet :aet loppuet :let}]
   (if (and alkuet loppuet)
@@ -71,82 +72,82 @@
                        [:div.tr-valitsin-tila tila-teksti]
                        [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])]
 
-    (go (loop [vkm-haku nil]
-          (let [[arvo kanava] (alts! (if vkm-haku
-                                       [vkm-haku tapahtumat]
-                                       [tapahtumat]))]
-            (when arvo
-              (if (= kanava vkm-haku)
-                ;; Saatiin VKM vastaus paikkahakuun, käsittele se
-                (let [{:keys [kun-valmis paivita]} @optiot
-                      osoite arvo]
-                  (if (vkm/virhe? osoite)
-                    (do (kartta/aseta-ohjelaatikon-sisalto [:span
-                                                            [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
-                                                            " "
-                                                            [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]])
-                        (recur nil))
-                    (do
-                      (kartta/tyhjenna-ohjelaatikko)
-                      (case @tila
-                        :ei-valittu
-                        (let [osoite (swap! tr-osoite
-                                            (fn [tr]
-                                              (dissoc (merge tr
-                                                             {:numero (:tie osoite)
-                                                              :alkuosa (:aosa osoite)
-                                                              :alkuetaisyys (:aet osoite)})
-                                                      :loppuosa
-                                                      :loppuetaisyys)))]
-                          (paivita osoite)
-                          (karttatasot/taso-paalle! :tr-alkupiste)
-                          (reset! tila :alku-valittu)
-                          (go
-                            (log "Haetaan alkupisteen sijainti")
-                            (let [piste (<! (k/post! :hae-tr-pisteeksi osoite))]
-                              (log "Alkupisteen sijainti saatu: " (pr-str piste))
-                              (reset! tierekisteri/valittu-alkupiste piste)))
-                          (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
-                                                              (str "Valittu alkupiste: "
-                                                                   (:numero osoite) " / "
-                                                                   (:alkuosa osoite) " / "
-                                                                   (:alkuetaisyys osoite))]))
+    (go-loop [vkm-haku nil]
+      (let [[arvo kanava] (alts! (if vkm-haku
+                                   [vkm-haku tapahtumat]
+                                   [tapahtumat]))]
+        (when arvo
+          (if (= kanava vkm-haku)
+            ;; Saatiin VKM vastaus paikkahakuun, käsittele se
+            (let [{:keys [kun-valmis paivita]} @optiot
+                  osoite arvo]
+              (if (vkm/virhe? osoite)
+                (do (kartta/aseta-ohjelaatikon-sisalto [:span
+                                                        [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
+                                                        " "
+                                                        [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]])
+                    (recur nil))
+                (do
+                  (kartta/tyhjenna-ohjelaatikko)
+                  (case @tila
+                    :ei-valittu
+                    (let [osoite (swap! tr-osoite
+                                        (fn [tr]
+                                          (dissoc (merge tr
+                                                         {:numero (:tie osoite)
+                                                          :alkuosa (:aosa osoite)
+                                                          :alkuetaisyys (:aet osoite)})
+                                                  :loppuosa
+                                                  :loppuetaisyys)))]
+                      (paivita osoite)
+                      (karttatasot/taso-paalle! :tr-alkupiste)
+                      (reset! tila :alku-valittu)
+                      (go
+                        (log "Haetaan alkupisteen sijainti")
+                        (let [piste (<! (k/post! :hae-tr-pisteeksi osoite))]
+                          (log "Alkupisteen sijainti saatu: " (pr-str piste))
+                          (reset! tierekisteri/valittu-alkupiste piste)))
+                      (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
+                                                          (str "Valittu alkupiste: "
+                                                               (:numero osoite) " / "
+                                                               (:alkuosa osoite) " / "
+                                                               (:alkuetaisyys osoite))]))
 
-                        :alku-valittu
-                        (let [osoite (swap! tr-osoite
-                                            merge
-                                            {:numero (:tie osoite)
-                                             :alkuosa (:aosa osoite)
-                                             :alkuetaisyys (:aet osoite)
-                                             :loppuosa (:losa osoite)
-                                             :loppuetaisyys (:let osoite)
-                                             :geometria (:geometria osoite)})]
-                          (poistu-tr-valinnasta)
-                          (kun-valmis osoite)))
-                      (recur nil))))
+                    :alku-valittu
+                    (let [osoite (swap! tr-osoite
+                                        merge
+                                        {:numero (:tie osoite)
+                                         :alkuosa (:aosa osoite)
+                                         :alkuetaisyys (:aet osoite)
+                                         :loppuosa (:losa osoite)
+                                         :loppuetaisyys (:let osoite)
+                                         :geometria (:geometria osoite)})]
+                      (poistu-tr-valinnasta)
+                      (kun-valmis osoite)))
+                  (recur nil))))
 
-                ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
-                (let [{:keys [tyyppi sijainti x y]} arvo]
-                  (case tyyppi
-                    ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
-                    :hover
-                    (kartta/aseta-tooltip! x y (case @tila
-                                                 :ei-valittu (luo-tooltip "Klikkaa alkupiste")
-                                                 :alku-valittu (luo-tooltip "Klikkaa loppupiste tai hyväksy pistemäinen painamalla Enter")))
+            ;; Saatiin uusi tapahtuma, jos se on klik, laukaise haku
+            (let [{:keys [tyyppi sijainti x y]} arvo]
+              (case tyyppi
+                ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
+                :hover
+                (kartta/aseta-tooltip! x y (case @tila
+                                             :ei-valittu (luo-tooltip "Klikkaa alkupiste")
+                                             :alku-valittu (luo-tooltip "Klikkaa loppupiste tai hyväksy pistemäinen painamalla Enter")))
 
-                    ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
-                    :enter (when (= @tila :alku-valittu)
-                             (do ((:kun-valmis @optiot) @tr-osoite)
-                                 (poistu-tr-valinnasta)))
-                    nil)
+                ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
+                :enter (when (= @tila :alku-valittu)
+                         (do ((:kun-valmis @optiot) @tr-osoite)
+                             (poistu-tr-valinnasta)))
+                nil)
 
-                  (recur (if (= :click tyyppi)
-                           (if (= :alku-valittu @tila)
-                             (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)
-                             (do
-                               (reset! alkupiste sijainti)
-                               (vkm/koordinaatti->trosoite sijainti)))
-                           vkm-haku))))))))
+              (recur (if (= :click tyyppi)
+                       (if (= :alku-valittu @tila)
+                         (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)
+                         (do
+                           (reset! alkupiste sijainti)
+                           (vkm/koordinaatti->trosoite sijainti)))
+                       vkm-haku)))))))
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo
