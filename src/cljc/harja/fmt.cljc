@@ -95,3 +95,17 @@
    (if luku
      (.toFixed luku tarkkuus)
      "")))
+
+(defn trimmaa-puhelinnumero
+  "Ottaa suomalaisen puhelinnumeron teksimuodossa ja palauttaa sen yksinkertaistetussa numeromuodossa ilman etuliitettä
+  Esim. +358400-123-456 -> 0400123456
+        +358500123123 -> 0500123123
+        0400-123123 -> 0400123123"
+  [numero-string]
+  (let [puhdas-numero (apply str (filter
+                                   #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9, \+} %)
+                                   numero-string))
+        siivottu-etuliite (if (= (str (first puhdas-numero)) "+")
+                            (str "0" (subs puhdas-numero 4 (count puhdas-numero)))
+                            puhdas-numero)]
+    siivottu-etuliite))

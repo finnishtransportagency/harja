@@ -106,6 +106,7 @@ INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehta
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
 SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 
+
 -- Ilmoitukset ja kuittaukset
 \i testidata/ilmoitukset.sql
 

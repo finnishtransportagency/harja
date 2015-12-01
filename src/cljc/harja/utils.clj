@@ -25,3 +25,14 @@
   Esim (lajittele-monella-avaimella [:ika :nimi] [< compare] @henkilot)"
   [avaimet vertailijat vektori]
   (sort-by (apply juxt avaimet) (compare-many vertailijat) vektori))
+
+(defn muuta-mapin-avaimet-keywordeiksi
+  "Palauttaa mapin, jossa avaimet ovat keywordeja"
+  [map]
+  (reduce (fn [eka toka]
+            (assoc
+              eka
+              (keyword toka)
+              (get map toka)))
+          {}
+          (keys map)))
