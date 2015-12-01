@@ -20,6 +20,7 @@
   (some #(= (:kuittaustyyppi %) kuittaustyyppi) (get-in ilmoitus [:kuittaukset])))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu?]
+  (log "Piirretään tiedotus: " (pr-str (map :kuittaustyyppi (:kuittaukset ilmoitus))))
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Tiedotus")
@@ -32,19 +33,31 @@
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Kysely")
-     :selite {:teksti "Kysely"
-              :img    "kartta-kysely-violetti.svg"}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? ilmoitus) 1.5 1)
-            :img         (if (sisaltaako-kuittauksen? ilmoitus :aloitus)
-                           "kartta-kysely-violetti.svg"
-                           "kartta-kysely-violetti.svg")
-            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
+  (log "Piirretään kysely: " (pr-str (map :kuittaustyyppi (:kuittaukset ilmoitus))))
+  (let [viimeisin-kuittaus (last (map :kuittaustyyppi (:kuittaukset ilmoitus)))
+        tooltip (case viimeisin-kuittaus
+                  :vastaanotto "Vastaanottokuittaus annettu"
+                  :vastaus "Vastauskuittaus annettu"
+                  :aloitus "Aloituskuittaus annettu"
+                  :lopetus "Lopetuskuittaus annettu"
+                  :muutos "Muutoskuittaus annettu"
+                  "Kysely")
+        aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
+        ikoni (if aloitettu?
+                "kartta-kysely-violetti.svg"
+                "kartta-kysely-kesken-punainen.svg")]
+    [(assoc ilmoitus
+       :type :ilmoitus
+       :nimi tooltip
+       :selite {:teksti (if aloitettu? "Kysely, aloitettu" "Kysely, ei aloituskuittausta.")
+                :img    ikoni}
+       :alue {:type        :tack-icon
+              :scale       (if (valittu? ilmoitus) 1.5 1)
+              :img         ikoni
+              :coordinates (get-in ilmoitus [:sijainti :coordinates])})]))
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
+  (log "Piirretään toimenpidepyynto: " (pr-str (map :kuittaustyyppi (:kuittaukset ilmoitus))))
   [(assoc ilmoitus
      :type :ilmoitus
      :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
@@ -54,7 +67,7 @@
             :scale       (if (valittu? ilmoitus) 1.5 1)
             :img         (if (sisaltaako-kuittauksen? ilmoitus :vastaanotto)
                            "kartta-toimenpidepyynto-violetti.svg"
-                           "kartta-toimenpidepyynto-violetti.svg")
+                           "kartta-toimenpidepyynto-kesken-punainen.svg")
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
 (defmethod asia-kartalle :havainto [havainto valittu?]
@@ -79,13 +92,13 @@
      :selite {:teksti "Tarkastus"
               :img    "kartta-tarkastus-violetti.svg"}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
-             {:type  :tack-icon-line
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   "kartta-tarkastus-violetti.svg"
+             {:type   :tack-icon-line
+              :scale  (if (valittu? tarkastus) 1.5 1)
+              :img    "kartta-tarkastus-violetti.svg"
               :points (get-in tarkastus [:sijainti :points])}
-             {:type  :tack-icon
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   "kartta-tarkastus-violetti.svg"
+             {:type        :tack-icon
+              :scale       (if (valittu? tarkastus) 1.5 1)
+              :img         "kartta-tarkastus-violetti.svg"
               :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
