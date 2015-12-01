@@ -66,8 +66,8 @@
                         [[nil turpot]]))
               [(rivi (when urakoittain? "") "Yhteensä: " (count turpot))])]
      
-     (when-not (and (= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
-                    (> (count turpot) 0))
+     (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+                (> (count turpot) 0))
        [:pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"}
         (into []
               (map (juxt identity #(or (turpo-maarat-kuukausittain %) 0)))
@@ -93,5 +93,4 @@
                   turpot)
             (rivi (if urakoittain? "" nil) "" "" "" "Yhteensä: "
                   (reduce + 0 (keep :sairaalavuorokaudet turpot))
-                  (reduce + 0 (keep :sairauspoissaolopaivat turpot))))]
-     [:teksti (pr-str turpot)]]))
+                  (reduce + 0 (keep :sairauspoissaolopaivat turpot))))]]))
