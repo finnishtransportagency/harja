@@ -3,6 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.0.5. Julkaistu: - . Muutokset:
+    - Päivystäjätietojen haku toteutettu kolmena eri GET-palveluna: haku urakka id:llä, sijainnilla tai puhelinnumerolla
     - Toteumalle merkitty pakolliseksi alkamis- ja päättymisaika
     - Reittipisteelle merkitty pakolliseksi antaa aika
     - Totemien kirjaamisesta muutettu materiaalien ja tehtävien yksiköt enumin sijasta tekstiksi. Käytettävät arvot yksiköille & materiaaleille otetaan jatkossa urakan tietojen hausta.

@@ -53,8 +53,11 @@
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader nil))
-  ([viesti]
-   [:div.ajax-loader.ladataan-harjaa
+  ([viesti] (ajax-loader viesti nil))
+  ([viesti opts]
+   [(keyword (str "div.ajax-loader"
+                  (when (:luokka opts)
+                    (str "." (:luokka opts)))))
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       [:div.viesti viesti])]))

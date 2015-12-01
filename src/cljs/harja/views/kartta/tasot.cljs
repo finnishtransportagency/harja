@@ -25,19 +25,27 @@
 
 (def geometriat (reaction
                   (loop [geometriat (transient [])
-                        [g & gs] (concat @pohjavesialueet/pohjavesialueet
-                                         @sillat/sillat
+                        [g & gs] (concat ;; Pohjavesi
+                                         @pohjavesialueet/pohjavesialueet
+                                         ;; Laadunseunranta
                                          @laadunseuranta/tarkastukset-kartalla
-                                         @ilmoitukset/ilmoitukset-kartalla
+                                         @sillat/sillat
+                                         ;; Turvallisuus
                                          @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-                                         @toteumat/yksikkohintainen-toteuma-kartalla
+                                         ;; Ilmoitukset
+                                         @ilmoitukset/ilmoitukset-kartalla
+                                         ;; TR-valitsin
                                          @tierekisteri/tr-alkupiste-kartalla
+                                         ;; Toteumat
+                                         @toteumat/yksikkohintainen-toteuma-kartalla
                                          @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
                                          @varusteet/varusteet-kartalla
+                                         @muut-tyot/muut-tyot-kartalla
+                                         ;; Tilannekuva
                                          @tilannekuva/tilannekuvan-asiat-kartalla
+                                         ;; Päällystys & paikkaus
                                          @paallystys/paallystyskohteet-kartalla
-                                         @paallystys/paikkauskohteet-kartalla
-                                         @muut-tyot/muut-tyot-kartalla)]
+                                         @paallystys/paikkauskohteet-kartalla)]
                    (if-not g
                      (persistent! geometriat)
                      (recur (conj! geometriat g) gs)))))

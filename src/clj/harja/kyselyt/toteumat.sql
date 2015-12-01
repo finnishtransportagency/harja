@@ -239,7 +239,7 @@ FROM toteuma_tehtava tt
                           AND toimenpidekoodi = :toimenpidekoodi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
-  JOIN kayttaja k ON k.id = t.luoja;
+  LEFT JOIN kayttaja k ON k.id = t.luoja;
 
 -- name: hae-toteumat-tilannekuvaan
 -- Hakee toteumat tilannekuvaan toimenpidekoodin perusteella.

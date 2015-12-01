@@ -9,13 +9,15 @@
         "ilmoittaja": {
           "etunimi": "Matti",
           "sukunimi": "Meikäläinen",
-          "puhelinnumero": "08023394852",
+          "matkapuhelin": "08023394852",
+          "tyopuhelin": "08023394852",
           "email": "matti.meikalainen@palvelu.fi"
         },
         "lahettaja": {
           "etunimi": "Pekka",
           "sukunimi": "Päivystäjä",
-          "puhelinnumero": "929304449282",
+          "matkapuhelin": "08023394852",
+          "tyopuhelin": "08023394852",
           "email": "pekka.paivystaja@livi.fi"
         },
         "seliteet": {

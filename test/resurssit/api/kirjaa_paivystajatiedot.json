@@ -20,14 +20,14 @@
           "etunimi": "__ETUNIMI__",
           "sukunimi": "__SUKUNIMI__",
           "email": "__EMAIL__",
-          "puhelinnumero": "__PUHELIN__",
+          "matkapuhelin": "__MATKAPUHELIN__",
+          "tyopuhelin": "__TYOPUHELIN__",
           "liviTunnus":"LX1234345"
         },
         "alku": "2015-01-30T12:00:00Z",
         "loppu": "2016-01-30T12:00:00Z",
         "vastuuhenkilo": true,
-        "yhteyshenkilo": true,
-        "varahenkilo": true
+        "varahenkilo": false
       }
     },
     {
@@ -37,12 +37,12 @@
           "etunimi": "Pertti",
           "sukunimi": "Päivystäjä",
           "email": "pertti.paivystaja@foo.bar",
-          "puhelinnumero": "0287445698"
+          "matkapuhelin": "0287445698",
+          "tyopuhelin": "5454646"
         },
         "alku": "2015-01-30T12:00:00Z",
         "loppu": "2016-01-30T12:00:00Z",
-        "vastuuhenkilo": false,
-        "yhteyshenkilo": false,
+        "vastuuhenkilo": true,
         "varahenkilo": true
       }
     }
