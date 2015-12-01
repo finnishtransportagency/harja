@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
-            [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -56,7 +56,7 @@
   (case nimi
     :pohjavesialueet pohjavesialueet/karttataso-pohjavesialueet
     :sillat sillat/karttataso-sillat
-    :tarkastukset laadunseuranta/karttataso-tarkastukset
+    :tarkastukset tarkastukset/karttataso-tarkastukset
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
     :historiakuva historiakuva/karttataso-historiakuva

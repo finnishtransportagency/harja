@@ -19,7 +19,9 @@
 
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -27,7 +29,7 @@
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
         lomakkeen-virheet (atom {})
-        voi-muokata? @laadunseuranta/voi-kirjata?
+        voi-muokata? @havainnot/voi-kirjata?
         voi-tallentaa? (reaction (and
                                   voi-muokata?
                                    (= (count @lomakkeen-virheet) 0)
@@ -175,9 +177,9 @@
                                            :toimenpideinstanssi (:tpi_id (first
                                                                            (filter
                                                                              #(= (:toimenpidekoodi tyyppi) (:id %))
-                                                                                @tiedot-urakka/urakan-toimenpideinstanssit)))))
+                                                                             @tiedot-urakka/urakan-toimenpideinstanssit)))))
                         ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Havainnossa käytetään.
-                        :valinnat-fn   (fn [_] (map #(dissoc % :laji) (laadunseuranta/lajin-sanktiotyypit (:laji @muokattu))))
+                        :valinnat-fn   (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
                         :valinta-nayta :nimi
                         :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
          #_{:otsikko "Toimenpidekoodi" :nimi :toimenpidekoodi
@@ -190,7 +192,7 @@
   []
   [:div.sanktiot
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-   (when @laadunseuranta/voi-kirjata?
+   (when @havainnot/voi-kirjata?
      [:button.nappi-ensisijainen
       {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
       (ikonit/plus) " Lisää sanktio"])

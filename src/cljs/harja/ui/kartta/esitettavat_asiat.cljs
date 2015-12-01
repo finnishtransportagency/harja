@@ -4,7 +4,7 @@
             [harja.loki :refer [log]]
             [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
-            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]))
+            [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]))
 
 (defn- oletusalue [asia valittu?]
   (merge
@@ -92,7 +92,7 @@
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus)
-               (str (laadunseuranta/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")"))
+               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")"))
      :selite {:teksti (str "Tarkastus (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))

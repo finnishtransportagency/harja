@@ -26,7 +26,8 @@
 
             [clojure.string :as str]
             [harja.domain.roolit :as roolit]
-            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot])
+            [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.tiedot.urakka.laadunseuranta.havainnot :as tiedot-havainnot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -85,7 +86,7 @@
                                           :pistokoe "Pistokoe")}
             laadunseuranta/tarkastustyyppi]]]]
 
-        (when @havainnot/voi-kirjata?
+        (when @tiedot-havainnot/voi-kirjata?
           [napit/uusi "Uusi tarkastus"
                            #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
            {:luokka "alle-marginia"}])
@@ -100,7 +101,7 @@
            :nimi :aika}
 
           {:otsikko "Tyyppi"
-           :nimi :tyyppi :fmt laadunseuranta/+tarkastustyyppi->nimi+ :leveys 1}
+           :nimi :tyyppi :fmt tarkastukset/+tarkastustyyppi->nimi+ :leveys 1}
 
           {:otsikko "TR osoite"
            :nimi :tr
@@ -165,7 +166,7 @@
 
      [lomake/lomake
       {:muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? @havainnot/voi-kirjata?}
+       :voi-muokata? @tiedot-havainnot/voi-kirjata?}
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tierekisteriosoite" :nimi :tr

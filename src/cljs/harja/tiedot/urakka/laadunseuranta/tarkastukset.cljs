@@ -3,12 +3,17 @@
             [harja.geo :as geo]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
+
+(def +tarkastustyyppi->nimi+ {:tiesto "Tiestötarkastus"
+                              :talvihoito "Talvihoitotarkastus"
+                              :soratie "Soratien tarkastus"
+                              :laatu "Laaduntarkastus"
+                              :pistokoe "Pistokoe"})
 
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy havainnot sekä niiden reklamaatiot."
@@ -80,12 +85,3 @@
                                      :loppupvm  loppupvm
                                      :tienumero tienumero
                                      :tyyppi    tyyppi}))
-
-(defonce tarkastukset-kartalla
-         (reaction
-           @urakan-tarkastukset
-           (when @karttataso-tarkastukset
-             (kartalla-esitettavaan-muotoon
-               (map #(assoc % :tyyppi-kartalla :tarkastus) @urakan-tarkastukset)
-               @valittu-tarkastus))))
-

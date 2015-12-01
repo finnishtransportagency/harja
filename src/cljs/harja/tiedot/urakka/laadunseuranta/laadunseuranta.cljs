@@ -12,10 +12,3 @@
 
 (defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie
-
-; FIXME Pitäisi siirtää tarkastuksiin, mutta namespace-requiretus sekoaa
-(def +tarkastustyyppi->nimi+ {:tiesto "Tiestötarkastus"
-                              :talvihoito "Talvihoitotarkastus"
-                              :soratie "Soratien tarkastus"
-                              :laatu "Laaduntarkastus"
-                              :pistokoe "Pistokoe"})
