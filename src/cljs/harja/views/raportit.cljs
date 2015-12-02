@@ -3,18 +3,14 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.komponentti :as komp]
-            [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.views.urakat :as urakat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko] :as yleiset]
-            [harja.fmt :as fmt]
             [harja.tiedot.raportit :as raportit]
-            [harja.ui.grid :as grid]
             [cljs.core.async :refer [<! >! chan]]
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.yksikkohintaiset-tyot :as yks-hint-tyot]
@@ -25,7 +21,6 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
-            [clojure.string :as str]
             [alandipert.storage-atom :refer [local-storage]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
@@ -191,6 +186,8 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 (def tyomaakokousraportit
   {"Laskutusyhteenveto" :laskutusyhteenveto
    "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
+   "Ilmoitusraportti" :ilmoitusraportti
+   "Turvallisuusraportti" :turvallisuus
    "Ympäristöraportti" :ymparisto})
 
 (defmethod raportin-parametri "checkbox" [p arvo]

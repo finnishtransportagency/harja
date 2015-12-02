@@ -6,6 +6,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
+            [harja.utils :refer [raportin-otsikko]]
             [harja.pvm :as pvm]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
@@ -76,18 +77,17 @@
           (and alkupvm loppupvm)
           (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm}))
 
-        aikavali (str (pvm/pvm alkupvm) " \u2010 " (pvm/pvm loppupvm))
-        
-        otsikko (str (case konteksti
-                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                       :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                       :koko-maa "KOKO MAA")
-                     ", Materiaaliraportti "
-                     aikavali)
+        raportin-nimi "Materiaaliraportti"
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)
         materiaalit (distinct (map :materiaali_nimi toteumat))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
 
-    [:raportti {:nimi otsikko}
+    [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []

@@ -1,12 +1,12 @@
 (ns harja.palvelin.raportointi.raportit.ilmoitus
   "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
+            [harja.utils :refer [raportin-otsikko]]
             [harja.domain.roolit :as roolit]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne +ilmoitustilat+]]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]))
 
 
 (defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
@@ -48,17 +48,15 @@
         ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
                      db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
                      [alkupvm loppupvm] "")
-
-        aikavali (str (pvm/pvm alkupvm) " \u2010 " (pvm/pvm loppupvm))
-        otsikko (str "Ilmoitusraportti, "
-                     (case konteksti
-                       :urakka (str (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
-                                    aikavali)
-                       :hallintayksikko (str (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                                             ", " aikavali)
-                       :koko-maa (str "KOKO MAA, " aikavali)))
+        raportin-nimi "Ilmoitusraportti"
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)
         ilmoitukset-urakan-mukaan (group-by :urakka ilmoitukset)]
-    [:raportti {:nimi otsikko}
+    [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []
@@ -75,8 +73,7 @@
         (concat
           ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
           (for [[urakka ilmoitukset] ilmoitukset-urakan-mukaan]
-            (let [urakan-nimi (:nimi (first (urakat-q/hae-urakka db urakka)))
-                  _ (log/debug "urakan nimi" urakan-nimi " urakka "urakka)
+            (let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")
                   tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
                   urk (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
                   tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]

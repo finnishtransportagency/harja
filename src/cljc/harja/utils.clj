@@ -1,4 +1,5 @@
-(ns harja.utils)
+(ns harja.utils
+  (:require [harja.pvm :as pvm]))
 
 (defn compare-many
   [comps]
@@ -36,3 +37,8 @@
               (get map toka)))
           {}
           (keys map)))
+
+(defn raportin-otsikko
+  [konteksti nimi alkupvm loppupvm]
+  (str konteksti ", " nimi " ajalta "
+       (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))

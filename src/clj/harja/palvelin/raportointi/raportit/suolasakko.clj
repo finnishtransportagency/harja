@@ -6,6 +6,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
+            [harja.utils :refer [raportin-otsikko]]
             [yesql.core :refer [defqueries]]
             [harja.fmt :as fmt]))
 
@@ -66,12 +67,14 @@
           :default
           ;; FIXME Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
           nil)
-        otsikko (str (case konteksti
-                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                       :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                       :koko-maa "KOKO MAA")
-                     ", Suolabonus/sakkoraportti "
-                     (pvm/pvm alkupvm) " \u2010 " (pvm/pvm loppupvm))
+
+        raportin-nimi "Suolasakkoraportti"
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)
         laske-sakko (fn [rivi]
                       (when (and (:ylitys rivi) (:sakko_maara_per_tonni rivi))
                         (* (:ylitys rivi)
@@ -84,7 +87,7 @@
 
         ]
     [:raportti {:orientaatio :landscape
-                :nimi        otsikko}
+                :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
       [{:leveys "15%" :otsikko "Urakka"}

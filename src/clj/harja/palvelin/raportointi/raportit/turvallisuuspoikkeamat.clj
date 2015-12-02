@@ -2,7 +2,10 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
+            [harja.utils :refer [raportin-otsikko]]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
@@ -37,7 +40,10 @@
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
                                alkupvm loppupvm toimenpide-id] :as parametrit}]
   (log/info "PARAMS: " parametrit)
-  (let [turpot (into []
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        turpot (into []
                      (comp 
                       (map #(konv/array->vec % :tyyppi))
                       (map konv/alaviiva->rakenne))
@@ -46,10 +52,15 @@
                                                  (if hallintayksikko-id true false) hallintayksikko-id
                                                  alkupvm loppupvm))
         turpo-maarat-kuukausittain (frequencies (map (comp vuosi-ja-kk :tapahtunut) turpot))
-        ]
-    
-    [:raportti {:otsikko "Turvallisuuspoikkeamaraportti"}
-     [:taulukko {:otsikko "Turvallisuuspoikkemat tyypeittäin" :viimeinen-rivi-yhteenveto? true}
+        raportin-nimi "Turvallisuusraportti"
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)]
+    [:raportti {:nimi raportin-nimi}
+     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat (when urakoittain?
                       [{:otsikko "Urakka"}])
