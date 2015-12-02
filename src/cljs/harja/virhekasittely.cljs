@@ -10,3 +10,6 @@
         (if (instance? js/Error e)
           (.-stack e)
           e)]])))
+
+(defn arsyttava-virhe [& msgs]
+  (.alert js/window (apply str msgs)))
