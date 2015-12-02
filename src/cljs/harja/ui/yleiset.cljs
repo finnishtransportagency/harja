@@ -193,7 +193,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             format-fn (or format-fn str)]
         [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
          [:button.nappi-alasveto
-          {:type        "button"
+          {:class (when disabled "disabled")
+           :type        "button"
            :disabled    (if disabled "disabled" "")
            :title title
            :on-click    #(do
@@ -243,7 +244,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   (reset! auki false)))) nil))}
 
           [:div.valittu (format-fn valinta)]
-          [:span.livicon-chevron-down]]
+          [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
          [:ul.dropdown-menu.livi-alasvetolista
           (doall
             (for [vaihtoehto vaihtoehdot]
