@@ -30,6 +30,7 @@
 
 (def nakymassa? (atom false))
 (def valittu-toteuma (atom nil))
+(tarkkaile! "Valittu toteuma: " valittu-toteuma)
 
 (def haetut-toteumat
          (reaction<!
@@ -55,6 +56,8 @@
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
 
+(tarkkaile! "Haetut reitit: " haetut-reitit)
+
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
 (def kokonaishintainen-toteuma-kartalla
@@ -63,4 +66,9 @@
              (kartalla-esitettavaan-muotoon
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
-                 @haetut-reitit)))))
+                 (if @valittu-toteuma
+                   (filter
+                     (fn [reitti]
+                       ((:tehtavat reitti) (:nimi @valittu-toteuma)))
+                     @haetut-reitit)
+                   @haetut-reitit))))))

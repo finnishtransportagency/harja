@@ -541,8 +541,12 @@
                          {:id            toteuma-id
                           :reittipisteet reittipisteet
                           :tehtavat      tehtavat}))
-                     toteuma-idt)]
-    reitit))
+                     toteuma-idt)
+        reitit-tehtavat-settina (mapv
+                                  (fn [reitti]
+                                    (assoc reitti :tehtavat (into #{} (:tehtavat reitti))))
+                                  reitit)]
+    reitit-tehtavat-settina))
 
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
