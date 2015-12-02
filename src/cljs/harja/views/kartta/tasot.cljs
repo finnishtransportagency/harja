@@ -7,7 +7,7 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.tiedot.urakka.toteumat.toteumat :as toteumat]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]

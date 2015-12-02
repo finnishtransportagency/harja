@@ -12,7 +12,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
 
-            [harja.tiedot.urakka.toteumat.toteumat :as toteumat]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.sunnittelu.materiaalit :as materiaali-tiedot]
 

@@ -14,8 +14,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.indeksit :as i]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu.suunnittelu :as s]
-            [harja.tiedot.urakka.toteumat.toteumat :as toteumat]
+            [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.views.urakka.valinnat :as valinnat]
 
             [harja.ui.lomake :refer [lomake]]

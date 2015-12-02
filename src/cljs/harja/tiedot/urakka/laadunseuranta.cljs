@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.laadunseuranta.laadunseuranta
+(ns harja.tiedot.urakka.laadunseuranta
   "Tämä nimiavaruus hallinnoi laadunseurantaa sekä havaintoja ja tarkastuksia"
   (:require [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]

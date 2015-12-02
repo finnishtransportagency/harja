@@ -8,7 +8,7 @@
             [clojure.string :as str]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.atom :refer-macros [reaction<!]]
-            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta])
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    ))

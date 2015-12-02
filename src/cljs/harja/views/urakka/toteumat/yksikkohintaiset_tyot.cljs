@@ -10,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.toteumat.toteumat :as toteumat]
+            [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.pvm :as pvm]
             [harja.ui.lomake :refer [lomake]]

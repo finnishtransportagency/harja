@@ -1,7 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.havainnot
   "Listaa urakan havainnot, jotka voivat olla joko tarkastukseen liittyviä tai irrallisia."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]

@@ -3,7 +3,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.sillat :as sillat]
-            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as urakka-laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             
             ;; [harja.loki :refer [log]]

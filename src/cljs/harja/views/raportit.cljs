@@ -18,7 +18,7 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
-            [harja.tiedot.urakka.suunnittelu.suunnittelu :as s]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.roolit :as roolit]

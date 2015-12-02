@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.toteumat.toteumat
+(ns harja.tiedot.urakka.toteumat
   "Tämä nimiavaruus hallinnoi urakan toteumien tietoja."
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]

@@ -2,7 +2,7 @@
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.geo :as geo]
             [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.urakka.laadunseuranta.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]

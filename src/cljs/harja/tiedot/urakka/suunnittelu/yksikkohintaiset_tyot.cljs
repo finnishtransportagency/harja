@@ -5,7 +5,7 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.suunnittelu.suunnittelu :as s])
+            [harja.tiedot.urakka.suunnittelu :as s])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 

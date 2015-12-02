@@ -3,12 +3,12 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu.suunnittelu :as s]
-            [harja.views.urakka.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
-            [harja.views.urakka.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
+            [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
+            [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.suunnittelu.suola :as suola]
-            [harja.views.urakka.materiaalit :as mat]
+            [harja.views.urakka.suunnittelu.materiaalit :as mat]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
 

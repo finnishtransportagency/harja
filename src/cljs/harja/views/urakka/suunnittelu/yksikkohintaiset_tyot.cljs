@@ -1,4 +1,4 @@
-(ns harja.views.urakka.yksikkohintaiset-tyot
+(ns harja.views.urakka.suunnittelu.yksikkohintaiset-tyot
   "Urakan 'Yksikkohintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.domain.roolit :as roolit]
@@ -9,7 +9,7 @@
             [harja.ui.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu.suunnittelu :as s]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
 
