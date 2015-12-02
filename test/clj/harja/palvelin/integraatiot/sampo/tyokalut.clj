@@ -25,8 +25,8 @@
 
 (def +testiurakka-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Project financialDepartmentHash=\"KP921303\"
-    financialDepartmentOBS=\"/Liikennevirasto/ELYT, TOA/Varsinais-Suomen ELY, OSA/VAR Tienpidon hankinnat, YK/VAR Tienpidon hankinnat, KP\"
+    <Project financialDepartmentHash=\"KP981303\"
+    financialDepartmentOBS=\"/Liikennevirasto/ELYT, TOA/Pohjois-Pohjanmaan ELY, OSA/VAR Tienpidon hankinnat, YK/VAR Tienpidon hankinnat, KP\"
     id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" programId=\"TESTIHANKE\"
              resourceId=\"TESTIHENKILO\" schedule_finish=\"2020-12-31T17:00:00.0\" schedule_start=\"2013-01-01T08:00:00.0\">
         <documentLinks/>
@@ -127,6 +127,9 @@
 
 (defn hae-urakan-tyyppi []
   (first (first (q "select tyyppi from urakka where sampoid = 'TESTIURAKKA';"))))
+
+(defn hae-urakan-hallintayksikon-nimi []
+  (first (first (q "SELECT o.nimi FROM urakka u INNER JOIN organisaatio o on o.id = u.hallintayksikko WHERE u.sampoid = 'TESTIURAKKA';"))))
 
 (defn onko-yhteyshenkilo-sidottu-urakkaan? []
   (first (first (q "SELECT exists(

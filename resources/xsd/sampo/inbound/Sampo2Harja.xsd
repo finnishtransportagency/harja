@@ -56,6 +56,8 @@
 		<xs:attribute name="name" type="xs:string" use="required"/>
 		<xs:attribute name="resourceId" type="xs:string" use="required"/>
 		<xs:attribute name="programId" type="xs:string" use="required"/>
+		<xs:attribute name="financialDepartmentHash" type="xs:string" use="required"/>
+		<xs:attribute name="financialDepartmentOBS" type="xs:string" use="required"/>
 		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
 		<xs:attribute name="schedule_start" type="xs:dateTime" use="required"/>
 		<xs:attribute name="schedule_finish" type="xs:dateTime" use="required"/>
