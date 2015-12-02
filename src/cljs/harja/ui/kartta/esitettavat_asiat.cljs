@@ -32,16 +32,17 @@
       nil)))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu?]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :selite {:teksti "Tiedotus"
-              :img    "kartta-tiedotus-violetti.svg"
-              }
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? ilmoitus) 1.5 1)
-            :img         "kartta-tiedotus-violetti.svg"
-            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
+  (let [tooltip (or (ilmoituksen-tooltip ilmoitus) "Tiedotus")]
+    [(assoc ilmoitus
+       :type :ilmoitus
+       :nimi tooltip
+       :selite {:teksti "Tiedotus"
+                :img    "kartta-tiedotus-violetti.svg"
+                }
+       :alue {:type        :tack-icon
+              :scale       (if (valittu? ilmoitus) 1.5 1)
+              :img         "kartta-tiedotus-violetti.svg"
+              :coordinates (get-in ilmoitus [:sijainti :coordinates])})]))
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
   (let [tooltip (or (ilmoituksen-tooltip ilmoitus) "Kysely")
