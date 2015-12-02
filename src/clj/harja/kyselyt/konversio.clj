@@ -195,7 +195,10 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
              [])))
 
 (defn array->set
-  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi."
+  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi. 
+  Yhden arityn versio ottaa JDBC arrayn ja paluttaa setin ilman mäppiä."
+  ([a]
+   (into #{} (and a (.getArray a))))
   ([rivi kentta] (array->set rivi kentta identity))
   ([rivi kentta muunnos]
    (assoc rivi
