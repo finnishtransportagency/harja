@@ -255,14 +255,18 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:span.rivilla-virheita
          (ikonit/warning-sign)])])])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna piilota-toiminnot? rivi-index valittu-rivi-index mahdollista-rivin-valinta]} skeema rivi]
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id vetolaatikot tallenna piilota-toiminnot? rivi-index valittu-rivi-index mahdollista-rivin-valinta]} skeema rivi]
   [:tr {:class    (str luokka (when (= rivi-index @valittu-rivi-index)
                                 " rivi-valittu"))
-        :on-click (when rivi-klikattu
-                    #(do
-                      (when mahdollista-rivin-valinta
-                        (reset! valittu-rivi-index rivi-index))
-                      (rivi-klikattu rivi)))}
+        :on-click #(do
+                    (when rivi-klikattu
+                      (rivi-klikattu rivi))
+                    (when mahdollista-rivin-valinta
+                      (if (= @valittu-rivi-index rivi-index)
+                        (do (reset! valittu-rivi-index nil)
+                            (when rivi-valinta-peruttu
+                              (rivi-valinta-peruttu rivi)))
+                        (reset! valittu-rivi-index rivi-index))))}
    (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
@@ -338,7 +342,7 @@ Optiot on mappi optioita:
   
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
-           muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot?
+           muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot mahdollista-rivin-valinta]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
@@ -545,7 +549,7 @@ Optiot on mappi optioita:
 
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta] :as opts} skeema tiedot]
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu] :as opts} skeema tiedot]
          (let [skeema (laske-sarakkeiden-leveys (keep identity skeema))
                colspan (if piilota-toiminnot?
                          (count skeema)
@@ -695,6 +699,7 @@ Optiot on mappi optioita:
                                                                                          (when rivin-luokka
                                                                                            (rivin-luokka rivi)))
                                                          :rivi-klikattu             rivi-klikattu
+                                                         :rivi-valinta-peruttu      rivi-valinta-peruttu
                                                          :valittu-rivi-index        valittu-rivi-index
                                                          :mahdollista-rivin-valinta mahdollista-rivin-valinta
                                                          :piilota-toiminnot?        piilota-toiminnot?}

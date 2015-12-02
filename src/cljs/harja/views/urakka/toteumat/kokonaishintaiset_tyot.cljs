@@ -26,6 +26,7 @@
        :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
        :tunniste :tehtavaid
        :rivi-klikattu #(do (reset! tiedot/valittu-toteuma %))
+       :rivi-valinta-peruttu #(do (reset! tiedot/valittu-toteuma nil))
        :mahdollista-rivin-valinta true}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
