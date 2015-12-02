@@ -60,7 +60,8 @@
             tapahtumat
             urakka-id
             (fn [ilmoitus-id]
-              (vastaanota-ilmoitus integraatioloki db kanava tapahtuma-id urakka-id ilmoitus-id viimeisin-id sulje-lahetyksen-jalkeen?)))
+              (vastaanota-ilmoitus integraatioloki db kanava tapahtuma-id urakka-id ilmoitus-id viimeisin-id sulje-lahetyksen-jalkeen?)
+              (notifikaatiot/ilmoita-lahetetysta-ilmoituksesta tapahtumat ilmoitus-id :api)))
           (on-close kanava
                     (fn [_]
                       (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
