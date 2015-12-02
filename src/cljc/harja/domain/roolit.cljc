@@ -156,7 +156,8 @@ rooleista."
 Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai 
 urakoitsija."
   [{urakat :organisaation-urakat} urakka-id]
-  (urakat urakka-id))
+  (and urakat
+       (urakat urakka-id)))
 
 (defn lukuoikeus-urakassa?
   [kayttaja urakka-id]
