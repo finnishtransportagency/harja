@@ -492,12 +492,12 @@
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
-(defmethod luo-feature :tack-icon-line [{:keys [points img scale width] :as spec}]
+(defmethod luo-feature :tack-icon-line [{:keys [points img scale width zindex color] :as spec}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
+        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
-                                      :zIndex 4})
+                                      :zIndex (or zindex 4)})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
@@ -505,7 +505,7 @@
                                                       :anchor  #js [0.5 1]
                                                       :opacity 1
                                                       :scale   (or scale 1)})
-                       :zIndex   5})]]
+                       :zIndex   ((fnil + 4) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
     (doto feature
       (.setStyle (clj->js tyylit)))))
 
@@ -530,7 +530,7 @@
                                                           #js [0.5 0.5])})
                                 :zIndex 5})]))))
 
-(defmethod luo-feature :tack-icon [{:keys [coordinates img scale]}]
+(defmethod luo-feature :tack-icon [{:keys [coordinates img scale zindex]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
@@ -538,7 +538,7 @@
                                      :anchor  #js [0.5 1]
                                      :opacity 1
                                      :scale   (or scale 1)})
-                      :zIndex 4}))))
+                      :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
