@@ -356,3 +356,6 @@ SET alueurakkanro = :alueurakkanro,
 
 -- name: hae-alueurakka-numerolla
 SELECT * FROM alueurakka WHERE alueurakkanro = :alueurakkanro;
+
+-- name: tuhoa-alueurakkadata!
+DELETE FROM alueurakka;
