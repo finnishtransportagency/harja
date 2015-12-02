@@ -10,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu.suunnittelu :as s]
-            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kok-hint-tyot]
+            [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
 
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]

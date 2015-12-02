@@ -15,7 +15,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
-            [harja.tiedot.urakka.suunnittelu.muut-tyot-kartalla :as muut-tyot-kartalla]
+            [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot-kartalla]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.views.urakka.valinnat :as valinnat]
 
