@@ -5,10 +5,10 @@
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
             [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
-            [harja.palvelin.palvelut.urakat :as urakkapalvelu]))
+            [harja.palvelin.palvelut.urakat :as urakkapalvelu]
+            [slingshot.slingshot :refer [throw+]]))
 
-(defn hae-urakoitsija [db urakka-id]
-  (first (urakat/hae-urakan-organisaatio db urakka-id)))
+
 
 (defn paivita-ilmoittaja [db id ilmoittaja]
   (ilmoitukset/paivita-ilmoittaja-ilmoitukselle!
@@ -72,14 +72,14 @@
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
-        urakka-id (urakkapalvelu/hae-urakka-id-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))
-        urakoitsija (hae-urakoitsija db urakka-id)]
+        urakka-id (urakkapalvelu/hae-urakka-id-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))]
     (if id
       (paivita-ilmoitus db id urakka-id ilmoitus)
       (luo-ilmoitus db urakka-id ilmoitus))
-
-    (when tapahtumat
-      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id))
-
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" ilmoitus))
-    (kuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil)))
+    (if-not urakka-id
+      (throw+ {:type :urakka-ei-loydy})
+      urakka-id)))
+
+
+
