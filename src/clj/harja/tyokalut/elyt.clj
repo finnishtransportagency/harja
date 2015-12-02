@@ -1,18 +1,12 @@
 (ns harja.tyokalut.elyt
   "Komponentti hallintayksiköiden rajojen hakemiseksi, tiepuolella haetaa Elyt_infra.shp tiedostosta."
-  (:import (org.geotools.data.shapefile ShapefileDataStore)
-           (org.geotools.map MapContent FeatureLayer))
+  (:import (org.geotools.data.shapefile ShapefileDataStore))
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
             [harja.shp :as shp])
   (:gen-class))
 
-
-
 (defn testaa [^ShapefileDataStore shp]
   (.getCo shp))
-
-
 
 (defn- lue-elyt
   "Lukee LiVin Elyt_infra.shp tiedostosta ELYt (ent. tiepiirit) ja palauttaa niiden tiedot mäppinä."
@@ -42,7 +36,6 @@
   (for [{:keys [nimi alue]} (sort-by :numero (vals elyt))]
     (str "\nINSERT INTO hallintayksikko (liikennemuoto, nimi, lyhenne, alue) VALUES ('T', '" nimi "', '" (lyhenteet nimi) "', "
          (shp/geom->pg alue) ");")))
-
 
 (defn -main [& args]
   (assert (= 2 (count args)) "Anna 2 parametrita: ELY SHP tiedosto ja tehtävä SQL tiedosto")

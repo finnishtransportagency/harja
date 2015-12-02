@@ -7,32 +7,20 @@
             [harja.kyselyt.organisaatiot :as o]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn paivita-ely [db ely]
-  (o/paivita-ely! db
-                  (:nimi ely)
-                  (elyt/lyhenteet (:nimi ely))
-                  "T"
-                  (:numero ely)
-                  (.toString (:the_geom ely))))
-
-(defn luo-ely [db ely]
-  (o/luo-ely<! db
-              (:nimi ely)
-              (elyt/lyhenteet (:nimi ely))
-              "T"
-              (:numero ely)
-              (.toString (:the_geom ely))))
-
 (defn luo-tai-paivita-ely [db ely]
-  (if-let [ely-kannassa (first (o/hae-ely db (:numero ely)))]
-    (paivita-ely db ely)
-    (luo-ely db ely)))
+  (let [nimi (:nimi ely)
+        lyhenne (elyt/lyhenteet (:nimi ely))
+        liikennemuoto "T"
+        numero (:numero ely)
+        geometria (.toString (:the_geom ely))]
+    (if (first (o/hae-ely db (:numero ely)))
+      (o/paivita-ely! db nimi lyhenne liikennemuoto numero geometria)
+      (o/luo-ely<! db nimi lyhenne liikennemuoto numero geometria))))
 
 (defn vie-ely-entry [db ely]
   (if (:the_geom ely)
     (luo-tai-paivita-ely db ely)
     (log/warn "ELY-aluetta ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error ely))))
-
 
 (defn vie-elyt-kantaan [db shapefile]
   (if shapefile
