@@ -85,7 +85,7 @@
            @urakan-tarkastukset
            (when @karttataso-tarkastukset
              (kartalla-esitettavaan-muotoon
-               (map #(assoc % :tyyppi-kartalla (:tyyppi %)) @urakan-tarkastukset)
+               (map #(assoc % :tyyppi-kartalla :tarkastus) @urakan-tarkastukset)
                @valittu-tarkastus))))
 
 (defn paivita-tarkastus-listaan!
