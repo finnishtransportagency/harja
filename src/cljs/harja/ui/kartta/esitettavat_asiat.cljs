@@ -46,13 +46,18 @@
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
   (let [tooltip (or (ilmoituksen-tooltip ilmoitus) "Kysely")
         aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
-        ikoni (if aloitettu?
-                "kartta-kysely-violetti.svg"
-                "kartta-kysely-kesken-punainen.svg")]
+        lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
+        ikoni (cond
+                lopetettu? "kartta-kysely-violetti.svg" ;; TODO Lisää harmaat ikonit kun valmistuvat.
+                aloitettu? "kartta-kysely-violetti.svg"
+                :else "kartta-kysely-kesken-punainen.svg")]
     [(assoc ilmoitus
        :type :ilmoitus
        :nimi tooltip
-       :selite {:teksti (if aloitettu? "Kysely, aloitettu" "Kysely, ei aloituskuittausta.")
+       :selite {:teksti (cond
+                          aloitettu? "Kysely, aloitettu"
+                          lopetettu? "Kysely, lopetettu"
+                          :else "Kysely, ei aloituskuittausta.")
                 :img    ikoni}
        :alue {:type        :tack-icon
               :scale       (if (valittu? ilmoitus) 1.5 1)
@@ -62,13 +67,18 @@
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
   (let [tooltip (or (ilmoituksen-tooltip ilmoitus) "Toimenpidepyyntö")
         vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
-        ikoni (if vastaanotettu?
-                "kartta-toimenpidepyynto-violetti.svg"
-                "kartta-toimenpidepyynto-kesken-punainen.svg")]
+        lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
+        ikoni (cond
+                lopetettu? "kartta-toimenpidepyynto-violetti.svg" ;; TODO
+                vastaanotettu? "kartta-toimenpidepyynto-violetti.svg"
+                :else "kartta-toimenpidepyynto-kesken-punainen.svg")]
     [(assoc ilmoitus
        :type :ilmoitus
        :nimi tooltip
-       :selite {:teksti (if vastaanotettu? "Toimenpidepyyntö, kuitattu" "Toimenpidepyyntö, kuittaamaton")
+       :selite {:teksti (cond
+                          vastaanotettu? "Toimenpidepyyntö, kuitattu"
+                          lopetettu? "Toimenpidepyyntö, lopetettu"
+                          :else "Toimenpidepyyntö, kuittaamaton")
                 :img    ikoni}
        :alue {:type        :tack-icon
               :scale       (if (valittu? ilmoitus) 1.5 1)
