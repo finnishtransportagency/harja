@@ -56,7 +56,7 @@
     (let [maksueran-tiedot (hae-maksuera db numero)
           ;; Sakot lähetetään Sampoon negatiivisena
           maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
-                             (assoc-in maksueran-tiedot [:maksuera :summa] (- (get-in maksueran-tiedot [:maksuera :summa])))
+                             (update-in maksueran-tiedot [:maksuera :summa] -)
                              maksueran-tiedot)
           maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
       (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
