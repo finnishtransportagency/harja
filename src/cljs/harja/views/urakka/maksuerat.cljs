@@ -47,8 +47,8 @@
   (let [otsikko (fn [rivi] (tyyppi-enum->string-monikko (:tyyppi (:maksuera rivi))))
         otsikon-mukaan (group-by otsikko (sort-by
                                            #(sorttausjarjestys
-                                                    (:tyyppi (:maksuera %))
-                                                    (:numero %))
+                                             (:tyyppi (:maksuera %))
+                                             (:numero %))
                                            rivit))]
     (doall (mapcat (fn [[otsikko rivit]]
                      (concat [(grid/otsikko otsikko)] rivit))
@@ -119,13 +119,13 @@
   (reset! pollataan-kantaa? true)
   (let [ur @nav/valittu-urakka]
     (go-loop []
-      (when @pollataan-kantaa?
-        (when (not (empty? @kuittausta-odottavat-maksuerat))          
-          (let [result (<! (maksuerat/hae-urakan-maksuerat (:id ur)))]
-            (log "tuli maksueriä: " result)
-            (reset! maksuerat/maksuerat result)))
-        (<! (timeout 10000))
-        (recur)))))
+             (when @pollataan-kantaa?
+               (when (not (empty? @kuittausta-odottavat-maksuerat))
+                 (let [result (<! (maksuerat/hae-urakan-maksuerat (:id ur)))]
+                   (log "tuli maksueriä: " result)
+                   (reset! maksuerat/maksuerat result)))
+               (<! (timeout 10000))
+               (recur)))))
 
 (defn nayta-tila [tila lahetetty]
   (case tila
@@ -147,9 +147,9 @@
     (fn []
       (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat
             maksuerarivit @maksuerarivit
-            maksuerarivit-ilman-otsikkoja  (filter (fn [rivi]
-                                             (not (contains? rivi :teksti)))
-                                           maksuerarivit)]
+            maksuerarivit-ilman-otsikkoja (filter (fn [rivi]
+                                                    (not (contains? rivi :teksti)))
+                                                  maksuerarivit)]
         [:div
          [grid/grid
           {:otsikko  "Maksuerät"
@@ -164,26 +164,26 @@
             :fmt     fmt/euro-opt :hae (fn [rivi] (:summa (:kustannussuunnitelma rivi)))}
            {:otsikko "Maksuerän summa" :nimi :maksueran-summa :tyyppi :numero :leveys "14%" :pituus 16
             :fmt     fmt/euro-opt :hae (fn [rivi] (:summa (:maksuera rivi)))}
-           {:otsikko     "Maksueran tila" :nimi :tila :tyyppi :komponentti
-            :komponentti (fn [rivi] (nayta-tila (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
            {:otsikko     "Kust.suunnitelman tila" :nimi :kustannussuunnitelma-tila :tyyppi :komponentti
             :komponentti (fn [rivi] (nayta-tila (:tila (:kustannussuunnitelma rivi)) (:lahetetty (:kustannussuunnitelma rivi)))) :leveys "19%"}
+           {:otsikko     "Maksueran tila" :nimi :tila :tyyppi :komponentti
+            :komponentti (fn [rivi] (nayta-tila (:tila (:maksuera rivi)) (:lahetetty (:maksuera rivi)))) :leveys "19%"}
            {:otsikko     "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
             :komponentti (fn [rivi]
                            (let [maksueranumero (:numero rivi)]
                              [:button.nappi-ensisijainen.nappi-grid {:class    (str "nappi-ensisijainen " (if (contains? kuittausta-odottavat maksueranumero) "disabled"))
-                                                       :type     "button"
-                                                       :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
+                                                                     :type     "button"
+                                                                     :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
             :leveys      "10%"}]
           maksuerarivit]
-       [:button.nappi-ensisijainen {:class    (if (= (count kuittausta-odottavat)
-                                                     (count maksuerarivit-ilman-otsikkoja))
-                                                "disabled"
-                                                "")
-                                    :on-click #(do (.preventDefault %)
-                                                   (laheta-maksuerat
-                                                     (into #{}
-                                                           (map
-                                                             (fn [rivi]
-                                                               (:numero rivi))
-                                                             maksuerarivit-ilman-otsikkoja))))} "Lähetä kaikki"]]))))
+         [:button.nappi-ensisijainen {:class    (if (= (count kuittausta-odottavat)
+                                                       (count maksuerarivit-ilman-otsikkoja))
+                                                  "disabled"
+                                                  "")
+                                      :on-click #(do (.preventDefault %)
+                                                     (laheta-maksuerat
+                                                       (into #{}
+                                                             (map
+                                                               (fn [rivi]
+                                                                 (:numero rivi))
+                                                               maksuerarivit-ilman-otsikkoja))))} "Lähetä kaikki"]]))))

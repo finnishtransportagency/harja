@@ -22,13 +22,6 @@
 (defn urakan-hoitokausi [ur]
   (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))
 
-(defn kontekstin-hoitokaudet [urakat]
-  (valinnat/kontekstin-hoitokaudet
-    (if @nav/valittu-hallintayksikko
-      (u/urakoiden-hoitokaudet urakat 5)
-      (u/edelliset-hoitokaudet 5))
-    u/valittu-kontekstin-hoitokausi
-    u/valitse-kontekstin-hoitokausi!))
 
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi

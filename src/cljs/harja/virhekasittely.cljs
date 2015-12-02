@@ -5,7 +5,7 @@
   (let [auki (atom false)]
     (fn [e]
       [:div.crash-component {:on-click #(swap! auki not)}
-       [:span "Ups... noloa. Pieniä teknisiä ongelmia, lataathan sivun uudelleen?"]
+       [:span "Hupsista, komponentti kaatui. Olemme pahoillamme!"]
        [:div.crash-details {:class (if @auki "details-open" "")}
         (if (instance? js/Error e)
           (.-stack e)

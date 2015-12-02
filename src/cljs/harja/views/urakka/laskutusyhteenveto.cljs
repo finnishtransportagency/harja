@@ -32,19 +32,14 @@
 
 (defonce laskutusyhteenvedon-parametrit
   (reaction (let [ur @nav/valittu-urakka
-                  [hk-alkupvm hk-loppupvm] @u/valittu-hoitokausi
-                  [aikavali-alkupvm aikavali-loppupvm] @u/valittu-hoitokauden-kuukausi
+                  [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
                   nakymassa? @laskutusyhteenveto-nakyvissa?]
-              (when (and ur hk-alkupvm hk-loppupvm
-                         aikavali-alkupvm aikavali-loppupvm
-                         nakymassa?)
+              (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/suorita-raportti-urakka-parametrit
                  (:id ur)
                  :laskutusyhteenveto
-                 {:hk-alkupvm        hk-alkupvm
-                  :hk-loppupvm       hk-loppupvm
-                  :aikavali-alkupvm  aikavali-alkupvm
-                  :aikavali-loppupvm aikavali-loppupvm})))))
+                 {:alkupvm  alkupvm
+                  :loppupvm loppupvm})))))
 
 
 (defonce laskutusyhteenvedon-tiedot

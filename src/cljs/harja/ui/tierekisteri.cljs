@@ -106,6 +106,7 @@
                         (log "Haetaan alkupisteen sijainti")
                         (let [piste (<! (k/post! :hae-tr-pisteeksi osoite))]
                           (log "Alkupisteen sijainti saatu: " (pr-str piste))
+                          (swap! tr-osoite assoc :geometria piste)
                           (reset! tierekisteri/valittu-alkupiste piste)))
                       (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
                                                           (str "Valittu alkupiste: "
@@ -151,32 +152,32 @@
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo
-        {:component-will-receive-props
-         (fn [_ _ uudet-optiot]
-           (reset! optiot uudet-optiot))}
+       {:component-will-receive-props
+        (fn [_ _ uudet-optiot]
+          (reset! optiot uudet-optiot))}
 
-        (komp/sisaan-ulos #(do
+       (komp/sisaan-ulos #(do
                             (reset! nav/kartan-edellinen-koko kartan-koko)
                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
                             (reset! kartta/pida-geometriat-nakyvilla?) ; Emme halua, että zoom-taso muuttuu kun TR:ää valitaan
                             (kartta/aseta-kursori! :crosshair))
-                          #(do
+                         #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
                             (poistu-tr-valinnasta)
                             (kartta/aseta-kursori! nil)))
-        (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
-        (komp/kuuntelija :esc-painettu
-                         (fn [_]
-                           (log "optiot: " @optiot)
-                           ((:kun-peruttu @optiot))
-                           (poistu-tr-valinnasta))
-                         :enter-painettu
-                         #(go (>! tapahtumat {:tyyppi :enter})))
-        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
-          [:div.tr-valitsin-teksti.form-control
-           [:div (case @tila
-                   :ei-valittu "Valitse alkupiste"
-                   :alku-valittu "Valitse loppupiste"
-                   "")]])))))
+       (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
+       (komp/kuuntelija :esc-painettu
+                        (fn [_]
+                          (log "optiot: " @optiot)
+                          ((:kun-peruttu @optiot))
+                          (poistu-tr-valinnasta))
+                        :enter-painettu
+                        #(go (>! tapahtumat {:tyyppi :enter})))
+       (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
+         [:div.tr-valitsin-teksti.form-control
+          [:div (case @tila
+                  :ei-valittu "Valitse alkupiste"
+                  :alku-valittu "Valitse loppupiste"
+                  "")]])))))
