@@ -105,6 +105,7 @@
                             (log "Haetaan alkupisteen sijainti")
                             (let [piste (<! (k/post! :hae-tr-pisteeksi osoite))]
                               (log "Alkupisteen sijainti saatu: " (pr-str piste))
+                              (swap! tr-osoite assoc :geometria piste)
                               (reset! tierekisteri/valittu-alkupiste piste)))
                           (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
                                                               (str "Valittu alkupiste: "

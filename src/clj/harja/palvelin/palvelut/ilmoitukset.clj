@@ -77,22 +77,10 @@
                                               (if (:avoimet tilat) true false) ;; falseksi
                                               ))
         mankeloitu (konv/sarakkeet-vektoriin mankeloitava {:kuittaus :kuittaukset})
-
         tulos (mapv
                 #(assoc % :uusinkuittaus
                           (when-not (empty? (:kuittaukset %))
-                            (reduce
-                              (fn [a b]
-                                (if-not (:kuitattu a)
-                                  (:kuitattu b)
-
-                                  (if-not (:kuitattu b)
-                                    (:kuitattu a)
-
-                                    (if (t/after? (from-sql-time (:kuitattu a)) (from-sql-time (:kuitattu b)))
-                                      (:kuitattu a)
-                                      (:kuitattu b)))))
-                              (:kuittaukset %))))
+                            (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
                 mankeloitu)]
     (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")

@@ -9,12 +9,14 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.organisaatiot :as organisaatiot-q]
             ;; vaaditaan built in raportit
+            [harja.palvelin.raportointi.raportit.ilmoitus]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot]
             [harja.palvelin.raportointi.raportit.suolasakko]
             [harja.palvelin.raportointi.raportit.ymparisto]
-            [harja.palvelin.raportointi.raportit.tyomaakokous]))
+            [harja.palvelin.raportointi.raportit.tyomaakokous]
+            [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta

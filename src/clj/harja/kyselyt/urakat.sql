@@ -356,3 +356,18 @@ WHERE
   ua.tyyppi = :urakkatyyppi :: urakkatyyppi AND
   (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
   (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
+
+-- name: luo-alueurakka<!
+INSERT INTO alueurakka (alueurakkanro, alue, elynumero) VALUES (:alueurakkanro, ST_GeomFromText(:alue)::geometry, :elynumero);
+
+-- name: paivita-alueurakka!
+UPDATE alueurakka
+SET alueurakkanro = :alueurakkanro,
+  alue = ST_GeomFromText(:alue)::geometry,
+  elynumero = :elynumero;
+
+-- name: hae-alueurakka-numerolla
+SELECT * FROM alueurakka WHERE alueurakkanro = :alueurakkanro;
+
+-- name: tuhoa-alueurakkadata!
+DELETE FROM alueurakka;

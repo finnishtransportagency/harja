@@ -29,6 +29,10 @@
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text}]
    toimenpiteet])
 
+(def turpo-tyypit {:turvallisuuspoikkeama "Turvallisuuspoikkeama"
+                   :prosessipoikkeama "Prosessipoikkeama"
+                   :tyoturvallisuuspoikkeama "Työturvallisuuspoikkeama"})
+
 (defn turvallisuuspoikkeaman-tiedot
   []
 
@@ -58,6 +62,7 @@
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :pakollinen? true
+          :vaihtoehto-nayta #(turpo-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
 
