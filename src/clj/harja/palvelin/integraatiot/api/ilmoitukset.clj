@@ -56,15 +56,15 @@
       (fn []
         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
         (with-channel request kanava
-                      (notifikaatiot/kuuntele-urakan-ilmoituksia
-                        tapahtumat
-                        urakka-id
-                        (fn [ilmoitus-id]
-                          (vastaanota-ilmoitus integraatioloki db kanava tapahtuma-id urakka-id ilmoitus-id viimeisin-id sulje-lahetyksen-jalkeen?)))
-                      (on-close kanava
-                                (fn [_]
-                                  (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
-                                  (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
+          (notifikaatiot/kuuntele-urakan-ilmoituksia
+            tapahtumat
+            urakka-id
+            (fn [ilmoitus-id]
+              (vastaanota-ilmoitus integraatioloki db kanava tapahtuma-id urakka-id ilmoitus-id viimeisin-id sulje-lahetyksen-jalkeen?)))
+          (on-close kanava
+                    (fn [_]
+                      (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
+                      (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
