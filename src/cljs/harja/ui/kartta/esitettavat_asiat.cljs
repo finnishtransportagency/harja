@@ -37,8 +37,7 @@
        :type :ilmoitus
        :nimi tooltip
        :selite {:teksti "Tiedotus"
-                :img    "kartta-tiedotus-violetti.svg"
-                }
+                :img    "kartta-tiedotus-violetti.svg"}
        :alue {:type        :tack-icon
               :scale       (if (valittu? ilmoitus) 1.5 1)
               :img         "kartta-tiedotus-violetti.svg"
