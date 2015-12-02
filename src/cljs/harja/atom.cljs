@@ -1,10 +1,12 @@
 (ns harja.atom
   "Erinäisiä atomien ja tilan käsittelyn apureita"
   (:require
-    [harja.loki :refer [log]]
-    [cljs.core.async :refer [<! >! chan put! alts! timeout]])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+   [harja.loki :refer [log]]
+   [harja.virhekasittely :refer [arsyttava-virhe]]
+   [cljs.core.async :refer [<! >! chan put! alts! timeout]])
+  (:require-macros [cljs.core.async.macros :refer [go-loop]]
+                   [harja.atom :refer [reaction<!]]
+                   [harja.makrot :refer [nappaa-virhe]]))
 
 ;; Tallennetaan reaktioiden kanavat, komentamista varten
 (defonce +reaktiot+ (atom {}))
@@ -17,12 +19,12 @@
 
 (defn paivita-periodisesti [reaktio periodi-ms]
   (let [paivita? (atom true)]
-    (go
-      (loop []
-        (<! (timeout periodi-ms))
-        (when @paivita?
-          (paivita! reaktio)
-          (recur))))
+    (go-loop []
+      (<! (timeout periodi-ms))
+      (when @paivita?
+        (nappaa-virhe
+          (paivita! reaktio))
+        (recur)))
     #(reset! paivita? false)))
 
 (defn kuristin
@@ -35,15 +37,16 @@
   ([paivitys-fn] (kuristin 100 paivitys-fn))
   ([odotusaika paivitys-fn]
    (let [parametrit-ch (chan)]
-     (go (loop [parametrit (<! parametrit-ch)]
-           (let [[arvo kanava] (alts! [parametrit-ch (timeout odotusaika)])]
-             (if (= kanava parametrit-ch)
-               ;; Uudet parametrit tuli ennen timeouttia
-               (recur arvo)
-               
-               ;; timeout
-               (do (apply paivitys-fn parametrit)
-                   (recur (<! parametrit-ch)))))))
+     (go-loop [parametrit (<! parametrit-ch)]
+       (let [[arvo kanava] (alts! [parametrit-ch (timeout odotusaika)])]
+         (if (= kanava parametrit-ch)
+           ;; Uudet parametrit tuli ennen timeouttia
+           (recur arvo)
+           
+           ;; timeout
+           (do (nappaa-virhe
+                 (apply paivitys-fn parametrit))
+               (recur (<! parametrit-ch))))))
      (fn [& parametrit]
        (put! parametrit-ch parametrit)))))
 
