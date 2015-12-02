@@ -9,6 +9,13 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
 
+(defn hae-urakka-id-sijainnilla [db urakkatyyppi sijainti]
+  (let [urakka-id (:id (first (q/hae-urakka-sijainnilla db urakkatyyppi (:x sijainti) (:y sijainti))))]
+    (if (and (not urakka-id)
+             (not (= "hoito" urakkatyyppi)))
+      (:id (first (q/hae-urakka-sijainnilla  db "hoito" (:x sijainti) (:y sijainti))))
+      urakka-id)))
+
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
         

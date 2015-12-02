@@ -90,7 +90,7 @@ Seuraavat optiot ovat mahdollisia:
              naytettava-kk (t/date-time vuosi (inc kk) 1)
              naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
          [:table.pvm-valinta {:style (merge
-                                      {:display (if @sijainti-atom "block" "none")}
+                                      {:display (if @sijainti-atom "table" "none")}
                                       (case @sijainti-atom
                                         :oikea {:top 0 :left "100%"}
                                         :ylos-oikea {:bottom "100%" :left 0}

@@ -35,7 +35,7 @@
                                     (pvm/vuosi (second @tiedot/valittu-hoitokausi)))
             tiedot-muuttuneet? (not= @lampotilarivit @tiedot/hoitourakoiden-lampotilat)]
         [:span.lampotilat
-         [valinnat/kontekstin-hoitokaudet tiedot/hoitokaudet tiedot/valittu-hoitokausi tiedot/valitse-hoitokausi!]
+         [valinnat/hoitokausi tiedot/hoitokaudet tiedot/valittu-hoitokausi tiedot/valitse-hoitokausi!]
          [grid/muokkaus-grid
           {:otsikko           "Teiden hoitourakoiden sydäntalven keskilämpötilat"
            :voi-muokata?      (constantly true)

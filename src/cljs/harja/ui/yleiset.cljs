@@ -1,10 +1,10 @@
 (ns harja.ui.yleiset
   "Yleisiä UI komponentteja ja apureita"
-  (:require [reagent.core :refer [atom] :as reagent]
-            [harja.loki :refer [log tarkkaile!]]
+  (:require [goog.string :as gstr]
             [harja.asiakas.tapahtumat :as t]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [reagent.core :as r])
+            [reagent.core :refer [atom] :as reagent])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -53,8 +53,11 @@
 (defn ajax-loader
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader nil))
-  ([viesti]
-   [:div.ajax-loader
+  ([viesti] (ajax-loader viesti nil))
+  ([viesti opts]
+   [(keyword (str "div.ajax-loader"
+                  (when (:luokka opts)
+                    (str "." (:luokka opts)))))
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       [:div.viesti viesti])]))
@@ -181,7 +184,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
     (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
       (let [auki (:auki (reagent/state (reagent/current-component)))
-            term (atom "")]
+            term (atom "")
+            format-fn (or format-fn str)]
         [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
          [:button.nappi-alasveto
           {:type        "button"
@@ -227,7 +231,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                               (do
                                 (reset! term (char kc))
                                 (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                  (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto))
+                                                                  (= (.indexOf (.toLowerCase (format-fn vaihtoehto))
                                                                                (.toLowerCase @term)) 0))
                                                                 vaihtoehdot))]
                                   (valitse-fn itemi)
@@ -437,24 +441,24 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (for [[avain rivi] @rivit]
        (luo-haitarin-rivi
          piiloita?
-         (r/wrap
-           rivi
-           (fn [uusi]
-             (swap! rivit assoc avain uusi)
-             ;; Jos vain yksi voi olla auki ja tämä rivi aukaistiin, sulje muut.
-             (when (and (:auki uusi) vain-yksi-auki?)
-               (reset! rivit (into {} (map
-                                        (fn [[a r]]
-                                          (if-not (= avain a)
-                                            [a (assoc r :auki false)]
-                                            [a r]))
-                                        @rivit))))
+         (reagent/wrap
+          rivi
+          (fn [uusi]
+            (swap! rivit assoc avain uusi)
+            ;; Jos vain yksi voi olla auki ja tämä rivi aukaistiin, sulje muut.
+            (when (and (:auki uusi) vain-yksi-auki?)
+              (reset! rivit (into {} (map
+                                      (fn [[a r]]
+                                        (if-not (= avain a)
+                                          [a (assoc r :auki false)]
+                                          [a r]))
+                                      @rivit))))
 
-             ;; Jos rivi suljettiin, ja jonkun pitää olla auki, ja yksikään ei ole auki,
-             ;; niin älä sulje riviä.
-             (when (and (not (:auki uusi)) aina-joku-auki?)
-               (when-not (some (fn [[_ r]] (:auki r)) @rivit)
-                 (swap! rivit assoc-in [avain :auki] true)))))))]])))
+            ;; Jos rivi suljettiin, ja jonkun pitää olla auki, ja yksikään ei ole auki,
+            ;; niin älä sulje riviä.
+            (when (and (not (:auki uusi)) aina-joku-auki?)
+              (when-not (some (fn [[_ r]] (:auki r)) @rivit)
+                (swap! rivit assoc-in [avain :auki] true)))))))]])))
 
 (def +valitse-kuukausi+
   "- Valitse kuukausi -")
@@ -487,3 +491,27 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (str " " teksti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
+
+(defn pitka-teksti
+  "Näyttää pitkän tekstin, josta näytetään oletuksena vain ensimmäinen rivi. Käyttäjä voi näyttää/piilottaa 
+jatkon."
+  ([teksti] (pitka-teksti teksti true))
+  ([teksti piilotettu?]
+   (let [piilossa? (atom piilotettu?)]
+     (fn [teksti _]
+       (if-not teksti
+         [:span]
+         [:span.pitka-teksti
+        (if @piilossa?
+          [:span.piilossa
+           (.substring teksti 0 80)
+           (when (> (count teksti) 80)
+             [:a.nayta-tai-piilota {:href "#" :on-click #(do (.preventDefault %)
+                                                             (swap! piilossa? not))}
+              "Lisää..."])]
+          [:span.naytetaan
+           teksti
+           [:a.nayta-tai-piilota {:href "#" :on-click #(do (.preventDefault %)
+                                                           (swap! piilossa? not))}
+            "Piilota"]])])))))
+

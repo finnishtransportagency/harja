@@ -17,16 +17,16 @@
 ;; 20.08.2015	Vesakonraivaus	ha	100,00 €	240	10	24 000,00 €	1 000,00 €
 ;; Yhteensä					72 000,00 €	3 000,00 €
 
-(defn suorita [db user {:keys [urakka-id aikavali-alkupvm aikavali-loppupvm toimenpide-id] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-paiva db
-                                                               urakka-id aikavali-alkupvm aikavali-loppupvm
+                                                               urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
         otsikko (str "Yksikköhintaisten töiden raportti"
                      (some->> toimenpide-id
                               (hae-urakan-toimenpideinstanssi db urakka-id)
                               first :nimi
                               (str ", "))
-                     ", " (pvm/pvm aikavali-alkupvm) " - " (pvm/pvm aikavali-loppupvm))]
+                     ", " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
     [:raportti {:orientaatio :landscape
                 :nimi otsikko}
      [:taulukko {:otsikko otsikko

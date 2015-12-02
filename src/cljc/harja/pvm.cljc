@@ -65,23 +65,27 @@
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj (Date. (- vuosi 1900) kk pv)))
 
-(defn luo-pvm-aika [vuosi kk pv tt mm ss ms]
-  #?(:cljs (DateTime. vuosi kk pv tt mm ss ms)
-     :clj (aikana (Date. (- vuosi 1900) kk pv) tt mm ss ms)))
-
 (defn sama-pvm? [eka toka]
   (and (= (t/year eka) (t/year toka))
        (= (t/month eka) (t/month toka))
        (= (t/day eka) (t/day toka))))
 
-(defn ennen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
-    (t/before? eka toka)
-    false))
+
+#?(:cljs
+   (defn ennen? [eka toka]
+     (if (and eka toka)
+       (t/before? eka toka)
+       false))
+
+   :clj
+   (defn ennen? [eka toka]
+     (if (and eka toka)
+       (.before eka toka)
+       false)))
 
 (defn sama-tai-ennen? [eka toka]
   (if-not (or (nil? eka) (nil? toka))
-    (or (t/before? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
+    (or (ennen? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
     false))
 
 (defn jalkeen? [eka toka]
@@ -265,6 +269,10 @@
    [vuosi]
    (luo-pvm vuosi 11 31))
 
+(defn vuoden-aikavali [vuosi]
+  [(paivan-alussa (vuoden-eka-pvm vuosi))
+   (paivan-lopussa (vuoden-viim-pvm vuosi))])
+
  (defn hoitokauden-alkupvm
    "Palauttaa hoitokauden alkupvm:n 1.10.vuosi"
    [vuosi]
@@ -273,7 +281,7 @@
  (defn hoitokauden-loppupvm
    "Palauttaa hoitokauden loppupvm:n 30.9.vuosi"
    [vuosi]
-   (luo-pvm-aika vuosi 8 30 23 59 59 999))
+   (luo-pvm vuosi 8 30))
 
 (defn- d [x]
   #?(:cljs x
@@ -286,11 +294,6 @@
    [pvm]
    (t/year (d pvm)))
 
-(defn paiva
-  "Palauttaa annetun DateTime päivän."
-  [pvm]
-  (t/day (d pvm)))
-
 (defn kuukausi
    "Palauttaa annetun DateTime kuukauden."
   [pvm]
@@ -298,6 +301,23 @@
   ;; esim 2015-09-30T21:00:00.000-00:00 (joka olisi keskiyöllä meidän aikavyöhykkeellä)
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
   (t/month (d pvm)))
+
+(defn paiva
+  "Palauttaa annetun DateTime päivän."
+  [pvm]
+  (t/day (d pvm)))
+
+
+
+(defn paivamaaran-hoitokausi
+  "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"
+  [pvm]
+  (let [vuosi (vuosi pvm)]
+    (if (ennen? pvm (hoitokauden-alkupvm vuosi))
+      [(hoitokauden-alkupvm (dec vuosi))
+       (hoitokauden-loppupvm vuosi)]
+      [(hoitokauden-alkupvm vuosi)
+       (hoitokauden-loppupvm (inc vuosi))])))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
@@ -340,6 +360,19 @@
        (loop [kkt [(kuukauden-aikavali alkupvm)]
               kk (t/plus alku (t/months 1))]
          (if (t/after? kk loppupvm)
+           kkt
+           (recur (conj kkt
+                        (kuukauden-aikavali kk))
+                  (t/plus kk (t/months 1))))))))
+
+#?(:cljs
+   (defn vuoden-kuukausivalit
+     "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
+     [alkuvuosi]
+     (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
+       (loop [kkt [(kuukauden-aikavali alku)]
+              kk (t/plus alku (t/months 1))]
+         (if (not= (vuosi kk) alkuvuosi)
            kkt
            (recur (conj kkt
                         (kuukauden-aikavali kk))

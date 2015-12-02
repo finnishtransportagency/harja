@@ -16,10 +16,11 @@
             [harja.geo :as geo]
             [harja.views.kartta :as kartta])
   (:require-macros [harja.atom :refer [reaction<!]]
+                   [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn korjaavattoimenpiteet
+(defc korjaavattoimenpiteet
   [toimenpiteet]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
@@ -27,6 +28,10 @@
     {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys "15%" :tyyppi :pvm}
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text}]
    toimenpiteet])
+
+(def turpo-tyypit {:turvallisuuspoikkeama "Turvallisuuspoikkeama"
+                   :prosessipoikkeama "Prosessipoikkeama"
+                   :tyoturvallisuuspoikkeama "Työturvallisuuspoikkeama"})
 
 (defn turvallisuuspoikkeaman-tiedot
   []
@@ -37,7 +42,7 @@
                                    (= (count @lomakkeen-virheet) 0)
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
-    (fn []
+    (fnc []
       (log "MUOKATTU: " (pr-str @muokattu))
       [:div
        [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
@@ -57,6 +62,7 @@
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :pakollinen? true
+          :vaihtoehto-nayta #(turpo-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
 
@@ -111,7 +117,7 @@
                                                         uusi)))))]}]
         @muokattu]])))
 
-(defn turvallisuuspoikkeamalistaus
+(defc turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
     [:div.sanktiot
