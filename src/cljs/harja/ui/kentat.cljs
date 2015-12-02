@@ -586,7 +586,6 @@
                                                                      :zindex 6)
                                                              :type :tr-valittu-osoite}))
                                  (let [e (geo/extent arvo)]
-                                   #_(kartta/keskita-kartta-alueeseen! e)
                                    (reset! edellinen-extent e))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
