@@ -66,7 +66,7 @@
   (log/debug "Lähetetään maksuera (numero: " numero ") Sampoon.")
   (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sampo" "maksuera-lahetys" nil nil)]
     (try
-      (if-let [maksuera-xml (maksuera/muodosta-maksuera db numero)]
+      (if-let [maksuera-xml (maksuera/muodosta-sampoon-lahetettava-maksuerasanoma db numero)]
         (if-let [viesti-id (laheta-sanoma-jonoon sonja lahetysjono-ulos maksuera-xml)]
           (do
             (maksuera/merkitse-maksuera-odottamaan-vastausta db numero viesti-id)

@@ -51,9 +51,13 @@
   (log/debug "Merkitään maksuerä (numero:" numero ") lähetetyksi.")
   (= 1 (qm/merkitse-maksuera-lahetetyksi! db numero)))
 
-(defn muodosta-maksuera [db numero]
+(defn muodosta-sampoon-lahetettava-maksuerasanoma [db numero]
   (if (lukitse-maksuera db numero)
     (let [maksueran-tiedot (hae-maksuera db numero)
+          ;; Sakot lähetetään Sampoon negatiivisena
+          maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
+                             (assoc-in maksueran-tiedot [:maksuera :summa] (- (get-in maksueran-tiedot [:maksuera :summa])))
+                             maksueran-tiedot)
           maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
       (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
         maksuera-xml
