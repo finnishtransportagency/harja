@@ -21,8 +21,15 @@
 (defn- valityskanavan-nimi [ilmoitus-id]
   (str "ilmoitus_" ilmoitus-id "_valitetty"))
 
-(defn kuuntele-ilmoituksen-lahetysta [tapahtumat ilmoitus-id callback]
-  (tapahtumat/kuuntele! tapahtumat (valityskanavan-nimi ilmoitus-id) callback))
+(defn kun-ilmoitus-lahetetty [tapahtumat ilmoitus-id callback]
+  (let [kanava (valityskanavan-nimi ilmoitus-id)]
+    (tapahtumat/kuuntele! tapahtumat kanava
+                          (fn [tapa]
+                            (try
+                              (callback tapa)
+                              (finally
+                                (tapahtumat/kuuroudu! tapahtumat kanava)))))))
+  
 
 (defn lopeta-ilmoituksen-lahetyksen-kuuntelu [tapahtumat ilmoitus-id]
   (tapahtumat/kuuroudu! tapahtumat (valityskanavan-nimi ilmoitus-id)))
