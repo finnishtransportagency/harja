@@ -19,7 +19,7 @@
                       (int (:piirinro urakka))))
 
 (defn luo-tai-paivita-urakka [db urakka]
-  (if-let (first (u/hae-alueurakka-numerolla db (str (:gridcode urakka))))
+  (if (first (u/hae-alueurakka-numerolla db (str (:gridcode urakka))))
     (paivita-alueurakka db urakka)
     (luo-alueurakka db urakka)))
 
