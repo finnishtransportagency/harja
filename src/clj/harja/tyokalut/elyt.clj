@@ -48,4 +48,3 @@
            elyt->sql
            (reduce str)
            (spit tulos)))))
-  
