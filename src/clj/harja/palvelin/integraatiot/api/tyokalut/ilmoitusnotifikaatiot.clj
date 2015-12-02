@@ -17,3 +17,18 @@
 (defn ilmoita-saapuneesta-ilmoituksesta [tapahtumat urakka-id ilmoitus-id]
   (log/debug (format "Ilmoitetaan urakan id: %s uudesta ilmoituksesta id: %s." urakka-id ilmoitus-id))
   (tapahtumat/julkaise! tapahtumat (kanavan-nimi urakka-id) ilmoitus-id))
+
+(defn- valityskanavan-nimi [ilmoitus-id]
+  (str "ilmoitus_" ilmoitus-id "_valitetty"))
+
+(defn kuuntele-ilmoituksen-lahetysta [tapahtumat ilmoitus-id callback]
+  (tapahtumat/kuuntele! tapahtumat (valityskanavan-nimi ilmoitus-id) callback))
+
+(defn lopeta-ilmoituksen-lahetyksen-kuuntelu [tapahtumat ilmoitus-id]
+  (tapahtumat/kuuroudu! tapahtumat (valityskanavan-nimi ilmoitus-id)))
+
+(defn ilmoita-lahetetysta-ilmoituksesta
+  "Ilmoita tietyn ilmoituksen onnistuneesta välittämisestä. Kanava on keyword, joka kertoo millä mekanismilla
+välitys tehtiin: :api, :sms tai :email."
+  [tapahtumat ilmoitus-id valitystapa]
+  (tapahtumat/julkaise! tapahtumat (str "ilmoitus_" ilmoitus-id "_valitetty") (name valitystapa)))

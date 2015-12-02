@@ -32,7 +32,8 @@
             urakoitsija (hae-urakoitsija db urakka-id)]
           
         (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id (:ilmoitus-id ilmoitus))
-        ;; Lähetetään ilmoitus urakoitsijalle
+        ;; Odotetaan, että ilmoitus on lähetetty urakoitsijalle
+        
         
         ;; lähetetään T-LOIKiin välitystiedot
         (kuittaus/muodosta (:viesti-id ilmoitus) (time/now) "valitetty" urakoitsija nil))
