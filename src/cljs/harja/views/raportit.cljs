@@ -146,12 +146,11 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                                                 "Koko hoitokausi")}
            @kuukaudet valittu-kuukausi]]
 
-         [:div
+         [:div.raportin-valittu-aikavali
           [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
            #(swap! vapaa-aikavali? not)
-           nil false]
-          (when @vapaa-aikavali?
-            [ui-valinnat/aikavali vapaa-aikavali])]]))))
+           nil false (when @vapaa-aikavali?
+                       [ui-valinnat/aikavali vapaa-aikavali])]]]))))
 
      
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
