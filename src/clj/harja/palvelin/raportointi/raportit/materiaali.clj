@@ -54,35 +54,39 @@
 
 
 
-(defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm
+(defn suorita [db user {:keys [urakka-id 
                                hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (let [[konteksti toteumat]
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        toteumat
         (cond
-          (and urakka-id hk-alkupvm hk-loppupvm)
-          [:urakka (muodosta-materiaaliraportti-urakalle db user {:urakka-id urakka-id
-                                                                  :alkupvm hk-alkupvm
-                                                                  :loppupvm hk-loppupvm})]
-
-          (and hallintayksikko-id alkupvm loppupvm)
-          [:hallintayksikko (muodosta-materiaaliraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
-                                                                                    :alkupvm alkupvm
-                                                                                    :loppupvm loppupvm})]
+          (and urakka-id alkupvm loppupvm)
+          (muodosta-materiaaliraportti-urakalle db user {:urakka-id urakka-id
+                                                         :alkupvm alkupvm
+                                                         :loppupvm loppupvm})
           
+          
+          (and hallintayksikko-id alkupvm loppupvm)
+          (muodosta-materiaaliraportti-hallintayksikolle db user
+                                                         {:hallintayksikko-id hallintayksikko-id
+                                                          :alkupvm alkupvm
+                                                          :loppupvm loppupvm})
+                    
           (and alkupvm loppupvm)
-          [:koko-maa (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
+          (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm}))
 
-          :default
-          ;; FIXME Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
-          nil)
+        aikavali (str (pvm/pvm alkupvm) " \u2010 " (pvm/pvm loppupvm))
+        
         otsikko (str (case konteksti
-                       :urakka (log/debug "Haetaan urakka id:llä " (pr-str urakka-id) (pr-str (first (urakat-q/hae-urakka db urakka-id))))
+                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                        :koko-maa "KOKO MAA")
                      ", Materiaaliraportti "
-                     (pvm/pvm (or hk-alkupvm alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm loppupvm)))
+                     aikavali)
         materiaalit (distinct (map :materiaali_nimi toteumat))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
-    (println "TOTEUMAT: " toteumat)
+
     [:raportti {:nimi otsikko}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}

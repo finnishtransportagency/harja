@@ -5,6 +5,8 @@
             [com.stuartsierra.component :as component]
             [clj-time.periodic :refer [periodic-seq]]
             [clj-time.core :as time]
+            [clj-time.coerce :as coerce]
+            [clojure.java.io :as io]
             [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.alk :as alk]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
@@ -13,8 +15,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.talvihoidon-hoitoluokat :as talvihoidon-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.alueurakat :as urakoiden-tuonti]
-            [clojure.java.io :as io]
-            [clj-time.coerce :as coerce])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.elyt :as elyjen-tuonti])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
            (java.sql Timestamp)))
@@ -33,6 +34,7 @@
     (let [polku (if (not tiedostourl) nil (.substring (.getSchemeSpecificPart (URI. tiedostourl)) 2))
           tiedosto (if (not polku) nil (io/file polku))
           tiedoston-muutospvm (if (not tiedosto) nil (coerce/to-sql-time (Timestamp. (.lastModified tiedosto))))]
+      (log/debug "Tarvitaanko paikallinen paivitys: " polku tiedosto tiedoston-muutospvm)
       (if (and
             (not (nil? tiedosto))
             (.exists tiedosto)
@@ -40,7 +42,9 @@
         (do
           (log/debug (format "Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
           true)
-        false))
+        (do
+          (log/debug "ei tarvita paikallista päivitystä")
+          false)))
     (catch Exception e
       (log/warn e (format "Tarkistettaessa paikallista ajoa geometriapäivitykselle: %s tapahtui poikkeus." paivitystunnus))
       false)))
@@ -67,7 +71,9 @@
           alk-tuontikohde (get asetukset alk-tuontikohde-avain)
           shapefile (get asetukset shapefile-avain)
           db (:db this)]
-      (when (not (and alk-osoite alk-tuontikohde))
+      (log/debug "Paikallinen päivitystehtävä: " paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys)
+      (when (and (not alk-osoite) (not alk-tuontikohde))
+        (log/debug "Startataan paikallinen paivitystehtava, tiedosto=" shapefile)
         (chime-at
           (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
           (fn [_]
@@ -89,7 +95,7 @@
 
 (def tee-tieverkon-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
-    "tieoverkko"
+    "tieverkko"
     :tieosoiteverkon-alk-osoite
     :tieosoiteverkon-alk-tuontikohde
     :tieosoiteverkon-shapefile
@@ -175,6 +181,21 @@
     :urakoiden-shapefile
     urakoiden-tuonti/vie-urakat-kantaan))
 
+(def tee-elyjen-alk-paivitystehtava
+  (maarittele-alk-paivitystehtava
+    "ely-alueet"
+    :ely-alueiden-alk-osoite
+    :ely-alueiden-alk-tuontikohde
+    :ely-alueiden-shapefile
+    elyjen-tuonti/vie-elyt-kantaan))
+
+(def tee-elyjen-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "elyt"
+    :ely-alueiden-alk-osoite
+    :ely-alueiden-alk-tuontikohde
+    :ely-alueiden-shapefile
+    elyjen-tuonti/vie-elyt-kantaan))
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
@@ -191,14 +212,22 @@
         (assoc :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))
         (assoc :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset))
         (assoc :urakoiden-hakutehtava (tee-urakoiden-alk-paivitystehtava this asetukset))
-        (assoc :urakoiden-paivitystehtava (tee-urakoiden-paikallinen-paivitystehtava this asetukset))))
-  (stop [this]
-    ((:tieverkon-hakutehtava this))
-    ((:soratien-hoitoluokkien-hakutehtava this))
-    ((:pohjavesialueiden-hakutehtava this))
-    ((:pohjavesialueiden-paivitystehtava this))
-    ((:tieverkon-paivitystehtava this))
-    ((:soratien-hoitoluokkien-paivitystehtava this))
-    ((:urakoiden-hakutehtava this))
-    ((:urakoiden-paivitystehtava this))
-    this))
+        (assoc :urakoiden-paivitystehtava (tee-urakoiden-paikallinen-paivitystehtava this asetukset))
+        (assoc :elyjen-hakutehtava (tee-elyjen-alk-paivitystehtava this asetukset))
+        (assoc :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset)))))
+(stop [this]
+      ((:tieverkon-hakutehtava this))
+      ((:tieverkon-paivitystehtava this))
+      ((:pohjavesialueiden-hakutehtava this))
+      ((:pohjavesialueiden-paivitystehtava this))
+      ((:talvihoidon-hoitoluokkien-hakutehtava this))
+      ((:talvihoidon-hoitoluokkien-paivitystehtava this))
+      ((:soratien-hoitoluokkien-hakutehtava this))
+      ((:soratien-hoitoluokkien-paivitystehtava this))
+      ((:siltojen-hakutehtava this))
+      ((:siltojen-paivitystehtava this))
+      ((:urakoiden-hakutehtava this))
+      ((:urakoiden-paivitystehtava this))
+      ((:elyjen-hakutehtava this))
+      ((:elyjen-paivitystehtava this))
+      this)

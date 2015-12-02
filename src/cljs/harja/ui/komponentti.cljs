@@ -117,6 +117,11 @@ aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation a
   {:component-will-mount (fn [& _]
                            (sisaan))})
 
+(defn piirretty
+  "Mixin, joka kutsutaan kun komponentti on oikeasti DOMissa asti (component-did-mount)"
+  [piirretty]
+  {:component-did-mount (fn [& _]
+                          (piirretty))})
 (defn lippu
   "Mixin, joka asettaa annetun atomin tilan joko true tai false sen mukaan onko komponentti näkyvissä."
   [& lippu-atomit]
@@ -163,3 +168,24 @@ Callbackille annetaan samat parametrit kuin render funktiolle."
    (fn [_]
      (funktio))})
   
+(defn watcher
+  "Komponentti mixin atomin add-watch/remove-watch tekemiseen kun component-did-mount ja component-will-unmount 
+elinkaaritapahtumien yhteydessä.
+  atomit-ja-kasittelijat on vuorotellen atomi ja käsittelyfunktio,
+  jolle annetaan kolme parametria: komponentti, vanha arvo ja uusi arvo."
+  [& atomit-ja-kasittelijat]
+  (let [kasittelijat (partition 2 atomit-ja-kasittelijat)
+        key (gensym "komponenttiwatch")]
+    {:component-did-mount (fn [this _]
+                            (loop [kahvat []
+                                   [[atomi kasittelija] & kasittelijat] kasittelijat]
+                              (if-not atomi
+                                (r/set-state this {::atomien-watcherit kahvat})
+                                (do (add-watch atomi key (fn [_ _ vanha uusi]
+                                                           (kasittelija this vanha uusi)))
+                                    (recur (conj kahvat atomi)
+                                           kasittelijat)))))
+     :component-will-unmount (fn [this _]                                
+                               (let [atomit (-> this r/state ::atomien-watcherit)]
+                                 (doseq [a atomit]
+                                   (remove-watch a key))))}))

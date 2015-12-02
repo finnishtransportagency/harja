@@ -54,7 +54,7 @@
 
  :geometriapaivitykset {:tuontivali                                60
 
-                        :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
+                        :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
                         :tieosoiteverkon-alk-osoite                "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTK_tieosoiteverkko.shz"
                         :tieosoiteverkon-alk-tuontikohde           "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
@@ -78,8 +78,8 @@
                         :urakoiden-alk-osoite                      "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2015.shz"
                         :urakoiden-alk-tuontikohde                 "./shp/Hoitourakat/PTV_Hoitourakat10_2015.shz"
 
-                        ;; :ely-alueiden-shapefile                    "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
-                        ;; :ely-alueiden-alk-osoite                   "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
-                        ;; :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
+                        :ely-alueiden-shapefile                    "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
+                        :ely-alueiden-alk-osoite                   "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
+                        :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
                         }
  }

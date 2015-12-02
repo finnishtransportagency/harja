@@ -25,15 +25,12 @@
                                 (hae-ymparistoraportti-urakoittain db alkupvm loppupvm
                                                                    (if hallintayksikko-id true false) hallintayksikko-id))))))
 
-(defn suorita [db user {:keys [hk-alkupvm hk-loppupvm alkupvm loppupvm
+(defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id konteksti
                                urakoittain?] :as parametrit}]
-  (let [[alku loppu] (if urakka-id
-                       [hk-alkupvm hk-loppupvm]
-                       [alkupvm loppupvm])
-        materiaalit (if urakoittain?
-                      (hae-raportti-urakoittain db alku loppu hallintayksikko-id)
-                      (hae-raportti db alku loppu urakka-id hallintayksikko-id))
+  (let [materiaalit (if urakoittain?
+                      (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id)
+                      (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id))
         kk-lev (if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5%")]

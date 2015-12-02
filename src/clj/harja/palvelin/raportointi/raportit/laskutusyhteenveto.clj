@@ -7,19 +7,21 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]))
 
 (defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id hk-alkupvm hk-loppupvm aikavali-alkupvm aikavali-loppupvm] :as tiedot}]
-  (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                   (konv/sql-date hk-alkupvm)
-                                                   (konv/sql-date hk-loppupvm)
-                                                   (konv/sql-date aikavali-alkupvm)
-                                                   (konv/sql-date aikavali-loppupvm)
-                                                   urakka-id)))
+  [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
+  (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi alkupvm)]
+    (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
+    (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+    (into []
+          (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                     (konv/sql-date hk-alkupvm)
+                                                     (konv/sql-date hk-loppupvm)
+                                                     (konv/sql-date alkupvm)
+                                                     (konv/sql-date loppupvm)
+                                                     urakka-id))))
 
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]
@@ -61,12 +63,12 @@
                                                  (or (rivi laskutetaan-kentta) 0)))]) tiedot)
              [yhteenveto]))]))
 
-(defn suorita [db user {:keys [aikavali-alkupvm aikavali-loppupvm] :as parametrit}]
+(defn suorita [db user {:keys [alkupvm loppupvm] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [joda-aikavali (t/plus (tc/from-date aikavali-alkupvm) (t/hours 2))
-        laskutettu-teksti (str "Laskutettu hoitokaudella ennen " (kuukausi aikavali-alkupvm) "ta "
+  (let [joda-aikavali (t/plus (tc/from-date alkupvm) (t/hours 2))
+        laskutettu-teksti (str "Laskutettu hoitokaudella ennen " (kuukausi alkupvm) "ta "
                                (pvm/vuosi joda-aikavali))
-        laskutetaan-teksti (str "Laskutetaan " (kuukausi aikavali-alkupvm) "ssa "
+        laskutetaan-teksti (str "Laskutetaan " (kuukausi alkupvm) "ssa "
                                 (pvm/vuosi joda-aikavali))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
         talvihoidon-tiedot (filter #(= (:tuotekoodi %) "23100") tiedot)

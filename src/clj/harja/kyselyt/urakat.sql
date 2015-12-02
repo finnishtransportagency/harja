@@ -345,14 +345,24 @@ SELECT EXISTS(
       tpi.urakka = :urakkaid AND
       tpk.id = :tehtavaid);
 
+-- name: hae-urakka-sijainnilla
+-- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
+SELECT u.id
+FROM urakoiden_alueet ua
+  JOIN urakka u ON ua.id = u.id
+WHERE
+  ua.tyyppi = :urakkatyyppi :: urakkatyyppi AND
+  (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
+  (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
+
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero) VALUES (:alueurakkanro, ST_GeomFromText(:alue)::geometry, :elynumero);
 
 -- name: paivita-alueurakka!
 UPDATE alueurakka
 SET alueurakkanro = :alueurakkanro,
-    alue = ST_GeomFromText(:alue)::geometry,
-    elynumero = :elynumero;
+  alue = ST_GeomFromText(:alue)::geometry,
+  elynumero = :elynumero;
 
 -- name: hae-alueurakka-numerolla
 SELECT * FROM alueurakka WHERE alueurakkanro = :alueurakkanro;

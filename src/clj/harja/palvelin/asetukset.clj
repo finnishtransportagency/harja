@@ -67,7 +67,9 @@
                                            (s/optional-key :urakoiden-shapefile)                       s/Str
                                            (s/optional-key :urakoiden-alk-osoite)                      s/Str
                                            (s/optional-key :urakoiden-alk-tuontikohde)                 s/Str
-                                           }
+                                           (s/optional-key :ely-alueiden-shapefile)                    s/Str
+                                           (s/optional-key :ely-alueiden-alk-osoite)                   s/Str
+                                           (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str}
    })
 
 (def oletusasetukset
