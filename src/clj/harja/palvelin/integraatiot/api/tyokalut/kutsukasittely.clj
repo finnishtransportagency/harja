@@ -98,6 +98,7 @@
   ([status skeema payload]
    (if payload
      (let [json (cheshire/encode payload)]
+       (println "----> JSON:" json)
        (if skeema
          (do
            (json/validoi skeema json)

@@ -70,13 +70,11 @@
     (poista-ilmoitus)))
 
 (deftest hae-valissa-saapuneet-ilmoitukset
-  (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti))]
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
-    (odota #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
+  (let [vastaus  (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti)]
 
-    (is (= 200 (:status @vastaus)))
+    (is (= 200 (:status vastaus)))
 
-    (let [vastausdata (cheshire/decode (:body @vastaus))]
+    (let [vastausdata (cheshire/decode (:body vastaus))]
       (is (= 5 (count (get vastausdata "ilmoitukset")))))
 
     (poista-ilmoitus)))
