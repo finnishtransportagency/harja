@@ -255,10 +255,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:span.rivilla-virheita
          (ikonit/warning-sign)])])])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna piilota-toiminnot?]} skeema rivi]
-  [:tr {:class    luokka
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu ohjaus id vetolaatikot tallenna piilota-toiminnot? rivi-index valittu-rivi-index mahdollista-rivin-valinta]} skeema rivi]
+  [:tr {:class    (str luokka (when (= rivi-index @valittu-rivi-index)
+                                " rivi-valittu"))
         :on-click (when rivi-klikattu
-                    #(rivi-klikattu rivi))}
+                    #(do
+                      (when mahdollista-rivin-valinta
+                        (reset! valittu-rivi-index rivi-index))
+                      (rivi-klikattu rivi)))}
    (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
@@ -335,7 +339,7 @@ Optiot on mappi optioita:
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot?
-           uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot]
+           uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot mahdollista-rivin-valinta]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
@@ -345,6 +349,7 @@ Optiot on mappi optioita:
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
         kysely-kaynnissa (atom false)
+        valittu-rivi-index (atom nil)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
@@ -540,7 +545,7 @@ Optiot on mappi optioita:
 
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot] :as opts} skeema tiedot]
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta] :as opts} skeema tiedot]
          (let [skeema (laske-sarakkeiden-leveys (keep identity skeema))
                colspan (if piilota-toiminnot?
                          (count skeema)
@@ -678,18 +683,21 @@ Optiot on mappi optioita:
 
                                          (let [id ((or tunniste :id) rivi)]
                                            [^{:key id}
-                                           [naytto-rivi {:ohjaus             ohjaus
-                                                         :vetolaatikot       vetolaatikot
-                                                         :id                 id
-                                                         :tallenna           tallenna
-                                                         :luokka             (str (if (even? (+ i 1)) "parillinen" "pariton")
-                                                                                  (when rivi-klikattu
-                                                                                    " klikattava ")
-                                                                                  (when (:yhteenveto rivi) " yhteenveto ")
-                                                                                  (when rivin-luokka
-                                                                                    (rivin-luokka rivi)))
-                                                         :rivi-klikattu      rivi-klikattu
-                                                         :piilota-toiminnot? piilota-toiminnot?}
+                                           [naytto-rivi {:ohjaus                    ohjaus
+                                                         :vetolaatikot              vetolaatikot
+                                                         :id                        id
+                                                         :tallenna                  tallenna
+                                                         :rivi-index                i
+                                                         :luokka                    (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                                                         (when rivi-klikattu
+                                                                                           " klikattava ")
+                                                                                         (when (:yhteenveto rivi) " yhteenveto ")
+                                                                                         (when rivin-luokka
+                                                                                           (rivin-luokka rivi)))
+                                                         :rivi-klikattu             rivi-klikattu
+                                                         :valittu-rivi-index        valittu-rivi-index
+                                                         :mahdollista-rivin-valinta mahdollista-rivin-valinta
+                                                         :piilota-toiminnot?        piilota-toiminnot?}
                                             skeema rivi]
                                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
                                             ])))
