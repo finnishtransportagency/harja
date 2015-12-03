@@ -1,34 +1,43 @@
 -- name: hae-urakan-turvallisuuspoikkeamat
-SELECT
-  t.id,
-  t.urakka,
-  t.tapahtunut,
-  t.paattynyt,
-  t.kasitelty,
-  t.tyontekijanammatti,
-  t.tyotehtava,
-  t.kuvaus,
-  t.vammat,
-  t.sairauspoissaolopaivat,
-  t.sairaalavuorokaudet,
-  t.sijainti,
-  t.tr_numero,
-  t.tr_alkuetaisyys,
-  t.tr_loppuetaisyys,
-  t.tr_alkuosa,
-  t.tr_loppuosa,
-  t.tyyppi,
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+       t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
+       t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
+       k.id              AS korjaavatoimenpide_id,
+       k.kuvaus          AS korjaavatoimenpide_kuvaus,
+       k.suoritettu      AS korjaavatoimenpide_suoritettu,
+       k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
+  FROM turvallisuuspoikkeama t
+       LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
+ WHERE t.urakka = :urakka
+       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
 
-  k.id              AS korjaavatoimenpide_id,
-  k.kuvaus          AS korjaavatoimenpide_kuvaus,
-  k.suoritettu      AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
-FROM turvallisuuspoikkeama t
-  LEFT JOIN korjaavatoimenpide k
-    ON t.id = k.turvallisuuspoikkeama
-       AND k.poistettu IS NOT TRUE
-WHERE t.urakka = :urakka
-      AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+-- name: hae-hallintayksikon-turvallisuuspoikkeamat
+-- Hakee turvallisuuspoikkeamat, jotka ovat annetun hallintayksikön urakoissa raportoituja
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+       t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
+       t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
+       k.id AS korjaavatoimenpide_id,
+       k.kuvaus AS korjaavatoimenpide_kuvaus,
+       k.suoritettu AS korjaavatoimenpide_suoritettu,
+       k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
+  FROM turvallisuuspoikkeama t
+      LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
+ WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+
+-- name: hae-turvallisuuspoikkeamat
+-- Hakee kaikki turvallisuuspoikkeamat aikavälillä ilman aluerajausta
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+       t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
+       t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
+       k.id AS korjaavatoimenpide_id,
+       k.kuvaus AS korjaavatoimenpide_kuvaus,
+       k.suoritettu AS korjaavatoimenpide_suoritettu,
+       k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
+  FROM turvallisuuspoikkeama t
+      LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
+ WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+
 
 -- name: hae-turvallisuuspoikkeama
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman

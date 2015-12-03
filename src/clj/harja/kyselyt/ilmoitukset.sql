@@ -9,7 +9,10 @@ SELECT
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
-  i.lyhytselite                       AS vapaateksti,
+  i.otsikko,
+  i.lyhytselite,
+  i.pitkaselite,
+  -- selitteet
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
@@ -91,18 +94,10 @@ WHERE
   ) AND
 
   -- Tarkasta ilmoituksen tyypit
-  (
-    :tyypit_annettu IS FALSE OR
-    i.ilmoitustyyppi :: TEXT IN (:tyypit)
-  ) AND
+  (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
   -- Tarkasta vapaatekstihakuehto
-  (
-    :teksti_annettu IS FALSE OR
-    i.otsikko LIKE :teksti OR
-    i.lyhytselite LIKE :teksti OR
-    i.pitkaselite LIKE :teksti
-  ) AND
+  (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
 
   -- Tarkasta ilmoituksen tilat
   (
@@ -112,6 +107,63 @@ WHERE
     (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
   )
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
+
+-- name: hae-ilmoitukset-idlla
+SELECT
+  ilmoitusid,
+  ilmoitettu,
+  yhteydenottopyynto,
+  lyhytselite,
+  pitkaselite,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE ilmoitusid IN (:ilmoitusidt);
+
+-- name: hae-ilmoituksen-jalkeen-saapuneet-ilmoitukset
+SELECT
+  ilmoitusid,
+  ilmoitettu,
+  yhteydenottopyynto,
+  lyhytselite,
+  pitkaselite,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE urakka = :urakka AND
+      ilmoitusid > :ilmoitusid;
 
 
 -- name: hae-id-ilmoitus-idlla
@@ -136,16 +188,16 @@ INSERT INTO ilmoitus
  urakkatyyppi)
 VALUES
   (:urakka,
-    :ilmoitusid,
-    :ilmoitettu,
-    :valitetty,
-    :yhteydenottopyynto,
-    :otsikko,
-    :lyhytselite,
-    :pitkaselite,
-    :ilmoitustyyppi :: ilmoitustyyppi,
-    :selitteet :: ilmoituksenselite [],
-    :urakkatyyppi :: urakkatyyppi);
+   :ilmoitusid,
+   :ilmoitettu,
+   :valitetty,
+   :yhteydenottopyynto,
+   :otsikko,
+   :lyhytselite,
+   :pitkaselite,
+   :ilmoitustyyppi :: ilmoitustyyppi,
+   :selitteet :: ilmoituksenselite [],
+   :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
 -- Päivittää havainnon
@@ -191,15 +243,6 @@ SET
   sijainti  = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY
 WHERE id = :id;
 
--- name: hae-ilmoituksen-urakka
--- Hakee sijainnin ja urakan tyypin perusteella urakan, johon ilmoitus liittyy. Urakan täytyy myös olla käynnissä.
-SELECT u.id
-FROM urakoiden_alueet ua
-  JOIN urakka u ON ua.id = u.id
-WHERE
-  ua.tyyppi = :urakkatyyppi :: urakkatyyppi AND
-  (st_contains(ua.alue, ST_MakePoint(:x, :y))) AND
-  (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
 
 -- name: hae-ilmoitustoimenpide
 SELECT

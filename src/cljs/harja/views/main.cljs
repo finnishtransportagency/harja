@@ -83,7 +83,7 @@
 (defn ladataan []
   [:div {:style {:position "absolute" :top "50%" :left "50%"}}
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
-    [yleiset/ajax-loader "Ladataan..."]]])
+    [yleiset/ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
 (defn main
   "Harjan UI:n pääkomponentti"

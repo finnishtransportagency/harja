@@ -28,7 +28,6 @@ schemas:
  - ilmoitusten-haku-response: !include schemas/ilmoitusten-haku-response.schema.json
  - ilmoituskuittauksen-kirjaaminen-request: !include schemas/ilmoituskuittauksen-kirjaaminen-request.schema.json
  - paivystajatietojen-kirjaus-request: !include schemas/paivystajatietojen-kirjaus-request.schema.json
- - paivystajatietojen-haku-request: !include schemas/paivystajatietojen-haku-request.schema.json
  - paivystajatietojen-haku-response: !include schemas/paivystajatietojen-haku-response.schema.json
  - tietolajien-haku-response: !include schemas/tietolajien-haku-response.schema.json
  - virhe-response: !include schemas/virhe-response.schema.json
@@ -39,14 +38,12 @@ schemas:
 securitySchemes:
  - basic:
     type: Basic Authentication
-    
+
 traits:
   - secured:
       description: Vaatii Basic HTTP autentikaation
-      
+
 documentation:
- - title: Versiohistoria
-   content: !include documentation/harja-api-versiohistoria.md
  - title: Kuvaus
    content: !include documentation/harja-api-kuvaus.md
  - title: Tekninen kuvaus
@@ -55,6 +52,8 @@ documentation:
    content: !include documentation/harja-api-sijaintitietojen-kuvaus.md
  - title: Tierekisteriurakkakoodit selitteineen
    content: !include documentation/tierekisteriurakkakoodit.md
+ - title: Versiohistoria
+   content: !include documentation/harja-api-versiohistoria.md
 
 
 /urakat:
@@ -274,7 +273,6 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
-
       /siltatarkastus:
         post:
           is: [secured]
@@ -375,6 +373,37 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
+    /ilmoitukset:
+        get:
+         is: [secured]
+         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös viimeisimmän onnistuneesti haetun ilmoituksen, jolloin palautetaan kaikki sen jälkeen tulleet ilmoitukset. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
+         queryParameters:
+          urakoitsijaId:
+            description: Urakoitsijan id, jolle haetaan ilmoituset
+            type: integer
+            required: true
+            example: 1
+          viimeisinId:
+            description: Viimeisen onnistuneesti haetun ilmoituksen id
+            type: integer
+            required: false
+            example: 12
+          stream:
+            description: Jos kytketty päälle, vastaukset palautetaan streamina, jolloin uutta requestia ei tarvitse tehdä jokaisen responsen jälkeen, vaan uudet ilmoitukset palautetaan streamina.
+            type: boolean
+            required: false
+            example: true
+         responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/ilmoitusten-haku-response.json
+                schema: ilmoitusten-haku-response
+          400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
     /tietyoilmoitus:
         description: Tietyöilmoituksen kirjaus
         post:
@@ -418,17 +447,17 @@ documentation:
           required: true
           example: 1
         alkuosa:
-          description: Alkuosa 
+          description: Alkuosa
           type: integer
           required: true
           example: 12
         alkuetaisyys:
-          description: Alkuetaisyys 
+          description: Alkuetaisyys
           type: integer
           required: true
           example: 12
         loppuosa:
-          description: Loppuosa 
+          description: Loppuosa
           type: integer
           required: true
           example: 12
@@ -503,7 +532,7 @@ documentation:
             example: Livi956991
           tietolajitunniste:
             description: Haettavan tietueen tietolajin tunniste
-            type: date
+            type: string
             example: tl506
       responses:
         200:
@@ -525,7 +554,7 @@ documentation:
       is: [secured]
       description: Uuden varusteen lisääminen. Päivittää tiedon tierekisteriin.
       body:
-        application/json: 
+        application/json:
           example: !include examples/varusteen-lisays-request.json
           schema: varusteen-lisays-request
       responses:
@@ -599,42 +628,17 @@ documentation:
       description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mieluusti 5-15 sekunnin intervalilla ja otoskoolla.
       body:
         application/json:
-          example: !include examples/tyokoneenseurannan-kirjaus-request.json     
+          example: !include examples/tyokoneenseurannan-kirjaus-request.json
           schema: tyokoneenseurannan-kirjaus-request
-          
+
 /ilmoitukset:
   is: [secured]
-  description: Ilmoitusten massahaku.
-  get:
-    is: [secured]
-    description: Ilmoitusten haku urakoitsijan id:n avulla. Palauttaa listan nimetylle urakoitsijalle listattuja ilmoituksia. Tämän lisäksi voidaan antaa viimeisimmän onnistuneesti haetun ilmoituksen id, jolloin palautetaan kaikki ilmoitukset, jotka ovat kirjattu tämän jälkeen. Muussa tapauksessa palautetaan kaikki urakoitsijalle kirjatut ilmoitukset. 
-    queryParameters:
-      urakoitsijaId: 
-        description: Urakoitsijan id, jolle haetaan ilmoituset
-        type: integer
-        required: true
-        example: 1
-      viimeisinHaettuId: 
-        description: Viimeisen onnistuneesti haetun ilmoituksen id
-        type: integer
-        required: false
-        example: 12
-    responses:
-      200:
-        body:
-          application/json:
-            example: !include examples/ilmoitusten-haku-response.json      
-            schema: ilmoitusten-haku-response
-      400:
-        body:
-          application/json:
-            example: !include examples/virhe-response.json
-            schema: virhe-response
+  description: Ilmoitusten hallinta.
   /{id}:
       description: Yksittäisen ilmoituksen hallinta.
       put:
         is: [secured]
-        description: Ilmoituksen kuittaaminen. Käytetään kirjaamaan eri kuittaukset ilmoituksille, kuten vastaanotto, muutos, aloitus, lopetus.
+        description: Ilmoitustoimenpiteen eli kuittauksen kirjaus. Käytetään kirjaamaan eri toimenpiteet ilmoituksille, kuten vastaanotto, muutos, aloitus, lopetus.
         body:
           application/json:
             example: !include examples/ilmoituskuittauksen-kirjaaminen-request.json
@@ -680,7 +684,7 @@ documentation:
           application/json:
             example: !include examples/virhe-response.json
             schema: virhe-response
-  /{diaarinumero}:   
+  /{diaarinumero}:
     get:
       is: [secured]
       description: Yksittäisen tieluvan haku diaarinumeron avulla.
@@ -701,26 +705,85 @@ documentation:
               example: !include examples/virhe-response.json
               schema: virhe-response
 /paivystajatiedot:
-  get:
+  is: [secured]
+  description: Päivystäjätietojen hallinta
+  /haku:
     is: [secured]
-    description: Päivystäjätietojen haku.
-    body:
-      application/json:
-        example: !include examples/paivystajatietojen-haku-request.json
-        schema: paivystajatietojen-haku-request
-    responses:
-      200:
-        body:
-          application/json:
-            example: !include examples/paivystajatietojen-haku-response.json
-            schema: paivystajatietojen-haku-response
-      400:
-        body:
-          application/json:
-            example: !include examples/virhe-response.json
-            schema: virhe-response
-      500:
-        body:
-          application/json:
-            example: !include examples/virhe-response.json
-            schema: virhe-response
+    description: Päivystäjätietojen haku
+    /puhelinnumerolla:
+      get:
+        is: [secured]
+        description: Päivystäjätietojen haku puhelinnumerolla.
+        queryParameters:
+          puhelinnumero:
+            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta.
+            type: string
+            required: true
+            example: +358 41 433 21 19
+          alkaen:
+            description: Päivystykset alkaen
+            type: date
+            example: 2015-01-01
+          paattyen:
+            description: Päivystykset päättyen
+            type: date
+            example: 2015-01-01
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/paivystajatietojen-haku-response.json
+                schema: paivystajatietojen-haku-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+    /sijainnilla:
+      get:
+        is: [secured]
+        description: Päivystäjätietojen haku sijainnilla.
+        queryParameters:
+          urakkatyyppi:
+            description: Urakkatyyppi (hoito, päällystys, paikkaus, valaisu) jolle päivystykset haetaan
+            type: string
+            required: true
+            example: +358 41 433 21 19
+          x:
+            description: Sijainnin X-koordinaatti
+            type: integer
+            required: true
+            example: 428699
+          y:
+            description: Sijainnin Y-koordinaatti
+            type: integer
+            required: true
+            example: 7210782
+          alkaen:
+            description: Päivystykset alkaen
+            type: integer
+            example: 2015-01-01
+          paattyen:
+            description: Päivystykset päättyen
+            type: date
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/paivystajatietojen-haku-response.json
+                schema: paivystajatietojen-haku-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response

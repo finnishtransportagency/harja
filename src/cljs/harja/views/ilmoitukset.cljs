@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -113,40 +114,44 @@
 
 (defn ilmoituksen-tiedot
   []
-  [:div
-   [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
-   (urakan-sivulle-nappi @tiedot/valittu-ilmoitus)
-   (pollauksen-merkki)
-   [bs/panel {}
-    (luo-ilmoituksen-otsikko @tiedot/valittu-ilmoitus)
-    [:span
-     [yleiset/tietoja {}
-      "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu @tiedot/valittu-ilmoitus))
-      "Sijainti: " (nayta-tierekisteriosoite (:tr @tiedot/valittu-ilmoitus))
-      "Lisätiedot: " (:vapaateksti @tiedot/valittu-ilmoitus)]
-
-     [:br]
-     [yleiset/tietoja {}
-      "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja @tiedot/valittu-ilmoitus))
-                          tyyppi (capitalize (name (get-in @tiedot/valittu-ilmoitus [:ilmoittaja :tyyppi])))]
-                      (if (and henkilo tyyppi)
-                        (str henkilo ", " tyyppi)
-                        (str (or henkilo tyyppi))))
-      "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja @tiedot/valittu-ilmoitus))
-      "Sähköposti: " (get-in @tiedot/valittu-ilmoitus [:ilmoittaja :sahkoposti])]
-
-     [:br]
-     [yleiset/tietoja {}
-      "Lähettäjä:" (nayta-henkilo (:lahettaja @tiedot/valittu-ilmoitus))
-      "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja @tiedot/valittu-ilmoitus))
-      "Sähköposti: " (get-in @tiedot/valittu-ilmoitus [:lahettaja :sahkoposti])]]]
-
-   (when-not (empty? (:kuittaukset @tiedot/valittu-ilmoitus))
+  (let [ilmoitus @tiedot/valittu-ilmoitus]
+    [:div
+     [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
+     (urakan-sivulle-nappi ilmoitus)
+     (pollauksen-merkki)
      [bs/panel {}
-      "Kuittaukset"
-      [:div
-       (for [kuittaus (:kuittaukset @tiedot/valittu-ilmoitus)]
-         (kuittauksen-tiedot kuittaus))]])])
+      (luo-ilmoituksen-otsikko ilmoitus)
+      [:span
+       [yleiset/tietoja {}
+        "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+        "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
+        "Otsikko: " (:otsikko ilmoitus)
+        "Lyhyt selite: " (:lyhytselite ilmoitus)
+        "Pitkä selite: " (when (:pitkaselite ilmoitus)
+                           [yleiset/pitka-teksti (:pitkaselite ilmoitus)])]
+
+       [:br]
+       [yleiset/tietoja {}
+        "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
+                            tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
+                        (if (and henkilo tyyppi)
+                          (str henkilo ", " tyyppi)
+                          (str (or henkilo tyyppi))))
+        "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
+        "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+
+       [:br]
+       [yleiset/tietoja {}
+        "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
+        "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
+        "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
+
+     (when-not (empty? (:kuittaukset ilmoitus))
+       [bs/panel {}
+        "Kuittaukset"
+        [:div
+         (for [kuittaus (:kuittaukset ilmoitus)]
+           (kuittauksen-tiedot kuittaus))]])]))
 
 (defn ilmoitusten-paanakyma
   []
@@ -203,7 +208,7 @@
                        {:nimi             :tyypit :otsikko "Tyyppi"
                         :tyyppi           :boolean-group
                         :vaihtoehdot      [:kysely :toimenpidepyynto :tiedoitus]
-                        :vaihtoehto-nayta tiedot/ilmoitustyypin-nimi})]
+                        :vaihtoehto-nayta ilmoitustyypin-nimi})]
 
         @tiedot/valinnat
         ]
@@ -216,7 +221,7 @@
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
-          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(tiedot/ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}
+          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}
           {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "20%"}
           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
            :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}

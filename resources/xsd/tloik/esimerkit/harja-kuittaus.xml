@@ -1,23 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <harja:harja-kuittaus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
-    <aika>2015-09-29T15:49:45</aika>
-    <kuittaustyyppi>valitetty</kuittaustyyppi>
-    <viestiId>14324234</viestiId>
+    <aika>2015-12-03T07:40:40.811Z</aika>
+    <kuittaustyyppi>virhe</kuittaustyyppi>
+    <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+    <virhe>Sisäinen käsittelyvirhe.</virhe>
     <valitystiedot>
-        <ilmoitusId>3213123</ilmoitusId>
-        <urakka>
-            <id>3</id>
-            <nimi>Oulun alueurakka 2014-2019</nimi>
-            <tyyppi>hoito</tyyppi>
-        </urakka>
-        <urakoitsija>
-            <nimi>Puulaaki Oy</nimi>
-            <ytunnus>1234567-8</ytunnus>
-        </urakoitsija>
-        <paivystaja>
-            <etunimi>Päivi</etunimi>
-            <sukunimi>Päivystäjä</sukunimi>
-            <matkapuhelin>0986578749309</matkapuhelin>
-            <sahkoposti>paivi.paivystaja@puulaaki.fi</sahkoposti>
-        </paivystaja>
+        <ilmoitusId>123456789</ilmoitusId>
     </valitystiedot>
 </harja:harja-kuittaus>

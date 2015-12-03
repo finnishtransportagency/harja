@@ -239,7 +239,7 @@ FROM toteuma_tehtava tt
                           AND toimenpidekoodi = :toimenpidekoodi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
-  JOIN kayttaja k ON k.id = t.luoja;
+  LEFT JOIN kayttaja k ON k.id = t.luoja;
 
 -- name: hae-toteumat-historiakuvaan
 -- Hakee toteumat historiakuvaan toimenpidekoodin perusteella.
@@ -600,8 +600,8 @@ FROM toteuma t
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
-  AND t.alkanut >= :alkanut
-  AND t.paattynyt <= :paattynyt
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR

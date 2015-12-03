@@ -1,11 +1,9 @@
 (ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.ilmoitukset :refer :all]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -29,7 +27,7 @@
 (deftest hae-ilmoitukset-sarakkeet
   (let []
     (is (oikeat-sarakkeet-palvelussa?
-          [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :vapaateksti
+          [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :lyhytselite :pitkaselite
            :ilmoitustyyppi :selitteet :urakkatyyppi :suljettu :sijainti :uusinkuittaus
 
            [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]

@@ -39,7 +39,8 @@
             [ol.Overlay]                                    ;; popup
             [harja.asiakas.tapahtumat :as t])
 
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [harja.makrot :refer [nappaa-virhe]]))
 
 ;; PENDING:
 ;; Tämä namespace kaipaa rakkautta... cleanup olisi tarpeen.
@@ -326,37 +327,38 @@
     ;; Aloitetaan komentokanavan kuuntelu
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
-               (case komento
-                 ::fit-bounds
-                 (let [{:keys [ol3 geometries-map]} (reagent/state this)
-                       view (.getView ol3)
-                       avain (geometria-avain (first args))
-                       [g _] (geometries-map avain)]
-                   (when g
-                     (keskita! ol3 g)))
-                 ::popup
-                 (let [[coordinate content] args]
-                   (nayta-popup! this coordinate content))
+               (nappaa-virhe
+                (case komento
+                  ::fit-bounds
+                  (let [{:keys [ol3 geometries-map]} (reagent/state this)
+                        view (.getView ol3)
+                        avain (geometria-avain (first args))
+                        [g _] (geometries-map avain)]
+                    (when g
+                      (keskita! ol3 g)))
+                  ::popup
+                  (let [[coordinate content] args]
+                    (nayta-popup! this coordinate content))
 
-                 ::invalidate-size
-                 (do
-                   (.updateSize ol3)
-                   (.render ol3))
+                  ::invalidate-size
+                  (do
+                    (.updateSize ol3)
+                    (.render ol3))
 
-                 ::hide-popup
-                 (poista-popup! this)
+                  ::hide-popup
+                  (poista-popup! this)
 
-                 ::cursor
-                 (let [[cursor] args
-                       vp (.-viewport_ ol3)
-                       style (.-style vp)]
-                   (set! (.-cursor style) (case cursor
-                                            :crosshair "crosshair" ;; lisää tarvittavia kursoreita
-                                            "")))
-                 ::tooltip
-                 (let [[x y teksti] args]
-                   (reagent/set-state this
-                                      {:hover {:x x :y y :tooltip teksti}})))
+                  ::cursor
+                  (let [[cursor] args
+                        vp (.-viewport_ ol3)
+                        style (.-style vp)]
+                    (set! (.-cursor style) (case cursor
+                                             :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                             "")))
+                  ::tooltip
+                  (let [[x y teksti] args]
+                    (reagent/set-state this
+                                       {:hover {:x x :y y :tooltip teksti}}))))
                (recur (alts! [komento-ch unmount-ch]))))
 
     (.setView ol3 (ol.View. #js {:center  (clj->js @view)
@@ -492,12 +494,12 @@
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
-(defmethod luo-feature :tack-icon-line [{:keys [points img scale width] :as spec}]
+(defmethod luo-feature :tack-icon-line [{:keys [points img scale width zindex color] :as spec}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
+        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
-                                      :zIndex 4})
+                                      :zIndex (or zindex 4)})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
@@ -505,7 +507,7 @@
                                                       :anchor  #js [0.5 1]
                                                       :opacity 1
                                                       :scale   (or scale 1)})
-                       :zIndex   5})]]
+                       :zIndex   ((fnil + 4) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
     (doto feature
       (.setStyle (clj->js tyylit)))))
 
@@ -530,7 +532,7 @@
                                                           #js [0.5 0.5])})
                                 :zIndex 5})]))))
 
-(defmethod luo-feature :tack-icon [{:keys [coordinates img scale]}]
+(defmethod luo-feature :tack-icon [{:keys [coordinates img scale zindex]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
@@ -538,7 +540,7 @@
                                      :anchor  #js [0.5 1]
                                      :opacity 1
                                      :scale   (or scale 1)})
-                      :zIndex 4}))))
+                      :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))

@@ -1,5 +1,5 @@
 {
-  "urakat": [
+  "paivystajatiedot": [
     {
       "urakka": {
         "tiedot": {
@@ -22,12 +22,12 @@
                 "etunimi": "Päivi",
                 "sukunimi": "Päivystäjä",
                 "email": "paivi.paivystaja@test.i",
-                "puhelinnumero": "7849885769"
+                "matkapuhelin": "4345455",
+                "tyopuhelin": "7849885769"
               },
               "alku": "2015-01-30T12:00:00Z",
               "loppu": "2016-01-30T12:00:00Z",
               "vastuuhenkilo": true,
-              "yhteyshenkilo": true,
               "varahenkilo": true
             }
           }
