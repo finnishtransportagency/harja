@@ -47,7 +47,6 @@
 (defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe]
   (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe)
         xml (tee-xml-sanoma sisalto)]
-    (println "-----------> XML" xml)
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do

@@ -23,10 +23,6 @@
         korrelaatio-id (.getJMSCorrelationID viesti)
         tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto)
         {:keys [viesti-id ilmoitus-id] :as ilmoitus} (ilmoitus-sanoma/lue-viesti viestin-sisalto)]
-
-    (println "-----> viesti-id" viesti-id)
-    (println "-----> ilmoitus-id" ilmoitus-id)
-
     (try+
       (let [
             urakka-id (jdbc/with-db-transaction [transaktio db]
