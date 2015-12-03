@@ -4,7 +4,7 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [reagent.core :refer [atom] :as reagent])
+            [reagent.core :refer [atom] :as r])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -101,7 +101,7 @@
 (defn sisalla?
   "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
   [komponentti tapahtuma]
-  (let [dom (reagent/dom-node komponentti)
+  (let [dom (r/dom-node komponentti)
         elt (.-target tapahtuma)]
     (loop [ylempi (.-parentNode elt)]
       (if (or (nil? ylempi)
@@ -169,7 +169,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   ([viesti rasti-funktio] (virheviesti-sailio viesti rasti-funktio false))
   ([viesti rasti-funktio inline-block?]
    (let [sulkemisnappi [:button.inlinenappi.nappi-kielteinen {:on-click #(rasti-funktio)}
-                        [ikonit/remove] " Sulje" ]]
+                        [ikonit/remove] " Sulje"]]
      (if inline-block?
        [:div.virheviesti-sailio {:style {:display :inline-block}} viesti
         (when rasti-funktio sulkemisnappi)]
@@ -181,14 +181,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     {:auki (atom false)}
 
     (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
-      (let [auki (:auki (reagent/state (reagent/current-component)))
+      (let [auki (:auki (r/state (r/current-component)))
             term (atom "")
             format-fn (or format-fn str)]
         [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
          [:button.nappi-alasveto
           {:type        "button"
            :disabled    (if disabled "disabled" "")
-           :title title
+           :title       title
            :on-click    #(do
                           (swap! auki not)
                           nil)
@@ -250,7 +250,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     :body-klikkaus
     (fn [this {klikkaus :tapahtuma}]
       (when-not (sisalla? this klikkaus)
-        (reset! (:auki (reagent/state this)) false)))
+        (reset! (:auki (r/state this)) false)))
     ))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
@@ -276,14 +276,14 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai joukko avainsanoj
 jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponentin inital-state."
   [alkutila render-fn & aiheet-ja-kasittelijat]
   (let [kuuntelijat (partition 2 aiheet-ja-kasittelijat)]
-    (reagent/create-class
+    (r/create-class
       {:get-initial-state      (fn [this] alkutila)
        :reagent-render         render-fn
        :component-did-mount    (fn [this _]
                                  (loop [kahvat []
                                         [[aihe kasittelija] & kuuntelijat] kuuntelijat]
                                    (if-not aihe
-                                     (reagent/set-state this {::kuuntelijat kahvat})
+                                     (r/set-state this {::kuuntelijat kahvat})
                                      (recur (concat kahvat
                                                     (doall (map #(t/kuuntele! % (fn [tapahtuma] (kasittelija this tapahtuma)))
                                                                 (if (keyword? aihe)
@@ -291,7 +291,7 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
                                                                   (seq aihe)))))
                                             kuuntelijat))))
        :component-will-unmount (fn [this _]
-                                 (let [kuuntelijat (-> this reagent/state ::kuuntelijat)]
+                                 (let [kuuntelijat (-> this r/state ::kuuntelijat)]
                                    (doseq [k kuuntelijat]
                                      (k))))})))
 
@@ -428,7 +428,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (defn haitari
   ([rivit] (haitari rivit {}))
   ([rivit {:keys [vain-yksi-auki? otsikko aina-joku-auki? piiloita-kun-kiinni? leijuva?]}]
-   (let [piiloita? (and piiloita-kun-kiinni? (not (some (fn [[_ r]] (:auki r)) @rivit)))]
+   (let [piilota? (and piiloita-kun-kiinni? (not (some (fn [[_ r]] (:auki r)) @rivit)))]
      (when aina-joku-auki?
        (when-not (some (fn [[_ r]] (:auki r)) @rivit)
          (pakota-haitarin-rivi-auki rivit)))
@@ -482,7 +482,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([numero alkuosa alkuetaisyys] (tierekisteriosoite numero alkuosa alkuetaisyys nil nil))
   ([numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
    [:span.tierekisteriosoite
-    [:span.tie "Tie " numero] " / " 
+    [:span.tie "Tie " numero] " / "
     [:span.alkuosa alkuosa] " / "
     [:span.alkuetaisyys alkuetaisyys]
     (when (and loppuosa loppuetaisyys)
@@ -511,16 +511,16 @@ jatkon."
        (if-not teksti
          [:span]
          [:span.pitka-teksti
-        (if @piilossa?
-          [:span.piilossa
-           (.substring teksti 0 80)
-           (when (> (count teksti) 80)
+          (if @piilossa?
+            [:span.piilossa
+             (.substring teksti 0 80)
+             (when (> (count teksti) 80)
+               [:a.nayta-tai-piilota {:href "#" :on-click #(do (.preventDefault %)
+                                                               (swap! piilossa? not))}
+                "Lisää..."])]
+            [:span.naytetaan
+             teksti
              [:a.nayta-tai-piilota {:href "#" :on-click #(do (.preventDefault %)
                                                              (swap! piilossa? not))}
-              "Lisää..."])]
-          [:span.naytetaan
-           teksti
-           [:a.nayta-tai-piilota {:href "#" :on-click #(do (.preventDefault %)
-                                                           (swap! piilossa? not))}
-            "Piilota"]])])))))
+              "Piilota"]])])))))
 
