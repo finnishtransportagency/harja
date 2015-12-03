@@ -1,10 +1,10 @@
 (ns harja.palvelin.palvelut.laadunseuranta
-  "Laadunseuranta: Tarkastukset, Havainnot ja Sanktiot"
+  "Laadunseuranta: Tarkastukset, Laatupoikkeamat ja Sanktiot"
 
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
 
-            [harja.kyselyt.havainnot :as havainnot]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
@@ -19,34 +19,35 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]))
 
-(def havainto-xf (comp
-                   (geo/muunna-pg-tulokset :sijainti)
-                   (map konv/alaviiva->rakenne)
-                   (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
-                   (map #(dissoc % :selvityspyydetty))
-                   (map #(assoc % :tekija (keyword (:tekija %))))
-                   (map #(update-in % [:paatos :paatos]
-                                    (fn [p]
-                                      (when p (keyword p)))))
-                   (map #(update-in % [:paatos :kasittelytapa]
-                                    (fn [k]
-                                      (when k (keyword k)))))
-                   (map #(if (nil? (:kasittelyaika (:paatos %)))
-                          (dissoc % :paatos)
-                          %))))
+(def laatupoikkeama-xf
+  (comp
+   (geo/muunna-pg-tulokset :sijainti)
+   (map konv/alaviiva->rakenne)
+   (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+   (map #(dissoc % :selvityspyydetty))
+   (map #(assoc % :tekija (keyword (:tekija %))))
+   (map #(update-in % [:paatos :paatos]
+                    (fn [p]
+                      (when p (keyword p)))))
+   (map #(update-in % [:paatos :kasittelytapa]
+                    (fn [k]
+                      (when k (keyword k)))))
+   (map #(if (nil? (:kasittelyaika (:paatos %)))
+           (dissoc % :paatos)
+           %))))
 
 (def tarkastus-xf
   (comp
     (geo/muunna-pg-tulokset :sijainti)
     (map konv/alaviiva->rakenne)
-    (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
+    (map #(konv/string->keyword % :tyyppi [:laatupoikkeama :tekija]))
     (map #(-> %1
-              (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
-              (update-in [:havainto] dissoc :selvityspyydetty)
-              (update-in [:havainto] (fn [h]
-                                       (if (nil? (:selvitys-pyydetty h))
-                                         (dissoc h :selvitys-pyydetty)
-                                         h)))))
+              (assoc-in [:laatupoikkeama :selvitys-pyydetty] (get-in %1 [:laatupoikkeama :selvitys-pyydetty]))
+              (update-in [:laatupoikkeama] dissoc :selvityspyydetty)
+              (update-in [:laatupoikkeama] (fn [h]
+                                             (if (nil? (:selvitys-pyydetty h))
+                                               (dissoc h :selvitys-pyydetty)
+                                               h)))))
 
     (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
     (map (fn [tarkastus]
@@ -57,7 +58,7 @@
              :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
              :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
 
-(defn hae-urakan-havainnot [db user {:keys [listaus urakka-id alku loppu]}]
+(defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
   (jdbc/with-db-transaction [db db]
     (let [listaus (or listaus :tilannekuva)
@@ -67,36 +68,36 @@
                        (if (get (:roolit user) "jarjestelmavastuuhenkilo")
                          (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
                          (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
-          _ (log/debug "Haetaan havaintoja urakoista " (pr-str urakka-idt))
+          _ (log/debug "Haetaan laatupoikkeamaja urakoista " (pr-str urakka-idt))
           tulos (apply (comp vec flatten merge)
                        (for [urakka-id urakka-idt]
                          (into []
-                               havainto-xf
-
+                               laatupoikkeama-xf
+                               
                                (if (= :omat listaus)
-                                 (apply havainnot/hae-omat-havainnot
+                                 (apply laatupoikkeamat/hae-omat-laatupoikkeamat
                                         (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
                                  (apply (case listaus
-                                          :kaikki havainnot/hae-kaikki-havainnot
-                                          :selvitys havainnot/hae-selvitysta-odottavat-havainnot
-                                          :kasitellyt havainnot/hae-kasitellyt-havainnot
-                                          :tilannekuva havainnot/hae-havainnot-tilannekuvaan)
+                                          :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
+                                          :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
+                                          :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat
+                                          :tilannekuva laatupoikkeamat/hae-laatupoikkeamat-tilannekuvaan)
                                         [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)])))))]
-      (log/debug "Löydettiin havainnot: " (pr-str (mapv :id tulos)))
+      (log/debug "Löydettiin laatupoikkeamat: " (pr-str (mapv :id tulos)))
       tulos)))
 
 
-(defn hae-havainnon-tiedot
-  "Hakee yhden havainnon kaiken tiedon muokkausnäkymää varten: havainnon perustiedot, kommentit ja liitteet, päätös ja sanktiot.
-   Ottaa urakka-id:n ja havainto-id:n. Urakka id:tä käytetään oikeustarkistukseen, havainnon tulee olla annetun urakan
+(defn hae-laatupoikkeaman-tiedot
+  "Hakee yhden laatupoikkeaman kaiken tiedon muokkausnäkymää varten: laatupoikkeaman perustiedot, kommentit ja liitteet, päätös ja sanktiot.
+   Ottaa urakka-id:n ja laatupoikkeama-id:n. Urakka id:tä käytetään oikeustarkistukseen, laatupoikkeaman tulee olla annetun urakan
    toimenpiteeseen kytketty."
-  [db user urakka-id havainto-id]
+  [db user urakka-id laatupoikkeama-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [havainto (first (into []
-                              havainto-xf
-                              (havainnot/hae-havainnon-tiedot db urakka-id havainto-id)))]
-    (when havainto
-      (assoc havainto
+  (let [laatupoikkeama (first (into []
+                              laatupoikkeama-xf
+                              (laatupoikkeamat/hae-laatupoikkeaman-tiedot db urakka-id laatupoikkeama-id)))]
+    (when laatupoikkeama
+      (assoc laatupoikkeama
         :kommentit (into []
                          (comp (map konv/alaviiva->rakenne)
                                (map #(assoc % :tekija (name (:tekija %))))
@@ -104,7 +105,7 @@
                                       (if (:id liite)
                                         kommentti
                                         (dissoc kommentti :liite)))))
-                         (havainnot/hae-havainnon-kommentit db havainto-id))
+                         (laatupoikkeamat/hae-laatupoikkeaman-kommentit db laatupoikkeama-id))
         :sanktiot (into []
                         (comp (map #(konv/array->set % :tyyppi_sanktiolaji keyword))
                               (map konv/alaviiva->rakenne)
@@ -112,8 +113,8 @@
                               (map #(assoc %
                                      :sakko? (not (nil? (:summa %)))
                                      :summa (some-> % :summa double))))
-                        (sanktiot/hae-havainnon-sanktiot db havainto-id))
-        :liitteet (into [] (havainnot/hae-havainnon-liitteet db havainto-id))))))
+                        (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
+        :liitteet (into [] (laatupoikkeamat/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
@@ -122,22 +123,22 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Hae sanktiot (" urakka-id alku loppu ")")
   (into []
-        (comp (geo/muunna-pg-tulokset :havainto_sijainti)
-              (map #(konv/string->keyword % :havainto_paatos_kasittelytapa))
+        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
+              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa))
               (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa))
               (map #(assoc % :laji (keyword (:laji %)))))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
-(defn tallenna-havainnon-sanktio
-  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio] :as sanktio} havainto urakka]
-  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", havaintoon " havainto)
+(defn tallenna-laatupoikkeaman-sanktio
+  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio] :as sanktio} laatupoikkeama urakka]
+  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (if (or (nil? id) (neg? id))
     (let [uusi-sanktio (sanktiot/luo-sanktio<!
                          db (konv/sql-timestamp perintapvm)
                          (name laji) (:id tyyppi)
                          urakka
-                         summa indeksi havainto (or suorasanktio false))]
+                         summa indeksi laatupoikkeama (or suorasanktio false))]
       (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
       (:id uusi-sanktio))
 
@@ -146,28 +147,28 @@
         db (konv/sql-timestamp perintapvm)
         (name laji) (:id tyyppi)
         urakka
-        summa indeksi havainto (or suorasanktio false)
+        summa indeksi laatupoikkeama (or suorasanktio false)
         id)
       (sanktiot/merkitse-maksuera-likaiseksi! db id)
       id)))
 
-(defn tallenna-havainto [db user {:keys [urakka] :as havainto}]
-  (log/info "Tuli havainto: " havainto)
-  (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
+(defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
+  (log/info "Tuli laatupoikkeama: " laatupoikkeama)
+  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamajen-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
 
     (let [osapuoli (roolit/osapuoli user urakka)
-          havainto (assoc havainto
+          laatupoikkeama (assoc laatupoikkeama
                      ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                      :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                             (:selvitys-pyydetty havainto))
+                                             (:selvitys-pyydetty laatupoikkeama))
 
                      ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu
-                     :selvitys-annettu (and (:uusi-kommentti havainto)
+                     :selvitys-annettu (and (:uusi-kommentti laatupoikkeama)
                                             (= :urakoitsija osapuoli)))
-          id (havainnot/luo-tai-paivita-havainto c user havainto)]
+          id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)]
       ;; Luodaan uudet kommentit
-      (when-let [uusi-kommentti (:uusi-kommentti havainto)]
+      (when-let [uusi-kommentti (:uusi-kommentti laatupoikkeama)]
         (log/info "UUSI KOMMENTTI: " uusi-kommentti)
         (let [liite (some->> uusi-kommentti
                              :liite
@@ -176,35 +177,35 @@
                              first
                              :id)
               kommentti (kommentit/luo-kommentti<! c
-                                                   (name (:tekija havainto))
+                                                   (name (:tekija laatupoikkeama))
                                                    (:kommentti uusi-kommentti)
                                                    liite
                                                    (:id user))]
-          ;; Liitä kommentti havaintoon
-          (havainnot/liita-kommentti<! c id (:id kommentti))))
+          ;; Liitä kommentti laatupoikkeamaon
+          (laatupoikkeamat/liita-kommentti<! c id (:id kommentti))))
 
-      ;; Liitä liite havaintoon
-      (when-let [uusi-liite (:uusi-liite havainto)]
+      ;; Liitä liite laatupoikkeamaon
+      (when-let [uusi-liite (:uusi-liite laatupoikkeama)]
         (log/info "UUSI LIITE: " uusi-liite)
-        (havainnot/liita-liite<! c id (:id uusi-liite)))
+        (laatupoikkeamat/liita-liite<! c id (:id uusi-liite)))
 
 
-      (when (:paatos (:paatos havainto))
+      (when (:paatos (:paatos laatupoikkeama))
         ;; Urakanvalvoja voi kirjata päätöksen
         (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
-        (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos havainto))
-        (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
-          (havainnot/kirjaa-havainnon-paatos! c
+        (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
+        (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
+          (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c
                                               (konv/sql-timestamp kasittelyaika)
                                               (name paatos) perustelu
                                               (name kasittelytapa) muukasittelytapa
                                               (:id user)
                                               id))
-        (when (= :sanktio (:paatos (:paatos havainto)))
-          (doseq [sanktio (:sanktiot havainto)]
-            (tallenna-havainnon-sanktio c user sanktio id urakka))))
+        (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
+          (doseq [sanktio (:sanktiot laatupoikkeama)]
+            (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
-      (hae-havainnon-tiedot c user urakka id))))
+      (hae-laatupoikkeaman-tiedot c user urakka id))))
 
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
@@ -244,20 +245,20 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id)))]
     (assoc tarkastus
-      :havainto (hae-havainnon-tiedot db user urakka-id (:id (:havainto tarkastus))))))
+      :laatupoikkeama (hae-laatupoikkeaman-tiedot db user urakka-id (:id (:laatupoikkeama tarkastus))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
-  (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamajen-kirjaus urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
-      (let [havainto (merge (:havainto tarkastus)
+      (let [laatupoikkeama (merge (:laatupoikkeama tarkastus)
                             {:aika   (:aika tarkastus)
                              :urakka urakka-id})
 
             uusi? (nil? (:id tarkastus))
-            havainto-id (:id (tallenna-havainto db user havainto)) ;; (havainnot/luo-tai-paivita-havainto c user havainto)
+            laatupoikkeama-id (:id (tallenna-laatupoikkeama db user laatupoikkeama)) ;; (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus
-                                                       havainto-id)]
+                                                       laatupoikkeama-id)]
 
         (condp = (:tyyppi tarkastus)
           :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
@@ -270,25 +271,25 @@
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
 
-(defn tallenna-suorasanktio [db user sanktio havainto urakka]
-  ;; Roolien tarkastukset on kopioitu havainnon kirjaamisesta,
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka]
+  ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
-  (log/info "Tallenna suorasanktio " (:id sanktio) " havaintoon " (:id havainto) ", urakassa " urakka)
-  (roolit/vaadi-rooli-urakassa user roolit/havaintojen-kirjaus urakka)
+  (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaon " (:id laatupoikkeama) ", urakassa " urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamajen-kirjaus urakka)
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
 
   (jdbc/with-db-transaction [c db]
     (let [;; FIXME: Suorasanktiolle pyydetty/annettu flagit?
           #_osapuoli #_(roolit/osapuoli user urakka)
-          #_havainto #_(assoc havainto
+          #_laatupoikkeama #_(assoc laatupoikkeama
                          :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                                 (:selvitys-pyydetty havainto))
-                         :selvitys-annettu (and (:uusi-kommentti havainto)
+                                                 (:selvitys-pyydetty laatupoikkeama))
+                         :selvitys-annettu (and (:uusi-kommentti laatupoikkeama)
                                                 (= :urakoitsija osapuoli)))
-          id (havainnot/luo-tai-paivita-havainto c user (assoc havainto :tekija "tilaaja"))]
+          id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
 
-      (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos havainto)]
-        (havainnot/kirjaa-havainnon-paatos! c
+      (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
+        (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c
                                             (konv/sql-timestamp kasittelyaika)
                                             (name paatos) perustelu
                                             (name kasittelytapa) muukasittelytapa
@@ -297,7 +298,7 @@
 
       ;; Frontilla oletetaan että palvelu palauttaa tallennetun sanktion id:n
       ;; Jos tämä muuttuu, pitää frontillekin tehdä muutokset.
-      (tallenna-havainnon-sanktio c user sanktio id urakka))))
+      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
@@ -306,21 +307,21 @@
     (julkaise-palvelut
       http-palvelin
 
-      :hae-urakan-havainnot
+      :hae-urakan-laatupoikkeamat
       (fn [user tiedot]
-        (hae-urakan-havainnot db user tiedot))
+        (hae-urakan-laatupoikkeamat db user tiedot))
 
-      :tallenna-havainto
-      (fn [user havainto]
-        (tallenna-havainto db user havainto))
+      :tallenna-laatupoikkeama
+      (fn [user laatupoikkeama]
+        (tallenna-laatupoikkeama db user laatupoikkeama))
 
       :tallenna-suorasanktio
       (fn [user tiedot]
-        (tallenna-suorasanktio db user (:sanktio tiedot) (:havainto tiedot) (get-in tiedot [:havainto :urakka])))
+        (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot) (get-in tiedot [:laatupoikkeama :urakka])))
 
-      :hae-havainnon-tiedot
-      (fn [user {:keys [urakka-id havainto-id]}]
-        (hae-havainnon-tiedot db user urakka-id havainto-id))
+      :hae-laatupoikkeaman-tiedot
+      (fn [user {:keys [urakka-id laatupoikkeama-id]}]
+        (hae-laatupoikkeaman-tiedot db user urakka-id laatupoikkeama-id))
 
       :hae-urakan-sanktiot
       (fn [user tiedot]
@@ -346,9 +347,9 @@
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
-                     :hae-urakan-havainnot
-                     :tallenna-havainto
-                     :hae-havainnon-tiedot
+                     :hae-urakan-laatupoikkeamat
+                     :tallenna-laatupoikkeama
+                     :hae-laatupoikkeaman-tiedot
                      :hae-urakan-sanktiot
                      :hae-sanktiotyypit
                      :hae-urakan-tarkastukset

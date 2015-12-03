@@ -44,11 +44,15 @@ COMMENT ON TABLE tarkastus_kommentti IS 'Linkkitaulu, jolla kommentit liitetää
 
 
 -- Havainto:
--- Muuta taulu laatupoikkeama nimelle
 ALTER TABLE havainto RENAME TO laatupoikkeama;
+ALTER TABLE sanktio RENAME COLUMN havainto TO laatupoikkeama;
+
+ALTER TABLE havainto_kommentti RENAME TO laatupoikkeama_kommentti;
+ALTAR TABLE laatupoikkeama_kommentti RENAME COLUMN havainto TO laatupoikkeama;
+ALTER TABLE havainto_liite RENAME TO laatupoikkeama_liite;
+ALTER TABLE laatupoikkeama_liite RENAME COLUMN havainto TO laatupoikkeama;
 
 
--- Tee geometria TR-osoitteen perusteella
 
 
 
