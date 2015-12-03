@@ -23,7 +23,8 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [harja.makrot :refer [nappaa-virhe]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
 
@@ -589,13 +590,14 @@
                                    (reset! edellinen-extent e))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
-      (go (loop []
-            (let [arvo (<! tr-osoite-ch)]
-              (log "VKM/TR: " (pr-str arvo))
-              (when arvo
-                (do (reset! sijainti (:geometria arvo))
-                    (nayta-kartalla (:geometria arvo))
-                    (recur)))))))
+      (go-loop []
+        (let [arvo (<! tr-osoite-ch)]
+          (log "VKM/TR: " (pr-str arvo))
+          (when arvo
+            (do (reset! sijainti (:geometria arvo))
+                (nappaa-virhe
+                 (nayta-kartalla (:geometria arvo)))
+                (recur))))))
 
     (komp/luo
       {:component-will-update

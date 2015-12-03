@@ -4,7 +4,7 @@
             [harja.views.main :as main-view]
             [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
-
+            [harja.virhekasittely :as v]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.istunto :as istunto]
             
@@ -49,7 +49,8 @@
                     :rivi   lineNumber
                     :sarake column
                     :selain (.-userAgent (.-navigator js/window))
-                    :stack (when errorObj (aget errorObj "stack"))})))
+                    :stack (when errorObj (aget errorObj "stack"))})
+          (v/arsyttava-virhe errorMsg url lineNumber column errorObj)))
 
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)
