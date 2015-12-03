@@ -14,7 +14,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komp]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -22,11 +23,13 @@
   (let [toteumat @tiedot/haetut-toteumat]
     [:span
      [grid/grid
-      {:otsikko "Kokonaishintaisten töiden toteumat"
-       :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
-       :tunniste :tehtavaid
-       :rivi-klikattu #(do (reset! tiedot/valittu-toteuma %))
-       :rivi-valinta-peruttu #(do (reset! tiedot/valittu-toteuma nil))
+      {:otsikko                   "Kokonaishintaisten töiden toteumat"
+       :tyhja                     (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
+       :tunniste                  :tehtavaid
+       :rivi-klikattu             #(do
+                                    (nav/vaihda-kartan-koko! :L)
+                                    (reset! tiedot/valittu-toteuma %))
+       :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-toteuma nil))
        :mahdollista-rivin-valinta true}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
