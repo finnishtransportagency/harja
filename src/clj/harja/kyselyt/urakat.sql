@@ -1,15 +1,21 @@
 -- name: hae-kaikki-urakat-aikavalilla
 SELECT
-  u.id, u.nimi, u.tyyppi FROM urakka u
+  u.id,
+  u.nimi,
+  u.tyyppi
+FROM urakka u
 WHERE loppupvm BETWEEN :alku AND :loppu
-OR alkupvm BETWEEN :alku AND :loppu
-OR loppupvm IS NULL AND :loppu > NOW();
+      OR alkupvm BETWEEN :alku AND :loppu
+      OR loppupvm IS NULL AND :loppu > NOW();
 
 -- name: hae-kaynnissa-olevat-urakat
-SELECT u.id, u.nimi, u.tyyppi
-  FROM urakka u
- WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
-   AND (u.loppupvm IS NULL OR u.loppupvm >= current_date);
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi
+FROM urakka u
+WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
@@ -180,8 +186,8 @@ SELECT
   u.alkupvm,
   u.loppupvm,
   h.alueurakkanro AS alueurakkanumero,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+  urk.nimi        AS urakoitsija_nimi,
+  urk.ytunnus     AS urakoitsija_ytunnus
 FROM urakka u
   JOIN hanke h ON h.id = u.hanke
   JOIN organisaatio urk ON u.urakoitsija = urk.id
@@ -204,28 +210,23 @@ SELECT EXISTS(SELECT id
               WHERE id = :id);
 
 -- name: paivita-hankkeen-tiedot-urakalle!
--- Päivittää hankkeen ja hallintayksikön viitteet urakalle hankkeen sampo id:n avulla
+-- Päivittää hankkeen sampo id:n avulla urakalle
 UPDATE urakka
 SET hanke         = (SELECT id
                      FROM hanke
-                     WHERE sampoid = :hanke_sampo_id),
-  hallintayksikko = (SELECT organisaatio.id
-                     FROM organisaatio organisaatio
-                       LEFT JOIN alueurakka alueurakka ON alueurakka.elynumero = organisaatio.elynumero
-                       LEFT JOIN hanke hanke ON alueurakka.alueurakkanro = hanke.alueurakkanro
-                     WHERE hanke.sampoid = :hanke_sampo_id)
+                     WHERE sampoid = :hanke_sampo_id)
 WHERE hanke_sampoid = :hanke_sampo_id;
 
 -- name: luo-urakka<!
 -- Luo uuden urakan.
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi)
-VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi);
+INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko)
+VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko);
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
 UPDATE urakka
 SET nimi = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm, hanke_sampoid = :hanke_sampoid,
-  tyyppi = :urakkatyyppi :: urakkatyyppi
+  tyyppi = :urakkatyyppi :: urakkatyyppi, hallintayksikko = :hallintayksikko
 WHERE id = :id;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
@@ -329,11 +330,13 @@ WHERE u.id IN (SELECT id
 
 -- name: hae-hallintayksikon-kaynnissa-olevat-urakat
 -- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakoista
-SELECT id, nimi
-  FROM urakka
- WHERE hallintayksikko = :hal
-   AND (alkupvm IS NULL OR alkupvm <= current_date)
-   AND (loppupvm IS NULL OR loppupvm >= current_date);
+SELECT
+  id,
+  nimi
+FROM urakka
+WHERE hallintayksikko = :hal
+      AND (alkupvm IS NULL OR alkupvm <= current_date)
+      AND (loppupvm IS NULL OR loppupvm >= current_date);
 
 -- name: onko-urakalla-tehtavaa
 SELECT EXISTS(
@@ -356,16 +359,19 @@ WHERE
   (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
 
 -- name: luo-alueurakka<!
-INSERT INTO alueurakka (alueurakkanro, alue, elynumero) VALUES (:alueurakkanro, ST_GeomFromText(:alue)::geometry, :elynumero);
+INSERT INTO alueurakka (alueurakkanro, alue, elynumero)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero);
 
 -- name: paivita-alueurakka!
 UPDATE alueurakka
 SET alueurakkanro = :alueurakkanro,
-  alue = ST_GeomFromText(:alue)::geometry,
-  elynumero = :elynumero;
+  alue            = ST_GeomFromText(:alue) :: GEOMETRY,
+  elynumero       = :elynumero;
 
 -- name: hae-alueurakka-numerolla
-SELECT * FROM alueurakka WHERE alueurakkanro = :alueurakkanro;
+SELECT *
+FROM alueurakka
+WHERE alueurakkanro = :alueurakkanro;
 
 -- name: tuhoa-alueurakkadata!
 DELETE FROM alueurakka;
