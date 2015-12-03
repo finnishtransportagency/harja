@@ -58,8 +58,9 @@ ALTER TABLE laatupoikkeama_kommentti RENAME COLUMN havainto TO laatupoikkeama;
 ALTER TABLE havainto_liite RENAME TO laatupoikkeama_liite;
 ALTER TABLE laatupoikkeama_liite RENAME COLUMN havainto TO laatupoikkeama;
 
-
-
+UPDATE integraatio
+   SET nimi = 'lisaa-laatupoikkeama'
+ WHERE nimi = 'lisaa-havainto';
 
 
 

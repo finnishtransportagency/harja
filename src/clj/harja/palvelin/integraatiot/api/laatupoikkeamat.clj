@@ -68,6 +68,7 @@
     (let [laatupoikkeama-id (tallenna-laatupoikkeama transaktio urakka-id kirjaaja data)
           kommentit (:kommentit data)
           liitteet (:liitteet data)]
+      (log/info "LIITE " (count liitteet))
       (tallenna-kommentit transaktio laatupoikkeama-id kirjaaja kommentit)
       (tallenna-liitteet-laatupoikkeamalle transaktio liitteiden-hallinta urakka-id laatupoikkeama-id kirjaaja liitteet))))
 
@@ -84,8 +85,11 @@
     (julkaise-reitti
       http :lisaa-laatupoikkeama
       (POST "/api/urakat/:id/laatupoikkeama" request
-        (kasittele-kutsu db integraatioloki :lisaa-laatupoikkeama request xml-skeemat/+havainnon-kirjaus+ xml-skeemat/+kirjausvastaus+
-                         (fn [parametrit data kayttaja db] (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
+            (kasittele-kutsu db integraatioloki
+                             :lisaa-laatupoikkeama request
+                             xml-skeemat/+havainnon-kirjaus+ xml-skeemat/+kirjausvastaus+
+                             (fn [parametrit data kayttaja db]
+                               (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-laatupoikkeama)

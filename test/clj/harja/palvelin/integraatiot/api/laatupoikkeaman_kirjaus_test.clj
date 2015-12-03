@@ -22,14 +22,15 @@
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeamat-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM laatupoikkeama;")))
+        
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja portti
                                          (-> "test/resurssit/api/laatupoikkeama.json" slurp))]
-    (cheshire/decode (:body vastaus) true)
+    (is (contains? (cheshire/decode (:body vastaus) true) :ilmoitukset))
 
     (is (= 200 (:status vastaus)))
 
     (let [laatupoikkeamat-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM laatupoikkeama;")))
-          liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testilaatupoikkeama36934853.jpg';")))
+          liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.jpg';")))
           laatupoikkeama-id (ffirst (q (str "SELECT id FROM laatupoikkeama WHERE kohde = 'testikohde36934853';")))
           kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti = 'Testikommentti323353435';")))]
       (log/debug "liite-id: " liite-id)
@@ -39,10 +40,4 @@
       (is (= (+ laatupoikkeamat-kannassa-ennen-pyyntoa 1) laatupoikkeamat-kannassa-pyynnon-jalkeen))
       (is (number? liite-id))
       (is (number? laatupoikkeama-id))
-      (is (number? kommentti-id))
-
-      (u (str "DELETE FROM laatupoikkeama_liite WHERE laatupoikkeama = " laatupoikkeama-id ";"))
-      (u (str "DELETE FROM laatupoikkeama_kommentti WHERE laatupoikkeama = " laatupoikkeama-id ";"))
-      (u (str "DELETE FROM kommentti WHERE kommentti = 'Testikommentti323353435';"))
-      (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
-      (u (str "DELETE FROM laatupoikkeama WHERE kuvaus = 'testilaatupoikkeama36934853';")))))
+      (is (number? kommentti-id)))))

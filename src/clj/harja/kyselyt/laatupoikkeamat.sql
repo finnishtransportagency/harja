@@ -238,7 +238,7 @@ INSERT INTO laatupoikkeama_kommentti (laatupoikkeama, kommentti) VALUES (:laatup
 INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite) VALUES (:laatupoikkeama, :liite);
 
 -- name: liita-laatupoikkeama<!
--- Liittää laatupoikkeamaon uuden liitteen
+-- Liittää laatupoikkeamalle uuden liitteen
 INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite) VALUES (:laatupoikkeama, :liite);
 
 -- name: onko-olemassa-ulkoisella-idlla
