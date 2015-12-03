@@ -623,7 +623,7 @@ WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
   AND t.alkanut >= :alkanut
-  AND t.paattynyt <= :paattynyt
+  AND t.alkanut <= :paattynyt
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR
