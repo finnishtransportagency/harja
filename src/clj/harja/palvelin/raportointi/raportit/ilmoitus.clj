@@ -1,7 +1,8 @@
 (ns harja.palvelin.raportointi.raportit.ilmoitus
   "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
+                                                                 pylvaat ei-osumia-aikavalilla-teksti]]
             [harja.domain.roolit :as roolit]
             [clj-time.coerce :as tc]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne +ilmoitustilat+]]
@@ -120,11 +121,16 @@
                      [tpp-yht urk-yht tur-yht])])))]
 
      (when nayta-pylvaat?
-       (pylvaat (str "TPP kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm tpp-kuukausittain))
+       (if-not (empty? tpp-kuukausittain)
+         (pylvaat (str "TPP kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm tpp-kuukausittain)
+         (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm loppupvm)))
      (when nayta-pylvaat?
-       (pylvaat (str "URK kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm urk-kuukausittain))
+       (if-not (empty? urk-kuukausittain)
+         (pylvaat (str "URK kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm urk-kuukausittain)
+         (ei-osumia-aikavalilla-teksti "URK-ilmoituksia" graafin-alkupvm loppupvm)))
      (when nayta-pylvaat?
-       (pylvaat (str "TUR kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm tur-kuukausittain))
-     ]))
+       (if-not (empty? tur-kuukausittain)
+         (pylvaat (str "TUR kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm tur-kuukausittain)
+         (ei-osumia-aikavalilla-teksti "TUR-ilmoituksia" graafin-alkupvm loppupvm)))]))
 
     

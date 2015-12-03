@@ -141,7 +141,6 @@
             format-amount (or format-amount #(.toFixed % 2))
             ]
         (log "Value range " min-value " -- " max-value " == " value-range)
-        (if-not (every? (comp zero? second) data)
           [:svg {:width width :height height}
            ;; render ticks that are in the min-value - max-value range
            (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)])
@@ -175,10 +174,7 @@
                                      :text-anchor "end"
                                      :font-size "7pt"}
                               label]]))
-                        data)
-
-           ]
-          [:text "Kaikki arvot nollia."])))))
+                        data)]))))
 
 (defn timeline [opts times]
   (let [component (r/current-component)

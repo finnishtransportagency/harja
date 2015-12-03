@@ -38,3 +38,7 @@
    (into []
          (map (juxt identity #(or (kuukausittainen-data %) 0)))
          (kuukaudet alkupvm loppupvm))])
+
+(defn ei-osumia-aikavalilla-teksti
+  [nimi alkupvm loppupvm]
+  [:otsikko-kuin-pylvaissa (str "Ei " nimi " aikana " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))])

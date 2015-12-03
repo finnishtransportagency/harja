@@ -39,6 +39,9 @@
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
 
+(defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
+  [:h3 teksti])
+
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari]}]]
   [:p {:style {:color (when vari vari)}} teksti])
 
