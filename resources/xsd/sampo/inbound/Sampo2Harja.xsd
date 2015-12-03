@@ -17,7 +17,7 @@
 	</xs:element>
 	<xs:complexType name="DocumentLinksType">
 		<xs:sequence>
-			<xs:element name="DocumentLink" type="DocumentLinkType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="DocumentLink" type="DocumentLinkType" minOccurs="1" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="DocumentLinkType">
@@ -56,11 +56,10 @@
 		<xs:attribute name="name" type="xs:string" use="required"/>
 		<xs:attribute name="resourceId" type="xs:string" use="required"/>
 		<xs:attribute name="programId" type="xs:string" use="required"/>
-		<xs:attribute name="financialDepartmentHash" type="xs:string" use="required"/>
-		<xs:attribute name="financialDepartmentOBS" type="xs:string" use="required"/>
 		<xs:attribute name="vv_transferred_harja" type="xs:dateTime"/>
 		<xs:attribute name="schedule_start" type="xs:dateTime" use="required"/>
 		<xs:attribute name="schedule_finish" type="xs:dateTime" use="required"/>
+		<xs:attribute name="financialDepartmentHash" type="xs:string" use="required"/>
 		<!-- Attributes that Harja uses -->
 		<!-- Extra attributes -->
 	</xs:complexType>
@@ -160,7 +159,7 @@
 	<xs:complexType name="CompanyType">
 		<xs:sequence>
 			<xs:element name="contactInformation" type="CompanyContactInformationType" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="contactPersons" type="ContactPersonType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="contactPersons" type="ContactPersonType" minOccurs="1" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="messageId" type="xs:string" use="required"/>
 		<xs:attribute name="id" type="xs:string" use="required"/>
