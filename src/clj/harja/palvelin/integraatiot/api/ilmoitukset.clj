@@ -38,7 +38,7 @@
         sulje-lahetyksen-jalkeen? (if (get parametrit "stream") (not (Boolean/valueOf (get parametrit "stream"))) true)
         tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
-    (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Viimeisin haettu ilmoitus id: %s." urakka-id viimeisin-id))
+    (log/debug (format "-----> Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Viimeisin haettu ilmoitus id: %s." urakka-id viimeisin-id))
     (aja-virhekasittelyn-kanssa
       (fn []
         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)

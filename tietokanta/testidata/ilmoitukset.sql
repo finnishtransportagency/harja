@@ -194,3 +194,29 @@ VALUES (12348, '2006-02-13 00:00.00', '2005-02-13 00:00.00', false, 'Täällä j
 ST_MakePoint(249863, 6723867)::GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus'::ilmoitustyyppi, ARRAY['virkaApupyynto']::ilmoituksenselite[],
 'George', 'Doe', '05079163872', '05079163872', '', 'tienkayttaja'::ilmoittajatyyppi,
 'Mika', 'Vaihdemies', '085612567', 'vaihde@valityspalvelu.fi');
+
+
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, lyhytselite, pitkaselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12349, '2015-10-01 10:00.00', '2015-10-01 10:05.13', true,
+        'Jotain tapahtui!', 'En tiedä mitä, mutta jotain on tapahtunut', '',
+        ST_MakePoint(452935, 7186873)::GEOMETRY, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi, ARRAY['saveaTiella', 'vettaTiella']::ilmoituksenselite[],
+        (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
+
+
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, lyhytselite, pitkaselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12350, '2015-10-01 10:00.00', '2015-10-01 10:05.13', true,
+        'Kuoppia tiessä', 'Kuusamon tiellä on kuoppia tiessä', '',
+        ST_MakePoint(452935, 7186873)::GEOMETRY, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi, ARRAY['saveaTiella', 'vettaTiella']::ilmoituksenselite[],
+        (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');

@@ -1,11 +1,9 @@
 (ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.ilmoitukset :refer :all]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma

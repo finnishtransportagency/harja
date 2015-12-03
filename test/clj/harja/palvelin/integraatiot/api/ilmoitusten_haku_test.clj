@@ -6,26 +6,25 @@
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [cheshire.core :as cheshire]
-
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]))
 
 (def kayttaja "jvh")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-ilmoitukset (component/using
-                                                              (api-ilmoitukset/->Ilmoitukset)
-                                                              [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
-                                           :sonja (feikki-sonja)
-                                           :tloik (component/using
-                                                    (->Tloik +tloik-ilmoitusviestijono+
-                                                             +tloik-ilmoituskuittausjono+
-                                                             +tloik-ilmoitustoimenpideviestijono+
-                                                             +tloik-ilmoitustoimenpidekuittausjono+)
-                                                    [:db :sonja :integraatioloki :klusterin-tapahtumat])))
+  (laajenna-integraatiojarjestelmafixturea
+    kayttaja
+    :api-ilmoitukset (component/using
+                       (api-ilmoitukset/->Ilmoitukset)
+                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
+    :sonja (feikki-sonja)
+    :tloik (component/using
+             (->Tloik +tloik-ilmoitusviestijono+
+                      +tloik-ilmoituskuittausjono+
+                      +tloik-ilmoitustoimenpideviestijono+
+                      +tloik-ilmoitustoimenpidekuittausjono+)
+             [:db :sonja :integraatioloki :klusterin-tapahtumat])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -59,7 +58,6 @@
   (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))]
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
     (odota #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
-
     (is (= 200 (:status @vastaus)))
 
     (let [vastausdata (cheshire/decode (:body @vastaus))
@@ -70,12 +68,11 @@
     (poista-ilmoitus)))
 
 (deftest hae-valissa-saapuneet-ilmoitukset
-  (let [vastaus  (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti)]
-
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti)]
     (is (= 200 (:status vastaus)))
 
     (let [vastausdata (cheshire/decode (:body vastaus))]
-      (is (= 5 (count (get vastausdata "ilmoitukset")))))
+      (is (= 2 (count (get vastausdata "ilmoitukset")))))
 
     (poista-ilmoitus)))
 

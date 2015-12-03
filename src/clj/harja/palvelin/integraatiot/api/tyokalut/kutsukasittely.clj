@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.kutsukasittely
   "API:n kutsujen käsittely funktiot"
-
   (:require [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [harja.tyokalut.json_validointi :as json]
@@ -98,7 +97,6 @@
   ([status skeema payload]
    (if payload
      (let [json (cheshire/encode payload)]
-       (println "----> JSON:" json)
        (if skeema
          (do
            (json/validoi skeema json)

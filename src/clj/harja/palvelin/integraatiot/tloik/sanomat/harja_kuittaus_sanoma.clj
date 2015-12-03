@@ -8,33 +8,46 @@
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
+(defn rakenna-urakka [urakka]
+  (when urakka
+    [:urakka
+     [:id (:id urakka)]
+     [:nimi (:nimi urakka)]
+     [:tyyppi (:tyyppi urakka)]]))
+
+(defn rakenna-urakoitsija [urakka]
+  (when urakka
+    [:urakoitsija
+     [:nimi (:urakoitsija_nimi urakka)]
+     [:ytunnus (:urakoitsija_ytunnus urakka)]]))
+
+(defn rakenna-vastaanottaja [vastaanottaja]
+  ;; todo: täytä päivystäjätiedot sitten, kun viestit voidaan lähettää tekstiviestillä tai sähköpostilla
+  (when vastaanottaja
+    [:paivystaja
+     [:etunimi "Päivi"]
+     [:sukunimi "Päivystäjä"]
+     [:matkapuhelin "0986578749309"]
+     [:sahkoposti "paivi.paivystaja@puulaaki.fi"]]))
+
 (defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe]
   [:harja:harja-kuittaus
    {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
    [:aika aika]
    [:kuittaustyyppi kuittaustyyppi]
    [:viestiId viesti-id]
+   (when virhe
+     [:virhe virhe])
    [:valitystiedot
     [:ilmoitusId ilmoitus-id]
-    [:urakka
-     [:id (:id urakka)]
-     [:nimi (:nimi urakka)]
-     [:tyyppi (:tyyppi urakka)]]
-    [:urakoitsija
-     [:nimi (:urakoitsija_nimi urakka)]
-     [:ytunnus (:urakoitsija_ytunnus urakka)]]
-    ;; todo: täytä päivystäjätiedot sitten, kun viestit voidaan lähettää tekstiviestillä tai sähköpostilla
-    #_[:paivystaja
-     [:etunimi "Päivi"]
-     [:sukunimi "Päivystäjä"]
-     [:matkapuhelin "0986578749309"]
-     [:sahkoposti "paivi.paivystaja@puulaaki.fi"]]]
-   (when virhe [:virhe virhe])])
+    (rakenna-urakka urakka)
+    (rakenna-urakoitsija urakka)
+    (rakenna-vastaanottaja vastaanottaja)]])
 
 (defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe]
   (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe)
         xml (tee-xml-sanoma sisalto)]
-    (println "----> XML:" xml)
+    (println "-----------> XML" xml)
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do

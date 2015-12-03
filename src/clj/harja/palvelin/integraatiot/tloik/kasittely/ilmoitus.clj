@@ -1,14 +1,9 @@
 (ns harja.palvelin.integraatiot.tloik.kasittely.ilmoitus
   (:require [taoensso.timbre :as log]
-            [clj-time.core :as time]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus]
-            [harja.kyselyt.urakat :as urakat]
-            [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
-            [slingshot.slingshot :refer [throw+]]))
-
-
+            [slingshot.slingshot :refer [throw+]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
 (defn paivita-ilmoittaja [db id ilmoittaja]
   (ilmoitukset/paivita-ilmoittaja-ilmoitukselle!
@@ -29,8 +24,7 @@
     (:sahkoposti lahettaja)
     id))
 
-(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
-  ;; todo tallenna välitystiedot ja vastaanottaja, jos on jo välitetty
+(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   (ilmoitukset/paivita-ilmoitus!
     db
     urakka-id
@@ -49,7 +43,6 @@
   (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id))
 
 (defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
-  ;; todo tallenna vastaanottaja, jos on jo välitetty
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   urakka-id
@@ -68,7 +61,7 @@
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
     id))
 
-(defn kasittele-ilmoitus [db tapahtumat ilmoitus]
+(defn kasittele-ilmoitus [db ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
@@ -78,7 +71,7 @@
       (luo-ilmoitus db urakka-id ilmoitus))
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" ilmoitus))
     (if-not urakka-id
-      (throw+ {:type :urakka-ei-loydy})
+      (throw+ {:type virheet/+urakkaa-ei-loydy+})
       urakka-id)))
 
 
