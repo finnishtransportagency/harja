@@ -20,9 +20,7 @@
     <Program id=\"TESTIHANKE\" manager_Id=\"A010098\" manager_User_Name=\"A010098\" message_Id=\"HankeMessageId\"
       name=\"Testi alueurakka 2009-2014\" schedule_finish=\"2013-12-31T00:00:00.0\"
       schedule_start=\"2009-01-01T00:00:00.0\" vv_alueurakkanro=\"TH-123\" vv_code=\"14-1177\">
-      <documentLinks>
-        <DocumentLink name=\"\" link=\"string\"></DocumentLink>
-      </documentLinks>
+      <documentLinks/>
     </Program>
   </Sampo2harja>")
 
@@ -33,9 +31,7 @@
         programId=\"TESTIHANKE\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
         financialDepartmentHash=\"KP981303\">
-        <documentLinks>
-          <DocumentLink name=\"\" link=\"string\"></DocumentLink>
-        </documentLinks>
+        <documentLinks/>
       </Project>
     </Sampo2harja>")
 
@@ -45,9 +41,7 @@
       <Order contactId=\"\" contractPartyId=\"TESTIORG\" id=\"TESTISOPIMUS\" messageId=\"OrganisaatioMessageId\"
              name=\"Testisopimus\" projectId=\"TESTIURAKKA\" schedule_finish=\"2013-10-31T00:00:00.0\"
              schedule_start=\"2013-09-02T00:00:00.0\" vv_code=\"\" vv_dno=\"-\">
-        <documentLinks>
-          <DocumentLink name=\"\" link=\"string\"></DocumentLink>
-        </documentLinks>
+        <documentLinks/>
     </Order>
   </Sampo2harja>")
 
@@ -67,9 +61,7 @@
                name=\"TESTITOIMENPIDE\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"THIGT-2-1515-2\"
                vv_operation=\"22111\">
-        <documentLinks>
-         <DocumentLink name=\"\" link=\"string\"></DocumentLink>
-        </documentLinks>
+        <documentLinks/>
     </Operation>
 </Sampo2harja>")
 
@@ -89,9 +81,7 @@
                name=\"TESTIDUPTOIMENPI\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"THIGT-2-1515-2\"
                vv_operation=\"22111\">
-        <documentLinks>
-          <DocumentLink name=\"\" link=\"string\"></DocumentLink>
-        </documentLinks>
+        <documentLinks/>
     </Operation>
 </Sampo2harja>")
 
@@ -103,9 +93,7 @@
                name=\"TESTITPKTPI\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"\"
                vv_operation=\"\">
-        <documentLinks>
-          <DocumentLink name=\"\" link=\"string\"></DocumentLink>
-        </documentLinks>
+        <documentLinks/>
     </Operation>
 </Sampo2harja>")
 

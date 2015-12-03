@@ -17,7 +17,7 @@
 	</xs:element>
 	<xs:complexType name="DocumentLinksType">
 		<xs:sequence>
-			<xs:element name="DocumentLink" type="DocumentLinkType" minOccurs="1" maxOccurs="unbounded"/>
+			<xs:element name="DocumentLink" type="DocumentLinkType" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="DocumentLinkType">
