@@ -45,13 +45,16 @@
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari]} pylvaat]]
+(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt]} pylvaat]]
   (let [w (int (* 0.85 @yleiset/leveys))
         h (int (/ w 3))]
     [:span.pylvaat
      [:h3 otsikko]
-     [vis/bars {:width w
-                :height h}
+     [vis/bars {:width         w
+                :height        h
+                ;; tarvitaanko erityyppisille rapsoille eri formatteri?
+                :format-amount (or fmt str)
+                }
       pylvaat]]))
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]

@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -14,20 +14,6 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
 
-(def vuosi-ja-kk-fmt (tf/formatter "YYYY/MM"))
-(defn- vuosi-ja-kk [pvm]
-  (tf/unparse vuosi-ja-kk-fmt (tc/from-date pvm)))
-
-(defn kuukaudet [alku loppu]
-  (let [alku (tc/from-date alku)
-        loppu (tc/from-date loppu)]
-    (letfn [(kuukaudet [kk]
-              (when (or (t/before? kk loppu)
-                        (t/equal? kk loppu))
-                (lazy-seq
-                 (cons (tf/unparse vuosi-ja-kk-fmt kk)
-                       (kuukaudet (t/plus kk (t/months 1)))))))]
-      (kuukaudet alku))))
 
 (def turvallisuuspoikkeama-tyyppi
   {"turvallisuuspoikkeama" "Turvallisuuspoikkeama"
@@ -79,10 +65,7 @@
      
      (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
-       [:pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"}
-        (into []
-              (map (juxt identity #(or (turpo-maarat-kuukausittain %) 0)))
-              (kuukaudet alkupvm loppupvm))])
+       (pylvaat "Turvallisuuspoikkeamat kuukausittain" alkupvm loppupvm turpo-maarat-kuukausittain))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []

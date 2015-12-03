@@ -1,7 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.ilmoitus
   "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat]]
             [harja.domain.roolit :as roolit]
             [clj-time.coerce :as tc]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne +ilmoitustilat+]]
@@ -53,31 +53,44 @@
         ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
                       db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
                       [alkupvm loppupvm] "")
-        alkupvm-ed-kuussa (t/minus (l/to-local-date-time alkupvm) (t/months 1))
-        loppupvm-ed-kuussa (t/last-day-of-the-month
-                             (t/minus (l/to-local-date-time alkupvm) (t/months 1)))
-        ilmoitukset-viime-kuussa (when kyseessa-kk-vali?
-                                         (ilmoituspalvelu/hae-ilmoitukset
-                                           db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
-                                           [(tc/to-date alkupvm-ed-kuussa) (tc/to-date loppupvm-ed-kuussa)] ""))
+
+        ;; graafia varten haetaan joko ilmoitukset pitkältä aikaväliltä tai jos kk raportti, niin hoitokaudelta
+        hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
+        ilmoitukset-hoitokaudella (when kyseessa-kk-vali?
+                                    (ilmoituspalvelu/hae-ilmoitukset
+                                      db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
+                                      [hoitokauden-alkupvm loppupvm] ""))
+        tpp-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
+                                            (filter #(= :toimenpidepyynto (:ilmoitustyyppi %))
+                                                    (if kyseessa-kk-vali?
+                                                      ilmoitukset-hoitokaudella
+                                                      ilmoitukset))))
+        urk-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
+                                            (filter #(= :kysely (:ilmoitustyyppi %)) (if kyseessa-kk-vali?
+                                                                                       ilmoitukset-hoitokaudella
+                                                                                       ilmoitukset))))
+        tur-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
+                                            (filter #(= :tiedoitus (:ilmoitustyyppi %)) (if kyseessa-kk-vali?
+                                                                                          ilmoitukset-hoitokaudella
+                                                                                          ilmoitukset))))
+        graafin-alkupvm (if kyseessa-kk-vali?
+                          hoitokauden-alkupvm
+                          alkupvm)
+        hoitokaudella-tahan-asti-opt (if kyseessa-kk-vali? " hoitokaudella tähän asti " "")
         raportin-nimi "Ilmoitusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        viime-kuun-otsikko (when kyseessa-kk-vali?
-                             (raportin-otsikko
-                               (case konteksti
-                                 :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                                 :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                                 :koko-maa "KOKO MAA")
-                               raportin-nimi (tc/to-date alkupvm-ed-kuussa) (tc/to-date loppupvm-ed-kuussa)))
         ilmoitukset-urakan-mukaan (group-by :urakka ilmoitukset)
-        viime-kuun-ilmoitukset-urakan-mukaan (when kyseessa-kk-vali? (group-by :urakka ilmoitukset-viime-kuussa))]
+        nayta-pylvaat? (or (and (> (count ilmoitukset) 0)
+                                (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm)))
+                           (and (> (count ilmoitukset-hoitokaudella) 0)
+                                kyseessa-kk-vali?))]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko
+     [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat
@@ -106,36 +119,12 @@
             [(concat ["Yhteensä"]
                      [tpp-yht urk-yht tur-yht])])))]
 
-     ;; jos kk-rapsa, näytetään viime kuun tilannekin
-     (when kyseessa-kk-vali?
-       [:taulukko {:otsikko viime-kuun-otsikko
-                   :viimeinen-rivi-yhteenveto? true}
-        (into []
-              (concat
-                [{:otsikko "Urakka"}]
-                (map (fn [ilmoitustyyppi]
-                       {:otsikko (str (ilmoitustyypin-lyhenne ilmoitustyyppi)
-                                      " ("
-                                      (ilmoitustyypin-nimi ilmoitustyyppi)
-                                      ")")})
-                     [:toimenpidepyynto :kysely :tiedoitus])))
-        (into
-          []
-          (concat
-            ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
-            (for [[urakka ilmoitukset] viime-kuun-ilmoitukset-urakan-mukaan]
-              (let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")
-                    tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                    urk (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
-                    tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]
-                [urakan-nimi tpp urk tur]))
-
-            ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
-            (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                  urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
-                  tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]
-              [(concat ["Yhteensä"]
-                       [tpp-yht urk-yht tur-yht])])))])
+     (when nayta-pylvaat?
+       (pylvaat (str "TPP kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm tpp-kuukausittain))
+     (when nayta-pylvaat?
+       (pylvaat (str "URK kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm urk-kuukausittain))
+     (when nayta-pylvaat?
+       (pylvaat (str "TUR kuukausittain" hoitokaudella-tahan-asti-opt) graafin-alkupvm loppupvm tur-kuukausittain))
      ]))
 
     
