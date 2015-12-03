@@ -43,6 +43,8 @@
            (when nakymassa?
              (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
+(tarkkaile! "Toteumat: " haetut-toteumat)
+
 (def haetut-reitit
   (reaction<!
     [urakka-id (:id @nav/valittu-urakka)
@@ -54,6 +56,8 @@
      nakymassa? @nakymassa?]
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
+
+(tarkkaile! "Reitit:" haetut-reitit)
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
