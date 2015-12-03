@@ -13,7 +13,9 @@
             [harja.kyselyt.muutoshintaiset-tyot :as mht-q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
 
-            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]))
+            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
+            [clj-time.coerce :as c]
+            [clj-time.core :as t]))
 
 (defn annettu? [p]
   (if (nil? p)
@@ -511,18 +513,20 @@
                          (konv/sql-date loppupvm)
                          toimenpide
                          tehtava))
-        paivittaiset-rivit (map (fn [[_ arvo]] arvo)
+        paivittaiset-rivit (mapv (fn [[_ arvo]] arvo)
                                 (group-by
                                   (fn [rivi]
-                                    [(:toimenpidekoodi rivi) (:alkanut rivi)])
-                                  (map #(assoc % :alkanut (clj-time.coerce/to-local-date (:alkanut %))) toteumat)))
-        summatut-rivit (mapv #(assoc % :alkanut (clj-time.coerce/to-date (:alkanut %)))
-                             (mapv #(reduce
+                                    (let [alkanut (c/from-sql-time (:alkanut rivi))]
+                                      [(:toimenpidekoodi rivi)
+                                       (str (t/year alkanut) "-" (t/month alkanut) "-" (t/day alkanut))]))
+                                  toteumat))
+        summatut-rivit (mapv #(reduce
                                      (fn [vanha uusi]
                                        (if (and (:maara vanha) (:maara uusi))
                                          (assoc vanha :maara (+ (:maara vanha) (:maara uusi)))
                                          (assoc vanha :maara 0)))
-                                     %) paivittaiset-rivit))]
+                                     %)
+                             paivittaiset-rivit)]
     summatut-rivit))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
