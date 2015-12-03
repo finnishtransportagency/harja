@@ -17,19 +17,22 @@
 
 (defn koka-remote-id->kayttajatiedot [db koka-remote-id]
   (get (swap! kayttajatiedot
-              #(cache/through (fn [id]
-                                (let [kt (first  (q/hae-kirjautumistiedot db id))]
-                                  (if (nil? kt)
-                                    nil
-                                    (-> kt
-                                        (assoc :organisaatio {:id (:org_id kt)
-                                                              :nimi (:org_nimi kt)
-                                                              :tyyppi (:org_tyyppi kt)}
-                                               :roolit (into #{} (:roolit (konv/array->vec (first (q/hae-kayttajan-roolit db (:id kt))) :roolit)))
-                                               :urakkaroolit (map konv/alaviiva->rakenne (q/hae-kayttajan-urakka-roolit db (:id kt))))
-                                        (dissoc :org_id :org_nimi :org_tyyppi)))))
-                              %
-                              koka-remote-id))
+              #(cache/through
+                (fn [id]
+                  (let [kt (first  (q/hae-kirjautumistiedot db id))]
+                    (if (nil? kt)
+                      nil
+                      (-> kt
+                          konv/alaviiva->rakenne
+                          (konv/array->set :organisaation-urakat)
+                          (assoc :roolit
+                                 (into #{} (:roolit (konv/array->vec
+                                                     (first (q/hae-kayttajan-roolit db (:id kt)))
+                                                     :roolit)))
+                                 :urakkaroolit
+                                 (map konv/alaviiva->rakenne (q/hae-kayttajan-urakka-roolit db (:id kt))))))))
+                %
+                koka-remote-id))
        koka-remote-id))
 
   
