@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.utils :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]

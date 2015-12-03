@@ -4,7 +4,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.pvm :as pvm]
-            [harja.utils :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql")

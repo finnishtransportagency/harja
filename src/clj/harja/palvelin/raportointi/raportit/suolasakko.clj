@@ -6,7 +6,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
-            [harja.utils :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [yesql.core :refer [defqueries]]
             [harja.fmt :as fmt]))
 

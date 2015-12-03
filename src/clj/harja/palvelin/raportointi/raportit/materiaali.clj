@@ -6,7 +6,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
-            [harja.utils :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.pvm :as pvm]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]

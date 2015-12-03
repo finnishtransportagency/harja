@@ -4,7 +4,7 @@
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.utils :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]))
 
 ;; oulu au 2014 - 2019:

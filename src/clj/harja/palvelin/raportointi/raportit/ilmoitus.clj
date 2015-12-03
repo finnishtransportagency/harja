@@ -1,7 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.ilmoitus
   "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
-            [harja.utils :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.domain.roolit :as roolit]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne +ilmoitustilat+]]
             [harja.kyselyt.urakat :as urakat-q]

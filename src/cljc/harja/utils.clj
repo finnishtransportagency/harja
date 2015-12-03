@@ -37,8 +37,3 @@
               (get map toka)))
           {}
           (keys map)))
-
-(defn raportin-otsikko
-  [konteksti nimi alkupvm loppupvm]
-  (str konteksti ", " nimi " ajalta "
-       (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))
