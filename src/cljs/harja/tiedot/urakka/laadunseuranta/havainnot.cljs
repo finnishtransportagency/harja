@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.havainnot
-  (:require [harja.pvm :as pvm]
+  (:require [reagent.core :refer [atom]]
+            [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]

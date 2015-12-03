@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.tarkastukset
-  (:require [harja.asiakas.kommunikaatio :as k]
+  (:require [reagent.core :refer [atom]]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.geo :as geo]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
