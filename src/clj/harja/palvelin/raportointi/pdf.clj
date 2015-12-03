@@ -43,6 +43,12 @@
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size "16pt"} teksti])
 
+(defmethod muodosta-pdf :otsikko-kuin-pylvaissa [[_ teksti]]
+  [:fo:block {:font-weight "bold"
+              :margin-bottom "2mm"
+              :margin-top "2mm"} teksti])
+
+
 (defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari]}]]
   [:fo:block {:color (when vari vari)} teksti])
 
@@ -94,7 +100,7 @@
                                   :height bar-height
                                   :fill (color-fn d)}]
                           [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (- y 1) :text-anchor "end"} (str value)]
-                          [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (+ 4 (+ y bar-height)) :text-anchor "end"}
+                          [:text {:font-size "3pt" :x (+ x (/ bar-width 2)) :y (+ 4 (+ y bar-height)) :text-anchor "end"}
                            label]]))
                      data)])]]])
 
