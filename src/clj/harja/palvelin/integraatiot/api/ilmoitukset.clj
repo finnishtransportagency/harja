@@ -43,6 +43,11 @@
       (fn []
         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
         (with-channel request kanava
+          (on-close kanava
+                    (fn [_]
+                      (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
+                      (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))
+
           (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?)
                 odottavat-ilmoitukset (and viimeisin-id (ilmoitukset/hae-ilmoituksen-jalkeen-saapuneet-ilmoitukset db urakka-id viimeisin-id))]
             (when-not (empty? odottavat-ilmoitukset)
@@ -51,11 +56,7 @@
               tapahtumat
               urakka-id
               (fn [ilmoitus-id]
-                (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-idlla db [(Integer/parseInt ilmoitus-id)])))))
-          (on-close kanava
-                    (fn [_]
-                      (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
-                      (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id))))))))
+                (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-idlla db [(Integer/parseInt ilmoitus-id)]))))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
