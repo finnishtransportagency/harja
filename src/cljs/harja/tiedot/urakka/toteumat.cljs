@@ -14,7 +14,6 @@
 ; FIXME Tämä nimiavaruus hallinoi jotakuinkin kaikkia Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
 ; jokaisella näkymällä olisi oma tiedot-namespace kaverina (kuten esim. kokonaishintaisilla nyt on).
 
-(defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))

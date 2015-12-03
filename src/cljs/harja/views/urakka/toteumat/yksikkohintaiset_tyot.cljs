@@ -289,7 +289,7 @@
 
 (defn yksikkohintaisten-toteumat []
   (komp/luo
-    (komp/lippu toteumat/yksikkohintaiset-tyot-nakymassa?)
+    (komp/lippu yksikkohintaiset-tyot/yksikkohintaiset-tyot-nakymassa?)
     (fn []
       [:span
        [kartta/kartan-paikka]

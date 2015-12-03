@@ -13,9 +13,11 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defonce yksikkohintaiset-tyot-nakymassa? (atom false))
+
 (defonce yks-hint-tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                                nakymassa? @toteumat/yksikkohintaiset-tyot-nakymassa?
+                                                nakymassa? @yksikkohintaiset-tyot-nakymassa?
                                                 valittu-hoitokausi @u/valittu-hoitokausi]
                                                (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
                                                  (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
@@ -98,3 +100,13 @@
                                  (> (:hoitokauden-toteutunut-maara rivi) 0)
                                  (> (:hoitokauden-suunniteltu-maara rivi) 0))))
                @tehtavarivit))))
+
+(def haetut-reitit
+  (reaction<!
+    [urakka-id (:id @nav/valittu-urakka)
+     sopimus-id (first @urakka/valittu-sopimusnumero)
+     hoitokausi @urakka/valittu-hoitokausi
+     toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
+     nakymassa? @yksikkohintaiset-tyot-nakymassa?]
+    (when nakymassa?
+      #_(hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))) ; FIXME Puuttu
