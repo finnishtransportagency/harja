@@ -39,7 +39,8 @@
             [ol.Overlay]                                    ;; popup
             [harja.asiakas.tapahtumat :as t])
 
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [harja.makrot :refer [nappaa-virhe]]))
 
 ;; PENDING:
 ;; Tämä namespace kaipaa rakkautta... cleanup olisi tarpeen.
@@ -326,37 +327,38 @@
     ;; Aloitetaan komentokanavan kuuntelu
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
-               (case komento
-                 ::fit-bounds
-                 (let [{:keys [ol3 geometries-map]} (reagent/state this)
-                       view (.getView ol3)
-                       avain (geometria-avain (first args))
-                       [g _] (geometries-map avain)]
-                   (when g
-                     (keskita! ol3 g)))
-                 ::popup
-                 (let [[coordinate content] args]
-                   (nayta-popup! this coordinate content))
+               (nappaa-virhe
+                (case komento
+                  ::fit-bounds
+                  (let [{:keys [ol3 geometries-map]} (reagent/state this)
+                        view (.getView ol3)
+                        avain (geometria-avain (first args))
+                        [g _] (geometries-map avain)]
+                    (when g
+                      (keskita! ol3 g)))
+                  ::popup
+                  (let [[coordinate content] args]
+                    (nayta-popup! this coordinate content))
 
-                 ::invalidate-size
-                 (do
-                   (.updateSize ol3)
-                   (.render ol3))
+                  ::invalidate-size
+                  (do
+                    (.updateSize ol3)
+                    (.render ol3))
 
-                 ::hide-popup
-                 (poista-popup! this)
+                  ::hide-popup
+                  (poista-popup! this)
 
-                 ::cursor
-                 (let [[cursor] args
-                       vp (.-viewport_ ol3)
-                       style (.-style vp)]
-                   (set! (.-cursor style) (case cursor
-                                            :crosshair "crosshair" ;; lisää tarvittavia kursoreita
-                                            "")))
-                 ::tooltip
-                 (let [[x y teksti] args]
-                   (reagent/set-state this
-                                      {:hover {:x x :y y :tooltip teksti}})))
+                  ::cursor
+                  (let [[cursor] args
+                        vp (.-viewport_ ol3)
+                        style (.-style vp)]
+                    (set! (.-cursor style) (case cursor
+                                             :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                             "")))
+                  ::tooltip
+                  (let [[x y teksti] args]
+                    (reagent/set-state this
+                                       {:hover {:x x :y y :tooltip teksti}}))))
                (recur (alts! [komento-ch unmount-ch]))))
 
     (.setView ol3 (ol.View. #js {:center  (clj->js @view)

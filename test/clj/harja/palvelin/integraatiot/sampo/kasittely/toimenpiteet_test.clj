@@ -43,14 +43,14 @@
   (is (= 8 (count (hae-kustannussuunnitelmat))) "Toimenpiteen päivitys ei saa lisätä uusia kustannussuunnitelmia.")
 
   (let [nimet (hae-maksuerien-nimet)]
-    (is (some #(= (first %) "Talvihoito: Kokonaishintaiset") nimet))
-    (is (some #(= (first %) "Talvihoito: Yksikköhintaiset") nimet))
-    (is (some #(= (first %) "Talvihoito: Lisätyöt") nimet))
-    (is (some #(= (first %) "Talvihoito: Indeksit") nimet))
-    (is (some #(= (first %) "Talvihoito: Bonukset") nimet))
-    (is (some #(= (first %) "Talvihoito: Sakot") nimet))
-    (is (some #(= (first %) "Talvihoito: Äkilliset hoitotyöt") nimet))
-    (is (some #(= (first %) "Talvihoito: Muut") nimet))
+    (is (some #(= (first %) "Laiturialue: Kokonaishintaiset") nimet))
+    (is (some #(= (first %) "Laiturialue: Yksikköhintaiset") nimet))
+    (is (some #(= (first %) "Laiturialue: Lisätyöt") nimet))
+    (is (some #(= (first %) "Laiturialue: Indeksit") nimet))
+    (is (some #(= (first %) "Laiturialue: Bonukset") nimet))
+    (is (some #(= (first %) "Laiturialue: Sakot") nimet))
+    (is (some #(= (first %) "Laiturialue: Äkilliset hoitotyöt") nimet))
+    (is (some #(= (first %) "Laiturialue: Muut") nimet))
     (println "nimet: " nimet))
 
   (poista-toimenpide))

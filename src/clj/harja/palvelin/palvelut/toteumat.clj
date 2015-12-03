@@ -501,6 +501,7 @@
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+  (log/debug "Aikaväli: " (pr-str alkupvm) (pr-str loppupvm))
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteumat (into []
                        (comp

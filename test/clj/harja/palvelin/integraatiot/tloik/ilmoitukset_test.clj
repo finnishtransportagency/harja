@@ -5,32 +5,34 @@
             [clojure.data.zip.xml :as z]
             [hiccup.core :refer [html]]
             [harja.testi :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]))
+            [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
+            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
 
-(defn jarjestelma-fixture [testit]
-  (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
-                        :sonja (feikki-sonja)
-                        :integraatioloki (component/using (->Integraatioloki nil) [:db])
-                        :tloik (component/using
-                                 (->Tloik +tloik-ilmoitusviestijono+
-                                          +tloik-ilmoituskuittausjono+
-                                          +tloik-ilmoitustoimenpideviestijono+
-                                          +tloik-ilmoitustoimenpidekuittausjono+)
-                                 [:db :sonja :integraatioloki])))))
-  (testit)
-  (alter-var-root #'jarjestelma component/stop))
 
+(def kayttaja "jvh")
+
+(def jarjestelma-fixture
+  (laajenna-integraatiojarjestelmafixturea
+    kayttaja
+    :api-ilmoitukset (component/using
+                       (api-ilmoitukset/->Ilmoitukset)
+                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
+    :sonja (feikki-sonja)
+    :tloik (component/using
+             (->Tloik +tloik-ilmoitusviestijono+
+                      +tloik-ilmoituskuittausjono+
+                      +tloik-ilmoitustoimenpideviestijono+
+                      +tloik-ilmoitustoimenpidekuittausjono+)
+             [:db :sonja :integraatioloki :klusterin-tapahtumat])))
+
+(use-fixtures :once jarjestelma-fixture)
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
@@ -61,6 +63,7 @@
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
+    (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
     (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
@@ -73,6 +76,24 @@
       (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
 
     (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
+    (poista-ilmoitus)))
+
+(deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
+  (let [sanoma +ilmoitus-ruotsissa+
+        viestit (atom [])]
+    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
+    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
+
+    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+
+    (let [xml (first @viestit)
+          data (xml/lue xml)]
+      (is (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
+      (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
+      (is (= "virhe" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
+      (is (= "Tiedoilla ei voitu päätellä urakkaa." (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
+
+    (is (= 0 (count (hae-ilmoitus))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
 
 

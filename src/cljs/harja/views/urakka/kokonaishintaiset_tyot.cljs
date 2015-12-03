@@ -194,12 +194,7 @@
        [:div.kokonaishintaiset-tyot
         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
 
-        ;; Näytetään kustannusten summat ja piirakkadiagrammit
-        [kustannukset
-         @valitun-hoitokauden-ja-tpin-kustannukset
-         @s/valitun-hoitokauden-kok-hint-kustannukset
-         @kaikkien-hoitokausien-taman-tpin-kustannukset
-         @valitun-hoitokauden-yks-hint-kustannukset]
+        
         
         (if (empty? @toimenpiteet)
           (when @toimenpiteet
@@ -264,4 +259,11 @@
                                     maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) (min p paivia))]
                                 
                                 (assoc tama-rivi :maksupvm maksu-pvm)))}]
-           @tyorivit])]))))
+           @tyorivit])
+
+        ;; Näytetään kustannusten summat ja piirakkadiagrammit
+        [kustannukset
+         @valitun-hoitokauden-ja-tpin-kustannukset
+         @s/valitun-hoitokauden-kok-hint-kustannukset
+         @kaikkien-hoitokausien-taman-tpin-kustannukset
+         @valitun-hoitokauden-yks-hint-kustannukset]]))))
