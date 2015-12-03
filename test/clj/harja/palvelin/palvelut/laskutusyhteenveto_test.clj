@@ -29,10 +29,8 @@
                           (:db jarjestelma)
                           +kayttaja-jvh+
                           {:urakka-id          @oulun-alueurakan-2014-2019-id
-                           :hk-alkupvm         (java.sql.Date. 114 9 1)
-                           :hk-loppupvm        (java.sql.Date. 115 8 30)
-                           :aikavali-alkupvm   (java.sql.Date. 115 7 1)
-                            :aikavali-loppupvm (java.sql.Date. 115 7 30)})
+                           :alkupvm   (java.sql.Date. 115 7 1)
+                           :loppupvm (java.sql.Date. 115 7 30)})
           haetut-tiedot-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot))
           haetut-tiedot-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot))
           haetut-tiedot-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot))

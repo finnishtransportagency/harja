@@ -47,21 +47,21 @@
         raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille parametrit))]
     raportin-tiedot))
 
-(defn suorita [db user {:keys [urakka-id hk-alkupvm hk-loppupvm hallintayksikko-id] :as parametrit}]
-  (log/debug "Ajat:" (pr-str hk-alkupvm hk-loppupvm))
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]
+  (log/debug "Ajat:" (pr-str alkupvm loppupvm))
   (let [[konteksti raportin-data]
         (cond
-          (and urakka-id hk-alkupvm hk-loppupvm)
+          (and urakka-id alkupvm loppupvm)
           [:urakka (muodosta-suolasakkoraportti-urakalle db user {:urakka-id urakka-id
-                                                                  :alkupvm   hk-alkupvm
-                                                                  :loppupvm  hk-loppupvm})]
+                                                                  :alkupvm   alkupvm
+                                                                  :loppupvm  loppupvm})]
 
-          (and hallintayksikko-id hk-alkupvm hk-loppupvm)
+          (and hallintayksikko-id alkupvm loppupvm)
           [:hallintayksikko (muodosta-suolasakkoraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
-                                                                                    :alkupvm            hk-alkupvm
-                                                                                    :loppupvm           hk-loppupvm})]
-          (and hk-alkupvm hk-loppupvm)
-          [:koko-maa (muodosta-suolasakkoraportti-koko-maalle db user {:alkupvm hk-alkupvm :loppupvm hk-loppupvm})]
+                                                                                    :alkupvm            alkupvm
+                                                                                    :loppupvm           loppupvm})]
+          (and alkupvm loppupvm)
+          [:koko-maa (muodosta-suolasakkoraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
 
           :default
           ;; FIXME Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
@@ -71,7 +71,7 @@
                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                        :koko-maa "KOKO MAA")
                      ", Suolabonus/sakkoraportti "
-                     (pvm/pvm (or hk-alkupvm hk-alkupvm)) " \u2010 " (pvm/pvm (or hk-loppupvm hk-loppupvm)))
+                     (pvm/pvm alkupvm) " \u2010 " (pvm/pvm loppupvm))
         laske-sakko (fn [rivi]
                       (when (and (:ylitys rivi) (:sakko_maara_per_tonni rivi))
                         (* (:ylitys rivi)

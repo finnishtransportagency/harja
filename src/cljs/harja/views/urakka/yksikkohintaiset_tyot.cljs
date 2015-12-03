@@ -165,31 +165,7 @@
       (fn [ur]
         [:div.yksikkohintaiset-tyot
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut ur]
-         [:div.hoitokauden-kustannukset
-          [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
-           [:div.col-xs-6.piirakka
-            (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
-                  kaikki-kust @kaikkien-hoitokausien-kustannukset]
-              (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
-                [:span.piirakka-wrapper
-                 [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
-                 [vis/pie
-                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-                  {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
-           [:div.col-xs-6.piirakka
-            (let [yks-hint-yhteensa @valitun-hoitokauden-yks-hint-kustannukset
-                  kok-hint-yhteensa @s/valitun-hoitokauden-kok-hint-kustannukset]
-              (when (or (not= 0 yks-hint-yhteensa) (not= 0 kok-hint-yhteensa))
-                [:span.piirakka-wrapper
-                 [:h5.piirakka-label "Hoitokauden yksikköhintaisten töiden osuus kaikista töistä"]
-                 [vis/pie
-                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-                  {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
-
-          [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
-           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
-          [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
-           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]
+         
 
          [grid/grid
           {:otsikko                "Urakkasopimuksen mukaiset yksikköhinnat"
@@ -228,4 +204,30 @@
             (yllapidon-sarakkeet))
 
                @tyorivit-joilla-hinta]
-         [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+]]))))
+         [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+]
+
+         [:div.hoitokauden-kustannukset
+          [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
+           [:div.col-xs-6.piirakka
+            (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
+                  kaikki-kust @kaikkien-hoitokausien-kustannukset]
+              (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
+                [:span.piirakka-wrapper
+                 [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
+                 [vis/pie
+                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                  {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
+           [:div.col-xs-6.piirakka
+            (let [yks-hint-yhteensa @valitun-hoitokauden-yks-hint-kustannukset
+                  kok-hint-yhteensa @s/valitun-hoitokauden-kok-hint-kustannukset]
+              (when (or (not= 0 yks-hint-yhteensa) (not= 0 kok-hint-yhteensa))
+                [:span.piirakka-wrapper
+                 [:h5.piirakka-label "Hoitokauden yksikköhintaisten töiden osuus kaikista töistä"]
+                 [vis/pie
+                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                  {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
+
+          [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
+           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
+          [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
+           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]]))))

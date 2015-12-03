@@ -39,10 +39,7 @@
 
 (defn kasittele-toimenpide [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi]}]
   (log/debug "Käsitellään toimenpide Sampo id:llä: " sampo-id ", viesti id:" viesti-id)
-
   (tarkista-toimenpide db viesti-id urakka-sampo-id sampo-id sampo-toimenpidekoodi)
-
-  (log/warn "Samposta tuodulla toimenpideinstanssilla (id: " sampo-id ") ei ole toimenpidekoodia, joten sitä ei voi tallentaa")
   (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Operation")
 
   (try

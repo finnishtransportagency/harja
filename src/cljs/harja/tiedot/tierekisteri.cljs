@@ -14,6 +14,6 @@
                                [{:alue {:type        :icon
                                         :direction   0
                                         :coordinates (:coordinates @valittu-alkupiste)
-                                        :img         "images/nuoli_alas.png"}}])))
+                                        :img         "images/karttaikonit/kartta-tr-piste-harmaa.svg"}}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)

@@ -55,9 +55,7 @@
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
   ([viesti opts]
-   [(keyword (str "div.ajax-loader"
-                  (when (:luokka opts)
-                    (str "." (:luokka opts)))))
+   [:div {:class (str "ajax-loader " (when (:luokka opts) (:luokka opts)))}
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       [:div.viesti viesti])]))
@@ -184,7 +182,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
     (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
       (let [auki (:auki (reagent/state (reagent/current-component)))
-            term (atom "")]
+            term (atom "")
+            format-fn (or format-fn str)]
         [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
          [:button.nappi-alasveto
           {:type        "button"
@@ -230,7 +229,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                               (do
                                 (reset! term (char kc))
                                 (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                  (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto))
+                                                                  (= (.indexOf (.toLowerCase (format-fn vaihtoehto))
                                                                                (.toLowerCase @term)) 0))
                                                                 vaihtoehdot))]
                                   (valitse-fn itemi)
