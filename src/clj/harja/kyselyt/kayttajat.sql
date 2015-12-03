@@ -7,10 +7,14 @@ SELECT
   k.sukunimi,
   k.sahkoposti,
   k.puhelin,
-  o.id     AS org_id,
-  o.nimi   AS org_nimi,
-  o.tyyppi AS org_tyyppi
-FROM kayttaja k LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  o.id     AS organisaatio_id,
+  o.nimi   AS organisaatio_nimi,
+  o.tyyppi AS organisaatio_tyyppi,
+  (SELECT array_agg(u.id)
+     FROM urakka u
+    WHERE u.urakoitsija = o.id OR u.hallintayksikko = o.id) as "organisaation-urakat"
+FROM kayttaja k
+     LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.kayttajanimi = :koka
       AND k.poistettu = FALSE
 

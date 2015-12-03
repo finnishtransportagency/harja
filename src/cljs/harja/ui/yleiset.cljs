@@ -55,9 +55,7 @@
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
   ([viesti opts]
-   [(keyword (str "div.ajax-loader"
-                  (when (:luokka opts)
-                    (str "." (:luokka opts)))))
+   [:div {:class (str "ajax-loader " (when (:luokka opts) (:luokka opts)))}
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       [:div.viesti viesti])]))
