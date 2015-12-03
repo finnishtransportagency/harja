@@ -433,38 +433,3 @@ VALUES ((SELECT id
          WHERE ilmoitusid = 12377), 12377, '2011-10-26 06:10:07', 'vastaanotto' :: kuittaustyyppi,
         'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
         'Välittävä Urakoitsija', 'Y1242334');
-
-INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, lyhytselite, pitkaselite, sijainti,
- tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
- ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
- lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2014-2019'), 12349, '2015-10-01 10:00.00', '2015-10-01 10:05.13', TRUE,
-        'Jotain tapahtui!', 'En tiedä mitä, mutta jotain on tapahtunut', '',
-        ST_MakePoint(452935, 7186873) :: GEOMETRY, 6, 6, 6, 6, 6, 'kysely' :: ilmoitustyyppi,
-        ARRAY ['saveaTiella', 'vettaTiella'] :: ilmoituksenselite [],
-        (SELECT tyyppi
-         FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas' :: ilmoittajatyyppi,
-        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
-
-
-INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, lyhytselite, pitkaselite, sijainti,
- tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
- ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
- lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2014-2019'), 12350, '2015-10-01 10:00.00', '2015-10-01 10:05.13', TRUE,
-        'Kuoppia tiessä', 'Kuusamon tiellä on kuoppia tiessä', '',
-        ST_MakePoint(452935, 7186873) :: GEOMETRY, 6, 6, 6, 6, 6, 'kysely' :: ilmoitustyyppi,
-        ARRAY ['saveaTiella', 'vettaTiella'] :: ilmoituksenselite [],
-        (SELECT tyyppi
-         FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas' :: ilmoittajatyyppi,
-        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
