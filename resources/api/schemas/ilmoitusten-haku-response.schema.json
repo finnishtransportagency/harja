@@ -7,7 +7,7 @@
     "ilmoitukset": {
       "id": "urn:harja/ilmoitukset",
       "type": "array",
-      "maxItems" : 1000,
+      "maxItems": 1000,
       "items": {
         "id": "urn:harja/ilmoitukset/0",
         "type": "object",
@@ -18,9 +18,9 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "ilmoitusId": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitusId",
-                "type": "string",
+              "ilmoitusid": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitusid",
+                "type": "integer",
                 "required": true
               },
               "ilmoitettu": {
@@ -39,7 +39,7 @@
               },
               "yhteydenottopyynto": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/yhteydenottopyynto",
-                "type": "string",
+                "type": "boolean",
                 "required": true
               },
               "ilmoittaja": {
@@ -56,31 +56,24 @@
                 "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
                 "required": true
               },
-              "seliteet": {
+              "selitteet": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet",
-                "type": "object",
+                "type": "array",
+                "maxItems": 10,
                 "additionalProperties": false,
-                "required": true,
-                "properties": {
-                  "selite": {
-                    "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite",
-                    "type": "array",
-                    "maxItems" : 10,
-                    "items": [
-                      {
-                        "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite/0",
-                        "type": "object",
-                        "additionalProperties": false,
-                        "properties": {
-                          "koodi": {
-                            "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet/selite/0/koodi",
-                            "type": "string"
-                          }
-                        }
+                "items": [
+                  {
+                    "id": "http://jsonschema.net/seliteet/0",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "selite": {
+                        "id": "http://jsonschema.net/seliteet/0/selite",
+                        "type": "string"
                       }
-                    ]
+                    }
                   }
-                }
+                ]
               },
               "sijainti": {
                 "id": "urn:harja/ilmoitukset/0/sijainti",
@@ -89,8 +82,21 @@
                 "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
                 "required": true
               },
-              "vapaateksti": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/vapaateksti",
+              "tienumero": {
+                "id": "urn:harja/ilmoitukset/0/tienumero",
+                "type": "integer",
+                "minimum": 0
+              },
+              "otsikko": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
+                "type": "string"
+              },
+              "lyhytselite": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/lyhytselite",
+                "type": "string"
+              },
+              "pitkaselite": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/pitkaselite",
                 "type": "string"
               }
             }
