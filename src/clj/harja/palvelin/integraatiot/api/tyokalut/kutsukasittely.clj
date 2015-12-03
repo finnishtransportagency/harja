@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.kutsukasittely
   "API:n kutsujen käsittely funktiot"
-
   (:require [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [harja.tyokalut.json_validointi :as json]
@@ -38,7 +37,7 @@
         body-ilman-liittteiden-sisaltoa (when liitteet-ilman-sisaltoja
                                           (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja))]
     (if avainpolku-liitteet
-      (cheshire/encode body-ilman-liittteiden-sisaltoa)     ;; FIXME Formatoi takaisin kivaan muotoon, miten? :(
+      (cheshire/encode body-ilman-liittteiden-sisaltoa)
       body)))
 
 (defn lokita-kutsu [integraatioloki resurssi request body]
@@ -146,6 +145,44 @@
                  :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
+(defn aja-virhekasittelyn-kanssa [ajo]
+  (try+
+    (ajo)
+    (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
+      (kasittele-invalidi-json virheet))
+    (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
+      (kasittele-viallinen-kutsu virheet))
+    (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
+      (kasittele-sisainen-kasittelyvirhe virheet))
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      (kasittele-sisainen-kasittelyvirhe virheet))
+    (catch [:type virheet/+virheellinen-liite+] {:keys [virheet]}
+      (kasittele-sisainen-kasittelyvirhe virheet))
+    (catch #(get % :virheet) poikkeus
+      (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
+    ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
+    (catch SQLException e
+      (log/error e "Tapahtui SQL-poikkeus: ")
+      (let [w (StringWriter.)]
+        (loop [ex (.getNextException e)]
+          (when (not (nil? ex))
+            (.printStackTrace ex (PrintWriter. w))
+            (recur (.getNextException ex))))
+        (log/error "Sisemmät virheet: " (.toString w)))
+      (kasittele-sisainen-kasittelyvirhe
+        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+          :viesti "Sisäinen käsittelyvirhe"}]))
+    (catch Exception e
+      (log/error e "Tapahtui poikkeus: ")
+      (kasittele-sisainen-kasittelyvirhe
+        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+          :viesti "Sisäinen käsittelyvirhe"}]))
+    (catch Object e
+      (log/error (:throwable &throw-context) "Tapahtui poikkeus: " e)
+      (kasittele-sisainen-kasittelyvirhe
+        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+          :viesti "Sisäinen käsittelyvirhe"}]))))
+
 (defn kasittele-kutsu [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
   on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
@@ -158,48 +195,13 @@
                nil)
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))
-        vastaus (try+
-                  (let
+        vastaus (aja-virhekasittelyn-kanssa
+                  #(let
                     [parametrit (:params request)
                      kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                      kutsun-data (lue-kutsu kutsun-skeema request body)
                      vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                    (tee-vastaus vastauksen-skeema vastauksen-data))
-                  ;; Tiedossa olevat poikkeustilanteet (virhetiedot pääosin julkisia):
-                  (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-                    (kasittele-invalidi-json virheet))
-                  (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
-                    (kasittele-viallinen-kutsu virheet))
-                  (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
-                    (kasittele-sisainen-kasittelyvirhe virheet))
-                  (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-                    (kasittele-sisainen-kasittelyvirhe virheet))
-                  (catch [:type virheet/+virheellinen-liite+] {:keys [virheet]}
-                    (kasittele-sisainen-kasittelyvirhe virheet))
-                  (catch #(get % :virheet) poikkeus
-                    (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
-                  ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
-                  (catch SQLException e
-                    (log/error e "Tapahtui SQL-poikkeus: " )
-                    (let [w (StringWriter.)]
-                      (loop [ex (.getNextException e)]
-                        (when (not (nil? ex))
-                          (.printStackTrace ex (PrintWriter. w))
-                          (recur (.getNextException ex))))
-                      (log/error "Sisemmät virheet: " (.toString w)))
-                    (kasittele-sisainen-kasittelyvirhe
-                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti "Sisäinen käsittelyvirhe"}]))
-                  (catch Exception e
-                    (log/error e "Tapahtui poikkeus: ")
-                    (kasittele-sisainen-kasittelyvirhe
-                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti "Sisäinen käsittelyvirhe"}]))
-                  (catch Object e
-                    (log/error (:throwable &throw-context) "Tapahtui poikkeus: " e)
-                    (kasittele-sisainen-kasittelyvirhe
-                      [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-                        :viesti "Sisäinen käsittelyvirhe"}])))]
+                    (tee-vastaus vastauksen-skeema vastauksen-data)))]
     (when integraatioloki
       (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
     vastaus))

@@ -1,11 +1,10 @@
 (ns harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot
-  (:require [harja.palvelin.palvelut.toteumat :as toteumat]
-            [harja.kyselyt.konversio :as konv]
-            [harja.domain.roolit :as roolit]
+  (:require [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.yksikkohintaiset-tyot :refer [hae-yksikkohintaiset-tyot-per-paiva]]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]))
 
 ;; oulu au 2014 - 2019:
@@ -21,14 +20,18 @@
   (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-paiva db
                                                                urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
-        otsikko (str "Yksikköhintaisten töiden raportti"
-                     (some->> toimenpide-id
-                              (hae-urakan-toimenpideinstanssi db urakka-id)
-                              first :nimi
-                              (str ", "))
-                     ", " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
+
+        raportin-nimi "Yksikköhintaisten töiden raportti"
+        konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    ;:hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    ;:koko-maa "KOKO MAA"
+                    )
+                  raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
-                :nimi otsikko}
+                :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}

@@ -40,15 +40,7 @@
   (comp
     (geo/muunna-pg-tulokset :sijainti)
     (map konv/alaviiva->rakenne)
-    (map #(konv/string->keyword % :tyyppi [:laatupoikkeama :tekija]))
-    (map #(-> %1
-              (assoc-in [:laatupoikkeama :selvitys-pyydetty] (get-in %1 [:laatupoikkeama :selvitys-pyydetty]))
-              (update-in [:laatupoikkeama] dissoc :selvityspyydetty)
-              (update-in [:laatupoikkeama] (fn [h]
-                                             (if (nil? (:selvitys-pyydetty h))
-                                               (dissoc h :selvitys-pyydetty)
-                                               h)))))
-
+    (map #(konv/string->keyword % :tyyppi :tekija)) ;FIXME: tekijä kyselyyn
     (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
     (map (fn [tarkastus]
            (condp = (:tyyppi tarkastus)

@@ -1,4 +1,5 @@
-(ns harja.utils)
+(ns harja.utils
+  (:require [harja.pvm :as pvm]))
 
 (defn compare-many
   [comps]

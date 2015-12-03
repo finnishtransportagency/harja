@@ -4,7 +4,7 @@
    [harja.loki :refer [log]]
    [harja.virhekasittely :refer [arsyttava-virhe]]
    [cljs.core.async :refer [<! >! chan put! alts! timeout]])
-  (:require-macros [cljs.core.async.macros :refer [go-loop]]
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.atom :refer [reaction<!]]
                    [harja.makrot :refer [nappaa-virhe]]))
 

@@ -16,9 +16,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "ilmoitusId": {
+        "ilmoitusid": {
           "id": "urn:harja/kuittaus/ilmoitusId",
-          "type": "string",
+          "type": "integer",
           "required": true
         },
         "kuitattu": {

@@ -1,15 +1,17 @@
 -- name: hae-urakan-tarkastukset
 -- Hakee urakan tarkastukset aikavälin perusteella
-SELECT id, sopimus, aika,
-       tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
-       sijainti,
-       tarkastaja, mittaaja,
-       tyyppi -- tähän myös havainnon kuvaus
-  FROM tarkastus
- WHERE urakka = :urakka
-   AND (aika >= :alku AND aika <= :loppu)
-   AND (:rajaa_tienumerolla = false OR tr_numero = :tienumero)
-   AND (:rajaa_tyypilla = false OR tyyppi = :tyyppi::tarkastustyyppi)
+SELECT t.id, sopimus, t.aika,
+  t.tr_numero, t.tr_alkuosa, t.tr_alkuetaisyys, t.tr_loppuosa, t.tr_loppuetaisyys,
+  t.sijainti,
+  tarkastaja, mittaaja,
+  tyyppi, -- tähän myös havainnon kuvaus
+  tekija
+  FROM tarkastus t
+  LEFT JOIN havainto ON t.havainto = havainto.id
+ WHERE t.urakka = :urakka
+   AND (t.aika >= :alku AND t.aika <= :loppu)
+   AND (:rajaa_tienumerolla = false OR t.tr_numero = :tienumero)
+   AND (:rajaa_tyypilla = false OR t.tyyppi = :tyyppi::tarkastustyyppi);
 
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.

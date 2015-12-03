@@ -600,8 +600,8 @@ FROM toteuma t
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
-  AND t.alkanut >= :alkanut
-  AND t.paattynyt <= :paattynyt
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR
