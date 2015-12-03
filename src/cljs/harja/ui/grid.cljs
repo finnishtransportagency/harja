@@ -260,7 +260,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                 " rivi-valittu"))
         :on-click #(do
                     (when rivi-klikattu
-                      (rivi-klikattu rivi))
+                      (if (not= @valittu-rivi-index rivi-index)
+                        (rivi-klikattu rivi)))
                     (when mahdollista-rivin-valinta
                       (if (= @valittu-rivi-index rivi-index)
                         (do (reset! valittu-rivi-index nil)
@@ -304,40 +305,43 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
-  :nimi            kentän hakufn
-  :fmt             kentän näyttämis fn (oletus str)
-  :otsikko         ihmiselle näytettävä otsikko
-  :tunniste        rivin tunnistava kenttä, oletuksena :id
-  :voi-poistaa?    voiko rivin poistaa (funktio)
-  :esta-poistaminen?          funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
-  :esta-poistaminen-tooltip   funktio, joka palauttaa tooltipin. ks. ylempi.
-  :voi-lisata?     voiko rivin lisätä (boolean)
-  :tyyppi          kentän tietotyyppi,  #{:string :puhelin :email :pvm}
-  :ohjaus          gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
+
+  :nimi                                 kentän hakufn
+  :fmt                                  kentän näyttämis fn (oletus str)
+  :otsikko                              ihmiselle näytettävä otsikko
+  :tunniste                             rivin tunnistava kenttä, oletuksena :id
+  :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
+  :esta-poistaminen?                    funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
+  :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
+  :voi-lisata?                          voiko rivin lisätä (boolean)
+  :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
+  :ohjaus                               gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
   
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
 Optiot on mappi optioita:
-  :tallenna        funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
-                   jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
-                   jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
-  :tallenna-vain-muokatut boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
-  :peruuta         funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
-  :rivi-klikattu   funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
-  :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
-  :muokkaa-aina    jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
-  :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
-                   Parametrina Grid ohjauskahva
-  :prosessoi-muutos  funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
-                     parametrina muokkausdata, palauttaa uuden muokkausdatan
-  :aloita-muokkaus-fn kutsutaan kun muokkaus alkaa. Kutsuva pää voi tällöin esim. muokata datasisällön eriksi muokkausta varten
-  :piilota-toiminnot? boolean, piilotetaan toiminnot sarake jos true
-  :rivin-luokka    funktio joka palauttaa rivin luokan
-  :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
-  :vetolaatikot    {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
-                   jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
-                   rivin alla
-  :luokat          Päätason div-elementille annettavat lisäluokat (vectori stringejä)
+  :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+                                        jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
+                                        jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
+  :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
+  :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
+  :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
+  :mahdollista-rivin-valinta            jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
+  rivi-valinta-peruttu                  funktio, joka suoritetaan kun valittua riviä klikataan uudelleen.
+  :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
+  :muokkaa-aina                         jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
+  :muutos                               jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
+                                        Parametrina Grid ohjauskahva
+  :prosessoi-muutos                     funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
+                                        Parametrina muokkausdata, palauttaa uuden muokkausdatan
+  :aloita-muokkaus-fn                   kutsutaan kun muokkaus alkaa. Kutsuva pää voi tällöin esim. muokata datasisällön eriksi muokkausta varten
+  :piilota-toiminnot?                   boolean, piilotetaan toiminnot sarake jos true
+  :rivin-luokka                         funktio joka palauttaa rivin luokan
+  :uusi-rivi                            jos annettu uuden rivin tiedot käsitellään tällä funktiolla
+  :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
+                                        jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
+                                        rivin alla
+  :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
 
   
   "
