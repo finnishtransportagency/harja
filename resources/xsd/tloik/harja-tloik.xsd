@@ -127,6 +127,7 @@
             <xs:enumeration value="kevyenLiikenteenVaylaanLiittyvaIlmoitus" />
             <xs:enumeration value="raivausJaKorjaustoita" />
             <xs:enumeration value="auraustarve" />
+            <xs:enumeration value="yliauraus" />
             <xs:enumeration value="kaivonKansiRikki" />
             <xs:enumeration value="kevyenLiikenteenVaylatOvatLiukkaita" />
             <xs:enumeration value="routaheitto" />
@@ -177,6 +178,7 @@
             <xs:enumeration value="lasiaTiella" />
             <xs:enumeration value="liukkaudentorjuntatarve" />
             <xs:enumeration value="alikulkukaytavassaVetta" />
+            <xs:enumeration value="kevyenliikenteenAlikulkukaytavassaVetta" />
             <xs:enumeration value="tievalaistuksenLamppuPimeana" />
             <xs:enumeration value="kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita" />
             <xs:enumeration value="kuoppa" />

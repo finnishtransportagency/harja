@@ -154,10 +154,16 @@
        :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
        :selite {:teksti selite
                 :img    ikoni}
-       :alue {:type        :tack-icon
-              :scale       (if (valittu? tp) 1.5 1)
-              :img         ikoni
-              :coordinates (get-in tp [:sijainti :coordinates])})]))
+       :alue (if (= :line (get-in tp [:sijainti :type]))
+               {:type   :tack-icon-line
+                :color  "black"
+                :scale  (if (valittu? tp) 1.5 1)
+                :img    ikoni
+                :points (get-in tp [:sijainti :points])}
+               {:type        :tack-icon
+                :scale       (if (valittu? tp) 1.5 1)
+                :img         ikoni
+                :coordinates (get-in tp [:sijainti :coordinates])}))]))
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv
