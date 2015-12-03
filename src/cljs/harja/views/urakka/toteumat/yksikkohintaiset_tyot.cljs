@@ -35,6 +35,83 @@
                                                  (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
                                                  (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen))))
 
+(defonce yks-hint-tyot-tehtavittain
+         (reaction
+           (let [lisaa-yksikkohinta (fn [rivit] (map
+                                                  (fn [rivi]
+                                                    (assoc rivi :yksikkohinta
+                                                                (or (:yksikkohinta (first (filter
+                                                                                            (fn [tyo]
+                                                                                              (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
+                                                                                                   (= (:tehtava tyo) (:id rivi))
+                                                                                                   (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                            @u/urakan-yks-hint-tyot)))
+                                                                    nil)))
+                                                  rivit))
+                 lisa-suunniteltu-maara (fn [rivit] (map
+                                                      (fn [rivi]
+                                                        (assoc rivi :hoitokauden-suunniteltu-maara
+                                                                    (or (:maara (first (filter
+                                                                                         (fn [tyo]
+                                                                                           (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
+                                                                                                (= (:tehtava tyo) (:id rivi))
+                                                                                                (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                         @u/urakan-yks-hint-tyot)))
+                                                                        nil)))
+                                                      rivit))
+                 lisaa-suunnitellut-kustannukset (fn [rivit]
+                                                   (map
+                                                     (fn [rivi]
+                                                       (assoc rivi :hoitokauden-suunnitellut-kustannukset
+                                                                   (or (:yhteensa (first (filter
+                                                                                           (fn [tyo]
+                                                                                             (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
+                                                                                                  (= (:tehtava tyo) (:id rivi))
+                                                                                                  (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
+                                                                                           @u/urakan-yks-hint-tyot)))
+                                                                       nil)))
+                                                     rivit))
+                 lisaa-toteutunut-maara (fn [rivit]
+                                          (map
+                                            (fn [rivi]
+                                              (assoc rivi :hoitokauden-toteutunut-maara (or (:maara
+                                                                                              (first (filter
+                                                                                                       (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
+                                                                                                       @yks-hint-tehtavien-summat)))
+                                                                                            nil)))
+                                            rivit))
+                 lisaa-toteutuneet-kustannukset (fn [rivit]
+                                                  (map
+                                                    (fn [rivi]
+                                                      (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
+                                                    rivit))
+                 lisaa-erotus (fn [rivit] (map
+                                            (fn [rivi]
+                                              (assoc rivi :kustannuserotus (- (:hoit3okauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
+                                            rivit))
+                 tehtavarivit (reaction
+                                (let [urakan-4-tason-tehtavat (map
+                                                                (fn [tasot]
+                                                                  (let [kolmostaso (nth tasot 2)
+                                                                        nelostaso (nth tasot 3)]
+                                                                    (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
+                                                                @u/urakan-toimenpiteet-ja-tehtavat)
+                                      tehtavien-summat @yks-hint-tehtavien-summat]
+
+                                  (when tehtavien-summat
+                                    (-> (lisaa-yksikkohinta urakan-4-tason-tehtavat)
+                                        (lisa-suunniteltu-maara)
+                                        (lisaa-suunnitellut-kustannukset)
+                                        (lisaa-toteutunut-maara)
+                                        (lisaa-toteutuneet-kustannukset)
+                                        (lisaa-erotus)))))
+                 valittu-tpi @u/valittu-toimenpideinstanssi]
+             (filter
+               (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi valittu-tpi))
+                               (or
+                                 (> (:hoitokauden-toteutunut-maara rivi) 0)
+                                 (> (:hoitokauden-suunniteltu-maara rivi) 0))))
+               @tehtavarivit))))
 
 (defn tallenna-toteuma
   "Ottaa lomakkeen ja tehtävät siinä muodossa kuin ne ovat lomake-komponentissa ja muodostaa palvelimelle lähetettävän payloadin."
@@ -262,87 +339,9 @@
           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
-  "Yksikköhintaisten töiden toteumat"
+  "Yksikköhintaisten töiden toteumat tehtävittäin"
   []
-  (let [lisaa-tyoriveille-yksikkohinta (fn [rivit] (map
-                                                     (fn [rivi]
-                                                       (assoc rivi :yksikkohinta
-                                                                   (or (:yksikkohinta (first (filter
-                                                                                               (fn [tyo]
-                                                                                                 (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
-                                                                                                      (= (:tehtava tyo) (:id rivi))
-                                                                                                      (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                               @u/urakan-yks-hint-tyot)))
-                                                                       nil)))
-                                                     rivit))
-        lisaa-tyoriveille-suunniteltu-maara (fn [rivit] (map
-                                                          (fn [rivi]
-                                                            (assoc rivi :hoitokauden-suunniteltu-maara
-                                                                        (or (:maara (first (filter
-                                                                                             (fn [tyo]
-                                                                                               (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
-                                                                                                    (= (:tehtava tyo) (:id rivi))
-                                                                                                    (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                             @u/urakan-yks-hint-tyot)))
-                                                                            nil)))
-                                                          rivit))
-        lisaa-tyoriveille-suunnitellut-kustannukset (fn [rivit]
-                                                      (map
-                                                        (fn [rivi]
-                                                          (assoc rivi :hoitokauden-suunnitellut-kustannukset
-                                                                      (or (:yhteensa (first (filter
-                                                                                              (fn [tyo]
-                                                                                                (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
-                                                                                                     (= (:tehtava tyo) (:id rivi))
-                                                                                                     (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                              @u/urakan-yks-hint-tyot)))
-                                                                          nil)))
-                                                        rivit))
-        lisaa-tyoriveille-toteutunut-maara (fn [rivit]
-                                             (map
-                                               (fn [rivi]
-                                                 (assoc rivi :hoitokauden-toteutunut-maara (or (:maara
-                                                                                                 (first (filter
-                                                                                                          (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
-                                                                                                          @yks-hint-tehtavien-summat)))
-                                                                                               nil)))
-                                               rivit))
-        lisaa-tyoriveille-toteutuneet-kustannukset (fn [rivit]
-                                                     (map
-                                                       (fn [rivi]
-                                                         (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
-                                                       rivit))
-        lisaa-tyoriveille-erotus (fn [rivit] (map
-                                               (fn [rivi]
-                                                 (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
-                                               rivit))
-        tyorivit (reaction
-                   (let [urakan-4-tason-tehtavat (map
-                                                   (fn [tasot]
-                                                     (let [kolmostaso (nth tasot 2)
-                                                           nelostaso (nth tasot 3)]
-                                                       (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
-                                                   @u/urakan-toimenpiteet-ja-tehtavat)
-                         tehtavien-summat @yks-hint-tehtavien-summat]
-
-                     (when tehtavien-summat
-                       (-> (lisaa-tyoriveille-yksikkohinta urakan-4-tason-tehtavat)
-                           (lisaa-tyoriveille-suunniteltu-maara)
-                           (lisaa-tyoriveille-suunnitellut-kustannukset)
-                           (lisaa-tyoriveille-toteutunut-maara)
-                           (lisaa-tyoriveille-toteutuneet-kustannukset)
-                           (lisaa-tyoriveille-erotus)))))
-        filteroidyt-tyorivit (reaction
-                               (let [valittu-tpi @u/valittu-toimenpideinstanssi]
-                                 (filter
-                                   (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi valittu-tpi))
-                                                   (or
-                                                     (> (:hoitokauden-toteutunut-maara rivi) 0)
-                                                     (> (:hoitokauden-suunniteltu-maara rivi) 0))))
-                                   @tyorivit)))
-        valittu-tpi @u/valittu-toimenpideinstanssi]
-
-    (komp/luo
+  (komp/luo
       (fn []
         [:div
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
@@ -353,23 +352,26 @@
 
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat")
-           :tyhja        (if (nil? @tyorivit) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
+           :tyhja        (if (nil? @yks-hint-tyot-tehtavittain) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
            :luokat       ["toteumat-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi yks-hint-tehtavien-summat])) (filter (fn [rivi] (> (:hoitokauden-toteutunut-maara rivi) 0)) @tyorivit)))
+           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi yks-hint-tehtavien-summat]))
+                                       (filter (fn [rivi]
+                                                 (> (:hoitokauden-toteutunut-maara rivi) 0))
+                                               @yks-hint-tyot-tehtavittain)))
            }
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
-           {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "20%"}
+           {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
             (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                          [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
-                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "20%"}]
-          @filteroidyt-tyorivit]]))))
+                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "10%"}]
+          @yks-hint-tyot-tehtavittain]])))
 
 (defn yksikkohintaisten-toteumat []
   (komp/luo
