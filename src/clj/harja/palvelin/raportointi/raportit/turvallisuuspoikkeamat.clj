@@ -38,7 +38,7 @@
   (into [] (keep identity asiat)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
-                               alkupvm loppupvm toimenpide-id] :as parametrit}]
+                               alkupvm loppupvm] :as parametrit}]
   (log/info "PARAMS: " parametrit)
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
