@@ -36,24 +36,24 @@
            [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @urakka/valittu-sopimusnumero)
             hoitokausi @urakka/valittu-hoitokausi
-            aikavali @urakka/valittu-aikavali
+            kuukausi @urakka/valittu-hoitokauden-kuukausi
             toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
             tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
             nakymassa? @nakymassa?]
            (when nakymassa?
-             (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
+             (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
 
 (def haetut-reitit
   (reaction<!
     [urakka-id (:id @nav/valittu-urakka)
      sopimus-id (first @urakka/valittu-sopimusnumero)
      hoitokausi @urakka/valittu-hoitokausi
-     aikavali @urakka/valittu-aikavali
+     kuukausi @urakka/valittu-hoitokauden-kuukausi
      toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
      tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
      nakymassa? @nakymassa?]
     (when nakymassa?
-      (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
+      (hae-toteumareitit urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
