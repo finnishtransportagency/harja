@@ -538,7 +538,7 @@
                        (let [reittipisteet (into [] (harja.geo/muunna-pg-tulokset :sijainti)
                                                  (q/hae-toteuman-reittipisteet db toteuma-id))
                              tehtavat (mapv :nimi (q/hae-toteuman-tehtavat db toteuma-id))]
-                         {:id            toteuma-id
+                         {:toteuma-id    toteuma-id
                           :reittipisteet reittipisteet
                           :tehtavat      tehtavat}))
                      toteuma-idt)

@@ -69,6 +69,6 @@
                  (if @valittu-toteuma
                    (filter
                      (fn [reitti]
-                       ((:tehtavat reitti) (:nimi @valittu-toteuma)))
+                       (= (:toteuma-id reitti) (:toteumaid @valittu-toteuma)))
                      @haetut-reitit)
                    @haetut-reitit))))))
