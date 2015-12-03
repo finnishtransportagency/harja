@@ -1,1 +1,2 @@
-ALTER TABLE organisaatio ADD COLUMN sampo_ely_hash VARCHAR(128);
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-ilmoitukset');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-ilmoitustoimenpide');
