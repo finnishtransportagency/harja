@@ -57,7 +57,7 @@
 
    ;; Harja API
    [harja.palvelin.integraatiot.api.urakat :as api-urakat]
-   [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
+   [harja.palvelin.integraatiot.api.laatupoikkeamat :as api-laatupoikkeamat]
    [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
    [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
    [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
@@ -257,9 +257,9 @@
      :api-urakat (component/using
                   (api-urakat/->Urakat)
                   [:http-palvelin :db :integraatioloki])
-     :api-havainnot (component/using
-                     (api-havainnot/->Havainnot)
-                     [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
+     :api-laatupoikkeamat (component/using
+                           (api-laatupoikkeamat/->Laatupoikkeamat)
+                           [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
      :api-paivystajatiedot (component/using
                             (api-paivystajatiedot/->Paivystajatiedot)
                             [:http-palvelin :db :integraatioloki])

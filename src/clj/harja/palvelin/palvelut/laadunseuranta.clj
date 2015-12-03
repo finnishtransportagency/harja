@@ -154,7 +154,7 @@
 
 (defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
-  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamajen-kirjaus urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamien-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
 
     (let [osapuoli (roolit/osapuoli user urakka)
@@ -248,7 +248,7 @@
       :laatupoikkeama (hae-laatupoikkeaman-tiedot db user urakka-id (:id (:laatupoikkeama tarkastus))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
-  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamajen-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamien-kirjaus urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
       (let [laatupoikkeama (merge (:laatupoikkeama tarkastus)
@@ -275,7 +275,7 @@
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
   (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaon " (:id laatupoikkeama) ", urakassa " urakka)
-  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamajen-kirjaus urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamien-kirjaus urakka)
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
 
   (jdbc/with-db-transaction [c db]

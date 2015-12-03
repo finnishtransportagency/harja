@@ -9,10 +9,10 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [harja.kyselyt.havainnot :as havainnot]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-laatupoikkeamalle]]))
 
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} tarkastus]
@@ -22,18 +22,18 @@
     (log/info "TARKASTUS TULOSSA: " tarkastus "; käyttäjä: " kayttaja)
     (log/debug "tyyppi: " tyyppi)
     (jdbc/with-db-transaction [db db]
-      (let [{tarkastus-id :id havainto-id :havainto}
+      (let [{tarkastus-id :id laatupoikkeama-id :laatupoikkeama}
             (first
               (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
             uusi? (nil? tarkastus-id)]
 
         (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
-              havainto (merge (:havainto tarkastus)
+              laatupoikkeama (merge (:laatupoikkeama tarkastus)
                               {:aika   aika
-                               :id     havainto-id
+                               :id     laatupoikkeama-id
                                :urakka urakka-id
                                :tekija :urakoitsija})
-              havainto-id (havainnot/luo-tai-paivita-havainto db kayttaja havainto)
+              laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db kayttaja laatupoikkeama)
               id (tarkastukset/luo-tai-paivita-tarkastus
                    db kayttaja urakka-id
                    {:id          tarkastus-id
@@ -44,10 +44,10 @@
                     :mittaaja    (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
                     :tr          (json/sijainti->tr (:sijainti tarkastus))
                     :sijainti    (json/sijainti->point (:sijainti tarkastus))}
-                   havainto-id)
-              liitteet (:liitteet (:havainto tarkastus))]
+                   laatupoikkeama-id)
+              liitteet (:liitteet (:laatupoikkeama tarkastus))]
 
-          (tallenna-liitteet-havainnolle db liitteiden-hallinta urakka-id havainto-id kayttaja liitteet)
+          (tallenna-liitteet-laatupoikkeamalle db liitteiden-hallinta urakka-id laatupoikkeama-id kayttaja liitteet)
 
           (case tyyppi
             :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus
