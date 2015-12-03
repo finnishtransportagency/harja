@@ -1,8 +1,8 @@
 (ns harja.tiedot.urakka.suunnittelu-test
   (:require [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
-            [harja.tiedot.urakka.yksikkohintaiset-tyot :as ykshint-tyot]
-            [harja.tiedot.urakka.kokonaishintaiset-tyot :as kokhint-tyot]
+            [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as ykshint-tyot]
+            [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kokhint-tyot]
             [cljs-time.core :as t]
             [cljs.test :as test :refer-macros [deftest is]]
             [harja.loki :refer [log]]

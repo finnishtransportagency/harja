@@ -40,6 +40,7 @@
     (geo/muunna-pg-tulokset :sijainti)
     (map konv/alaviiva->rakenne)
     (map #(konv/string->keyword % :tyyppi [:havainto :tekija]))
+    (map #(konv/string->keyword % :tekija [:tekija]))
     (map #(-> %1
               (assoc-in [:havainto :selvitys-pyydetty] (get-in %1 [:havainto :selvitys-pyydetty]))
               (update-in [:havainto] dissoc :selvityspyydetty)
