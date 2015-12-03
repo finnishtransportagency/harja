@@ -12,7 +12,7 @@
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-laatupoikkeamalle]]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]))
 
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} tarkastus]
@@ -28,12 +28,6 @@
             uusi? (nil? tarkastus-id)]
 
         (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
-              laatupoikkeama (merge (:laatupoikkeama tarkastus)
-                              {:aika   aika
-                               :id     laatupoikkeama-id
-                               :urakka urakka-id
-                               :tekija :urakoitsija})
-              laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db kayttaja laatupoikkeama)
               id (tarkastukset/luo-tai-paivita-tarkastus
                    db kayttaja urakka-id
                    {:id          tarkastus-id
@@ -43,11 +37,16 @@
                     :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
                     :mittaaja    (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
                     :tr          (json/sijainti->tr (:sijainti tarkastus))
-                    :sijainti    (json/sijainti->point (:sijainti tarkastus))}
-                   laatupoikkeama-id)
-              liitteet (:liitteet (:laatupoikkeama tarkastus))]
+                    :sijainti    (json/sijainti->point (:sijainti tarkastus))
 
-          (tallenna-liitteet-laatupoikkeamalle db liitteiden-hallinta urakka-id laatupoikkeama-id kayttaja liitteet)
+                    ;; FIXME: siirrä havainto/kuvaus suoraan havainnot kentäksi
+                    :havainnot (get-in tarkastus [:havainto :kuvaus])}
+                   )
+
+              ;; FIXME: siirrä liitteet suoraan tarkastukseen
+              liitteet (:liitteet (:havainto tarkastus))]
+
+          (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
 
           (case tyyppi
             :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus

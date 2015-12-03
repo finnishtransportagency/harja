@@ -47,8 +47,8 @@
     urakoitsijan-urakan-vastuuhenkilo
     urakoitsijan-laatuvastaava})
 
-(def laatupoikkeamien-kirjaus
-  "Roolit, joilla on oikeus kirjata laatupoikkeamia urakkaan."
+(def laadunseuranta-kirjaus
+  "Roolit, joilla on oikeus kirjata laadunseurantaa urakkaan."
   #{urakanvalvoja
     urakoitsijan-paakayttaja
     urakoitsijan-urakan-vastuuhenkilo

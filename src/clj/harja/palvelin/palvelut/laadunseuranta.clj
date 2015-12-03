@@ -154,7 +154,7 @@
 
 (defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
-  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamien-kirjaus urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
 
     (let [osapuoli (roolit/osapuoli user urakka)
@@ -248,17 +248,15 @@
       :laatupoikkeama (hae-laatupoikkeaman-tiedot db user urakka-id (:id (:laatupoikkeama tarkastus))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
-  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamien-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
       (let [laatupoikkeama (merge (:laatupoikkeama tarkastus)
-                            {:aika   (:aika tarkastus)
-                             :urakka urakka-id})
-
+                                  {:aika   (:aika tarkastus)
+                                   :urakka urakka-id})
+            
             uusi? (nil? (:id tarkastus))
-            laatupoikkeama-id (:id (tallenna-laatupoikkeama db user laatupoikkeama)) ;; (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)
-            id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus
-                                                       laatupoikkeama-id)]
+            id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
         (condp = (:tyyppi tarkastus)
           :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
@@ -275,7 +273,7 @@
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
   (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaon " (:id laatupoikkeama) ", urakassa " urakka)
-  (roolit/vaadi-rooli-urakassa user roolit/laatupoikkeamien-kirjaus urakka)
+  (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka)
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
 
   (jdbc/with-db-transaction [c db]

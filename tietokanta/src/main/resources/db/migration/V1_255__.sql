@@ -42,13 +42,19 @@ CREATE TABLE tarkastus_kommentti (
 );
 COMMENT ON TABLE tarkastus_kommentti IS 'Linkkitaulu, jolla kommentit liitetään tarkastukseen';
 
+CREATE TABLE tarkastus_liite (
+  tarkastus INTEGER REFERENCES tarkastus (id),
+  liite INTEGER REFERENCES liite (id)
+);
+COMMENT ON TABLE tarkastus_liite IS 'Tarkastukseen liitetyt tiedostot.';
+
 
 -- Havainto:
 ALTER TABLE havainto RENAME TO laatupoikkeama;
 ALTER TABLE sanktio RENAME COLUMN havainto TO laatupoikkeama;
 
 ALTER TABLE havainto_kommentti RENAME TO laatupoikkeama_kommentti;
-ALTAR TABLE laatupoikkeama_kommentti RENAME COLUMN havainto TO laatupoikkeama;
+ALTER TABLE laatupoikkeama_kommentti RENAME COLUMN havainto TO laatupoikkeama;
 ALTER TABLE havainto_liite RENAME TO laatupoikkeama_liite;
 ALTER TABLE laatupoikkeama_liite RENAME COLUMN havainto TO laatupoikkeama;
 
