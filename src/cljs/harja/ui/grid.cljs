@@ -363,7 +363,7 @@ Optiot on mappi optioita:
                                  true
                                  tallenna-vain-muokatut)
 
-        fokus (atom nil)                                    ;; nyt fokusoitu item [id :sarake]
+        fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
 
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
@@ -447,8 +447,7 @@ Optiot on mappi optioita:
                    (swap! vetolaatikot-auki conj id))
 
                  (sulje-vetolaatikko! [_ id]
-                   (swap! vetolaatikot-auki disj id))
-                 )
+                   (swap! vetolaatikot-auki disj id)))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [id funktio & argumentit]
@@ -484,10 +483,6 @@ Optiot on mappi optioita:
                                                 (assoc varoitukset id rivin-varoitukset))))))
                      (when muutos
                        (muutos ohjaus))))
-
-
-
-
 
         ;; Peruu yhden muokkauksen
         peru! (fn []
@@ -532,8 +527,7 @@ Optiot on mappi optioita:
                                             )
                                           (conj jarj id)
                                           rivit)))))
-                           nil)
-        ]
+                           nil)]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
