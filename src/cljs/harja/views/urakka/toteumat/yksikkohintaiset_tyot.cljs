@@ -101,7 +101,6 @@
   Lomakkeen käsittelyn ajaksi tiedot haetaan tästä atomista kahteen eri atomiin käsittelyn ajaksi:
   yksikköhintaiset tehtävät ovat omassa ja muut tiedot omassa atomissa.
   Kun lomake tallennetaan, tiedot yhdistetään näistä atomeista yhdeksi kokonaisuudeksi."
-  ; Olisin toteuttanut tämän paremmin käyttäen r/wrappia jos olisin osannut Clojurea paremmin tätä tehdessä :-)
   []
   (let [lomake-toteuma (atom (if (empty? @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
                                (if @u/urakan-organisaatio

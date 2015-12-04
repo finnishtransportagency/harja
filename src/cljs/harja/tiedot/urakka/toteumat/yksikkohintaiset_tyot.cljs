@@ -128,10 +128,12 @@
     [urakka-id (:id @nav/valittu-urakka)
      sopimus-id (first @urakka/valittu-sopimusnumero)
      hoitokausi @urakka/valittu-hoitokausi
-     toimenpide 1 ; FIXME Käytä oikeaa arvoa
+     toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
      nakymassa? @yksikkohintaiset-tyot-nakymassa?]
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide))))
+
+(tarkkaile! "TPI: " u/valittu-toimenpideinstanssi)
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
