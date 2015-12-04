@@ -66,14 +66,18 @@
                                                     (if kyseessa-kk-vali?
                                                       ilmoitukset-hoitokaudella
                                                       ilmoitukset))))
+        _ (log/debug "tpp-kuukausittain" tpp-kuukausittain)
+        _ (log/debug "kyseessä kk " kyseessa-kk-vali?)
         urk-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
-                                            (filter #(= :kysely (:ilmoitustyyppi %)) (if kyseessa-kk-vali?
-                                                                                       ilmoitukset-hoitokaudella
-                                                                                       ilmoitukset))))
+                                            (filter #(= :kysely (:ilmoitustyyppi %))
+                                                    (if kyseessa-kk-vali?
+                                                      ilmoitukset-hoitokaudella
+                                                      ilmoitukset))))
         tur-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
-                                            (filter #(= :tiedoitus (:ilmoitustyyppi %)) (if kyseessa-kk-vali?
-                                                                                          ilmoitukset-hoitokaudella
-                                                                                          ilmoitukset))))
+                                            (filter #(= :tiedoitus (:ilmoitustyyppi %))
+                                                    (if kyseessa-kk-vali?
+                                                      ilmoitukset-hoitokaudella
+                                                      ilmoitukset))))
         graafin-alkupvm (if kyseessa-kk-vali?
                           hoitokauden-alkupvm
                           alkupvm)

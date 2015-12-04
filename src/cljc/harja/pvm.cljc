@@ -394,8 +394,10 @@
            loppu (l/to-local-date-time loppupvm)
            paivia-kkssa (t/number-of-days-in-the-month alku)
            loppu-pv (paiva loppu)]
-       (and (= (kuukausi alku)
-               (kuukausi loppu))
+       (and (and (= (vuosi alku)
+                    (vuosi loppu))
+                 (= (kuukausi alku)
+                    (kuukausi loppu)))
             (= paivia-kkssa loppu-pv)))))
 
 #?(:clj

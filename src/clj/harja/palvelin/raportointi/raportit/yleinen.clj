@@ -17,16 +17,16 @@
            (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))
 
 
-(def vuosi-ja-kk-fmt (tf/formatter "YYYY/MM"))
+(def vuosi-ja-kk-fmt (tf/with-zone (tf/formatter "YYYY/MM") (t/time-zone-for-id "EET")))
+
 (defn vuosi-ja-kk [pvm]
-  (tf/unparse vuosi-ja-kk-fmt (tc/from-date pvm)))
+  (tf/unparse vuosi-ja-kk-fmt (l/to-local-date-time pvm)))
 
 (defn kuukaudet [alku loppu]
-  (let [alku (tc/from-date alku)
-        loppu (tc/from-date loppu)]
+  (let [alku  (l/to-local-date-time alku)
+        loppu  (l/to-local-date-time loppu)]
     (letfn [(kuukaudet [kk]
-              (when (or (t/before? kk loppu)
-                        (t/equal? kk loppu))
+              (when-not (t/after? kk loppu)
                 (lazy-seq
                   (cons (tf/unparse vuosi-ja-kk-fmt kk)
                         (kuukaudet (t/plus kk (t/months 1)))))))]
