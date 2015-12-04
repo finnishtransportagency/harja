@@ -130,7 +130,6 @@
     (log "Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "Lomake tehtävät: " (pr-str @lomake-tehtavat))
     (komp/luo
-      (komp/lippu yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma)
       (fn [ur]
         [:div.toteuman-tiedot
          [:button.nappi-toissijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)}
@@ -289,7 +288,7 @@
 
 (defn yksikkohintaisten-toteumat []
   (komp/luo
-    (komp/lippu yksikkohintaiset-tyot/yksikkohintaiset-tyot-nakymassa?)
+    (komp/lippu yksikkohintaiset-tyot/yksikkohintaiset-tyot-nakymassa? yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma)
     (fn []
       [:span
        [kartta/kartan-paikka]

@@ -128,7 +128,7 @@
     [urakka-id (:id @nav/valittu-urakka)
      sopimus-id (first @urakka/valittu-sopimusnumero)
      hoitokausi @urakka/valittu-hoitokausi
-     toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
+     toimenpide 1 ; FIXME Käytä oikeaa arvoa
      nakymassa? @yksikkohintaiset-tyot-nakymassa?]
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide))))
