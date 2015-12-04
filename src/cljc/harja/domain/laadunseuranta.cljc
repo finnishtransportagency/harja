@@ -92,10 +92,10 @@
    (s/optional-key :sijainti)          Sijainti
    :tyyppi                             Tarkastustyyppi
    :tarkastaja                         Teksti
+   :havainnot                          s/Str
    (s/optional-key :mittaaja)          (s/maybe Teksti)
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
-   (s/optional-key :soratiemittaus)    Soratiemittaus
-   (s/optional-key :laatupoikkeama)          TarkastuksenLaatupoikkeama})
+   (s/optional-key :soratiemittaus)    Soratiemittaus})
 
 (defn validoi-tarkastus [data]
   (skeema/tarkista Tarkastus data))
