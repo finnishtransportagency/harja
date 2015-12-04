@@ -10,6 +10,7 @@
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.urakka.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
+            [harja.views.urakka.aikataulu :as aikataulu]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
@@ -27,6 +28,7 @@
     :yleiset true
     :suunnittelu (not= sopimustyyppi :kokonaisurakka)
     :toteumat (not= sopimustyyppi :kokonaisurakka)
+    :aikataulu (= urakkatyyppi :paallystys)
     :kohdeluettelo-paallystys (= urakkatyyppi :paallystys)
     :kohdeluettelo-paikkaus (= urakkatyyppi :paikkaus)
     :laadunseuranta true
@@ -67,6 +69,13 @@
      (when (valilehti-mahdollinen? :toteumat (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "toteumat"}
        [toteumat/toteumat])
+
+
+     "Aikataulu"
+     :aikataulu
+     (when (valilehti-mahdollinen? :aikataulu (:tyyppi ur) (:sopimustyyppi ur))
+       ^{:key "aikataulu"}
+       [aikataulu/aikataulu])
 
      "Kohdeluettelo"
      :kohdeluettelo-paallystys
