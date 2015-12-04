@@ -317,12 +317,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
              {:otsikko     "Liitteet" :nimi :liitteet
-              :komponentti [:span (for [liite (:liitteet @laatupoikkeama)]
-                                    ^{:key (:id liite)}
-                                    [:span (liitteet/liitetiedosto liite)])
-                            [liitteet/liite {:urakka-id     (:id @nav/valittu-urakka)
-                                             :liite-ladattu #(swap! laatupoikkeama assoc :uusi-liite %)
-                                             :nappi-teksti " Lisää liite laatupoikkeamaon"}]]}
+              :komponentti [liitteet/liitteet {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
+                                                                        #(swap! laatupoikkeama assoc :uusi-liite %))
+                                               :uusi-liite-teksti "Lisää liite laatupoikkeamaan"}
+                            (:liitteet @laatupoikkeama)]}
 
              (when-not uusi?
                (lomake/ryhma
