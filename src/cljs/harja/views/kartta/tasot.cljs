@@ -20,35 +20,35 @@
 
 ;; Lisää uudet karttatasot tänne
 (def +karttatasot+ #{:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
-                    :historiakuva :nykytilanne :paallystyskohteet :tr-alkupiste :yksikkohintainen-toteuma
+                     :tilannekuva :paallystyskohteet :tr-alkupiste :yksikkohintainen-toteuma
                      :kokonaishintainen-toteuma :varusteet})
 
 (def geometriat (reaction
                   (loop [geometriat (transient [])
-                        [g & gs] (concat ;; Pohjavesi
-                                         @pohjavesialueet/pohjavesialueet
-                                         ;; Laadunseunranta
-                                         @laadunseuranta/tarkastukset-kartalla
-                                         @sillat/sillat
-                                         ;; Turvallisuus
-                                         @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-                                         ;; Ilmoitukset
-                                         @ilmoitukset/ilmoitukset-kartalla
-                                         ;; TR-valitsin
-                                         @tierekisteri/tr-alkupiste-kartalla
-                                         ;; Toteumat
-                                         @toteumat/yksikkohintainen-toteuma-kartalla
-                                         @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
-                                         @varusteet/varusteet-kartalla
-                                         @muut-tyot/muut-tyot-kartalla
-                                         ;; Tilannekuva
-                                         @tilannekuva/tilannekuvan-asiat-kartalla
-                                         ;; Päällystys & paikkaus
-                                         @paallystys/paallystyskohteet-kartalla
-                                         @paallystys/paikkauskohteet-kartalla)]
-                   (if-not g
-                     (persistent! geometriat)
-                     (recur (conj! geometriat g) gs)))))
+                         [g & gs] (concat                   ;; Pohjavesi
+                                    @pohjavesialueet/pohjavesialueet
+                                    ;; Laadunseunranta
+                                    @laadunseuranta/tarkastukset-kartalla
+                                    @sillat/sillat
+                                    ;; Turvallisuus
+                                    @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+                                    ;; Ilmoitukset
+                                    @ilmoitukset/ilmoitukset-kartalla
+                                    ;; TR-valitsin
+                                    @tierekisteri/tr-alkupiste-kartalla
+                                    ;; Toteumat
+                                    @toteumat/yksikkohintainen-toteuma-kartalla
+                                    @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
+                                    @varusteet/varusteet-kartalla
+                                    @muut-tyot/muut-tyot-kartalla
+                                    ;; Tilannekuva
+                                    @tilannekuva/tilannekuvan-asiat-kartalla
+                                    ;; Päällystys & paikkaus
+                                    @paallystys/paallystyskohteet-kartalla
+                                    @paallystys/paikkauskohteet-kartalla)]
+                    (if-not g
+                      (persistent! geometriat)
+                      (recur (conj! geometriat g) gs)))))
 
 (defn- taso-atom [nimi]
   (case nimi
@@ -66,15 +66,15 @@
     :muut-tyot muut-tyot/karttataso-muut-tyot))
 
 (defonce nykyiset-karttatasot
-  (reaction (into #{}
-                  (keep (fn [nimi]
-                          (when @(taso-atom nimi)
-                            nimi)))
-                  +karttatasot+)))
+         (reaction (into #{}
+                         (keep (fn [nimi]
+                                 (when @(taso-atom nimi)
+                                   nimi)))
+                         +karttatasot+)))
 
 (defonce karttatasot-muuttuneet
-  (ratom/run! (let [tasot @nykyiset-karttatasot]
-                (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :karttatasot tasot}))))
+         (ratom/run! (let [tasot @nykyiset-karttatasot]
+                       (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :karttatasot tasot}))))
 
 (defn taso-paalle! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-paalle nimi})
