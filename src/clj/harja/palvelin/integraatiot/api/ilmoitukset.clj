@@ -13,10 +13,34 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat])
+            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
+(defn tarkista-ilmoitus [db ilmoitusid]
+  (when-not (ilmoitukset/onko-olemassa? db ilmoitusid)
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi  :tuntematon-ilmoitus
+       :viesti (format "Ilmoitus id:llä %s. ei löydy ilmoitusta." ilmoitusid)})))
+
+(defn tee-onnistunut-ilmoitustoimenpidevastaus []
+  (let [vastauksen-data {:ilmoitukset "Ilmoitustoimenpide kirjattu onnistuneesti"}]
+    vastauksen-data))
+
+(defn kirjaa-ilmoitustoimenpide [db tloik parametrit data]
+  (println "-----------------> parametrit" parametrit)
+  (println "-----------------> data" data)
+
+  (let [ilmoitustoimenpide (:ilmoitustoimenpide data)
+        ilmoitusid (:ilmoitusid ilmoitustoimenpide)]
+    (println "-----------------> ilmoitustoimenpide" ilmoitustoimenpide)
+    (tarkista-ilmoitus db ilmoitusid)
+    (ilmoitukset/luo-ilmoitustoimenpide<!
+      db)
+
+    ;; todo: tallenna kantaan
+    ;; todo: lähetä t-loikn
+    (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
 (defn ilmoituslahettaja [integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?]
   (fn [ilmoitukset]
@@ -60,7 +84,7 @@
 
 (defrecord Ilmoitukset []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki klusterin-tapahtumat :klusterin-tapahtumat :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki klusterin-tapahtumat :klusterin-tapahtumat tloik :tloik :as this}]
     (julkaise-reitti
       http :hae-ilmoitukset
       (GET "/api/urakat/:id/ilmoitukset" request
@@ -70,7 +94,7 @@
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
         (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoitustoimenpiteen-kirjaaminen+ json-skeemat/+kirjausvastaus+
-                         (fn [parametrit data kayttaja db] (kirjaa-ilmoitustoimenpide db parametrit data kayttaja)))))
+                         (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)

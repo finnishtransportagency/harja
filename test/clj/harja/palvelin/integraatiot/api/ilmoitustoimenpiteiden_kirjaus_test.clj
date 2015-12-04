@@ -6,7 +6,6 @@
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.tyokalut.xml :as xml]))
@@ -46,12 +45,12 @@
                FROM ilmoitus
                WHERE ilmoitusid = 987654321);")))
 
-(deftest kuuntele-urakan-ilmoituksia
+(deftest tarkista-ilmoitustoimenpiteen-kirjaus
   (let [viestit (atom [])]
     (luo-testi-ilmoitus)
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(swap! viestit conj (.getText %)))
-    (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
-                                           (-> "test/resurssit/api/havainto.json" slurp))]
+    (let [vastaus (api-tyokalut/put-kutsu ["/api/ilmoitukset/987654321/"] kayttaja portti (slurp "test/resurssit/api/ilmoitustoimenpide.json"))]
+      (println "-----> VASTAUS: " vastaus)
       (is 200 (:status vastaus)) "Viestin lähetys API:n onnistui.")
 
     (is (= 1 (hae-testi-ilmoituksen-toimenpiteiden-maara)) "Ilmoitustoimenpide löytyy tietokannasta.")

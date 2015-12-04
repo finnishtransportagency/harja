@@ -291,7 +291,7 @@
       :api-varusteet (component/using (api-varusteet/->Varusteet)
                                       [:http-palvelin :db :integraatioloki :tierekisteri])
       :api-ilmoitukset (component/using (api-ilmoitukset/->Ilmoitukset)
-                                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat]))))
+                                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik]))))
 
 (defonce harja-jarjestelma nil)
 
