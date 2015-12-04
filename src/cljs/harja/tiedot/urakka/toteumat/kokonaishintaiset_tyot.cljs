@@ -57,9 +57,6 @@
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
-(tarkkaile! "Reitit: " haetut-reitit)
-(tarkkaile! "Valittu: " valittu-paivakohtainen-tehtava)
-
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
 (def kokonaishintainen-toteuma-kartalla
