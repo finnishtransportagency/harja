@@ -55,7 +55,7 @@
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari]} pylvaat]]
+(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari piilota-arvo?]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
   [:fo:block
    [:fo:block {:font-weight "bold"} otsikko]
@@ -76,7 +76,12 @@
            value-range (- max-value min-value)
            scale (if (zero? value-range)
                    1
-                   (/ height value-range))]
+                   (/ height value-range))
+           number-of-items (count data)
+           show-every-nth-label (if (< number-of-items 13)
+                                  1
+                                  (Math/ceil (/ number-of-items 12)))
+           hide-value? (or piilota-arvo? (constantly false))]
        [:g
         ;; render ticks that are in the min-value - max-value range
         (for [tick [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)]
@@ -99,9 +104,12 @@
                                   :width (* bar-width 0.75)
                                   :height bar-height
                                   :fill (color-fn d)}]
-                          [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (- y 1) :text-anchor "end"} (str value)]
-                          [:text {:font-size "3pt" :x (+ x (/ bar-width 2)) :y (+ 4 (+ y bar-height)) :text-anchor "end"}
-                           label]]))
+                          (when-not (hide-value? value)
+                            [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (- y 1) :text-anchor "end"} (str value)])
+                          (when (zero? (rem i show-every-nth-label))
+                            [:text {:font-size "3pt" :x (+ x (/ (* bar-width 0.75) 2)) :y (+ 4 (+ y bar-height))
+                                    :text-anchor "middle"}
+                             label])]))
                      data)])]]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
