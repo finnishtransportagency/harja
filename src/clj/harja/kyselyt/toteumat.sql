@@ -612,27 +612,28 @@ WHERE
 ORDER BY t.alkanut
 LIMIT 501;
 
--- name: hae-urakan-kokonaishintaiset-toteumat
-SELECT t.id AS toteumaid
-FROM toteuma t
-  INNER JOIN toteuma_tehtava tt
-    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-  INNER JOIN toimenpidekoodi tk
-    ON tk.id = tt.toimenpidekoodi
+-- name: hae-kokonaishintaisten-toiden-reittipisteet
+SELECT
+  rp.id            AS reittipiste_id,
+  rp.aika          AS reittipiste_aika,
+  rp.sijainti      AS reittipiste_sijainti,
+  tt.toteuma AS toteumaid
+FROM toteuma_tehtava tt
+  JOIN reittipiste rp ON tt.toteuma = rp.toteuma
+  JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
-  AND t.alkanut >= :alkanut
-  AND t.alkanut <= :paattynyt
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR
-       tk.emo = (SELECT toimenpide
+       tpk.emo = (SELECT toimenpide
                  FROM toimenpideinstanssi
                  WHERE id = :toimenpide))
-  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
-ORDER BY t.alkanut
-LIMIT 501;
+  AND t.poistettu IS NOT TRUE;
 
 -- name: hae-toteuman-tehtavat
 SELECT
