@@ -636,7 +636,7 @@ LIMIT 501;
 
 -- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
 SELECT
-  CAST(t.alkanut AS DATE) AS paiva,
+  CAST(t.alkanut AS DATE) AS pvm,
   tt.toimenpidekoodi      AS toimenpidekoodi,
   tk.nimi                 AS nimi,
   SUM(tt.maara)           AS maara,
@@ -657,7 +657,7 @@ WHERE t.urakka = :urakkaid
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR tk.emo = (SELECT toimenpide FROM toimenpideinstanssi WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
-GROUP BY paiva, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
+GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
 LIMIT 501;
 
 -- name: hae-toteuman-tehtavat
