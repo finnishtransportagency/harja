@@ -29,8 +29,8 @@
        :tyhja                     (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
        :rivi-klikattu             #(do
                                     (nav/vaihda-kartan-koko! :L)
-                                    (reset! tiedot/valittu-toteuma %))
-       :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-toteuma nil))
+                                    (reset! tiedot/valittu-paivakohtainen-tehtava %))
+       :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
        :mahdollista-rivin-valinta true}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "20%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}

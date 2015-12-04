@@ -517,7 +517,6 @@
     toteumat))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
-  ; FIXME Tässä on nyt ihan liikaa kyselyitä, pitäisi saada nostettua yhdellä tai kahdella
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteumat (into [] (q/hae-urakan-kokonaishintaiset-toteumat
                                                  db
@@ -530,7 +529,7 @@
         reitit (mapv (fn [toteuma-id]
                        (let [reittipisteet (into [] (harja.geo/muunna-pg-tulokset :sijainti)
                                                  (q/hae-toteuman-reittipisteet db toteuma-id))
-                             tehtavat (mapv :nimi (q/hae-toteuman-tehtavat db toteuma-id))]
+                             tehtavat (into #{} (mapv :nimi (q/hae-toteuman-tehtavat db toteuma-id)))]
                          {:toteuma-paiva (:alkanut (first (filter #(= toteuma-id (:id %)) toteumat)))
                           :reittipisteet reittipisteet
                           :tehtavat      tehtavat}))

@@ -658,6 +658,7 @@ WHERE t.urakka = :urakkaid
   AND (:toimenpide :: INTEGER IS NULL OR tk.emo = (SELECT toimenpide FROM toimenpideinstanssi WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
 GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
+ORDER BY pvm
 LIMIT 501;
 
 -- name: hae-toteuman-tehtavat

@@ -33,8 +33,7 @@
      (-compare [x y]
        (if (instance? DateTime y)
          (compare (tc/to-long x) (tc/to-long y))
-         (throw (js/Error. (str "Ei voi verrata " x " (goog.date.DateTime) ja " y " (" (type y) ")")))))
-     ))
+         (throw (js/Error. (str "Ei voi verrata " x " (goog.date.DateTime) ja " y " (" (type y) ")")))))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -307,8 +306,6 @@
   "Palauttaa annetun DateTime päivän."
   [pvm]
   (t/day (d pvm)))
-
-
 
 (defn paivamaaran-hoitokausi
   "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"

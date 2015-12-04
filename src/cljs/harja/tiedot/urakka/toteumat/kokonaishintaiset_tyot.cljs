@@ -31,7 +31,7 @@
             :tehtava    tehtava}))
 
 (def nakymassa? (atom false))
-(def valittu-toteuma (atom nil))
+(def valittu-paivakohtainen-tehtava (atom nil))
 
 (def haetut-toteumat
          (reaction<!
@@ -45,9 +45,6 @@
            (when nakymassa?
              (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
-(tarkkaile! "toteumat: " haetut-toteumat)
-(tarkkaile! "valittu-toteuma: " valittu-toteuma)
-
 (def haetut-reitit
   (reaction<!
     [urakka-id (:id @nav/valittu-urakka)
@@ -60,7 +57,8 @@
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
-(tarkkaile! "Reitit:" haetut-reitit)
+(tarkkaile! "Reitit: " haetut-reitit)
+(tarkkaile! "Valittu: " valittu-paivakohtainen-tehtava)
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
@@ -70,9 +68,13 @@
              (kartalla-esitettavaan-muotoon
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
-                 (if @valittu-toteuma
+                 (if @valittu-paivakohtainen-tehtava
                    (filter
                      (fn [reitti]
-                       (= (:toteuma-id reitti) (:toteumaid @valittu-toteuma)))
+                       ; Reittiin liittyvä toteuma on tapahtunut samana päivänä kuin gridistä valitun summarivin
+                       ; pvm. Lisäksi reitillä on tehty kyseistä tehtävää.
+                       (and (= (pvm/paivan-alussa (:toteuma-paiva reitti))
+                               (pvm/paivan-alussa (:pvm @valittu-paivakohtainen-tehtava)))
+                            ((:tehtavat reitti) (:nimi @valittu-paivakohtainen-tehtava))))
                      @haetut-reitit)
                    @haetut-reitit))))))
