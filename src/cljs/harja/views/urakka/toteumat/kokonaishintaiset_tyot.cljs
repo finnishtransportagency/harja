@@ -20,7 +20,9 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn tee-taulukko []
-  (let [toteumat @tiedot/haetut-toteumat]
+  (let [toteumat (into [] (map-indexed ; Summatuilla riveillä ei ole yksilöivää id:tä, generoidaan omat
+                            #(assoc %2 :id %1)
+                            @tiedot/haetut-toteumat))]
     [:span
      [grid/grid
       {:otsikko                   "Kokonaishintaisten töiden toteumat"
