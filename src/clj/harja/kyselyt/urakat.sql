@@ -13,6 +13,12 @@ SELECT u.id, u.nimi, u.tyyppi
  WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
    AND (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
+-- name: hae-hallintayksikon-urakat
+SELECT u.id, u.nimi, u.tyyppi
+FROM urakka u
+JOIN organisaatio o ON o.id = u.hallintayksikko
+WHERE o.id = :hy;
+
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
 -- PENDING: joinataan mukaan ylläpidon urakat eri taulusta?
