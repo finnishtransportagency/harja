@@ -27,14 +27,22 @@
          [grid/grid
           {:otsikko "Kohteiden aikataulu"}
 
-          [{:otsikko "YHA-ID" :leveys "15%" :nimi :yha-id :tyyppi :string :pituus-max 128 :muokattava? (constantly false)}
-           {:otsikko "Kohde" :leveys "60%" :nimi :kohde :tyyppi :string :muokattava? (constantly false)}
-           {:otsikko "Alkamispvm" :leveys "20%" :tyyppi :string :muokattava? (constantly false)
-            :nimi    :tila}]
-          ;; FIXME: kohteiden tavoite aikataulut jne.
-          [{:yha-id 1 :kohde "Mt 22 Ruohonjuuren pätkä" :tila "Kaikki valmiina"}
-           {:yha-id 2 :kohde "Mt 22 Terilän silta" :tila "Kaikki valmiina"}
-           {:yha-id 3 :kohde "Mt 22 Matulan  pätkä" :tila "Kohde kesken"}
-           {:yha-id 4 :kohde "Mt 22 koskenlaskijan kuru" :tila "Kohde kesken"}
-           {:yha-id 5 :kohde "Mt 22 rampit" :tila "Kaikki valmiina"}
+          [{:otsikko "Kohde\u00ADnumero" :leveys "10%" :nimi :kohdenumero :tyyppi :string :pituus-max 128 :muokattava? (constantly false)}
+           {:otsikko "TR-osoite" :leveys "10%" :nimi :tr-osoite :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "KVL" :leveys "10%" :nimi :kvl :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "Toimenpide" :leveys "10%" :nimi :toimenpide :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "YP LK" :leveys "10%" :nimi :yp-lk :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "Aloitus\u00ADaika" :leveys "10%" :nimi :alkuaika :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "Pääll. valmis" :leveys "10%" :nimi :valmistumisaika :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "TM aloitus\u00ADaika" :leveys "10%" :nimi :tm-alkuaika :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "TM valmis" :leveys "10%" :nimi :tm-valmistumisaika :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "Kohde valmis" :leveys "10%" :nimi :kohde-valmis :tyyppi :string :muokattava? (constantly false)}]
+
+          [{:kohdenumero 1 :tr-osoite "4/1/100/4/534" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
+            :alkuaika "10.6.2015" :valmistumisaika "5.7.2015" :tm-alkuaika "6.7.2015" :tm-valmistumisaika "14.7.2015" :kohde-valmis "Ei"}
+           {:kohdenumero 2 :tr-osoite "4/4/534/6/134" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
+            :alkuaika "11.6.2015" :valmistumisaika "6.7.2015" :tm-alkuaika "7.7.2015" :tm-valmistumisaika "14.7.2015" :kohde-valmis "Ei"}
+           {:kohdenumero 3 :tr-osoite "4/6/134/7/1534" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
+            :alkuaika "12.6.2015" :valmistumisaika "7.7.2015" :tm-alkuaika "8.7.2015" :tm-valmistumisaika "14.7.2015" :kohde-valmis "Ei"}
+
            ]]]))))
