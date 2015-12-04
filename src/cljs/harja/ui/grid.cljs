@@ -255,19 +255,19 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:span.rivilla-virheita
          (ikonit/warning-sign)])])])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id vetolaatikot tallenna piilota-toiminnot? rivi-index valittu-rivi-index mahdollista-rivin-valinta]} skeema rivi]
-  [:tr {:class    (str luokka (when (= rivi-index @valittu-rivi-index)
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id vetolaatikot tallenna piilota-toiminnot? valittu-rivi mahdollista-rivin-valinta]} skeema rivi]
+  [:tr {:class    (str luokka (when (= rivi @valittu-rivi)
                                 " rivi-valittu"))
         :on-click #(do
                     (when rivi-klikattu
-                      (if (not= @valittu-rivi-index rivi-index)
+                      (if (not= @valittu-rivi rivi)
                         (rivi-klikattu rivi)))
                     (when mahdollista-rivin-valinta
-                      (if (= @valittu-rivi-index rivi-index)
-                        (do (reset! valittu-rivi-index nil)
+                      (if (= @valittu-rivi rivi)
+                        (do (reset! valittu-rivi nil)
                             (when rivi-valinta-peruttu
                               (rivi-valinta-peruttu rivi)))
-                        (reset! valittu-rivi-index rivi-index))))}
+                        (reset! valittu-rivi rivi))))}
    (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
@@ -357,7 +357,7 @@ Optiot on mappi optioita:
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
         kysely-kaynnissa (atom false)
-        valittu-rivi-index (atom nil)
+        valittu-rivi (atom nil)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
@@ -505,7 +505,7 @@ Optiot on mappi optioita:
                                  (reset! viime-assoc nil)
                                  (reset! uusi-id 0)
                                  (when rivi-valinta-peruttu (rivi-valinta-peruttu))
-                                 (reset! valittu-rivi-index nil)
+                                 (reset! valittu-rivi nil)
                                  (reset! kysely-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
                            (nollaa-muokkaustiedot!)
@@ -691,7 +691,6 @@ Optiot on mappi optioita:
                                                          :vetolaatikot              vetolaatikot
                                                          :id                        id
                                                          :tallenna                  tallenna
-                                                         :rivi-index                i
                                                          :luokka                    (str (if (even? (+ i 1)) "parillinen" "pariton")
                                                                                          (when rivi-klikattu
                                                                                            " klikattava ")
@@ -700,7 +699,7 @@ Optiot on mappi optioita:
                                                                                            (rivin-luokka rivi)))
                                                          :rivi-klikattu             rivi-klikattu
                                                          :rivi-valinta-peruttu      rivi-valinta-peruttu
-                                                         :valittu-rivi-index        valittu-rivi-index
+                                                         :valittu-rivi              valittu-rivi
                                                          :mahdollista-rivin-valinta mahdollista-rivin-valinta
                                                          :piilota-toiminnot?        piilota-toiminnot?}
                                             skeema rivi]
