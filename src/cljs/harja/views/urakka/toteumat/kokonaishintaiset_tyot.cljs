@@ -25,7 +25,6 @@
      [grid/grid
       {:otsikko                   "Kokonaishintaisten töiden toteumat"
        :tyhja                     (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
-       :tunniste                  :tehtavaid
        :rivi-klikattu             #(do
                                     (nav/vaihda-kartan-koko! :L)
                                     (reset! tiedot/valittu-toteuma %))

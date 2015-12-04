@@ -613,7 +613,7 @@ ORDER BY t.alkanut
 LIMIT 501;
 
 -- name: hae-urakan-kokonaishintaiset-toteumat
-SELECT t.id AS toteumaid
+SELECT t.id, alkanut
 FROM toteuma t
   INNER JOIN toteuma_tehtava tt
     ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
