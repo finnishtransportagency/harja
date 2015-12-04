@@ -682,8 +682,129 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12614), 12614, '2014-10-26 06:
                                                           'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
                                                           'Välittävä Urakoitsija', 'Y1242334');
 
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12615, '2015-1-26 16:05:32', '2015-1-26 16:06:32', true, 'Onhan varmasti kalustoa poppeleiden hoitoon?',
+                                                                         ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi,
+                                                                                                                              ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                              (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+                                                                                                                              'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12615), 12615, '2015-1-26 16:10:07', 'aloitus'::kuittaustyyppi,
+                                                          'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+                                                          'Välittävä Urakoitsija', 'Y1242334');
+
+
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12616, '2015-3-22 16:05:32', '2015-3-22 16:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
+                                                                         ST_MakePoint(430100, 7197493)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
+                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+                                                                                                                                          'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12616), 12616, '2015-3-22 16:10:07', 'vastaanotto'::kuittaustyyppi,
+                                                          'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+                                                          'Välittävä Urakoitsija', 'Y1242334');
+
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12617, '2015-3-16 11:05:32', '2015-3-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
+                                                                         ST_MakePoint(430100, 7197493)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
+                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+                                                                                                                                          'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12617), 12617, '2015-3-16 11:10:07', 'vastaanotto'::kuittaustyyppi,
+                                                          'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+                                                          'Välittävä Urakoitsija', 'Y1242334');
 -- ***** Oulun au 2014-2019
 
+-- Pudasjärvi
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12618, '2012-8-16 11:05:32', '2012-8-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
+                                                                         ST_MakePoint(496694, 7243835)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
+                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+                                                                                                                                          'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12618), 12618, '2012-8-16 11:10:07', 'vastaanotto'::kuittaustyyppi,
+                                                          'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+                                                          'Välittävä Urakoitsija', 'Y1242334');
+
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12619, '2012-7-16 11:05:32', '2012-7-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
+                                                                         ST_MakePoint(496694, 7243835)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
+                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+                                                                                                                                          'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12619), 12619, '2012-7-16 11:10:07', 'vastaanotto'::kuittaustyyppi,
+                                                          'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+                                                          'Välittävä Urakoitsija', 'Y1242334');
+
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12620, '2012-3-16 11:05:32', '2012-3-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
+                                                                         ST_MakePoint(496694, 7243835)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
+                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+                                                                                                                                          'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
+        'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
+VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12620), 12620, '2012-3-16 11:10:07', 'vastaanotto'::kuittaustyyppi,
+                                                          'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+                                                          'Välittävä Urakoitsija', 'Y1242334');
+-- Pudasjärvi
 
 --Ilmoituksia etelämmäksi: Porin alueurakka 2007-2012
 INSERT INTO ilmoitus
