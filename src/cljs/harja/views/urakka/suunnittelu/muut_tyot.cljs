@@ -8,7 +8,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.muut-tyot :as muut-tyot]
+            [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
 
             [harja.loki :refer [log logt tarkkaile!]]

@@ -1,14 +1,15 @@
 (ns harja.pvm
   "Yleiset päivämääräkäsittelyn asiat."
   (:require
-   #?(:cljs [cljs-time.format :as df])
-   #?(:cljs [cljs-time.core :as t])
-   #?(:cljs [cljs-time.coerce :as tc])
-   #?(:cljs [harja.loki :refer [log]])
-   #?(:clj [clj-time.format :as df])
-   #?(:clj [clj-time.core :as t])
-   #?(:clj [clj-time.coerce :as tc])
-   #?(:clj [taoensso.timbre :as log])
+    #?(:cljs [cljs-time.format :as df])
+    #?(:cljs [cljs-time.core :as t])
+    #?(:cljs [cljs-time.coerce :as tc])
+    #?(:cljs [harja.loki :refer [log]])
+    #?(:clj [clj-time.format :as df])
+    #?(:clj [clj-time.core :as t])
+    #?(:clj [clj-time.coerce :as tc])
+    #?(:clj [clj-time.local :as l])
+    #?(:clj [taoensso.timbre :as log])
    [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
@@ -384,3 +385,22 @@
      (let [pvm-ed-kkna (t/minus p (t/months 1))]
        [(t/first-day-of-the-month pvm-ed-kkna)
         (t/last-day-of-the-month pvm-ed-kkna)])))
+
+#?(:clj
+   (defn kyseessa-kk-vali?
+     "Kertoo onko annettu pvm-väli täysi kuukausi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
+     [alkupvm loppupvm]
+     (let [alku (l/to-local-date-time alkupvm)
+           loppu (l/to-local-date-time loppupvm)
+           paivia-kkssa (t/number-of-days-in-the-month alku)
+           loppu-pv (paiva loppu)]
+       (and (= (kuukausi alku)
+               (kuukausi loppu))
+            (= paivia-kkssa loppu-pv)))))
+
+#?(:clj
+   (defn kuukautena-ja-vuonna
+     "Palauttaa tekstiä esim tammikuussa 2016"
+     [alkupvm]
+     (str (kuukauden-nimi (kuukausi alkupvm)) "ssa "
+          (vuosi alkupvm))))

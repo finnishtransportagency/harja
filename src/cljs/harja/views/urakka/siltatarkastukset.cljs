@@ -13,7 +13,7 @@
             [harja.ui.tierekisteri :refer [tieosoite]]
 
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.siltatarkastukset :as st]
+            [harja.tiedot.urakka.laadunseuranta.siltatarkastukset :as st]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.sillat :as sillat]
             [harja.views.kartta.tasot :as kartta-tasot]

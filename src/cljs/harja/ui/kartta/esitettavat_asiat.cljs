@@ -2,7 +2,9 @@
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.loki :refer [log]]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]))
 
 (defn- oletusalue [asia valittu?]
   (merge
@@ -57,15 +59,29 @@
                            "kartta-toimenpidepyynto-violetti.svg")
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
+(defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
+  (case tekija
+    :urakoitsija (str "kartta-" ikonityyppi "-urakoitsija-violetti.svg")
+    :tilaaja (str "kartta-" ikonityyppi "-tilaaja-violetti.svg")
+    :konsultti (str "kartta-" ikonityyppi "-konsultti-violetti.svg")
+    (str "kartta-" ikonityyppi "-violetti.svg")))
+
+(defn selvita-tarkastuksen-ikoni [tekija]
+  (selvita-laadunseurannan-ikoni "tarkastus" tekija))
+
+(defn selvita-havainnon-ikoni [tekija]
+  (selvita-laadunseurannan-ikoni "havainto" tekija))
+
 (defmethod asia-kartalle :havainto [havainto valittu?]
   [(assoc havainto
      :type :havainto
-     :nimi (or (:nimi havainto) "Havainto")
-     :selite {:teksti "Havainto"
-              :img    "kartta-havainto-violetti.svg"}
+     :nimi (or (:nimi havainto)
+               (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")"))
+     :selite {:teksti (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")")
+              :img    (selvita-havainnon-ikoni (:tekija havainto))}
      :alue {:type        :tack-icon
             :scale       (if (valittu? havainto) 1.5 1)
-            :img         "kartta-havainto-violetti.svg"
+            :img         (selvita-havainnon-ikoni (:tekija havainto))
             :coordinates (if (= :line (get-in havainto [:sijainti :type]))
                            ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
                            (first (get-in havainto [:sijainti :points]))
@@ -75,18 +91,18 @@
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Tarkastus")
-     :selite {:teksti "Tarkastus"
-              :img    "kartta-tarkastus-violetti.svg"}
+     :nimi (or (:nimi tarkastus)
+               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")"))
+     :selite {:teksti (str "Tarkastus (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
+              :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
-             {:type   :tack-icon-line
-              :color  "black"
-              :scale  (if (valittu? tarkastus) 1.5 1)
-              :img    "kartta-tarkastus-violetti.svg"
+             {:type  :tack-icon-line
+              :scale (if (valittu? tarkastus) 1.5 1)
+              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :points (get-in tarkastus [:sijainti :points])}
-             {:type        :tack-icon
-              :scale       (if (valittu? tarkastus) 1.5 1)
-              :img         "kartta-tarkastus-violetti.svg"
+             {:type  :tack-icon
+              :scale (if (valittu? tarkastus) 1.5 1)
+              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]

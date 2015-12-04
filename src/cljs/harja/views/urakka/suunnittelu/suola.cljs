@@ -2,7 +2,7 @@
   "Urakan suolan käytön suunnittelu"
   (:require [reagent.core :refer [atom wrap]]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.tiedot.urakka.suola :as suola]
+            [harja.tiedot.urakka.toteumat.suola :as suola]
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
             [harja.domain.roolit :as roolit]

@@ -10,7 +10,6 @@
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.siltatarkastukset :as siltatarkastukset]))
 
-
 (defn laadunseuranta []
   (let [ur @nav/valittu-urakka]
     (komp/luo
