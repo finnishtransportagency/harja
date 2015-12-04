@@ -66,8 +66,6 @@
                                                     (if kyseessa-kk-vali?
                                                       ilmoitukset-hoitokaudella
                                                       ilmoitukset))))
-        _ (log/debug "tpp-kuukausittain" tpp-kuukausittain)
-        _ (log/debug "kyseessä kk " kyseessa-kk-vali?)
         urk-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
                                             (filter #(= :kysely (:ilmoitustyyppi %))
                                                     (if kyseessa-kk-vali?
