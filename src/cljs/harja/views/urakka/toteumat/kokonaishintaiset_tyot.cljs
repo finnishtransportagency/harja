@@ -31,7 +31,7 @@
                                     (reset! tiedot/valittu-toteuma %))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-toteuma nil))
        :mahdollista-rivin-valinta true}
-      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
+      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "20%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}

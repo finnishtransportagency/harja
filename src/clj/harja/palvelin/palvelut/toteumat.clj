@@ -507,28 +507,14 @@
                        (comp
                          (filter #(not (nil? (:toimenpidekoodi %))))
                          (map konv/alaviiva->rakenne))
-                       (q/hae-urakan-kokonaishintaisten-toteumien-tehtavat
+                       (q/hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
                          db urakka-id
                          sopimus-id
                          (konv/sql-date alkupvm)
                          (konv/sql-date loppupvm)
                          toimenpide
-                         tehtava))
-        paivittaiset-rivit (mapv (fn [[_ arvo]] arvo)
-                                (group-by
-                                  (fn [rivi]
-                                    (let [alkanut (c/from-sql-time (:alkanut rivi))]
-                                      [(:toimenpidekoodi rivi)
-                                       (str (t/year alkanut) "-" (t/month alkanut) "-" (t/day alkanut))]))
-                                  toteumat))
-        summatut-rivit (mapv #(reduce
-                                     (fn [vanha uusi]
-                                       (if (and (:maara vanha) (:maara uusi))
-                                         (assoc vanha :maara (+ (:maara vanha) (:maara uusi)))
-                                         (assoc vanha :maara 0)))
-                                     %)
-                             paivittaiset-rivit)]
-    summatut-rivit))
+                         tehtava))]
+    toteumat))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)

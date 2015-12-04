@@ -622,7 +622,24 @@ FROM toteuma_tehtava tt
   JOIN reittipiste rp ON tt.toteuma = rp.toteuma
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-WHERE
+
+
+
+-- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
+SELECT
+  CAST(t.alkanut AS DATE) AS pvm,
+  tt.toimenpidekoodi      AS toimenpidekoodi,
+  tk.nimi                 AS nimi,
+  SUM(tt.maara)           AS maara,
+  tk.yksikko              AS yksikko,
+  k.jarjestelma           AS jarjestelmanlisaama
+FROM toteuma_tehtava tt
+  LEFT JOIN toteuma t
+    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
+  LEFT JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
+  LEFT JOIN kayttaja k
+    ON k.id = t.luoja
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
   AND t.alkanut >= :alkupvm
@@ -634,6 +651,9 @@ WHERE
                  FROM toimenpideinstanssi
                  WHERE id = :toimenpide))
   AND t.poistettu IS NOT TRUE;
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
+LIMIT 501;
 
 -- name: hae-toteuman-tehtavat
 SELECT
