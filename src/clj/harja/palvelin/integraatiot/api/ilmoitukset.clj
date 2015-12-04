@@ -69,7 +69,7 @@
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
-        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoituskuittauksen-kirjaaminen+ json-skeemat/+kirjausvastaus+
+        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoitustoimenpiteen-kirjaaminen+ json-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db] (kirjaa-ilmoitustoimenpide db parametrit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]

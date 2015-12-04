@@ -15,7 +15,7 @@
 
   (is (nil? (validoi json-skeemat/+havainnon-kirjaus+ json-esimerkit/+havainnon-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/+ilmoituskuittauksen-kirjaaminen+ json-esimerkit/+ilmoituskuittauksen-kirjaaminen+)))
+  (is (nil? (validoi json-skeemat/+ilmoitustoimenpiteen-kirjaaminen+ json-esimerkit/+ilmoitustoimenpiteen-kirjaaminen+)))
   (is (nil? (validoi json-skeemat/+ilmoitusten-haku+ json-esimerkit/+ilmoitusten-haku+)))
   (is (nil? (validoi json-skeemat/+tietyoilmoituksen-kirjaus+ json-esimerkit/+tietyoilmoituksen-kirjaus+)))
 

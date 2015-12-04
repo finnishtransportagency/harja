@@ -9,7 +9,7 @@
 
 (def +havainnon-kirjaus+ "api/examples/havainnon-kirjaus-request.json")
 
-(def +ilmoituskuittauksen-kirjaaminen+ "api/examples/ilmoituskuittauksen-kirjaaminen-request.json")
+(def +ilmoitustoimenpiteen-kirjaaminen+ "api/examples/ilmoitustoimenpiteen-kirjaaminen-request.json")
 (def +ilmoitusten-haku+ "api/examples/ilmoitusten-haku-response.json")
 (def +tietyoilmoituksen-kirjaus+ "api/examples/tietyoilmoituksen-kirjaus-request.json")
 (def +tietyoilmoituksen-kirjaus-vastaus+ "api/examples/tietyoilmoituksen-kirjaus-response.json")
