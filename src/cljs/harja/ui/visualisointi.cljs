@@ -173,8 +173,8 @@
                                      :fill   (color-fn d)}]
                              ;(when (= hovered d)
                              (when-not (hide-value? value)
-                               [:text {:x           (+ x (/ bar-width 2)) :y (- height bar-height hmy 2)
-                                      :text-anchor "end"}
+                               [:text {:x           (+ x (/ (* 0.75 bar-width) 2)) :y (- height bar-height hmy 2)
+                                      :text-anchor "middle"}
                                (format-amount value)])
                              (when (zero? (rem i show-every-nth-label))
                                [:text {:x           (+ x (/ (* 0.75 bar-width) 2)) :y (- height 5)
