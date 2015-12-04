@@ -118,17 +118,17 @@
   (tunteja-vuorokausissa (* 7 viikot)))
 
 ;; Mäppi sisältää numeroarvot tekstuaaliselle esitykselle.
-(defonce aikasuodatin-tunteina {"0-2h"  2
-                                "0-4h"  4
-                                "0-12h" 12
-                                "1 vrk" (tunteja-vuorokausissa 1)
-                                "2 vrk" (tunteja-vuorokausissa 2)
-                                "3 vrk" (tunteja-vuorokausissa 3)
-                                "1 vk"  (tunteja-viikoissa 1)
-                                "2 vk"  (tunteja-viikoissa 2)
-                                "3 vk"  (tunteja-viikoissa 3)})
+(defonce aikasuodatin-tunteina [["0-2h" 2]
+                                ["0-4h" 4]
+                                ["0-12h" 12]
+                                ["1 vrk" (tunteja-vuorokausissa 1)]
+                                ["2 vrk" (tunteja-vuorokausissa 2)]
+                                ["3 vrk" (tunteja-vuorokausissa 3)]
+                                ["1 vk" (tunteja-viikoissa 1)]
+                                ["2 vk" (tunteja-viikoissa 2)]
+                                ["3 vk" (tunteja-viikoissa 3)]])
 
-(defonce valittu-aikasuodattimen-arvo (atom (get aikasuodatin-tunteina "2h")))
+(defonce valitun-aikasuodattimen-arvo (atom (get aikasuodatin-tunteina "2h")))
 
 (defonce haetut-asiat (atom nil))
 (defonce tilannekuvan-asiat-kartalla
@@ -145,100 +145,100 @@
                       (pvm/nyt)
                       (first @historiakuvan-aikavali))
    :loppu           (if (= @valittu-tila :nykytilanne)
-                      (t/plus (pvm/nyt) (t/hours (get aikasuodatin-tunteina @valittu-aikasuodattimen-arvo)))
+                      (t/plus (pvm/nyt) (t/hours (get aikasuodatin-tunteina @valitun-aikasuodattimen-arvo)))
                       (second @historiakuvan-aikavali))})
 
-(defn hae-asiat []
-  (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
-  (go
-    (let [yhdista (fn [& tulokset]
-                    (apply (comp vec concat) (remove k/virhe? tulokset)))
-          yhteiset-parametrit (kasaa-parametrit)
-          haettavat-toimenpidekoodit (mapv
-                                       :id
-                                       (filter
-                                         (fn [{:keys [nimi]}]
-                                           (get @valitut-toteumatyypit nimi))
-                                         @toimenpidekoodit))
-          tulos (yhdista
-                  (when (and (= @valittu-tila :nykytilanne) (:tyokoneet @valitut-suodattimet))
-                    (mapv
-                      #(assoc % :tyyppi-kartalla :tyokone)
-                      (let [tyokone-tulos (<! (k/post! :hae-tyokoneseurantatiedot yhteiset-parametrit))]
-                        (when-not (k/virhe? tyokone-tulos) (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
-                                                                                  :tyokoneet tyokone-tulos}))
-                        tyokone-tulos)))                    ;;Voidaan palauttaa tässä vaikka olisi virhe - filtteröidään yhdista-funktiossa
-                  (when (:turvallisuuspoikkeamat @valitut-suodattimet)
-                    (mapv
-                      #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
-                      (<! (k/post! :hae-turvallisuuspoikkeamat (rename-keys
-                                                                 yhteiset-parametrit
-                                                                 {:urakka :urakka-id})))))
-                  (when (:tarkastukset @valitut-suodattimet)
-                    (mapv
-                      #(assoc % :tyyppi-kartalla :tarkastus)
-                      (<! (k/post! :hae-urakan-tarkastukset (rename-keys
-                                                              yhteiset-parametrit
-                                                              {:urakka :urakka-id
-                                                               :alku   :alkupvm
-                                                               :loppu  :loppupvm})))))
-                  (when (:havainnot @valitut-suodattimet)
-                    (mapv
-                      #(assoc % :tyyppi-kartalla :havainto)
-                      (<! (k/post! :hae-urakan-havainnot (rename-keys
-                                                           yhteiset-parametrit
-                                                           {:urakka :urakka-id})))))
-                  (when (:paikkaustyot @valitut-suodattimet)
-                    (remove
-                      #(empty? (:kohdeosat %))
+#_(defn hae-asiat []
+    (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
+    (go
+      (let [yhdista (fn [& tulokset]
+                      (apply (comp vec concat) (remove k/virhe? tulokset)))
+            yhteiset-parametrit (kasaa-parametrit)
+            haettavat-toimenpidekoodit (mapv
+                                         :id
+                                         (filter
+                                           (fn [{:keys [nimi]}]
+                                             (get @valitut-toteumatyypit nimi))
+                                           @toimenpidekoodit))
+            tulos (yhdista
+                    (when (and (= @valittu-tila :nykytilanne) (:tyokoneet @valitut-suodattimet))
                       (mapv
-                        #(assoc % :tyyppi-kartalla :paikkaustoteuma)
-                        (<! (k/post! :urakan-paikkaustoteumat (rename-keys
+                        #(assoc % :tyyppi-kartalla :tyokone)
+                        (let [tyokone-tulos (<! (k/post! :hae-tyokoneseurantatiedot yhteiset-parametrit))]
+                          (when-not (k/virhe? tyokone-tulos) (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
+                                                                                    :tyokoneet tyokone-tulos}))
+                          tyokone-tulos)))                  ;;Voidaan palauttaa tässä vaikka olisi virhe - filtteröidään yhdista-funktiossa
+                    (when (:turvallisuuspoikkeamat @valitut-suodattimet)
+                      (mapv
+                        #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
+                        (<! (k/post! :hae-turvallisuuspoikkeamat (rename-keys
+                                                                   yhteiset-parametrit
+                                                                   {:urakka :urakka-id})))))
+                    (when (:tarkastukset @valitut-suodattimet)
+                      (mapv
+                        #(assoc % :tyyppi-kartalla :tarkastus)
+                        (<! (k/post! :hae-urakan-tarkastukset (rename-keys
                                                                 yhteiset-parametrit
-                                                                {:urakka :urakka-id}))))))
-                  (when (:paallystystyot @valitut-suodattimet)
-                    (remove
-                      #(empty? (:kohdeosat %))
+                                                                {:urakka :urakka-id
+                                                                 :alku   :alkupvm
+                                                                 :loppu  :loppupvm})))))
+                    (when (:havainnot @valitut-suodattimet)
                       (mapv
-                        #(assoc % :tyyppi-kartalla :paallystyskohde)
-                        (<! (k/post! :urakan-paallystyskohteet (rename-keys
-                                                                 yhteiset-parametrit
-                                                                 {:urakka :urakka-id}))))))
-                  (when
-                    (or (:toimenpidepyynnot @valitut-suodattimet)
-                        (:kyselyt @valitut-suodattimet)
-                        (:tiedotukset @valitut-suodattimet))
-                    (mapv
-                      #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
-                      (<! (k/post! :hae-ilmoitukset (assoc
-                                                      yhteiset-parametrit
-                                                      :aikavali [(:alku yhteiset-parametrit)
-                                                                 (:loppu yhteiset-parametrit)]
-                                                      :tilat #{:avoimet}
-                                                      :tyypit (remove nil? [(when (:toimenpidepyynnot @valitut-suodattimet)
-                                                                              :toimenpidepyynto)
-                                                                            (when (:kyselyt @valitut-suodattimet)
-                                                                              :kysely)
-                                                                            (when (:tiedotukset @valitut-suodattimet)
-                                                                              :tiedoitus)]))))))
-                  (when-not (empty? haettavat-toimenpidekoodit)
-                    (mapv
-                      #(assoc % :tyyppi-kartalla :toteuma)
-                      (<! (k/post! :hae-toteumat-tilannekuvaan (assoc
-                                                                 yhteiset-parametrit
-                                                                 :toimenpidekoodit
-                                                                 haettavat-toimenpidekoodit))))))]
-      (reset! haetut-asiat tulos))))
+                        #(assoc % :tyyppi-kartalla :havainto)
+                        (<! (k/post! :hae-urakan-havainnot (rename-keys
+                                                             yhteiset-parametrit
+                                                             {:urakka :urakka-id})))))
+                    (when (:paikkaustyot @valitut-suodattimet)
+                      (remove
+                        #(empty? (:kohdeosat %))
+                        (mapv
+                          #(assoc % :tyyppi-kartalla :paikkaustoteuma)
+                          (<! (k/post! :urakan-paikkaustoteumat (rename-keys
+                                                                  yhteiset-parametrit
+                                                                  {:urakka :urakka-id}))))))
+                    (when (:paallystystyot @valitut-suodattimet)
+                      (remove
+                        #(empty? (:kohdeosat %))
+                        (mapv
+                          #(assoc % :tyyppi-kartalla :paallystyskohde)
+                          (<! (k/post! :urakan-paallystyskohteet (rename-keys
+                                                                   yhteiset-parametrit
+                                                                   {:urakka :urakka-id}))))))
+                    (when
+                      (or (:toimenpidepyynnot @valitut-suodattimet)
+                          (:kyselyt @valitut-suodattimet)
+                          (:tiedotukset @valitut-suodattimet))
+                      (mapv
+                        #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                        (<! (k/post! :hae-ilmoitukset (assoc
+                                                        yhteiset-parametrit
+                                                        :aikavali [(:alku yhteiset-parametrit)
+                                                                   (:loppu yhteiset-parametrit)]
+                                                        :tilat #{:avoimet}
+                                                        :tyypit (remove nil? [(when (:toimenpidepyynnot @valitut-suodattimet)
+                                                                                :toimenpidepyynto)
+                                                                              (when (:kyselyt @valitut-suodattimet)
+                                                                                :kysely)
+                                                                              (when (:tiedotukset @valitut-suodattimet)
+                                                                                :tiedoitus)]))))))
+                    (when-not (empty? haettavat-toimenpidekoodit)
+                      (mapv
+                        #(assoc % :tyyppi-kartalla :toteuma)
+                        (<! (k/post! :hae-toteumat-tilannekuvaan (assoc
+                                                                   yhteiset-parametrit
+                                                                   :toimenpidekoodit
+                                                                   haettavat-toimenpidekoodit))))))]
+        (reset! haetut-asiat tulos))))
 
 (def asioiden-haku (reaction<!
-                     [_ @valitut-suodattimet
-                      _ @valitut-toteumatyypit
+                     [;;_ @valitut-suodattimet
+                      ;;_ @valitut-toteumatyypit
                       _ @nav/kartalla-nakyva-alue
                       _ @nav/valittu-urakka
                       nakymassa? @nakymassa?
                       _ @nav/valittu-hallintayksikko-id]
                      {:odota bufferi}
-                     (when nakymassa? (hae-asiat))))
+                     (when nakymassa? #_(hae-asiat) (print "Haettaisiin, mutta eipä haeta.")))) ;;TODO otin haun pois käytöstä, koska se on borked (tarkoituksella)
 
 (defonce lopeta-haku (atom nil))                            ;; Säilöö funktion jolla pollaus lopetetaan
 

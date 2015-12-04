@@ -35,6 +35,7 @@
       (doall (for [elementti elementit]
                [pudotusvalikon-elementti elementti]))]]))
 
+;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
 (defn nykytilanteen-aikasuodattimen-elementti [[teksti tunnit]]
   ^{:key (str "nykytilanteen_aikasuodatin_" teksti)}
   [:li.tk-nykytilanne-aikavalitsin
