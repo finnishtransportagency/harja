@@ -381,8 +381,7 @@
     (apply q/luo-tehtava<! toteumatehtavan-parametrit)
     (log/debug "Merkitään maksuera likaiseksi maksuerätyypin: " maksueratyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
     (q/merkitse-toteuman-maksuera-likaiseksi! c maksueratyyppi toimenpidekoodi)
-    true)
-  )
+    true))
 
 (defn tallenna-muiden-toiden-toteuma
   [db user toteuma]
@@ -529,7 +528,8 @@
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [toteuma-idt (distinct (mapv :toteumaid (q/hae-urakan-kokonaishintaiset-toteumat
-                                                 db urakka-id
+                                                 db
+                                                 urakka-id
                                                  sopimus-id
                                                  (konv/sql-date alkupvm)
                                                  (konv/sql-date loppupvm)
@@ -544,6 +544,25 @@
                           :tehtavat      tehtavat}))
                      toteuma-idt)]
     reitit))
+
+(defn hae-urakan-yksikkohintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide]}]
+  ;(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [reitit (into []
+                     (comp
+                       (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                       (map konv/alaviiva->rakenne))
+                     (q/hae-yksikkohintaistent-toiden-reittipisteet db
+                                                              urakka-id
+                                                              sopimus-id
+                                                              (konv/sql-date alkupvm)
+                                                              (konv/sql-date loppupvm)
+                                                              toimenpide))
+        _ (log/debug "Reittipisteet: " reitit)
+        kasitellyt-reitit (konv/sarakkeet-vektoriin
+                            reitit
+                            {:reittipiste :reittipisteet}
+                            :toteumaid)]
+    kasitellyt-reitit))
 
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -560,6 +579,7 @@
                                                      (konv/sql-date loppupvm)
                                                      (if tienumero true false)
                                                      tienumero))
+        _ (log/debug "--------> Varustetoteumat: " (pr-str toteumat))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
                                   {:reittipiste :reittipisteet}
@@ -632,6 +652,9 @@
       (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot)))
+      (julkaise-palvelu http :urakan-yksikkohintaisten-toteumien-reitit
+                        (fn [user tiedot]
+                          (hae-urakan-yksikkohintaisten-toteumien-reitit db user tiedot)))
       (julkaise-palvelu http :urakan-varustetoteumat
                         (fn [user tiedot]
                           (hae-urakan-varustetoteumat db user tiedot)))
@@ -650,6 +673,8 @@
       :paivita-yk-hint-toteumien-tehtavat
       :tallenna-erilliskustannus
       :tallenna-toteuma-ja-toteumamateriaalit
+      :urakan-yksikkohintaisten-toteumien-reitit
+      :urakan-kokonaishintaisten-toteumien-reitit
       :poista-toteuma!
       :poista-tehtava!
       :hae-toteumat-historiakuvaan

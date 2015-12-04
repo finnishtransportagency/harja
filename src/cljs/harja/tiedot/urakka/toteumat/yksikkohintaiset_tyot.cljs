@@ -112,15 +112,16 @@
                                   pvm/ennen?
                                   (:reittipisteet %)))}))))
 
-(def karttataso-yksikkohintainen-toteuma (atom false))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
-(defonce yksikkohintainen-toteuma-kartalla
-         (reaction
-           @valittu-yksikkohintainen-toteuma
-           (when @karttataso-yksikkohintainen-toteuma
-             (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]))))
+(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide ]
+  (k/post! :urakan-yksikkohintaisten-toteumien-reitit
+           {:urakka-id  urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm    alkupvm
+            :loppupvm   loppupvm
+            :toimenpide toimenpide}))
 
 (def haetut-reitit
   (reaction<!
@@ -130,4 +131,18 @@
      toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
      nakymassa? @yksikkohintaiset-tyot-nakymassa?]
     (when nakymassa?
-      #_(hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))) ; FIXME Puuttu
+      (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide))))
+
+(def karttataso-yksikkohintainen-toteuma (atom false))
+
+(defonce yksikkohintainen-toteuma-kartalla
+         (reaction
+           @valittu-yksikkohintainen-toteuma
+           @haetut-reitit
+           (when @karttataso-yksikkohintainen-toteuma
+             (if @valittu-yksikkohintainen-toteuma
+               (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]) ; FIXME Ei tarvita enää
+               (kartalla-esitettavaan-muotoon
+                 (map
+                   #(assoc % :tyyppi-kartalla :toteuma)
+                   @haetut-reitit))))))
