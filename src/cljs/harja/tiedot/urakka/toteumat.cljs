@@ -35,6 +35,14 @@
            {:urakka-id urakka-id
             :toteuma-id toteuma-id}))
 
+(defn hae-urakan-toteumien-tehtavien-summat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
+  (k/post! :urakan-toteumien-tehtavien-summat
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm
+            :tyyppi tyyppi}))
+
 (defn hae-urakan-toteutuneet-tehtavat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
   (k/post! :urakan-toteutuneet-tehtavat
            {:urakka-id urakka-id
