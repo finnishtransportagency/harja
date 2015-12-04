@@ -81,8 +81,7 @@
            show-every-nth-label (if (< number-of-items 13)
                                   1
                                   (Math/ceil (/ number-of-items 12)))
-           hide-value? (or piilota-arvo? (constantly false))
-           _ (log/debug "PDF hidevaliue" hide-value?)]
+           hide-value? (or piilota-arvo? (constantly false))]
        [:g
         ;; render ticks that are in the min-value - max-value range
         (for [tick [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)]
