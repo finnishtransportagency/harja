@@ -135,7 +135,7 @@
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.4.1"]
-            [cider/cider-nrepl "0.9.1"]
+            [cider/cider-nrepl "0.10.0"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.1"]
             [lein-auto "0.1.2"]
