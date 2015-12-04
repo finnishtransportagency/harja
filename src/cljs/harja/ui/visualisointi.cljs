@@ -122,7 +122,7 @@
 (defn bars [_ data]
   (let [hover (atom nil)]
     (log "bars data" (pr-str data))
-    (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks format-amount]}  data]
+    (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks format-amount hide-value?]}  data]
       (let [label-fn (or label-fn first)
             value-fn (or value-fn second)
             key-fn (or key-fn hash)
@@ -143,7 +143,8 @@
             number-of-items (count data)
             show-every-nth-label (if (< number-of-items 13)
                                    1
-                                   (Math/ceil (/ number-of-items 12)))]
+                                   (Math/ceil (/ number-of-items 12)))
+            hide-value? (or hide-value? (constantly false))]
         (log "Value range " min-value " -- " max-value " == " value-range)
           [:svg {:width width :height height}
            ;; render ticks that are in the min-value - max-value range
@@ -171,9 +172,10 @@
                                      :height bar-height
                                      :fill   (color-fn d)}]
                              ;(when (= hovered d)
-                             [:text {:x           (+ x (/ bar-width 2)) :y (- height bar-height hmy 2)
-                                     :text-anchor "end"}
-                              (format-amount value)]
+                             (when-not (hide-value? value)
+                               [:text {:x           (+ x (/ bar-width 2)) :y (- height bar-height hmy 2)
+                                      :text-anchor "end"}
+                               (format-amount value)])
                              (when (zero? (rem i show-every-nth-label))
                                [:text {:x           (+ x (/ (* 0.75 bar-width) 2)) :y (- height 5)
                                        :text-anchor "middle"

@@ -33,8 +33,9 @@
       (kuukaudet alku))))
 
 (defn pylvaat
-  [otsikko alkupvm loppupvm kuukausittainen-data]
-  [:pylvaat {:otsikko (str otsikko " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
+  [{:keys [otsikko alkupvm loppupvm kuukausittainen-data piilota-arvo?]}]
+  [:pylvaat {:otsikko (str otsikko " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
+             :piilota-arvo? piilota-arvo?}
    (into []
          (map (juxt identity #(or (kuukausittainen-data %) 0)))
          (kuukaudet alkupvm loppupvm))])
