@@ -33,7 +33,7 @@
    :perustelu                         s/Str
    })
 
-(def Havainto
+(def Laatupoikkeama
   {:aika                               pvm-tyyppi
    :kuvaus                             Teksti
    :tekija                             Osapuoli
@@ -50,7 +50,7 @@
    (s/optional-key :uusi-kommentti) s/Any
    (s/optional-key :liitteet) s/Any})
 
-(def TarkastuksenHavainto
+(def TarkastuksenLaatupoikkeama
   {(s/optional-key :aika)                  pvm-tyyppi
    :kuvaus                             Teksti
    :tekija                             Osapuoli
@@ -95,7 +95,7 @@
    (s/optional-key :mittaaja)          (s/maybe Teksti)
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus
-   (s/optional-key :havainto)          TarkastuksenHavainto})
+   (s/optional-key :laatupoikkeama)          TarkastuksenLaatupoikkeama})
 
 (defn validoi-tarkastus [data]
   (skeema/tarkista Tarkastus data))
@@ -106,11 +106,11 @@
     #?(:cljs (log "tarkastus virheet: " (pr-str virheet)))
     (nil? virheet)))
 
-(defn validoi-havainto [data]
-  (skeema/tarkista Havainto data))
+(defn validoi-laatupoikkeama [data]
+  (skeema/tarkista Laatupoikkeama data))
 
-(defn validi-havainto? [data]
-  (let [virheet (validoi-havainto data)]
-    #?(:cljs (log "havainto virheet: " (pr-str virheet)))
+(defn validi-laatupoikkeama? [data]
+  (let [virheet (validoi-laatupoikkeama data)]
+    #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
     (nil? virheet)))
                     
