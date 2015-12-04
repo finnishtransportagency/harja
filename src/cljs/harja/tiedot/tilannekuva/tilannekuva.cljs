@@ -17,7 +17,6 @@
 
 (defonce nakymassa? (atom false))
 (defonce karttataso-tilannekuva (atom false))
-(defonce mahdolliset-tilat #{:historiakuva :nykytilanne})
 (defonce valittu-tila (atom :nykytilanne))
 
 (defonce bufferi 1000)
@@ -25,49 +24,88 @@
                                 :nykytilanne 3000
                                 :historiakuva 60000)))
 
-;; Mitä haetaan?
-(defonce suodattimet {
-                      :toimenpidepyynnot      "Toimenpidepyynnöt"
-                      :kyselyt                "Kyselyt"
-                      :tiedotukset            "Tiedotukset"
-                      :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"
-                      :tarkastukset           "Tarkastukset"
-                      :havainnot              "Havainnot"
-                      :paikkaustyot           "Paikkaustyöt"
-                      :paallystystyot         "Päällystystyöt"
-                      :tyokoneet              "Työkoneet"
-                      })
-(defonce valitut-suodattimet (atom (into #{} (keys suodattimet))))
+;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
+(defonce suodattimien-nimet
+         {:havainnot                        "Havainnot"
+          :tarkastukset                     "Tarkastukset"
+          :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
 
-;; Haetaan/päivitetään toimenpidekoodit kun tullaan näkymään
-(defonce toimenpidekoodit (reaction<! [nakymassa? @nakymassa?
-                                       urakka @nav/valittu-urakka
-                                       tyyppi @nav/valittu-urakkatyyppi]
-                                      (when nakymassa?
-                                        (go (let [res (<! (k/post! :hae-toimenpidekoodit-tilannekuvaan
-                                                                   {:urakka        (:id urakka)
-                                                                    :urakan-tyyppi (:arvo tyyppi)}))]
-                                              (when-not (k/virhe? res) res))))))
+          :toimenpidepyynnot                "TPP"
+          :tiedotukset                      "TUR"
+          :kyselyt                          "URK"
 
-;; Kartassa säilötään toteumakoodin nimi ja true/false arvo
-(defonce valitut-toteumatyypit (atom {}))
+          :paallystys                       "Päällystystyöt"
+          :paikkaus                         "Paikkaustyöt"
 
-;; Toimenpidekoodit-reaktio päivittyy aina kun tullaan näkymään tai kun urakka vaihtuu.
-;; Tässä reaktiossa säilytetään kaikki toimenpidekoodit, jotka ovat relevantteja. Emme kuitenkaan halua että
-;; aina urakkaa vaihdettaessa asetukset resetoituvat, jonka takia tarvitsemme tänän funktion.
-(defonce valitse-uudet-tpkt
-         (run!
-           (let [nimet (into #{} (map :nimi @toimenpidekoodit))] ;; Mahdollisesti "uudet" toimenpidekoodit
-             (swap! valitut-toteumatyypit
-                    (fn [nyt-valitut]
-                      (let [olemasaolevat (into #{} (keys nyt-valitut)) ;; "vanhat" valitut ja valitsemattomat toimenpidekoodit
-                            kaikki (vec (clojure.set/union olemasaolevat nimet))] ;; Kaikki relevantit toimenpidekoodit
-                        (zipmap kaikki
-                                (map #(get nyt-valitut % true) ;; Jos ei löydy nyt-valituista, eli ei ole vanhaa arvoa,
-                                     kaikki))))))))         ;; eli on uusi, niin laitetaan valituksi
+          "auraus ja sohjonpoisto"          "Auraus ja sohjonpoisto"
+          "suolaus"                         "Suolaus"
+          "pistehiekoitus"                  "Pistehiekoitus"
+          "linjahiekoitus"                  "Linjahiekoitus"
+          "lumivallien madaltaminen"        "Lumivallien madaltaminen"
+          "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"
+          "kelintarkastus"                  "Kelintarkastus"
 
-(defonce naytettavat-toteumatyypit (reaction
-                                     (group-by :emo @toimenpidekoodit)))
+          "tiestotarkastus"                 "Tiestötarkastus"
+          "koneellinen niitto"              "Koneellinen niitto"
+          "koneellinen vesakonraivaus"      "Koneellinen vesakonraivaus"
+
+          "liikennemerkkien puhdistus"      "Liikennemerkkien puhdistus"
+
+          "sorateiden muokkaushoylays"      "Sorateiden muokkaushöyläys"
+          "sorateiden polynsidonta"         "Sorateiden pölynsidonta"
+          "sorateiden tasaus"               "Sorateiden tasaus"
+          "sorastus"                        "Sorastus"
+
+          "harjaus"                         "Harjaus"
+          "pinnan tasaus"                   "Pinnan tasaus"
+          "paallysteiden paikkaus"          "Päällysteiden paikkaus"
+          "paallysteiden juotostyot"        "Päällysteiden juotostyöt"
+
+          "siltojen puhdistus"              "Siltojen puhdistus"
+
+          "l- ja p-alueiden puhdistus"      "L- ja P-alueiden puhdistus"
+          "muu"                             "Muu"})
+
+;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
+(defonce suodattimet (atom {:yllapito       {:paallystys true
+                                             :paikkaus   true}
+                            :ilmoitukset    {:toimenpidepyynnot true
+                                             :kyselyt           true
+                                             :tiedotukset       true}
+                            :turvallisuus   {:turvallisuuspoikkeamat true}
+                            :laadunseuranta {:havainnot    true
+                                             :tarkastukset true}
+
+                            ;; Näiden pitää osua työkoneen enumeihin
+                            :talvi          {"auraus ja sohjonpoisto"          true
+                                             "suolaus"                         true
+                                             "pistehiekoitus"                  true
+                                             "linjahiekoitus"                  true
+                                             "lumivallien madaltaminen"        true
+                                             "sulamisveden haittojen torjunta" true
+                                             "kelintarkastus"                  true
+                                             "muu"                             true}
+
+                            :kesa           {"tiestotarkastus"            true
+                                             "koneellinen niitto"         true
+                                             "koneellinen vesakonraivaus" true
+
+                                             "liikennemerkkien puhdistus" true
+
+                                             "sorateiden muokkaushoylays" true
+                                             "sorateiden polynsidonta"    true
+                                             "sorateiden tasaus"          true
+                                             "sorastus"                   true
+
+                                             "harjaus"                    true
+                                             "pinnan tasaus"              true
+                                             "paallysteiden paikkaus"     true
+                                             "paallysteiden juotostyot"   true
+
+                                             "siltojen puhdistus"         true
+
+                                             "l- ja p-alueiden puhdistus" true
+                                             "muu"                        true}}))
 
 ;; Valittu aikaväli vektorissa [alku loppu]
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
@@ -80,19 +118,17 @@
   (tunteja-vuorokausissa (* 7 viikot)))
 
 ;; Mäppi sisältää numeroarvot tekstuaaliselle esitykselle.
-(defonce aikasuodatin-tunteina {"2h"  2
-                                "4h"  4
-                                "24h" (tunteja-vuorokausissa 1)
-                                "1vk" (tunteja-viikoissa 1)
-                                "2vk" (tunteja-viikoissa 2)})
+(defonce aikasuodatin-tunteina {"0-2h"  2
+                                "0-4h"  4
+                                "0-12h" 12
+                                "1 vrk" (tunteja-vuorokausissa 1)
+                                "2 vrk" (tunteja-vuorokausissa 2)
+                                "3 vrk" (tunteja-vuorokausissa 3)
+                                "1 vk"  (tunteja-viikoissa 1)
+                                "2 vk"  (tunteja-viikoissa 2)
+                                "3 vk"  (tunteja-viikoissa 3)})
 
-;; Nykytilanteeseen voidaan joutua tekemään eri suodatinvaihtoehtoja eri asioille,
-;; esim talvella ja kesällä voi olla eri ajat. Siksi toteutettu tällä tavalla.
-;; Vektori sisältää tekstuaalisen esityksen vaihtoehdot, nämä osuvat aikasuodatin-tunteina mäppiin. Atomissa
-;; nykyinen valittu tekstuaalinen arvo.
-(defonce talvikauden-aikasuodatin ["2h" "6h" "12h" "24h"])
-(defonce valittu-aikasuodatin (atom talvikauden-aikasuodatin))
-(defonce valittu-aikasuodattimen-arvo (reaction (first @valittu-aikasuodatin)))
+(defonce valittu-aikasuodattimen-arvo (atom (get aikasuodatin-tunteina "2h")))
 
 (defonce haetut-asiat (atom nil))
 (defonce tilannekuvan-asiat-kartalla
