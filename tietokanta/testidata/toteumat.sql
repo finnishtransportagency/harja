@@ -197,6 +197,30 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 3')
         st_makepoint(440520, 7209485) ::POINT, 2);
 
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
+        '2005-11-11 10:01.00',
+        NOW(),
+        st_makepoint(441119, 7206199) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
+        '2005-11-11 10:03.51',
+        NOW(),
+        st_makepoint(441171, 7206195) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
+        '2005-11-11 10:06.00',
+        NOW(),
+        st_makepoint(441899, 7207119) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
+        '2005-11-11 10:09.00',
+        NOW(),
+        st_makepoint(441520, 7208485) ::POINT, 2);
+
+INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
 '2005-10-10 10:00.00',
 NOW(),
