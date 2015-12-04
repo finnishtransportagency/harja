@@ -15,13 +15,21 @@
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
+(defn hae-urakan-toteumien-tehtavien-summat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
+  (k/post! :urakan-toteumien-tehtavien-summat
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id
+            :alkupvm alkupvm
+            :loppupvm loppupvm
+            :tyyppi tyyppi}))
+
 (defonce yks-hint-tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                                 nakymassa? @yksikkohintaiset-tyot-nakymassa?
                                                 valittu-hoitokausi @u/valittu-hoitokausi]
                                                (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
                                                  (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
-                                                 (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen))))
+                                                 (hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen))))
 
 (defonce yks-hint-tyot-tehtavittain
          (reaction
@@ -100,6 +108,27 @@
                                  (> (:hoitokauden-toteutunut-maara rivi) 0)
                                  (> (:hoitokauden-suunniteltu-maara rivi) 0))))
                @tehtavarivit))))
+
+(def yksikkohintainen-toteuma-kartalla-xf
+  (map #(do
+         (assoc %
+           :type :yksikkohintainen-toteuma
+           :alue {:type   :arrow-line
+                  :points (mapv (comp :coordinates :sijainti)
+                                (sort-by
+                                  :aika
+                                  pvm/ennen?
+                                  (:reittipisteet %)))}))))
+
+(def karttataso-yksikkohintainen-toteuma (atom false))
+
+(defonce valittu-yksikkohintainen-toteuma (atom nil))
+
+(defonce yksikkohintainen-toteuma-kartalla
+         (reaction
+           @valittu-yksikkohintainen-toteuma
+           (when @karttataso-yksikkohintainen-toteuma
+             (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]))))
 
 (def haetut-reitit
   (reaction<!

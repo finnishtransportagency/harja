@@ -103,17 +103,17 @@
   Kun lomake tallennetaan, tiedot yhdistetään näistä atomeista yhdeksi kokonaisuudeksi."
   ; Olisin toteuttanut tämän paremmin käyttäen r/wrappia jos olisin osannut Clojurea paremmin tätä tehdessä :-)
   []
-  (let [lomake-toteuma (atom (if (empty? @toteumat/valittu-yksikkohintainen-toteuma)
+  (let [lomake-toteuma (atom (if (empty? @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
                                (if @u/urakan-organisaatio
-                                 (-> (assoc @toteumat/valittu-yksikkohintainen-toteuma :suorittajan-nimi (:nimi @u/urakan-organisaatio))
+                                 (-> (assoc @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma :suorittajan-nimi (:nimi @u/urakan-organisaatio))
                                      (assoc :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio)))
-                                 @toteumat/valittu-yksikkohintainen-toteuma)
-                               @toteumat/valittu-yksikkohintainen-toteuma))
+                                 @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
+                               @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma))
         lomake-tehtavat (atom (into {}
                                     (map (fn [[id tehtava]]
                                            [id (assoc tehtava :tehtava
                                                               (:id (:tehtava tehtava)))])
-                                         (:tehtavat @toteumat/valittu-yksikkohintainen-toteuma))))
+                                         (:tehtavat @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma))))
         tehtavat-virheet (atom nil)
         jarjestelman-lisaama-toteuma? (true? (:jarjestelman-lisaama @lomake-toteuma))
         valmis-tallennettavaksi? (reaction
@@ -130,12 +130,12 @@
     (log "Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "Lomake tehtävät: " (pr-str @lomake-tehtavat))
     (komp/luo
-      (komp/lippu toteumat/karttataso-yksikkohintainen-toteuma)
+      (komp/lippu yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma)
       (fn [ur]
         [:div.toteuman-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! toteumat/valittu-yksikkohintainen-toteuma nil)}
+         [:button.nappi-toissijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)}
           (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
-         (if (:toteuma-id @toteumat/valittu-yksikkohintainen-toteuma)
+         (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
            (if jarjestelman-lisaama-toteuma?
              [:h3 "Tarkastele toteumaa"]
              [:h3 "Muokkaa toteumaa"])
@@ -158,7 +158,7 @@
                                                     (reset! yksikkohintaiset-tyot/yks-hint-tehtavien-summat (:tehtavien-summat vastaus))
                                                     (reset! lomake-tehtavat nil)
                                                     (reset! lomake-toteuma nil)
-                                                    (reset! toteumat/valittu-yksikkohintainen-toteuma nil))}])}
+                                                    (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil))}])}
           [(when jarjestelman-lisaama-toteuma?
              {:otsikko     "Lähde" :nimi :luoja :tyyppi :string
               :hae         (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
@@ -246,7 +246,7 @@
                                                          :luoja                (:kayttajanimi toteuma)
                                                          :reittipisteet        (:reittipisteet toteuma)
                                                          :organisaatio         (:organisaatio toteuma)}]
-                                      (reset! toteumat/valittu-yksikkohintainen-toteuma lomake-tiedot)))))}
+                                      (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma lomake-tiedot)))))}
                           (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
@@ -260,7 +260,7 @@
         [:div
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
 
-         [:button.nappi-ensisijainen {:on-click #(reset! toteumat/valittu-yksikkohintainen-toteuma {})
+         [:button.nappi-ensisijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
                                       :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka)))}
           (ikonit/plus) " Lisää toteuma"]
 
@@ -293,6 +293,6 @@
     (fn []
       [:span
        [kartta/kartan-paikka]
-       (if @toteumat/valittu-yksikkohintainen-toteuma
+       (if @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
          [yksikkohintainen-toteumalomake]
          [yksikkohintaisten-toteumalistaus])])))
