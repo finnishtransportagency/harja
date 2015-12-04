@@ -8,7 +8,8 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]))
+            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
+            [harja.tyokalut.xml :as xml]))
 
 (def kayttaja "jvh")
 
@@ -28,51 +29,34 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(def odotettu-ilmoitus
-  {"ilmoittaja"
-                        {"sukunimi"           "Meikäläinen",
-                         "etunimi"            "Matti",
-                         "matkapuhelinnumero" "08023394852",
-                         "tyopuhelinnumero"   nil,
-                         "email"              "matti.meikalainen@palvelu.fi"},
-   "ilmoitustyyppi"     "toimenpidepyynto",
-   "otsikko"            "Korkeat vallit",
-   "yhteydenottopyynto" false,
-   "sijainti"           {"koordinaatit" {"x" 452935.0, "y" 7186873.0}},
-   "lahettaja"
-                        {"etunimi"            "Pekka",
-                         "sukunimi"           "Päivystäjä",
-                         "matkapuhelinnumero" nil,
-                         "tyopuhelinnumero"   nil,
-                         "email"              "pekka.paivystaja@livi.fi"},
-   "ilmoitettu"         "2015-09-29T11:49:45Z",
-   "ilmoitusid"         123456789,
-   "selitteet"
-                        [{"selite" "auraustarve"} {"selite" "aurausvallitNakemaesteena"}],
-   "tienumero"          4,
-   "lyhytselite"        nil,
-   "pitkaselite"
-                        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
+(defn luo-testi-ilmoitus []
+  (u "INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu)
+      VALUES ((SELECT id
+      FROM urakka
+      WHERE nimi = 'Oulun alueurakka 2014-2019'), 987654321, now());"))
+
+(defn poista-testi-ilmoitus []
+  (u "DELETE FROM ilmoitus WHERE ilmoitusid = 987654321;"))
+
+(defn hae-testi-ilmoituksen-toimenpiteiden-maara []
+  (ffirst (q "SELECT count(id)
+              FROM ilmoitustoimenpide
+              WHERE ilmoitus =
+              (SELECT id
+               FROM ilmoitus
+               WHERE ilmoitusid = 987654321);")))
 
 (deftest kuuntele-urakan-ilmoituksia
-  (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))]
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
-    (odota #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
-    (is (= 200 (:status @vastaus)))
+  (let [viestit (atom [])]
+    (luo-testi-ilmoitus)
+    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(swap! viestit conj (.getText %)))
+    (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/havainto"] kayttaja portti
+                                           (-> "test/resurssit/api/havainto.json" slurp))]
+      (is 200 (:status vastaus)) "Viestin lähetys API:n onnistui.")
 
-    (let [vastausdata (cheshire/decode (:body @vastaus))
-          ilmoitus (get (first (get vastausdata "ilmoitukset")) "ilmoitus")]
-      (is (= 1 (count (get vastausdata "ilmoitukset"))))
-      (is (= odotettu-ilmoitus ilmoitus)))
+    (is (= 1 (hae-testi-ilmoituksen-toimenpiteiden-maara)) "Ilmoitustoimenpide löytyy tietokannasta.")
 
-    (poista-ilmoitus)))
+    (odota #(= 1 (count @viestit)) "Ilmoitustoimenpideviesti lähetettiin Sonjan jonoon." 10000)
+    (is (xml/validoi "xsd/tloik/" "harja-tloik.xsd" @viestit) "Lähetetty ilmoitustoimenpide XML on valid.i")
 
-(deftest hae-valissa-saapuneet-ilmoitukset
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti)]
-    (is (= 200 (:status vastaus)))
-
-    (let [vastausdata (cheshire/decode (:body vastaus))]
-      (is (= 5 (count (get vastausdata "ilmoitukset")))))
-
-    (poista-ilmoitus)))
-
+    (poista-testi-ilmoitus)))
