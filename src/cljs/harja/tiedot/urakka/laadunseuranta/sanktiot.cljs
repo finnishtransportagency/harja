@@ -16,7 +16,7 @@
 (def nakymassa? (atom false))
 (def +uusi-sanktio+
   (reaction {:suorasanktio true
-             :havainto
+             :laatupoikkeama
                            {
                             :tekijanimi @istunto/kayttajan-nimi
                             :paatos     {:paatos "sanktio"}
@@ -39,10 +39,10 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s]
-  {:sanktio  (dissoc s :havainto)
-   :havainto (if-not (get-in s [:havainto :urakka])
-               (:havainto (assoc-in s [:havainto :urakka] (:id @nav/valittu-urakka)))
-               (:havainto s))})
+  {:sanktio  (dissoc s :laatupoikkeama)
+   :laatupoikkeama (if-not (get-in s [:laatupoikkeama :urakka])
+               (:laatupoikkeama (assoc-in s [:laatupoikkeama :urakka] (:id @nav/valittu-urakka)))
+               (:laatupoikkeama s))})
 
 (defn tallenna-sanktio
   [sanktio]
@@ -53,7 +53,7 @@
   (when (and
           palautettu-id
           (pvm/valissa?
-            (get-in sanktio [:havainto :aika])
+            (get-in sanktio [:laatupoikkeama :aika])
             (first @urakka/valittu-hoitokausi)
             (second @urakka/valittu-hoitokausi)))
     (if (some #(= (:id %) palautettu-id) @haetut-sanktiot)
