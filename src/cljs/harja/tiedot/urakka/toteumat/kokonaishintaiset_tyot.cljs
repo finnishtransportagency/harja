@@ -45,6 +45,7 @@
            (when nakymassa?
              (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
+(tarkkaile! "toteumat: " haetut-toteumat)
 (tarkkaile! "valittu-toteuma: " valittu-toteuma)
 
 (def haetut-reitit

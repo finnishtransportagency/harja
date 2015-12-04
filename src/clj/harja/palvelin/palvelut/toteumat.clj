@@ -516,23 +516,25 @@
                          tehtava))]
     toteumat))
 
-(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide]}]
+(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (let [reitit (into []
-                     (comp
-                       (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                       (map konv/alaviiva->rakenne))
-                     (q/hae-kokonaishintaisten-toiden-reittipisteet db
-                                                                    urakka-id
-                                                                    sopimus-id
-                                                                    (konv/sql-date alkupvm)
-                                                                    (konv/sql-date loppupvm)
-                                                                    toimenpide))
-        kasitellyt-reitit (konv/sarakkeet-vektoriin
-                            reitit
-                            {:reittipiste :reittipisteet}
-                            :toteumaid)]
-    kasitellyt-reitit))
+  (let [toteumat (q/hae-urakan-kokonaishintaiset-toteumat
+                                                 db urakka-id
+                                                 sopimus-id
+                                                 (konv/sql-date alkupvm)
+                                                 (konv/sql-date loppupvm)
+                                                 toimenpide
+                                                 tehtava)
+        toteuma-idt (distinct (mapv :toteumaid toteumat))
+        reitit (mapv (fn [toteuma-id]
+                       (let [reittipisteet (into [] (harja.geo/muunna-pg-tulokset :sijainti)
+                                                 (q/hae-toteuman-reittipisteet db toteuma-id))
+                             tehtavat (mapv :nimi (q/hae-toteuman-tehtavat db toteuma-id))]
+                         {:id            toteuma-id
+                          :reittipisteet reittipisteet
+                          :tehtavat      tehtavat}))
+                     toteuma-idt)]
+    reitit))
 
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
