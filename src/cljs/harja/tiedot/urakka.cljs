@@ -237,13 +237,15 @@
                        (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-tpin-kokonaishintaiset-tehtavat
-         (reaction (filter
-                     (fn [rivi]
-                       (if (:t3_koodi @valittu-toimenpideinstanssi)
-                         (= (:t3_koodi rivi)
-                            (:t3_koodi @valittu-toimenpideinstanssi))
-                         true))
-                     @urakan-kokonaishintaiset-tehtavat)))
+         (reaction (let [tpi @valittu-toimenpideinstanssi
+                         tehtavat @urakan-kokonaishintaiset-tehtavat]
+                     (filter
+                       (fn [rivi]
+                         (if (:t3_koodi tpi)
+                           (= (:t3_koodi rivi)
+                              (:t3_koodi @valittu-toimenpideinstanssi))
+                           true))
+                       tehtavat))))
 
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
