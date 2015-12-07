@@ -8,7 +8,8 @@
             [harja.loki :refer [log]]
             [harja.transit :as transit]
             [harja.domain.roolit :as roolit]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.virhekasittely :as vk])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def +polku+ (let [host (.-host js/location)]
@@ -30,16 +31,28 @@
       (do (<! (timeout 100))
           (recur (get-csrf-token))))))
 
+(defn virhe?
+  "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, statuksen 500 tai on EiOikeutta viesti"
+  [vastaus]
+  (or (roolit/ei-oikeutta? vastaus)
+      (and (map? vastaus)
+           (some (partial contains? vastaus) [:failure :virhe :error]))))
+           ; Aiemmin oli hellempi tapa tarkistaa, että näiden avainten
+           ; sisällä on jokin loogisesti tosi arvo. On kuitenkin mahdollista,
+           ; että serveri palauttaa esim. {:error nil}
+
 (def testmode {})
 
 (defn- kysely [palvelu metodi parametrit transducer]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
-               (put! chan (if transducer (into [] transducer vastaus) vastaus)))
+               (if (virhe? vastaus)
+                 (do (log "Palvelu " palvelu " palautti virheen: " vastaus)
+                     (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe))
+                     (vk/arsyttava-virhe (str "Palvelinkutsussa virhe: " vastaus)))
+                 (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
-
-    ;(log "X-XSRF-Token on " (.-anti_csrf_token js/window))
     (go
       (if (testmode palvelu)
         (>! chan (testmode palvelu))
@@ -71,16 +84,6 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   ([service] (get! service nil))
   ([service transducer]
    (kysely service :get nil transducer)))
-
-(defn virhe?
-  "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, statuksen 500 tai on EiOikeutta viesti"
-  [vastaus]
-  (or (roolit/ei-oikeutta? vastaus)
-      (and (map? vastaus)
-           (some (partial contains? vastaus) [:failure :virhe :error]))))
-           ; Aiemmin oli hellempi tapa tarkistaa, että näiden avainten
-           ; sisällä on jokin loogisesti tosi arvo. On kuitenkin mahdollista,
-           ; että serveri palauttaa esim. {:error nil}
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
