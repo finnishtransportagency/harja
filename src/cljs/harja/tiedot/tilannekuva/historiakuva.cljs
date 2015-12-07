@@ -171,14 +171,14 @@
                       valittu-aikasuodatin @valittu-aikasuodatin
                       lyhyen-suodattimen-asetukset @lyhyen-suodattimen-asetukset
                       pitkan-suodattimen-asetukset @pitkan-suodattimen-asetukset
-                      nakymassa @nakymassa?
+                      nakymassa? @nakymassa?
                       _ @nav/kartalla-nakyva-alue
                       _ @nav/valittu-urakka
                       _ @nav/valittu-hallintayksikko-id]
                      {:odota +bufferi+}
                      (when (and nakymassa?
                                 (or
-                                  (and
+                                 (and
                                     (= valittu-aikasuodatin :lyhyt)
                                     (not (some nil? (vals lyhyen-suodattimen-asetukset))))
                                   (and
