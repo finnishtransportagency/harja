@@ -231,7 +231,7 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
-(defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
+(defonce urakan-kokonaishintaiset-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)
                       nakymassa? (and (= :toteumat @urakan-valittu-valilehti)
                                       (= :kokonaishintaiset-tyot @toteumat-valilehti))]
