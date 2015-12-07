@@ -163,12 +163,12 @@
        :voi-muokata? @tiedot-laatupoikkeamat/voi-kirjata?}
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-       {:otsikko "Tierekisteriosoite" :nimi :tr
+       {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
         :pakollinen? true
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
-       {:otsikko "Tarkastus" :nimi :tyyppi
+       {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
         :pakollinen? true
         :tyyppi :valinta
         :valinnat (tarkastustyypit-tekijalle (:tekija tarkastus))
@@ -181,13 +181,13 @@
                           "- valitse -")
         :leveys-col 4}
        
-       {:otsikko "Tarkastaja" :nimi :tarkastaja
+       {:otsikko "Tar\u00ADkastaja" :nimi :tarkastaja
         :tyyppi :string :pituus-max 256
         :pakollinen? true
         :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
         :leveys-col 6}
 
-       {:otsikko "Havainnot" :nimi :havainnot
+       {:otsikko "Havain\u00ADnot" :nimi :havainnot
         :koko [80 :auto]
         :tyyppi :text :pakollinen? true
         :validoi [[:ei-tyhja "Kirjaa havainnot"]]
