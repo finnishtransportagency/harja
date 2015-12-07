@@ -612,7 +612,7 @@ WHERE
 ORDER BY t.alkanut
 LIMIT 501;
 
--- name: hae-yksikkohintaistent-toiden-reittipisteet
+-- name: hae-yksikkohintaisten-toiden-reittipisteet
 SELECT
   rp.id            AS reittipiste_id,
   rp.aika          AS reittipiste_aika,
@@ -635,13 +635,21 @@ WHERE
                  WHERE id = :toimenpide))
   AND t.poistettu IS NOT TRUE;
 
--- name: hae-urakan-kokonaishintaiset-toteumat
+-- name: hae-kokonaishintaisten-toiden-reittipisteet
 SELECT t.id AS toteumaid
 FROM toteuma t
   INNER JOIN toteuma_tehtava tt
     ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
   INNER JOIN toimenpidekoodi tk
     ON tk.id = tt.toimenpidekoodi
+  tt.toteuma       AS toteumaid,
+  t.alkanut        AS pvm,
+  tk.nimi          AS tehtava_nimi,
+  tk.id            AS tehtava_id
+FROM toteuma_tehtava tt
+  JOIN reittipiste rp ON tt.toteuma = rp.toteuma
+  JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
@@ -654,7 +662,32 @@ WHERE
                  FROM toimenpideinstanssi
                  WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
-ORDER BY t.alkanut
+
+-- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
+SELECT
+  CAST(t.alkanut AS DATE) AS pvm,
+  tt.toimenpidekoodi      AS toimenpidekoodi,
+  tk.nimi                 AS nimi,
+  SUM(tt.maara)           AS maara,
+  tk.yksikko              AS yksikko,
+  k.jarjestelma           AS jarjestelmanlisaama
+FROM toteuma_tehtava tt
+  LEFT JOIN toteuma t
+    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
+  LEFT JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
+  LEFT JOIN kayttaja k
+    ON k.id = t.luoja
+WHERE t.urakka = :urakkaid
+  AND t.sopimus = :sopimusid
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
+  AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
+  AND t.poistettu IS NOT TRUE
+  AND (:toimenpide :: INTEGER IS NULL OR tk.emo = (SELECT toimenpide FROM toimenpideinstanssi WHERE id = :toimenpide))
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
+ORDER BY pvm
 LIMIT 501;
 
 -- name: hae-toteuman-tehtavat

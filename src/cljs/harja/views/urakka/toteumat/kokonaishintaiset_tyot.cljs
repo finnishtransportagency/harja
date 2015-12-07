@@ -14,18 +14,25 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komp]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn tee-taulukko []
-  (let [toteumat @tiedot/haetut-toteumat]
+  (let [toteumat (into [] (map-indexed ; Summatuilla riveillä ei ole yksilöivää id:tä, generoidaan omat
+                            #(assoc %2 :id %1)
+                            @tiedot/haetut-toteumat))]
     [:span
      [grid/grid
-      {:otsikko "Kokonaishintaisten töiden toteumat"
-       :tyhja   (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
-       :tunniste :tehtavaid}
-      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "20%"}
+      {:otsikko                   "Kokonaishintaisten töiden toteumat"
+       :tyhja                     (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
+       :rivi-klikattu             #(do
+                                    (nav/vaihda-kartan-koko! :L)
+                                    (reset! tiedot/valittu-paivakohtainen-tehtava %))
+       :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
+       :mahdollista-rivin-valinta true}
+      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "20%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}

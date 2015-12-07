@@ -68,11 +68,12 @@
     (poista-ilmoitus)))
 
 (deftest hae-valissa-saapuneet-ilmoitukset
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti)]
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti)
+        ilmoitusten-maara-suoraan-kannasta (ffirst (q
+                                                     (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
     (is (= 200 (:status vastaus)))
-
     (let [vastausdata (cheshire/decode (:body vastaus))]
-      (is (= 5 (count (get vastausdata "ilmoitukset")))))
+      (is (= ilmoitusten-maara-suoraan-kannasta (count (get vastausdata "ilmoitukset")))))
 
     (poista-ilmoitus)))
 
