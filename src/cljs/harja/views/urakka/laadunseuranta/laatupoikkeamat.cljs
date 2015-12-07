@@ -87,7 +87,7 @@
 
    [grid/grid
     {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
-     :tyhja   "Ei laatupoikkeamaja."}
+     :tyhja   "Ei laatupoikkeamia."}
     [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
      {:otsikko "Kohde" :nimi :kohde :leveys 1}
      {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}

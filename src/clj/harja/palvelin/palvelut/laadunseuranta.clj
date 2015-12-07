@@ -60,7 +60,7 @@
                        (if (get (:roolit user) "jarjestelmavastuuhenkilo")
                          (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
                          (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
-          _ (log/debug "Haetaan laatupoikkeamaja urakoista " (pr-str urakka-idt))
+          _ (log/debug "Haetaan laatupoikkeamia urakoista " (pr-str urakka-idt))
           tulos (apply (comp vec flatten merge)
                        (for [urakka-id urakka-idt]
                          (into []

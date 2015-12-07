@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.laadunseuranta
-  "Tämä nimiavaruus hallinnoi laadunseurantaa sekä laatupoikkeamaja ja tarkastuksia"
+  "Tämä nimiavaruus hallinnoi laadunseurantaa sekä laatupoikkeamia ja tarkastuksia"
   (:require [reagent.core :refer [atom]]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]

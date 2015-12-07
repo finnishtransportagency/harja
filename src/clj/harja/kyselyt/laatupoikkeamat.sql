@@ -20,7 +20,7 @@ WHERE h.urakka = :urakka
 
 -- name: hae-kaikki-laatupoikkeamat
 -- Hakee listaukseen kaikki urakan laatupoikkeamat annetulle aikavälille
--- Ei palauta laatupoikkeamaja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
 -- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
@@ -42,7 +42,7 @@ WHERE h.urakka = :urakka
 
 -- name: hae-selvitysta-odottavat-laatupoikkeamat
 -- Hakee listaukseen kaikki urakan laatupoikkeamat, jotka odottavat urakoitsijalta selvitystä.
--- Ei palauta laatupoikkeamaja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
 -- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
@@ -102,7 +102,7 @@ WHERE h.urakka = :urakka
 
 -- name: hae-omat-laatupoikkeamat
 -- Hakee listaukseen kaikki urakan laatupoikkeamat, joiden luoja tai kommentoija on annettu henkilö.
--- Ei palauta laatupoikkeamaja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
 -- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
