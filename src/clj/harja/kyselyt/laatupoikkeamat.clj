@@ -1,18 +1,18 @@
-(ns harja.kyselyt.havainnot
-  "Havaintoihin liittyvät tietokantakyselyt"
+(ns harja.kyselyt.laatupoikkeamat
+  "Laatupoikkeamiin liittyvät tietokantakyselyt"
   (:require [yesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]))
 
-(defqueries "harja/kyselyt/havainnot.sql")
+(defqueries "harja/kyselyt/laatupoikkeamat.sql")
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))
 
-(defn luo-tai-paivita-havainto
-  "Luo uuden havainnon tai päivittää olemassaolevan havainnon perustiedot. Palauttaa havainnon id:n."
-  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus] :as havainto}]
+(defn luo-tai-paivita-laatupoikkeama
+  "Luo uuden laatupoikkeaman tai päivittää olemassaolevan laatupoikkeaman perustiedot. Palauttaa laatupoikkeaman id:n."
+  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus] :as laatupoikkeama}]
   (if id
-    (do (paivita-havainnon-perustiedot<! db
+    (do (paivita-laatupoikkeaman-perustiedot<! db
                                         (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
                                         (if selvitys-pyydetty true false)
                                         (:id user)
@@ -20,6 +20,6 @@
                                         id)
         id)
 
-    (:id (luo-havainto<! db urakka (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
+    (:id (luo-laatupoikkeama<! db urakka (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
                          (if selvitys-pyydetty true false) (:id user) kuvaus
                          nil nil nil nil nil nil nil nil))))

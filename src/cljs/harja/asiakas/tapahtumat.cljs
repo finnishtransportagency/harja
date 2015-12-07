@@ -1,6 +1,7 @@
 (ns harja.asiakas.tapahtumat
   "Harjan asiakaspään eventbus"
-  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]])
+  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]]
+            [harja.virhekasittely :as vk])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [nappaa-virhe]]))
 

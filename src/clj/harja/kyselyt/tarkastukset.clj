@@ -8,7 +8,7 @@
 
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tarkastuksen, palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti ulkoinen-id] :as tarkastus} havainto]
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti ulkoinen-id havainnot] :as tarkastus}]
   (log/info "tarkastus: " tarkastus)
   (let [sijainti (and sijainti
                       (geo/geometry (geo/clj->pg sijainti)))]
@@ -16,13 +16,14 @@
       (:id (luo-tarkastus<! db
                           urakka-id (konv/sql-timestamp aika)
                           (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                          sijainti tarkastaja mittaaja (name tyyppi) havainto (:id user) ulkoinen-id))
+                          sijainti tarkastaja mittaaja (name tyyppi) (:id user) ulkoinen-id havainnot))
       
       (do (log/info "TARKASTUS PÄIVITETÄÄN: " id)
           (paivita-tarkastus! db
                               (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
                               sijainti tarkastaja mittaaja (name tyyppi) (:id user)
+                              havainnot
                               urakka-id id)
           id))))
   

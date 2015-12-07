@@ -1,13 +1,14 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.liitteet
   (:require [harja.palvelin.komponentit.liitteet :as liitteet]
-            [harja.kyselyt.havainnot :as havainnot]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
+            [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
   (:import (java.util Base64)))
 
 (defn dekoodaa-base64 [data]
   (.decode (Base64/getDecoder) data))
 
-(defn tallenna-liitteet-havainnolle [db liitteiden-hallinta urakan-id havainto-id kirjaaja liitteet]
+(defn- luo-liitteet [db liitteiden-hallinta urakan-id kirjaaja liitteet liite-luotu-fn]
   (doseq [liitteen-data liitteet]
     (when (:sisalto (:liite liitteen-data))
       (let [liite (:liite liitteen-data)
@@ -16,15 +17,16 @@
             data (dekoodaa-base64 (:sisalto liite))
             koko (alength data)
             liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data))]
-        (havainnot/liita-havainto<! db havainto-id liite-id)))))
+        (liite-luotu-fn liite-id)))))
+
+(defn tallenna-liitteet-laatupoikkeamalle [db liitteiden-hallinta urakan-id laatupoikkeama-id kirjaaja liitteet]
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
+                #(laatupoikkeamat/liita-laatupoikkeama<! db laatupoikkeama-id %)))
+
+(defn tallenna-liitteet-tarkastukselle [db liitteiden-hallinta urakan-id tarkastus-id kirjaaja liitteet]
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
+                #(tarkastukset/luo-liite<! db tarkastus-id %)))
 
 (defn tallenna-liitteet-turvallisuuspoikkeamalle [db liitteiden-hallinta urakan-id tp-id kirjaaja liitteet]
-  (doseq [liitteen-data liitteet]
-    (when (:sisalto (:liite liitteen-data))
-      (let [liite (:liite liitteen-data)
-            tyyppi (:tyyppi liite)
-            tiedostonimi (:nimi liite)
-            data (dekoodaa-base64 (:sisalto liite))
-            koko (alength data)
-            liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data))]
-        (turvallisuuspoikkeamat/liita-liite<! db tp-id liite-id)))))
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
+                #(turvallisuuspoikkeamat/liita-liite<! db tp-id %)))

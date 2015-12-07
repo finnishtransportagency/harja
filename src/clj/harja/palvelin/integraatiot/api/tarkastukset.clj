@@ -9,10 +9,10 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [harja.kyselyt.havainnot :as havainnot]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-havainnolle]]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]))
 
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} tarkastus]
@@ -22,18 +22,12 @@
     (log/info "TARKASTUS TULOSSA: " tarkastus "; käyttäjä: " kayttaja)
     (log/debug "tyyppi: " tyyppi)
     (jdbc/with-db-transaction [db db]
-      (let [{tarkastus-id :id havainto-id :havainto}
+      (let [{tarkastus-id :id laatupoikkeama-id :laatupoikkeama}
             (first
               (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
             uusi? (nil? tarkastus-id)]
 
         (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
-              havainto (merge (:havainto tarkastus)
-                              {:aika   aika
-                               :id     havainto-id
-                               :urakka urakka-id
-                               :tekija :urakoitsija})
-              havainto-id (havainnot/luo-tai-paivita-havainto db kayttaja havainto)
               id (tarkastukset/luo-tai-paivita-tarkastus
                    db kayttaja urakka-id
                    {:id          tarkastus-id
@@ -43,11 +37,16 @@
                     :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
                     :mittaaja    (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
                     :tr          (json/sijainti->tr (:sijainti tarkastus))
-                    :sijainti    (json/sijainti->point (:sijainti tarkastus))}
-                   havainto-id)
+                    :sijainti    (json/sijainti->point (:sijainti tarkastus))
+
+                    ;; FIXME: siirrä havainto/kuvaus suoraan havainnot kentäksi
+                    :havainnot (get-in tarkastus [:havainto :kuvaus])}
+                   )
+
+              ;; FIXME: siirrä liitteet suoraan tarkastukseen
               liitteet (:liitteet (:havainto tarkastus))]
 
-          (tallenna-liitteet-havainnolle db liitteiden-hallinta urakka-id havainto-id kayttaja liitteet)
+          (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
 
           (case tyyppi
             :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus

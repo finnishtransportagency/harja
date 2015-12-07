@@ -14,36 +14,42 @@
             [harja.testi :as testi])
   (:import (javax.jms TextMessage)))
 
-(def +testihanke-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+(def +testihanke-sanoma+
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+  <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
     <Program id=\"TESTIHANKE\" manager_Id=\"A010098\" manager_User_Name=\"A010098\" message_Id=\"HankeMessageId\"
-             name=\"Testi alueurakka 2009-2014\" schedule_finish=\"2013-12-31T00:00:00.0\"
-             schedule_start=\"2009-01-01T00:00:00.0\" vv_alueurakkanro=\"TH-123\" vv_code=\"14-1177\">
-        <documentLinks/>
+      name=\"Testi alueurakka 2009-2014\" schedule_finish=\"2013-12-31T00:00:00.0\"
+      schedule_start=\"2009-01-01T00:00:00.0\" vv_alueurakkanro=\"TH-123\" vv_code=\"14-1177\">
+      <documentLinks/>
     </Program>
-</Sampo2harja>")
+  </Sampo2harja>")
 
-(def +testiurakka-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" programId=\"TESTIHANKE\"
-             resourceId=\"TESTIHENKILO\" schedule_finish=\"2020-12-31T17:00:00.0\" schedule_start=\"2013-01-01T08:00:00.0\">
+(def +testiurakka-sanoma+
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+      <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
+        programId=\"TESTIHANKE\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
+        schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
+        financialDepartmentHash=\"KP981303\">
         <documentLinks/>
-    </Project>
-</Sampo2harja>")
+      </Project>
+    </Sampo2harja>")
 
-(def +testisopimus-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
-    <Order contactId=\"\" contractPartyId=\"TESTIORG\" id=\"TESTISOPIMUS\" messageId=\"OrganisaatioMessageId\"
-           name=\"Testisopimus\" projectId=\"TESTIURAKKA\" schedule_finish=\"2013-10-31T00:00:00.0\"
-           schedule_start=\"2013-09-02T00:00:00.0\" vv_code=\"\" vv_dno=\"-\">
+(def +testisopimus-sanoma+
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+      <Order contactId=\"\" contractPartyId=\"TESTIORG\" id=\"TESTISOPIMUS\" messageId=\"OrganisaatioMessageId\"
+             name=\"Testisopimus\" projectId=\"TESTIURAKKA\" schedule_finish=\"2013-10-31T00:00:00.0\"
+             schedule_start=\"2013-09-02T00:00:00.0\" vv_code=\"\" vv_dno=\"-\">
         <documentLinks/>
     </Order>
-</Sampo2harja>")
+  </Sampo2harja>")
 
 (def +testiorganisaatio-sanoma+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
     <Company id=\"TESTIORG\" messageId=\"OrganisaatioMessageId\" name=\"Testi Oy\" vv_corporate_id=\"3214527-8\">
         <contactInformation address=\"Katu 1\" city=\"Helsinki\" postal_Code=\"00100\" type=\"main\"/>
+        <contactPersons id=\"\" first_name=\"\" family_name=\"\" yhthlo_puh=\"\" yht_sposti=\"\"/>
     </Company>
 </Sampo2harja>")
 
@@ -125,6 +131,9 @@
 
 (defn hae-urakan-tyyppi []
   (first (first (q "select tyyppi from urakka where sampoid = 'TESTIURAKKA';"))))
+
+(defn hae-urakan-hallintayksikon-nimi []
+  (first (first (q "SELECT o.nimi FROM urakka u INNER JOIN organisaatio o on o.id = u.hallintayksikko WHERE u.sampoid = 'TESTIURAKKA';"))))
 
 (defn onko-yhteyshenkilo-sidottu-urakkaan? []
   (first (first (q "SELECT exists(
