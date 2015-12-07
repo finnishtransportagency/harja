@@ -50,22 +50,6 @@
    (s/optional-key :uusi-kommentti) s/Any
    (s/optional-key :liitteet) s/Any})
 
-(def TarkastuksenLaatupoikkeama
-  {(s/optional-key :aika)                  pvm-tyyppi
-   :kuvaus                             Teksti
-   :tekija                             Osapuoli
-   (s/optional-key :kohde)             (s/maybe s/Str)
-   (s/optional-key :urakka)            s/Any
-   (s/optional-key :tekijanimi)        s/Str
-   (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
-   (s/optional-key :uusi-liite)        s/Any
-   (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
-   (s/optional-key :id) s/Int
-   (s/optional-key :paatos) Paatos
-   (s/optional-key :sanktiot) {s/Num Sanktio}
-   (s/optional-key :uusi-kommentti) s/Any
-   (s/optional-key :liitteet) s/Any})
-
 (def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie :laatu :pistokoe))
 
 (def Talvihoitomittaus
@@ -91,6 +75,7 @@
    :tr                                 Tierekisteriosoite
    (s/optional-key :sijainti)          Sijainti
    (s/optional-key :uusi-liite)        s/Any
+   (s/optinal-key :liitteet)           s/Any
    :tyyppi                             Tarkastustyyppi
    :tarkastaja                         Teksti
    :havainnot                          s/Str
