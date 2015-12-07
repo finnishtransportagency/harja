@@ -241,11 +241,6 @@
                            (juxt :tpi_id :tpi_nimi)
                            (<! (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur)))))))
 
-(defonce valittu-kokonaishintainen-toimenpide (atom nil))
-
-(defn valitse-kokonaishintainen-toimenpide [tpi]
-  (reset! valittu-kokonaishintainen-toimenpide tpi))
-
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
 (defn valitse-kokonaishintainen-tehtava! [tpi]

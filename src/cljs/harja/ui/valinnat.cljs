@@ -121,28 +121,17 @@
                          :valitse-fn valitse-fn}
     @urakan-toimenpideinstanssit-atom]])
 
-(defn urakan-kokonaishintainen-toimenpide-ja-tehtava
-  [urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-atom
-   valittu-kokonaishintainen-toimenpideinstanssi-atom
-   valitse-kokonaishintainen-toimenpide-fn
+(defn urakan-kokonaishintainen-tehtava
+  [valittu-toimenpideinstanssi-atom
    valittu-kokonaishintainen-tehtava-atom
    valitse-kokonaishintainen-tehtava-fn]
   [:span
-   [:div.label-ja-alasveto
-    [:span.alasvedon-otsikko "Toimenpide"]
-    [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-toimenpideinstanssi-atom
-                          :format-fn  #(if % (str (second (first %))) "Kaikki toimenpiteet")
-                          :valitse-fn #(do
-                                        (valitse-kokonaishintainen-tehtava-fn nil)
-                                        (valitse-kokonaishintainen-toimenpide-fn %))}
-     (concat [nil] @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-atom)]]
-
    [:div.label-ja-alasveto
     [:span.alasvedon-otsikko "Tehtävä"]
     [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-tehtava-atom
                           :format-fn  #(if % (str (:t4_nimi %)) "Kaikki tehtävät")
                           :valitse-fn valitse-kokonaishintainen-tehtava-fn}
-     (concat [nil] (second @valittu-kokonaishintainen-toimenpideinstanssi-atom))]]])
+     (concat [nil] (second @valittu-toimenpideinstanssi-atom))]]])
 
 ;; Parametreja näissä on melkoisen hurja määrä, mutta ei voi mitään
 (defn urakan-sopimus-ja-hoitokausi

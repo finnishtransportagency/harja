@@ -60,11 +60,9 @@
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
-(defn urakan-kokonaishintainen-toimenpide-ja-tehtava []
-  (valinnat/urakan-kokonaishintainen-toimenpide-ja-tehtava
-    u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
-    u/valittu-kokonaishintainen-toimenpide
-    u/valitse-kokonaishintainen-toimenpide
+(defn urakan-kokonaishintainen-tehtava+kaikki []
+  (valinnat/urakan-kokonaishintainen-tehtava
+    u/valittu-toimenpideinstanssi
     u/valittu-kokonaishintainen-tehtava
     u/valitse-kokonaishintainen-tehtava!))
 

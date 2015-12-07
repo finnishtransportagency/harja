@@ -39,8 +39,8 @@
             sopimus-id (first @urakka/valittu-sopimusnumero)
             hoitokausi @urakka/valittu-hoitokausi
             aikavali @urakka/valittu-aikavali
-            toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
-            tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
+            toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
+            tehtava nil ; FIXME Käytä @urakka/valittu-kokonaishintainen-tehtava kun toimii
             nakymassa? @nakymassa?]
            (when nakymassa?
              (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
@@ -51,8 +51,8 @@
      sopimus-id (first @urakka/valittu-sopimusnumero)
      hoitokausi @urakka/valittu-hoitokausi
      aikavali @urakka/valittu-aikavali
-     toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
-     tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
+     toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
+     tehtava nil ; FIXME Käytä @urakka/valittu-kokonaishintainen-tehtava kun toimii
      nakymassa? @nakymassa?]
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
