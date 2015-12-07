@@ -62,7 +62,7 @@
 
 (defn urakan-kokonaishintainen-tehtava+kaikki []
   (valinnat/urakan-kokonaishintainen-tehtava
-    u/valittu-toimenpideinstanssi
+    u/urakan-kokonaishintaiset-tehtavat
     u/valittu-kokonaishintainen-tehtava
     u/valitse-kokonaishintainen-tehtava!))
 
