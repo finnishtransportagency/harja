@@ -129,7 +129,7 @@
    [:div.label-ja-alasveto
     [:span.alasvedon-otsikko "Tehtävä"]
     [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-tehtava-atom
-                          :format-fn  #(if % (str (:t4_nimi %)) "Kaikki tehtävät")
+                          :format-fn  #(if % (str (:t4_nimi %)) "Ei tehtävää")
                           :valitse-fn valitse-kokonaishintainen-tehtava-fn}
      @urakan-kokonaishintaiset-tehtavat-atom]]])
 
