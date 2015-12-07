@@ -243,11 +243,7 @@
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
-      (let [laatupoikkeama (merge (:laatupoikkeama tarkastus)
-                                  {:aika   (:aika tarkastus)
-                                   :urakka urakka-id})
-            
-            uusi? (nil? (:id tarkastus))
+      (let [uusi? (nil? (:id tarkastus))
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
         (condp = (:tyyppi tarkastus)

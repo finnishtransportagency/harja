@@ -45,13 +45,7 @@
 (defn valitse-tarkastus [tarkastus]
   (go
     (reset! tarkastukset/valittu-tarkastus
-            (update-in (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) (:id tarkastus)))
-                       [:laatupoikkeama :sanktiot]
-                       (fn [sanktiot]
-                         (when sanktiot
-                           (into {}
-                                 (map (juxt :id identity)
-                                      sanktiot))))))))
+            (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) (:id tarkastus))))))
 
 (defn tarkastuslistaus
   "Tarkastuksien listauskomponentti"
