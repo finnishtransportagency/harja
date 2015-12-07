@@ -232,19 +232,23 @@
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-kokonaishintaiset-tehtavat
-         (reaction<! [ur (:id @nav/valittu-urakka)
-                      nakymassa? (and (= :toteumat @urakan-valittu-valilehti)
-                                      (= :kokonaishintaiset-tyot @toteumat-valilehti))]
-                     (when (and ur nakymassa?)
-                       (go
-                         (group-by
-                           (juxt :tpi_id :tpi_nimi)
-                           (<! (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur)))))))
+         (reaction<! [ur (:id @nav/valittu-urakka)]
+                     (when ur
+                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
+
+(defonce urakan-tpin-kokonaishintaiset-tehtavat
+         (reaction (filter
+                     (fn [rivi]
+                       (if (:t3_koodi @valittu-toimenpideinstanssi)
+                         (= (:t3_koodi rivi)
+                            (:t3_koodi @valittu-toimenpideinstanssi))
+                         true))
+                     @urakan-kokonaishintaiset-tehtavat)))
 
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
-(defn valitse-kokonaishintainen-tehtava! [tpi]
-  (reset! valittu-kokonaishintainen-tehtava tpi))
+(defn valitse-kokonaishintainen-tehtava! [tehtava]
+  (reset! valittu-kokonaishintainen-tehtava tehtava))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)

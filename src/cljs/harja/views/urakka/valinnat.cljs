@@ -62,7 +62,9 @@
 
 (defn urakan-kokonaishintainen-tehtava+kaikki []
   (valinnat/urakan-kokonaishintainen-tehtava
-    u/urakan-kokonaishintaiset-tehtavat
+    (r/wrap (vec (concat [{:t4_nimi "Kaikki"}]
+                         @u/urakan-tpin-kokonaishintaiset-tehtavat))
+            identity)
     u/valittu-kokonaishintainen-tehtava
     u/valitse-kokonaishintainen-tehtava!))
 
