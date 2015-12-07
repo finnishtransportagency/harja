@@ -17,8 +17,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tarkista-ilmoitus [db ilmoitusid]
-  (when-not (ilmoitukset/onko-olemassa? db ilmoitusid)
+(defn hae-ilmoituksen-id [db ilmoitusid]
+  (if-let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitusid)))]
+    id
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi  :tuntematon-ilmoitus
        :viesti (format "Ilmoitus id:llä %s. ei löydy ilmoitusta." ilmoitusid)})))
@@ -31,14 +32,40 @@
   (println "-----------------> parametrit" parametrit)
   (println "-----------------> data" data)
 
-  (let [ilmoitustoimenpide (:ilmoitustoimenpide data)
-        ilmoitusid (:ilmoitusid ilmoitustoimenpide)]
-    (println "-----------------> ilmoitustoimenpide" ilmoitustoimenpide)
-    (tarkista-ilmoitus db ilmoitusid)
-    (ilmoitukset/luo-ilmoitustoimenpide<!
-      db)
+  (let [ilmoitusid (Integer/parseInt (:id parametrit))
+        id (hae-ilmoituksen-id db ilmoitusid)
+        ilmoitustoimenpide (:ilmoitustoimenpide data)
+        ilmoittaja (:ilmoittaja ilmoitustoimenpide)
+        kasittelija (:kasittelija ilmoitustoimenpide)]
+    (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
 
-    ;; todo: tallenna kantaan
+    (println "-----------------> ilmoitustoimenpide" ilmoitustoimenpide)
+    (println "-----------------> (:aika ilmoitustoimenpide)" (:aika ilmoitustoimenpide))
+    (println "-----------------> ilmoitusid" ilmoitusid)
+    (println "-----------------> id" id)
+
+    (ilmoitukset/luo-ilmoitustoimenpide<!
+      db
+      id
+      ilmoitusid
+      (pvm-string->java-sql-date (:aika ilmoitustoimenpide))
+      (:vapaateksti ilmoitustoimenpide)
+      (:tyyppi ilmoitustoimenpide)
+      (get-in ilmoittaja [:henkilo :etunimi])
+      (get-in ilmoittaja [:henkilo :sukunimi])
+      (get-in ilmoittaja [:henkilo :matkapuhelin])
+      (get-in ilmoittaja [:henkilo :tyopuhelin])
+      (get-in ilmoittaja [:henkilo :sahkoposti])
+      (get-in ilmoittaja [:organisaatio :nimi])
+      (get-in ilmoittaja [:organisaatio :ytunnus])
+      (get-in kasittelija [:henkilo :etunimi])
+      (get-in kasittelija [:henkilo :sukunimi])
+      (get-in kasittelija [:henkilo :matkapuhelin])
+      (get-in kasittelija [:henkilo :tyopuhelin])
+      (get-in kasittelija [:henkilo :sahkoposti])
+      (get-in kasittelija [:organisaatio :nimi])
+      (get-in kasittelija [:organisaatio :ytunnus]))
+
     ;; todo: lähetä t-loikn
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
 

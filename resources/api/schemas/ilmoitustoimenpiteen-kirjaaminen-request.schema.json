@@ -16,11 +16,6 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "ilmoitusid": {
-          "id": "urn:harja/ilmoitustoimenpide/ilmoitusId",
-          "type": "integer",
-          "required": true
-        },
         "aika": {
           "id": "urn:harja/ilmoitustoimenpide/aika",
           "type": "string",
