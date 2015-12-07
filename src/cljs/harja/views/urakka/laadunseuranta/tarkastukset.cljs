@@ -202,10 +202,11 @@
          :talvihoito (talvihoitomittaus)
          :soratie (soratiemittaus)
          nil)
-       
-       {:otsikko "Liitteet" :nimi :liitteet
-        :komponentti [liitteet/liitteet {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
-                                                                  #(swap! tarkastus-atom assoc :uusi-liite %))
+
+       {:otsikko     "Liitteet" :nimi :liitteet
+        :komponentti [liitteet/liitteet {:urakka-id         (:id @nav/valittu-urakka)
+                                         :uusi-liite-atom   (r/wrap (:uusi-liite tarkastus)
+                                                                    #(swap! tarkastus-atom assoc :uusi-liite %))
                                          :uusi-liite-teksti "Lisää liite tarkastukseen"}
                       (:liitteet tarkastus)]}]
       
