@@ -36,7 +36,15 @@ SELECT t.id, t.sopimus, t.aika,
        LEFT JOIN soratiemittaus stm ON (t.tyyppi = 'soratie'::tarkastustyyppi AND stm.tarkastus=t.id)
        LEFT JOIN talvihoitomittaus thm ON (t.tyyppi = 'talvihoito'::tarkastustyyppi AND thm.tarkastus=id)
  WHERE t.urakka = :urakka AND t.id = :id
- 
+
+-- name: hae-tarkastuksen-liitteet
+-- Hakee annetun tarkastuksen kaikki liitteet
+SELECT l.id, l.tyyppi, l.koko, l.nimi, l.liite_oid AS oid
+  FROM liite l
+       JOIN tarkastus_liite tl on l.id = tl.liite
+ WHERE tl.tarkastus = :tarkastus
+ORDER BY l.luotu ASC;
+
 -- name: luo-tarkastus<!
 -- Luo uuden tarkastuksen
 INSERT

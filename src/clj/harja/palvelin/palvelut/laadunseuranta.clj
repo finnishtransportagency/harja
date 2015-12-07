@@ -237,7 +237,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id)))]
     (assoc tarkastus
-      :laatupoikkeama (hae-laatupoikkeaman-tiedot db user urakka-id (:id (:laatupoikkeama tarkastus))))))
+           :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id)))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
