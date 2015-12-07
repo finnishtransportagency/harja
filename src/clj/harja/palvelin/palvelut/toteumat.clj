@@ -96,12 +96,19 @@
     (log/debug "Käsitelty toteuma: " (pr-str kasitelty-toteuma))
     kasitelty-toteuma))
 
-(defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-  (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
+(defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id]}]
+  (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
-        (q/hae-toteumien-tehtavien-summat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
+        (q/hae-toteumien-tehtavien-summat db
+                                          urakka-id
+                                          sopimus-id
+                                          (konv/sql-date alkupvm)
+                                          (konv/sql-date loppupvm)
+                                          (name tyyppi)
+                                          toimenpide-id
+                                          tehtava-id)))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
@@ -535,7 +542,7 @@
                             :toteumaid)]
     kasitellyt-reitit))
 
-(defn hae-urakan-yksikkohintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide]}]
+(defn hae-urakan-yksikkohintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [reitit (into []
                      (comp
@@ -546,7 +553,8 @@
                                                               sopimus-id
                                                               (konv/sql-date alkupvm)
                                                               (konv/sql-date loppupvm)
-                                                              toimenpide))
+                                                              toimenpide
+                                                              tehtava))
         kasitellyt-reitit (konv/sarakkeet-vektoriin
                             reitit
                             {:reittipiste :reittipisteet}
@@ -596,15 +604,9 @@
       (julkaise-palvelu http :poista-tehtava!
                         (fn [user tiedot]
                           (poista-tehtava! db user tiedot)))
-      (julkaise-palvelu http :urakan-toteutuneet-tehtavat
-                        (fn [user tiedot]
-                          (hae-urakan-toteutuneet-tehtavat db user tiedot)))
       (julkaise-palvelu http :urakan-toteutuneet-tehtavat-toimenpidekoodilla
                         (fn [user tiedot]
                           (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot)))
-      (julkaise-palvelu http :urakan-toteuma-paivat
-                        (fn [user tiedot]
-                          (hae-urakan-toteuma-paivat db user tiedot)))
       (julkaise-palvelu http :hae-urakan-tehtavat
                         (fn [user urakka-id]
                           (hae-urakan-tehtavat db user urakka-id)))

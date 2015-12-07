@@ -65,12 +65,12 @@ WHERE
 -- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
-          toimenpidekoodi AS tpk_id,
-          SUM(tt.maara)   AS maara,
-  (SELECT nimi
-   FROM toimenpidekoodi tpk
-   WHERE tpk.id = tt.toimenpidekoodi)
+  toimenpidekoodi AS tpk_id,
+  SUM(tt.maara)   AS maara,
+  nimi
 FROM toteuma_tehtava tt
+  LEFT JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
   JOIN toteuma t ON tt.toteuma = t.id
                     AND t.urakka = :urakka
                     AND sopimus = :sopimus
@@ -79,7 +79,9 @@ FROM toteuma_tehtava tt
                     AND tyyppi = :tyyppi :: toteumatyyppi
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-GROUP BY toimenpidekoodi;
+                    AND (:toimenpide :: INTEGER IS NULL OR tk.emo = (SELECT toimenpide FROM toimenpideinstanssi WHERE id = :toimenpide))
+                    AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+GROUP BY toimenpidekoodi, nimi;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
 -- Hakee toteuma_materiaalien ja tehtävien id:t. Hyödyllinen kun poistetaan toteuma.
@@ -621,7 +623,7 @@ SELECT
 FROM toteuma_tehtava tt
   JOIN reittipiste rp ON tt.toteuma = rp.toteuma
   JOIN toteuma t ON tt.toteuma = t.id
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
@@ -630,9 +632,10 @@ WHERE
   AND t.tyyppi = 'yksikkohintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR
-       tpk.emo = (SELECT toimenpide
+       tk.emo = (SELECT toimenpide
                  FROM toimenpideinstanssi
                  WHERE id = :toimenpide))
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
   AND t.poistettu IS NOT TRUE;
 
 -- name: hae-kokonaishintaisten-toiden-reittipisteet

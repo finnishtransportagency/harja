@@ -18,10 +18,12 @@
 (defonce yks-hint-tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
                                                 nakymassa? @yksikkohintaiset-tyot-nakymassa?
-                                                valittu-hoitokausi @u/valittu-hoitokausi]
+                                                valittu-hoitokausi @u/valittu-hoitokausi
+                                                valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
+                                                valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
                                                (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
                                                  (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
-                                                 (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen))))
+                                                 (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen valittu-toimenpide-id valittu-tehtava-id))))
 
 (defonce yks-hint-tyot-tehtavittain
          (reaction
@@ -92,13 +94,10 @@
                                         (lisaa-suunnitellut-kustannukset)
                                         (lisaa-toteutunut-maara)
                                         (lisaa-toteutuneet-kustannukset)
-                                        (lisaa-erotus)))))
-                 valittu-tpi @u/valittu-toimenpideinstanssi]
+                                        (lisaa-erotus)))))]
              (filter
-               (fn [rivi] (and (= (:t3_koodi rivi) (:t3_koodi valittu-tpi))
-                               (or
-                                 (> (:hoitokauden-toteutunut-maara rivi) 0)
-                                 (> (:hoitokauden-suunniteltu-maara rivi) 0))))
+               (fn [rivi]
+                 (> (:hoitokauden-toteutunut-maara rivi) 0))
                @tehtavarivit))))
 
 (def yksikkohintainen-toteuma-kartalla-xf
@@ -115,13 +114,14 @@
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
-(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide ]
+(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
   (k/post! :urakan-yksikkohintaisten-toteumien-reitit
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
             :alkupvm    alkupvm
             :loppupvm   loppupvm
-            :toimenpide toimenpide}))
+            :toimenpide toimenpide
+            :tehtava tehtava}))
 
 (def haetut-reitit
   (reaction<!
@@ -129,9 +129,10 @@
      sopimus-id (first @urakka/valittu-sopimusnumero)
      hoitokausi @urakka/valittu-hoitokausi
      toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
+     tehtava (:id @u/valittu-yksikkohintainen-tehtava)
      nakymassa? @yksikkohintaiset-tyot-nakymassa?]
     (when nakymassa?
-      (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide))))
+      (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
 
 (tarkkaile! "TPI: " u/valittu-toimenpideinstanssi)
 
