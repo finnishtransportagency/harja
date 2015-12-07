@@ -58,8 +58,6 @@
                (get-in kasittelija [:henkilo :sahkoposti])
                (get-in kasittelija [:organisaatio :nimi])
                (get-in kasittelija [:organisaatio :ytunnus])))]
-
-    (println "-------> ilmoitustoimenpide-id " ilmoitustoimenpide-id)
     (tloik/laheta-ilmoitustoimenpide tloik ilmoitustoimenpide-id)
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
