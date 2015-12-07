@@ -80,7 +80,7 @@
 
     [:kaikki :selvitys :kasitellyt :omat]]
 
-   [urakka-valinnat/aikavali @nav/valittu-urakka]
+   [urakka-valinnat/aikavali]
 
    (when @laatupoikkeamat/voi-kirjata?
      [napit/uusi "Uusi laatupoikkeama" #(reset! valittu-laatupoikkeama-id :uusi)])

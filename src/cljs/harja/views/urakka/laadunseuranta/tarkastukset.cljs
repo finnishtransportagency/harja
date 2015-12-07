@@ -57,7 +57,7 @@
         [yleiset/taulukko2 "col-md-6" "col-md-6" "350px" "350px"
          
          [valinnat/urakan-hoitokausi urakka]
-         [valinnat/aikavali urakka]
+         [valinnat/aikavali]
 
          [valinnat/tienumero tarkastukset/tienumero]
 

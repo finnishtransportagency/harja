@@ -35,3 +35,8 @@
   (is (= "hoito" (hae-urakan-tyyppi)) "Urakkatyyppi on asetettu oikein kun hanke on tuotu ensin.")
   (poista-urakka)
   (poista-hanke))
+
+(deftest tarkista-hallintayksikon-asettaminen
+  (tuo-urakka)
+  (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Pohjanmaa") "Urakan hallintayksiköksi on asetettu Pohjois-Pohjanmaan ELY")
+  (poista-urakka))
