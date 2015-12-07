@@ -47,7 +47,7 @@
     [:span
      (urakka-valinnat/urakan-sopimus urakka)
      (urakka-valinnat/urakan-hoitokausi urakka)
-     (urakka-valinnat/aikavali urakka)
+     (urakka-valinnat/aikavali)
      (urakka-valinnat/urakan-kokonaishintainen-toimenpide-ja-tehtava)]))
 
 (defn kokonaishintaisten-toteumien-listaus

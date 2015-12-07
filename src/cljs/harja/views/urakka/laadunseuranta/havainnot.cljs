@@ -82,7 +82,7 @@
 
     [:kaikki :selvitys :kasitellyt :omat]]
 
-   [urakka-valinnat/aikavali @nav/valittu-urakka]
+   [urakka-valinnat/aikavali]
 
    (when @havainnot/voi-kirjata?
      [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)])
