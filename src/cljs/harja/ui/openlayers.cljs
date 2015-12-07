@@ -37,6 +37,7 @@
             [ol.interaction :as ol-interaction]
 
             [ol.Overlay]                                    ;; popup
+            [harja.virhekasittely :as vk]
             [harja.asiakas.tapahtumat :as t])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
