@@ -14,7 +14,8 @@
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-ilmoituksen-id [db ilmoitusid]
@@ -29,44 +30,37 @@
     vastauksen-data))
 
 (defn kirjaa-ilmoitustoimenpide [db tloik parametrit data]
-  (println "-----------------> parametrit" parametrit)
-  (println "-----------------> data" data)
-
   (let [ilmoitusid (Integer/parseInt (:id parametrit))
         id (hae-ilmoituksen-id db ilmoitusid)
         ilmoitustoimenpide (:ilmoitustoimenpide data)
         ilmoittaja (:ilmoittaja ilmoitustoimenpide)
-        kasittelija (:kasittelija ilmoitustoimenpide)]
-    (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
+        kasittelija (:kasittelija ilmoitustoimenpide)
+        _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
+        ilmoitustoimenpide-id
+        (:id (ilmoitukset/luo-ilmoitustoimenpide<!
+               db
+               id
+               ilmoitusid
+               (pvm-string->java-sql-date (:aika ilmoitustoimenpide))
+               (:vapaateksti ilmoitustoimenpide)
+               (:tyyppi ilmoitustoimenpide)
+               (get-in ilmoittaja [:henkilo :etunimi])
+               (get-in ilmoittaja [:henkilo :sukunimi])
+               (get-in ilmoittaja [:henkilo :matkapuhelin])
+               (get-in ilmoittaja [:henkilo :tyopuhelin])
+               (get-in ilmoittaja [:henkilo :sahkoposti])
+               (get-in ilmoittaja [:organisaatio :nimi])
+               (get-in ilmoittaja [:organisaatio :ytunnus])
+               (get-in kasittelija [:henkilo :etunimi])
+               (get-in kasittelija [:henkilo :sukunimi])
+               (get-in kasittelija [:henkilo :matkapuhelin])
+               (get-in kasittelija [:henkilo :tyopuhelin])
+               (get-in kasittelija [:henkilo :sahkoposti])
+               (get-in kasittelija [:organisaatio :nimi])
+               (get-in kasittelija [:organisaatio :ytunnus])))]
 
-    (println "-----------------> ilmoitustoimenpide" ilmoitustoimenpide)
-    (println "-----------------> (:aika ilmoitustoimenpide)" (:aika ilmoitustoimenpide))
-    (println "-----------------> ilmoitusid" ilmoitusid)
-    (println "-----------------> id" id)
-
-    (ilmoitukset/luo-ilmoitustoimenpide<!
-      db
-      id
-      ilmoitusid
-      (pvm-string->java-sql-date (:aika ilmoitustoimenpide))
-      (:vapaateksti ilmoitustoimenpide)
-      (:tyyppi ilmoitustoimenpide)
-      (get-in ilmoittaja [:henkilo :etunimi])
-      (get-in ilmoittaja [:henkilo :sukunimi])
-      (get-in ilmoittaja [:henkilo :matkapuhelin])
-      (get-in ilmoittaja [:henkilo :tyopuhelin])
-      (get-in ilmoittaja [:henkilo :sahkoposti])
-      (get-in ilmoittaja [:organisaatio :nimi])
-      (get-in ilmoittaja [:organisaatio :ytunnus])
-      (get-in kasittelija [:henkilo :etunimi])
-      (get-in kasittelija [:henkilo :sukunimi])
-      (get-in kasittelija [:henkilo :matkapuhelin])
-      (get-in kasittelija [:henkilo :tyopuhelin])
-      (get-in kasittelija [:henkilo :sahkoposti])
-      (get-in kasittelija [:organisaatio :nimi])
-      (get-in kasittelija [:organisaatio :ytunnus]))
-
-    ;; todo: lähetä t-loikn
+    (println "-------> ilmoitustoimenpide-id " ilmoitustoimenpide-id)
+    (tloik/laheta-ilmoitustoimenpide tloik ilmoitustoimenpide-id)
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
 (defn ilmoituslahettaja [integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?]

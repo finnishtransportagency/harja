@@ -8,23 +8,25 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml]
+            [clojure.data.zip.xml :as xml-zip]
+            [clojure.data.zip :as zip]))
 
 (def kayttaja "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :api-ilmoitukset (component/using
-                       (api-ilmoitukset/->Ilmoitukset)
-                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
     :tloik (component/using
              (->Tloik +tloik-ilmoitusviestijono+
                       +tloik-ilmoituskuittausjono+
                       +tloik-ilmoitustoimenpideviestijono+
                       +tloik-ilmoitustoimenpidekuittausjono+)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat])))
+             [:db :sonja :integraatioloki :klusterin-tapahtumat])
+    :api-ilmoitukset (component/using
+                       (api-ilmoitukset/->Ilmoitukset)
+                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -59,8 +61,13 @@
 
     (is (= 1 (hae-testi-ilmoituksen-toimenpiteiden-maara)) "Ilmoitustoimenpide löytyy tietokannasta.")
 
-    #_(odota #(= 1 (count @viestit)) "Ilmoitustoimenpideviesti lähetettiin Sonjan jonoon." 10000)
-    #_(is (xml/validoi "xsd/tloik/" "harja-tloik.xsd" @viestit) "Lähetetty ilmoitustoimenpide XML on valid.i")
+    (odota #(= 1 (count @viestit)) "Ilmoitustoimenpideviesti lähetettiin Sonjan jonoon." 10000)
+
+    (is (xml/validoi "xsd/tloik/" "harja-tloik.xsd" (first @viestit)) "Lähetetty ilmoitustoimenpide XML on validi")
+    (let [data (zip/auto false (xml/lue (first @viestit)))]
+      (is (= "987654321" (xml-zip/xml1-> data :harja:toimenpide :ilmoitusId xml-zip/text)) "Toimenpide tehtiin oikeaan ilmoitukseen")
+      (is (= "vastaanotto" (xml-zip/xml1-> data :harja:toimenpide :tyyppi xml-zip/text)) "Toimenpide tyyppi on oikea")      )
+
 
     (poista-testi-ilmoitustoimenpide)
     (poista-testi-ilmoitus)))
