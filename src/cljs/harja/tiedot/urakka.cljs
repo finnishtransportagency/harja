@@ -249,6 +249,8 @@
 
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
+(tarkkaile! "Valittu: " valittu-kokonaishintainen-tehtava)
+
 (defn valitse-kokonaishintainen-tehtava! [tehtava]
   (reset! valittu-kokonaishintainen-tehtava tehtava))
 

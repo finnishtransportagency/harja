@@ -13,6 +13,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn hae-toteumatehtavien-paivakohtaiset-summat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
+  (log "Haetaan " urakka-id sopimus-id toimenpide tehtava)
   (k/post! :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
@@ -40,7 +41,7 @@
             hoitokausi @urakka/valittu-hoitokausi
             aikavali @urakka/valittu-aikavali
             toimenpide (or (:tpi_id @urakka/valittu-toimenpideinstanssi) nil)
-            tehtava (or (:id @urakka/valittu-kokonaishintainen-tehtava nil))
+            tehtava (or (:t4_id @urakka/valittu-kokonaishintainen-tehtava) nil)
             nakymassa? @nakymassa?]
            (when nakymassa?
              (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
@@ -52,7 +53,7 @@
      hoitokausi @urakka/valittu-hoitokausi
      aikavali @urakka/valittu-aikavali
      toimenpide (or (:tpi_id @urakka/valittu-toimenpideinstanssi) nil)
-     tehtava (or (:id @urakka/valittu-kokonaishintainen-tehtava nil))
+     tehtava (or (:t4_id @urakka/valittu-kokonaishintainen-tehtava) nil)
      nakymassa? @nakymassa?]
     (when nakymassa?
       (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
