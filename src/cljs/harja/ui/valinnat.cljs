@@ -114,6 +114,11 @@
 
 (defn urakan-toimenpide
   [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
+  (when (not (some
+               #(= % @valittu-toimenpideinstanssi-atom)
+               @urakan-toimenpideinstanssit-atom))
+    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+    (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Toimenpide"]
    [livi-pudotusvalikko {:valinta    @valittu-toimenpideinstanssi-atom
