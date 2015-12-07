@@ -689,7 +689,6 @@ GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
 ORDER BY pvm
 LIMIT 501;
 
-
 -- name: hae-toteuman-tehtavat
 SELECT
   tt.id              AS id,
