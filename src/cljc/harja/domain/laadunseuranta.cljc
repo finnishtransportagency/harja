@@ -75,7 +75,7 @@
    :tr                                 Tierekisteriosoite
    (s/optional-key :sijainti)          Sijainti
    (s/optional-key :uusi-liite)        s/Any
-   (s/optinal-key :liitteet)           s/Any
+   (s/optional-key :liitteet)          s/Any
    :tyyppi                             Tarkastustyyppi
    :tarkastaja                         Teksti
    :havainnot                          s/Str
