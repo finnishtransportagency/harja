@@ -22,7 +22,7 @@
 (defonce hae-tiedoitukset? (atom true))
 (defonce hae-turvallisuuspoikkeamat? (atom true))
 (defonce hae-tarkastukset? (atom true))
-(defonce hae-havainnot? (atom true))
+(defonce hae-laatupoikkeamat? (atom true))
 (defonce hae-paikkaustyot? (atom true))
 (defonce hae-paallystystyot? (atom true))
 
@@ -116,9 +116,9 @@
                                                              {:urakka :urakka-id
                                                               :alku   :alkupvm
                                                               :loppu  :loppupvm})))))
-                  (when @hae-havainnot? (mapv
-                                          #(assoc % :tyyppi-kartalla :havainto)
-                                          (<! (k/post! :hae-urakan-havainnot (rename-keys
+                  (when @hae-laatupoikkeamat? (mapv
+                                          #(assoc % :tyyppi-kartalla :laatupoikkeama)
+                                          (<! (k/post! :hae-urakan-laatupoikkeamat (rename-keys
                                                                                yhteiset-parametrit
                                                                                {:urakka :urakka-id})))))
                   (when @hae-paikkaustyot? (remove
@@ -163,7 +163,7 @@
                       _ @hae-tiedoitukset?
                       _ @hae-turvallisuuspoikkeamat?
                       _ @hae-tarkastukset?
-                      _ @hae-havainnot?
+                      _ @hae-laatupoikkeamat?
                       _ @hae-paikkaustyot?
                       _ @hae-paallystystyot?
                       _ @toimenpidekoodit

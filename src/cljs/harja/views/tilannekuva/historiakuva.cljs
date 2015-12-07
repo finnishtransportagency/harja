@@ -51,7 +51,7 @@
                                          :tiedoitukset
                                          :turvallisuuspoikkeamat
                                          :tarkastukset
-                                         :havainnot
+                                         :laatupoikkeamat
                                          :paikkaustyot
                                          :paallystystyot]
 
@@ -61,7 +61,7 @@
                                          :tiedoitukset           "Tiedotukset"
                                          :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"
                                          :tarkastukset           "Tarkastukset"
-                                         :havainnot              "Havainnot"
+                                         :laatupoikkeamat              "Laatupoikkeamat"
                                          :paikkaustyot           "Paikkaustyöt"
                                          :paallystystyot         "Päällystystyöt"
                                          }}
@@ -74,7 +74,7 @@
             (when @tiedot/hae-tiedoitukset? :tiedoitukset)
             (when @tiedot/hae-turvallisuuspoikkeamat? :turvallisuuspoikkeamat)
             (when @tiedot/hae-tarkastukset? :tarkastukset)
-            (when @tiedot/hae-havainnot? :havainnot)
+            (when @tiedot/hae-laatupoikkeamat? :laatupoikkeamat)
             (when @tiedot/hae-paikkaustyot? :paikkaustyot)
             (when @tiedot/hae-paallystystyot? :paallystystyot)])
 
@@ -84,7 +84,7 @@
        (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
        (reset! tiedot/hae-turvallisuuspoikkeamat? (:turvallisuuspoikkeamat uusi))
        (reset! tiedot/hae-tarkastukset? (:tarkastukset uusi))
-       (reset! tiedot/hae-havainnot? (:havainnot uusi))
+       (reset! tiedot/hae-laatupoikkeamat? (:laatupoikkeamat uusi))
        (reset! tiedot/hae-paikkaustyot? (:paikkaustyot uusi))
        (reset! tiedot/hae-paallystystyot? (:paallystystyot uusi))))])
 
@@ -128,7 +128,7 @@
   (komp/luo
     (komp/ulos (paivita-periodisesti tiedot/asioiden-haku 60000)) ;1min
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
-                      :havainto-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
+                      :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystyskohde-klikattu :paikkaustoteuma-klikattu] #(nayta-popup %2))
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit

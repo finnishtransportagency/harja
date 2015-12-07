@@ -44,26 +44,14 @@
     (is (str/blank? (slurp (:body vastaus))))
 
     ;; varmistetaan että tarkastus löytyy tietokannasta
-    (let [tark (first (q (str "SELECT t.tyyppi, h.kuvaus, stm.kiinteys, l.nimi "
+    (let [tark (first (q (str "SELECT t.tyyppi, t.havainnot, stm.kiinteys, l.nimi "
                               "  FROM tarkastus t "
-                              "       JOIN havainto h ON t.havainto=h.id "
                               "       JOIN soratiemittaus stm ON stm.tarkastus=t.id "
-                              "       JOIN havainto_liite hl ON h.id = hl.havainto"
+                              "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
                               "       JOIN liite l ON hl.liite = l.id"
                               " WHERE t.ulkoinen_id = " id
                               "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
-      (is (= tark ["soratie" "jotain outoa" 3 "soratietarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
-
-    (let [t-id (ffirst (q (str "SELECT id FROM tarkastus"
-                               " WHERE ulkoinen_id=" id
-                               "   AND luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
-          h-id (ffirst (q (str "SELECT havainto FROM tarkastus WHERE id=" t-id)))
-          l-id (ffirst (q (str "SELECT liite FROM havainto_liite  WHERE havainto=" h-id)))]
-      (u (str "DELETE FROM soratiemittaus WHERE tarkastus=" t-id))
-      (u (str "DELETE FROM tarkastus WHERE id=" t-id))
-      (u (str "DELETE FROM havainto_liite WHERE havainto = " h-id))
-      (u (str "DELETE FROM liite WHERE id= " l-id))
-      (u (str "DELETE FROM havainto WHERE id=" h-id)))))
+      (is (= tark ["soratie" "jotain outoa" 3 "soratietarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))))
 
 (deftest tallenna-virheellinen-soratietarkastus
   (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
@@ -87,25 +75,13 @@
     (is (str/blank? (slurp (:body vastaus))))
 
     ;; varmistetaan että tarkastus löytyy tietokannasta
-    (let [tark (first (q (str "SELECT t.tyyppi, h.kuvaus, thm.lumimaara, l.nimi "
+    (let [tark (first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
                               "  FROM tarkastus t "
-                              "       JOIN havainto h ON t.havainto=h.id "
                               "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
-                              "       JOIN havainto_liite hl ON h.id = hl.havainto"
+                              "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
                               "       JOIN liite l ON hl.liite = l.id"
                               " WHERE t.ulkoinen_id = " id
                               "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
-      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
-
-    (let [t-id (ffirst (q (str "SELECT id FROM tarkastus"
-                               " WHERE ulkoinen_id=" id
-                               "   AND luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
-          h-id (ffirst (q (str "SELECT havainto FROM tarkastus WHERE id=" t-id)))
-          l-id (ffirst (q (str "SELECT liite FROM havainto_liite  WHERE havainto=" h-id)))]
-      (u (str "DELETE FROM talvihoitomittaus WHERE tarkastus=" t-id))
-      (u (str "DELETE FROM tarkastus WHERE id=" t-id))
-      (u (str "DELETE FROM havainto_liite WHERE havainto = " h-id))
-      (u (str "DELETE FROM liite WHERE id= " l-id))
-      (u (str "DELETE FROM havainto WHERE id=" h-id)))))
+      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))))
     
                                

@@ -20,7 +20,7 @@
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -29,7 +29,7 @@
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
         lomakkeen-virheet (atom {})
-        voi-muokata? @havainnot/voi-kirjata?
+        voi-muokata? @laatupoikkeamat/voi-kirjata?
         voi-tallentaa? (reaction (and
                                   voi-muokata?
                                    (= (count @lomakkeen-virheet) 0)
@@ -42,7 +42,7 @@
          (if (:suorasanktio @muokattu)
            [:h3 "Muokkaa suoraa sanktiota"]
 
-           [:h3 "Muokkaa havainnon kautta tehtyä sanktiota"])
+           [:h3 "Muokkaa laatupoikkeaman kautta tehtyä sanktiota"])
 
          [:h3 "Luo uusi suora sanktio"])
 
@@ -61,66 +61,66 @@
                                      (reset! tiedot/valittu-sanktio nil))
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko     "Tekijä" :nimi :tekijanimi
-          :hae         (comp :tekijanimi :havainto)
-          :aseta       (fn [rivi arvo] (assoc-in rivi [:havainto :tekijanimi] arvo))
+          :hae         (comp :tekijanimi :laatupoikkeama)
+          :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
           :leveys      1 :tyyppi :string
           :muokattava? (constantly false)}
 
          ;; TODO Mitkä päivämäärät tarvitaan?
          (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 2}
-                       {:otsikko "Havaittu" :nimi :havaintoaika
+                       {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
                         :pakollinen? true
-                        :hae     (comp :aika :havainto)
-                        :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :aika] arvo))
+                        :hae     (comp :aika :laatupoikkeama)
+                        :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]]
                         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
                        {:otsikko "Käsitelty" :nimi :kasittelyaika
                         :pakollinen? true
-                        :hae     (comp :kasittelyaika :paatos :havainto)
-                        :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :kasittelyaika] arvo))
+                        :hae     (comp :kasittelyaika :paatos :laatupoikkeama)
+                        :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                  [:pvm-kentan-jalkeen (comp :aika :havainto) "Ei voida käsitellä havaintoa ennen"]]}
+                                  [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voida käsitellä laatupoikkeamaa ennen"]]}
                        {:otsikko "Perintäpvm" :nimi :perintapvm
                         :pakollinen? true
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                  [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :havainto)
+                                  [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :laatupoikkeama)
                                    "Ei voida periä käsittelyä ennen"]]})
 
          ;; Päätös on aina sanktio
          #_{:otsikko "Päätös" :nimi :paatos
-          :hae     (comp :paatos :paatos :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :paatos] arvo))
+          :hae     (comp :paatos :paatos :laatupoikkeama)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :paatos] arvo))
           :leveys-col  3 :tyyppi :string
           :muokattava? (constantly false)}
          {:otsikko "Perustelu" :nimi :perustelu
           :pakollinen? true
-          :hae     (comp :perustelu :paatos :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :perustelu] arvo))
+          :hae     (comp :perustelu :paatos :laatupoikkeama)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
           :leveys-col  4 :tyyppi :text :koko [80 :auto]
           :validoi [[:ei-tyhja "Anna perustelu"]]}
          {:otsikko "Kohde" :nimi :kohde
-          :hae     (comp :kohde :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :kohde] arvo))
+          :hae     (comp :kohde :laatupoikkeama)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
           :leveys-col  4 :tyyppi :string}
 
-         ;; Ei havainnon kuvausta, koska annetaan suoraan perustelu
+         ;; Ei laatupoikkeaman kuvausta, koska annetaan suoraan perustelu
          #_{:otsikko "Kuvaus" :nimi :kuvaus
-          :hae     (comp :kuvaus :havainto)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :kuvaus] arvo))
+          :hae     (comp :kuvaus :laatupoikkeama)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kuvaus] arvo))
           :leveys  3 :tyyppi :string}
 
          ;; TODO, eikö tekijän tyyppiä oikeasti tarvita? Hard-koodataanko?
          #_{:otsikko "Tekijätyyppi" :nimi :tekija
-           :hae     (comp :tekija :havainto)
-           :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :tekija] arvo))
+           :hae     (comp :tekija :laatupoikkeama)
+           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekija] arvo))
            :leveys  1 :tyyppi :string}
          {:otsikko "Käsitelty" :nimi :kasittelytapa
           :pakollinen? true
-          :hae (comp :kasittelytapa :paatos :havainto)
-          :aseta #(assoc-in %1 [:havainto :paatos :kasittelytapa] %2)
+          :hae (comp :kasittelytapa :paatos :laatupoikkeama)
+          :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
           :tyyppi :valinta
           :valinnat [:tyomaakokous :puhelin :kommentit :muu]
           :valinta-nayta #(if % (case %
@@ -131,10 +131,10 @@
                                   nil) "- valitse käsittelytapa -")
           :leveys-col 4}
 
-         (when (= :muu (get-in @muokattu [:havainto :paatos :kasittelytapa]))
+         (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
            {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
-            :hae     (comp :muukasittelytapa :paatos :havainto)
-            :aseta   (fn [rivi arvo] (assoc-in rivi [:havainto :paatos :muukasittelytapa] arvo))
+            :hae     (comp :muukasittelytapa :paatos :laatupoikkeama)
+            :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :muukasittelytapa] arvo))
             :leveys  2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
@@ -178,7 +178,7 @@
                                                                            (filter
                                                                              #(= (:toimenpidekoodi tyyppi) (:id %))
                                                                              @tiedot-urakka/urakan-toimenpideinstanssit)))))
-                        ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Havainnossa käytetään.
+                        ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
                         :valinnat-fn   (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
                         :valinta-nayta :nimi
                         :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
@@ -192,7 +192,7 @@
   []
   [:div.sanktiot
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-   (when @havainnot/voi-kirjata?
+   (when @laatupoikkeamat/voi-kirjata?
      [:button.nappi-ensisijainen
       {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
       (ikonit/plus) " Lisää sanktio"])
@@ -202,10 +202,10 @@
      :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
      :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
     [{:otsikko "Päivämäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
-     {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :havainto) :leveys 1}
-     {:otsikko "Perustelu" :nimi :kuvaus :hae (comp :perustelu :paatos :havainto) :leveys 3}
+     {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1}
+     {:otsikko "Perustelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
      {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3}
-     {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :havainto) :leveys 1}
+     {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
      {:otsikko "Summa" :nimi :summa :leveys 1 :tyyppi :numero}]
     @tiedot/haetut-sanktiot
     ]])

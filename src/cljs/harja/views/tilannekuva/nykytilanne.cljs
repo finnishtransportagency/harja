@@ -24,13 +24,13 @@
                                     :kyselyt
                                     :tiedoitukset
                                     :tyokoneet
-                                    :havainnot]
+                                    :laatupoikkeamat]
                       :vaihtoehto-nayta {
                                          :toimenpidepyynnot "Toimenpidepyynnöt"
                                          :kyselyt "Kyselyt"
                                          :tiedoitukset "Tiedotukset"
                                          :tyokoneet "Työkoneiden seuranta"
-                                         :havainnot "Havainnot"
+                                         :laatupoikkeamat "Laatupoikkeamat"
                                          }}
    (r/wrap
     (into #{}
@@ -39,14 +39,14 @@
            (when @tiedot/hae-kyselyt? :kyselyt)
            (when @tiedot/hae-tiedoitukset? :tiedoitukset)
            (when @tiedot/hae-tyokoneet? :tyokoneet)
-           (when @tiedot/hae-havainnot? :havainnot)])
+           (when @tiedot/hae-laatupoikkeamat? :laatupoikkeamat)])
     
     (fn [uusi]
       (reset! tiedot/hae-toimenpidepyynnot? (:toimenpidepyynnot uusi))
       (reset! tiedot/hae-kyselyt? (:kyselyt uusi))
       (reset! tiedot/hae-tyokoneet? (:tyokoneet uusi))
       (reset! tiedot/hae-tiedoitukset? (:tiedoitukset uusi))
-      (reset! tiedot/hae-havainnot? (:havainnot uusi))))])
+      (reset! tiedot/hae-laatupoikkeamat? (:laatupoikkeamat uusi))))])
 
 (defonce suodattimet [:span
                       [nayta-hallinnolliset-tiedot]
@@ -58,7 +58,7 @@
 (defn nykytilanne []
   (komp/luo
     (komp/ulos (paivita-periodisesti tiedot/asioiden-haku 3000)) ;3s
-    (komp/kuuntelija [:ilmoitus-klikattu :tyokone-klikattu :uusi-tyokonedata :havainto-klikattu] #(nayta-popup %2)
+    (komp/kuuntelija [:ilmoitus-klikattu :tyokone-klikattu :uusi-tyokonedata :laatupoikkeama-klikattu] #(nayta-popup %2)
                      :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
 
     {:component-will-mount   (fn [_]
