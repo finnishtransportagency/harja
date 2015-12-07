@@ -7,7 +7,6 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
-            [harja.ui.kentat :as kentat]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
@@ -22,7 +21,6 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta :refer [validi-laatupoikkeama?]]
             [harja.tiedot.istunto :as istunto]
-            [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta])

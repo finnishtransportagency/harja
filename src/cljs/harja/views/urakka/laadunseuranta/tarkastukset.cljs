@@ -3,7 +3,6 @@
             [cljs.core.async :refer [<! >! chan]]
 
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
             [harja.loki :refer [log]]
 
             [harja.tiedot.navigaatio :as nav]
@@ -22,10 +21,6 @@
             [harja.views.urakka.valinnat :as valinnat]
 
             [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]]
-
-            [clojure.string :as str]
-            [harja.domain.roolit :as roolit]
-            [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset-kartalla]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat])
   (:require-macros [reagent.ratom :refer [reaction]]
