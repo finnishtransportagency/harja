@@ -636,12 +636,10 @@ WHERE
   AND t.poistettu IS NOT TRUE;
 
 -- name: hae-kokonaishintaisten-toiden-reittipisteet
-SELECT t.id AS toteumaid
-FROM toteuma t
-  INNER JOIN toteuma_tehtava tt
-    ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
-  INNER JOIN toimenpidekoodi tk
-    ON tk.id = tt.toimenpidekoodi
+SELECT
+  rp.id            AS reittipiste_id,
+  rp.aika          AS reittipiste_aika,
+  rp.sijainti      AS reittipiste_sijainti,
   tt.toteuma       AS toteumaid,
   t.alkanut        AS pvm,
   tk.nimi          AS tehtava_nimi,
@@ -662,6 +660,7 @@ WHERE
                  FROM toimenpideinstanssi
                  WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+
 
 -- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
 SELECT
@@ -689,6 +688,7 @@ WHERE t.urakka = :urakkaid
 GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
 ORDER BY pvm
 LIMIT 501;
+
 
 -- name: hae-toteuman-tehtavat
 SELECT
