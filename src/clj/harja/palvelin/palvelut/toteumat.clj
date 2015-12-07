@@ -517,7 +517,7 @@
     toteumat))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
-  ;(roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [reitit (into []
                      (comp
                        (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
