@@ -88,8 +88,8 @@
    [grid/grid
     {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
      :tyhja   "Ei laatupoikkeamia."}
-    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-     {:otsikko "Kohde" :nimi :kohde :leveys 1}
+    [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+     {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1}
      {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
      {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
      {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}]  ;; Päätös
