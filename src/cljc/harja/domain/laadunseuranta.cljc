@@ -90,6 +90,7 @@
    :aika                               pvm-tyyppi
    :tr                                 Tierekisteriosoite
    (s/optional-key :sijainti)          Sijainti
+   (s/optional-key :uusi-liite)        s/Any
    :tyyppi                             Tarkastustyyppi
    :tarkastaja                         Teksti
    :havainnot                          s/Str
