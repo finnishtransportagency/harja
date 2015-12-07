@@ -157,31 +157,32 @@
 
 (def +bufferi+ 1000) ;1s
 
-(def asioiden-haku (reaction<!
-                     [_ @hae-toimenpidepyynnot?
-                      _ @hae-kyselyt?
-                      _ @hae-tiedoitukset?
-                      _ @hae-turvallisuuspoikkeamat?
-                      _ @hae-tarkastukset?
-                      _ @hae-laatupoikkeamat?
-                      _ @hae-paikkaustyot?
-                      _ @hae-paallystystyot?
-                      _ @toimenpidekoodit
-                      _ @valitut-toteumatyypit
-                      valittu-aikasuodatin @valittu-aikasuodatin
-                      lyhyen-suodattimen-asetukset @lyhyen-suodattimen-asetukset
-                      pitkan-suodattimen-asetukset @pitkan-suodattimen-asetukset
-                      nakymassa? @nakymassa?
-                      _ @nav/kartalla-nakyva-alue
-                      _ @nav/valittu-urakka
-                      _ @nav/valittu-hallintayksikko-id]
-                     {:odota +bufferi+}
-                     (when (and nakymassa?
-                                (or
-                                 (and
-                                    (= valittu-aikasuodatin :lyhyt)
-                                    (not (some nil? (vals lyhyen-suodattimen-asetukset))))
-                                  (and
-                                    (= valittu-aikasuodatin :pitka)
-                                    (not (some nil? (vals pitkan-suodattimen-asetukset))))))
-                       (hae-asiat))))
+(defonce asioiden-haku
+  (reaction<!
+   [_ @hae-toimenpidepyynnot?
+    _ @hae-kyselyt?
+    _ @hae-tiedoitukset?
+    _ @hae-turvallisuuspoikkeamat?
+    _ @hae-tarkastukset?
+    _ @hae-laatupoikkeamat?
+    _ @hae-paikkaustyot?
+    _ @hae-paallystystyot?
+    _ @toimenpidekoodit
+    _ @valitut-toteumatyypit
+    valittu-aikasuodatin @valittu-aikasuodatin
+    lyhyen-suodattimen-asetukset @lyhyen-suodattimen-asetukset
+    pitkan-suodattimen-asetukset @pitkan-suodattimen-asetukset
+    nakymassa? @nakymassa?
+    _ @nav/kartalla-nakyva-alue
+    _ @nav/valittu-urakka
+    _ @nav/valittu-hallintayksikko-id]
+   {:odota +bufferi+}
+   (when (and nakymassa?
+              (or
+               (and
+                (= valittu-aikasuodatin :lyhyt)
+                (not (some nil? (vals lyhyen-suodattimen-asetukset))))
+               (and
+                (= valittu-aikasuodatin :pitka)
+                (not (some nil? (vals pitkan-suodattimen-asetukset))))))
+     (hae-asiat))))
