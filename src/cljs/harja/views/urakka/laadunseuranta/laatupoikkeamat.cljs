@@ -88,7 +88,7 @@
      [napit/uusi "Uusi laatupoikkeama" #(reset! valittu-laatupoikkeama-id :uusi)])
 
    [grid/grid
-    {:otsikko "Laatupoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
+    {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
      :tyhja   "Ei laatupoikkeamaja."}
     [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
      {:otsikko "Kohde" :nimi :kohde :leveys 1}
@@ -277,7 +277,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                :kun-onnistuu (fn [_] (reset! valittu-laatupoikkeama-id nil))}])}
 
             [(when-not osa-tarkastusta?
-               {:otsikko     "Laatupoikkeaman pvm ja aika"
+               {:otsikko     "Laatu\u00ADpoikkeaman pvm ja aika"
                 :pakollinen? true
                 :tyyppi      :pvm-aika
                 :nimi        :aika
