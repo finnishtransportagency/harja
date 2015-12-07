@@ -121,11 +121,6 @@
 (defonce valittu-hoitokausi
          (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-(defonce valittu-kontekstin-hoitokausi (atom nil))
-
-(defn valitse-kontekstin-hoitokausi! [hk]
-  (reset! valittu-kontekstin-hoitokausi hk))
-
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
 (defn valitse-hoitokausi! [hk]

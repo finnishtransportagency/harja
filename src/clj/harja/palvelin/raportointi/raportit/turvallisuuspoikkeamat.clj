@@ -65,7 +65,10 @@
      
      (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
-       (pylvaat "Turvallisuuspoikkeamat kuukausittain" alkupvm loppupvm turpo-maarat-kuukausittain))
+       (pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"
+                 :alkupvm alkupvm :loppupvm loppupvm
+                  :kuukausittainen-data turpo-maarat-kuukausittain
+                :piilota-arvo? #{0}}))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []
