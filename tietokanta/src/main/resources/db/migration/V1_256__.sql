@@ -50,6 +50,10 @@ COMMENT ON TABLE tarkastus_liite IS 'Tarkastukseen liitetyt tiedostot.';
 
 
 -- Havainto:
+
+ALTER TYPE havainnon_paatostyyppi RENAME TO laatupoikkeaman_paatostyyppi;
+ALTER TYPE havainnon_kasittelytapa RENAME TO laatupoikkeaman_kasittelytapa;
+
 ALTER TABLE havainto RENAME TO laatupoikkeama;
 ALTER TABLE sanktio RENAME COLUMN havainto TO laatupoikkeama;
 
