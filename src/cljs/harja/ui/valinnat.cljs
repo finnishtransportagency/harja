@@ -133,6 +133,18 @@
                           :valitse-fn valitse-kokonaishintainen-tehtava-fn}
      @urakan-kokonaishintaiset-tehtavat-atom]]])
 
+(defn urakan-yksikkohintainen-tehtava
+  [urakan-yksikkohintainen-tehtavat-atom
+   valittu-yksikkohintainen-tehtava-atom
+   valitse-yksikkohintainen-tehtava-fn]
+  [:span
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Tehtävä"]
+    [livi-pudotusvalikko {:valinta    @valittu-yksikkohintainen-tehtava-atom
+                          :format-fn  #(if % (str (:nimi %)) "Ei tehtävää")
+                          :valitse-fn valitse-yksikkohintainen-tehtava-fn}
+     @urakan-yksikkohintainen-tehtavat-atom]]])
+
 ;; Parametreja näissä on melkoisen hurja määrä, mutta ei voi mitään
 (defn urakan-sopimus-ja-hoitokausi
   [ur

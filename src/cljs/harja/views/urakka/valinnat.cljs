@@ -68,6 +68,14 @@
     u/valittu-kokonaishintainen-tehtava
     u/valitse-kokonaishintainen-tehtava!))
 
+(defn urakan-yksikkohintainen-tehtava+kaikki []
+  (valinnat/urakan-yksikkohintainen-tehtava
+    (r/wrap (vec (concat [{:nimi "Kaikki"}]
+                         @u/urakan-tpin-yksikkohintaiset-tehtavat))
+            identity)
+    u/valittu-yksikkohintainen-tehtava
+    u/valitse-yksikkohintainen-tehtava!))
+
 (defn urakan-sopimus-ja-hoitokausi [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi
     ur

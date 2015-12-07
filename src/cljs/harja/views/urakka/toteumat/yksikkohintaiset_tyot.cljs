@@ -257,6 +257,7 @@
       (fn []
         [:div
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+         [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
          [:button.nappi-ensisijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
                                       :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka)))}

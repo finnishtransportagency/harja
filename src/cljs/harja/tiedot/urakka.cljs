@@ -231,19 +231,19 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
+(defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
+         (reaction<! [ur (:id @nav/valittu-urakka)]
+                     (when ur
+                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
+
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
 (defn valitse-kokonaishintainen-tehtava! [tehtava]
   (reset! valittu-kokonaishintainen-tehtava tehtava))
 
-(defonce urakan-kokonaishintaiset-tehtavat
-         (reaction<! [ur (:id @nav/valittu-urakka)]
-                     (when ur
-                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
-
 (defonce urakan-tpin-kokonaishintaiset-tehtavat
          (reaction (let [tpi @valittu-toimenpideinstanssi
-                         tehtavat @urakan-kokonaishintaiset-tehtavat]
+                         tehtavat @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
                      (reset! valittu-kokonaishintainen-tehtava nil)
                      (filter
                        (fn [rivi]
@@ -253,7 +253,24 @@
                            true))
                        tehtavat))))
 
+(defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
+         (reaction<! [ur (:id @nav/valittu-urakka)]
+                     (when ur
+                       (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat ur))))
 
+(defonce valittu-yksikkohintainen-tehtava (atom nil))
+
+(defn valitse-yksikkohintainen-tehtava! [tehtava]
+  (reset! valittu-yksikkohintainen-tehtava tehtava))
+
+(defonce urakan-tpin-yksikkohintaiset-tehtavat
+         (reaction (let [tpi @valittu-toimenpideinstanssi
+                         tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
+                     (reset! valittu-yksikkohintainen-tehtava nil)
+                     (into [] (keep (fn [[_ _ t3 t4]]
+                                      (when (= (:koodi t3) (:t3_koodi tpi))
+                                        t4))
+                                    tehtavat)))))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
          (reaction<! [ur (:id @nav/valittu-urakka)
