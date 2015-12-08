@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs-time.core :as t]
-            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]))
 
 (defn- oletusalue [asia valittu?]
@@ -69,31 +69,31 @@
 (defn selvita-tarkastuksen-ikoni [tekija]
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
 
-(defn selvita-havainnon-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "havainto" tekija))
+(defn selvita-laatupoikkeaman-ikoni [tekija]
+  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
 
-(defmethod asia-kartalle :havainto [havainto valittu?]
-  [(assoc havainto
-     :type :havainto
-     :nimi (or (:nimi havainto)
-               (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")"))
-     :selite {:teksti (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")")
-              :img    (selvita-havainnon-ikoni (:tekija havainto))}
+(defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu?]
+  [(assoc laatupoikkeama
+     :type :laatupoikkeama
+     :nimi (or (:nimi laatupoikkeama)
+               (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
+     :selite {:teksti (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")
+              :img    (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))}
      :alue {:type        :tack-icon
-            :scale       (if (valittu? havainto) 1.5 1)
-            :img         (selvita-havainnon-ikoni (:tekija havainto))
-            :coordinates (if (= :line (get-in havainto [:sijainti :type]))
+            :scale       (if (valittu? laatupoikkeama) 1.5 1)
+            :img         (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+            :coordinates (if (= :line (get-in laatupoikkeama [:sijainti :type]))
                            ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
-                           (first (get-in havainto [:sijainti :points]))
+                           (first (get-in laatupoikkeama [:sijainti :points]))
 
-                           (get-in havainto [:sijainti :coordinates]))})])
+                           (get-in laatupoikkeama [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus)
-               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")"))
-     :selite {:teksti (str "Tarkastus (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
+               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")"))
+     :selite {:teksti (str "Tarkastus (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line
