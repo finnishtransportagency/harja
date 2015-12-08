@@ -188,16 +188,16 @@ INSERT INTO ilmoitus
  urakkatyyppi)
 VALUES
   (:urakka,
-   :ilmoitusid,
-   :ilmoitettu,
-   :valitetty,
-   :yhteydenottopyynto,
-   :otsikko,
-   :lyhytselite,
-   :pitkaselite,
-   :ilmoitustyyppi :: ilmoitustyyppi,
-   :selitteet :: ilmoituksenselite [],
-   :urakkatyyppi :: urakkatyyppi);
+    :ilmoitusid,
+    :ilmoitettu,
+    :valitetty,
+    :yhteydenottopyynto,
+    :otsikko,
+    :lyhytselite,
+    :pitkaselite,
+    :ilmoitustyyppi :: ilmoitustyyppi,
+    :selitteet :: ilmoituksenselite [],
+    :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
 -- Päivittää havainnon
@@ -282,3 +282,45 @@ WHERE lahetysid = :lahetysid;
 UPDATE ilmoitustoimenpide
 SET tila = 'virhe'
 WHERE id = :id;
+
+-- name: luo-ilmoitustoimenpide<!
+INSERT INTO ilmoitustoimenpide
+(ilmoitus,
+ ilmoitusid,
+ kuitattu,
+ vapaateksti,
+ kuittaustyyppi,
+ kuittaaja_henkilo_etunimi,
+ kuittaaja_henkilo_sukunimi,
+ kuittaaja_henkilo_matkapuhelin,
+ kuittaaja_henkilo_tyopuhelin,
+ kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi,
+ kuittaaja_organisaatio_ytunnus,
+ kasittelija_henkilo_etunimi,
+ kasittelija_henkilo_sukunimi,
+ kasittelija_henkilo_matkapuhelin,
+ kasittelija_henkilo_tyopuhelin,
+ kasittelija_henkilo_sahkoposti,
+ kasittelija_organisaatio_nimi,
+ kasittelija_organisaatio_ytunnus)
+VALUES
+  (:ilmoitus,
+    :ilmoitusid,
+    :kuitattu,
+    :vapaateksti,
+    :kuittaustyyppi :: kuittaustyyppi,
+    :kuittaaja_henkilo_etunimi,
+    :kuittaaja_henkilo_sukunimi,
+    :kuittaaja_henkilo_matkapuhelin,
+    :kuittaaja_henkilo_tyopuhelin,
+    :kuittaaja_henkilo_sahkoposti,
+    :kuittaaja_organisaatio_nimi,
+   :kuittaaja_organisaatio_ytunnus,
+   :kasittelija_henkilo_etunimi,
+   :kasittelija_henkilo_sukunimi,
+   :kasittelija_henkilo_matkapuhelin,
+   :kasittelija_henkilo_tyopuhelin,
+   :kasittelija_henkilo_sahkoposti,
+   :kasittelija_organisaatio_nimi,
+   :kasittelija_organisaatio_ytunnus);
