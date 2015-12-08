@@ -14,7 +14,7 @@
 
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.sunnittelu.materiaalit :as materiaali-tiedot]
+            [harja.tiedot.urakka.suunnittelu.materiaalit :as materiaali-tiedot]
 
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta])
