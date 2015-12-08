@@ -72,6 +72,6 @@
     (is (= 200 (:status vastaus)))
 
     (let [vastausdata (cheshire/decode (:body vastaus))]
-      (is (= 23 (count (get vastausdata "ilmoitukset")))))
+      (is (= 5 (count (get vastausdata "ilmoitukset")))))
 
     (poista-ilmoitus)))
