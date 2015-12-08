@@ -563,7 +563,6 @@
         hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
-   ;     alkuperainen-sijainti (atom @sijainti)
         virheet (atom nil)
 
         alkuperainen-sijainti (atom @sijainti)
