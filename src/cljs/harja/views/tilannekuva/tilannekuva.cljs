@@ -24,18 +24,20 @@
 
 (defn pudotusvalikko [otsikko elementit]
   (let [auki? (atom false)]
-    [:div
-     [:div.tk-pudotusvalikko-nappi {:on-click #(swap! auki? not)}
-      [:span.tk-pudotusvalikko-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
-      [:div.tk-pudotusvalikko-checkbox
-       [:label
-        [:input {:type    "checkbox"
-                 :checked true}]
-        otsikko]]]
+    (fn []
+      [:div
+       [:div.tk-pudotusvalikko-nappi {:on-click (fn [] (swap! auki? not))}
+        [:span.tk-pudotusvalikko-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
+        [:div.tk-pudotusvalikko-checkbox
+         [:label
+          [:input {:type    "checkbox"
+                   :checked true}]
+          otsikko]]]
 
-     [:ul.tk-pudotusvalikon-lista (if @auki? {:class "tk-pudotusvalikko-auki"} {:class "tk-pudotusvalikko-kiinni"})
-      (doall (for [elementti elementit]
-               [pudotusvalikon-elementti elementti]))]]))
+       (when @auki?
+         [:ul.tk-pudotusvalikon-sisalto
+          (doall (for [elementti elementit]
+                   [pudotusvalikon-elementti elementti]))])])))
 
 ;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
 (defn nykytilanteen-aikasuodattimen-elementti [[teksti]]
