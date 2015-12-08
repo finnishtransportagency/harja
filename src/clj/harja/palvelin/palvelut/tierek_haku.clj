@@ -40,6 +40,7 @@
 (defn hae-tr-viiva
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
   [db user params]
+  (log/debug "Haetaan viiva osoiteelle " (pr-str params))
   (let [korjattu-osoite (jarjestele-tr-osoite params)
         geom (first (tv/tierekisteriosoite-viivaksi db
                                                     (:numero korjattu-osoite)
@@ -47,7 +48,7 @@
                                                     (:alkuetaisyys korjattu-osoite)
                                                     (:loppuosa korjattu-osoite)
                                                     (:loppuetaisyys korjattu-osoite)))]
-    (log/debug "hae-tr-viiva " geom)
+    (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
     (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
 
 (defn hae-tr-piste
@@ -58,6 +59,7 @@
                                                     (:numero params)
                                                     (:alkuosa params)
                                                     (:alkuetaisyys params)))]
+    (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
     (geo/pg->clj (:tierekisteriosoitteelle_piste geom))))
 
 (defrecord TierekisteriHaku []
