@@ -9,10 +9,7 @@
   "Ottaa tila-atomin, joka määrittelee komponentin tilan. Tila-atomin mahdolliset arvot true ja false."
   [tila opts]
   (let [kasittely-fn (:on-change opts)
-        vaihda-tila (fn []
-                      (if @tila
-                        (reset! tila false)
-                        (reset! tila true)))]
+        vaihda-tila #(swap! tila not)]
     [:div {:class    (str "harja-on-off-valinta " (when (:luokka opts) (:luokka opts)))
            :on-click (fn []
                        (vaihda-tila)
