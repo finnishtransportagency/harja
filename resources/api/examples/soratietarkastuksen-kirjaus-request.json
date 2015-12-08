@@ -18,6 +18,9 @@
         "tunniste": {
           "id": 123
         },
+        "tarkastusajo": {
+          "id": 123
+        },
         "aika": "2015-07-06T15:01:00Z",
         "alkusijainti": {
           "tie": {
