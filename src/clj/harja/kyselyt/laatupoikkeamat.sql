@@ -1,3 +1,6 @@
+-- name: hae-laatupoikkeamat-tilannekuvaan
+-- Hakee laatupoikkeamat urakasta aikavälillä. Muuten voitaisiin käyttää esim hae-kaikki-laatupoikkeamat, mutta siinä
+-- filtteröidään pois suorasanktiona luodut laatupoikkeamat. Historiakuvassa näin ei haluta tehdä.
 SELECT
   h.id,
   h.aika,
