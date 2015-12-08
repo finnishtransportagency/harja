@@ -35,6 +35,9 @@
                                                  [:http-palvelin :db])
           :urakan-kokonaishintaisten-toteumien-reitit (component/using
                                                         (->Toteumat)
+                                                        [:http-palvelin :db])
+          :urakan-yksikkohintaisten-toteumien-reitit (component/using
+                                                        (->Toteumat)
                                                         [:http-palvelin :db])))))
 
   (testit)
@@ -252,6 +255,19 @@
                                   :loppupvm   loppupvm
                                   :toimenpide nil
                                   :tehtava    nil})]
-    (log/debug "Toteumat: " toteumat)
     (is (>= (count toteumat) 3))
+    (is (>= (count (:reittipisteet (first toteumat))) 3))))
+
+(deftest yks-hint-toteumien-reitit-haettu-oikein
+  (let [alkupvm (java.sql.Date. 100 9 1)
+        loppupvm (java.sql.Date. 110 10 30)
+        toteumat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :urakan-yksikkohintaisten-toteumien-reitit +kayttaja-jvh+
+                                 {:urakka-id  @oulun-alueurakan-2005-2010-id
+                                  :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+                                  :alkupvm    alkupvm
+                                  :loppupvm   loppupvm
+                                  :toimenpide nil
+                                  :tehtava    nil})]
+    (is (>= (count toteumat) 2))
     (is (>= (count (:reittipisteet (first toteumat))) 3))))
