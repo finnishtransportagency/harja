@@ -5,7 +5,9 @@
             [harja.domain.roolit :as roolit]
 
             [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.urakat :as urakat-q]))
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.tilannekuva :as q]
+            [harja.geo :as geo]))
 
 (defn kayttajan-urakoiden-idt
   [db user urakka-id hallintayksikko alku loppu]
@@ -27,53 +29,86 @@
                (into #{} urakat)))))))
 
 (defn- hae-ilmoitukset
-  [db user {:keys [hallintayksikko urakka-id alku loppu ilmoitukset]}]
-  (let [haettavat (into {} (filter (fn [[_ arvo :as v]] (when arvo v)) ilmoitukset))]
+  [db user {{:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
+  (let [haettavat (into {} (filter (fn [[avain arvo]] (when arvo avain)) tyypit))]
     (when-not (empty? haettavat)
-      (let [urakat (kayttajan-urakoiden-idt db user urakka-id hallintayksikko alku loppu)]))))
+      (let [suljetut? (if (:suljetut tilat) true false)
+            avoimet? (if (:avoimet tilat) true false)]
+        (mapv
+          #(assoc % :uusinkuittaus
+                    (when-not (empty? (:kuittaukset %))
+                      (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+          (konv/sarakkeet-vektoriin
+            (into []
+                  (comp
+                    (geo/muunna-pg-tulokset :sijainti)
+                    (map konv/alaviiva->rakenne)
+                    (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                    (map #(konv/array->vec % :selitteet))
+                    (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                    (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                    (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                    (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                  (q/hae-ilmoitukset db urakat avoimet? suljetut? (mapv name haettavat)))
+            {:kuittaus :kuittaukset}))))))
 
 (defn- hae-paallystystyot
-  [db user {:keys [hallintayksikko urakka-id alku loppu yllapito]}]
-  (when (:paallystys yllapito)
-    (let [urakat (kayttajan-urakoiden-idt db user urakka-id hallintayksikko alku loppu)])))
+  [db user {:keys [alku loppu yllapito]} urakat]
+  (when (:paallystys yllapito)))
 
 (defn- hae-paikkaustyot
-  [db user {:keys [hallintayksikko urakka-id alku loppu yllapito]}]
+  [db user {:keys [alku loppu yllapito]} urakat]
   (when (:paikkaus yllapito)))
 
 (defn- hae-havainnot
-  [db user {:keys [hallintayksikko urakka-id alku loppu laadunseuranta]}]
+  [db user {:keys [alku loppu laadunseuranta]} urakat]
   (when (:havainnot laadunseuranta)
-    (let [urakat (kayttajan-urakoiden-idt db user urakka-id hallintayksikko alku loppu)])))
+    (into []
+          (comp
+            (geo/muunna-pg-tulokset :sijainti)
+            (map konv/alaviiva->rakenne)
+            (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+            (map #(dissoc % :selvityspyydetty))
+            (map #(assoc % :tekija (keyword (:tekija %))))
+            (map #(update-in % [:paatos :paatos]
+                             (fn [p]
+                               (when p (keyword p)))))
+            (map #(update-in % [:paatos :kasittelytapa]
+                             (fn [k]
+                               (when k (keyword k)))))
+            (map #(if (nil? (:kasittelyaika (:paatos %)))
+                   (dissoc % :paatos)
+                   %))
+            (q/hae-havainnot db urakat alku loppu)))))
 
 (defn- hae-tarkastukset
-  [db user {:keys [hallintayksikko urakka-id alku loppu laadunseuranta]}]
-  (when (:tarkastukset laadunseuranta)
-    (let [urakat (kayttajan-urakoiden-idt db user urakka-id hallintayksikko alku loppu)])))
+  [db user {:keys [alku loppu laadunseuranta]} urakat]
+  (when (:tarkastukset laadunseuranta)))
 
 (defn- hae-turvallisuuspoikkeamat
-  [db user {:keys [hallintayksikko urakka-id alku loppu turvallisuus]}]
-  (when (:turvallisuuspoikkeamat turvallisuus)
-    (let [urakat (kayttajan-urakoiden-idt db user urakka-id hallintayksikko alku loppu)])))
+  [db user {:keys [alku loppu turvallisuus]} urakat]
+  (when (:turvallisuuspoikkeamat turvallisuus)))
 
 (defn- hae-toimenpiteiden-reitit
-  [db user {:keys [hallintayksikko urakka-id alue alku loppu talvi kesa]}]
-  (let [haettavat-toimenpiteet (into {} (filter (fn [[_ arvo :as v]] (when arvo v)) (merge talvi kesa)))]
-    (when-not (empty? haettavat-toimenpiteet)
-      (let [urakat (kayttajan-urakoiden-idt db user urakka-id hallintayksikko alku loppu)]))))
+  [db user {:keys [alue alku loppu talvi kesa]} urakat]
+  (let [haettavat-toimenpiteet (into {} (filter (fn [[avain arvo]] (when arvo avain)) (merge talvi kesa)))]
+    (when-not (empty? haettavat-toimenpiteet))))
 
 (defn hae-tilannekuvaan
   [db user tiedot]
   (let [yhdista (fn [& tulokset]
-                  (apply (comp vec concat) tulokset))]
-    (yhdista
-      (hae-toimenpiteiden-reitit db user tiedot)
-      (hae-turvallisuuspoikkeamat db user tiedot)
-      (hae-tarkastukset db user tiedot)
-      (hae-havainnot db user tiedot)
-      (hae-paikkaustyot db user tiedot)
-      (hae-paallystystyot db user tiedot)
-      (hae-ilmoitukset db user tiedot))))
+                  (apply (comp vec concat) tulokset))
+        urakat (kayttajan-urakoiden-idt db user (:urakka-id tiedot)
+                                        (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
+    (when-not (empty? urakat)
+      (yhdista
+        (hae-toimenpiteiden-reitit db user tiedot urakat)
+        (hae-turvallisuuspoikkeamat db user tiedot urakat)
+        (hae-tarkastukset db user tiedot urakat)
+        (hae-havainnot db user tiedot urakat)
+        (hae-paikkaustyot db user tiedot urakat)
+        (hae-paallystystyot db user tiedot urakat)
+        (hae-ilmoitukset db user tiedot urakat)))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
