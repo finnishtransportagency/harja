@@ -12,42 +12,49 @@
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
-  "tunniste": {
-    "id": 123
-  },
-  "paivamaara": "2015-02-02T15:01:00Z",
-  "sijainti": {
-    "tie": {
-      "numero": 1,
-      "aosa": 2,
-      "aet": 3,
-      "losa": 4,
-      "let": 5
-    }
-  },
-  "tarkastaja": {
-    "id": 123,
-    "etunimi": "Taneli",
-    "sukunimi": "Tarkastaja"
-  },
-  "havainto": {
-    "kuvaus": "Tie hiekoittamatta. Todella liukasta.",
-    "liitteet": [
-      {
-        "liite": {
-          "nimi": "tie.png",
-          "tyyppi": "image/png",
-          "kuvaus": "Kuva hiekoittamattomasta tiestä",
-          "sisalto": "... sisältö base64 enkoodattuna  ..."
-        }
+  "tarkastukset": [
+    {
+      "tarkastus": {
+        "tunniste": {
+          "id": 123
+        },
+        "tarkastusajo": {
+          "id": 123
+        },
+        "aika": "2015-02-02T15:01:00Z",
+        "alkusijainti": {
+          "tie": {
+            "numero": 1,
+            "aosa": 2,
+            "aet": 3,
+            "losa": 4,
+            "let": 5
+          }
+        },
+        "tarkastaja": {
+          "id": 123,
+          "etunimi": "Taneli",
+          "sukunimi": "Tarkastaja"
+        },
+        "havainnot": "Tie hiekoittamatta. Todella liukasta.",
+        "liitteet": [
+          {
+            "liite": {
+              "nimi": "tie.png",
+              "tyyppi": "image/png",
+              "kuvaus": "Kuva hiekoittamattomasta tiestä",
+              "sisalto": "... sisältö base64 enkoodattuna  ..."
+            }
+          }
+        ]
+      },
+      "mittaus": {
+        "hoitoluokka": 1,
+        "lumisuus": 15,
+        "tasaisuus": 5,
+        "kitka": 3.2,
+        "lampotila": -10
       }
-    ]
-  },
-  "mittaus": {
-    "hoitoluokka": 1,
-    "lumisuus": 15,
-    "tasaisuus": 5,
-    "kitka": 3.2,
-    "lampotila": -10
-  }
+    }
+  ]
 }
