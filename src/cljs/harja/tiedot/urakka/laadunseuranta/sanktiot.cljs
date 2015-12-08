@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.sanktiot
+(ns harja.tiedot.urakka.laadunseuranta.sanktiot
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
@@ -7,7 +7,8 @@
 
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -15,7 +16,7 @@
 (def nakymassa? (atom false))
 (def +uusi-sanktio+
   (reaction {:suorasanktio true
-             :havainto
+             :laatupoikkeama
                            {
                             :tekijanimi @istunto/kayttajan-nimi
                             :paatos     {:paatos "sanktio"}
@@ -38,10 +39,10 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s]
-  {:sanktio  (dissoc s :havainto)
-   :havainto (if-not (get-in s [:havainto :urakka])
-               (:havainto (assoc-in s [:havainto :urakka] (:id @nav/valittu-urakka)))
-               (:havainto s))})
+  {:sanktio  (dissoc s :laatupoikkeama)
+   :laatupoikkeama (if-not (get-in s [:laatupoikkeama :urakka])
+               (:laatupoikkeama (assoc-in s [:laatupoikkeama :urakka] (:id @nav/valittu-urakka)))
+               (:laatupoikkeama s))})
 
 (defn tallenna-sanktio
   [sanktio]
@@ -52,7 +53,7 @@
   (when (and
           palautettu-id
           (pvm/valissa?
-            (get-in sanktio [:havainto :aika])
+            (get-in sanktio [:laatupoikkeama :aika])
             (first @urakka/valittu-hoitokausi)
             (second @urakka/valittu-hoitokausi)))
     (if (some #(= (:id %) palautettu-id) @haetut-sanktiot)
@@ -62,3 +63,12 @@
      (reset! haetut-sanktiot
              (into [] (concat @haetut-sanktiot [(assoc sanktio :id palautettu-id)]))))))
 
+
+(defonce sanktiotyypit
+         (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
+                     (when laadunseurannassa?
+                       (k/get! :hae-sanktiotyypit))))
+
+(defn lajin-sanktiotyypit
+  [laji]
+  (filter #((:laji %) laji) @sanktiotyypit))

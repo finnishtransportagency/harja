@@ -141,9 +141,11 @@
   []
   (pollaa-kantaa)
   (komp/luo
+    (komp/lippu maksuerat/nakymassa?)
     {:component-will-unmount
      (fn []
        (reset! pollataan-kantaa? false))}
+
     (fn []
       (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat
             maksuerarivit @maksuerarivit

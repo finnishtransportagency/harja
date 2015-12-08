@@ -160,7 +160,7 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:ilmoitustiedot :ylimaarainen-keyword] "Olen cräppidataa, en halua kantaan :("))
+                                 (assoc-in [:ilmoitustiedot :ylimaarainen-keyword] "Huonoa dataa, jota ei saa päästää kantaan."))
           maara-ennen-pyyntoa (ffirst (q
                                         (str "SELECT count(*) FROM paallystysilmoitus
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
@@ -263,7 +263,7 @@
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :paatos_taloudellinen_osa :hyvaksytty)
                                  (assoc :paatos_tekninen_osa :hyvaksytty)
-                                 (assoc :perustelu_tekninen_osa "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia. @:D"))]
+                                 (assoc :perustelu_tekninen_osa "Yritän saada ilmoituksen hyväksytyksi ilman oikeuksia."))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-tero+ {:urakka-id          urakka-id

@@ -50,8 +50,8 @@ Optiot voi sisältää:
          [:span.liitekomponentti
           [:div.file-upload.nappi-toissijainen
            [:span (ikonit/upload) (if @tiedosto
-                                    "Vaihda liite"
-                                    (or nappi-teksti " Valitse tiedosto"))]
+                                    " Vaihda liite"
+                                    (str " " (or nappi-teksti "Valitse tiedosto")))]
            [:input.upload
             {:type      "file"
              :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
@@ -72,3 +72,15 @@ Optiot voi sisältää:
                                                              (if (:viesti ed)
                                                                (str " (" (:viesti ed) ")"))))))))))}]]
           [:div.liite-virheviesti @virheviesti]])])))
+
+(defn liitteet [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id]} liitteet]
+  [:span
+   ;; Näytä olemassaolevat liitteet
+   (for [liite liitteet]
+     ^{:key (:id liite)}
+     [liitetiedosto liite])
+   ;; Uuden liitteen lähetys
+   (when uusi-liite-atom
+     [liite {:urakka-id urakka-id
+             :liite-ladattu #(reset! uusi-liite-atom %)
+             :nappi-teksti (or uusi-liite-teksti "Lisää liite")}])])

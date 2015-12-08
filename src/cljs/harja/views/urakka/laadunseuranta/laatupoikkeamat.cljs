@@ -1,12 +1,12 @@
-(ns harja.views.urakka.laadunseuranta.havainnot
-  "Listaa urakan havainnot, jotka voivat olla joko tarkastukseen liittyviä tai irrallisia."
+(ns harja.views.urakka.laadunseuranta.laatupoikkeamat
+  "Listaa urakan laatupoikkeamat, jotka voivat olla joko tarkastukseen liittyviä tai irrallisia."
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
-            [harja.ui.kentat :as kentat]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
@@ -15,12 +15,12 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [harja.domain.roolit :as roolit]
-            [harja.domain.laadunseuranta :refer [validi-havainto?]]
+            [harja.domain.laadunseuranta :refer [validi-laatupoikkeama?]]
             [harja.tiedot.istunto :as istunto]
-            [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta])
@@ -31,78 +31,45 @@
 (defonce listaus (atom :kaikki))
 
 
-(defonce urakan-havainnot
+(defonce urakan-laatupoikkeamat
          (reaction<! [urakka-id (:id @nav/valittu-urakka)
                       [alku loppu] @tiedot-urakka/valittu-aikavali
                       laadunseurannassa? @laadunseuranta/laadunseurannassa?
                       valilehti @laadunseuranta/valittu-valilehti
                       listaus @listaus]
                      (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
-                     (when (and laadunseurannassa? (= :havainnot valilehti)
+                     (when (and laadunseurannassa? (= :laatupoikkeamat valilehti)
                                 urakka-id alku loppu)
-                       (laadunseuranta/hae-urakan-havainnot listaus urakka-id alku loppu))))
+                       (laatupoikkeamat/hae-urakan-laatupoikkeamat listaus urakka-id alku loppu))))
 
 
-(defonce valittu-havainto-id (atom nil))
+(defonce valittu-laatupoikkeama-id (atom nil))
 
-(defn uusi-havainto []
+(defn uusi-laatupoikkeama []
   {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))})
 
-(defonce valittu-havainto
-         (reaction<! [id @valittu-havainto-id]
+(defonce valittu-laatupoikkeama
+         (reaction<! [id @valittu-laatupoikkeama-id]
                      (when id
-                       (go (let [havainto (if (= :uusi id)
-                                            (uusi-havainto)
-                                            (<! (laadunseuranta/hae-havainnon-tiedot (:id @nav/valittu-urakka) id)))]
-                             (-> havainto
+                       (go (let [laatupoikkeama (if (= :uusi id)
+                                            (uusi-laatupoikkeama)
+                                            (<! (laatupoikkeamat/hae-laatupoikkeaman-tiedot (:id @nav/valittu-urakka) id)))]
+                             (-> laatupoikkeama
 
                                  ;; Tarvitsemme urakan liitteen linkitystä varten
 
                                  (assoc :urakka (:id @nav/valittu-urakka))
                                  (assoc :sanktiot (into {}
-                                                        (map (juxt :id identity) (:sanktiot havainto))))))))))
+                                                        (map (juxt :id identity) (:sanktiot laatupoikkeama))))))))))
 
-(defn kuvaile-kasittelytapa [kasittelytapa]
-  (case kasittelytapa
-    :tyomaakokous "Työmaakokous"
-    :puhelin "Puhelimitse"
-    :kommentit "Harja-kommenttien perusteella"
-    :muu "Muu tapa"
-    nil))
-
-(defn kuvaile-paatostyyppi [paatos]
-  (case paatos
-    :sanktio "Sanktio"
-    :ei_sanktiota "Ei sanktiota"
-    :hylatty "Hylätty"))
-
-(defn kuvaile-paatos [{:keys [kasittelyaika paatos kasittelytapa]}]
-  (when paatos
-    (str
-      (pvm/pvm kasittelyaika)
-      " "
-      (kuvaile-paatostyyppi paatos)
-      " ("
-      (kuvaile-kasittelytapa kasittelytapa) ")")))
-
-(defn kuvaile-tekija [tekija]
-  (case tekija
-    :tilaaja "Tilaaja"
-    :urakoitsija "Urakoitsija"
-    :konsultti "Konsultti"
-    "Ei tiedossa"))
-
-
-(defn havaintolistaus
-  "Listaa urakan havainnot"
+(defn laatupoikkeamalistaus
+  "Listaa urakan laatupoikkeamat"
   []
 
-  [:div.havainnot
-
+  [:div.laatupoikkeamat
    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-
    [yleiset/pudotusvalikko
-    "Näytä havainnot"
+    "Näytä laatupoikkeamat"
     {:valinta    @listaus
      :valitse-fn #(reset! listaus %)
      :format-fn  #(case %
@@ -113,60 +80,57 @@
 
     [:kaikki :selvitys :kasitellyt :omat]]
 
-   [urakka-valinnat/aikavali @nav/valittu-urakka]
+   [urakka-valinnat/aikavali]
 
-   (when @laadunseuranta/voi-kirjata?
-     [napit/uusi "Uusi havainto" #(reset! valittu-havainto-id :uusi)])
+   (when @laatupoikkeamat/voi-kirjata?
+     [napit/uusi "Uusi laatupoikkeama" #(reset! valittu-laatupoikkeama-id :uusi)])
 
    [grid/grid
-    {:otsikko "Havainnot" :rivi-klikattu #(reset! valittu-havainto-id (:id %))
-     :tyhja   "Ei havaintoja."}
-    [{:otsikko "Päivämäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-     {:otsikko "Kohde" :nimi :kohde :leveys 1}
+    {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
+     :tyhja   "Ei laatupoikkeamia."}
+    [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+     {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1}
      {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
-     {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt kuvaile-tekija}
-     {:otsikko "Päätös" :nimi :paatos :fmt kuvaile-paatos :leveys 2} ;; Päätös
-     ]
-
-    @urakan-havainnot
-    ]])
+     {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
+     {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}]  ;; Päätös
+    @urakan-laatupoikkeamat]])
 
 (defn paatos?
-  "Onko annetussa havainnossa päätös?"
-  [havainto]
-  (not (nil? (get-in havainto [:paatos :paatos]))))
+  "Onko annetussa laatupoikkeamassa päätös?"
+  [laatupoikkeama]
+  (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
 
-(defn tallenna-havainto
-  "Tallentaa annetun havainnon palvelimelle. Lukee serveriltä palautuvan havainnon ja 
+(defn tallenna-laatupoikkeama
+  "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja 
    päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
-  [havainto]
-  (let [havainto (-> havainto
-                     (assoc :sanktiot (vals (:sanktiot havainto))))]
+  [laatupoikkeama]
+  (let [laatupoikkeama (-> laatupoikkeama
+                     (assoc :sanktiot (vals (:sanktiot laatupoikkeama))))]
     (go
-      (let [tulos (<! (laadunseuranta/tallenna-havainto havainto))]
+      (let [tulos (<! (laatupoikkeamat/tallenna-laatupoikkeama laatupoikkeama))]
         (if (k/virhe? tulos)
           ;; Palautetaan virhe, jotta nappi näyttää virheviestin
           tulos
 
-          ;; Havainto tallennettu onnistuneesti, päivitetään sen tiedot
-          (let [uusi-havainto tulos
-                aika (:aika uusi-havainto)
+          ;; Laatupoikkeama tallennettu onnistuneesti, päivitetään sen tiedot
+          (let [uusi-laatupoikkeama tulos
+                aika (:aika uusi-laatupoikkeama)
                 [alku loppu] @tiedot-urakka/valittu-aikavali]
             (when (and (pvm/sama-tai-jalkeen? aika alku)
                        (pvm/sama-tai-ennen? aika loppu))
               ;; Kuuluu aikavälille, lisätään tai päivitetään
-              (if (:id havainto)
+              (if (:id laatupoikkeama)
                 ;; Päivitetty olemassaolevaa
-                (swap! urakan-havainnot
-                       (fn [havainnot]
+                (swap! urakan-laatupoikkeamat
+                       (fn [laatupoikkeamat]
                          (mapv (fn [h]
-                                 (if (= (:id h) (:id uusi-havainto))
-                                   uusi-havainto
-                                   h)) havainnot)))
+                                 (if (= (:id h) (:id uusi-laatupoikkeama))
+                                   uusi-laatupoikkeama
+                                   h)) laatupoikkeamat)))
                 ;; Luotu uusi
-                (swap! urakan-havainnot
-                       conj uusi-havainto)))
+                (swap! urakan-laatupoikkeamat
+                       conj uusi-laatupoikkeama)))
             true))))))
 
 (defn kuvaile-sanktion-sakko [{:keys [sakko? summa indeksi]}]
@@ -176,8 +140,8 @@
          (when indeksi (str " (" indeksi ")")))))
 
 
-(defn havainnon-sanktiot
-  "Näyttää muokkaus-gridin havainnon sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
+(defn laatupoikkeaman-sanktiot
+  "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [_ _]
   (let [g (grid/grid-ohjaus)]
@@ -265,7 +229,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                              :toimenpideinstanssi (:tpi_id (first (filter #(= (:toimenpidekoodi tyyppi)
                                                                               (:id %))
                                                                           @tiedot-urakka/urakan-toimenpideinstanssit)))))
-          :valinnat-fn   #(laadunseuranta/lajin-sanktiotyypit (:laji %))
+          :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
           :valinta-nayta :nimi
           :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]
           }
@@ -276,46 +240,46 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
         sanktiot-atom]])))
 
-(defn havainto [asetukset havainto]
+(defn laatupoikkeama [asetukset laatupoikkeama]
   (let [sanktio-virheet (atom {})
-        alkuperainen @havainto]
+        alkuperainen @laatupoikkeama]
     (komp/luo
-      (fn [{:keys [osa-tarkastusta?] :as asetukset} havainto]
+      (fn [{:keys [osa-tarkastusta?] :as asetukset} laatupoikkeama]
         (let [muokattava? (constantly (not (paatos? alkuperainen)))
               uusi? (not (:id alkuperainen))]
 
-          [:div.havainto
+          [:div.laatupoikkeama
            (when-not osa-tarkastusta?
-             [napit/takaisin "Takaisin havaintoluetteloon" #(reset! valittu-havainto-id nil)])
+             [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! valittu-laatupoikkeama-id nil)])
 
-           (when-not osa-tarkastusta? [:h3 "Havainnon tiedot"])
+           (when-not osa-tarkastusta? [:h3 "Laatupoikkeaman tiedot"])
            [lomake/lomake
-            {:muokkaa!     #(reset! havainto %)
+            {:muokkaa!     #(reset! laatupoikkeama %)
              :luokka       :horizontal
-             :voi-muokata? @laadunseuranta/voi-kirjata?
+             :voi-muokata? @laatupoikkeamat/voi-kirjata?
              :footer       (when-not osa-tarkastusta?
                              [napit/palvelinkutsu-nappi
-                              ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan havainto,
-                              ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan havainto
+                              ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
+                              ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
                               (cond
                                 (and (not (paatos? alkuperainen))
-                                     (paatos? @havainto))
-                                "Tallenna ja lukitse havainto"
+                                     (paatos? @laatupoikkeama))
+                                "Tallenna ja lukitse laatupoikkeama"
 
                                 :default
-                                "Tallenna havainto")
+                                "Tallenna laatupoikkeama")
 
-                              #(tallenna-havainto @havainto)
+                              #(tallenna-laatupoikkeama @laatupoikkeama)
                               {:ikoni        (ikonit/tallenna)
-                               :disabled     (not (validi-havainto? @havainto))
-                               :kun-onnistuu (fn [_] (reset! valittu-havainto-id nil))}])}
+                               :disabled     (not (validi-laatupoikkeama? @laatupoikkeama))
+                               :kun-onnistuu (fn [_] (reset! valittu-laatupoikkeama-id nil))}])}
 
             [(when-not osa-tarkastusta?
-               {:otsikko     "Havainnon pvm ja aika"
+               {:otsikko     "Laatu\u00ADpoikkeaman pvm ja aika"
                 :pakollinen? true
                 :tyyppi      :pvm-aika
                 :nimi        :aika
-                :validoi     [[:ei-tyhja "Anna havainnon päivämäärä ja aika"]]
+                :validoi     [[:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
                 :varoita     [[:urakan-aikana-ja-hoitokaudella]]
                 :leveys-col  5})
 
@@ -329,9 +293,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                "- valitse osapuoli -")
               :leveys-col    4
               :muokattava?   muokattava?
-              :validoi       [[:ei-tyhja "Valitse havainnon tehnyt osapuoli"]]}
+              :validoi       [[:ei-tyhja "Valitse laatupoikkeaman tehnyt osapuoli"]]}
 
-             (when-not (= :urakoitsija (:tekija @havainto))
+             (when-not (= :urakoitsija (:tekija @laatupoikkeama))
                {:otsikko "Urakoitsijan selvitystä pyydetään"
                 :nimi    :selvitys-pyydetty
                 :tyyppi  :boolean})
@@ -341,7 +305,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :leveys-col  4
                 :pakollinen? true
                 :muokattava? muokattava?
-                :validoi     [[:ei-tyhja "Anna havainnon kohde"]]})
+                :validoi     [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
 
              {:otsikko     "Kuvaus"
               :nimi :kuvaus
@@ -351,12 +315,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
              {:otsikko     "Liitteet" :nimi :liitteet
-              :komponentti [:span (for [liite (:liitteet @havainto)]
-                                    ^{:key (:id liite)}
-                                    [:span (liitteet/liitetiedosto liite)])
-                            [liitteet/liite {:urakka-id     (:id @nav/valittu-urakka)
-                                             :liite-ladattu #(swap! havainto assoc :uusi-liite %)
-                                             :nappi-teksti " Lisää liite havaintoon"}]]}
+              :komponentti [liitteet/liitteet {:urakka-id         (:id @nav/valittu-urakka)
+                                               :uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
+                                                                        #(swap! laatupoikkeama assoc :uusi-liite %))
+                                               :uusi-liite-teksti "Lisää liite laatupoikkeamaan"}
+                            (:liitteet @laatupoikkeama)]}
 
              (when-not uusi?
                (lomake/ryhma
@@ -366,9 +329,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                      :voi-liittaa      true
                                                      :liita-nappi-teksti " Lisää liite kommenttiin"
                                                      :placeholder      "Kirjoita kommentti..."
-                                                     :uusi-kommentti   (r/wrap (:uusi-kommentti @havainto)
-                                                                               #(swap! havainto assoc :uusi-kommentti %))}
-                                (:kommentit @havainto)]}))
+                                                     :uusi-kommentti   (r/wrap (:uusi-kommentti @laatupoikkeama)
+                                                                               #(swap! laatupoikkeama assoc :uusi-kommentti %))}
+                                (:kommentit @laatupoikkeama)]}))
 
              ;; Päätös
              (when (:id alkuperainen)
@@ -386,11 +349,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   :aseta         #(assoc-in %1 [:paatos :kasittelytapa] %2)
                   :tyyppi        :valinta
                   :valinnat      [:tyomaakokous :puhelin :kommentit :muu]
-                  :valinta-nayta #(if % (kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
+                  :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
                   :leveys-col    4
                   :muokattava?   muokattava?}
 
-                 (when (= :muu (:kasittelytapa (:paatos @havainto)))
+                 (when (= :muu (:kasittelytapa (:paatos @laatupoikkeama)))
                    {:otsikko     "Muu käsittelytapa"
                     :nimi        :kasittelytapa-selite
                     :hae         (comp :muukasittelytapa :paatos)
@@ -407,11 +370,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   :valinnat      [:sanktio :ei_sanktiota :hylatty]
                   :hae           (comp :paatos :paatos)
                   :aseta         #(assoc-in %1 [:paatos :paatos] %2)
-                  :valinta-nayta #(if % (kuvaile-paatostyyppi %) "- valitse päätös -")
+                  :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %) "- valitse päätös -")
                   :leveys-col    4
                   :muokattava?   muokattava?}
 
-                 (when (:paatos (:paatos @havainto))
+                 (when (:paatos (:paatos @laatupoikkeama))
                    {:otsikko     "Päätöksen selitys"
                     :nimi        :paatoksen-selitys
                     :tyyppi      :text
@@ -423,19 +386,19 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})
 
 
-                 (when (= :sanktio (:paatos (:paatos @havainto)))
+                 (when (= :sanktio (:paatos (:paatos @laatupoikkeama)))
                    ;; FIXME: tarkista myös oikeus, urakanvalvoja... urakoitsija/konsultti EI saa päätöstä tehdä
                    {:otsikko     "Sanktiot"
                     :nimi        :sanktiot
-                    :komponentti [havainnon-sanktiot
-                                  (r/wrap (:sanktiot @havainto)
-                                          #(swap! havainto assoc :sanktiot %))
+                    :komponentti [laatupoikkeaman-sanktiot
+                                  (r/wrap (:sanktiot @laatupoikkeama)
+                                          #(swap! laatupoikkeama assoc :sanktiot %))
                                   sanktio-virheet]})
                  ))]
 
-            @havainto]])))))
+            @laatupoikkeama]])))))
 
-(defn havainnot []
+(defn laatupoikkeamat []
   (komp/luo
     (komp/lippu kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
@@ -443,10 +406,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                         (nav/vaihda-kartan-koko! :XL))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
-     [:span.havainnot
-      [kartta/sisalto-ja-kartta-2-palstana (if @valittu-havainto
-                                             [havainto {} valittu-havainto]
-                                             [havaintolistaus])]])))
+     [:span.laatupoikkeamat
+      [kartta/sisalto-ja-kartta-2-palstana (if @valittu-laatupoikkeama
+                                             [laatupoikkeama {} valittu-laatupoikkeama]
+                                             [laatupoikkeamalistaus])]])))
 
   
   

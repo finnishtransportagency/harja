@@ -57,6 +57,8 @@ server {
     }
     
     location ~ /harja/api/(?<path>.*)$ {
+      # buffering off tarvitaan kun halutaan striimata chunked responseja
+      proxy_buffering off;
       proxy_pass http://backend/api/$path$is_args$args;
     }
     

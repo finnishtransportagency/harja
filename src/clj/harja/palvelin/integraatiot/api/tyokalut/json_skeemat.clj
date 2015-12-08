@@ -9,7 +9,7 @@
 
 (def +havainnon-kirjaus+ "api/schemas/havainnon-kirjaus-request.schema.json")
 
-(def +ilmoituskuittauksen-kirjaaminen+ "api/schemas/ilmoituskuittauksen-kirjaaminen-request.schema.json")
+(def +ilmoitustoimenpiteen-kirjaaminen+ "api/schemas/ilmoitustoimenpiteen-kirjaaminen-request.schema.json")
 (def +ilmoitusten-haku+ "api/schemas/ilmoitusten-haku-response.schema.json")
 (def +tietyoilmoituksen-kirjaus+ "api/schemas/tietyoilmoituksen-kirjaus-request.schema.json")
 

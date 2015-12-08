@@ -2,7 +2,7 @@
   "Suolankäytön toteumat hoidon alueurakoissa"
   (:require [reagent.core :refer [atom wrap]]
             [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.urakka.suola :as suola]
+            [harja.tiedot.urakka.toteumat.suola :as suola]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]

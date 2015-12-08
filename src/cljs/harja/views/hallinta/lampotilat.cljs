@@ -12,7 +12,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :refer [tee-kentta]]
 
-            [harja.tiedot.urakka.suola :as tiedot]
+            [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]

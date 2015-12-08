@@ -5,7 +5,9 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -29,31 +31,31 @@
             :tehtava    tehtava}))
 
 (def nakymassa? (atom false))
-(def valittu-toteuma (atom nil))
+(def valittu-paivakohtainen-tehtava (atom nil))
 
 (def haetut-toteumat
          (reaction<!
            [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @urakka/valittu-sopimusnumero)
             hoitokausi @urakka/valittu-hoitokausi
-            kuukausi @urakka/valittu-hoitokauden-kuukausi
+            aikavali @urakka/valittu-aikavali
             toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
             tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
             nakymassa? @nakymassa?]
            (when nakymassa?
-             (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
+             (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
 (def haetut-reitit
   (reaction<!
     [urakka-id (:id @nav/valittu-urakka)
      sopimus-id (first @urakka/valittu-sopimusnumero)
      hoitokausi @urakka/valittu-hoitokausi
-     kuukausi @urakka/valittu-hoitokauden-kuukausi
+     aikavali @urakka/valittu-aikavali
      toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
      tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
      nakymassa? @nakymassa?]
     (when nakymassa?
-      (hae-toteumareitit urakka-id sopimus-id (or kuukausi hoitokausi) toimenpide tehtava))))
+      (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
@@ -63,4 +65,13 @@
              (kartalla-esitettavaan-muotoon
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
-                 @haetut-reitit)))))
+                 (if @valittu-paivakohtainen-tehtava
+                   (filter
+                     (fn [reitti]
+                       ; Reittiin liittyvä toteuma on tapahtunut samana päivänä kuin gridistä valitun summarivin
+                       ; pvm. Lisäksi reitillä on tehty kyseistä tehtävää.
+                       (and (= (pvm/paivan-alussa (:pvm reitti))
+                               (pvm/paivan-alussa (:pvm @valittu-paivakohtainen-tehtava)))
+                            ((into #{} (mapv :nimi (:tehtavat reitti))) (:nimi @valittu-paivakohtainen-tehtava))))
+                     @haetut-reitit)
+                   @haetut-reitit))))))

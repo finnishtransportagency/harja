@@ -1,2 +1,2 @@
--- Kuvaus: uudelleennimeä toimenpidekoodin historiakuvasarake tilannekuvaksi
-ALTER TABLE toimenpidekoodi RENAME COLUMN historiakuva TO tilannekuva;
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'hae-ilmoitukset');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-ilmoitustoimenpide');

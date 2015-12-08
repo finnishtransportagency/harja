@@ -40,7 +40,7 @@
      u/valittu-hoitokauden-kuukausi
      u/valitse-hoitokauden-kuukausi!]))
 
-(defn aikavali [ur]
+(defn aikavali []
   (valinnat/aikavali u/valittu-aikavali))
 
 (defn urakan-toimenpide []
