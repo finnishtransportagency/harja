@@ -60,9 +60,9 @@
   [db user {:keys [alku loppu yllapito]} urakat]
   (when (:paikkaus yllapito)))
 
-(defn- hae-havainnot
+(defn- hae-laatupoikkeamat
   [db user {:keys [alku loppu laadunseuranta]} urakat]
-  (when (:havainnot laadunseuranta)
+  (when (:laatupoikkeamat laadunseuranta)
     (into []
           (comp
             (geo/muunna-pg-tulokset :sijainti)
@@ -79,15 +79,36 @@
             (map #(if (nil? (:kasittelyaika (:paatos %)))
                    (dissoc % :paatos)
                    %))
-            (q/hae-havainnot db urakat alku loppu)))))
+            (q/hae-laatupoikkeamat db urakat alku loppu)))))
 
 (defn- hae-tarkastukset
   [db user {:keys [alku loppu laadunseuranta]} urakat]
-  (when (:tarkastukset laadunseuranta)))
+  (when (:tarkastukset laadunseuranta)
+    (into []
+          (comp
+            (geo/muunna-pg-tulokset :sijainti)
+            (map konv/alaviiva->rakenne)
+            (map (fn [tarkastus]
+                   (condp = (:tyyppi tarkastus)
+                     :talvihoito (dissoc tarkastus :soratiemittaus)
+                     :soratie (dissoc tarkastus :talvihoitomittaus)
+                     :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                     :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                     :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
+          (q/hae-tarkastukset db urakat alku loppu))))
 
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [alku loppu turvallisuus]} urakat]
-  (when (:turvallisuuspoikkeamat turvallisuus)))
+  (when (:turvallisuuspoikkeamat turvallisuus)
+    (konv/sarakkeet-vektoriin
+      (into []
+            (comp
+              (map konv/alaviiva->rakenne)
+              (geo/muunna-pg-tulokset :sijainti)
+              (map #(konv/array->vec % :tyyppi))
+              (map #(assoc % :tyyppi (mapv keyword (:tyyppi %)))))
+            (q/hae-turvallisuuspoikkeamat db urakat alku loppu))
+      {:korjaavatoimenpide :korjaavattoimenpiteet})))
 
 (defn- hae-toimenpiteiden-reitit
   [db user {:keys [alue alku loppu talvi kesa]} urakat]
@@ -105,7 +126,7 @@
         (hae-toimenpiteiden-reitit db user tiedot urakat)
         (hae-turvallisuuspoikkeamat db user tiedot urakat)
         (hae-tarkastukset db user tiedot urakat)
-        (hae-havainnot db user tiedot urakat)
+        (hae-laatupoikkeamat db user tiedot urakat)
         (hae-paikkaustyot db user tiedot urakat)
         (hae-paallystystyot db user tiedot urakat)
         (hae-ilmoitukset db user tiedot urakat)))))
