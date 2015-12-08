@@ -3,7 +3,6 @@
             [cljs.core.async :refer [<! >! chan]]
 
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
             [harja.loki :refer [log]]
 
             [harja.tiedot.navigaatio :as nav]
@@ -16,17 +15,14 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
-
+            [harja.ui.liitteet :as liitteet]
+            
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
 
             [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]]
-
-            [clojure.string :as str]
-            [harja.domain.roolit :as roolit]
-            [harja.views.urakka.laadunseuranta.havainnot :as havainnot]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset-kartalla]
-            [harja.tiedot.urakka.laadunseuranta.havainnot :as tiedot-havainnot])
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -44,19 +40,12 @@
 (defn uusi-tarkastus []
   {:uusi?      true
    :aika       (pvm/nyt)
-   :tarkastaja @istunto/kayttajan-nimi
-   :havainto {:tekija     (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))}})
+   :tarkastaja @istunto/kayttajan-nimi})
 
 (defn valitse-tarkastus [tarkastus]
   (go
     (reset! tarkastukset/valittu-tarkastus
-            (update-in (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) (:id tarkastus)))
-                       [:havainto :sanktiot]
-                       (fn [sanktiot]
-                         (when sanktiot
-                           (into {}
-                                 (map (juxt :id identity)
-                                      sanktiot))))))))
+            (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) (:id tarkastus))))))
 
 (defn tarkastuslistaus
   "Tarkastuksien listauskomponentti"
@@ -68,7 +57,7 @@
         [yleiset/taulukko2 "col-md-6" "col-md-6" "350px" "350px"
          
          [valinnat/urakan-hoitokausi urakka]
-         [valinnat/aikavali urakka]
+         [valinnat/aikavali]
 
          [valinnat/tienumero tarkastukset/tienumero]
 
@@ -85,7 +74,7 @@
                                           :pistokoe "Pistokoe")}
             tarkastukset/tarkastustyyppi]]]]
 
-        (when @tiedot-havainnot/voi-kirjata?
+        (when @tiedot-laatupoikkeamat/voi-kirjata?
           [napit/uusi "Uusi tarkastus"
                            #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
            {:luokka "alle-marginia"}])
@@ -165,18 +154,18 @@
 
      [lomake/lomake
       {:muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? @tiedot-havainnot/voi-kirjata?}
+       :voi-muokata? @tiedot-laatupoikkeamat/voi-kirjata?}
       [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-       {:otsikko "Tierekisteriosoite" :nimi :tr
+       {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
         :pakollinen? true
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
-       {:otsikko "Tarkastus" :nimi :tyyppi
+       {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
         :pakollinen? true
         :tyyppi :valinta
-        :valinnat (tarkastustyypit-tekijalle (get-in tarkastus [:havainto :tekija]))
+        :valinnat (tarkastustyypit-tekijalle (:tekija tarkastus))
         :valinta-nayta #(case %
                           :tiesto "Tiestötarkastus"
                           :talvihoito "Talvihoitotarkastus"
@@ -184,30 +173,35 @@
                           :laatu "Laaduntarkastus"
                           :pistokoe "Pistokoe"
                           "- valitse -")
-        :leveys-col 2}
+        :leveys-col 4}
        
-       {:otsikko "Tarkastaja" :nimi :tarkastaja
+       {:otsikko "Tar\u00ADkastaja" :nimi :tarkastaja
         :tyyppi :string :pituus-max 256
         :pakollinen? true
         :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
-        :leveys-col 4}
+        :leveys-col 6}
 
+       {:otsikko "Havain\u00ADnot" :nimi :havainnot
+        :koko [80 :auto]
+        :tyyppi :text :pakollinen? true
+        :validoi [[:ei-tyhja "Kirjaa havainnot"]]
+        :leveys-col 6}
+       
        (case (:tyyppi tarkastus)
          :talvihoito (talvihoitomittaus)
          :soratie (soratiemittaus)
          nil)
-       
-       (when-not (= :soratie (:tyyppi tarkastus))
-         {:otsikko "Mittaaja" :nimi :mittaaja
-          :pakollinen? true
-          :tyyppi :string :pituus-max 256
-          :leveys-col 4})]
+
+       {:otsikko     "Liitteet" :nimi :liitteet
+        :komponentti [liitteet/liitteet {:urakka-id         (:id @nav/valittu-urakka)
+                                         :uusi-liite-atom   (r/wrap (:uusi-liite tarkastus)
+                                                                    #(swap! tarkastus-atom assoc :uusi-liite %))
+                                         :uusi-liite-teksti "Lisää liite tarkastukseen"}
+                      (:liitteet tarkastus)]}]
       
       tarkastus]
 
-     [havainnot/havainto {:osa-tarkastusta? true}
-      (r/wrap (:havainto tarkastus)
-              #(swap! tarkastus-atom assoc :havainto %))]
+     
 
      [:div.row
       [:div.col-sm-2]
@@ -215,11 +209,7 @@
        [napit/palvelinkutsu-nappi
         "Tallenna tarkastus"
         (fn []
-          (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka)
-                                             (update-in tarkastus [:havainto :sanktiot]
-                                                        (fn [sanktiot]
-                                                          (when sanktiot
-                                                            (vals sanktiot))))))
+          (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
         
         {:disabled (let [validi? (validi-tarkastus? tarkastus)]
                      (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)

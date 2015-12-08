@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.laadunseuranta.havainnot
+(ns harja.tiedot.urakka.laadunseuranta.laatupoikkeamat
   (:require [reagent.core :refer [atom]]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
@@ -44,22 +44,22 @@
                               urakka @nav/valittu-urakka]
                           (and kayttaja
                                urakka
-                               (roolit/rooli-urakassa? kayttaja roolit/havaintojen-kirjaus (:id urakka))))))
+                               (roolit/rooli-urakassa? kayttaja roolit/laadunseuranta-kirjaus (:id urakka))))))
 
-(defn hae-urakan-havainnot
-  "Hakee annetun urakan havainnot urakka id:n ja aikavälin perusteella."
+(defn hae-urakan-laatupoikkeamat
+  "Hakee annetun urakan laatupoikkeamat urakka id:n ja aikavälin perusteella."
   [listaus urakka-id alkupvm loppupvm]
-  (k/post! :hae-urakan-havainnot {:listaus   listaus
+  (k/post! :hae-urakan-laatupoikkeamat {:listaus   listaus
                                   :urakka-id urakka-id
                                   :alku      alkupvm
                                   :loppu     loppupvm}))
 
-(defn hae-havainnon-tiedot
-  "Hakee urakan havainnon tiedot urakan id:n ja havainnon id:n perusteella.
-  Palauttaa kaiken tiedon mitä havainnon muokkausnäkymään tarvitaan."
-  [urakka-id havainto-id]
-  (k/post! :hae-havainnon-tiedot {:urakka-id   urakka-id
-                                  :havainto-id havainto-id}))
+(defn hae-laatupoikkeaman-tiedot
+  "Hakee urakan laatupoikkeaman tiedot urakan id:n ja laatupoikkeaman id:n perusteella.
+  Palauttaa kaiken tiedon mitä laatupoikkeaman muokkausnäkymään tarvitaan."
+  [urakka-id laatupoikkeama-id]
+  (k/post! :hae-laatupoikkeaman-tiedot {:urakka-id   urakka-id
+                                  :laatupoikkeama-id laatupoikkeama-id}))
 
-(defn tallenna-havainto [havainto]
-  (k/post! :tallenna-havainto havainto))
+(defn tallenna-laatupoikkeama [laatupoikkeama]
+  (k/post! :tallenna-laatupoikkeama laatupoikkeama))
