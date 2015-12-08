@@ -55,9 +55,7 @@
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
   ([viesti opts]
-   [(keyword (str "div.ajax-loader"
-                  (when (:luokka opts)
-                    (str "." (:luokka opts)))))
+   [:div {:class (str "ajax-loader " (when (:luokka opts) (:luokka opts)))}
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
       [:div.viesti viesti])]))
@@ -149,17 +147,22 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
-(defn raksiboksi [teksti checked toiminto info-teksti nayta-infoteksti?]
-  (let [toiminto-fn (fn [e] (do (.preventDefault e) (toiminto) nil))]
-    [:span
-     [:div.raksiboksi.input-group
-      [:span.input-group-addon
-       [:input {:type      "checkbox"
-                :checked   (if checked "checked" "")
-                :on-change #(toiminto-fn %)}]]
-      [:span.raksiboksi-teksti {:on-click #(toiminto-fn %)} teksti]]
-     (when nayta-infoteksti?
-       info-teksti)]))
+(defn raksiboksi
+  ([teksti checked toiminto info-teksti nayta-infoteksti?]
+   (raksiboksi teksti checked toiminto info-teksti nayta-infoteksti? nil))
+  ([teksti checked toiminto info-teksti nayta-infoteksti? komponentti]
+   (let [toiminto-fn (fn [e] (do (.preventDefault e) (toiminto) nil))]
+     [:span
+      [:div.raksiboksi.input-group
+       [:div.input-group-addon
+        [:input {:type      "checkbox"
+                 :checked   (if checked "checked" "")
+                 :on-change #(toiminto-fn %)}]
+        [:span.raksiboksi-teksti {:on-click #(toiminto-fn %)} teksti]]
+       (when komponentti
+         komponentti)]
+      (when nayta-infoteksti?
+        info-teksti)])))
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
@@ -184,10 +187,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
     (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
       (let [auki (:auki (reagent/state (reagent/current-component)))
-            term (atom "")]
+            term (atom "")
+            format-fn (or format-fn str)]
         [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
          [:button.nappi-alasveto
-          {:type        "button"
+          {:class (when disabled "disabled")
+           :type        "button"
            :disabled    (if disabled "disabled" "")
            :title title
            :on-click    #(do
@@ -230,14 +235,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                               (do
                                 (reset! term (char kc))
                                 (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                  (= (.indexOf (.toLowerCase ((or format-fn str) vaihtoehto))
+                                                                  (= (.indexOf (.toLowerCase (format-fn vaihtoehto))
                                                                                (.toLowerCase @term)) 0))
                                                                 vaihtoehdot))]
                                   (valitse-fn itemi)
                                   (reset! auki false)))) nil))}
 
           [:div.valittu (format-fn valinta)]
-          [:span.livicon-chevron-down]]
+          [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
          [:ul.dropdown-menu.livi-alasvetolista
           (doall
             (for [vaihtoehto vaihtoehdot]

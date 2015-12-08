@@ -1,14 +1,15 @@
 (ns harja.pvm
   "Yleiset päivämääräkäsittelyn asiat."
   (:require
-   #?(:cljs [cljs-time.format :as df])
-   #?(:cljs [cljs-time.core :as t])
-   #?(:cljs [cljs-time.coerce :as tc])
-   #?(:cljs [harja.loki :refer [log]])
-   #?(:clj [clj-time.format :as df])
-   #?(:clj [clj-time.core :as t])
-   #?(:clj [clj-time.coerce :as tc])
-   #?(:clj [taoensso.timbre :as log])
+    #?(:cljs [cljs-time.format :as df])
+    #?(:cljs [cljs-time.core :as t])
+    #?(:cljs [cljs-time.coerce :as tc])
+    #?(:cljs [harja.loki :refer [log]])
+    #?(:clj [clj-time.format :as df])
+    #?(:clj [clj-time.core :as t])
+    #?(:clj [clj-time.coerce :as tc])
+    #?(:clj [clj-time.local :as l])
+    #?(:clj [taoensso.timbre :as log])
    [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
@@ -32,8 +33,7 @@
      (-compare [x y]
        (if (instance? DateTime y)
          (compare (tc/to-long x) (tc/to-long y))
-         (throw (js/Error. (str "Ei voi verrata " x " (goog.date.DateTime) ja " y " (" (type y) ")")))))
-     ))
+         (throw (js/Error. (str "Ei voi verrata " x " (goog.date.DateTime) ja " y " (" (type y) ")")))))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -70,14 +70,22 @@
        (= (t/month eka) (t/month toka))
        (= (t/day eka) (t/day toka))))
 
-(defn ennen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
-    (t/before? eka toka)
-    false))
+
+#?(:cljs
+   (defn ennen? [eka toka]
+     (if (and eka toka)
+       (t/before? eka toka)
+       false))
+
+   :clj
+   (defn ennen? [eka toka]
+     (if (and eka toka)
+       (.before eka toka)
+       false)))
 
 (defn sama-tai-ennen? [eka toka]
   (if-not (or (nil? eka) (nil? toka))
-    (or (t/before? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
+    (or (ennen? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
     false))
 
 (defn jalkeen? [eka toka]
@@ -261,6 +269,10 @@
    [vuosi]
    (luo-pvm vuosi 11 31))
 
+(defn vuoden-aikavali [vuosi]
+  [(paivan-alussa (vuoden-eka-pvm vuosi))
+   (paivan-lopussa (vuoden-viim-pvm vuosi))])
+
  (defn hoitokauden-alkupvm
    "Palauttaa hoitokauden alkupvm:n 1.10.vuosi"
    [vuosi]
@@ -282,11 +294,6 @@
    [pvm]
    (t/year (d pvm)))
 
-(defn paiva
-  "Palauttaa annetun DateTime päivän."
-  [pvm]
-  (t/day (d pvm)))
-
 (defn kuukausi
    "Palauttaa annetun DateTime kuukauden."
   [pvm]
@@ -294,6 +301,21 @@
   ;; esim 2015-09-30T21:00:00.000-00:00 (joka olisi keskiyöllä meidän aikavyöhykkeellä)
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
   (t/month (d pvm)))
+
+(defn paiva
+  "Palauttaa annetun DateTime päivän."
+  [pvm]
+  (t/day (d pvm)))
+
+(defn paivamaaran-hoitokausi
+  "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"
+  [pvm]
+  (let [vuosi (vuosi pvm)]
+    (if (ennen? pvm (hoitokauden-alkupvm vuosi))
+      [(hoitokauden-alkupvm (dec vuosi))
+       (hoitokauden-loppupvm vuosi)]
+      [(hoitokauden-alkupvm vuosi)
+       (hoitokauden-loppupvm (inc vuosi))])))
 
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
@@ -342,8 +364,42 @@
                   (t/plus kk (t/months 1))))))))
 
 #?(:cljs
+   (defn vuoden-kuukausivalit
+     "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
+     [alkuvuosi]
+     (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
+       (loop [kkt [(kuukauden-aikavali alku)]
+              kk (t/plus alku (t/months 1))]
+         (if (not= (vuosi kk) alkuvuosi)
+           kkt
+           (recur (conj kkt
+                        (kuukauden-aikavali kk))
+                  (t/plus kk (t/months 1))))))))
+
+#?(:cljs
    (defn ed-kk-aikavalina
      [p]
      (let [pvm-ed-kkna (t/minus p (t/months 1))]
        [(t/first-day-of-the-month pvm-ed-kkna)
         (t/last-day-of-the-month pvm-ed-kkna)])))
+
+#?(:clj
+   (defn kyseessa-kk-vali?
+     "Kertoo onko annettu pvm-väli täysi kuukausi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
+     [alkupvm loppupvm]
+     (let [alku (l/to-local-date-time alkupvm)
+           loppu (l/to-local-date-time loppupvm)
+           paivia-kkssa (t/number-of-days-in-the-month alku)
+           loppu-pv (paiva loppu)]
+       (and (and (= (vuosi alku)
+                    (vuosi loppu))
+                 (= (kuukausi alku)
+                    (kuukausi loppu)))
+            (= paivia-kkssa loppu-pv)))))
+
+#?(:clj
+   (defn kuukautena-ja-vuonna
+     "Palauttaa tekstiä esim tammikuussa 2016"
+     [alkupvm]
+     (str (kuukauden-nimi (kuukausi alkupvm)) "ssa "
+          (vuosi alkupvm))))

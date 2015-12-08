@@ -71,7 +71,7 @@ SELECT
   tpk.nimi AS toimenpide_nimi
 FROM toimenpideinstanssi tpi
   JOIN urakka ON tpi.urakka = urakka.id
-  JOIN toimenpidekoodi tpk ON tpk.id = tpi.toimenpide
+  JOIN toimenpidekoodi tpk ON tpk.id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)
 WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
                      FROM maksuera
                      WHERE toimenpideinstanssi IS NOT NULL)

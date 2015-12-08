@@ -47,8 +47,8 @@
     urakoitsijan-urakan-vastuuhenkilo
     urakoitsijan-laatuvastaava})
 
-(def havaintojen-kirjaus
-  "Roolit, joilla on oikeus kirjata havaintoja urakkaan."
+(def laadunseuranta-kirjaus
+  "Roolit, joilla on oikeus kirjata laadunseurantaa urakkaan."
   #{urakanvalvoja
     urakoitsijan-paakayttaja
     urakoitsijan-urakan-vastuuhenkilo
@@ -151,10 +151,19 @@ rooleista."
                tilaajan-asiantuntija
                tilaajan-laadunvalvontakonsultti}))
 
+(defn organisaation-urakka?
+  "Tarkistaa onko annettu urakka käyttäjän organisaation oma urakka.
+Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai 
+urakoitsija."
+  [{urakat :organisaation-urakat} urakka-id]
+  (and urakat
+       (urakat urakka-id)))
+
 (defn lukuoikeus-urakassa?
   [kayttaja urakka-id]
   (or (tilaajan-kayttaja? kayttaja)
-      (rooli-urakassa? kayttaja urakoitsijan-paakayttaja urakka-id)
+      (and (organisaation-urakka? kayttaja urakka-id)
+           (roolissa? kayttaja urakoitsijan-paakayttaja))
       (rooli-urakassa? kayttaja urakoitsijan-urakan-vastuuhenkilo urakka-id)))
 
 

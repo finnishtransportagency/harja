@@ -16,6 +16,10 @@
 .alasveto-urakoitsija {
   .livi-alasveto(200px);
 }
+.alasveto-vuosi {
+  .livi-alasveto(85px, 85px);
+}
+
 .nappi-ensisijainen.alle-marginia {
   margin-bottom: 10px;
 }
@@ -200,11 +204,11 @@ tr.uusitehtavakoodi td {
   width: 100%;
 }
 
-.label-ja-aikavali {
+.label-ja-aikavali-tpl (@leveys: @valintakontrollin-leveys) {
   display: inline-block;
   margin: 10px 5px 20px;
   max-width: 100%;
-  width: @valintakontrollin-leveys;
+  width: @leveys;
   .aikavali-valinnat {
     text-align: center;
   }
@@ -224,6 +228,13 @@ tr.uusitehtavakoodi td {
     position: relative;
     top: 1px;
   }
+}
+
+.label-ja-aikavali {
+  .label-ja-aikavali-tpl(@valintakontrollin-leveys);
+}
+.label-ja-aikavali-lyhyt {
+  .label-ja-aikavali-tpl(100px);
 }
 
 .flash-viesti {
@@ -279,3 +290,31 @@ tr.uusitehtavakoodi td {
   color: @valkoinen;
   padding: 5px;
 }
+
+.raksiboksi {
+  background-color: @harjan-taustavari;
+  border: 1px solid @harmaa5;
+  margin: 10px 0;
+  width: 315px;
+  .input-group-addon {
+    background-color: @harjan-taustavari;
+    border: none;
+    text-align: left;
+  }
+}
+
+.raksiboksi-teksti {
+  color: @harmaa1;
+  line-height: 34px;
+  padding: 0 2px;
+}
+
+.raksiboksin-info {
+  .glyphicon-warning-sign {
+    color: orange;
+  }
+  > span {
+    margin-left: 10px;
+  }
+}
+

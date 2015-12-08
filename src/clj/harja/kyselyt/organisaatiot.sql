@@ -1,4 +1,3 @@
-
 -- name: luo-organisaatio<!
 -- Luo uuden organisaation.
 INSERT INTO organisaatio (sampoid, nimi, ytunnus, katuosoite, postinumero)
@@ -31,9 +30,41 @@ WHERE sampoid = :sampoid;
 
 -- name: hae-organisaatio
 -- Hakee organisaation id:llä
-SELECT id, nimi, lyhenne, ytunnus, liikennemuoto, katuosoite, postinumero,
-       sampoid, elynumero, tyyppi
-  FROM organisaatio
- WHERE id = :id;
+SELECT
+  id,
+  nimi,
+  lyhenne,
+  ytunnus,
+  liikennemuoto,
+  katuosoite,
+  postinumero,
+  sampoid,
+  elynumero,
+  tyyppi
+FROM organisaatio
+WHERE id = :id;
 
+-- name: hae-ely
+SELECT *
+FROM organisaatio
+WHERE elynumero = :elynumero;
 
+-- name: luo-ely<!
+INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, alue, tyyppi)
+VALUES (:nimi, :lyhenne, :liikennemuoto :: liikennemuoto, :elynumero, ST_GeomFromText(:alue) :: GEOMETRY,
+        'hallintayksikko' :: organisaatiotyyppi)
+
+-- name: paivita-ely!
+UPDATE organisaatio
+SET
+  nimi          = :nimi,
+  lyhenne       = :lyhenne,
+  liikennemuoto = :liikennemuoto :: liikennemuoto,
+  elynumero     = :elynumero,
+  alue          = ST_GeomFromText(:alue) :: GEOMETRY
+WHERE elynumero = :elynumero;
+
+-- name: hae-ely-id-sampo-hashilla
+SELECT id
+FROM organisaatio
+WHERE sampo_ely_hash = :ely_hash;

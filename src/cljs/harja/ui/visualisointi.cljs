@@ -121,7 +121,8 @@
 
 (defn bars [_ data]
   (let [hover (atom nil)]
-    (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks format-amount]}  data]
+    (log "bars data" (pr-str data))
+    (fn [{:keys [width height label-fn value-fn key-fn color-fn color ticks format-amount hide-value?]}  data]
       (let [label-fn (or label-fn first)
             value-fn (or value-fn second)
             key-fn (or key-fn hash)
@@ -134,45 +135,53 @@
             max-value (reduce max (map value-fn data))
             min-value (reduce min (map value-fn data))
             value-range (- max-value min-value)
-            value-height #(/ (* (- height my) %) max-value)
+            value-height #(/ (* (- height my) %)
+                             (if (= 0 max-value)
+                               1
+                               max-value))
             format-amount (or format-amount #(.toFixed % 2))
-            ]
+            number-of-items (count data)
+            show-every-nth-label (if (< number-of-items 13)
+                                   1
+                                   (Math/ceil (/ number-of-items 12)))
+            hide-value? (or hide-value? (constantly false))]
         (log "Value range " min-value " -- " max-value " == " value-range)
-        [:svg {:width width :height height}
-         ;; render ticks that are in the min-value - max-value range
-         (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)])
-               :let [tick-y (- height (value-height tick) hmy)]]
-           ^{:key tick}
-           [:g
-            [:text {:font-size "8pt" :text-anchor "end" :x (- mx 3) :y tick-y}
-             (str tick)]
-            [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
-                    :style {:stroke "rgb(200,200,200)"
-                            :stroke-width 0.5
-                            :stroke-dasharray "5,1"}}]])
-         (map-indexed (fn [i d]
-                        (let [label (label-fn d)
-                              value (value-fn d)
-                              bar-height (value-height value)
-                              x (+ mx (* bar-width i))] ;; FIXME: scale min-max
-                          ^{:key i}
-                          [:g {:on-mouse-over #(reset! hover d)
-                               :on-mouse-out #(reset! hover nil)}
-                           [:rect {:x x
-                                   :y (- height bar-height hmy)
-                                   :width (* bar-width 0.75)
-                                   :height bar-height
-                                   :fill (color-fn d)}]
-                                        ;(when (= hovered d)
-                           [:text {:x (+ x (/ bar-width 2)) :y (- height bar-height hmy 2)
-                                   :text-anchor "end"}
-                            (format-amount value)]
-                           [:text {:x (+ x (/ bar-width 2)) :y height
-                                   :text-anchor "end"}
-                            label]]))
-                      data)
-
-         ]))))
+          [:svg {:width width :height height}
+           ;; render ticks that are in the min-value - max-value range
+           (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)])
+                 :let [tick-y (- height (value-height tick) hmy)]]
+             ^{:key tick}
+             [:g
+              [:text {:font-size "8pt" :text-anchor "end" :x (- mx 3) :y tick-y}
+               (str tick)]
+              [:line {:x1    mx :y1 tick-y :x2 width :y2 tick-y
+                      :style {:stroke           "rgb(200,200,200)"
+                              :stroke-width     0.5
+                              :stroke-dasharray "5,1"}}]])
+           (map-indexed (fn [i d]
+                          (let [label (label-fn d)
+                                value (value-fn d)
+                                bar-height (value-height value)
+                                x (+ mx (* bar-width i))]   ;; FIXME: scale min-max
+                            ^{:key i}
+                            [:g {:on-mouse-over #(reset! hover d)
+                                 :on-mouse-out  #(reset! hover nil)}
+                             [:rect {:x      x
+                                     :y      (- height bar-height hmy)
+                                     :width  (* bar-width 0.75)
+                                     :height bar-height
+                                     :fill   (color-fn d)}]
+                             ;(when (= hovered d)
+                             (when-not (hide-value? value)
+                               [:text {:x           (+ x (/ (* 0.75 bar-width) 2)) :y (- height bar-height hmy 2)
+                                      :text-anchor "middle"}
+                               (format-amount value)])
+                             (when (zero? (rem i show-every-nth-label))
+                               [:text {:x           (+ x (/ (* 0.75 bar-width) 2)) :y (- height 5)
+                                       :text-anchor "middle"
+                                       :font-size   "7pt"}
+                                label])]))
+                        data)]))))
 
 (defn timeline [opts times]
   (let [component (r/current-component)

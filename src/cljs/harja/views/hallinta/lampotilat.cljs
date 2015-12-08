@@ -12,7 +12,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :refer [tee-kentta]]
 
-            [harja.tiedot.urakka.suola :as tiedot]
+            [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -35,7 +35,7 @@
                                     (pvm/vuosi (second @tiedot/valittu-hoitokausi)))
             tiedot-muuttuneet? (not= @lampotilarivit @tiedot/hoitourakoiden-lampotilat)]
         [:span.lampotilat
-         [valinnat/kontekstin-hoitokaudet tiedot/hoitokaudet tiedot/valittu-hoitokausi tiedot/valitse-hoitokausi!]
+         [valinnat/hoitokausi tiedot/hoitokaudet tiedot/valittu-hoitokausi tiedot/valitse-hoitokausi!]
          [grid/muokkaus-grid
           {:otsikko           "Teiden hoitourakoiden sydäntalven keskilämpötilat"
            :voi-muokata?      (constantly true)

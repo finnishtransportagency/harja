@@ -50,6 +50,11 @@
   </harja:ilmoitus>
 ")
 
+(def +ilmoitus-ruotsissa+
+  (clojure.string/replace
+    (clojure.string/replace +testi-ilmoitus-sanoma+ "452935" "319130")
+    "7186873" "7345904"))
+
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma+)]
     (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))

@@ -1,7 +1,10 @@
 (ns harja.palvelin.raportointi.raportit.ymparisto
   (:require [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql")
@@ -25,22 +28,29 @@
                                 (hae-ymparistoraportti-urakoittain db alkupvm loppupvm
                                                                    (if hallintayksikko-id true false) hallintayksikko-id))))))
 
-(defn suorita [db user {:keys [hk-alkupvm hk-loppupvm alkupvm loppupvm
-                               urakka-id hallintayksikko-id konteksti
+(defn suorita [db user {:keys [alkupvm loppupvm
+                               urakka-id hallintayksikko-id
                                urakoittain?] :as parametrit}]
-  (let [[alku loppu] (if urakka-id
-                       [hk-alkupvm hk-loppupvm]
-                       [alkupvm loppupvm])
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
         materiaalit (if urakoittain?
-                      (hae-raportti-urakoittain db alku loppu hallintayksikko-id)
-                      (hae-raportti db alku loppu urakka-id hallintayksikko-id))
+                      (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id)
+                      (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id))
         kk-lev (if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
-                 "5%")]
+                 "5%")
+        raportin-nimi "Ympäristöraportti"
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)]
 
-    [:raportti {:otsikko "Ympäristöraportti"
+    [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     [:taulukko {:otsikko "Ympäristöraportti"}
+     [:taulukko {:otsikko otsikko}
       (into []
             
             (concat

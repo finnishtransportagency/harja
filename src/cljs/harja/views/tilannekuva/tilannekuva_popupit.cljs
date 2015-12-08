@@ -110,10 +110,10 @@
       (nayta-popup (assoc haettu :aihe :tyokone-klikattu)))))
 
 
-(defmethod nayta-popup :havainto-klikattu [tapahtuma]
+(defmethod nayta-popup :laatupoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
-                        [:p [:b "Havainto"]]
+                        [:p [:b "Laatupoikkeama"]]
                         [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
                         [:div "Tekijä: " (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
                         [:div "Päätös: " (name (get-in tapahtuma [:paatos :paatos])) ", "

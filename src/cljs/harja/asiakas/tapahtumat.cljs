@@ -1,7 +1,9 @@
 (ns harja.asiakas.tapahtumat
   "Harjan asiakaspään eventbus"
-  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]]
+            [harja.virhekasittely :as vk])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.makrot :refer [nappaa-virhe]]))
 
 (def julkaisukanava (chan))
 
@@ -18,7 +20,7 @@ voi lopettaa."
           ch (chan)]
       (go (loop [tapahtuma (<! ch)]
             (when tapahtuma
-              (kasittelija tapahtuma)
+              (nappaa-virhe (kasittelija tapahtuma))
               (recur (<! ch)))))
       (sub julkaisu aihe ch)
       #(unsub julkaisu aihe ch))
