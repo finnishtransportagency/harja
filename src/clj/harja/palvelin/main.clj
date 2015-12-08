@@ -51,6 +51,7 @@
    [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
    [harja.palvelin.palvelut.raportit :as raportit]
    [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
+   [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
 
    ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
    [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
@@ -85,7 +86,7 @@
       (validoi-asetukset asetukset)
       (catch Exception e
         (log/error e "Validointivirhe asetuksissa!")))
-    
+
     (component/system-map
      :db (tietokanta/luo-tietokanta (:palvelin tietokanta)
                                     (:portti tietokanta)
@@ -252,6 +253,10 @@
      :geometriapaivitykset (component/using (geometriapaivitykset/->Geometriapaivitykset
                                              (:geometriapaivitykset asetukset))
                                             [:db :integraatioloki])
+
+     :tilannekuva (component/using
+                    (tilannekuva/->Tilannekuva)
+                    [:http-palvelin :db])
 
      ;; Harja API
      :api-urakat (component/using
