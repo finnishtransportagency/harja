@@ -12,10 +12,53 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat])
+            [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn kirjaa-ilmoitustoimenpide [db parametrit data kayttaja])
+(defn hae-ilmoituksen-id [db ilmoitusid]
+  (if-let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitusid)))]
+    id
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi  :tuntematon-ilmoitus
+       :viesti (format "Ilmoitus id:llä %s. ei löydy ilmoitusta." ilmoitusid)})))
+
+(defn tee-onnistunut-ilmoitustoimenpidevastaus []
+  (let [vastauksen-data {:ilmoitukset "Ilmoitustoimenpide kirjattu onnistuneesti"}]
+    vastauksen-data))
+
+(defn kirjaa-ilmoitustoimenpide [db tloik parametrit data]
+  (let [ilmoitusid (Integer/parseInt (:id parametrit))
+        id (hae-ilmoituksen-id db ilmoitusid)
+        ilmoitustoimenpide (:ilmoitustoimenpide data)
+        ilmoittaja (:ilmoittaja ilmoitustoimenpide)
+        kasittelija (:kasittelija ilmoitustoimenpide)
+        _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
+        ilmoitustoimenpide-id
+        (:id (ilmoitukset/luo-ilmoitustoimenpide<!
+               db
+               id
+               ilmoitusid
+               (pvm-string->java-sql-date (:aika ilmoitustoimenpide))
+               (:vapaateksti ilmoitustoimenpide)
+               (:tyyppi ilmoitustoimenpide)
+               (get-in ilmoittaja [:henkilo :etunimi])
+               (get-in ilmoittaja [:henkilo :sukunimi])
+               (get-in ilmoittaja [:henkilo :matkapuhelin])
+               (get-in ilmoittaja [:henkilo :tyopuhelin])
+               (get-in ilmoittaja [:henkilo :sahkoposti])
+               (get-in ilmoittaja [:organisaatio :nimi])
+               (get-in ilmoittaja [:organisaatio :ytunnus])
+               (get-in kasittelija [:henkilo :etunimi])
+               (get-in kasittelija [:henkilo :sukunimi])
+               (get-in kasittelija [:henkilo :matkapuhelin])
+               (get-in kasittelija [:henkilo :tyopuhelin])
+               (get-in kasittelija [:henkilo :sahkoposti])
+               (get-in kasittelija [:organisaatio :nimi])
+               (get-in kasittelija [:organisaatio :ytunnus])))]
+    (tloik/laheta-ilmoitustoimenpide tloik ilmoitustoimenpide-id)
+    (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
 (defn ilmoituslahettaja [integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?]
   (fn [ilmoitukset]
@@ -59,7 +102,7 @@
 
 (defrecord Ilmoitukset []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki klusterin-tapahtumat :klusterin-tapahtumat :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki klusterin-tapahtumat :klusterin-tapahtumat tloik :tloik :as this}]
     (julkaise-reitti
       http :hae-ilmoitukset
       (GET "/api/urakat/:id/ilmoitukset" request
@@ -68,8 +111,8 @@
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
-        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoituskuittauksen-kirjaaminen+ json-skeemat/+kirjausvastaus+
-                         (fn [parametrit data kayttaja db] (kirjaa-ilmoitustoimenpide db parametrit data kayttaja)))))
+        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoitustoimenpiteen-kirjaaminen+ json-skeemat/+kirjausvastaus+
+                         (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)

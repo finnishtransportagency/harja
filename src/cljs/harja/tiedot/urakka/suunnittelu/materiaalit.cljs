@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.sunnittelu.materiaalit
+(ns harja.tiedot.urakka.suunnittelu.materiaalit
   "Urakoiden materiaalisuunnittelun tiedot."
   (:require [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]

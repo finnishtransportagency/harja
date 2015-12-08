@@ -76,4 +76,3 @@
       (is (= ilmoitusten-maara-suoraan-kannasta (count (get vastausdata "ilmoitukset")))))
 
     (poista-ilmoitus)))
-
