@@ -63,7 +63,7 @@
                  [spyscope "0.1.5"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
-                 [cljs-ajax "0.5.2"]
+                 [cljs-ajax "0.3.13"]
                  [figwheel "0.4.1"]
 
                  [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
