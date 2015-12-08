@@ -18,7 +18,14 @@
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
-    "sijainti": {
+    "alkusijainti": {
+      "id": "urn:harja/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "required": false
+    },
+    "loppusijainti": {
       "id": "urn:harja/sijainti",
       "type": "object",
       "additionalProperties": false,
@@ -43,8 +50,8 @@
       "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
       "required": true
     },
-    "paivamaara": {
-      "id": "urn:harja/paivamaara",
+    "aika": {
+      "id": "urn:harja/aika",
       "type": "string",
       "format": "date-time",
       "required": true
@@ -54,22 +61,6 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
-    },
-    "kommentit": {
-      "id": "urn:harja/kommentit",
-      "type": "array",
-      "maxItems" : 1000,
-      "items": {
-        "id": "urn:harja/kommentit/0",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "kommentti": {
-            "id": "urn:harja/kommentit/0/kommentti",
-            "type": "string"
-          }
-        }
-      }
     }
   }
 }
