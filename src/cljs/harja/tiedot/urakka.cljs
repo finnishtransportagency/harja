@@ -223,7 +223,7 @@
 (defonce urakan-valittu-valilehti (atom :yleiset))
 (defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
 (defonce toteumat-valilehti (atom :kokonaishintaiset-tyot))
-(defonce laskutus-valittu-valilehti (atom :maksuerat))
+(defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
 (defonce hallinnan-valittu-valilehti (atom :kayttajat))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
