@@ -1,5 +1,6 @@
-
 -- kuvaus: tierekisteriosoitteelle_viiva multilinestring korjaus
+DROP FUNCTION tierekisteriosoitteelle_viiva(INTEGER,INTEGER,INTEGER,INTEGER,INTEGER);
+
 CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
   RETURNS SETOF geometry
