@@ -100,7 +100,7 @@
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-tilannekuva)
     (komp/sisaan-ulos #(reset! kartta/pida-geometriat-nakyvilla? false) #(reset! kartta/pida-geometriat-nakyvilla? true))
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
-                      :havainto-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
+                      :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystyskohde-klikattu :paikkaustoteuma-klikattu :tyokone-klikattu
                       :uusi-tyokonedata] (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
                      :popup-suljettu #(reset! popupit/klikattu-tyokone nil))

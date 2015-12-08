@@ -26,7 +26,7 @@
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
-         {:havainnot                        "Havainnot"
+         {:laatupoikkeamat                        "Laatupoikkeamat"
           :tarkastukset                     "Tarkastukset"
           :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
 
@@ -73,7 +73,7 @@
                                              :kyselyt           true
                                              :tiedotukset       true}
                             :turvallisuus   {:turvallisuuspoikkeamat true}
-                            :laadunseuranta {:havainnot    true
+                            :laadunseuranta {:laatupoikkeamat    true
                                              :tarkastukset true}
 
                             ;; Näiden pitää osua työkoneen enumeihin
