@@ -427,12 +427,12 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (defn haitari
   ([rivit] (haitari rivit {}))
-  ([rivit {:keys [vain-yksi-auki? otsikko aina-joku-auki? piiloita-kun-kiinni? leijuva?]}]
+  ([rivit {:keys [vain-yksi-auki? otsikko aina-joku-auki? piiloita-kun-kiinni? leijuva? luokka]}]
    (let [piilota? (and piiloita-kun-kiinni? (not (some (fn [[_ r]] (:auki r)) @rivit)))]
      (when aina-joku-auki?
        (when-not (some (fn [[_ r]] (:auki r)) @rivit)
          (pakota-haitarin-rivi-auki rivit)))
-     [:div.harja-haitari
+     [:div {:class (str "harja-haitari " (when luokka luokka))}
       (when leijuva? {:class "leijuva" :style {:top (laske-haitarin-paikka leijuva?)}})
       (when otsikko [:div.haitari-otsikko (if (string? otsikko)
                                             otsikko

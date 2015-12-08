@@ -3,6 +3,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.views.kartta :as kartta]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.views.tilannekuva.tilannekuva-popupit :as popupit]
             [harja.ui.kentat :as kentat]
             [reagent.core :as r]
@@ -36,9 +37,9 @@
                [pudotusvalikon-elementti elementti]))]]))
 
 ;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
-(defn nykytilanteen-aikasuodattimen-elementti [[teksti tunnit]]
+(defn nykytilanteen-aikasuodattimen-elementti [[teksti]]
   ^{:key (str "nykytilanteen_aikasuodatin_" teksti)}
-  [:li.tk-nykytilanne-aikavalitsin
+  [:div.tk-nykytilanne-aikavalitsin
    [:div.tk-radio
     [:label
      [:input {:type    "radio"
@@ -46,9 +47,23 @@
      teksti]]])
 
 (defn nykytilanteen-aikavalinta []
-  [:ul#tk-nykytilanteen-aikavalinta
-   (doall (for [aika tiedot/aikasuodatin-tunteina]
-            [nykytilanteen-aikasuodattimen-elementti aika]))])
+  (let [aikavalinnat-hiccup (map
+                              (fn [aika]
+                                [nykytilanteen-aikasuodattimen-elementti aika])
+                              tiedot/aikasuodatin-tunteina)]
+  [:div#tk-nykytilanteen-aikavalinta
+   [:div.tk-nykytilanteen-aikavalinta-ryhma-tunnit
+    (nth aikavalinnat-hiccup 0)
+    (nth aikavalinnat-hiccup 1)
+    (nth aikavalinnat-hiccup 2)]
+   [:div.tk-nykytilanteen-aikavalinta-ryhma-vuorokaudet
+    (nth aikavalinnat-hiccup 3)
+    (nth aikavalinnat-hiccup 4)
+    (nth aikavalinnat-hiccup 5)]
+   [:div.tk-nykytilanteen-aikavalinta-ryhma-viikot
+    (nth aikavalinnat-hiccup 6)
+    (nth aikavalinnat-hiccup 7)
+    (nth aikavalinnat-hiccup 8)]]))
 
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
@@ -81,7 +96,7 @@
           ;; [historiakuvan-aikavalitsin] TODO: (when historia [aikavalinta])
           [pudotusvalikko "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
           [pudotusvalikko "Ylläpito" (:yllapito @tiedot/suodattimet)]
-          [nykytilanteen-suodattimet]])                     ;; TODO (if historia ..)
+          [nykytilanteen-suodattimet]]) ;; TODO (if historia ..)
 
 (defonce hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
 
@@ -96,7 +111,8 @@
                      :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit
-                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))
+                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
+                                                                   :luokka "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
                                (kartta/tyhjenna-yleiset-kontrollit)
                                (kartta/poista-popup!))}
