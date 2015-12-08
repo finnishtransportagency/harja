@@ -20,5 +20,5 @@
                          (kasittely-fn)))}
      [:div.harja-on-off-pohja
       [:div.harja-on-off-pallo {:style (if @tila
-                                         {:left 0}
-                                         {:right 0})}]]]))
+                                         {:left "0px"}
+                                         {:left "30px"})}]]]))

@@ -1,4 +1,6 @@
 .harja-on-off-valinta {
+    cursor: pointer;
+
     > .harja-on-off-pohja {
         position: relative;
         border: 1px solid @harmaa7;
@@ -13,6 +15,11 @@
             width: 20px;
             height: 20px;
             background-color: @sininen4;
+            -webkit-transition: all 0.2s ease-in-out;
+            -moz-transition: all 0.2s ease-in-out;
+            -o-transition: all 0.2s ease-in-out;
+            -ms-transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
         }
     }
 }
