@@ -64,9 +64,9 @@
     (odota #(= 1 (count @viestit)) "Ilmoitustoimenpideviesti lähetettiin Sonjan jonoon." 10000)
 
     (is (xml/validoi "xsd/tloik/" "harja-tloik.xsd" (first @viestit)) "Lähetetty ilmoitustoimenpide XML on validi")
-    (let [data (zip/auto false (xml/lue (first @viestit)))]
-      (is (= "987654321" (xml-zip/xml1-> data :harja:toimenpide :ilmoitusId xml-zip/text)) "Toimenpide tehtiin oikeaan ilmoitukseen")
-      (is (= "vastaanotto" (xml-zip/xml1-> data :harja:toimenpide :tyyppi xml-zip/text)) "Toimenpide tyyppi on oikea"))
+    (let [data (xml/lue (first @viestit))]
+      (is (= "987654321" (xml-zip/xml1-> data :ilmoitusId xml-zip/text)) "Toimenpide tehtiin oikeaan ilmoitukseen")
+      (is (= "vastaanotto" (xml-zip/xml1-> data :tyyppi xml-zip/text)) "Toimenpide tyyppi on oikea"))
 
     (poista-testi-ilmoitustoimenpide)
     (poista-testi-ilmoitus)))
