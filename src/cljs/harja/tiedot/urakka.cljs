@@ -7,7 +7,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.urakka.toteumat :as toteumat]
-            [harja.tiedot.urakka.muut-tyot :as muut-tyot]
+            [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.organisaatio :as organisaatio]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
@@ -121,11 +121,6 @@
 (defonce valittu-hoitokausi
          (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-(defonce valittu-kontekstin-hoitokausi (atom nil))
-
-(defn valitse-kontekstin-hoitokausi! [hk]
-  (reset! valittu-kontekstin-hoitokausi hk))
-
 (defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
 
 (defn valitse-hoitokausi! [hk]
@@ -228,7 +223,7 @@
 (defonce urakan-valittu-valilehti (atom :yleiset))
 (defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
 (defonce toteumat-valilehti (atom :kokonaishintaiset-tyot))
-(defonce laskutus-valittu-valilehti (atom :maksuerat))
+(defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
 (defonce hallinnan-valittu-valilehti (atom :kayttajat))
 
 (defonce urakan-toimenpiteet-ja-tehtavat

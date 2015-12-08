@@ -2,7 +2,9 @@
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.loki :refer [log]]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]))
 
 (defn- oletusalue [asia valittu?]
   (merge
@@ -57,36 +59,50 @@
                            "kartta-toimenpidepyynto-violetti.svg")
             :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
 
-(defmethod asia-kartalle :havainto [havainto valittu?]
-  [(assoc havainto
-     :type :havainto
-     :nimi (or (:nimi havainto) "Havainto")
-     :selite {:teksti "Havainto"
-              :img    "kartta-havainto-violetti.svg"}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? havainto) 1.5 1)
-            :img         "kartta-havainto-violetti.svg"
-            :coordinates (if (= :line (get-in havainto [:sijainti :type]))
-                           ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
-                           (first (get-in havainto [:sijainti :points]))
+(defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
+  (case tekija
+    :urakoitsija (str "kartta-" ikonityyppi "-urakoitsija-violetti.svg")
+    :tilaaja (str "kartta-" ikonityyppi "-tilaaja-violetti.svg")
+    :konsultti (str "kartta-" ikonityyppi "-konsultti-violetti.svg")
+    (str "kartta-" ikonityyppi "-violetti.svg")))
 
-                           (get-in havainto [:sijainti :coordinates]))})])
+(defn selvita-tarkastuksen-ikoni [tekija]
+  (selvita-laadunseurannan-ikoni "tarkastus" tekija))
+
+(defn selvita-laatupoikkeaman-ikoni [tekija]
+  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
+
+(defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu?]
+  [(assoc laatupoikkeama
+     :type :laatupoikkeama
+     :nimi (or (:nimi laatupoikkeama)
+               (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
+     :selite {:teksti (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")
+              :img    (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))}
+     :alue {:type        :tack-icon
+            :scale       (if (valittu? laatupoikkeama) 1.5 1)
+            :img         (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+            :coordinates (if (= :line (get-in laatupoikkeama [:sijainti :type]))
+                           ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
+                           (first (get-in laatupoikkeama [:sijainti :points]))
+
+                           (get-in laatupoikkeama [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
-     :nimi (or (:nimi tarkastus) "Tarkastus")
-     :selite {:teksti "Tarkastus"
-              :img    "kartta-tarkastus-violetti.svg"}
+     :nimi (or (:nimi tarkastus)
+               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")"))
+     :selite {:teksti (str "Tarkastus (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")")
+              :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
-             {:type   :tack-icon-line
-              :color  "black"
-              :scale  (if (valittu? tarkastus) 1.5 1)
-              :img    "kartta-tarkastus-violetti.svg"
+             {:type  :tack-icon-line
+              :scale (if (valittu? tarkastus) 1.5 1)
+              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :points (get-in tarkastus [:sijainti :points])}
-             {:type        :tack-icon
-              :scale       (if (valittu? tarkastus) 1.5 1)
-              :img         "kartta-tarkastus-violetti.svg"
+             {:type  :tack-icon
+              :scale (if (valittu? tarkastus) 1.5 1)
+              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]

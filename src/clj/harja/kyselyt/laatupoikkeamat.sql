@@ -1,6 +1,3 @@
--- name: hae-havainnot-tilannekuvaan
--- Hakee havainnot urakasta aikavälillä. Muuten voitaisiin käyttää esim hae-kaikki-havainnot, mutta siinä
--- filtteröidään pois suorasanktiona luodut havainnot. Tilannekuvassa näin ei haluta tehdä.
 SELECT
   h.id,
   h.aika,
@@ -12,16 +9,16 @@ SELECT
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.kuvaus,
   h.sijainti
-FROM havainto h
+FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON h.id=s.havainto
+  LEFT JOIN sanktio s ON h.id=s.laatupoikkeama
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu);
 
--- name: hae-kaikki-havainnot
--- Hakee listaukseen kaikki urakan havainnot annetulle aikavälille
--- Ei palauta havaintoja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
--- välilehden kautta, ja havainto on luotu käytännössä vain tietomallin vaatimusten vuoksi.
+-- name: hae-kaikki-laatupoikkeamat
+-- Hakee listaukseen kaikki urakan laatupoikkeamat annetulle aikavälille
+-- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
   h.aika,
@@ -33,17 +30,17 @@ SELECT
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.kuvaus,
   h.sijainti
-FROM havainto h
+FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON h.id=s.havainto
+  LEFT JOIN sanktio s ON h.id=s.laatupoikkeama
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND s.suorasanktio IS NOT TRUE;
 
--- name: hae-selvitysta-odottavat-havainnot
--- Hakee listaukseen kaikki urakan havainnot, jotka odottavat urakoitsijalta selvitystä.
--- Ei palauta havaintoja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
--- välilehden kautta, ja havainto on luotu käytännössä vain tietomallin vaatimusten vuoksi.
+-- name: hae-selvitysta-odottavat-laatupoikkeamat
+-- Hakee listaukseen kaikki urakan laatupoikkeamat, jotka odottavat urakoitsijalta selvitystä.
+-- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
   h.aika,
@@ -58,21 +55,21 @@ SELECT
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
-                  FROM havainto_kommentti hk
-                  WHERE hk.havainto = h.id)
+                  FROM laatupoikkeama_kommentti hk
+                  WHERE hk.laatupoikkeama = h.id)
    ORDER BY luotu ASC
    OFFSET 0
    LIMIT 1)                          AS kommentti
-FROM havainto h
+FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON s.havainto = h.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND selvitys_pyydetty = TRUE AND selvitys_annettu = FALSE
       AND s.suorasanktio IS NOT TRUE;
 
--- name: hae-kasitellyt-havainnot
--- Hakee listaukseen kaikki urakan havainnot, jotka on käsitelty.
+-- name: hae-kasitellyt-laatupoikkeamat
+-- Hakee listaukseen kaikki urakan laatupoikkeamat, jotka on käsitelty.
 SELECT
   h.id,
   h.aika,
@@ -87,23 +84,23 @@ SELECT
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
-                  FROM havainto_kommentti hk
-                  WHERE hk.havainto = h.id)
+                  FROM laatupoikkeama_kommentti hk
+                  WHERE hk.laatupoikkeama = h.id)
    ORDER BY luotu ASC
    OFFSET 0
    LIMIT 1)                          AS kommentti
-FROM havainto h
+FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON s.havainto=h.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama=h.id
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND paatos IS NOT NULL
       AND s.suorasanktio IS NOT TRUE;
 
--- name: hae-omat-havainnot
--- Hakee listaukseen kaikki urakan havainnot, joiden luoja tai kommentoija on annettu henkilö.
--- Ei palauta havaintoja, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
--- välilehden kautta, ja havainto on luotu käytännössä vain tietomallin vaatimusten vuoksi.
+-- name: hae-omat-laatupoikkeamat
+-- Hakee listaukseen kaikki urakan laatupoikkeamat, joiden luoja tai kommentoija on annettu henkilö.
+-- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
+-- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
   h.id,
   h.aika,
@@ -118,25 +115,25 @@ SELECT
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
-                  FROM havainto_kommentti hk
-                  WHERE hk.havainto = h.id)
+                  FROM laatupoikkeama_kommentti hk
+                  WHERE hk.laatupoikkeama = h.id)
    ORDER BY luotu ASC
    OFFSET 0
    LIMIT 1)                          AS kommentti
-FROM havainto h
+FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON s.havainto = h.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND (h.luoja = :kayttaja OR
-           h.id IN (SELECT hk.havainto
-                    FROM havainto_kommentti hk JOIN kommentti k ON hk.kommentti = k.id
+           h.id IN (SELECT hk.laatupoikkeama
+                    FROM laatupoikkeama_kommentti hk JOIN kommentti k ON hk.kommentti = k.id
                     WHERE k.luoja = :kayttaja))
       AND s.suorasanktio IS NOT TRUE;
 
 
--- name: hae-havainnon-tiedot
--- Hakee havainnon tiedot muokkausnäkymiin.
+-- name: hae-laatupoikkeaman-tiedot
+-- Hakee laatupoikkeaman tiedot muokkausnäkymiin.
 SELECT
   h.id,
   h.aika,
@@ -151,15 +148,15 @@ SELECT
   h.perustelu                        AS paatos_perustelu,
   h.muu_kasittelytapa                AS paatos_muukasittelytapa,
   h.selvitys_pyydetty                AS selvityspyydetty
-FROM havainto h
+FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
 WHERE h.urakka = :urakka
       AND h.id = :id;
 
--- name: hae-havainnon-kommentit
--- Hakee annetun havainnon kaikki kommentit (joita ei ole poistettu) sekä
+-- name: hae-laatupoikkeaman-kommentit
+-- Hakee annetun laatupoikkeaman kaikki kommentit (joita ei ole poistettu) sekä
 -- kommentin mahdollisen liitteen tiedot. Kommentteja on vaikea hakea
--- array aggregoimalla itse havainnon hakukyselyssä.
+-- array aggregoimalla itse laatupoikkeaman hakukyselyssä.
 SELECT
   k.id,
   k.tekija,
@@ -177,13 +174,13 @@ FROM kommentti k
   LEFT JOIN liite l ON l.id = k.liite
 WHERE k.poistettu = FALSE
       AND k.id IN (SELECT hk.kommentti
-                   FROM havainto_kommentti hk
-                   WHERE hk.havainto = :id)
+                   FROM laatupoikkeama_kommentti hk
+                   WHERE hk.laatupoikkeama = :id)
 ORDER BY k.luotu ASC;
 
 
--- name: hae-havainnon-liitteet
--- Hakee annetun havainnon kaikki liitteet
+-- name: hae-laatupoikkeaman-liitteet
+-- Hakee annetun laatupoikkeaman kaikki liitteet
 SELECT
   l.id                                 AS id,
   l.tyyppi                             AS tyyppi,
@@ -191,13 +188,13 @@ SELECT
   l.nimi                               AS nimi,
   l.liite_oid                          AS oid
 FROM liite l
-  JOIN havainto_liite hl on l.id = hl.liite
-WHERE hl.havainto = :havaintoid
+  JOIN laatupoikkeama_liite hl on l.id = hl.liite
+WHERE hl.laatupoikkeama = :laatupoikkeamaid
 ORDER BY l.luotu ASC;
 
--- name: paivita-havainnon-perustiedot<!
--- Päivittää aiemmin luodun havainnon perustiedot
-UPDATE havainto
+-- name: paivita-laatupoikkeaman-perustiedot<!
+-- Päivittää aiemmin luodun laatupoikkeaman perustiedot
+UPDATE laatupoikkeama
 SET aika            = :aika,
   tekija            = :tekija :: osapuoli,
   kohde             = :kohde,
@@ -207,50 +204,50 @@ SET aika            = :aika,
   muokattu          = current_timestamp
 WHERE id = :id;
 
--- name: luo-havainto<!
--- Luo uuden havainnon annetuille perustiedoille. Luontivaiheessa ei
+-- name: luo-laatupoikkeama<!
+-- Luo uuden laatupoikkeaman annetuille perustiedoille. Luontivaiheessa ei
 -- voi antaa päätöstietoja.
 INSERT
-INTO havainto
+INTO laatupoikkeama
 (urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
 VALUES (:urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
         POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :ulkoinen_id);
 
--- name: kirjaa-havainnon-paatos!
+-- name: kirjaa-laatupoikkeaman-paatos!
 -- Kirjaa havainnolle päätöksen.
-UPDATE havainto
+UPDATE laatupoikkeama
 SET kasittelyaika   = :kasittelyaika,
-  paatos            = :paatos :: havainnon_paatostyyppi,
+  paatos            = :paatos :: laatupoikkeaman_paatostyyppi,
   perustelu         = :perustelu,
-  kasittelytapa     = :kasittelytapa :: havainnon_kasittelytapa,
+  kasittelytapa     = :kasittelytapa :: laatupoikkeaman_kasittelytapa,
   muu_kasittelytapa = :muukasittelytapa,
   muokkaaja         = :muokkaaja,
   muokattu          = current_timestamp
 WHERE id = :id;
 
 -- name: liita-kommentti<!
--- Liittää havaintoon uuden kommentin
-INSERT INTO havainto_kommentti (havainto, kommentti) VALUES (:havainto, :kommentti);
+-- Liittää laatupoikkeamaon uuden kommentin
+INSERT INTO laatupoikkeama_kommentti (laatupoikkeama, kommentti) VALUES (:laatupoikkeama, :kommentti);
 
 -- name: liita-liite<!
--- Liittää havaintoon uuden liitteen
-INSERT INTO havainto_liite (havainto, liite) VALUES (:havainto, :liite);
+-- Liittää laatupoikkeamaon uuden liitteen
+INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite) VALUES (:laatupoikkeama, :liite);
 
--- name: liita-havainto<!
--- Liittää havaintoon uuden liitteen
-INSERT INTO havainto_liite (havainto, liite) VALUES (:havainto, :liite);
+-- name: liita-laatupoikkeama<!
+-- Liittää laatupoikkeamalle uuden liitteen
+INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite) VALUES (:laatupoikkeama, :liite);
 
 -- name: onko-olemassa-ulkoisella-idlla
--- Tarkistaa löytyykö havaintoa ulkoisella id:llä
+-- Tarkistaa löytyykö laatupoikkeamaa ulkoisella id:llä
 SELECT exists(
-    SELECT havainto.id
-    FROM havainto
+    SELECT laatupoikkeama.id
+    FROM laatupoikkeama
     WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
 
--- name: paivita-havainto-ulkoisella-idlla<!
--- Päivittää havainnon annetuille perustiedoille.
-UPDATE havainto
+-- name: paivita-laatupoikkeama-ulkoisella-idlla<!
+-- Päivittää laatupoikkeaman annetuille perustiedoille.
+UPDATE laatupoikkeama
 SET
   aika             = :aika,
   kohde            = :kohde,

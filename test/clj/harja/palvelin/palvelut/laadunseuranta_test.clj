@@ -31,15 +31,14 @@
                     :sivukaltevuus 5
                     :tasaisuus     1
                     :kiinteys      3}
-   :havainto       {:kuvaus "kuvaus tähän"
-                    :tekija :urakoitsija}})
+   :havainnot     "kuvaus tähän"})
 
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tallenna-ja-paivita-soratietarkastus
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         kuvaus (str "kuvaus nyt " (System/currentTimeMillis))
-        soratietarkastus (assoc-in soratietarkastus [:havainto :kuvaus] kuvaus)
+        soratietarkastus (assoc-in soratietarkastus [:havainnot] kuvaus)
         hae-tarkastukset #(kutsu-http-palvelua :hae-urakan-tarkastukset +kayttaja-jvh+
                                                {:urakka-id urakka-id
                                                 :alkupvm   #inst "2005-10-01T00:00:00.000-00:00"
@@ -76,39 +75,40 @@
       (let [tarkastus (kutsu-http-palvelua :hae-tarkastus +kayttaja-jvh+
                                            {:urakka-id    urakka-id
                                             :tarkastus-id @tarkastus-id})]
-        (is (= kuvaus (get-in tarkastus [:havainto :kuvaus])))
+        (is (= kuvaus (:havainnot tarkastus)))
 
         (testing "Muokataan tarkastusta"
           (let [muokattu-tarkastus (kutsu-http-palvelua :tallenna-tarkastus +kayttaja-jvh+
                                                         {:urakka-id urakka-id
                                                          :tarkastus (-> tarkastus
                                                                         (assoc-in [:soratiemittaus :tasaisuus] 5)
-                                                                        (assoc-in [:havainto :kuvaus] "MUOKATTU KUVAUS"))})]
+                                                                        (assoc-in [:havainnot] "MUOKATTU KUVAUS"))})]
 
             ;; id on edelleen sama
             (is (= (:id muokattu-tarkastus) @tarkastus-id))
 
             ;; muokatut kentät tallentuivat
-            (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainto :kuvaus])))
+            (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainnot])))
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
 ; FIXME Siivoa tallennettu data
 
-(deftest hae-havainnon-tiedot []
+(deftest hae-laatupoikkeaman-tiedot []
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-havainnon-tiedot +kayttaja-jvh+ {:urakka-id   urakka-id
-                                                                      :havainto-id 1})]
+                                :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id   urakka-id
+                                                                            :laatupoikkeama-id 1})]
     (is (not (empty? vastaus)))
     (is (string? (:kuvaus vastaus)))
     (is (>= (count (:kuvaus vastaus)) 10))))
 
-(deftest hae-urakan-havainnot []
+(deftest hae-urakan-laatupoikkeamat []
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-havainnot +kayttaja-jvh+ {:listaus   :kaikki
-                                                                      :urakka-id urakka-id
-                                                                      :alku      (java.sql.Date. 100 9 1)
-                                                                      :loppu     (java.sql.Date. 110 8 30)})]
+                                :hae-urakan-laatupoikkeamat +kayttaja-jvh+
+                                {:listaus   :kaikki
+                                 :urakka-id urakka-id
+                                 :alku      (java.sql.Date. 100 9 1)
+                                 :loppu     (java.sql.Date. 110 8 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
@@ -149,15 +149,15 @@
 (deftest hae-urakan-sanktiot-test
   (is (oikeat-sarakkeet-palvelussa?
         [:id :perintapvm :summa :laji :indeksi :suorasanktio :toimenpideinstanssi
-         [:havainto :id] [:havainto :kohde] [:havainto :aika] [:havainto :tekija] [:havainto :urakka]
-         [:havainto :tekijanimi] [:havainto :kuvaus] [:havainto :sijainti] [:havainto :tarkastuspiste]
-         [:havainto :selvityspyydetty] [:havainto :selvitysannettu]
+         [:laatupoikkeama :id] [:laatupoikkeama :kohde] [:laatupoikkeama :aika] [:laatupoikkeama :tekija] [:laatupoikkeama :urakka]
+         [:laatupoikkeama :tekijanimi] [:laatupoikkeama :kuvaus] [:laatupoikkeama :sijainti] [:laatupoikkeama :tarkastuspiste]
+         [:laatupoikkeama :selvityspyydetty] [:laatupoikkeama :selvitysannettu]
 
-         [:havainto :paatos :kasittelyaika] [:havainto :paatos :paatos] [:havainto :paatos :kasittelytapa]
-         [:havainto :paatos :muukasittelytapa] [:havainto :paatos :perustelu]
+         [:laatupoikkeama :paatos :kasittelyaika] [:laatupoikkeama :paatos :paatos] [:laatupoikkeama :paatos :kasittelytapa]
+         [:laatupoikkeama :paatos :muukasittelytapa] [:laatupoikkeama :paatos :perustelu]
 
-         [:havainto :tr :numero] [:havainto :tr :alkuosa] [:havainto :tr :loppuosa]
-         [:havainto :tr :alkuetaisyys] [:havainto :tr :loppuetaisyys]]
+         [:laatupoikkeama :tr :numero] [:laatupoikkeama :tr :alkuosa] [:laatupoikkeama :tr :loppuosa]
+         [:laatupoikkeama :tr :alkuetaisyys] [:laatupoikkeama :tr :loppuetaisyys]]
         :hae-urakan-sanktiot
         {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
          :alku      (java.sql.Date. 100 0 1)

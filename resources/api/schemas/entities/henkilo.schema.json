@@ -31,6 +31,14 @@
       "id": "urn:harja/paivystykset/0/paivystys/tyopuhelin",
       "type": "string"
     },
+    "matkapuhelinnumero": {
+      "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
+      "type": "string"
+    },
+    "tyopuhelinnumero": {
+      "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
+      "type": "string"
+    },
     "liviTunnus": {
       "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
       "type": "string"

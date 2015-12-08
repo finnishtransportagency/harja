@@ -9,7 +9,10 @@ SELECT
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
-  i.otsikko, i.lyhytselite, i.pitkaselite, -- selitteet
+  i.otsikko,
+  i.lyhytselite,
+  i.pitkaselite,
+  -- selitteet
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
@@ -104,6 +107,63 @@ WHERE
     (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
   )
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
+
+-- name: hae-ilmoitukset-idlla
+SELECT
+  ilmoitusid,
+  ilmoitettu,
+  yhteydenottopyynto,
+  lyhytselite,
+  pitkaselite,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE ilmoitusid IN (:ilmoitusidt);
+
+-- name: hae-ilmoituksen-jalkeen-saapuneet-ilmoitukset
+SELECT
+  ilmoitusid,
+  ilmoitettu,
+  yhteydenottopyynto,
+  lyhytselite,
+  pitkaselite,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE urakka = :urakka AND
+      ilmoitusid > :ilmoitusid;
 
 
 -- name: hae-id-ilmoitus-idlla
@@ -222,3 +282,45 @@ WHERE lahetysid = :lahetysid;
 UPDATE ilmoitustoimenpide
 SET tila = 'virhe'
 WHERE id = :id;
+
+-- name: luo-ilmoitustoimenpide<!
+INSERT INTO ilmoitustoimenpide
+(ilmoitus,
+ ilmoitusid,
+ kuitattu,
+ vapaateksti,
+ kuittaustyyppi,
+ kuittaaja_henkilo_etunimi,
+ kuittaaja_henkilo_sukunimi,
+ kuittaaja_henkilo_matkapuhelin,
+ kuittaaja_henkilo_tyopuhelin,
+ kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi,
+ kuittaaja_organisaatio_ytunnus,
+ kasittelija_henkilo_etunimi,
+ kasittelija_henkilo_sukunimi,
+ kasittelija_henkilo_matkapuhelin,
+ kasittelija_henkilo_tyopuhelin,
+ kasittelija_henkilo_sahkoposti,
+ kasittelija_organisaatio_nimi,
+ kasittelija_organisaatio_ytunnus)
+VALUES
+  (:ilmoitus,
+    :ilmoitusid,
+    :kuitattu,
+    :vapaateksti,
+    :kuittaustyyppi :: kuittaustyyppi,
+    :kuittaaja_henkilo_etunimi,
+    :kuittaaja_henkilo_sukunimi,
+    :kuittaaja_henkilo_matkapuhelin,
+    :kuittaaja_henkilo_tyopuhelin,
+    :kuittaaja_henkilo_sahkoposti,
+    :kuittaaja_organisaatio_nimi,
+   :kuittaaja_organisaatio_ytunnus,
+   :kasittelija_henkilo_etunimi,
+   :kasittelija_henkilo_sukunimi,
+   :kasittelija_henkilo_matkapuhelin,
+   :kasittelija_henkilo_tyopuhelin,
+   :kasittelija_henkilo_sahkoposti,
+   :kasittelija_organisaatio_nimi,
+   :kasittelija_organisaatio_ytunnus);

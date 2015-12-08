@@ -2,7 +2,10 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat]]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
@@ -11,20 +14,6 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
 
-(def vuosi-ja-kk-fmt (tf/formatter "YYYY/MM"))
-(defn- vuosi-ja-kk [pvm]
-  (tf/unparse vuosi-ja-kk-fmt (tc/from-date pvm)))
-
-(defn kuukaudet [alku loppu]
-  (let [alku (tc/from-date alku)
-        loppu (tc/from-date loppu)]
-    (letfn [(kuukaudet [kk]
-              (when (or (t/before? kk loppu)
-                        (t/equal? kk loppu))
-                (lazy-seq
-                 (cons (tf/unparse vuosi-ja-kk-fmt kk)
-                       (kuukaudet (t/plus kk (t/months 1)))))))]
-      (kuukaudet alku))))
 
 (def turvallisuuspoikkeama-tyyppi
   {"turvallisuuspoikkeama" "Turvallisuuspoikkeama"
@@ -35,9 +24,12 @@
   (into [] (keep identity asiat)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
-                               alkupvm loppupvm toimenpide-id] :as parametrit}]
+                               alkupvm loppupvm] :as parametrit}]
   (log/info "PARAMS: " parametrit)
-  (let [turpot (into []
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        turpot (into []
                      (comp 
                       (map #(konv/array->vec % :tyyppi))
                       (map konv/alaviiva->rakenne))
@@ -46,10 +38,15 @@
                                                  (if hallintayksikko-id true false) hallintayksikko-id
                                                  alkupvm loppupvm))
         turpo-maarat-kuukausittain (frequencies (map (comp vuosi-ja-kk :tapahtunut) turpot))
-        ]
-    
-    [:raportti {:otsikko "Turvallisuuspoikkeamaraportti"}
-     [:taulukko {:otsikko "Turvallisuuspoikkemat tyypeittäin" :viimeinen-rivi-yhteenveto? true}
+        raportin-nimi "Turvallisuusraportti"
+        otsikko (raportin-otsikko
+                  (case konteksti
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)]
+    [:raportti {:nimi raportin-nimi}
+     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat (when urakoittain?
                       [{:otsikko "Urakka"}])
@@ -68,10 +65,10 @@
      
      (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
-       [:pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"}
-        (into []
-              (map (juxt identity #(or (turpo-maarat-kuukausittain %) 0)))
-              (kuukaudet alkupvm loppupvm))])
+       (pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"
+                 :alkupvm alkupvm :loppupvm loppupvm
+                  :kuukausittainen-data turpo-maarat-kuukausittain
+                :piilota-arvo? #{0}}))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []

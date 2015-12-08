@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -14,7 +14,7 @@
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
-            [harja.tiedot.urakka.muut-tyot :as muut-tyot])
+            [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 
@@ -28,7 +28,7 @@
                          [g & gs] (concat                   ;; Pohjavesi
                                     @pohjavesialueet/pohjavesialueet
                                     ;; Laadunseunranta
-                                    @laadunseuranta/tarkastukset-kartalla
+                                    @tarkastukset/tarkastukset-kartalla
                                     @sillat/sillat
                                     ;; Turvallisuus
                                     @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
@@ -54,7 +54,7 @@
   (case nimi
     :pohjavesialueet pohjavesialueet/karttataso-pohjavesialueet
     :sillat sillat/karttataso-sillat
-    :tarkastukset laadunseuranta/karttataso-tarkastukset
+    :tarkastukset tarkastukset/karttataso-tarkastukset
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
     :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma

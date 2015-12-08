@@ -8,7 +8,8 @@
     [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+    [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [com.stuartsierra.component :as component]))
 
 (def jarjestelma nil)
 

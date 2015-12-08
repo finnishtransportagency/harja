@@ -19,7 +19,7 @@
 (defonce hae-toimenpidepyynnot? (atom true))
 (defonce hae-kyselyt? (atom true))
 (defonce hae-tiedoitukset? (atom true))
-(defonce hae-havainnot? (atom true))
+(defonce hae-laatupoikkeamat? (atom true))
 (defonce hae-tyokoneet? (atom true))
 
 ;; Millä ehdoilla haetaan?
@@ -66,10 +66,10 @@
                                                       :tyypit (remove nil? [(when @hae-toimenpidepyynnot? :toimenpidepyynto)
                                                                             (when @hae-kyselyt? :kysely)
                                                                             (when @hae-tiedoitukset? :tiedoitus)]))))))
-                  (when @hae-havainnot?
+                  (when @hae-laatupoikkeamat?
                     (mapv
-                      #(assoc % :tyyppi-kartalla :havainto)
-                      (<! (k/post! :hae-urakan-havainnot (rename-keys
+                      #(assoc % :tyyppi-kartalla :laatupoikkeama)
+                      (<! (k/post! :hae-urakan-laatupoikkeamat (rename-keys
                                                            yhteiset-parametrit
                                                            {:urakka :urakka-id}))))))]
       (reset! haetut-asiat tulos)
@@ -84,7 +84,7 @@
                       _ @hae-kyselyt?
                       _ @hae-tiedoitukset?
                       _ @hae-tyokoneet?
-                      _ @hae-havainnot?
+                      _ @hae-laatupoikkeamat?
                       _ @livesuodattimen-asetukset]
                      {:odota +bufferi+}
                      (when nakymassa? (hae-asiat))))

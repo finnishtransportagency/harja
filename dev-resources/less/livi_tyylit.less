@@ -260,6 +260,10 @@ table.table-striped {
     width: @leveys;
 
     .nappi-alasveto {
+        &.disabled {
+            background-color: @harmaa9;
+            color: @harmaa6;
+        }
         height: 32px;
         .valittu {
             display: inline-block;
@@ -272,6 +276,11 @@ table.table-striped {
             width: 100%;
         }
         .livicon-chevron-down {
+            &.disabled {
+                background: none;
+                background-color: @harmaa9;
+                color: @harmaa6;
+            }
             color: @sininen4;
             position: absolute;
             top: 9px;

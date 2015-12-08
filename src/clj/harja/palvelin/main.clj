@@ -58,7 +58,7 @@
 
    ;; Harja API
    [harja.palvelin.integraatiot.api.urakat :as api-urakat]
-   [harja.palvelin.integraatiot.api.havainnot :as api-havainnot]
+   [harja.palvelin.integraatiot.api.laatupoikkeamat :as api-laatupoikkeamat]
    [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
    [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
    [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
@@ -69,7 +69,8 @@
    [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
    [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
-
+   [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
+   
    ;; Ajastetut tehtävät
    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
    [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
@@ -137,7 +138,7 @@
                                             (:ilmoituskuittausjono (:tloik asetukset))
                                             (:toimenpideviestijono (:tloik asetukset))
                                             (:toimenpidekuittausjono (:tloik asetukset)))
-                             [:sonja :db :integraatioloki])
+                             [:sonja :db :integraatioloki :klusterin-tapahtumat])
 
      ;; Tierekisteri
      :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
@@ -262,9 +263,9 @@
      :api-urakat (component/using
                   (api-urakat/->Urakat)
                   [:http-palvelin :db :integraatioloki])
-     :api-havainnot (component/using
-                     (api-havainnot/->Havainnot)
-                     [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
+     :api-laatupoikkeamat (component/using
+                           (api-laatupoikkeamat/->Laatupoikkeamat)
+                           [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
      :api-paivystajatiedot (component/using
                             (api-paivystajatiedot/->Paivystajatiedot)
                             [:http-palvelin :db :integraatioloki])
@@ -293,7 +294,9 @@
      :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                                  [:db])
      :api-varusteet (component/using (api-varusteet/->Varusteet)
-                                     [:http-palvelin :db :integraatioloki :tierekisteri]))))
+                                     [:http-palvelin :db :integraatioloki :tierekisteri])
+     :api-ilmoitukset (component/using (api-ilmoitukset/->Ilmoitukset)
+                                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik]))))
 
 (defonce harja-jarjestelma nil)
 

@@ -1,8 +1,8 @@
 -- name: luo-sanktio<!
--- Luo uuden sanktion annetulle havainnolle
+-- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, havainto, suorasanktio)
+(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, laatupoikkeama, suorasanktio)
 VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
         (
           SELECT t.id
@@ -10,7 +10,7 @@ VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
             JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
           WHERE s.id = :tyyppi AND t.urakka = :urakka
         ),
-        :summa, :indeksi, :havainto, :suorasanktio);
+        :summa, :indeksi, :laatupoikkeama, :suorasanktio);
 
 -- name: paivita-sanktio!
 -- Päivittää olemassaolevan sanktion
@@ -26,12 +26,12 @@ SET perintapvm        = :perintapvm,
   ),
   maara               = :summa,
   indeksi             = :indeksi,
-  havainto            = :havainto,
+  laatupoikkeama            = :laatupoikkeama,
   suorasanktio        = :suorasanktio
 WHERE id = :id;
 
--- name: hae-havainnon-sanktiot
--- Palauttaa kaikki annetun havainnon sanktiot
+-- name: hae-laatupoikkeaman-sanktiot
+-- Palauttaa kaikki annetun laatupoikkeaman sanktiot
 SELECT
   s.id,
   s.perintapvm,
@@ -45,7 +45,7 @@ SELECT
   t.sanktiolaji     AS tyyppi_sanktiolaji
 FROM sanktio s
   JOIN sanktiotyyppi t ON s.tyyppi = t.id
-WHERE havainto = :havainto;
+WHERE laatupoikkeama = :laatupoikkeama;
 
 -- name: hae-urakan-sanktiot
 -- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
@@ -59,34 +59,34 @@ SELECT
   s.suorasanktio,
   s.toimenpideinstanssi,
 
-  h.id                               AS havainto_id,
-  h.kohde                            AS havainto_kohde,
-  h.aika                             AS havainto_aika,
-  h.tekija                           AS havainto_tekija,
-  h.urakka                           AS havainto_urakka,
-  CONCAT(k.etunimi, ' ', k.sukunimi) AS havainto_tekijanimi,
-  h.kasittelyaika                    AS havainto_paatos_kasittelyaika,
-  h.paatos                           AS havainto_paatos_paatos,
-  h.kasittelytapa                    AS havainto_paatos_kasittelytapa,
-  h.muu_kasittelytapa                AS havainto_paatos_muukasittelytapa,
-  h.kuvaus                           AS havainto_kuvaus,
-  h.perustelu                        AS havainto_paatos_perustelu,
-  h.tr_numero                        AS havainto_tr_numero,
-  h.tr_alkuosa                       AS havainto_tr_alkuosa,
-  h.tr_loppuosa                      AS havainto_tr_loppuosa,
-  h.tr_alkuetaisyys                  AS havainto_tr_alkuetaisyys,
-  h.tr_loppuetaisyys                 AS havainto_tr_loppuetaisyys,
-  h.sijainti                         AS havainto_sijainti,
-  h.tarkastuspiste                   AS havainto_tarkastuspiste,
-  h.selvitys_pyydetty                AS havainto_selvityspyydetty,
-  h.selvitys_annettu                 AS havainto_selvitysannettu,
+  h.id                               AS laatupoikkeama_id,
+  h.kohde                            AS laatupoikkeama_kohde,
+  h.aika                             AS laatupoikkeama_aika,
+  h.tekija                           AS laatupoikkeama_tekija,
+  h.urakka                           AS laatupoikkeama_urakka,
+  CONCAT(k.etunimi, ' ', k.sukunimi) AS laatupoikkeama_tekijanimi,
+  h.kasittelyaika                    AS laatupoikkeama_paatos_kasittelyaika,
+  h.paatos                           AS laatupoikkeama_paatos_paatos,
+  h.kasittelytapa                    AS laatupoikkeama_paatos_kasittelytapa,
+  h.muu_kasittelytapa                AS laatupoikkeama_paatos_muukasittelytapa,
+  h.kuvaus                           AS laatupoikkeama_kuvaus,
+  h.perustelu                        AS laatupoikkeama_paatos_perustelu,
+  h.tr_numero                        AS laatupoikkeama_tr_numero,
+  h.tr_alkuosa                       AS laatupoikkeama_tr_alkuosa,
+  h.tr_loppuosa                      AS laatupoikkeama_tr_loppuosa,
+  h.tr_alkuetaisyys                  AS laatupoikkeama_tr_alkuetaisyys,
+  h.tr_loppuetaisyys                 AS laatupoikkeama_tr_loppuetaisyys,
+  h.sijainti                         AS laatupoikkeama_sijainti,
+  h.tarkastuspiste                   AS laatupoikkeama_tarkastuspiste,
+  h.selvitys_pyydetty                AS laatupoikkeama_selvityspyydetty,
+  h.selvitys_annettu                 AS laatupoikkeama_selvitysannettu,
 
   t.nimi                             AS tyyppi_nimi,
   t.id                               AS tyyppi_id,
   t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi
 
 FROM sanktio s
-  JOIN havainto h ON s.havainto = h.id
+  JOIN laatupoikkeama h ON s.laatupoikkeama = h.id
   JOIN kayttaja k ON h.luoja = k.id
   JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE

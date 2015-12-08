@@ -39,19 +39,26 @@
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
 
+(defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
+  [:h3 teksti])
+
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari]}]]
   [:p {:style {:color (when vari vari)}} teksti])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari]} pylvaat]]
+(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo?]} pylvaat]]
   (let [w (int (* 0.85 @yleiset/leveys))
         h (int (/ w 3))]
-    [:span.pylvaat
+    [:div.pylvaat
      [:h3 otsikko]
-     [vis/bars {:width w
-                :height h}
+     [vis/bars {:width         w
+                :height        h
+                ;; tarvitaanko erityyppisille rapsoille eri formatteri?
+                :format-amount (or fmt str)
+                :hide-value?   piilota-arvo?
+                }
       pylvaat]]))
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
@@ -60,7 +67,10 @@
 
   
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
+  (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
   [:div.raportti
+   (when (:nimi raportin-tunnistetiedot)
+     [:h3 (:nimi raportin-tunnistetiedot)])
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}
@@ -70,8 +80,3 @@
                              sisalto
                              [sisalto]))
                          sisalto))])
-
-                                   
-  
-   
-  

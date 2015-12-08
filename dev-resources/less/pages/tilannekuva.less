@@ -1,10 +1,10 @@
+.haitari-tilannekuva {
+  max-width: 300px;
+  min-width: 300px;
+}
+
 .tk-radio,
 .tk-checkbox {
-  position: relative;
-  display: inline-block;
-  margin-top: 10px;
-  margin-bottom: 10px;
-
   label {
     padding-left: 5px;
     margin-bottom: 0;
@@ -17,9 +17,26 @@
   }
 }
 
-#tk-tilan-vaihtajat {}
+#tk-tilan-vaihtajat {
+  padding-top: 5px;
+  position: relative;
+  height: 32px;
 
-#tk-aikavalitsin {}
+  > .tk-tilan-vaihto-nykytilanne {
+    left: 0;
+    position: absolute;
+  }
+
+  > .tk-tilan-vaihto-historia {
+    position: absolute;
+    left: 180px;
+  }
+
+  > .on-off-tilannekuva {
+    position: absolute;
+    left: 100px;
+  }
+}
 
 .tk-pudotusvalikko-nappi {
   border: 1px ridge @harmaa3;
@@ -31,7 +48,6 @@
   margin-right: 5px;
   vertical-align: middle;
   display: inline-block;
-  //line-height: 29px;
 }
 
 .tk-pudotusvalikko-checkbox {
@@ -59,8 +75,6 @@
   vertical-align: middle;
 }
 
-.tk-pudotusvalikko-auki {}
-
 .tk-pudotusvalikko-kiinni {
   display: none;
 }
@@ -75,13 +89,8 @@
   border: 1px ridge @harmaa3;
 }
 
-#tk-nykytila-paavalikko {
-
-}
-
-#tk-nykytilanteen-aikavalinta {
-  list-style: none;
-}
-
 .tk-nykytilanne-aikavalitsin {
+  display: inline-block;
+  height: 28px;
+  padding-right: 10px;
 }

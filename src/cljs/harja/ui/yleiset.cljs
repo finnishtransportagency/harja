@@ -147,17 +147,22 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
-(defn raksiboksi [teksti checked toiminto info-teksti nayta-infoteksti?]
-  (let [toiminto-fn (fn [e] (do (.preventDefault e) (toiminto) nil))]
-    [:span
-     [:div.raksiboksi.input-group
-      [:span.input-group-addon
-       [:input {:type      "checkbox"
-                :checked   (if checked "checked" "")
-                :on-change #(toiminto-fn %)}]]
-      [:span.raksiboksi-teksti {:on-click #(toiminto-fn %)} teksti]]
-     (when nayta-infoteksti?
-       info-teksti)]))
+(defn raksiboksi
+  ([teksti checked toiminto info-teksti nayta-infoteksti?]
+   (raksiboksi teksti checked toiminto info-teksti nayta-infoteksti? nil))
+  ([teksti checked toiminto info-teksti nayta-infoteksti? komponentti]
+   (let [toiminto-fn (fn [e] (do (.preventDefault e) (toiminto) nil))]
+     [:span
+      [:div.raksiboksi.input-group
+       [:div.input-group-addon
+        [:input {:type      "checkbox"
+                 :checked   (if checked "checked" "")
+                 :on-change #(toiminto-fn %)}]
+        [:span.raksiboksi-teksti {:on-click #(toiminto-fn %)} teksti]]
+       (when komponentti
+         komponentti)]
+      (when nayta-infoteksti?
+        info-teksti)])))
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
@@ -186,7 +191,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             format-fn (or format-fn str)]
         [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
          [:button.nappi-alasveto
-          {:type        "button"
+          {:class (when disabled "disabled")
+           :type        "button"
            :disabled    (if disabled "disabled" "")
            :title       title
            :on-click    #(do
@@ -236,7 +242,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   (reset! auki false)))) nil))}
 
           [:div.valittu (format-fn valinta)]
-          [:span.livicon-chevron-down]]
+          [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
          [:ul.dropdown-menu.livi-alasvetolista
           (doall
             (for [vaihtoehto vaihtoehdot]
@@ -427,12 +433,12 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (defn haitari
   ([rivit] (haitari rivit {}))
-  ([rivit {:keys [vain-yksi-auki? otsikko aina-joku-auki? piiloita-kun-kiinni? leijuva?]}]
+  ([rivit {:keys [vain-yksi-auki? otsikko aina-joku-auki? piiloita-kun-kiinni? leijuva? luokka]}]
    (let [piilota? (and piiloita-kun-kiinni? (not (some (fn [[_ r]] (:auki r)) @rivit)))]
      (when aina-joku-auki?
        (when-not (some (fn [[_ r]] (:auki r)) @rivit)
          (pakota-haitarin-rivi-auki rivit)))
-     [:div.harja-haitari
+     [:div {:class (str "harja-haitari " (when luokka luokka))}
       (when leijuva? {:class "leijuva" :style {:top (laske-haitarin-paikka leijuva?)}})
       (when otsikko [:div.haitari-otsikko (if (string? otsikko)
                                             otsikko
