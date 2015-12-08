@@ -48,7 +48,7 @@
         cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
                (if (virhe? vastaus)
-                 (do (log "Palvelu " palvelu " palautti virheen: " vastaus)
+                 (do (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus))
                      (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe))
                      ;; kaataa seleniumin testiajon, oikea ongelma taustalla, pidä toistaiseksi kommentoituna
                      #_(vk/arsyttava-virhe (str "Palvelinkutsussa virhe: " vastaus)))
