@@ -106,8 +106,8 @@
     [tee-kentta {:tyyppi :pvm :irrallinen? true}
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]
-               (if (t/before? uusi-arvo (first @valittu-aikavali-atom))
-                 ; Estetään käänteinen aikaväli
+               ;; Estetään käänteinen aikaväli
+               (if (and uusi-arvo (t/before? uusi-arvo (first @valittu-aikavali-atom)))
                  (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali uusi-arvo))
                  (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo])))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]])
