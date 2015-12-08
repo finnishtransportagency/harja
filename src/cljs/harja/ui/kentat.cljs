@@ -566,7 +566,7 @@
    ;     alkuperainen-sijainti (atom @sijainti)
         virheet (atom nil)
 
-        alkuperainen-sijainti @sijainti
+        alkuperainen-sijainti (atom @sijainti)
 
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)

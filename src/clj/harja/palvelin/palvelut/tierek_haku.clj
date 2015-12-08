@@ -42,14 +42,14 @@
   [db user params]
   (log/debug "Haetaan viiva osoiteelle " (pr-str params))
   (let [korjattu-osoite (jarjestele-tr-osoite params)
-        geom (first (tv/tierekisteriosoite-viivaksi db
-                                                    (:numero korjattu-osoite)
-                                                    (:alkuosa korjattu-osoite)
-                                                    (:alkuetaisyys korjattu-osoite)
-                                                    (:loppuosa korjattu-osoite)
-                                                    (:loppuetaisyys korjattu-osoite)))]
+        geom (tv/tierekisteriosoite-viivaksi db
+                                             (:numero korjattu-osoite)
+                                             (:alkuosa korjattu-osoite)
+                                             (:alkuetaisyys korjattu-osoite)
+                                             (:loppuosa korjattu-osoite)
+                                             (:loppuetaisyys korjattu-osoite))]
     (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
-    (geo/pg->clj (:tierekisteriosoitteelle_viiva geom))))
+    (mapv geo/pg->clj (mapv :tierekisteriosoitteelle_viiva geom))))
 
 (defn hae-tr-piste
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
