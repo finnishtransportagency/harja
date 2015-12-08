@@ -9,6 +9,7 @@
             [reagent.core :as r]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.on-off-valinta :as on-off]
             [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
@@ -74,21 +75,15 @@
    [pudotusvalikko "Laadunseuranta" (:laadunseuranta @tiedot/suodattimet)]])
 
 (defn tilan-vaihtaja []
+  (let [on-off-tila (atom false)]
   [:div#tk-tilan-vaihtajat
-   [:div.tk-radio
-    [:label
-     [:input {:type      "radio"
-              :value     0
-              :checked   (= :nykytilanne @tiedot/valittu-tila)
-              :on-change #(reset! tiedot/valittu-tila :nykytilanne)}]
-     "Nykytilanne"]]
-   [:div.tk-radio
-    [:label
-     [:input {:type      "radio"
-              :value     1
-              :checked   (= :historiakuva @tiedot/valittu-tila)
-              :on-change #(reset! tiedot/valittu-tila :historiakuva)}]
-     "Historiakuva"]]])
+   [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
+   [:div.tk-tilan-vaihto-historia "Historia"]
+   [on-off/on-off-valinta on-off-tila {:luokka "on-off-tilannekuva"
+                                       :on-change (fn []
+                                                    (if @on-off-tila
+                                                      (reset! tiedot/valittu-tila :nykytilanne)
+                                                      (reset! tiedot/valittu-tila :historiakuva)))}]]))
 
 (defonce suodattimet
          [:span
