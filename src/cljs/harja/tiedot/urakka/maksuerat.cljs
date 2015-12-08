@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.maksuerat
   "Tämä nimiavaruus hallinnoi urakan maksueria."
-  (:require [harja.asiakas.kommunikaatio :as k]
+  (:require [reagent.core :refer [atom]]
+            [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
