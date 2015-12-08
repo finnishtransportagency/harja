@@ -19,10 +19,9 @@
   (let [urakka-id (Long/parseLong id)
         ulkoinen-id (-> tarkastus :tunniste :id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (log/info "TARKASTUS TULOSSA: " tarkastus "; käyttäjä: " kayttaja)
-    (log/debug "tyyppi: " tyyppi)
+    (log/debug (format "Tallenetaan uusi tarkastus: tyyppi: %s, käyttäjä: %s, data: %s" tyyppi kayttaja tarkastus))
     (jdbc/with-db-transaction [db db]
-      (let [{tarkastus-id :id laatupoikkeama-id :laatupoikkeama}
+      (let [{tarkastus-id :id}
             (first
               (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
             uusi? (nil? tarkastus-id)]
