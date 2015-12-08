@@ -15,7 +15,10 @@
 (defn laheta-maksuerat [maksueranumerot]
   (k/post! :laheta-maksuerat-sampoon (into [] maksueranumerot)))
 
-(def maksuerat (reaction<! [urakan-id (:id @nav/valittu-urakka)
-                            sivu @u/laskutus-valittu-valilehti]
-                           (when (and urakan-id (= sivu :maksuerat))
-                             (hae-urakan-maksuerat urakan-id))))
+(defonce nakymassa? (atom false))
+
+(defonce maksuerat
+  (reaction<! [urakan-id (:id @nav/valittu-urakka)
+               nakymassa? @nakymassa?]
+              (when (and urakan-id nakymassa?)
+                (hae-urakan-maksuerat urakan-id))))
