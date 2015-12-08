@@ -3,7 +3,6 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]))
@@ -21,7 +20,7 @@
 
 (deftest tallenna-turvallisuuspoikkeama
   (let [tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/"urakka"/poikkeamat/turvallisuuspoikkeamat"]
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/"urakka"/turvallisuuspoikkeama"]
                                          kayttaja portti
                                          (-> "test/resurssit/api/turvallisuuspoikkeama.json" slurp))]
     (cheshire/decode (:body vastaus) true)

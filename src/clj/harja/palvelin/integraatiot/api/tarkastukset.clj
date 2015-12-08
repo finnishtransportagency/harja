@@ -40,7 +40,7 @@
                     :sijainti    (json/sijainti->point (:sijainti tarkastus))
 
                     ;; FIXME: siirrä havainto/kuvaus suoraan havainnot kentäksi
-                    :havainnot (get-in tarkastus [:havainto :kuvaus])}
+                    :havainnot   (get-in tarkastus [:havainto :kuvaus])}
                    )
 
               ;; FIXME: siirrä liitteet suoraan tarkastukseen
@@ -60,7 +60,6 @@
 
           nil)))))
 
-;; Määritellään tarkastustyypit, joiden lisäämiselle tehdään API palvelut
 (def tarkastukset
   [{:palvelu       :lisaa-tiestotarkastus
     :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
