@@ -556,7 +556,6 @@
            (pvm/pvm-aika p)
            "")])
 
-
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
@@ -576,7 +575,7 @@
                            (kartta/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do (kartta/nayta-geometria! :tr-valittu-osoite
-                                                          (if (= :line (:type arvo))
+                                                          (if (or (= :multiline (:type arvo)) (= :line (:type arvo)))
                                                             {:alue (assoc arvo
                                                                      :type :tack-icon-line
                                                                      :img "kartta-tr-piste-harmaa.svg"
@@ -597,8 +596,12 @@
             (when-let [arvo (<! tr-osoite-ch)]
               (log "VKM/TR: " (pr-str arvo))
               (if-not (= arvo :virhe)
-                (do (reset! sijainti (:geometria arvo))
-                    (nappaa-virhe (nayta-kartalla (:geometria arvo)))
+                (do (reset! sijainti (if (vector? (:geometria arvo))
+                                       (first (:geometria arvo))
+                                       (:geometria arvo)))
+                    (nappaa-virhe (nayta-kartalla (if (vector? (:geometria arvo))
+                                                    (first (:geometria arvo))
+                                                    (:geometria arvo))))
                     (recur))
                 (do
                   (reset! sijainti nil)

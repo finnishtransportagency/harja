@@ -495,9 +495,11 @@
     (doto feature
       (.setStyle (clj->js @nuolityylit)))))
 
-(defmethod luo-feature :tack-icon-line [{:keys [points img scale width zindex color] :as spec}]
-  (assert (not (nil? points)) "Viivalla pitää olla pisteitä")
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
+(defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
+  #_(assert (not (nil? points)) "Viivalla pitää olla pisteitä") 
+  (let [feature (if (not (nil? lines))
+                  (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (map :points lines)))})
+                  (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
         tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
                                       :zIndex (or zindex 4)})
