@@ -136,34 +136,14 @@ SELECT
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
--- name: hae-ilmoituksen-jalkeen-saapuneet-ilmoitukset
-SELECT
-  ilmoitusid,
-  ilmoitettu,
-  yhteydenottopyynto,
-  lyhytselite,
-  pitkaselite,
-  otsikko,
-  ilmoitustyyppi,
-  selitteet,
-  sijainti,
-  tr_numero,
-  tr_alkuosa,
-  tr_loppuosa,
-  tr_alkuetaisyys,
-  tr_loppuetaisyys,
-  ilmoittaja_etunimi,
-  ilmoittaja_sukunimi,
-  ilmoittaja_tyopuhelin,
-  ilmoittaja_matkapuhelin,
-  ilmoittaja_sahkoposti,
-  lahettaja_etunimi,
-  lahettaja_sukunimi,
-  lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
-FROM ilmoitus
-WHERE urakka = :urakka AND
-      ilmoitusid > :ilmoitusid;
+-- name: hae-muuttuneet-ilmoitukset
+SELECT ilmoitusid, ilmoitettu, yhteydenottopyynto, lyhytselite, pitkaselite, otsikko, ilmoitustyyppi,
+       selitteet, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys,
+       ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti,
+       lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti
+  FROM ilmoitus
+ WHERE urakka = :urakka AND
+       (muokattu > :aika OR luotu > :aika)
 
 
 -- name: hae-id-ilmoitus-idlla
@@ -200,7 +180,7 @@ VALUES
     :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
--- Päivittää havainnon
+-- Päivittää ilmoituksen
 UPDATE ilmoitus
 SET
   urakka             = :urakka,
@@ -212,7 +192,8 @@ SET
   lyhytselite        = :lyhytselite,
   pitkaselite        = :pitkaselite,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
-  selitteet          = :selitteet :: ilmoituksenselite []
+  selitteet          = :selitteet :: ilmoituksenselite [],
+  muokattu           = NOW()
 WHERE id = :id;
 
 -- name: paivita-ilmoittaja-ilmoitukselle!

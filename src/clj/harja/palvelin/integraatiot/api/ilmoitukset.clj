@@ -14,6 +14,7 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -76,11 +77,11 @@
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (let [parametrit (:params request)
         urakka-id (when (:id parametrit) (Integer/parseInt (:id parametrit)))
-        viimeisin-id (when (get parametrit "viimeisinId") (Integer/parseInt (get parametrit "viimeisinId")))
+        muuttunut-jalkeen (some-> parametrit (get "muuttunutJalkeen")  parametrit/pvm-aika)
         sulje-lahetyksen-jalkeen? (if (get parametrit "stream") (not (Boolean/valueOf (get parametrit "stream"))) true)
         tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
         kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
-    (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Viimeisin haettu ilmoitus id: %s." urakka-id viimeisin-id))
+    (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Muutosaika: %s." urakka-id muuttunut-jalkeen))
     (aja-virhekasittelyn-kanssa
       (fn []
         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -91,7 +92,7 @@
                       (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))
 
           (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?)
-                odottavat-ilmoitukset (and viimeisin-id (ilmoitukset/hae-ilmoituksen-jalkeen-saapuneet-ilmoitukset db urakka-id viimeisin-id))]
+                odottavat-ilmoitukset (and muuttunut-jalkeen (ilmoitukset/hae-muuttuneet-ilmoitukset db urakka-id muuttunut-jalkeen))]
             (when-not (empty? odottavat-ilmoitukset)
               (laheta-ilmoitukset odottavat-ilmoitukset))
             (notifikaatiot/kuuntele-urakan-ilmoituksia
