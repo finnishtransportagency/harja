@@ -11,12 +11,13 @@
   "Parsii parametrina saadun ajan. Heittää parametripoikkeuksen, jos pvm ei ole validi. 
 Sallii puuttuvan parametrin, jolloin palautetaan nil."
   ([string] (pvm-aika-opt string "Anna päivämäärä ja aika muodossa: \"yyyy-MM-dd'T'HH:mm:ssX\" (esim. " esimerkki-aika ")"))
-  ([string & virheet]
+  ([string & viestit]
    (try
      (pvm-string->java-sql-date string)
      (catch ParseException e
        (heita-puutteelliset-parametrit-poikkeus
-        (apply str virheet))))))
+        {:koodi "virheellinen-pvm-aika-muoto"
+         :viesti (apply str viestit)})))))
 
 (defn pvm-aika 
   "Sama kuin pvm-aika-opt mutta ei salli puuttuvaa arvoa"

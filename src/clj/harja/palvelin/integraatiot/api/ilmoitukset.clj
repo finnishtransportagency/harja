@@ -75,31 +75,31 @@
            sulje-lahetyksen-jalkeen?)))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
-  (let [parametrit (:params request)
-        urakka-id (when (:id parametrit) (Integer/parseInt (:id parametrit)))
-        muuttunut-jalkeen (some-> parametrit (get "muuttunutJalkeen")  parametrit/pvm-aika)
-        sulje-lahetyksen-jalkeen? (if (get parametrit "stream") (not (Boolean/valueOf (get parametrit "stream"))) true)
-        tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
-        kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
-    (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Muutosaika: %s." urakka-id muuttunut-jalkeen))
-    (aja-virhekasittelyn-kanssa
-      (fn []
-        (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-        (with-channel request kanava
-          (on-close kanava
-                    (fn [_]
-                      (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
-                      (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))
+  (aja-virhekasittelyn-kanssa
+   (fn []
+     (let [parametrit (:params request)
+           urakka-id (when (:id parametrit) (Integer/parseInt (:id parametrit)))
+           muuttunut-jalkeen (some-> parametrit (get "muuttunutJalkeen")  parametrit/pvm-aika)
+           sulje-lahetyksen-jalkeen? (if (get parametrit "stream") (not (Boolean/valueOf (get parametrit "stream"))) true)
+           tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
+           kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
+       (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Muutosaika: %s." urakka-id muuttunut-jalkeen))
+       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+       (with-channel request kanava
+         (on-close kanava
+                   (fn [_]
+                     (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
+                     (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))
 
-          (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?)
-                odottavat-ilmoitukset (and muuttunut-jalkeen (ilmoitukset/hae-muuttuneet-ilmoitukset db urakka-id muuttunut-jalkeen))]
-            (when-not (empty? odottavat-ilmoitukset)
-              (laheta-ilmoitukset odottavat-ilmoitukset))
-            (notifikaatiot/kuuntele-urakan-ilmoituksia
-              tapahtumat
-              urakka-id
-              (fn [ilmoitus-id]
-                (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-idlla db [(Integer/parseInt ilmoitus-id)]))))))))))
+         (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?)
+               odottavat-ilmoitukset (and muuttunut-jalkeen (ilmoitukset/hae-muuttuneet-ilmoitukset db urakka-id muuttunut-jalkeen))]
+           (when-not (empty? odottavat-ilmoitukset)
+             (laheta-ilmoitukset odottavat-ilmoitukset))
+           (notifikaatiot/kuuntele-urakan-ilmoituksia
+            tapahtumat
+            urakka-id
+            (fn [ilmoitus-id]
+              (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-idlla db [(Integer/parseInt ilmoitus-id)]))))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
