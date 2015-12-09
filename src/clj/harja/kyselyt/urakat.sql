@@ -4,9 +4,8 @@ SELECT
   u.nimi,
   u.tyyppi
 FROM urakka u
-WHERE loppupvm BETWEEN :alku AND :loppu
-      OR alkupvm BETWEEN :alku AND :loppu
-      OR loppupvm IS NULL AND :loppu > NOW();
+WHERE (u.loppupvm > :alku AND u.alkupvm < :loppu) OR
+      (u.loppupvm IS NULL AND u.alkupvm < :loppu);
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
