@@ -19,9 +19,6 @@
     vastauksen-data))
 
 (defn hae-sijainti [db alkusijainti loppusijainti]
-  (println "----> alkusijainti" alkusijainti)
-  (println "----> loppusijainti" loppusijainti)
-
   (let [alku-x (:x alkusijainti)
         alku-y (:y alkusijainti)
         loppu-x (:x loppusijainti)
@@ -40,7 +37,8 @@
                                   (assoc :lumimaara (:lumisuus (:mittaus tarkastus)))))
 
     :soratie (tarkastukset/luo-tai-paivita-soratiemittaus
-               db id uusi? (:mittaus tarkastus))))
+               db id uusi? (:mittaus tarkastus))
+    nil))
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]

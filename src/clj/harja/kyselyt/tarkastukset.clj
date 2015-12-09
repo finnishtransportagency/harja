@@ -11,10 +11,6 @@
   "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
   [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti ulkoinen-id havainnot] :as tarkastus}]
   (log/info "tarkastus: " tarkastus)
-
-  (println "----> sijainti" sijainti)
-  (println "----> tr" tr)
-
   (let [sijainti (if (instance? PGgeometry sijainti)
                    sijainti
                    (and sijainti (geo/geometry (geo/clj->pg sijainti))))]
