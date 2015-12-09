@@ -42,7 +42,7 @@
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
-    (log/debug (format "Kirjataan tarkastus: tyyppi: %s, käyttäjä: %s, data: %s" tyyppi kayttaja data))
+    (log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (doseq [tarkastus (:tarkastukset data)]
       (let [tarkastus (:tarkastus tarkastus)

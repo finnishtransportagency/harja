@@ -16,12 +16,13 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Kaikki laatupoikkeamat kirjattu onnistuneesti"}]
+  (let [vastauksen-data {:ilmoitukset "Laatupoikkeama kirjattu onnistuneesti"}]
     vastauksen-data))
 
 (defn tallenna-laatupoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde paivamaara]} data
         tie (:tie sijainti)
+        ;; todo: tee sama tierekisterihaku kuin tarkastusten kanssa ja kirjaa tr-osoite & geometria sitä kautta
         koordinaatit (:koordinaatit sijainti)]
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
