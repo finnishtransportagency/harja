@@ -150,9 +150,29 @@ WHERE
    t.luotu BETWEEN :alku AND :loppu OR
    t.muokattu BETWEEN :alku AND :loppu);
 
--- name: hae-toteumat-tilannekuvaan
--- Hakee toteumat tilannekuvaan toimenpidekoodin perusteella.
--- Hakua saatetaan suodattaa myös hallintayksikön, urakan, tai päivämäärän perusteella
+-- name: hae-paallystykset
+SELECT
+  pk.id,
+  pi.id AS paallystysilmoitus_id,
+  pi.tila AS paallystysilmoitus_tila,
+  kohdenumero,
+  pk.nimi,
+  sopimuksen_mukaiset_tyot,
+  muu_tyo,
+  arvonvahennykset,
+  bitumi_indeksi,
+  kaasuindeksi,
+  muutoshinta,
+  pko.sijainti,
+  pi.tila
+FROM paallystysilmoitus pi
+  LEFT JOIN paallystyskohde pk ON pi.paallystyskohde = pk.id
+  LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
+WHERE pk.poistettu IS NOT TRUE AND
+      (pi.tila :: TEXT != 'valmis' OR
+       (now() - pi.valmispvm_kohde) < INTERVAL '7 days'); -- Näytetään 7pv sitten valmistuneet päällystykset
+
+-- name: hae-toteumat
 SELECT
   t.id,
   t.urakka,
