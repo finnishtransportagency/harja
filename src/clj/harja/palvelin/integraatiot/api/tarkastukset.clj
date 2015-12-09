@@ -3,19 +3,31 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+            [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [clojure.java.jdbc :as jdbc]
-            [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
+            [harja.kyselyt.tieverkko :as tieverkko]))
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
     vastauksen-data))
+
+(defn hae-tr-osoite [db alkusijainti loppusijainti]
+  (let [alku-x (:x (:koordinaatit alkusijainti))
+        alku-y (:y (:koordinaatit alkusijainti))
+        loppu-x (:x (:koordinaatit loppusijainti))
+        loppu-y (:y (:koordinaatit loppusijainti))
+        threshold 250]
+    (if (and alku-x alku-y loppu-x loppu-y)
+      (tieverkko/hae-tr-osoite-valille db alku-x alku-y loppu-x loppu-y threshold)
+      (when (and alku-x alku-y)
+        (tieverkko/hae-tr-osoite db alku-x alku-y threshold)))))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? tarkastus]
   (case tyyppi
@@ -27,44 +39,39 @@
     :soratie (tarkastukset/luo-tai-paivita-soratiemittaus
                db id uusi? (:mittaus tarkastus))))
 
-(defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} tarkastus]
-  (let [urakka-id (Long/parseLong id)
-        ulkoinen-id (-> tarkastus :tunniste :id)]
+(defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
+  (let [urakka-id (Long/parseLong id)]
+    (log/debug (format "Kirjataan tarkastus: tyyppi: %s, käyttäjä: %s, data: %s" tyyppi kayttaja data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (log/debug (format "Tallenetaan uusi tarkastus: tyyppi: %s, käyttäjä: %s, data: %s" tyyppi kayttaja tarkastus))
-    (jdbc/with-db-transaction [db db]
-      (let [{tarkastus-id :id}
-            (first
-              (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
-            uusi? (nil? tarkastus-id)]
+    (doseq [tarkastus (:tarkastukset data)]
+      (let [tarkastus (:tarkastus tarkastus)
+            ulkoinen-id (-> tarkastus :tunniste :id)]
+        (println "----> tarkastus:" tarkastus)
+        (jdbc/with-db-transaction [db db]
+          (let [{tarkastus-id :id}
+                (first
+                  (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
+                uusi? (nil? tarkastus-id)]
 
-        (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
-              id (tarkastukset/luo-tai-paivita-tarkastus
-                   db kayttaja urakka-id
-                   {:id          tarkastus-id
-                    :ulkoinen-id ulkoinen-id
-                    :tyyppi      tyyppi
-                    :aika        aika
-                    :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
-                    
-                    :alku-tr          (json/sijainti->tr (:alkusijainti tarkastus))
-                    :alku-sijainti    (json/sijainti->point (::alkusijainti tarkastus))
+            (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
+                  id (tarkastukset/luo-tai-paivita-tarkastus
+                       db kayttaja urakka-id
+                       {:id             tarkastus-id
+                        :ulkoinen-id    ulkoinen-id
+                        :tyyppi         tyyppi
+                        :aika           aika
+                        :tarkastaja     (json/henkilo->nimi (:tarkastaja tarkastus))
+                        :alku-sijainti  (json/sijainti->point (:alkusijainti tarkastus))
+                        :loppu-sijainti (json/sijainti->point (:loppusijainti tarkastus))
+                        :tr             (hae-tr-osoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                        :havainnot      (:havainnot tarkastus)})
+                  liitteet (:liitteet tarkastus)]
 
-                    :alku-tr          (json/sijainti->tr (:alkusijainti tarkastus))
-                    :alku-sijainti    (json/sijainti->point (::alkusijainti tarkastus))
+              (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
+              (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? tarkastus))))))
+    (tee-onnistunut-vastaus)))
 
-                    ;; FIXME: siirrä havainto/kuvaus suoraan havainnot kentäksi
-                    :havainnot   (get-in tarkastus [:havainto :kuvaus])}
-                   )
-
-              ;; FIXME: siirrä liitteet suoraan tarkastukseen
-              liitteet (:liitteet tarkastus)]
-
-          (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
-          (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? tarkastus)
-          (tee-onnistunut-vastaus))))))
-
-(def tarkastukset
+(def palvelut
   [{:palvelu       :lisaa-tiestotarkastus
     :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
     :pyynto-skeema json-skeemat/+tiestotarkastuksen-kirjaus+
@@ -81,18 +88,18 @@
 (defrecord Tarkastukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi]} tarkastukset]
+    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi]} palvelut]
       (julkaise-reitti
         http palvelu
         (POST polku request
           (do
             (kasittele-kutsu db integraatioloki palvelu request
-                             pyynto-skeema nil
+                             pyynto-skeema json-skeemat/+kirjausvastaus+
                              (fn [parametrit data kayttaja db]
                                (kirjaa-tarkastus db liitteiden-hallinta kayttaja tyyppi parametrit data)))))))
 
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (apply poista-palvelut http (map :palvelu tarkastukset))
+    (apply poista-palvelut http (map :palvelu palvelut))
     this))

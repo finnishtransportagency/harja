@@ -243,6 +243,7 @@
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
+      ;; todo: täytyy päivittää alku ja loppu sijainnin kirjaus
       (let [uusi? (nil? (:id tarkastus))
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 

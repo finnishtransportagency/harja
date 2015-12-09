@@ -7,26 +7,28 @@
 (defqueries "harja/kyselyt/tarkastukset.sql")
 
 (defn luo-tai-paivita-tarkastus
-  "Luo uuden tarkastuksen, palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti ulkoinen-id havainnot] :as tarkastus}]
+  "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja alkusijainti loppusijainti ulkoinen-id havainnot] :as tarkastus}]
   (log/info "tarkastus: " tarkastus)
-  (let [sijainti (and sijainti
-                      (geo/geometry (geo/clj->pg sijainti)))]
+  (let [alkusijainti (and alkusijainti (geo/geometry (geo/clj->pg alkusijainti)))
+        loppusijainti (and loppusijainti (geo/geometry (geo/clj->pg loppusijainti)))]
     (if (nil? id)
-      (:id (luo-tarkastus<! db
-                          urakka-id (konv/sql-timestamp aika)
-                          (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                          sijainti tarkastaja mittaaja (name tyyppi) (:id user) ulkoinen-id havainnot))
-      
-      (do (log/info "TARKASTUS PÄIVITETÄÄN: " id)
+      (do
+        (log/debug "Luodaan uusi tarkastus")
+        (:id (luo-tarkastus<! db
+                              urakka-id (konv/sql-timestamp aika)
+                              (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
+                              alkusijainti loppusijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id havainnot)))
+
+      (do (log/debug (format "Päivitetään tarkastus id: %s " id))
           (paivita-tarkastus! db
                               (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                              sijainti tarkastaja mittaaja (name tyyppi) (:id user)
+                              alkusijainti loppusijainti tarkastaja (name tyyppi) (:id user)
                               havainnot
                               urakka-id id)
           id))))
-  
+
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
                                          {:keys [hoitoluokka lumimaara tasaisuus
                                                  kitka lampotila ajosuunta] :as talvihoitomittaus}]
