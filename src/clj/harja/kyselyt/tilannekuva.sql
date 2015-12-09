@@ -91,7 +91,7 @@ WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.luotu BETWEEN :alku AND :loppu OR
            l.muokattu BETWEEN :alku AND :loppu OR
            l.aika BETWEEN :alku AND :loppu OR
-           l.kasitelty BETWEEN :alku AND :loppu)
+           l.kasittelyaika BETWEEN :alku AND :loppu)
       AND l.poistettu IS NOT TRUE;
 
 -- name: hae-tarkastukset
@@ -106,7 +106,7 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.mittaaja,
-  t.havainto,
+  t.havainnot,
   t.tyyppi
 FROM tarkastus t
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)

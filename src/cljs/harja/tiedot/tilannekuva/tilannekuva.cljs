@@ -69,13 +69,13 @@
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet (atom {:yllapito       {:paallystys false
                                              :paikkaus   false}
-                            :ilmoitukset    {:tyypit {:toimenpidepyynto true
-                                                      :kysely           true
-                                                      :tiedoitus        true}
+                            :ilmoitukset    {:tyypit {:toimenpidepyynto false
+                                                      :kysely           false
+                                                      :tiedoitus        false}
                                              :tilat  #{:avoimet}}
                             :turvallisuus   {:turvallisuuspoikkeamat false}
-                            :laadunseuranta {:laatupoikkeamat false
-                                             :tarkastukset    false}
+                            :laadunseuranta {:laatupoikkeamat true
+                                             :tarkastukset    true}
 
                             ;; Näiden pitää osua työkoneen enumeihin
                             :talvi          {"auraus ja sohjonpoisto"          false
@@ -129,7 +129,7 @@
                                 ["2 vk" (tunteja-viikoissa 2)]
                                 ["3 vk" (tunteja-viikoissa 3)]])
 
-(defonce valitun-aikasuodattimen-arvo (atom 2))
+(defonce valitun-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
 
 (defonce haetut-asiat (atom nil))
 (defonce tilannekuvan-asiat-kartalla
@@ -144,10 +144,10 @@
      :urakka-id       (:id @nav/valittu-urakka)
      :alue            @nav/kartalla-nakyva-alue
      :alku            (if (= @valittu-tila :nykytilanne)
-                        (pvm/nyt)
+                        (t/minus (pvm/nyt) (t/hours @valitun-aikasuodattimen-arvo))
                         (first @historiakuvan-aikavali))
      :loppu           (if (= @valittu-tila :nykytilanne)
-                        (t/plus (pvm/nyt) (t/hours @valitun-aikasuodattimen-arvo))
+                        (pvm/nyt)
                         (second @historiakuvan-aikavali))}
     @suodattimet))
 
@@ -161,7 +161,17 @@
           lisaa-karttatyypit (fn [tulos]
                                (-> tulos
                                    (assoc :ilmoitukset
-                                          (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %)) (:ilmoitukset tulos)))))
+                                          (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                                               (:ilmoitukset tulos)))
+                                   (assoc :turvallisuuspoikkeamat
+                                          (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
+                                               (:turvallisuuspoikkeamat tulos)))
+                                   (assoc :tarkastukset
+                                          (map #(assoc % :tyyppi-kartalla :tarkastus)
+                                               (:tarkastukset tulos)))
+                                   (assoc :laatupoikkeamat
+                                          (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
+                                               (:laatupoikkeamat tulos)))))
           yhdista (fn [kartta]
                     (when-not (k/virhe? kartta)
                       (apply (comp vec concat) (remove

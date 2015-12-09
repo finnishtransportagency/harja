@@ -20,7 +20,6 @@
 
 (defn kayttajan-urakoiden-idt
   [db user urakka-id hallintayksikko alku loppu]
-  (log/debug urakka-id (:roolit user) alku loppu)
   (if-not (nil? urakka-id)
     (when (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
       (if (vector? urakka-id) urakka-id [urakka-id]))
@@ -96,8 +95,8 @@
                                  (when k (keyword k)))))
               (map #(if (nil? (:kasittelyaika (:paatos %)))
                      (dissoc % :paatos)
-                     %))
-              (q/hae-laatupoikkeamat db urakat alku loppu)))
+                     %)))
+            (q/hae-laatupoikkeamat db urakat alku loppu))
       (catch Exception e
         (tulosta-virhe! "laatupoikkeamia" e)
         nil))))
@@ -110,6 +109,7 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
+              (map #(konv/string->keyword % :tyyppi))
               (map (fn [tarkastus]
                      (condp = (:tyyppi tarkastus)
                        :talvihoito (dissoc tarkastus :soratiemittaus)
@@ -157,7 +157,7 @@
                                              (hae-turvallisuuspoikkeamat db user tiedot urakat))
      :tarkastukset           (tulosta-tulos! "tarkastusta"
                                              (hae-tarkastukset db user tiedot urakat))
-     :laatupoikkemat         (tulosta-tulos! "laatupoikkeamaa"
+     :laatupoikkeamat         (tulosta-tulos! "laatupoikkeamaa"
                                              (hae-laatupoikkeamat db user tiedot urakat))
      :paikkaus               (tulosta-tulos! "paikkausta"
                                              (hae-paikkaustyot db user tiedot urakat))
