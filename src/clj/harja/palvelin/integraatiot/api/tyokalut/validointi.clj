@@ -67,5 +67,16 @@
   (tarkista-sopimus db urakka-id sopimus-id)
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
+(defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
+  (when-not
+    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
+        (roolit/roolissa? kayttaja roolit/tieliikennekeskus)
+        (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
+                        :viesti (format  "Käyttäjällä: %s ei ole oikeuksia urakan: %s päivystäjätietoihin."
+                                         (:kayttajanimi kayttaja)
+                                         urakka-id)}]})))
+
 
 
