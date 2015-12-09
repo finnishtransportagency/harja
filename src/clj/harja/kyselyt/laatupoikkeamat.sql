@@ -255,7 +255,7 @@ SET
   aika             = :aika,
   kohde            = :kohde,
   kuvaus           = :kuvaus,
-  alkusijainti         = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY,
+  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY,
   tr_numero        = :tr_numero,
   tr_alkuosa       = :tr_alkuosa,
   tr_loppuosa      = :tr_loppuosa,

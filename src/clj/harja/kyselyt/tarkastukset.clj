@@ -2,29 +2,35 @@
   (:require [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
-            [harja.geo :as geo]))
+            [harja.geo :as geo])
+  (:import (org.postgis PGgeometry)))
 
 (defqueries "harja/kyselyt/tarkastukset.sql")
 
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja alkusijainti loppusijainti ulkoinen-id havainnot] :as tarkastus}]
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti ulkoinen-id havainnot] :as tarkastus}]
   (log/info "tarkastus: " tarkastus)
-  (let [alkusijainti (and alkusijainti (geo/geometry (geo/clj->pg alkusijainti)))
-        loppusijainti (and loppusijainti (geo/geometry (geo/clj->pg loppusijainti)))]
+
+  (println "----> sijainti" sijainti)
+  (println "----> tr" tr)
+
+  (let [sijainti (if (instance? PGgeometry sijainti)
+                   sijainti
+                   (and sijainti (geo/geometry (geo/clj->pg sijainti))))]
     (if (nil? id)
       (do
         (log/debug "Luodaan uusi tarkastus")
         (:id (luo-tarkastus<! db
                               urakka-id (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                              alkusijainti loppusijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id havainnot)))
+                              sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id havainnot)))
 
       (do (log/debug (format "Päivitetään tarkastus id: %s " id))
           (paivita-tarkastus! db
                               (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                              alkusijainti loppusijainti tarkastaja (name tyyppi) (:id user)
+                              sijainti tarkastaja (name tyyppi) (:id user)
                               havainnot
                               urakka-id id)
           id))))

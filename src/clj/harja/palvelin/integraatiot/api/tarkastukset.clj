@@ -18,16 +18,19 @@
   (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn hae-tr-osoite [db alkusijainti loppusijainti]
-  (let [alku-x (:x (:koordinaatit alkusijainti))
-        alku-y (:y (:koordinaatit alkusijainti))
-        loppu-x (:x (:koordinaatit loppusijainti))
-        loppu-y (:y (:koordinaatit loppusijainti))
+(defn hae-sijainti [db alkusijainti loppusijainti]
+  (println "----> alkusijainti" alkusijainti)
+  (println "----> loppusijainti" loppusijainti)
+
+  (let [alku-x (:x alkusijainti)
+        alku-y (:y alkusijainti)
+        loppu-x (:x loppusijainti)
+        loppu-y (:y loppusijainti)
         threshold 250]
     (if (and alku-x alku-y loppu-x loppu-y)
-      (tieverkko/hae-tr-osoite-valille db alku-x alku-y loppu-x loppu-y threshold)
+      (first (tieverkko/hae-tr-osoite-valille db alku-x alku-y loppu-x loppu-y threshold))
       (when (and alku-x alku-y)
-        (tieverkko/hae-tr-osoite db alku-x alku-y threshold)))))
+        (first (tieverkko/hae-tr-osoite db alku-x alku-y threshold))))))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? tarkastus]
   (case tyyppi
@@ -46,25 +49,28 @@
     (doseq [tarkastus (:tarkastukset data)]
       (let [tarkastus (:tarkastus tarkastus)
             ulkoinen-id (-> tarkastus :tunniste :id)]
-        (println "----> tarkastus:" tarkastus)
         (jdbc/with-db-transaction [db db]
           (let [{tarkastus-id :id}
                 (first
                   (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
                 uusi? (nil? tarkastus-id)]
 
-            (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
+            (let [aika (json/pvm-string->java-sql-date (:aika tarkastus))
+                  sijainti (hae-sijainti db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                   id (tarkastukset/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
-                       {:id             tarkastus-id
-                        :ulkoinen-id    ulkoinen-id
-                        :tyyppi         tyyppi
-                        :aika           aika
-                        :tarkastaja     (json/henkilo->nimi (:tarkastaja tarkastus))
-                        :alku-sijainti  (json/sijainti->point (:alkusijainti tarkastus))
-                        :loppu-sijainti (json/sijainti->point (:loppusijainti tarkastus))
-                        :tr             (hae-tr-osoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
-                        :havainnot      (:havainnot tarkastus)})
+                       {:id          tarkastus-id
+                        :ulkoinen-id ulkoinen-id
+                        :tyyppi      tyyppi
+                        :aika        aika
+                        :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
+                        :sijainti    (:geometria sijainti)
+                        :tr          {:numero        (:tie sijainti)
+                                      :alkuosa       (:aosa sijainti)
+                                      :alkuetaisyys  (:aet sijainti)
+                                      :loppuosa      (:losa sijainti)
+                                      :loppuetaisyys (:let sijainti)}
+                        :havainnot   (:havainnot tarkastus)})
                   liitteet (:liitteet tarkastus)]
 
               (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)

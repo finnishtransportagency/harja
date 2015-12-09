@@ -65,7 +65,7 @@
                        (for [urakka-id urakka-idt]
                          (into []
                                laatupoikkeama-xf
-                               
+
                                (if (= :omat listaus)
                                  (apply laatupoikkeamat/hae-omat-laatupoikkeamat
                                         (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
@@ -243,7 +243,6 @@
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
-      ;; todo: täytyy päivittää alku ja loppu sijainnin kirjaus
       (let [uusi? (nil? (:id tarkastus))
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
@@ -255,7 +254,7 @@
         (when-let [uusi-liite (:uusi-liite tarkastus)]
           (log/info "UUSI LIITE: " uusi-liite)
           (tarkastukset/luo-liite<! c id (:id uusi-liite)))
-        
+
         (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
         (hae-tarkastus c user urakka-id id)))
     (catch Exception e
