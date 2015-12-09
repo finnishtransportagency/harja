@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as xml-skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
@@ -87,7 +87,7 @@
       (POST "/api/urakat/:id/laatupoikkeama" request
             (kasittele-kutsu db integraatioloki
                              :lisaa-laatupoikkeama request
-                             xml-skeemat/+havainnon-kirjaus+ xml-skeemat/+kirjausvastaus+
+                             json-skeemat/+laatupoikkeaman-kirjaus+ json-skeemat/+kirjausvastaus+
                              (fn [parametrit data kayttaja db]
                                (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
     this)

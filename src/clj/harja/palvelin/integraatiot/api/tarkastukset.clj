@@ -9,11 +9,23 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]))
 
+(defn tee-onnistunut-vastaus []
+  (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
+    vastauksen-data))
+
+(defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? tarkastus]
+  (case tyyppi
+    :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus
+                  db id uusi? (-> tarkastus
+                                  :mittaus
+                                  (assoc :lumimaara (:lumisuus (:mittaus tarkastus)))))
+
+    :soratie (tarkastukset/luo-tai-paivita-soratiemittaus
+               db id uusi? (:mittaus tarkastus))))
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} tarkastus]
   (let [urakka-id (Long/parseLong id)
@@ -34,30 +46,23 @@
                     :tyyppi      tyyppi
                     :aika        aika
                     :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
-                    :mittaaja    (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
-                    :tr          (json/sijainti->tr (:sijainti tarkastus))
-                    :sijainti    (json/sijainti->point (:sijainti tarkastus))
+                    
+                    :alku-tr          (json/sijainti->tr (:alkusijainti tarkastus))
+                    :alku-sijainti    (json/sijainti->point (::alkusijainti tarkastus))
+
+                    :alku-tr          (json/sijainti->tr (:alkusijainti tarkastus))
+                    :alku-sijainti    (json/sijainti->point (::alkusijainti tarkastus))
 
                     ;; FIXME: siirrä havainto/kuvaus suoraan havainnot kentäksi
                     :havainnot   (get-in tarkastus [:havainto :kuvaus])}
                    )
 
               ;; FIXME: siirrä liitteet suoraan tarkastukseen
-              liitteet (:liitteet (:havainto tarkastus))]
+              liitteet (:liitteet tarkastus)]
 
           (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
-
-          (case tyyppi
-            :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus
-                          db id uusi? (-> tarkastus
-                                          :mittaus
-                                          (assoc :lumimaara (:lumisuus (:mittaus tarkastus)))))
-
-            :soratie (tarkastukset/luo-tai-paivita-soratiemittaus
-                       db id uusi? (:mittaus tarkastus))
-            nil)
-
-          nil)))))
+          (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? tarkastus)
+          (tee-onnistunut-vastaus))))))
 
 (def tarkastukset
   [{:palvelu       :lisaa-tiestotarkastus
@@ -81,7 +86,6 @@
         http palvelu
         (POST polku request
           (do
-            (log/info "REQUEST: " (pr-str request))
             (kasittele-kutsu db integraatioloki palvelu request
                              pyynto-skeema nil
                              (fn [parametrit data kayttaja db]

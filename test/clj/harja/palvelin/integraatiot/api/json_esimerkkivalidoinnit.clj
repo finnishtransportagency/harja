@@ -8,7 +8,7 @@
 
 (defn validoi [skeemapolku esimerkkipolku]
   (json-validointi/validoi skeemapolku (slurp (io/resource esimerkkipolku))))
-Pä
+
 (deftest validoi-jsonit
   (is (nil? (validoi json-skeemat/+urakan-haku-vastaus+ json-esimerkit/+urakan-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/+urakoiden-haku-vastaus+ json-esimerkit/+urakoiden-haku-vastaus+)))
