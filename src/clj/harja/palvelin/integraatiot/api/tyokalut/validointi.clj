@@ -70,7 +70,7 @@
 (defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
   (when-not
     (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
-        (roolit/roolissa? kayttaja roolit/tieliikennekeskus)
+        (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
         (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
