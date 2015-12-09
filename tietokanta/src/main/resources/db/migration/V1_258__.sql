@@ -17,9 +17,9 @@ BEGIN
 				      WHEN osa=losa_ THEN ST_Line_Substring(geom, 0, LEAST(1,let_/ST_Length(geom)))
 				      ELSE geom END) ORDER BY osa)) AS geom
 		     FROM tieverkko_paloina
-		      	WHERE tie = 20
-			AND osa >= 1
-			AND osa <= 5
+		      	WHERE tie = tie_
+			AND osa >= aosa_
+			AND osa <= losa_
 			GROUP BY ajorata)
 	  SELECT geom FROM q WHERE GeometryType(geom)='LINESTRING';
    END IF;
