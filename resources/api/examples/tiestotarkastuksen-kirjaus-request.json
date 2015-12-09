@@ -23,13 +23,12 @@
         },
         "aika": "2015-07-06T15:01:00Z",
         "alkusijainti": {
-          "tie": {
-            "numero": 1,
-            "aosa": 2,
-            "aet": 3,
-            "losa": 4,
-            "let": 5
-          }
+          "x": 441895,
+          "y": 7199136
+        },
+        "loppusijainti": {
+          "x": 442131,
+          "y": 7198982
         },
         "tarkastaja": {
           "id": 123,

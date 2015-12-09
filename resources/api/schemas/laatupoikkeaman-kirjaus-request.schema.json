@@ -19,18 +19,17 @@
       "required": true
     },
     "alkusijainti": {
-      "id": "urn:harja/sijainti",
+      "id": "urn:harja/alkusijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-      "required": false
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+      "required": true
     },
     "loppusijainti": {
-      "id": "urn:harja/sijainti",
+      "id": "urn:harja/loppusijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-      "required": false
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
     },
     "kohde": {
       "id": "urn:harja/tyyppi",

@@ -23,16 +23,12 @@
         },
         "aika": "2015-07-06T15:01:00Z",
         "alkusijainti": {
-          "koordinaatit": {
-            "x": 441057,
-            "y": 7198624
-          }
+          "x": 441057,
+          "y": 7198624
         },
         "loppusijainti": {
-          "koordinaatit": {
-            "x": 441037,
-            "y": 7198450
-          }
+          "x": 441037,
+          "y": 7198450
         },
         "tarkastaja": {
           "id": 123,

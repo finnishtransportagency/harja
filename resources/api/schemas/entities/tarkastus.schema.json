@@ -44,18 +44,17 @@
       "required": true
     },
     "alkusijainti": {
-      "id": "urn:harja/talvihoitotarkastus/sijainti",
+      "id": "urn:harja/talvihoitotarkastus/alkusijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
       "required": true
     },
     "loppusijainti": {
-      "id": "urn:harja/talvihoitotarkastus/sijainti",
+      "id": "urn:harja/talvihoitotarkastus/loppusijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-      "required": false
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
     }
   }
 }
