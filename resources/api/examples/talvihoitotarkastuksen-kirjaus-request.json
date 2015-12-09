@@ -23,12 +23,15 @@
         },
         "aika": "2015-02-02T15:01:00Z",
         "alkusijainti": {
-          "tie": {
-            "numero": 1,
-            "aosa": 2,
-            "aet": 3,
-            "losa": 4,
-            "let": 5
+          "koordinaatit": {
+            "x": 441895,
+            "y": 7199136
+          }
+        },
+        "loppusijainti": {
+          "koordinaatit": {
+            "x": 442131,
+            "y": 7198982
           }
         },
         "tarkastaja": {
