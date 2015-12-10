@@ -16,14 +16,14 @@
   (let [checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
                                :ei-valittu       "harja-checkbox-ei-valittu"
                                :osittain-valittu "harja-checkbox-osittain-valitu"}
-        kasittele-click-eventti (fn []
-                                  (case @tila-atom
-                                    :valittu (reset! tila-atom :ei-valittu)
-                                    :ei-valittu (reset! tila-atom :valittu)
-                                    :osittain-valittu (reset! tila-atom :ei-valittu)))]
+        vaihda-tila (fn []
+                      (case @tila-atom
+                        :valittu (reset! tila-atom :ei-valittu)
+                        :ei-valittu (reset! tila-atom :valittu)
+                        :osittain-valittu (reset! tila-atom :ei-valittu)))]
     (fn []
       [:div.harja-checkbox {:style {:display (or (:display opts) "inline-block")}}
        [:div.harja-checkbox-laatikko {:class    (checkbox-tila->luokka @tila-atom)
-                                      :on-click kasittele-click-eventti}
+                                      :on-click vaihda-tila}
         [:div.harja-checkbox-laatikko-sisalto]]
        [:div.harja-checkbox-teksti nimi]])))

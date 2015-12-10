@@ -41,24 +41,25 @@
                               (fn [aika]
                                 [nykytilanteen-aikasuodattimen-elementti aika])
                               tiedot/aikasuodatin-tunteina)]
-  [:div#tk-nykytilanteen-aikavalinta
-   [:div.tk-nykytilanteen-aikavalinta-ryhma-tunnit
-    (nth aikavalinnat-hiccup 0)
-    (nth aikavalinnat-hiccup 1)
-    (nth aikavalinnat-hiccup 2)]
-   [:div.tk-nykytilanteen-aikavalinta-ryhma-vuorokaudet
-    (nth aikavalinnat-hiccup 3)
-    (nth aikavalinnat-hiccup 4)
-    (nth aikavalinnat-hiccup 5)]
-   [:div.tk-nykytilanteen-aikavalinta-ryhma-viikot
-    (nth aikavalinnat-hiccup 6)
-    (nth aikavalinnat-hiccup 7)
-    (nth aikavalinnat-hiccup 8)]]))
+    [:div#tk-nykytilanteen-aikavalinta
+     [:div.tk-nykytilanteen-aikavalinta-ryhma-tunnit
+      (nth aikavalinnat-hiccup 0)
+      (nth aikavalinnat-hiccup 1)
+      (nth aikavalinnat-hiccup 2)]
+     [:div.tk-nykytilanteen-aikavalinta-ryhma-vuorokaudet
+      (nth aikavalinnat-hiccup 3)
+      (nth aikavalinnat-hiccup 4)
+      (nth aikavalinnat-hiccup 5)]
+     [:div.tk-nykytilanteen-aikavalinta-ryhma-viikot
+      (nth aikavalinnat-hiccup 6)
+      (nth aikavalinnat-hiccup 7)
+      (nth aikavalinnat-hiccup 8)]]))
 
 
-(defn checkbox-ryhma-elementti [[avain valittu?]]
-  ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet avain))}
-  [checkbox/checkbox (atom :ei-valittu) (get tiedot/suodattimien-nimet avain) {:display "block"}])
+(defn checkbox-ryhma-elementti [nimi]
+  (let [checkbox-tila-atom (atom :ei-valittu)]
+    (fn []
+      [checkbox/checkbox checkbox-tila-atom nimi {:display "block"}])))
 
 (defn checkbox-ryhma [otsikko elementit]
   (let [auki? (atom false)]
@@ -74,8 +75,9 @@
 
        (when @auki?
          [:div.tk-checkbox-ryhma-sisalto
-          (doall (for [elementti elementit]
-                   [checkbox-ryhma-elementti elementti]))])])))
+          (doall (for [elementti (keys elementit)]
+                   ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet elementti))}
+                   [checkbox-ryhma-elementti (get tiedot/suodattimien-nimet elementti)]))])])))
 
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
@@ -91,7 +93,7 @@
    [tilan-vaihtaja]
    [checkbox-ryhma "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
    [checkbox-ryhma "Ylläpito" (:yllapito @tiedot/suodattimet)]
-   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan
+   (when (= :nykytilanne @tiedot/valittu-tila)              ; FIXME Ei päivity jos tilaa vaihdetaan
      [nykytilanteen-suodattimet])])
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
@@ -108,7 +110,7 @@
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit
                                  [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
-                                                                   :luokka "haitari-tilannekuva"}]))
+                                                                   :luokka               "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
                                (kartta/tyhjenna-yleiset-kontrollit)
                                (kartta/poista-popup!))}

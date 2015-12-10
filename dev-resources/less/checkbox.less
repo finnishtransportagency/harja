@@ -14,7 +14,6 @@
     background: -o-linear-gradient(-45deg, #cccccc 0%,#ffffff 100%); /* Opera 11.10+ */
     background: -ms-linear-gradient(-45deg, #cccccc 0%,#ffffff 100%); /* IE10+ */
     background: linear-gradient(135deg, #cccccc 0%,#ffffff 100%); /* W3C */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cccccc', endColorstr='#ffffff',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
 }
 
 .harja-checkbox-teksti {
@@ -31,6 +30,7 @@
 }
 
 .harja-checkbox-valittu > .harja-checkbox-laatikko-sisalto {
+    border: 1px solid @harmaa2;
     background-image: url("../images/rasti.svg");
 }
 
