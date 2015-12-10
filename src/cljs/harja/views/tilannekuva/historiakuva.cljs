@@ -129,7 +129,7 @@
     (komp/ulos (paivita-periodisesti tiedot/asioiden-haku 60000)) ;1min
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
-                      :paallystyskohde-klikattu :paikkaustoteuma-klikattu] #(nayta-popup %2))
+                      :paallystys-klikattu :paikkaus-klikattu] #(nayta-popup %2))
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit
                                  [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true}]))

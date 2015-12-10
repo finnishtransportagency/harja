@@ -139,7 +139,7 @@
                          (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
                          "/" (count (:korjaavattoimenpiteet tapahtuma))]]))
 
-(defmethod nayta-popup :paallystyskohde-klikattu [tapahtuma]
+(defmethod nayta-popup :paallystys-klikattu [tapahtuma]
   (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Päällystyskohde"]]
@@ -147,7 +147,7 @@
                         [:div "Toimenpide: " (:toimenpide tapahtuma)]
                         [:div "Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))
 
-(defmethod nayta-popup :paikkaustoteuma-klikattu [tapahtuma]
+(defmethod nayta-popup :paikkaus-klikattu [tapahtuma]
   (kartta/nayta-popup! (get-in tapahtuma [:sijainti :coordinates])
                        [:div.kartta-popup
                         [:p [:b "Paikkaustoteuma"]]

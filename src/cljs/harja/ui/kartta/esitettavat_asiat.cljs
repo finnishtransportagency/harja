@@ -193,21 +193,35 @@
                 :img         ikoni
                 :coordinates (get-in tp [:sijainti :coordinates])}))]))
 
-(defmethod asia-kartalle :paallystyskohde [pt valittu?]
-  (mapv
+;; TODO: Päällystyksissä ja paikkauksissa on kommentoitua koodia, koska näille dedikoituijen näkymien käyttämät
+;; kyselyt palauttavat datan sellaisessa muodossa, että sijainti pitää kaivaa erikseen "kohdeosista".
+;; Tilannekuvassa tämä sijaintitieto palautetaan suoraan samassa kyselyssä. Tilannekuva on tällä hetkellä
+;; ainoa paikka jossa piirretään päällystyksiä/paikkauksia tämän namespacen avulla, joten päätettiin toteuttaa
+;; metodit uudelleen. Kun päällystys/paikkaus-näkymät laitetaan käyttämään tätä uutta paradigmaa, voidaan joko
+;; toteuttaa näille omat metodit TAI miettiä, tarviiko tosiaan näiden käyttämä data palauttaa sellaisessa muodossa?
+(defmethod asia-kartalle :paallystys [pt valittu?]
+  [(assoc pt
+     :type :paallystys
+     :nimi (or (:nimi pt) "Päällystys")
+     :alue (:sijainti pt))]
+
+  #_(mapv
     (fn [kohdeosa]
       (assoc kohdeosa
-        :type :paallystyskohde
+        :type :paallystys
         :nimi (or (:nimi pt) "Päällystyskohde")
         :alue (:sijainti kohdeosa)))
     (:kohdeosat pt)))
 
-(defmethod asia-kartalle :paikkaustoteuma [pt valittu?]
-  ;; Saattaa olla, että yhdelle kohdeosalle pitää antaa jokin viittaus paikkaustoteumaan.
-  (mapv
+(defmethod asia-kartalle :paikkaus [pt valittu?]
+  [(assoc pt
+     :type :paikkaus
+     :nimi (or (:nimi pt) "Paikkaus")
+     :alue (:sijainti pt))]
+  #_(mapv
     (fn [kohdeosa]
       (assoc kohdeosa
-        :type :paikkaustoteuma
+        :type :paikkaus
         :nimi (or (:nimi pt) "Paikkaus")
         :alue (:sijainti kohdeosa)))
     (:kohdeosat pt)))

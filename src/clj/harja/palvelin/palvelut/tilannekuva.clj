@@ -70,11 +70,31 @@
 
 (defn- hae-paallystystyot
   [db user {:keys [alku loppu yllapito]} urakat]
-  (when (:paallystys yllapito)))
+  (when (:paallystys yllapito)
+    (try
+      (into []
+           (comp
+             (geo/muunna-pg-tulokset :sijainti)
+             (map konv/alaviiva->rakenne)
+             (map #(konv/string->avain % [:tila])))
+           (q/hae-paallystykset db))
+      (catch Exception e
+        (tulosta-virhe! "paallystyksia" e)
+        nil))))
 
 (defn- hae-paikkaustyot
   [db user {:keys [alku loppu yllapito]} urakat]
-  (when (:paikkaus yllapito)))
+  (when (:paikkaus yllapito)
+    (try
+      (into []
+           (comp
+             (geo/muunna-pg-tulokset :sijainti)
+             (map konv/alaviiva->rakenne)
+             (map #(konv/string->avain % [:tila])))
+           (q/hae-paikkaukset db))
+         (catch Exception e
+           (tulosta-virhe! "paikkauksia" e)
+           nil))))
 
 (defn- hae-laatupoikkeamat
   [db user {:keys [alku loppu laadunseuranta]} urakat]

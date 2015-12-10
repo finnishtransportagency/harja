@@ -5,7 +5,6 @@
             [clojure.set :refer [rename-keys]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.pvm :as pvm]
@@ -174,7 +173,13 @@
                                                (:tarkastukset tulos)))
                                    (assoc :laatupoikkeamat
                                           (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
-                                               (:laatupoikkeamat tulos)))))
+                                               (:laatupoikkeamat tulos)))
+                                   (assoc :paikkaus
+                                          (map #(assoc % :tyyppi-kartalla :paikkaus)
+                                               (:paikkaus tulos)))
+                                   (assoc :paallystys
+                                          (map #(assoc % :tyyppi-kartalla :paallystys)
+                                               (:paallystys tulos)))))
           yhdista (fn [kartta]
                     (when-not (k/virhe? kartta)
                       (apply (comp vec concat) (remove
