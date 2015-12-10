@@ -32,16 +32,16 @@
                           :valinnat (mapv first tiedot/nykytilanteen-aikasuodatin-tunteina)}
        tiedot/nyktilanteen-aikavali]])
 
-(defn checkbox-ryhma-elementti [nimi suodattimet-atom nykyinen-suodattimen-tila reset-polku]
+(defn checkbox-ryhma-elementti [nimi suodattimet-atom suodatinpolku]
   [checkbox/checkbox
-       (atom (checkbox/boolean->checkbox-tila-keyword nykyinen-suodattimen-tila))
-       nimi {:display   "block"
-             :on-change (fn [uusi-tila]
-                          (reset! suodattimet-atom
-                                  (assoc-in
-                                    @suodattimet-atom
-                                    reset-polku
-                                    (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
+   (atom (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatinpolku)))
+   nimi {:display   "block"
+         :on-change (fn [uusi-tila]
+                      (reset! suodattimet-atom
+                              (assoc-in
+                                @suodattimet-atom
+                                suodatinpolku
+                                (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
 
 (defn checkbox-ryhma [otsikko suodattimet-atom ryhma]
   (let [auki? (atom false)
@@ -71,7 +71,6 @@
                    [checkbox-ryhma-elementti
                     (get tiedot/suodattimien-nimet (first elementti))
                     suodattimet-atom
-                    (second elementti)
                     [ryhma (first elementti)]]))])])))
 
 (defn nykytilanteen-suodattimet []
