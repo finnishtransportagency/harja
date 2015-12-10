@@ -105,7 +105,7 @@
                              (mapcat #(keep (fn [{sij :sijainti nimi :nimi :as osa}]
                                               (when sij
                                                 (let [paallystyskohde-id (:paallystyskohde_id %)]
-                                                  {:type               :paallystyskohde
+                                                  {:type               :paallystys
                                                    :kohde              %
                                                    :paallystyskohde-id paallystyskohde-id
                                                    :tila               (or (:paallystysilmoitus_tila %) (:tila %)) ; Eri keywordissa lähetetystä pyynnöstä riippuen
@@ -136,7 +136,7 @@
                              (mapcat #(keep (fn [{sij :sijainti nimi :nimi :as osa}]
                                               (when sij
                                                 (let [paikkauskohde-id (:paikkauskohde_id %)]
-                                                  {:type             :paikkauskohde
+                                                  {:type             :paikkaus
                                                    :kohde            %
                                                    :paikkauskohde-id paikkauskohde-id
                                                    :tila             (or (:paikkausilmoitus_tila %) (:tila %)) ; Eri keywordissa lähetetystä pyynnöstä riippuen
