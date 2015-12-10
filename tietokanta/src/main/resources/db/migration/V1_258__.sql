@@ -1,0 +1,3 @@
+-- Ilmoituksen luonti ja muutosajat
+ALTER TABLE ilmoitus ADD COLUMN luotu TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE ilmoitus ADD COLUMN muokattu TIMESTAMP WITH TIME ZONE;
