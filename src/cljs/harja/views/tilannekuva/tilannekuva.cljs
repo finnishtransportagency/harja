@@ -29,8 +29,12 @@
 (defn nykytilanteen-aikavalinta []
     [:div#tk-nykytilanteen-aikavalit
       [kentat/tee-kentta {:tyyppi   :radio
-                          :valinnat (mapv first tiedot/nykytilanteen-aikasuodatin-tunteina)}
+                          :valinta-nayta (fn [[nimi _]] nimi)
+                          :valinta-arvo (fn [[_ arvo]] arvo)
+                          :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
        tiedot/nykytilanteen-aikavali]])
+
+(tarkkaile! "Aikavalinta: " tiedot/nykytilanteen-aikavali)
 
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom suodatinpolku]
   [checkbox/checkbox
