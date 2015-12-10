@@ -7,7 +7,7 @@
 
 (def checkbox-tila-keyword->boolean
   {:valittu    true
-   :ei-valittu true})
+   :ei-valittu false})
 
 (def boolean->checkbox-tila-keyword
   {true :valittu
