@@ -97,6 +97,10 @@ Palautettavassa datassa:
                        {:type :point	
                         :coordinates [x y]}))))))))	
 
+(defn tieosoite->piste [trosoite]
+  (log "Haetaan piste tieosoitteelle")
+  (k/post! :hae-tr-pisteeksi trosoite))
+
 (defn tieosoite->viiva [trosoite]
   (k/post! :hae-tr-viivaksi trosoite))
 
