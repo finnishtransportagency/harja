@@ -9,10 +9,11 @@
   }
 }
 
-#tk-tilan-vaihtajat {
-  padding-top: 5px;
+#tk-tilan-vaihto {
   position: relative;
-  height: 32px;
+  height: 22px;
+  margin-top: 6px;
+  margin-bottom: 6px;
 
   > .tk-tilan-vaihto-nykytilanne {
     left: 0;
@@ -30,24 +31,20 @@
   }
 }
 
-.tk-radio,
-.tk-checkbox {
-  label {
-    padding-left: 5px;
-    margin-bottom: 0;
-    font-weight: normal;
-    cursor: pointer;
-  }
-
-  input {
-    margin-right: 5px;
-  }
-}
-
 .tk-nykytilanne-aikavalitsin {
   display: inline-block;
   height: 28px;
   padding-right: 10px;
+}
+
+#tk-nykytilanteen-aikavalit {
+  .radiovalinta {
+    width: 70px;
+    padding: 2px;
+    display: inline-block;
+  }
+
+  margin-bottom: 10px;
 }
 
 .tk-checkbox-ryhma {
@@ -56,18 +53,13 @@
   margin-bottom: 2px;
 }
 
-.tk-checkbox-ryhma-nappi {
-  cursor: pointer;
-  height: 30px;
+.tk-checkbox-ryhma-otsikko {
+  height: 26px;
   background-color: @harmaa10;
 }
 
-.tk-checkbox-ryhma-otsikko {
-  margin-right: 5px;
-  display: inline-block;
-}
-
 .tk-checkbox-ryhma-tila {
+  cursor: pointer;
   display: inline-block;
   margin-left: 5px;
   margin-right: 5px;

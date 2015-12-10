@@ -15,83 +15,81 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defn tilan-vaihtaja []
-  (let [on-off-tila (atom false)]
+  (let [on-off-tila (atom (if (= :nykytilanne @tiedot/valittu-tila)
+                            false
+                            true))]
     (fn []
-      [:div#tk-tilan-vaihtajat
+      [:div#tk-tilan-vaihto
        [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
        [:div.tk-tilan-vaihto-historia "Historia"]
        [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
                                            :on-change (fn []
-                                                        (if @on-off-tila
+                                                        (if (false? @on-off-tila)
                                                           (reset! tiedot/valittu-tila :nykytilanne)
                                                           (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
-;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
-(defn nykytilanteen-aikasuodattimen-elementti [[teksti]]
-  ^{:key (str "nykytilanteen_aikasuodatin_" teksti)}
-  [:div.tk-nykytilanne-aikavalitsin
-   [:div.tk-radio
-    [:label
-     [:input {:type    "radio"
-              :checked false}]
-     teksti]]])
-
 (defn nykytilanteen-aikavalinta []
-  (let [aikavalinnat-hiccup (map
-                              (fn [aika]
-                                [nykytilanteen-aikasuodattimen-elementti aika])
-                              tiedot/aikasuodatin-tunteina)]
-    [:div#tk-nykytilanteen-aikavalinta
-     [:div.tk-nykytilanteen-aikavalinta-ryhma-tunnit
-      (nth aikavalinnat-hiccup 0)
-      (nth aikavalinnat-hiccup 1)
-      (nth aikavalinnat-hiccup 2)]
-     [:div.tk-nykytilanteen-aikavalinta-ryhma-vuorokaudet
-      (nth aikavalinnat-hiccup 3)
-      (nth aikavalinnat-hiccup 4)
-      (nth aikavalinnat-hiccup 5)]
-     [:div.tk-nykytilanteen-aikavalinta-ryhma-viikot
-      (nth aikavalinnat-hiccup 6)
-      (nth aikavalinnat-hiccup 7)
-      (nth aikavalinnat-hiccup 8)]]))
+    [:div#tk-nykytilanteen-aikavalit
+      [kentat/tee-kentta {:tyyppi   :radio
+                          :valinta-nayta (fn [[nimi _]] nimi)
+                          :valinta-arvo (fn [[_ arvo]] arvo)
+                          :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
+       tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
-(defn checkbox-ryhma-elementti [nimi suodattimet-atom nykyinen-suodattimen-tila reset-polku]
-  (let [tila (atom (checkbox/boolean->checkbox-tila-keyword nykyinen-suodattimen-tila))]
-    (fn []
-      [checkbox/checkbox
-       tila
-       nimi {:display   "block"
-             :on-change (fn [uusi-tila]
-                          (reset! suodattimet-atom
-                                  (assoc-in
-                                    @suodattimet-atom
-                                    reset-polku
-                                    (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])))
+(defn checkbox-ryhma-elementti [nimi suodattimet-atom suodatinpolku]
+  [checkbox/checkbox
+   (reaction (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatinpolku)))
+   nimi
+   {:display   "block"
+    :on-change (fn [uusi-tila]
+                 (reset! suodattimet-atom
+                         (assoc-in
+                           @suodattimet-atom
+                           suodatinpolku
+                           (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
 
-(defn checkbox-ryhma [otsikko suodattimet-atom suodatinryhma]
+(defn checkbox-ryhma [otsikko suodattimet-atom ryhma]
   (let [auki? (atom false)
-        ryhmanjohtaja-tila-atom (atom :ei-valittu)
-        ryhman-elementit-ja-tilat (get @suodattimet-atom suodatinryhma)]
+        ryhmanjohtaja-tila-atom (reaction
+                                  (if (every? true? (vals (get @suodattimet-atom ryhma)))
+                                            :valittu
+                                            (if (every? false? (vals (get @suodattimet-atom ryhma)))
+                                              :ei-valittu
+                                              :osittain-valittu)))]
     (fn []
-      [:div.tk-checkbox-ryhma
-       [:div.tk-checkbox-ryhma-nappi {:on-click (fn [] (swap! auki? not))}
-        [:span.tk-checkbox-ryhma-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
-        [:div.tk-checkbox-ryhma-checkbox
-         [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko {:display "inline-block"}]]]
+      (let [ryhman-elementit-ja-tilat (atom (get @suodattimet-atom ryhma))]
+        @suodattimet-atom
+        [:div.tk-checkbox-ryhma
+         [:div.tk-checkbox-ryhma-otsikko
+          [:span.tk-checkbox-ryhma-tila {:on-click (fn []
+                                                     (swap! auki? not))}
+           (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
+          [:div.tk-checkbox-ryhma-checkbox
+           [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
+            {:display   "inline-block"
+             :on-change (fn [uusi-tila]
+                          ; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
+                          (when (not= :osittain-valittu uusi-tila)
+                            (reset! suodattimet-atom
+                                    (reduce (fn [edellinen-map tehtava-avain]
+                                              (assoc-in edellinen-map
+                                                        [ryhma tehtava-avain]
+                                                        (checkbox/checkbox-tila-keyword->boolean uusi-tila)))
+                                            @suodattimet-atom
+                                            (keys (get @suodattimet-atom ryhma))))))}]]]
 
-       (when @auki?
-         [:div.tk-checkbox-ryhma-sisalto
-          (doall (for [elementti (seq ryhman-elementit-ja-tilat)]
-                   ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
-                   [checkbox-ryhma-elementti
-                    (get tiedot/suodattimien-nimet (first elementti))
-                    suodattimet-atom
-                    (second elementti)
-                    [suodatinryhma (first elementti)]]))])])))
+         (when @auki?
+           [:div.tk-checkbox-ryhma-sisalto
+            (doall (for [elementti (seq @ryhman-elementit-ja-tilat)]
+                     ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
+                     [checkbox-ryhma-elementti
+                      (get tiedot/suodattimien-nimet (first elementti))
+                      suodattimet-atom
+                      [ryhma (first elementti)]]))])]))))
 
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
-   [:p "Näytä seuraavat aikavälillä:"]
+   [:span "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
    [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet :talvi]
    [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet :kesa]
@@ -103,7 +101,7 @@
    [tilan-vaihtaja]
    ; [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet :ilmoitukset] ; FIXME Ei toimi nykyisillä checkbokseilla näin
    [checkbox-ryhma "Ylläpito" tiedot/suodattimet :yllapito]
-   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan
+   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan, ilmeisesti siksi ettei tämä ole reagent renderöintifunktio
      [nykytilanteen-suodattimet])])
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))

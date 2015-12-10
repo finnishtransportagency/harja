@@ -20,6 +20,8 @@
 (defonce karttataso-tilannekuva (atom false))
 (defonce valittu-tila (atom :nykytilanne))
 
+(tarkkaile! "Valittu tila: " valittu-tila)
+
 (defonce bufferi 1000)
 (defonce hakutiheys (reaction (condp = @valittu-tila
                                 :nykytilanne 3000
@@ -110,8 +112,6 @@
                                          "muu"                        true}}))
 (tarkkaile! "Suodattimet " suodattimet)
 
-;; Valittu aikaväli vektorissa [alku loppu]
-(defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
@@ -121,17 +121,19 @@
   (tunteja-vuorokausissa (* 7 viikot)))
 
 ;; Mäppi sisältää numeroarvot tekstuaaliselle esitykselle.
-(defonce aikasuodatin-tunteina [["0-2h" 2]
-                                ["0-4h" 4]
-                                ["0-12h" 12]
-                                ["1 vrk" (tunteja-vuorokausissa 1)]
-                                ["2 vrk" (tunteja-vuorokausissa 2)]
-                                ["3 vrk" (tunteja-vuorokausissa 3)]
-                                ["1 vk" (tunteja-viikoissa 1)]
-                                ["2 vk" (tunteja-viikoissa 2)]
-                                ["3 vk" (tunteja-viikoissa 3)]])
+(defonce nykytilanteen-aikasuodatin-tunteina [["0-2h" 2]
+                                              ["0-4h" 4]
+                                              ["0-12h" 12]
+                                              ["1 vrk" (tunteja-vuorokausissa 1)]
+                                              ["2 vrk" (tunteja-vuorokausissa 2)]
+                                              ["3 vrk" (tunteja-vuorokausissa 3)]
+                                              ["1 vk" (tunteja-viikoissa 1)]
+                                              ["2 vk" (tunteja-viikoissa 2)]
+                                              ["3 vk" (tunteja-viikoissa 3)]])
 
-(defonce valitun-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
+(defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt)))) ;; Valittu aikaväli vektorissa [alku loppu]
+(defonce nykytilanteen-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
+(tarkkaile! "Aikasuodatin: " nykytilanteen-aikasuodattimen-arvo)
 
 (defonce haetut-asiat (atom nil))
 (defonce tilannekuvan-asiat-kartalla
@@ -147,7 +149,7 @@
      :urakka-id       (:id @nav/valittu-urakka)
      :alue            @nav/kartalla-nakyva-alue
      :alku            (if (= @valittu-tila :nykytilanne)
-                        (t/minus (pvm/nyt) (t/hours @valitun-aikasuodattimen-arvo))
+                        (t/minus (pvm/nyt) (t/hours @nykytilanteen-aikasuodattimen-arvo))
                         (first @historiakuvan-aikavali))
      :loppu           (if (= @valittu-tila :nykytilanne)
                         (pvm/nyt)

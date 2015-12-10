@@ -261,7 +261,8 @@
                             arvo (arvo valinta)]
                         ^{:key otsikko}
                         [:span.radiovalinta
-                         [:input {:type      "radio" :value i
+                         [:input {:type      "radio"
+                                  :value i
                                   :checked   (= nykyinen-arvo arvo)
                                   :on-change #(reset! data arvo)}]
                          [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
