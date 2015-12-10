@@ -34,10 +34,9 @@
                         (when on-change-fn
                           (on-change-fn uusi-tila))))]
     (fn []
-      [:div.harja-checkbox
-       [:div.harja-checkbox-laatikko {:class    (checkbox-tila->luokka @tila-atom)
-                                      :on-click vaihda-tila}
+      [:div.harja-checkbox {:on-click vaihda-tila}
+       [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka @tila-atom)}
         [:div.harja-checkbox-laatikko-sisalto
          (when (= :valittu @tila-atom)
-                  [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]
+           [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]
        [:div.harja-checkbox-teksti nimi]])))
