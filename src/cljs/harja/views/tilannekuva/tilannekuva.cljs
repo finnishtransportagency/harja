@@ -53,11 +53,14 @@
       @suodattimet-atom
       [:div.tk-checkbox-ryhma
        [:div.tk-checkbox-ryhma-otsikko
-        [:span.tk-checkbox-ryhma-tila {:on-click (fn [] (swap! auki? not))} (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
+        [:span.tk-checkbox-ryhma-tila {:on-click (fn []
+                                                   (swap! auki? not))}
+         (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
         [:div.tk-checkbox-ryhma-checkbox
          [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
           {:display   "inline-block"
            :on-change (fn [uusi-tila]
+                        ; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
                         (reset! suodattimet-atom
                                 (reduce (fn [edellinen-map tehtava-avain]
                                           (assoc-in edellinen-map
