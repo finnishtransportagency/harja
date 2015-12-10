@@ -56,15 +56,17 @@
       (nth aikavalinnat-hiccup 8)]]))
 
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom nykyinen-suodattimen-tila reset-polku]
-  [checkbox/checkbox
-   (atom (checkbox/boolean->checkbox-tila-keyword nykyinen-suodattimen-tila))
-   nimi {:display   "block"
-         :on-change (fn [uusi-tila]
-                      (reset! suodattimet-atom
-                              (assoc-in
-                                @suodattimet-atom
-                                reset-polku
-                                (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
+  (let [tila (atom (checkbox/boolean->checkbox-tila-keyword nykyinen-suodattimen-tila))]
+    (fn []
+      [checkbox/checkbox
+       tila
+       nimi {:display   "block"
+             :on-change (fn [uusi-tila]
+                          (reset! suodattimet-atom
+                                  (assoc-in
+                                    @suodattimet-atom
+                                    reset-polku
+                                    (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])))
 
 (defn checkbox-ryhma [otsikko suodattimet-atom suodatinryhma]
   (let [auki? (atom false)
