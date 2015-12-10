@@ -56,20 +56,22 @@
       (nth aikavalinnat-hiccup 8)]]))
 
 
-(defn checkbox-ryhma-elementti [nimi suodattimet nykyinen-tila reset-polku]
-  (let [checkbox-tila-atom (r/wrap (checkbox/checkbox-boolean-tila->keyword nykyinen-tila) (fn [uusi-tila]
-                                                                                             (reset! suodattimet
-                                                                                                     (assoc-in
-                                                                                                       @suodattimet
-                                                                                                       reset-polku
-                                                                                                       (checkbox/checkbox-tila-keyword->boolean uusi-tila)))))]
+(defn checkbox-ryhma-elementti [nimi suodattimet-atom nykyinen-suodattimen-tila reset-polku]
+  (let [checkbox-tila-atom (r/wrap
+                             (checkbox/checkbox-boolean-tila->keyword nykyinen-suodattimen-tila)
+                             (fn [uusi-tila]
+                               (reset! suodattimet-atom
+                                       (assoc-in
+                                         @suodattimet-atom
+                                         reset-polku
+                                         (checkbox/checkbox-tila-keyword->boolean uusi-tila)))))]
     (fn []
       [checkbox/checkbox checkbox-tila-atom nimi {:display "block"}])))
 
-(defn checkbox-ryhma [otsikko suodattimet ryhma]
+(defn checkbox-ryhma [otsikko suodattimet-atom suodatinryhma]
   (let [auki? (atom false)
         ryhmanjohtaja-tila-atom (atom :ei-valittu)
-        ryhman-elementit-ja-tilat (get @suodattimet ryhma)]
+        ryhman-elementit-ja-tilat (get @suodattimet-atom suodatinryhma)]
     (fn []
       [:div
        [:div.tk-checkbox-ryhma-nappi {:on-click (fn [] (swap! auki? not))}
@@ -83,9 +85,9 @@
                    ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
                    [checkbox-ryhma-elementti
                     (get tiedot/suodattimien-nimet (first elementti))
-                    suodattimet
+                    suodattimet-atom
                     (second elementti)
-                    [ryhma (first elementti)]]))])])))
+                    [suodatinryhma (first elementti)]]))])])))
 
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
