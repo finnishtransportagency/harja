@@ -14,25 +14,17 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
-(defn checkbox-ryhma-elementti [[avain valittu?]]
-  ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet avain))}
-  [checkbox/checkbox (atom :ei-valittu) (get tiedot/suodattimien-nimet avain)])
-
-(defn checkbox-ryhma [otsikko elementit]
-  (let [auki? (atom false)]
+(defn tilan-vaihtaja []
+  (let [on-off-tila (atom false)]
     (fn []
-      [:div
-       [:div.tk-pudotusvalikko-nappi {:on-click (fn [] (swap! auki? not))}
-        [:span.tk-pudotusvalikko-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
-        [:div.tk-pudotusvalikko-checkbox
-         [:label
-          [:input {:type    "checkbox"
-                   :checked true}]
-          otsikko]]]
-
-       (when @auki?
-         (doall (for [elementti elementit]
-                   [checkbox-ryhma-elementti elementti])))])))
+      [:div#tk-tilan-vaihtajat
+       [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
+       [:div.tk-tilan-vaihto-historia "Historia"]
+       [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
+                                           :on-change (fn []
+                                                        (if @on-off-tila
+                                                          (reset! tiedot/valittu-tila :nykytilanne)
+                                                          (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
 ;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
 (defn nykytilanteen-aikasuodattimen-elementti [[teksti]]
@@ -63,6 +55,27 @@
     (nth aikavalinnat-hiccup 7)
     (nth aikavalinnat-hiccup 8)]]))
 
+
+(defn checkbox-ryhma-elementti [[avain valittu?]]
+  ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet avain))}
+  [checkbox/checkbox (atom :ei-valittu) (get tiedot/suodattimien-nimet avain)])
+
+(defn checkbox-ryhma [otsikko elementit]
+  (let [auki? (atom false)]
+    (fn []
+      [:div
+       [:div.tk-pudotusvalikko-nappi {:on-click (fn [] (swap! auki? not))}
+        [:span.tk-pudotusvalikko-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
+        [:div.tk-pudotusvalikko-checkbox
+         [:label
+          [:input {:type    "checkbox"
+                   :checked true}]
+          otsikko]]]
+
+       (when @auki?
+         (doall (for [elementti elementit]
+                  [checkbox-ryhma-elementti elementti])))])))
+
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
    [:p "Näytä seuraavat aikavälillä:"]
@@ -71,24 +84,13 @@
    [checkbox-ryhma "Kesähoitotyöt" (:kesa @tiedot/suodattimet)]
    [checkbox-ryhma "Laadunseuranta" (:laadunseuranta @tiedot/suodattimet)]])
 
-(defn tilan-vaihtaja []
-  (let [on-off-tila (atom false)]
-    (fn []
-      [:div#tk-tilan-vaihtajat
-       [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
-       [:div.tk-tilan-vaihto-historia "Historia"]
-       [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
-                                           :on-change (fn []
-                                                        (if @on-off-tila
-                                                          (reset! tiedot/valittu-tila :nykytilanne)
-                                                          (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
 (def suodattimet
   [:span
    [tilan-vaihtaja]
    [checkbox-ryhma "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
    [checkbox-ryhma "Ylläpito" (:yllapito @tiedot/suodattimet)]
-   (when (= :nykytilanne @tiedot/valittu-tila)
+   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan
      [nykytilanteen-suodattimet])])
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
