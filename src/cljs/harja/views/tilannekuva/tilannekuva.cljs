@@ -17,7 +17,7 @@
 (defn tilan-vaihtaja []
   (let [on-off-tila (atom false)]
     (fn []
-      [:div#tk-tilan-vaihtajat
+      [:div#tk-tilan-vaihto
        [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
        [:div.tk-tilan-vaihto-historia "Historia"]
        [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
