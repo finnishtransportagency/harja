@@ -30,7 +30,7 @@
     [:div#tk-nykytilanteen-aikavalit
       [kentat/tee-kentta {:tyyppi   :radio
                           :valinnat (mapv first tiedot/nykytilanteen-aikasuodatin-tunteina)}
-       tiedot/nyktilanteen-aikavali]])
+       tiedot/nykytilanteen-aikavali]])
 
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom suodatinpolku]
   [checkbox/checkbox

@@ -112,7 +112,7 @@
 
 ;; Valittu aikaväli vektorissa [alku loppu]
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
-(defonce nyktilanteen-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
+(defonce nykytilanteen-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
