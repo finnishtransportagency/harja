@@ -153,8 +153,11 @@ WHERE
 -- name: hae-paallystykset
 SELECT
   pk.id,
-  pi.id AS paallystysilmoitus_id,
+  pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
+  pi.aloituspvm,
+  pi.valmispvm_paallystys,
+  pi.valmispvm_kohde,
   kohdenumero,
   pk.nimi,
   sopimuksen_mukaiset_tyot,
@@ -170,7 +173,31 @@ FROM paallystysilmoitus pi
   LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
       (pi.tila :: TEXT != 'valmis' OR
-       (now() - pi.valmispvm_kohde) < INTERVAL '7 days'); -- Näytetään 7pv sitten valmistuneet päällystykset
+       (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
+
+-- name: hae-paikkaukset
+SELECT
+  pk.id,
+  pi.id   AS paallystysilmoitus_id,
+  pi.tila AS paallystysilmoitus_tila,
+  pi.aloituspvm,
+  pi.valmispvm_paikkaus,
+  pi.valmispvm_kohde,
+  kohdenumero,
+  pk.nimi,
+  sopimuksen_mukaiset_tyot,
+  muu_tyo,
+  arvonvahennykset,
+  bitumi_indeksi,
+  kaasuindeksi,
+  pko.sijainti,
+  pi.tila
+FROM paikkausilmoitus pi
+  LEFT JOIN paallystyskohde pk ON pi.paikkauskohde = pk.id
+  LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
+WHERE pk.poistettu IS NOT TRUE AND
+      (pi.tila :: TEXT != 'valmis' OR
+       (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
 
 -- name: hae-toteumat
 SELECT
