@@ -48,7 +48,8 @@
      (urakka-valinnat/urakan-sopimus urakka)
      (urakka-valinnat/urakan-hoitokausi urakka)
      (urakka-valinnat/aikavali)
-     (urakka-valinnat/urakan-kokonaishintainen-toimenpide-ja-tehtava)]))
+     (urakka-valinnat/urakan-toimenpide+kaikki)
+     (urakka-valinnat/urakan-kokonaishintainen-tehtava+kaikki)]))
 
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"

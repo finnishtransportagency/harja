@@ -374,35 +374,35 @@ documentation:
                   schema: virhe-response
     /ilmoitukset:
         get:
-          is: [secured]
-          description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös viimeisimmän onnistuneesti haetun ilmoituksen, jolloin palautetaan kaikki sen jälkeen tulleet ilmoitukset. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
-          queryParameters:
-            urakoitsijaId:
-              description: Urakoitsijan id, jolle haetaan ilmoituset
-              type: integer
-              required: true
-              example: 1
-            viimeisinId:
-              description: Viimeisen onnistuneesti haetun ilmoituksen id
-              type: integer
-              required: false
-              example: 12
-            stream:
-              description: Jos kytketty päälle, vastaukset palautetaan streamina, jolloin uutta requestia ei tarvitse tehdä jokaisen responsen jälkeen, vaan uudet ilmoitukset palautetaan streamina.
-              type: boolean
-              required: false
-              example: true
-          responses:
-           200:
-              body:
-                application/json:
-                  example: !include examples/ilmoitusten-haku-response.json
-                  schema: ilmoitusten-haku-response
-           400:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
+         is: [secured]
+         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset palautetaan. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
+         queryParameters:
+          urakoitsijaId:
+            description: Urakoitsijan id, jolle haetaan ilmoitusket
+            type: integer
+            required: true
+            example: 1
+          muuttunutJalkeen:
+            description: Aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset haetaan
+            type: integer
+            required: false
+            example: 12
+          stream:
+            description: Jos kytketty päälle, vastaukset palautetaan streamina, jolloin uutta requestia ei tarvitse tehdä jokaisen responsen jälkeen, vaan uudet ilmoitukset palautetaan streamina.
+            type: boolean
+            required: false
+            example: true
+         responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/ilmoitusten-haku-response.json
+                schema: ilmoitusten-haku-response
+          400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
     /tietyoilmoitus:
         description: Tietyöilmoituksen kirjaus
         post:
