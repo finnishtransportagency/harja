@@ -129,3 +129,9 @@
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
+
+(deftest hae-paivystajatiedot-sijainnilla-monta-urakkaa
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=441966&y=7217398"] kayttaja-yit portti)
+        body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (= (count (:paivystajatiedot body)) 2))))
