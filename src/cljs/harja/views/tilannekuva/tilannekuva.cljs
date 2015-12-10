@@ -55,18 +55,16 @@
       (nth aikavalinnat-hiccup 7)
       (nth aikavalinnat-hiccup 8)]]))
 
-
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom nykyinen-suodattimen-tila reset-polku]
-  (let [checkbox-tila-atom (r/wrap
-                             (checkbox/boolean->checkbox-tila-keyword nykyinen-suodattimen-tila)
-                             (fn [uusi-tila]
-                               (reset! suodattimet-atom
-                                       (assoc-in
-                                         @suodattimet-atom
-                                         reset-polku
-                                         (checkbox/checkbox-tila-keyword->boolean uusi-tila)))))]
-    (fn []
-      [checkbox/checkbox checkbox-tila-atom nimi {:display "block"}])))
+  [checkbox/checkbox
+   (atom (checkbox/boolean->checkbox-tila-keyword nykyinen-suodattimen-tila))
+   nimi {:display   "block"
+         :on-change (fn [uusi-tila]
+                      (reset! suodattimet-atom
+                              (assoc-in
+                                @suodattimet-atom
+                                reset-polku
+                                (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
 
 (defn checkbox-ryhma [otsikko suodattimet-atom suodatinryhma]
   (let [auki? (atom false)
@@ -101,9 +99,9 @@
 (def suodattimet
   [:span
    [tilan-vaihtaja]
-   [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet :ilmoitukset]
+   ; [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet :ilmoitukset] ; FIXME Ei toimi nykyisillä checkbokseilla näin
    [checkbox-ryhma "Ylläpito" tiedot/suodattimet :yllapito]
-   (when (= :nykytilanne @tiedot/valittu-tila)              ; FIXME Ei päivity jos tilaa vaihdetaan
+   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan
      [nykytilanteen-suodattimet])])
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))

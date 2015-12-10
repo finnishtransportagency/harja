@@ -18,15 +18,19 @@
   :valittu, :ei-valittu, :osittain-valittu
   Lisäksi ottaa nimen, joka ilmestyy checkboxin viereen (jos nimen halutaan olevan teksti tämän
   komponentin ulkopuolella, voidaan antaa nil."
-  [tila-atom nimi]
-  (let [checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
+  [tila-atom nimi opts]
+  (let [on-change-fn (:on-change opts)
+        checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
                                :ei-valittu       "harja-checkbox-ei-valittu"
                                :osittain-valittu "harja-checkbox-osittain-valitu"}
         vaihda-tila (fn []
-                      (case @tila-atom
-                        :valittu (reset! tila-atom :ei-valittu)
-                        :ei-valittu (reset! tila-atom :valittu)
-                        :osittain-valittu (reset! tila-atom :ei-valittu)))]
+                      (let [uusi-tila (case @tila-atom
+                                        :valittu :ei-valittu
+                                        :ei-valittu :valittu
+                                        :osittain-valittu :ei-valittu)]
+                        (reset! tila-atom uusi-tila)
+                        (when on-change-fn
+                          (on-change-fn uusi-tila))))]
     (fn []
       [:div.harja-checkbox
        [:div.harja-checkbox-laatikko {:class    (checkbox-tila->luokka @tila-atom)

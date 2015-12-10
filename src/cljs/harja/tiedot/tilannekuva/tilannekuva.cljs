@@ -69,46 +69,46 @@
           "muu"                             "Muu"})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(defonce suodattimet (atom {:yllapito       {:paallystys false
-                                             :paikkaus   false}
-                            ;:ilmoitukset    {:tyypit {:toimenpidepyynto false ; FIXME Ei toimi nykyisillä checkbokseilla näin
-                            ;                          :kysely           false
-                            ;                          :tiedoitus        false}
-                            ;                 :tilat  #{:avoimet}}
-                            :turvallisuus   {:turvallisuuspoikkeamat false}
-                            :laadunseuranta {:laatupoikkeamat true
-                                             :tarkastukset    true}
+(def suodattimet (atom {:yllapito       {:paallystys false
+                                         :paikkaus   false}
+                        :ilmoitukset    {:tyypit {:toimenpidepyynto false
+                                                  :kysely           false
+                                                  :tiedoitus        false}
+                                         :tilat  #{:avoimet}}
+                        :turvallisuus   {:turvallisuuspoikkeamat false}
+                        :laadunseuranta {:laatupoikkeamat true
+                                         :tarkastukset    true}
 
-                            ;; Näiden pitää osua työkoneen enumeihin
-                            :talvi          {"auraus ja sohjonpoisto"          false
-                                             "suolaus"                         false
-                                             "pistehiekoitus"                  false
-                                             "linjahiekoitus"                  false
-                                             "lumivallien madaltaminen"        false
-                                             "sulamisveden haittojen torjunta" false
-                                             "kelintarkastus"                  false
-                                             "muu"                             false}
+                        ;; Näiden pitää osua työkoneen enumeihin
+                        :talvi          {"auraus ja sohjonpoisto"          false
+                                         "suolaus"                         false
+                                         "pistehiekoitus"                  false
+                                         "linjahiekoitus"                  false
+                                         "lumivallien madaltaminen"        false
+                                         "sulamisveden haittojen torjunta" false
+                                         "kelintarkastus"                  false
+                                         "muu"                             false}
 
-                            :kesa           {"tiestotarkastus"            false
-                                             "koneellinen niitto"         false
-                                             "koneellinen vesakonraivaus" false
+                        :kesa           {"tiestotarkastus"            false
+                                         "koneellinen niitto"         false
+                                         "koneellinen vesakonraivaus" false
 
-                                             "liikennemerkkien puhdistus" false
+                                         "liikennemerkkien puhdistus" false
 
-                                             "sorateiden muokkaushoylays" false
-                                             "sorateiden polynsidonta"    false
-                                             "sorateiden tasaus"          false
-                                             "sorastus"                   false
+                                         "sorateiden muokkaushoylays" false
+                                         "sorateiden polynsidonta"    false
+                                         "sorateiden tasaus"          false
+                                         "sorastus"                   false
 
-                                             "harjaus"                    false
-                                             "pinnan tasaus"              false
-                                             "paallysteiden paikkaus"     false
-                                             "paallysteiden juotostyot"   false
+                                         "harjaus"                    false
+                                         "pinnan tasaus"              false
+                                         "paallysteiden paikkaus"     false
+                                         "paallysteiden juotostyot"   false
 
-                                             "siltojen puhdistus"         false
+                                         "siltojen puhdistus"         false
 
-                                             "l- ja p-alueiden puhdistus" false
-                                             "muu"                        false}}))
+                                         "l- ja p-alueiden puhdistus" false
+                                         "muu"                        false}}))
 (tarkkaile! "Suodattimet " suodattimet)
 
 ;; Valittu aikaväli vektorissa [alku loppu]
