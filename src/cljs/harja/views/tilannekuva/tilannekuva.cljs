@@ -63,7 +63,6 @@
              :on-change (fn [uusi-tila]
                           ; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
                           (do
-                            (log "render resetti uusi tila" (pr-str uusi-tila))
                             (reset! suodattimet-atom
                                     (reduce (fn [edellinen-map tehtava-avain]
                                               (assoc-in edellinen-map
