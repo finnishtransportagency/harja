@@ -5,6 +5,7 @@
             [clojure.set :refer [rename-keys]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.pvm :as pvm]
@@ -70,10 +71,10 @@
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet (atom {:yllapito       {:paallystys false
                                              :paikkaus   false}
-                            :ilmoitukset    {:tyypit {:toimenpidepyynto false
-                                                      :kysely           false
-                                                      :tiedoitus        false}
-                                             :tilat  #{:avoimet}}
+                            ;:ilmoitukset    {:tyypit {:toimenpidepyynto false ; FIXME Ei toimi nykyisillä checkbokseilla näin
+                            ;                          :kysely           false
+                            ;                          :tiedoitus        false}
+                            ;                 :tilat  #{:avoimet}}
                             :turvallisuus   {:turvallisuuspoikkeamat false}
                             :laadunseuranta {:laatupoikkeamat true
                                              :tarkastukset    true}
@@ -108,6 +109,7 @@
 
                                              "l- ja p-alueiden puhdistus" false
                                              "muu"                        false}}))
+(tarkkaile! "Suodattimet " suodattimet)
 
 ;; Valittu aikaväli vektorissa [alku loppu]
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))

@@ -56,14 +56,18 @@
       (nth aikavalinnat-hiccup 8)]]))
 
 
-(defn checkbox-ryhma-elementti [nimi]
-  (let [checkbox-tila-atom (atom :ei-valittu)]
+(defn checkbox-ryhma-elementti [nimi suodattimet nykyinen-tila reset-polku]
+  (log "Luodaan checkbox " nimi)
+  (let [checkbox-tila-atom (r/wrap nykyinen-tila (fn [uusi-tila]
+                                                   (log "Resetoidaan polulla " reset-polku "tilaksi " uusi-tila)
+                                                   (reset! suodattimet (assoc-in @suodattimet reset-polku uusi-tila))))]
     (fn []
       [checkbox/checkbox checkbox-tila-atom nimi {:display "block"}])))
 
-(defn checkbox-ryhma [otsikko elementit]
+(defn checkbox-ryhma [otsikko suodattimet ryhma]
   (let [auki? (atom false)
-        ryhmanjohtaja-tila-atom (atom :ei-valittu)]
+        ryhmanjohtaja-tila-atom (atom :ei-valittu)
+        ryhman-elementit-ja-tilat (get @suodattimet ryhma)]
     (fn []
       [:div
        [:div.tk-checkbox-ryhma-nappi {:on-click (fn [] (swap! auki? not))}
@@ -73,24 +77,28 @@
 
        (when @auki?
          [:div.tk-checkbox-ryhma-sisalto
-          (doall (for [elementti (keys elementit)]
-                   ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet elementti))}
-                   [checkbox-ryhma-elementti (get tiedot/suodattimien-nimet elementti)]))])])))
+          (doall (for [elementti (seq ryhman-elementit-ja-tilat)]
+                   ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
+                   [checkbox-ryhma-elementti
+                    (get tiedot/suodattimien-nimet (first elementti))
+                    suodattimet
+                    (second elementti)
+                    [ryhma (first elementti)]]))])])))
 
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
    [:p "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
-   [checkbox-ryhma "Talvihoitotyöt" (:talvi @tiedot/suodattimet)]
-   [checkbox-ryhma "Kesähoitotyöt" (:kesa @tiedot/suodattimet)]
-   [checkbox-ryhma "Laadunseuranta" (:laadunseuranta @tiedot/suodattimet)]])
+   [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet :talvi]
+   [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet :kesa]
+   [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet :laadunseuranta]])
 
 
 (def suodattimet
   [:span
    [tilan-vaihtaja]
-   [checkbox-ryhma "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
-   [checkbox-ryhma "Ylläpito" (:yllapito @tiedot/suodattimet)]
+   [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet :ilmoitukset]
+   [checkbox-ryhma "Ylläpito" tiedot/suodattimet :yllapito]
    (when (= :nykytilanne @tiedot/valittu-tila)              ; FIXME Ei päivity jos tilaa vaihdetaan
      [nykytilanteen-suodattimet])])
 

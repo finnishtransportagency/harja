@@ -9,9 +9,7 @@
   "Ottaa checkbox-tila atomin, joka määrittelee komponentin tilan. Tila-atomin mahdolliset arvot:
   :valittu, :ei-valittu, :osittain-valittu
   Lisäksi ottaa nimen, joka ilmestyy checkboxin viereen (jos nimen halutaan olevan teksti tämän
-  komponentin ulkopuolella, voidaan antaa nil.
-  Lopuksi ottaa mapin muita optioita, joista tuettuna:
-  - display, määrittelee komponentin CSS-display arvon (oletuksena inline-block)"
+  komponentin ulkopuolella, voidaan antaa nil."
   [tila-atom nimi]
   (let [checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
                                :ei-valittu       "harja-checkbox-ei-valittu"
