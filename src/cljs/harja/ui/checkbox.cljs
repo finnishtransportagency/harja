@@ -1,6 +1,6 @@
 (ns harja.ui.checkbox
   (:require [reagent.core :refer [atom]]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
 
             [cljs.core.async :refer [<!]])
   (:require-macros
