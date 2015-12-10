@@ -26,13 +26,13 @@
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
-         {:laatupoikkeamat                        "Laatupoikkeamat"
+         {:laatupoikkeamat                  "Laatupoikkeamat"
           :tarkastukset                     "Tarkastukset"
           :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
 
-          :toimenpidepyynnot                "TPP"
-          :tiedotukset                      "TUR"
-          :kyselyt                          "URK"
+          :toimenpidepyynto                 "TPP"
+          :tiedoitus                        "TUR"
+          :kysely                           "URK"
 
           :paallystys                       "Päällystystyöt"
           :paikkaus                         "Paikkaustyöt"
@@ -67,45 +67,46 @@
           "muu"                             "Muu"})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(defonce suodattimet (atom {:yllapito       {:paallystys true
-                                             :paikkaus   true}
-                            :ilmoitukset    {:toimenpidepyynnot true
-                                             :kyselyt           true
-                                             :tiedotukset       true}
-                            :turvallisuus   {:turvallisuuspoikkeamat true}
-                            :laadunseuranta {:laatupoikkeamat    true
-                                             :tarkastukset true}
+(defonce suodattimet (atom {:yllapito       {:paallystys false
+                                             :paikkaus   false}
+                            :ilmoitukset    {:tyypit {:toimenpidepyynto false
+                                                      :kysely           false
+                                                      :tiedoitus        false}
+                                             :tilat  #{:avoimet}}
+                            :turvallisuus   {:turvallisuuspoikkeamat false}
+                            :laadunseuranta {:laatupoikkeamat true
+                                             :tarkastukset    true}
 
                             ;; Näiden pitää osua työkoneen enumeihin
-                            :talvi          {"auraus ja sohjonpoisto"          true
-                                             "suolaus"                         true
-                                             "pistehiekoitus"                  true
-                                             "linjahiekoitus"                  true
-                                             "lumivallien madaltaminen"        true
-                                             "sulamisveden haittojen torjunta" true
-                                             "kelintarkastus"                  true
-                                             "muu"                             true}
+                            :talvi          {"auraus ja sohjonpoisto"          false
+                                             "suolaus"                         false
+                                             "pistehiekoitus"                  false
+                                             "linjahiekoitus"                  false
+                                             "lumivallien madaltaminen"        false
+                                             "sulamisveden haittojen torjunta" false
+                                             "kelintarkastus"                  false
+                                             "muu"                             false}
 
-                            :kesa           {"tiestotarkastus"            true
-                                             "koneellinen niitto"         true
-                                             "koneellinen vesakonraivaus" true
+                            :kesa           {"tiestotarkastus"            false
+                                             "koneellinen niitto"         false
+                                             "koneellinen vesakonraivaus" false
 
-                                             "liikennemerkkien puhdistus" true
+                                             "liikennemerkkien puhdistus" false
 
-                                             "sorateiden muokkaushoylays" true
-                                             "sorateiden polynsidonta"    true
-                                             "sorateiden tasaus"          true
-                                             "sorastus"                   true
+                                             "sorateiden muokkaushoylays" false
+                                             "sorateiden polynsidonta"    false
+                                             "sorateiden tasaus"          false
+                                             "sorastus"                   false
 
-                                             "harjaus"                    true
-                                             "pinnan tasaus"              true
-                                             "paallysteiden paikkaus"     true
-                                             "paallysteiden juotostyot"   true
+                                             "harjaus"                    false
+                                             "pinnan tasaus"              false
+                                             "paallysteiden paikkaus"     false
+                                             "paallysteiden juotostyot"   false
 
-                                             "siltojen puhdistus"         true
+                                             "siltojen puhdistus"         false
 
-                                             "l- ja p-alueiden puhdistus" true
-                                             "muu"                        true}}))
+                                             "l- ja p-alueiden puhdistus" false
+                                             "muu"                        false}}))
 
 ;; Valittu aikaväli vektorissa [alku loppu]
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
@@ -128,7 +129,7 @@
                                 ["2 vk" (tunteja-viikoissa 2)]
                                 ["3 vk" (tunteja-viikoissa 3)]])
 
-(defonce valitun-aikasuodattimen-arvo (atom (get aikasuodatin-tunteina "2h")))
+(defonce valitun-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
 
 (defonce haetut-asiat (atom nil))
 (defonce tilannekuvan-asiat-kartalla
@@ -138,15 +139,53 @@
              (kartalla-esitettavaan-muotoon @haetut-asiat))))
 
 (defn kasaa-parametrit []
-  {:hallintayksikko @nav/valittu-hallintayksikko-id
-   :urakka-id       (:id @nav/valittu-urakka)
-   :alue            @nav/kartalla-nakyva-alue
-   :alku            (if (= @valittu-tila :nykytilanne)
-                      (pvm/nyt)
-                      (first @historiakuvan-aikavali))
-   :loppu           (if (= @valittu-tila :nykytilanne)
-                      (t/plus (pvm/nyt) (t/hours (get aikasuodatin-tunteina @valitun-aikasuodattimen-arvo)))
-                      (second @historiakuvan-aikavali))})
+  (merge
+    {:hallintayksikko @nav/valittu-hallintayksikko-id
+     :urakka-id       (:id @nav/valittu-urakka)
+     :alue            @nav/kartalla-nakyva-alue
+     :alku            (if (= @valittu-tila :nykytilanne)
+                        (t/minus (pvm/nyt) (t/hours @valitun-aikasuodattimen-arvo))
+                        (first @historiakuvan-aikavali))
+     :loppu           (if (= @valittu-tila :nykytilanne)
+                        (pvm/nyt)
+                        (second @historiakuvan-aikavali))}
+    @suodattimet))
+
+(defn hae-asiat []
+  (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
+  (go
+    (let [yhteiset-parametrit (kasaa-parametrit)
+          julkaise-tyokonedata! (fn [tulos]
+                                  ;; TODO: lisää tänne logiikkaa, jolla tunnistetaan onko uutta työkonedataa tullut
+                                  tulos)                    ; Muista palauttaa sama tulos
+          lisaa-karttatyypit (fn [tulos]
+                               (-> tulos
+                                   (assoc :ilmoitukset
+                                          (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                                               (:ilmoitukset tulos)))
+                                   (assoc :turvallisuuspoikkeamat
+                                          (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
+                                               (:turvallisuuspoikkeamat tulos)))
+                                   (assoc :tarkastukset
+                                          (map #(assoc % :tyyppi-kartalla :tarkastus)
+                                               (:tarkastukset tulos)))
+                                   (assoc :laatupoikkeamat
+                                          (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
+                                               (:laatupoikkeamat tulos)))))
+          yhdista (fn [kartta]
+                    (when-not (k/virhe? kartta)
+                      (apply (comp vec concat) (remove
+                                                 (fn [a]
+                                                   (or
+                                                     (k/virhe? a)
+                                                     (nil? a)
+                                                     (nil? (first a))))
+                                                 (vals kartta)))))
+          tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
+                    (julkaise-tyokonedata!)
+                    (lisaa-karttatyypit)
+                    (yhdista))]
+      (reset! haetut-asiat tulos))))
 
 #_(defn hae-asiat []
     (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
@@ -238,7 +277,7 @@
                       nakymassa? @nakymassa?
                       _ @nav/valittu-hallintayksikko-id]
                      {:odota bufferi}
-                     (when nakymassa? #_(hae-asiat) (print "Haettaisiin, mutta eipä haeta.")))) ;;TODO otin haun pois käytöstä, koska se on borked (tarkoituksella)
+                     (when nakymassa? (hae-asiat))))
 
 (defonce lopeta-haku (atom nil))                            ;; Säilöö funktion jolla pollaus lopetetaan
 

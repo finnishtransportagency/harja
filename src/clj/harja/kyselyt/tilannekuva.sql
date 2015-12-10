@@ -63,40 +63,40 @@ WHERE
   i.ilmoitustyyppi :: TEXT IN (:tyypit);
 
 
--- name: hae-havainnot
+-- name: hae-laatupoikkeamat
 SELECT
-  h.id,
-  h.aika,
-  h.kohde,
-  h.tekija,
-  h.kuvaus,
-  h.sijainti,
-  h.tarkastuspiste,
+  l.id,
+  l.aika,
+  l.kohde,
+  l.tekija,
+  l.kuvaus,
+  l.sijainti,
+  l.tarkastuspiste,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  h.kasittelyaika                    AS paatos_kasittelyaika,
-  h.paatos                           AS paatos_paatos,
-  h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.perustelu                        AS paatos_perustelu,
-  h.muu_kasittelytapa                AS paatos_muukasittelytapa,
-  h.selvitys_pyydetty                AS selvityspyydetty,
+  l.kasittelyaika                    AS paatos_kasittelyaika,
+  l.paatos                           AS paatos_paatos,
+  l.kasittelytapa                    AS paatos_kasittelytapa,
+  l.perustelu                        AS paatos_perustelu,
+  l.muu_kasittelytapa                AS paatos_muukasittelytapa,
+  l.selvitys_pyydetty                AS selvityspyydetty,
 
-  h.tr_numero,
-  h.tr_alkuosa,
-  h.tr_alkuetaisyys,
-  h.tr_loppuosa,
-  h.tr_loppuetaisyys
-FROM havainto h
-  JOIN kayttaja k ON h.luoja = k.id
-WHERE (h.urakka IN (:urakat) OR h.urakka IS NULL)
-      AND (h.luotu BETWEEN :alku AND :loppu OR
-           h.muokattu BETWEEN :alku AND :loppu)
-      AND h.poistettu IS NOT TRUE;
+  l.tr_numero,
+  l.tr_alkuosa,
+  l.tr_alkuetaisyys,
+  l.tr_loppuosa,
+  l.tr_loppuetaisyys
+FROM laatupoikkeama l
+  JOIN kayttaja k ON l.luoja = k.id
+WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
+      AND (l.luotu BETWEEN :alku AND :loppu OR
+           l.muokattu BETWEEN :alku AND :loppu OR
+           l.aika BETWEEN :alku AND :loppu OR
+           l.kasittelyaika BETWEEN :alku AND :loppu)
+      AND l.poistettu IS NOT TRUE;
 
--- name: hae-urakan-tarkastukset
--- Hakee urakan tarkastukset aikavälin perusteella
+-- name: hae-tarkastukset
 SELECT
   t.id,
-  t.sopimus,
   t.aika,
   t.tr_numero,
   t.tr_alkuosa,
@@ -106,14 +106,49 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.mittaaja,
-  t.tyyppi -- tähän myös havainnon kuvaus
+  t.havainnot,
+  t.tyyppi
 FROM tarkastus t
-  LEFT JOIN havainto h ON t.havainto = h.id
-                          AND h.poistettu IS NOT TRUE
-
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
       AND (t.luotu BETWEEN :alku AND :loppu OR
-           t.muokattu BETWEEN :alku AND :loppu);
+           t.muokattu BETWEEN :alku AND :loppu OR
+           t.aika BETWEEN :alku AND :loppu);
+
+-- name: hae-turvallisuuspoikkeamat
+SELECT
+  t.id,
+  t.urakka,
+  t.tapahtunut,
+  t.paattynyt,
+  t.kasitelty,
+  t.tyontekijanammatti,
+  t.tyotehtava,
+  t.kuvaus,
+  t.vammat,
+  t.sairauspoissaolopaivat,
+  t.sairaalavuorokaudet,
+  t.sijainti,
+  t.tr_numero,
+  t.tr_alkuetaisyys,
+  t.tr_loppuetaisyys,
+  t.tr_alkuosa,
+  t.tr_loppuosa,
+  t.tyyppi,
+
+  k.id              AS korjaavatoimenpide_id,
+  k.kuvaus          AS korjaavatoimenpide_kuvaus,
+  k.suoritettu      AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
+FROM turvallisuuspoikkeama t
+  LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama
+                                    AND k.poistettu IS NOT TRUE
+WHERE
+  (t.urakka IS NULL OR t.urakka IN (:urakat)) AND
+  (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
+   t.paattynyt BETWEEN :alku AND :loppu OR
+   t.kasitelty BETWEEN :alku AND :loppu OR
+   t.luotu BETWEEN :alku AND :loppu OR
+   t.muokattu BETWEEN :alku AND :loppu);
 
 -- name: hae-toteumat-tilannekuvaan
 -- Hakee toteumat tilannekuvaan toimenpidekoodin perusteella.
