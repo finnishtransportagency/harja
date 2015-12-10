@@ -22,7 +22,7 @@
               :checked valittu?}]
      (get tiedot/suodattimien-nimet avain)]]])
 
-(defn pudotusvalikko [otsikko elementit]
+(defn checkbox-ryhma [otsikko elementit]
   (let [auki? (atom false)]
     (fn []
       [:div
@@ -72,9 +72,9 @@
   [:div#tk-nykytila-paavalikko
    [:p "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
-   [pudotusvalikko "Talvihoitotyöt" (:talvi @tiedot/suodattimet)]
-   [pudotusvalikko "Kesähoitotyöt" (:kesa @tiedot/suodattimet)]
-   [pudotusvalikko "Laadunseuranta" (:laadunseuranta @tiedot/suodattimet)]])
+   [checkbox-ryhma "Talvihoitotyöt" (:talvi @tiedot/suodattimet)]
+   [checkbox-ryhma "Kesähoitotyöt" (:kesa @tiedot/suodattimet)]
+   [checkbox-ryhma "Laadunseuranta" (:laadunseuranta @tiedot/suodattimet)]])
 
 (defn tilan-vaihtaja []
   (let [on-off-tila (atom false)]
@@ -91,8 +91,8 @@
          [:span
           [tilan-vaihtaja]
           ;; [historiakuvan-aikavalitsin] TODO: (when historia [aikavalinta])
-          [pudotusvalikko "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
-          [pudotusvalikko "Ylläpito" (:yllapito @tiedot/suodattimet)]
+          [checkbox-ryhma "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
+          [checkbox-ryhma "Ylläpito" (:yllapito @tiedot/suodattimet)]
           [nykytilanteen-suodattimet]]) ;; TODO (if historia ..)
 
 (defonce hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
