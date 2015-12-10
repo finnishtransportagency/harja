@@ -71,7 +71,7 @@
         ryhmanjohtaja-tila-atom (atom :ei-valittu)
         ryhman-elementit-ja-tilat (get @suodattimet-atom ryhma)]
     (fn []
-      (log "Ajetaan render")
+      @suodattimet-atom
       [:div.tk-checkbox-ryhma
        [:div.tk-checkbox-ryhma-otsikko
         [:span.tk-checkbox-ryhma-tila {:on-click (fn [] (swap! auki? not))} (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]

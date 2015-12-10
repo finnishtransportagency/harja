@@ -3,7 +3,9 @@
             [harja.loki :refer [log]]
 
             [cljs.core.async :refer [<!]])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros
+    [reagent.ratom :refer [reaction]]
+    [cljs.core.async.macros :refer [go]]))
 
 (def checkbox-tila-keyword->boolean
   {:valittu    true
