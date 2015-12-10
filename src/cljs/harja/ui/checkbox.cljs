@@ -12,17 +12,18 @@
   komponentin ulkopuolella, voidaan antaa nil.
   Lopuksi ottaa mapin muita optioita, joista tuettuna:
   - display, määrittelee komponentin CSS-display arvon (oletuksena inline-block)"
-  [checkbox-tila nimi opts]
-  (let [checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
-                               :ei-valittu "harja-checkbox-ei-valittu"
+  [tila-atom nimi opts]
+  (let [checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
+                               :ei-valittu       "harja-checkbox-ei-valittu"
                                :osittain-valittu "harja-checkbox-osittain-valitu"}
         kasittele-click-eventti (fn []
-                                  (case @checkbox-tila
-                                    :valittu (reset! checkbox-tila :ei-valittu)
-                                    :ei-valittu (reset! checkbox-tila :valittu)
-                                    :osittain-valittu (reset! checkbox-tila :ei-valittu)))]
-    [:div.harja-checkbox {:style {:display (or (:display opts) "inline-block")}}
-     [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka @checkbox-tila)
-                                    :on-click kasittele-click-eventti}
-      [:div.harja-checkbox-laatikko-sisalto]]
-     [:div.harja-checkbox-teksti nimi]]))
+                                  (case @tila-atom
+                                    :valittu (reset! tila-atom :ei-valittu)
+                                    :ei-valittu (reset! tila-atom :valittu)
+                                    :osittain-valittu (reset! tila-atom :ei-valittu)))]
+    (fn []
+      [:div.harja-checkbox {:style {:display (or (:display opts) "inline-block")}}
+       [:div.harja-checkbox-laatikko {:class    (checkbox-tila->luokka @tila-atom)
+                                      :on-click kasittele-click-eventti}
+        [:div.harja-checkbox-laatikko-sisalto]]
+       [:div.harja-checkbox-teksti nimi]])))

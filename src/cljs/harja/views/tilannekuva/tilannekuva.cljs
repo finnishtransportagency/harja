@@ -9,18 +9,14 @@
             [reagent.core :as r]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.checkbox :as checkbox]
             [harja.ui.on-off-valinta :as on-off]
             [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
-(defn pudotusvalikon-elementti [[avain valittu?]]
+(defn checkbox-ryhma-elementti [[avain valittu?]]
   ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet avain))}
-  [:li.tk-pudotusvalikon-listan-elementti
-   [:div.tk-checkbox
-    [:label
-     [:input {:class   "checkbox"
-              :checked valittu?}]
-     (get tiedot/suodattimien-nimet avain)]]])
+  [checkbox/checkbox (atom :ei-valittu) (get tiedot/suodattimien-nimet avain)])
 
 (defn checkbox-ryhma [otsikko elementit]
   (let [auki? (atom false)]
@@ -35,9 +31,8 @@
           otsikko]]]
 
        (when @auki?
-         [:ul.tk-pudotusvalikon-sisalto
-          (doall (for [elementti elementit]
-                   [pudotusvalikon-elementti elementti]))])])))
+         (doall (for [elementti elementit]
+                   [checkbox-ryhma-elementti elementti])))])))
 
 ;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
 (defn nykytilanteen-aikasuodattimen-elementti [[teksti]]
@@ -78,24 +73,25 @@
 
 (defn tilan-vaihtaja []
   (let [on-off-tila (atom false)]
-  [:div#tk-tilan-vaihtajat
-   [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
-   [:div.tk-tilan-vaihto-historia "Historia"]
-   [on-off/on-off-valinta on-off-tila {:luokka "on-off-tilannekuva"
-                                       :on-change (fn []
-                                                    (if @on-off-tila
-                                                      (reset! tiedot/valittu-tila :nykytilanne)
-                                                      (reset! tiedot/valittu-tila :historiakuva)))}]]))
+    (fn []
+      [:div#tk-tilan-vaihtajat
+       [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
+       [:div.tk-tilan-vaihto-historia "Historia"]
+       [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
+                                           :on-change (fn []
+                                                        (if @on-off-tila
+                                                          (reset! tiedot/valittu-tila :nykytilanne)
+                                                          (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
-(defonce suodattimet
-         [:span
-          [tilan-vaihtaja]
-          ;; [historiakuvan-aikavalitsin] TODO: (when historia [aikavalinta])
-          [checkbox-ryhma "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
-          [checkbox-ryhma "Ylläpito" (:yllapito @tiedot/suodattimet)]
-          [nykytilanteen-suodattimet]]) ;; TODO (if historia ..)
+(def suodattimet
+  [:span
+   [tilan-vaihtaja]
+   [checkbox-ryhma "Ilmoitukset" (:ilmoitukset @tiedot/suodattimet)]
+   [checkbox-ryhma "Ylläpito" (:yllapito @tiedot/suodattimet)]
+   (when (= :nykytilanne @tiedot/valittu-tila)
+     [nykytilanteen-suodattimet])])
 
-(defonce hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
+(def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
 
 (defn tilannekuva []
   (komp/luo

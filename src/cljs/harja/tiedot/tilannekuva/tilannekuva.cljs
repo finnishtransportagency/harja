@@ -3,6 +3,7 @@
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [clojure.set :refer [rename-keys]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.asiakas.kommunikaatio :as k]
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
