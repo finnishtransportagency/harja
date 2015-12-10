@@ -12,7 +12,7 @@
             [harja.geo :as geo]))
 
 (defn tulosta-virhe! [asiat e]
-  (log/error (str "Yritettiin hakea tilannekuvaan " asiat ", mutta virhe tapahtui: " (.getMessage e))))
+  (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat ", mutta virhe tapahtui: " (.getMessage e))))
 
 (defn tulosta-tulos! [asiaa tulos]
   (if (vector? tulos)
