@@ -7,6 +7,7 @@
     width: 24px;
     height: 24px;
     border: 1px solid black;
+    overflow: hidden;
     background: #cccccc; /* Old browsers */
     background: -moz-linear-gradient(-45deg, #cccccc 0%, #ffffff 100%); /* FF3.6+ */
     background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#cccccc), color-stop(100%,#ffffff)); /* Chrome,Safari4+ */
@@ -30,7 +31,7 @@
 }
 
 .harja-checkbox-valittu > .harja-checkbox-laatikko-sisalto {
-    background-image: url("../images/rasti.svg");
+    background-image: url("../images/rasti.svg"), linear-gradient(135deg, #cccccc 0% ,#ffffff 100%);
 }
 
 .harja-checkbox-osittain-valittu > .harja-checkbox-laatikko-sisalto {
