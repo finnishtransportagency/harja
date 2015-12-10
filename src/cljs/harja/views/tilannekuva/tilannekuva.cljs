@@ -48,7 +48,12 @@
 
 (defn checkbox-ryhma [otsikko suodattimet-atom ryhma]
   (let [auki? (atom false)
-        ryhmanjohtaja-tila-atom (atom :ei-valittu)]
+        ryhmanjohtaja-tila-atom (reaction
+                                  (if (every? true? (vals (get @suodattimet-atom ryhma)))
+                                            :valittu
+                                            (if (every? false? (vals (get @suodattimet-atom ryhma)))
+                                              :ei-valittu
+                                              :osittain-valittu)))]
     (fn []
       (let [ryhman-elementit-ja-tilat (atom (get @suodattimet-atom ryhma))]
         @suodattimet-atom

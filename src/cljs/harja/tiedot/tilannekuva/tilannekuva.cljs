@@ -75,8 +75,8 @@
                                                   :tiedoitus        false}
                                          :tilat  #{:avoimet}}
                         :turvallisuus   {:turvallisuuspoikkeamat false}
-                        :laadunseuranta {:laatupoikkeamat true
-                                         :tarkastukset    true}
+                        :laadunseuranta {:laatupoikkeamat false
+                                         :tarkastukset    false}
 
                         ;; Näiden pitää osua työkoneen enumeihin
                         :talvi          {"auraus ja sohjonpoisto"          false

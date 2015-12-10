@@ -24,7 +24,7 @@
   (let [on-change-fn (:on-change opts)
         checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
                                :ei-valittu       "harja-checkbox-ei-valittu"
-                               :osittain-valittu "harja-checkbox-osittain-valitu"}
+                               :osittain-valittu "harja-checkbox-osittain-valittu"}
         vaihda-tila (fn []
                       (let [uusi-tila (case @tila-atom
                                         :valittu :ei-valittu
