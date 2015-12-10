@@ -58,7 +58,7 @@
 
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom nykyinen-suodattimen-tila reset-polku]
   (let [checkbox-tila-atom (r/wrap
-                             (checkbox/checkbox-boolean-tila->keyword nykyinen-suodattimen-tila)
+                             (checkbox/boolean->checkbox-tila-keyword nykyinen-suodattimen-tila)
                              (fn [uusi-tila]
                                (reset! suodattimet-atom
                                        (assoc-in
