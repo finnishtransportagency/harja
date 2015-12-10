@@ -34,8 +34,6 @@
                           :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
        tiedot/nykytilanteen-aikavali]])
 
-(tarkkaile! "Aikavalinta: " tiedot/nykytilanteen-aikavali)
-
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom suodatinpolku]
   [checkbox/checkbox
    (atom (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatinpolku)))
@@ -91,7 +89,7 @@
    [tilan-vaihtaja]
    ; [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet :ilmoitukset] ; FIXME Ei toimi nykyisillä checkbokseilla näin
    [checkbox-ryhma "Ylläpito" tiedot/suodattimet :yllapito]
-   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan
+   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan, ilmeisesti siksi ettei tämä ole reagent renderöintifunktio
      [nykytilanteen-suodattimet])])
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
