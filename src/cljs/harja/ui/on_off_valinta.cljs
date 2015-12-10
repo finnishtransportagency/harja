@@ -16,6 +16,6 @@
                        (when kasittely-fn
                          (kasittely-fn)))}
      [:div.harja-on-off-pohja
-      [:div.harja-on-off-pallo {:style (if @tila
+      [:div.harja-on-off-pallo {:style (if (false? @tila)
                                          {:left "0px"}
                                          {:left "30px"})}]]]))

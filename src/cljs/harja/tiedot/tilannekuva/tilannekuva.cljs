@@ -20,6 +20,8 @@
 (defonce karttataso-tilannekuva (atom false))
 (defonce valittu-tila (atom :nykytilanne))
 
+(tarkkaile! "Valittu tila: " valittu-tila)
+
 (defonce bufferi 1000)
 (defonce hakutiheys (reaction (condp = @valittu-tila
                                 :nykytilanne 3000

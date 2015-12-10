@@ -15,14 +15,16 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defn tilan-vaihtaja []
-  (let [on-off-tila (atom false)]
+  (let [on-off-tila (atom (if (= :nykytilanne @tiedot/valittu-tila)
+                            false
+                            true))]
     (fn []
       [:div#tk-tilan-vaihto
        [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
        [:div.tk-tilan-vaihto-historia "Historia"]
        [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
                                            :on-change (fn []
-                                                        (if @on-off-tila
+                                                        (if (false? @on-off-tila)
                                                           (reset! tiedot/valittu-tila :nykytilanne)
                                                           (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
