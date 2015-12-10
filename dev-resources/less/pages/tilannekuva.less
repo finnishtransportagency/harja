@@ -9,20 +9,6 @@
   }
 }
 
-.tk-radio,
-.tk-checkbox {
-  label {
-    padding-left: 5px;
-    margin-bottom: 0;
-    font-weight: normal;
-    cursor: pointer;
-  }
-
-  input {
-    margin-right: 5px;
-  }
-}
-
 #tk-tilan-vaihtajat {
   padding-top: 5px;
   position: relative;
@@ -44,19 +30,40 @@
   }
 }
 
-.tk-pudotusvalikko-nappi {
+.tk-radio,
+.tk-checkbox {
+  label {
+    padding-left: 5px;
+    margin-bottom: 0;
+    font-weight: normal;
+    cursor: pointer;
+  }
+
+  input {
+    margin-right: 5px;
+  }
+}
+
+.tk-nykytilanne-aikavalitsin {
+  display: inline-block;
+  height: 28px;
+  padding-right: 10px;
+}
+
+
+.tk-checkbox-ryhma-nappi {
   border: 1px ridge @harmaa3;
   cursor: pointer;
   background-color: @harmaa10;
 }
 
-.tk-pudotusvalikko-otsikko {
+.tk-checkbox-ryhma-otsikko {
   margin-right: 5px;
   vertical-align: middle;
   display: inline-block;
 }
 
-.tk-pudotusvalikko-checkbox {
+.tk-checkbox-ryhma-checkbox {
   position: relative;
   display: inline-block;
   margin-top: 5px;
@@ -74,21 +81,19 @@
   }
 }
 
-.tk-pudotusvalikko-tila {
+.tk-checkbox-ryhma-tila {
   display: inline-block;
   margin-left: 5px;
   margin-right: 5px;
   vertical-align: middle;
 }
 
-.tk-pudotusvalikko-kiinni {
+.tk-checkbox-ryhma-kiinni {
   display: none;
 }
 
-.tk-nykytilanne-aikavalitsin {
-  display: inline-block;
-  height: 28px;
-  padding-right: 10px;
+.tk-checkbox-ryhma-sisalto {
+  padding: 5px;
 }
 
 #tk-nykytila-paavalikko {

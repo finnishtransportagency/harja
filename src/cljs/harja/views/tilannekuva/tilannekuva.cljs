@@ -58,23 +58,24 @@
 
 (defn checkbox-ryhma-elementti [[avain valittu?]]
   ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet avain))}
-  [checkbox/checkbox (atom :ei-valittu) (get tiedot/suodattimien-nimet avain)])
+  [checkbox/checkbox (atom :ei-valittu) (get tiedot/suodattimien-nimet avain) {:display "block"}])
 
 (defn checkbox-ryhma [otsikko elementit]
   (let [auki? (atom false)]
     (fn []
       [:div
-       [:div.tk-pudotusvalikko-nappi {:on-click (fn [] (swap! auki? not))}
-        [:span.tk-pudotusvalikko-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
-        [:div.tk-pudotusvalikko-checkbox
+       [:div.tk-checkbox-ryhma-nappi {:on-click (fn [] (swap! auki? not))}
+        [:span.tk-checkbox-ryhma-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
+        [:div.tk-checkbox-ryhma-checkbox
          [:label
           [:input {:type    "checkbox"
                    :checked true}]
           otsikko]]]
 
        (when @auki?
-         (doall (for [elementti elementit]
-                  [checkbox-ryhma-elementti elementti])))])))
+         [:div.tk-checkbox-ryhma-sisalto
+          (doall (for [elementti elementit]
+                   [checkbox-ryhma-elementti elementti]))])])))
 
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
