@@ -50,7 +50,7 @@
         aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
         ikoni (cond
-                lopetettu? "kartta-kysely-violetti.svg" ;; TODO Lisää harmaat ikonit kun valmistuvat.
+                lopetettu? "kartta-kysely-violetti.svg"     ;; TODO Lisää harmaat ikonit kun valmistuvat.
                 aloitettu? "kartta-kysely-violetti.svg"
                 :else "kartta-kysely-kesken-punainen.svg")]
     [(assoc ilmoitus
@@ -124,13 +124,13 @@
      :selite {:teksti (str "Tarkastus (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
-             {:type  :tack-icon-line
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
+             {:type   :tack-icon-line
+              :scale  (if (valittu? tarkastus) 1.5 1)
+              :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :points (get-in tarkastus [:sijainti :points])}
-             {:type  :tack-icon
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
+             {:type        :tack-icon
+              :scale       (if (valittu? tarkastus) 1.5 1)
+              :img         (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
@@ -206,12 +206,12 @@
      :alue (:sijainti pt))]
 
   #_(mapv
-    (fn [kohdeosa]
-      (assoc kohdeosa
-        :type :paallystys
-        :nimi (or (:nimi pt) "Päällystyskohde")
-        :alue (:sijainti kohdeosa)))
-    (:kohdeosat pt)))
+      (fn [kohdeosa]
+        (assoc kohdeosa
+          :type :paallystys
+          :nimi (or (:nimi pt) "Päällystyskohde")
+          :alue (:sijainti kohdeosa)))
+      (:kohdeosat pt)))
 
 (defmethod asia-kartalle :paikkaus [pt valittu?]
   [(assoc pt
@@ -219,12 +219,12 @@
      :nimi (or (:nimi pt) "Paikkaus")
      :alue (:sijainti pt))]
   #_(mapv
-    (fn [kohdeosa]
-      (assoc kohdeosa
-        :type :paikkaus
-        :nimi (or (:nimi pt) "Paikkaus")
-        :alue (:sijainti kohdeosa)))
-    (:kohdeosat pt)))
+      (fn [kohdeosa]
+        (assoc kohdeosa
+          :type :paikkaus
+          :nimi (or (:nimi pt) "Paikkaus")
+          :alue (:sijainti kohdeosa)))
+      (:kohdeosat pt)))
 
 (defn- paattele-tyokoneen-ikoni
   [tehtavat lahetetty valittu?]
@@ -280,10 +280,15 @@
        :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
        :selite {:teksti selite-teksti
                 :img    ["kartta-suuntanuoli-sininen.svg" selite-img]}
-       :alue {:type        :sticker-icon
-              :coordinates (:sijainti tyokone)
-              :direction   (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
-              :img         img})]))
+       :alue (if-let [reitti (:reitti tyokone)]
+               {:type      :tack-icon-line
+                :points    reitti
+                :direction (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
+                :img       img}
+               {:type        :sticker-icon
+                :coordinates (:sijainti tyokone)
+                :direction   (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
+                :img         img}))]))
 
 (defmethod asia-kartalle :default [_ _ _])
 
@@ -305,6 +310,7 @@
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
+   (log (pr-str asiat))
     ;; tarkastetaan että edes jollain on..
    (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")
    (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))

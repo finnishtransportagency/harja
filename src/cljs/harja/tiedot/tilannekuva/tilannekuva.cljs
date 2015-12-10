@@ -75,39 +75,39 @@
                                                   :tiedoitus        false}
                                          :tilat  #{:avoimet}}
                         :turvallisuus   {:turvallisuuspoikkeamat false}
-                        :laadunseuranta {:laatupoikkeamat true
-                                         :tarkastukset    true}
+                        :laadunseuranta {:laatupoikkeamat false
+                                         :tarkastukset    false}
 
                         ;; Näiden pitää osua työkoneen enumeihin
-                        :talvi          {"auraus ja sohjonpoisto"          false
-                                         "suolaus"                         false
-                                         "pistehiekoitus"                  false
-                                         "linjahiekoitus"                  false
-                                         "lumivallien madaltaminen"        false
-                                         "sulamisveden haittojen torjunta" false
-                                         "kelintarkastus"                  false
-                                         "muu"                             false}
+                        :talvi          {"auraus ja sohjonpoisto"          true
+                                         "suolaus"                         true
+                                         "pistehiekoitus"                  true
+                                         "linjahiekoitus"                  true
+                                         "lumivallien madaltaminen"        true
+                                         "sulamisveden haittojen torjunta" true
+                                         "kelintarkastus"                  true
+                                         "muu"                             true}
 
-                        :kesa           {"tiestotarkastus"            false
-                                         "koneellinen niitto"         false
-                                         "koneellinen vesakonraivaus" false
+                        :kesa           {"tiestotarkastus"            true
+                                         "koneellinen niitto"         true
+                                         "koneellinen vesakonraivaus" true
 
-                                         "liikennemerkkien puhdistus" false
+                                         "liikennemerkkien puhdistus" true
 
-                                         "sorateiden muokkaushoylays" false
-                                         "sorateiden polynsidonta"    false
-                                         "sorateiden tasaus"          false
-                                         "sorastus"                   false
+                                         "sorateiden muokkaushoylays" true
+                                         "sorateiden polynsidonta"    true
+                                         "sorateiden tasaus"          true
+                                         "sorastus"                   true
 
-                                         "harjaus"                    false
-                                         "pinnan tasaus"              false
-                                         "paallysteiden paikkaus"     false
-                                         "paallysteiden juotostyot"   false
+                                         "harjaus"                    true
+                                         "pinnan tasaus"              true
+                                         "paallysteiden paikkaus"     true
+                                         "paallysteiden juotostyot"   true
 
-                                         "siltojen puhdistus"         false
+                                         "siltojen puhdistus"         true
 
-                                         "l- ja p-alueiden puhdistus" false
-                                         "muu"                        false}}))
+                                         "l- ja p-alueiden puhdistus" true
+                                         "muu"                        true}}))
 (tarkkaile! "Suodattimet " suodattimet)
 
 ;; Valittu aikaväli vektorissa [alku loppu]
@@ -138,7 +138,8 @@
          (reaction
            @haetut-asiat
            (when @karttataso-tilannekuva
-             (kartalla-esitettavaan-muotoon @haetut-asiat))))
+             (kartalla-esitettavaan-muotoon
+               (concat (vals (:tyokoneet @haetut-asiat)) (apply concat (vals (dissoc @haetut-asiat :tyokoneet))))))))
 
 (defn kasaa-parametrit []
   (merge
@@ -153,46 +154,67 @@
                         (second @historiakuvan-aikavali))}
     @suodattimet))
 
+(defn yhdista-tyokonedata [uusi]
+  (let [vanhat (:tyokoneet @haetut-asiat)
+        uudet (:tyokoneet uusi)]
+    (log "Yhdistä työkonedata: " (pr-str uusi))
+    (log (pr-str vanhat))
+    (log (pr-str uudet))
+    (assoc uusi :tyokoneet
+                (merge-with
+                  (fn [vanha uusi]
+                    (let [vanha-reitti (:reitti vanha)]
+                      (assoc uusi :reitti (if (= (:sijainti vanha) (:sijainti uusi))
+                                            vanha-reitti
+                                            (conj
+                                              (or vanha-reitti [(:sijainti vanha)])
+                                              (:sijainti uusi))))))
+                  vanhat uudet))))
+
 (defn hae-asiat []
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
   (go
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
-                                  ;; TODO: lisää tänne logiikkaa, jolla tunnistetaan onko uutta työkonedataa tullut
-                                  tulos)                    ; Muista palauttaa sama tulos
+                                  (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
+                                                         :tyokoneet (:tyokoneet tulos)})
+                                  tulos)
           lisaa-karttatyypit (fn [tulos]
-                               (-> tulos
-                                   (assoc :ilmoitukset
-                                          (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
-                                               (:ilmoitukset tulos)))
-                                   (assoc :turvallisuuspoikkeamat
-                                          (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
-                                               (:turvallisuuspoikkeamat tulos)))
-                                   (assoc :tarkastukset
-                                          (map #(assoc % :tyyppi-kartalla :tarkastus)
-                                               (:tarkastukset tulos)))
-                                   (assoc :laatupoikkeamat
-                                          (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
-                                               (:laatupoikkeamat tulos)))
-                                   (assoc :paikkaus
-                                          (map #(assoc % :tyyppi-kartalla :paikkaus)
-                                               (:paikkaus tulos)))
-                                   (assoc :paallystys
-                                          (map #(assoc % :tyyppi-kartalla :paallystys)
-                                               (:paallystys tulos)))))
-          yhdista (fn [kartta]
-                    (when-not (k/virhe? kartta)
-                      (apply (comp vec concat) (remove
-                                                 (fn [a]
-                                                   (or
-                                                     (k/virhe? a)
-                                                     (nil? a)
-                                                     (nil? (first a))))
-                                                 (vals kartta)))))
+                               (as-> tulos t
+                                     (assoc t :ilmoitukset
+                                              (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                                                   (:ilmoitukset t)))
+                                     (assoc t :turvallisuuspoikkeamat
+                                              (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
+                                                   (:turvallisuuspoikkeamat t)))
+                                     (assoc t :tarkastukset
+                                              (map #(assoc % :tyyppi-kartalla :tarkastus)
+                                                   (:tarkastukset t)))
+                                     (assoc t :laatupoikkeamat
+                                              (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
+                                                   (:laatupoikkeamat t)))
+                                     (assoc t :paikkaus
+                                              (map #(assoc % :tyyppi-kartalla :paikkaus)
+                                                   (:paikkaus t)))
+                                     (assoc t :paallystys
+                                              (map #(assoc % :tyyppi-kartalla :paallystys)
+                                                   (:paallystys t)))
+
+                                     ;; Tyokoneet on mäp, id -> työkone
+                                     (assoc t :tyokoneet (into {}
+                                                               (map
+                                                                 (fn [[id tyokone]]
+                                                                   {id (assoc tyokone :tyyppi-kartalla :tyokone)})
+                                                                 (:tyokoneet t))))
+
+                                     (assoc t :toteumat
+                                              (map #(assoc % :tyyppi-kartalla :toteuma)
+                                                   (:toteumat t)))))
+
           tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
+                    (yhdista-tyokonedata)
                     (julkaise-tyokonedata!)
-                    (lisaa-karttatyypit)
-                    (yhdista))]
+                    (lisaa-karttatyypit))]
       (reset! haetut-asiat tulos))))
 
 #_(defn hae-asiat []
