@@ -67,7 +67,7 @@
             {:display   "inline-block"
              :on-change (fn [uusi-tila]
                           ; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
-                          (do
+                          (when (not= :osittain-valittu uusi-tila)
                             (reset! suodattimet-atom
                                     (reduce (fn [edellinen-map tehtava-avain]
                                               (assoc-in edellinen-map
