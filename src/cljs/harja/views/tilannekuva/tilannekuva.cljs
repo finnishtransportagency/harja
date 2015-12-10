@@ -62,16 +62,14 @@
       [checkbox/checkbox checkbox-tila-atom nimi {:display "block"}])))
 
 (defn checkbox-ryhma [otsikko elementit]
-  (let [auki? (atom false)]
+  (let [auki? (atom false)
+        ryhmanjohtaja-tila-atom (atom :ei-valittu)]
     (fn []
       [:div
        [:div.tk-checkbox-ryhma-nappi {:on-click (fn [] (swap! auki? not))}
         [:span.tk-checkbox-ryhma-tila (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
         [:div.tk-checkbox-ryhma-checkbox
-         [:label
-          [:input {:type    "checkbox"
-                   :checked true}]
-          otsikko]]]
+         [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko {:display "inline-block"}]]]
 
        (when @auki?
          [:div.tk-checkbox-ryhma-sisalto

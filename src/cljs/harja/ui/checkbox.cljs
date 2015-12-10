@@ -12,7 +12,7 @@
   komponentin ulkopuolella, voidaan antaa nil.
   Lopuksi ottaa mapin muita optioita, joista tuettuna:
   - display, määrittelee komponentin CSS-display arvon (oletuksena inline-block)"
-  [tila-atom nimi opts]
+  [tila-atom nimi]
   (let [checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
                                :ei-valittu       "harja-checkbox-ei-valittu"
                                :osittain-valittu "harja-checkbox-osittain-valitu"}
@@ -22,7 +22,7 @@
                         :ei-valittu (reset! tila-atom :valittu)
                         :osittain-valittu (reset! tila-atom :ei-valittu)))]
     (fn []
-      [:div.harja-checkbox {:style {:display (or (:display opts) "inline-block")}}
+      [:div.harja-checkbox
        [:div.harja-checkbox-laatikko {:class    (checkbox-tila->luokka @tila-atom)
                                       :on-click vaihda-tila}
         [:div.harja-checkbox-laatikko-sisalto
