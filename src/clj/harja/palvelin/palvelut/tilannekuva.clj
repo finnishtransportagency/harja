@@ -15,8 +15,13 @@
   (log/error (str "Yritettiin hakea tilannekuvaan " asiat ", mutta virhe tapahtui: " (.getMessage e))))
 
 (defn tulosta-tulos! [asiaa tulos]
-  (log/debug (str "  - " (count tulos) " " asiaa))
+  (if (vector? tulos)
+    (log/debug (str "  - " (count tulos) " " asiaa))
+    (log/debug (str " - " (count (keys tulos)) " " asiaa)))
   tulos)
+
+(defn haettavat [s]
+  (into #{} (keep (fn [[avain arvo]] (when arvo avain)) s)))
 
 (defn kayttajan-urakoiden-idt
   [db user urakka-id hallintayksikko alku loppu]
@@ -39,7 +44,7 @@
 
 (defn- hae-ilmoitukset
   [db user {{:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
-  (let [haettavat (keep (fn [[avain arvo]] (when arvo avain)) tyypit)]
+  (let [haettavat (haettavat tyypit)]
     (when-not (empty? haettavat)
       (try
         (let [suljetut? (if (:suljetut tilat) true false)
@@ -73,11 +78,11 @@
   (when (:paallystys yllapito)
     (try
       (into []
-           (comp
-             (geo/muunna-pg-tulokset :sijainti)
-             (map konv/alaviiva->rakenne)
-             (map #(konv/string->avain % [:tila])))
-           (q/hae-paallystykset db))
+            (comp
+              (geo/muunna-pg-tulokset :sijainti)
+              (map konv/alaviiva->rakenne)
+              (map #(konv/string->avain % [:tila])))
+            (q/hae-paallystykset db))
       (catch Exception e
         (tulosta-virhe! "paallystyksia" e)
         nil))))
@@ -87,14 +92,14 @@
   (when (:paikkaus yllapito)
     (try
       (into []
-           (comp
-             (geo/muunna-pg-tulokset :sijainti)
-             (map konv/alaviiva->rakenne)
-             (map #(konv/string->avain % [:tila])))
-           (q/hae-paikkaukset db))
-         (catch Exception e
-           (tulosta-virhe! "paikkauksia" e)
-           nil))))
+            (comp
+              (geo/muunna-pg-tulokset :sijainti)
+              (map konv/alaviiva->rakenne)
+              (map #(konv/string->avain % [:tila])))
+            (q/hae-paikkaukset db))
+      (catch Exception e
+        (tulosta-virhe! "paikkauksia" e)
+        nil))))
 
 (defn- hae-laatupoikkeamat
   [db user {:keys [alku loppu laadunseuranta]} urakat]
@@ -159,10 +164,47 @@
         (tulosta-virhe! "turvallisuuspoikkeamia" e)
         nil))))
 
-(defn- hae-toimenpiteiden-reitit
+(defn- hae-tyokoneet
+  [db user {:keys [alue alku loppu talvi kesa urakka-id]} urakat]
+  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
+        tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
+    (when-not (empty? haettavat-toimenpiteet)
+      (try
+        (into {}
+              (comp
+                (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
+                (map #(update-in % [:edellinensijainti] (fn [pos] (when pos
+                                                                    (geo/piste-koordinaatit pos)))))
+                (map #(assoc % :tyyppi :tyokone))
+                (map #(konv/array->set % :tehtavat))
+                (map (juxt :tyokoneid identity)))
+              (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                               urakka-id tpi-str))
+        (catch Exception e
+          (tulosta-virhe! "tyokoneet" e)
+          nil)))))
+
+(defn- hae-toteumien-reitit
   [db user {:keys [alue alku loppu talvi kesa]} urakat]
-  (let [haettavat-toimenpiteet (into {} (filter (fn [[avain arvo]] (when arvo avain)) (merge talvi kesa)))]
-    (when-not (empty? haettavat-toimenpiteet))))
+  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
+    (when-not (empty? haettavat-toimenpiteet)
+      (try
+        (let [toimenpidekoodit (q/hae-toimenpidekoodit db haettavat-toimenpiteet)]
+          (konv/sarakkeet-vektoriin
+            (into []
+                  (comp
+                    (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                    (map konv/alaviiva->rakenne)
+                    (map #(assoc % :tyyppi :toteuma)))
+                  (q/hae-toteumat db alku loppu toimenpidekoodit
+                                  (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                  urakat))
+            {:tehtava     :tehtavat
+             :materiaali  :materiaalit
+             :reittipiste :reittipisteet}))
+        (catch Exception e
+          (tulosta-virhe! "toteumaa" e)
+          nil)))))
 
 (defn hae-tilannekuvaan
   [db user tiedot]
@@ -171,13 +213,15 @@
 
     ;; Huomaa, että haku voidaan tehdä, vaikka urakoita ei löytyisi: silloin haetaan ainoastaan julkista tietoa!
     (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
-    {:toimenpiteet           (tulosta-tulos! "toimenpidettä"
-                                             (hae-toimenpiteiden-reitit db user tiedot urakat))
+    {:toteumat               nil #_(tulosta-tulos! "toteumaa"
+                                                   (hae-toteumien-reitit db user tiedot urakat))
+     :tyokoneet              (tulosta-tulos! "tyokonetta"
+                                             (hae-tyokoneet db user tiedot urakat))
      :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
                                              (hae-turvallisuuspoikkeamat db user tiedot urakat))
      :tarkastukset           (tulosta-tulos! "tarkastusta"
                                              (hae-tarkastukset db user tiedot urakat))
-     :laatupoikkeamat         (tulosta-tulos! "laatupoikkeamaa"
+     :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
                                              (hae-laatupoikkeamat db user tiedot urakat))
      :paikkaus               (tulosta-tulos! "paikkausta"
                                              (hae-paikkaustyot db user tiedot urakat))

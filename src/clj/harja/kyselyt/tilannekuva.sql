@@ -254,25 +254,46 @@ FROM toteuma_tehtava tt
   INNER JOIN reittipiste rp ON rp.toteuma = t.id
                                -- Haettavan reittipisteen pitää ensinnäkin mahtua kartalla näkyvälle alueelle
                                AND (st_contains((ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)), rp.sijainti :: GEOMETRY))
+                               AND (rp.aika BETWEEN :alku AND :loppu)
   LEFT JOIN reitti_materiaali rm ON rm.reittipiste = rp.id
   LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                                      AND tm.poistettu IS NOT TRUE
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-WHERE t.urakka = :urakka OR :rajaa_urakalla IS FALSE
-                            -- Sen jälkeen tarkastetaan hallintayksiköllä/urakalla suodattaminen
-                            AND (
-                              -- Joko ei suodateta HY:llä/urakalla
-                              (:hallintayksikko_annettu IS FALSE AND :rajaa_urakalla IS FALSE) OR
-                              -- tai suodatetaan vain HY:llä..
-                              (:rajaa_urakalla IS FALSE AND
-                               st_contains((SELECT alue
-                                            FROM organisaatio
-                                            WHERE id = :hallintayksikko),
-                                           rp.sijainti :: GEOMETRY)) OR
-                              -- Tai suodatetaan urakalla
-                              (st_contains((SELECT alue
-                                            FROM urakoiden_alueet
-                                            WHERE id = :urakka),
-                                           rp.sijainti :: GEOMETRY)))
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.alkanut BETWEEN :alku AND :loppu) AND
+      (t.paattynyt BETWEEN :alku AND :loppu)
 ORDER BY rp.aika ASC;
+
+-- name: hae-tyokoneet
+SELECT
+  t.tyokoneid,
+  t.jarjestelma,
+  t.organisaatio,
+  (SELECT nimi
+   FROM organisaatio
+   WHERE id = t.organisaatio) AS organisaationimi,
+  t.viestitunniste,
+  t.lahetysaika,
+  t.vastaanotettu,
+  t.tyokonetyyppi,
+  t.sijainti,
+  t.suunta,
+  t.edellinensijainti,
+  t.urakkaid,
+  (SELECT nimi
+   FROM urakka
+   WHERE id = t.urakkaid)     AS urakkanimi,
+  t.tehtavat
+FROM tyokonehavainto t
+WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
+                  CAST(sijainti AS GEOMETRY)) AND
+      (:urakka :: INTEGER IS NULL OR
+       t.urakkaid = :urakka OR t.urakkaid IS NULL) AND
+      t.tehtavat && :toimenpiteet :: suoritettavatehtava[];
+
+-- name: hae-toimenpidekoodit
+SELECT
+  id
+FROM toimenpidekoodi
+WHERE suoritettavatehtava IN (:toimenpiteet);
