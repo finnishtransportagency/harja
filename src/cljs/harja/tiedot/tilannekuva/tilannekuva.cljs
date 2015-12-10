@@ -112,6 +112,7 @@
 
 ;; Valittu aikaväli vektorissa [alku loppu]
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
+(defonce nyktilanteen-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
@@ -121,15 +122,15 @@
   (tunteja-vuorokausissa (* 7 viikot)))
 
 ;; Mäppi sisältää numeroarvot tekstuaaliselle esitykselle.
-(defonce aikasuodatin-tunteina [["0-2h" 2]
-                                ["0-4h" 4]
-                                ["0-12h" 12]
-                                ["1 vrk" (tunteja-vuorokausissa 1)]
-                                ["2 vrk" (tunteja-vuorokausissa 2)]
-                                ["3 vrk" (tunteja-vuorokausissa 3)]
-                                ["1 vk" (tunteja-viikoissa 1)]
-                                ["2 vk" (tunteja-viikoissa 2)]
-                                ["3 vk" (tunteja-viikoissa 3)]])
+(defonce nykytilanteen-aikasuodatin-tunteina [["0-2h" 2]
+                                              ["0-4h" 4]
+                                              ["0-12h" 12]
+                                              ["1 vrk" (tunteja-vuorokausissa 1)]
+                                              ["2 vrk" (tunteja-vuorokausissa 2)]
+                                              ["3 vrk" (tunteja-vuorokausissa 3)]
+                                              ["1 vk" (tunteja-viikoissa 1)]
+                                              ["2 vk" (tunteja-viikoissa 2)]
+                                              ["3 vk" (tunteja-viikoissa 3)]])
 
 (defonce valitun-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
 

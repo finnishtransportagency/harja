@@ -27,33 +27,21 @@
                                                           (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
 ;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
-(defn nykytilanteen-aikasuodattimen-elementti [[teksti]]
+(defn nykytilanteen-aikasuodattimen-elementti [[teksti _] valittu]
   ^{:key (str "nykytilanteen_aikasuodatin_" teksti)}
   [:div.tk-nykytilanne-aikavalitsin
    [:div.tk-radio
      [:input {:type    "radio"
               :name "aikavali"
-              :value teksti}]
+              :value teksti
+              :on-change (reset! valittu )}]
      teksti]])
 
 (defn nykytilanteen-aikavalinta []
-  (let [aikavalinnat-hiccup (map
-                              (fn [aika]
-                                [nykytilanteen-aikasuodattimen-elementti aika])
-                              tiedot/aikasuodatin-tunteina)]
-    [:div#tk-nykytilanteen-aikavalinta
-     [:div.tk-nykytilanteen-aikavalinta-ryhma-tunnit
-      (nth aikavalinnat-hiccup 0)
-      (nth aikavalinnat-hiccup 1)
-      (nth aikavalinnat-hiccup 2)]
-     [:div.tk-nykytilanteen-aikavalinta-ryhma-vuorokaudet
-      (nth aikavalinnat-hiccup 3)
-      (nth aikavalinnat-hiccup 4)
-      (nth aikavalinnat-hiccup 5)]
-     [:div.tk-nykytilanteen-aikavalinta-ryhma-viikot
-      (nth aikavalinnat-hiccup 6)
-      (nth aikavalinnat-hiccup 7)
-      (nth aikavalinnat-hiccup 8)]]))
+    [:div#tk-nykytilanteen-aikavalit
+      [kentat/tee-kentta {:tyyppi   :radio
+                          :valinnat (mapv first tiedot/nykytilanteen-aikasuodatin-tunteina)}
+       tiedot/nyktilanteen-aikavali]])
 
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom nykyinen-suodattimen-tila reset-polku]
   [checkbox/checkbox
@@ -99,7 +87,7 @@
 
 (defn nykytilanteen-suodattimet []
   [:div#tk-nykytila-paavalikko
-   [:p "Näytä seuraavat aikavälillä:"]
+   [:span "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
    [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet :talvi]
    [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet :kesa]
