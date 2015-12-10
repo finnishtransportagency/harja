@@ -19,7 +19,7 @@
 (def urakanvalvoja                     "urakanvalvoja")
 ;;(def vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
 (def hallintayksikon-vastuuhenkilo     "hallintayksikon vastuuhenkilo")
-(def liikennepaivystaja                "liikennepäivystäjä")
+(def liikennepaivystaja                "liikennepaivystaja")
 (def tilaajan-asiantuntija             "tilaajan asiantuntija")
 (def tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
 (def urakoitsijan-paakayttaja          "urakoitsijan paakayttaja")

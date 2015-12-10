@@ -71,7 +71,8 @@
 
 (defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja alkaen paattyen]
   (log/debug "Haetaan päivystäjätiedot urakan id:llä: " urakka-id " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
-  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+  (validointi/tarkista-urakka db urakka-id)
+  (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
   (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
                                                                 urakka-id
                                                                 (not (nil? alkaen))
