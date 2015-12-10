@@ -26,17 +26,6 @@
                                                           (reset! tiedot/valittu-tila :nykytilanne)
                                                           (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
-;; TODO (reset! tiedot/valitun-aikasuodattimen-arvo tunnit)
-(defn nykytilanteen-aikasuodattimen-elementti [[teksti _] valittu]
-  ^{:key (str "nykytilanteen_aikasuodatin_" teksti)}
-  [:div.tk-nykytilanne-aikavalitsin
-   [:div.tk-radio
-     [:input {:type    "radio"
-              :name "aikavali"
-              :value teksti
-              :on-change (reset! valittu )}]
-     teksti]])
-
 (defn nykytilanteen-aikavalinta []
     [:div#tk-nykytilanteen-aikavalit
       [kentat/tee-kentta {:tyyppi   :radio
