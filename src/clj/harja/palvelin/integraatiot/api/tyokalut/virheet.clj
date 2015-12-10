@@ -39,3 +39,6 @@
 
 (defn heita-ulkoinen-kasittelyvirhe-poikkeus [virheet]
   (heita-poikkeus +ulkoinen-kasittelyvirhe-koodi+ virheet))
+
+(defn heita-puutteelliset-parametrit-poikkeus [virheet]
+  (heita-poikkeus +puutteelliset-parametrit+ virheet))

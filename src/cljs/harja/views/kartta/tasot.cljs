@@ -7,7 +7,7 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
             [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
@@ -38,7 +38,7 @@
                                          ;; TR-valitsin
                                          @tierekisteri/tr-alkupiste-kartalla
                                          ;; Toteumat
-                                         @toteumat/yksikkohintainen-toteuma-kartalla
+                                         @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
                                          @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
                                          @varusteet/varusteet-kartalla
                                          @muut-tyot/muut-tyot-kartalla
@@ -60,7 +60,7 @@
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
     :historiakuva historiakuva/karttataso-historiakuva
-    :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
+    :yksikkohintainen-toteuma yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
     :kokonaishintainen-toteuma kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
     :varusteet varusteet/karttataso-varustetoteuma
     :nykytilanne nykytilanne/karttataso-nykytilanne

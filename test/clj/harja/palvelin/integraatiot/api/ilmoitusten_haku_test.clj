@@ -67,12 +67,20 @@
 
     (poista-ilmoitus)))
 
-(deftest hae-valissa-saapuneet-ilmoitukset
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?viimeisinId=1"] kayttaja portti)
-        ilmoitusten-maara-suoraan-kannasta (ffirst (q
-                                                     (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
+(deftest hae-muuttuneet-ilmoitukset
+  (let [nyt (.format (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (java.util.Date.))
+        _ (do (Thread/sleep 10) ; varmista, että on kulunut joitain millisekunteja
+              (u (str "UPDATE ilmoitus SET muokattu = NOW() WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)")))
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?muuttunutJalkeen="
+                                         (java.net.URLEncoder/encode nyt)] kayttaja portti)
+        kaikkien-ilmoitusten-maara-suoraan-kannasta (ffirst (q
+                                                             (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
+    (println "%%%% VASTAUS: " vastaus)
     (is (= 200 (:status vastaus)))
-    (let [vastausdata (cheshire/decode (:body vastaus))]
-      (is (= ilmoitusten-maara-suoraan-kannasta (count (get vastausdata "ilmoitukset")))))
+    (let [vastausdata (cheshire/decode (:body vastaus))
+          ilmoitukset (get vastausdata "ilmoitukset")
+          ilmoituksia (count ilmoitukset)]
+      (is (> kaikkien-ilmoitusten-maara-suoraan-kannasta ilmoituksia))
+      (is (= 1 ilmoituksia)))
 
     (poista-ilmoitus)))

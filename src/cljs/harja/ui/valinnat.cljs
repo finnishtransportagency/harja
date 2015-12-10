@@ -114,6 +114,11 @@
 
 (defn urakan-toimenpide
   [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
+  (when (not (some
+               #(= % @valittu-toimenpideinstanssi-atom)
+               @urakan-toimenpideinstanssit-atom))
+    ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
+    (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Toimenpide"]
    [livi-pudotusvalikko {:valinta    @valittu-toimenpideinstanssi-atom
@@ -121,28 +126,29 @@
                          :valitse-fn valitse-fn}
     @urakan-toimenpideinstanssit-atom]])
 
-(defn urakan-kokonaishintainen-toimenpide-ja-tehtava
-  [urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-atom
-   valittu-kokonaishintainen-toimenpideinstanssi-atom
-   valitse-kokonaishintainen-toimenpide-fn
+(defn urakan-kokonaishintainen-tehtava
+  [urakan-kokonaishintaiset-tehtavat-atom
    valittu-kokonaishintainen-tehtava-atom
    valitse-kokonaishintainen-tehtava-fn]
   [:span
    [:div.label-ja-alasveto
-    [:span.alasvedon-otsikko "Toimenpide"]
-    [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-toimenpideinstanssi-atom
-                          :format-fn  #(if % (str (second (first %))) "Kaikki toimenpiteet")
-                          :valitse-fn #(do
-                                        (valitse-kokonaishintainen-tehtava-fn nil)
-                                        (valitse-kokonaishintainen-toimenpide-fn %))}
-     (concat [nil] @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-atom)]]
-
-   [:div.label-ja-alasveto
     [:span.alasvedon-otsikko "Tehtävä"]
     [livi-pudotusvalikko {:valinta    @valittu-kokonaishintainen-tehtava-atom
-                          :format-fn  #(if % (str (:t4_nimi %)) "Kaikki tehtävät")
+                          :format-fn  #(if % (str (:t4_nimi %)) "Ei tehtävää")
                           :valitse-fn valitse-kokonaishintainen-tehtava-fn}
-     (concat [nil] (second @valittu-kokonaishintainen-toimenpideinstanssi-atom))]]])
+     @urakan-kokonaishintaiset-tehtavat-atom]]])
+
+(defn urakan-yksikkohintainen-tehtava
+  [urakan-yksikkohintainen-tehtavat-atom
+   valittu-yksikkohintainen-tehtava-atom
+   valitse-yksikkohintainen-tehtava-fn]
+  [:span
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Tehtävä"]
+    [livi-pudotusvalikko {:valinta    @valittu-yksikkohintainen-tehtava-atom
+                          :format-fn  #(if % (str (:nimi %)) "Ei tehtävää")
+                          :valitse-fn valitse-yksikkohintainen-tehtava-fn}
+     @urakan-yksikkohintainen-tehtavat-atom]]])
 
 ;; Parametreja näissä on melkoisen hurja määrä, mutta ei voi mitään
 (defn urakan-sopimus-ja-hoitokausi

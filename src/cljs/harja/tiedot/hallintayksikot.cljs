@@ -9,34 +9,9 @@
 
 (def hallintayksikot (atom nil))
  
- 
- (defn hae-hallintayksikko 
-   "Palauttaa kanavan, josta hallintayksikön tiedot voidaan lukea.
-   Jos hallintayksikköä ei ole, tehdään palvelinkutsu."
-   [id]
-   
-   (let [ch (chan)]
-     (go (if-let [hy @hallintayksikot]
-           (do 
-             (>! ch (first (filter #(= id (:id %)) hy)))
-             (close! ch))
-           ;; else: luetaan hy kun on saatu vastaus palvelimelta
-           (let [hy (<! (k/post! :hallintayksikot :tie ))]
-             (>! ch (first (filter #(= id (:id %)) hy)))
-             (close! ch)
-             (comment (reset! hallintayksikot
-                                  (mapv (fn [hy]
-                                           (assoc hy :type :hy)) hy))))))
-     ch))
- 
-;; Kun käyttäjätiedot saapuvat, hae relevantit hallintayksiköt
-(t/kuuntele! :kayttajatiedot
-             (fn [kayttaja]
-               (when-not @hallintayksikot
-                 (go (reset! hallintayksikot
-                             (<! (k/post! :hallintayksikot
-                                         :tie ;; FIXME: tämä otettava käyttäjän tiedoista
-                                         (map #(assoc % :type :hy)))))))))
-
-                 
- 
+(go (reset! hallintayksikot
+            (into []
+                  (map #(assoc % :type :hy))
+                  (<! (k/post! :hallintayksikot
+                               ;; FIXME: tämä päätellään serverin puolella käyttäjästä, kun on sen aika
+                               :tie)))))

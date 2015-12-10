@@ -376,15 +376,15 @@ documentation:
     /ilmoitukset:
         get:
          is: [secured]
-         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös viimeisimmän onnistuneesti haetun ilmoituksen, jolloin palautetaan kaikki sen jälkeen tulleet ilmoitukset. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
+         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset palautetaan. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
          queryParameters:
           urakoitsijaId:
-            description: Urakoitsijan id, jolle haetaan ilmoituset
+            description: Urakoitsijan id, jolle haetaan ilmoitusket
             type: integer
             required: true
             example: 1
-          viimeisinId:
-            description: Viimeisen onnistuneesti haetun ilmoituksen id
+          muuttunutJalkeen:
+            description: Aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset haetaan
             type: integer
             required: false
             example: 12
