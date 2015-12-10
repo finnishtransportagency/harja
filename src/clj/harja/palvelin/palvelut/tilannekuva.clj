@@ -189,19 +189,20 @@
   (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
     (when-not (empty? haettavat-toimenpiteet)
       (try
-        (let [toimenpidekoodit (q/hae-toimenpidekoodit db haettavat-toimenpiteet)]
-          (konv/sarakkeet-vektoriin
-            (into []
-                  (comp
-                    (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                    (map konv/alaviiva->rakenne)
-                    (map #(assoc % :tyyppi :toteuma)))
-                  (q/hae-toteumat db alku loppu toimenpidekoodit
-                                  (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
-                                  urakat))
-            {:tehtava     :tehtavat
-             :materiaali  :materiaalit
-             :reittipiste :reittipisteet}))
+        (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit db haettavat-toimenpiteet))]
+          (when-not (empty? toimenpidekoodit)
+            (konv/sarakkeet-vektoriin
+              (into []
+                    (comp
+                      (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                      (map konv/alaviiva->rakenne)
+                      (map #(assoc % :tyyppi :toteuma)))
+                    (q/hae-toteumat db alku loppu toimenpidekoodit
+                                    (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
+                                    urakat))
+              {:tehtava     :tehtavat
+               :materiaali  :materiaalit
+               :reittipiste :reittipisteet})))
         (catch Exception e
           (tulosta-virhe! "toteumaa" e)
           nil)))))

@@ -246,14 +246,14 @@ SELECT
   mk.nimi                         AS reittipiste_materiaali_nimi
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
-                          AND t.alkanut >= :alkupvm
-                          AND t.paattynyt <= :loppupvm
+                          AND t.alkanut >= :alku
+                          AND t.paattynyt <= :loppu
                           AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   INNER JOIN reittipiste rp ON rp.toteuma = t.id
                                -- Haettavan reittipisteen pitää ensinnäkin mahtua kartalla näkyvälle alueelle
-                               AND (st_contains((ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)), rp.sijainti :: GEOMETRY))
+                               AND st_contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), rp.sijainti :: GEOMETRY)
                                AND (rp.aika BETWEEN :alku AND :loppu)
   LEFT JOIN reitti_materiaali rm ON rm.reittipiste = rp.id
   LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
@@ -296,4 +296,4 @@ WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
 SELECT
   id
 FROM toimenpidekoodi
-WHERE suoritettavatehtava IN (:toimenpiteet);
+WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
