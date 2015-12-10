@@ -48,27 +48,27 @@
     (when-not (empty? haettavat)
       (try
         (let [suljetut? (if (:suljetut tilat) true false)
-              avoimet? (if (:avoimet tilat) true false)
-              tulos (mapv
-                      #(assoc % :uusinkuittaus
-                                (when-not (empty? (:kuittaukset %))
-                                  (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                      (konv/sarakkeet-vektoriin
-                        (into []
-                              (comp
-                                (geo/muunna-pg-tulokset :sijainti)
-                                (map konv/alaviiva->rakenne)
-                                (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-                                (map #(konv/array->vec % :selitteet))
-                                (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                                (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                                (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                                (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                              (q/hae-ilmoitukset db urakat avoimet? suljetut? (mapv name haettavat)))
-                        {:kuittaus :kuittaukset}))]
-          ;;(log/debug "Löydettiin seuraavat ilmoitukset (+ kuittausten lkm):")
-          ;;(doall (map #(log/debug (:id %) " (" (count (:kuittaukset %)) ")") tulos))
-          tulos)
+              avoimet? (if (:avoimet tilat) true false)]
+          (mapv
+            #(assoc % :uusinkuittaus
+                      (when-not (empty? (:kuittaukset %))
+                        (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+            (konv/sarakkeet-vektoriin
+              (into []
+                    (comp
+                      (geo/muunna-pg-tulokset :sijainti)
+                      (map konv/alaviiva->rakenne)
+                      (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                      (map #(konv/array->vec % :selitteet))
+                      (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                      (map #(assoc-in
+                             %
+                             [:kuittaus :kuittaustyyppi]
+                             (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                      (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                      (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                    (q/hae-ilmoitukset db urakat avoimet? suljetut? (mapv name haettavat)))
+              {:kuittaus :kuittaukset})))
         (catch Exception e
           (tulosta-virhe! "ilmoituksia" e)
           nil)))))
@@ -212,10 +212,9 @@
                                         (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
 
     ;; Huomaa, että haku voidaan tehdä, vaikka urakoita ei löytyisi: silloin haetaan ainoastaan julkista tietoa!
-    (log/debug "Haetaan tilannekuvaan parametreilla: " (pr-str tiedot))
     (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
-    {:toteumat               nil #_(tulosta-tulos! "toteumaa"
-                                                   (hae-toteumien-reitit db user tiedot urakat))
+    {:toteumat               (tulosta-tulos! "toteumaa"
+                                             (hae-toteumien-reitit db user tiedot urakat))
      :tyokoneet              (tulosta-tulos! "tyokonetta"
                                              (hae-tyokoneet db user tiedot urakat))
      :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
