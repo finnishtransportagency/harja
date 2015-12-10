@@ -1,16 +1,13 @@
 (ns harja.tiedot.tilannekuva.tilannekuva
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
-            [clojure.string :as str]
-            [clojure.set :refer [rename-keys]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.asiakas.kommunikaatio :as k]
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
-            [harja.loki :refer [log]]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf kartalla-esitettavaan-muotoon]]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.tiedot.navigaatio :as nav])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -159,9 +156,6 @@
 (defn yhdista-tyokonedata [uusi]
   (let [vanhat (:tyokoneet @haetut-asiat)
         uudet (:tyokoneet uusi)]
-    (log "Yhdistä työkonedata: " (pr-str uusi))
-    (log (pr-str vanhat))
-    (log (pr-str uudet))
     (assoc uusi :tyokoneet
                 (merge-with
                   (fn [vanha uusi]
