@@ -25,5 +25,7 @@
       [:div.harja-checkbox {:style {:display (or (:display opts) "inline-block")}}
        [:div.harja-checkbox-laatikko {:class    (checkbox-tila->luokka @tila-atom)
                                       :on-click vaihda-tila}
-        [:div.harja-checkbox-laatikko-sisalto]]
+        [:div.harja-checkbox-laatikko-sisalto
+         (when (= :valittu @tila-atom)
+                  [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]
        [:div.harja-checkbox-teksti nimi]])))
