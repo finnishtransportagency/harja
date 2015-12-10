@@ -32,7 +32,7 @@
                           :valinta-nayta (fn [[nimi _]] nimi)
                           :valinta-arvo (fn [[_ arvo]] arvo)
                           :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
-       tiedot/nykytilanteen-aikavali]])
+       tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
 (defn checkbox-ryhma-elementti [nimi suodattimet-atom suodatinpolku]
   [checkbox/checkbox

@@ -170,6 +170,7 @@
                                         (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
 
     ;; Huomaa, että haku voidaan tehdä, vaikka urakoita ei löytyisi: silloin haetaan ainoastaan julkista tietoa!
+    (log/debug "Haetaan tilannekuvaan parametreilla: " (pr-str tiedot))
     (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
     {:toimenpiteet           (tulosta-tulos! "toimenpidettä"
                                              (hae-toimenpiteiden-reitit db user tiedot urakat))

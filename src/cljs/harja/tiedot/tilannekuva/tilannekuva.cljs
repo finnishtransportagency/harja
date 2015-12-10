@@ -110,9 +110,6 @@
                                          "muu"                        false}}))
 (tarkkaile! "Suodattimet " suodattimet)
 
-;; Valittu aikaväli vektorissa [alku loppu]
-(defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
-(defonce nykytilanteen-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
@@ -132,7 +129,9 @@
                                               ["2 vk" (tunteja-viikoissa 2)]
                                               ["3 vk" (tunteja-viikoissa 3)]])
 
-(defonce valitun-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
+(defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt)))) ;; Valittu aikaväli vektorissa [alku loppu]
+(defonce nykytilanteen-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
+(tarkkaile! "Aikasuodatin: " nykytilanteen-aikasuodattimen-arvo)
 
 (defonce haetut-asiat (atom nil))
 (defonce tilannekuvan-asiat-kartalla
@@ -147,7 +146,7 @@
      :urakka-id       (:id @nav/valittu-urakka)
      :alue            @nav/kartalla-nakyva-alue
      :alku            (if (= @valittu-tila :nykytilanne)
-                        (t/minus (pvm/nyt) (t/hours @valitun-aikasuodattimen-arvo))
+                        (t/minus (pvm/nyt) (t/hours @nykytilanteen-aikasuodattimen-arvo))
                         (first @historiakuvan-aikavali))
      :loppu           (if (= @valittu-tila :nykytilanne)
                         (pvm/nyt)
