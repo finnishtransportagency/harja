@@ -13,6 +13,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn hae-toteumatehtavien-paivakohtaiset-summat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
+  (log "Haetaan " urakka-id sopimus-id toimenpide tehtava)
   (k/post! :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
@@ -31,7 +32,7 @@
             :tehtava    tehtava}))
 
 (def nakymassa? (atom false))
-(def valittu-toteuma (atom nil))
+(def valittu-paivakohtainen-tehtava (atom nil))
 
 (def haetut-toteumat
          (reaction<!
@@ -39,7 +40,7 @@
             sopimus-id (first @urakka/valittu-sopimusnumero)
             hoitokausi @urakka/valittu-hoitokausi
             aikavali @urakka/valittu-aikavali
-            toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
+            toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
             tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
             nakymassa? @nakymassa?]
            (when nakymassa?
@@ -51,7 +52,7 @@
      sopimus-id (first @urakka/valittu-sopimusnumero)
      hoitokausi @urakka/valittu-hoitokausi
      aikavali @urakka/valittu-aikavali
-     toimenpide (first (first @urakka/valittu-kokonaishintainen-toimenpide))
+     toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
      tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
      nakymassa? @nakymassa?]
     (when nakymassa?
@@ -65,4 +66,13 @@
              (kartalla-esitettavaan-muotoon
                (map
                  #(assoc % :tyyppi-kartalla :toteuma)
-                 @haetut-reitit)))))
+                 (if @valittu-paivakohtainen-tehtava
+                   (filter
+                     (fn [reitti]
+                       ; Reittiin liittyvä toteuma on tapahtunut samana päivänä kuin gridistä valitun summarivin
+                       ; pvm. Lisäksi reitillä on tehty kyseistä tehtävää.
+                       (and (= (pvm/paivan-alussa (:pvm reitti))
+                               (pvm/paivan-alussa (:pvm @valittu-paivakohtainen-tehtava)))
+                            ((into #{} (mapv :nimi (:tehtavat reitti))) (:nimi @valittu-paivakohtainen-tehtava))))
+                     @haetut-reitit)
+                   @haetut-reitit))))))

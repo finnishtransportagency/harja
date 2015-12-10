@@ -40,7 +40,7 @@
      u/valittu-hoitokauden-kuukausi
      u/valitse-hoitokauden-kuukausi!]))
 
-(defn aikavali [ur]
+(defn aikavali []
   (valinnat/aikavali u/valittu-aikavali))
 
 (defn urakan-toimenpide []
@@ -60,13 +60,21 @@
             identity)
     u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
-(defn urakan-kokonaishintainen-toimenpide-ja-tehtava []
-  (valinnat/urakan-kokonaishintainen-toimenpide-ja-tehtava
-    u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat
-    u/valittu-kokonaishintainen-toimenpide
-    u/valitse-kokonaishintainen-toimenpide
+(defn urakan-kokonaishintainen-tehtava+kaikki []
+  (valinnat/urakan-kokonaishintainen-tehtava
+    (r/wrap (vec (concat [{:t4_nimi "Kaikki"}]
+                         @u/urakan-tpin-kokonaishintaiset-tehtavat))
+            identity)
     u/valittu-kokonaishintainen-tehtava
     u/valitse-kokonaishintainen-tehtava!))
+
+(defn urakan-yksikkohintainen-tehtava+kaikki []
+  (valinnat/urakan-yksikkohintainen-tehtava
+    (r/wrap (vec (concat [{:nimi "Kaikki"}]
+                         @u/urakan-tpin-yksikkohintaiset-tehtavat))
+            identity)
+    u/valittu-yksikkohintainen-tehtava
+    u/valitse-yksikkohintainen-tehtava!))
 
 (defn urakan-sopimus-ja-hoitokausi [ur]
   (valinnat/urakan-sopimus-ja-hoitokausi

@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [cljs-time.core :as t]
-            [harja.tiedot.urakka.laadunseuranta.havainnot :as havainnot]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]))
 
 (defn- oletusalue [asia valittu?]
@@ -21,43 +21,71 @@
 (defn sisaltaako-kuittauksen? [ilmoitus kuittaustyyppi]
   (some #(= (:kuittaustyyppi %) kuittaustyyppi) (get-in ilmoitus [:kuittaukset])))
 
+(defn ilmoituksen-tooltip [ilmoitus]
+  (if (empty? (:kuittaukset ilmoitus))
+    "Ei kuittauksia"
+
+    (case (last (map :kuittaustyyppi (:kuittaukset ilmoitus)))
+      :vastaanotto "Vastaanottokuittaus annettu"
+      :vastaus "Vastauskuittaus annettu"
+      :aloitus "Aloituskuittaus annettu"
+      :lopetus "Lopetuskuittaus annettu"
+      :muutos "Muutoskuittaus annettu"
+      nil)))
+
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu?]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Tiedotus")
-     :selite {:teksti "Tiedotus"
-              :img    "kartta-tiedotus-violetti.svg"
-              }
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? ilmoitus) 1.5 1)
-            :img         "kartta-tiedotus-violetti.svg"
-            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
+  (let [tooltip (or (ilmoituksen-tooltip ilmoitus) "Tiedotus")]
+    [(assoc ilmoitus
+       :type :ilmoitus
+       :nimi tooltip
+       :selite {:teksti "Tiedotus"
+                :img    "kartta-tiedotus-violetti.svg"}
+       :alue {:type        :tack-icon
+              :scale       (if (valittu? ilmoitus) 1.5 1)
+              :img         "kartta-tiedotus-violetti.svg"
+              :coordinates (get-in ilmoitus [:sijainti :coordinates])})]))
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Kysely")
-     :selite {:teksti "Kysely"
-              :img    "kartta-kysely-violetti.svg"}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? ilmoitus) 1.5 1)
-            :img         (if (sisaltaako-kuittauksen? ilmoitus :aloitus)
-                           "kartta-kysely-violetti.svg"
-                           "kartta-kysely-violetti.svg")
-            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
+  (let [tooltip (or (ilmoituksen-tooltip ilmoitus) "Kysely")
+        aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
+        lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
+        ikoni (cond
+                lopetettu? "kartta-kysely-violetti.svg" ;; TODO Lisää harmaat ikonit kun valmistuvat.
+                aloitettu? "kartta-kysely-violetti.svg"
+                :else "kartta-kysely-kesken-punainen.svg")]
+    [(assoc ilmoitus
+       :type :ilmoitus
+       :nimi tooltip
+       :selite {:teksti (cond
+                          aloitettu? "Kysely, aloitettu"
+                          lopetettu? "Kysely, lopetettu"
+                          :else "Kysely, ei aloituskuittausta.")
+                :img    ikoni}
+       :alue {:type        :tack-icon
+              :scale       (if (valittu? ilmoitus) 1.5 1)
+              :img         ikoni
+              :coordinates (get-in ilmoitus [:sijainti :coordinates])})]))
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu?]
-  [(assoc ilmoitus
-     :type :ilmoitus
-     :nimi (or (:nimi ilmoitus) "Toimenpidepyyntö")
-     :selite {:teksti "Toimenpidepyyntö"
-              :img    "kartta-toimenpidepyynto-violetti.svg"}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? ilmoitus) 1.5 1)
-            :img         (if (sisaltaako-kuittauksen? ilmoitus :vastaanotto)
-                           "kartta-toimenpidepyynto-violetti.svg"
-                           "kartta-toimenpidepyynto-violetti.svg")
-            :coordinates (get-in ilmoitus [:sijainti :coordinates])})])
+  (let [tooltip (or (ilmoituksen-tooltip ilmoitus) "Toimenpidepyyntö")
+        vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
+        lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
+        ikoni (cond
+                lopetettu? "kartta-toimenpidepyynto-violetti.svg" ;; TODO
+                vastaanotettu? "kartta-toimenpidepyynto-violetti.svg"
+                :else "kartta-toimenpidepyynto-kesken-punainen.svg")]
+    [(assoc ilmoitus
+       :type :ilmoitus
+       :nimi tooltip
+       :selite {:teksti (cond
+                          vastaanotettu? "Toimenpidepyyntö, kuitattu"
+                          lopetettu? "Toimenpidepyyntö, lopetettu"
+                          :else "Toimenpidepyyntö, kuittaamaton")
+                :img    ikoni}
+       :alue {:type        :tack-icon
+              :scale       (if (valittu? ilmoitus) 1.5 1)
+              :img         ikoni
+              :coordinates (get-in ilmoitus [:sijainti :coordinates])})]))
 
 (defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
   (case tekija
@@ -69,31 +97,31 @@
 (defn selvita-tarkastuksen-ikoni [tekija]
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
 
-(defn selvita-havainnon-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "havainto" tekija))
+(defn selvita-laatupoikkeaman-ikoni [tekija]
+  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
 
-(defmethod asia-kartalle :havainto [havainto valittu?]
-  [(assoc havainto
-     :type :havainto
-     :nimi (or (:nimi havainto)
-               (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")"))
-     :selite {:teksti (str "Havainto (" (havainnot/kuvaile-tekija (:tekija havainto)) ")")
-              :img    (selvita-havainnon-ikoni (:tekija havainto))}
+(defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu?]
+  [(assoc laatupoikkeama
+     :type :laatupoikkeama
+     :nimi (or (:nimi laatupoikkeama)
+               (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
+     :selite {:teksti (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")
+              :img    (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))}
      :alue {:type        :tack-icon
-            :scale       (if (valittu? havainto) 1.5 1)
-            :img         (selvita-havainnon-ikoni (:tekija havainto))
-            :coordinates (if (= :line (get-in havainto [:sijainti :type]))
+            :scale       (if (valittu? laatupoikkeama) 1.5 1)
+            :img         (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+            :coordinates (if (= :line (get-in laatupoikkeama [:sijainti :type]))
                            ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
-                           (first (get-in havainto [:sijainti :points]))
+                           (first (get-in laatupoikkeama [:sijainti :points]))
 
-                           (get-in havainto [:sijainti :coordinates]))})])
+                           (get-in laatupoikkeama [:sijainti :coordinates]))})])
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   [(assoc tarkastus
      :type :tarkastus
      :nimi (or (:nimi tarkastus)
-               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")"))
-     :selite {:teksti (str "Tarkastus (" (havainnot/kuvaile-tekija (:tekija tarkastus)) ")")
+               (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")"))
+     :selite {:teksti (str "Tarkastus (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
              {:type  :tack-icon-line

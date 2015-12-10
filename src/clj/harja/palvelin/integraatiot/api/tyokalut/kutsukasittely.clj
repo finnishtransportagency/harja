@@ -119,6 +119,10 @@
   (log/warn "Tehty kutsu on viallinen: " virheet)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
+(defn kasittele-puutteelliset-parametrit [virheet]
+  (log/warn "Kutsussa puutteelliset parametrit: " virheet)
+  (tee-viallinen-kutsu-virhevastaus virheet))
+
 (defn kasittele-sisainen-kasittelyvirhe [virheet]
   (log/warn "Tapahtui sisäinen käsittelyvirhe: " virheet)
   (tee-sisainen-kasittelyvirhevastaus virheet))
@@ -152,6 +156,8 @@
       (kasittele-invalidi-json virheet))
     (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
       (kasittele-viallinen-kutsu virheet))
+    (catch [:type virheet/+puutteelliset-parametrit+] {:keys [virheet]}
+      (kasittele-puutteelliset-parametrit virheet))
     (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
       (kasittele-sisainen-kasittelyvirhe virheet))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}

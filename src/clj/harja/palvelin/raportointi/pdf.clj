@@ -105,7 +105,7 @@
                                   :height bar-height
                                   :fill (color-fn d)}]
                           (when-not (hide-value? value)
-                            [:text {:font-size "4pt" :x (+ x (/ bar-width 2)) :y (- y 1) :text-anchor "end"} (str value)])
+                            [:text {:font-size "4pt" :x (+ x (/ (* bar-width 0.75) 2)) :y (- y 1) :text-anchor "middle"} (str value)])
                           (when (zero? (rem i show-every-nth-label))
                             [:text {:font-size "3pt" :x (+ x (/ (* bar-width 0.75) 2)) :y (+ 4 (+ y bar-height))
                                     :text-anchor "middle"}

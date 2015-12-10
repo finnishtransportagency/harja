@@ -12,11 +12,10 @@
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
-  "kuittaus": {
-    "ilmoitusid": 32123,
-    "kuitattu": "2016-01-30T12:00:00Z",
-    "kuittaustyyppi": "vastaanotto",
-    "kuittaaja": {
+  "ilmoitustoimenpide": {
+    "aika": "2016-01-30T12:00:00Z",
+    "tyyppi": "vastaanotto",
+    "ilmoittaja": {
       "henkilo": {
         "etunimi": "Urho",
         "sukunimi": "Urakoitsija",

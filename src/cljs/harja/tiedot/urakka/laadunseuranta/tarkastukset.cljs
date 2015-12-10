@@ -20,7 +20,7 @@
 (defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie
 
 (defn hae-tarkastus
-  "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy havainnot sekä niiden reklamaatiot."
+  "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy laatupoikkeamat sekä niiden reklamaatiot."
   [urakka-id tarkastus-id]
   (k/post! :hae-tarkastus {:urakka-id    urakka-id
                            :tarkastus-id tarkastus-id}))

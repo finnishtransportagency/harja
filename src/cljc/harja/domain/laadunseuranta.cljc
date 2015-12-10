@@ -33,29 +33,13 @@
    :perustelu                         s/Str
    })
 
-(def Havainto
+(def Laatupoikkeama
   {:aika                               pvm-tyyppi
    :kuvaus                             Teksti
    :tekija                             Osapuoli
    (s/optional-key :kohde)             (s/maybe s/Str)
    (s/optional-key :urakka)            s/Any
    (s/optional-key :sijainti)          s/Any
-   (s/optional-key :tekijanimi)        s/Str
-   (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
-   (s/optional-key :uusi-liite)        s/Any
-   (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
-   (s/optional-key :id) s/Int
-   (s/optional-key :paatos) Paatos
-   (s/optional-key :sanktiot) {s/Num Sanktio}
-   (s/optional-key :uusi-kommentti) s/Any
-   (s/optional-key :liitteet) s/Any})
-
-(def TarkastuksenHavainto
-  {(s/optional-key :aika)                  pvm-tyyppi
-   :kuvaus                             Teksti
-   :tekija                             Osapuoli
-   (s/optional-key :kohde)             (s/maybe s/Str)
-   (s/optional-key :urakka)            s/Any
    (s/optional-key :tekijanimi)        s/Str
    (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
    (s/optional-key :uusi-liite)        s/Any
@@ -90,12 +74,14 @@
    :aika                               pvm-tyyppi
    :tr                                 Tierekisteriosoite
    (s/optional-key :sijainti)          Sijainti
+   (s/optional-key :uusi-liite)        s/Any
+   (s/optional-key :liitteet)          s/Any
    :tyyppi                             Tarkastustyyppi
    :tarkastaja                         Teksti
+   :havainnot                          s/Str
    (s/optional-key :mittaaja)          (s/maybe Teksti)
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
-   (s/optional-key :soratiemittaus)    Soratiemittaus
-   (s/optional-key :havainto)          TarkastuksenHavainto})
+   (s/optional-key :soratiemittaus)    Soratiemittaus})
 
 (defn validoi-tarkastus [data]
   (skeema/tarkista Tarkastus data))
@@ -106,11 +92,11 @@
     #?(:cljs (log "tarkastus virheet: " (pr-str virheet)))
     (nil? virheet)))
 
-(defn validoi-havainto [data]
-  (skeema/tarkista Havainto data))
+(defn validoi-laatupoikkeama [data]
+  (skeema/tarkista Laatupoikkeama data))
 
-(defn validi-havainto? [data]
-  (let [virheet (validoi-havainto data)]
-    #?(:cljs (log "havainto virheet: " (pr-str virheet)))
+(defn validi-laatupoikkeama? [data]
+  (let [virheet (validoi-laatupoikkeama data)]
+    #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
     (nil? virheet)))
                     

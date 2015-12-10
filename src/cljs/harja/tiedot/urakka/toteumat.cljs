@@ -11,32 +11,10 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-; FIXME Tämä nimiavaruus hallinoi jotakuinkin kaikkia Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
-; jokaisella näkymällä olisi oma tiedot-namespace kaverina (kuten esim. kokonaishintaisilla nyt on).
+; FIXME Tämä nimiavaruus hallinoi useaa Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
+; jokaisella näkymällä olisi oma tiedot-namespace kaverina.
 
-(defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))
-
-(def karttataso-yksikkohintainen-toteuma (atom false))
-
-(def yksikkohintainen-toteuma-kartalla-xf
-  (map #(do
-         (assoc %
-           :type :yksikkohintainen-toteuma
-           :alue {:type   :arrow-line
-                  :points (mapv (comp :coordinates :sijainti)
-                                (sort-by
-                                  :aika
-                                  pvm/ennen?
-                                  (:reittipisteet %)))}))))
-
-(defonce valittu-yksikkohintainen-toteuma (atom nil))
-
-(defonce yksikkohintainen-toteuma-kartalla
-         (reaction
-           @valittu-yksikkohintainen-toteuma
-           (when @karttataso-yksikkohintainen-toteuma
-             (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]))))
 
 (defn hae-tehtavat [urakka-id]
   (k/post! :hae-urakan-tehtavat urakka-id))
@@ -57,21 +35,16 @@
            {:urakka-id urakka-id
             :toteuma-id toteuma-id}))
 
-(defn hae-urakan-toteutuneet-tehtavat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
-  (k/post! :urakan-toteutuneet-tehtavat
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm
-            :tyyppi tyyppi}))
-
-(defn hae-urakan-toteumien-tehtavien-summat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
+(defn hae-urakan-toteumien-tehtavien-summat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi toimenpide-id tehtava-id]
+  (log "Haetaan: toimenpide-id tehtava-id")
   (k/post! :urakan-toteumien-tehtavien-summat
            {:urakka-id urakka-id
             :sopimus-id sopimus-id
             :alkupvm alkupvm
             :loppupvm loppupvm
-            :tyyppi tyyppi}))
+            :tyyppi tyyppi
+            :toimenpide-id toimenpide-id
+            :tehtava-id tehtava-id}))
 
 (defn hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla [urakka-id sopimus-id [alkupvm loppupvm] tyyppi toimenpidekoodi]
   (log "TOT Haetaan urakan toteutuneet tehtävät toimenpidekoodilla: " toimenpidekoodi)
@@ -82,13 +55,6 @@
             :loppupvm loppupvm
             :tyyppi tyyppi
             :toimenpidekoodi toimenpidekoodi}))
-
-(defn hae-urakan-toteuma-paivat [urakka-id sopimus-id [alkupvm loppupvm]]
-  (k/post! :urakan-toteuma-paivat
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm}))
 
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat [toteuma]
   (k/post! :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat toteuma))

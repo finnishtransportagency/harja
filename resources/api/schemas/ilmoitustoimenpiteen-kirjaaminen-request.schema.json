@@ -11,24 +11,19 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "kuittaus": {
-      "id": "urn:harja/kuittaus",
+    "ilmoitustoimenpide": {
+      "id": "urn:harja/ilmoitustoimenpide",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "ilmoitusid": {
-          "id": "urn:harja/kuittaus/ilmoitusId",
-          "type": "integer",
-          "required": true
-        },
-        "kuitattu": {
-          "id": "urn:harja/kuittaus/kuitattu",
+        "aika": {
+          "id": "urn:harja/ilmoitustoimenpide/aika",
           "type": "string",
           "format": "date-time",
           "required": true
         },
-        "kuittaustyyppi": {
-          "id": "urn:harja/kuittaus/kuittaustyyppi",
+        "tyyppi": {
+          "id": "urn:harja/ilmoitustoimenpide/tyyppi",
           "required": true,
           "enum": [
             "vastaanotto",
@@ -38,21 +33,21 @@
             "vastaus"
           ]
         },
-        "kuittaaja": {
-          "id": "urn:harja/kuittaus/kuittaaja",
+        "ilmoittaja": {
+          "id": "urn:harja/ilmoitustoimenpide/ilmoittaja",
           "type": "object",
           "required": true,
           "additionalProperties": false,
           "properties": {
             "henkilo": {
-              "id": "urn:harja/kuittaus/kuittaaja/henkilo",
+              "id": "urn:harja/ilmoitustoimenpide/ilmoittaja/henkilo",
               "type": "object",
               "additionalProperties": false,
               "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
               "required": true
             },
             "organisaatio": {
-              "id": "urn:harja/kuittaus/kuittaaja/organisaatio",
+              "id": "urn:harja/ilmoitustoimenpide/ilmoittaja/organisaatio",
               "type": "object",
               "additionalProperties": false,
               "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
@@ -61,20 +56,20 @@
           }
         },
         "kasittelija": {
-          "id": "urn:harja/kuittaus/kasittelija",
+          "id": "urn:harja/ilmoitustoimenpide/kasittelija",
           "type": "object",
           "required": true,
           "additionalProperties": false,
           "properties": {
             "henkilo": {
-              "id": "urn:harja/kuittaus/kasittelija/henkilo",
+              "id": "urn:harja/ilmoitustoimenpide/kasittelija/henkilo",
               "type": "object",
               "additionalProperties": false,
               "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
               "required": true
             },
             "organisaatio": {
-              "id": "urn:harja/kuittaus/kasittelija/organisaatio",
+              "id": "urn:harja/ilmoitustoimenpide/kasittelija/organisaatio",
               "type": "object",
               "additionalProperties": false,
               "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
@@ -83,7 +78,7 @@
           }
         },
         "vapaateksti": {
-          "id": "urn:harja/kuittaus/vapaateksti",
+          "id": "urn:harja/ilmoitustoimenpide/vapaateksti",
           "type": "string"
         }
       }

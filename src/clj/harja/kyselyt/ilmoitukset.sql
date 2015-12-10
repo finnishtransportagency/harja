@@ -136,34 +136,14 @@ SELECT
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
--- name: hae-ilmoituksen-jalkeen-saapuneet-ilmoitukset
-SELECT
-  ilmoitusid,
-  ilmoitettu,
-  yhteydenottopyynto,
-  lyhytselite,
-  pitkaselite,
-  otsikko,
-  ilmoitustyyppi,
-  selitteet,
-  sijainti,
-  tr_numero,
-  tr_alkuosa,
-  tr_loppuosa,
-  tr_alkuetaisyys,
-  tr_loppuetaisyys,
-  ilmoittaja_etunimi,
-  ilmoittaja_sukunimi,
-  ilmoittaja_tyopuhelin,
-  ilmoittaja_matkapuhelin,
-  ilmoittaja_sahkoposti,
-  lahettaja_etunimi,
-  lahettaja_sukunimi,
-  lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
-FROM ilmoitus
-WHERE urakka = :urakka AND
-      ilmoitusid > :ilmoitusid;
+-- name: hae-muuttuneet-ilmoitukset
+SELECT ilmoitusid, ilmoitettu, yhteydenottopyynto, lyhytselite, pitkaselite, otsikko, ilmoitustyyppi,
+       selitteet, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys,
+       ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti,
+       lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti
+  FROM ilmoitus
+ WHERE urakka = :urakka AND
+       (muokattu > :aika OR luotu > :aika)
 
 
 -- name: hae-id-ilmoitus-idlla
@@ -188,19 +168,19 @@ INSERT INTO ilmoitus
  urakkatyyppi)
 VALUES
   (:urakka,
-   :ilmoitusid,
-   :ilmoitettu,
-   :valitetty,
-   :yhteydenottopyynto,
-   :otsikko,
-   :lyhytselite,
-   :pitkaselite,
-   :ilmoitustyyppi :: ilmoitustyyppi,
-   :selitteet :: ilmoituksenselite [],
-   :urakkatyyppi :: urakkatyyppi);
+    :ilmoitusid,
+    :ilmoitettu,
+    :valitetty,
+    :yhteydenottopyynto,
+    :otsikko,
+    :lyhytselite,
+    :pitkaselite,
+    :ilmoitustyyppi :: ilmoitustyyppi,
+    :selitteet :: ilmoituksenselite [],
+    :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
--- Päivittää havainnon
+-- Päivittää ilmoituksen
 UPDATE ilmoitus
 SET
   urakka             = :urakka,
@@ -212,7 +192,8 @@ SET
   lyhytselite        = :lyhytselite,
   pitkaselite        = :pitkaselite,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
-  selitteet          = :selitteet :: ilmoituksenselite []
+  selitteet          = :selitteet :: ilmoituksenselite [],
+  muokattu           = NOW()
 WHERE id = :id;
 
 -- name: paivita-ilmoittaja-ilmoitukselle!
@@ -282,3 +263,45 @@ WHERE lahetysid = :lahetysid;
 UPDATE ilmoitustoimenpide
 SET tila = 'virhe'
 WHERE id = :id;
+
+-- name: luo-ilmoitustoimenpide<!
+INSERT INTO ilmoitustoimenpide
+(ilmoitus,
+ ilmoitusid,
+ kuitattu,
+ vapaateksti,
+ kuittaustyyppi,
+ kuittaaja_henkilo_etunimi,
+ kuittaaja_henkilo_sukunimi,
+ kuittaaja_henkilo_matkapuhelin,
+ kuittaaja_henkilo_tyopuhelin,
+ kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi,
+ kuittaaja_organisaatio_ytunnus,
+ kasittelija_henkilo_etunimi,
+ kasittelija_henkilo_sukunimi,
+ kasittelija_henkilo_matkapuhelin,
+ kasittelija_henkilo_tyopuhelin,
+ kasittelija_henkilo_sahkoposti,
+ kasittelija_organisaatio_nimi,
+ kasittelija_organisaatio_ytunnus)
+VALUES
+  (:ilmoitus,
+    :ilmoitusid,
+    :kuitattu,
+    :vapaateksti,
+    :kuittaustyyppi :: kuittaustyyppi,
+    :kuittaaja_henkilo_etunimi,
+    :kuittaaja_henkilo_sukunimi,
+    :kuittaaja_henkilo_matkapuhelin,
+    :kuittaaja_henkilo_tyopuhelin,
+    :kuittaaja_henkilo_sahkoposti,
+    :kuittaaja_organisaatio_nimi,
+   :kuittaaja_organisaatio_ytunnus,
+   :kasittelija_henkilo_etunimi,
+   :kasittelija_henkilo_sukunimi,
+   :kasittelija_henkilo_matkapuhelin,
+   :kasittelija_henkilo_tyopuhelin,
+   :kasittelija_henkilo_sahkoposti,
+   :kasittelija_organisaatio_nimi,
+   :kasittelija_organisaatio_ytunnus);
