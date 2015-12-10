@@ -31,10 +31,10 @@
   ^{:key (str "nykytilanteen_aikasuodatin_" teksti)}
   [:div.tk-nykytilanne-aikavalitsin
    [:div.tk-radio
-    [:label
      [:input {:type    "radio"
-              :checked false}]
-     teksti]]])
+              :name "aikavali"
+              :value teksti}]
+     teksti]])
 
 (defn nykytilanteen-aikavalinta []
   (let [aikavalinnat-hiccup (map
