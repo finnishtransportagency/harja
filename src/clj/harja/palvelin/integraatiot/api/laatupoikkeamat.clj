@@ -12,6 +12,7 @@
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-laatupoikkeamalle]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -20,23 +21,21 @@
     vastauksen-data))
 
 (defn tallenna-laatupoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde paivamaara]} data
-        tie (:tie sijainti)
-        ;; todo: tee sama tierekisterihaku kuin tarkastusten kanssa ja kirjaa tr-osoite & geometria sitä kautta
-        koordinaatit (:koordinaatit sijainti)]
+  (let [{:keys [tunniste sijainti kuvaus kohde paivamaara alkusijainti loppusijainti]} data
+        sijainti (sijainnit/hae-sijainti db alkusijainti loppusijainti)]
+     (println "--------> SIJAINTI:" sijainti)
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
              db
              (pvm-string->java-sql-date paivamaara)
              kohde
              kuvaus
-             (:x koordinaatit)
-             (:y koordinaatit)
-             (:numero tie)
-             (:aosa tie)
-             (:losa tie)
-             (:aet tie)
-             (:let tie)
+             (:geometria sijainti)
+             (:tie sijainti)
+             (:aosa sijainti)
+             (:losa sijainti)
+             (:aet sijainti)
+             (:let sijainti)
              (:id kirjaaja)
              (:id tunniste)
              (:id kirjaaja)))
@@ -49,13 +48,12 @@
              true
              (:id kirjaaja)
              kuvaus
-             (:x koordinaatit)
-             (:y koordinaatit)
-             (:numero tie)
-             (:aosa tie)
-             (:losa tie)
-             (:aet tie)
-             (:let tie)
+             (:geometria sijainti)
+             (:numero sijainti)
+             (:aosa sijainti)
+             (:losa sijainti)
+             (:aet sijainti)
+             (:let sijainti)
              (:id tunniste))))))
 
 (defn tallenna-kommentit [db laatupoikkeama-id kirjaaja kommentit]
@@ -86,11 +84,11 @@
     (julkaise-reitti
       http :lisaa-laatupoikkeama
       (POST "/api/urakat/:id/laatupoikkeama" request
-            (kasittele-kutsu db integraatioloki
-                             :lisaa-laatupoikkeama request
-                             json-skeemat/+laatupoikkeaman-kirjaus+ json-skeemat/+kirjausvastaus+
-                             (fn [parametrit data kayttaja db]
-                               (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
+        (kasittele-kutsu db integraatioloki
+                         :lisaa-laatupoikkeama request
+                         json-skeemat/+laatupoikkeaman-kirjaus+ json-skeemat/+kirjausvastaus+
+                         (fn [parametrit data kayttaja db]
+                           (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-laatupoikkeama)

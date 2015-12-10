@@ -212,9 +212,10 @@ WHERE id = :id;
 -- voi antaa päätöstietoja.
 INSERT
 INTO laatupoikkeama
-(urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
+(urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus,
+ sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
 VALUES (:urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
-        POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
+        :sijainti, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :ulkoinen_id);
 
 -- name: kirjaa-laatupoikkeaman-paatos!
@@ -255,7 +256,7 @@ SET
   aika             = :aika,
   kohde            = :kohde,
   kuvaus           = :kuvaus,
-  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY,
+  sijainti         = :sijainti,
   tr_numero        = :tr_numero,
   tr_alkuosa       = :tr_alkuosa,
   tr_loppuosa      = :tr_loppuosa,

@@ -12,22 +12,11 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
-            [harja.kyselyt.tieverkko :as tieverkko]))
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]))
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
     vastauksen-data))
-
-(defn hae-sijainti [db alkusijainti loppusijainti]
-  (let [alku-x (:x alkusijainti)
-        alku-y (:y alkusijainti)
-        loppu-x (:x loppusijainti)
-        loppu-y (:y loppusijainti)
-        threshold 250]
-    (if (and alku-x alku-y loppu-x loppu-y)
-      (first (tieverkko/hae-tr-osoite-valille db alku-x alku-y loppu-x loppu-y threshold))
-      (when (and alku-x alku-y)
-        (first (tieverkko/hae-tr-osoite db alku-x alku-y threshold))))))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? tarkastus]
   (case tyyppi
@@ -54,7 +43,7 @@
                 uusi? (nil? tarkastus-id)]
 
             (let [aika (json/pvm-string->java-sql-date (:aika tarkastus))
-                  sijainti (hae-sijainti db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                  sijainti (sijainnit/hae-sijainti db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                   id (tarkastukset/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
                        {:id          tarkastus-id
