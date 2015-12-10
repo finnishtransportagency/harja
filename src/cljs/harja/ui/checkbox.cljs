@@ -5,6 +5,14 @@
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def checkbox-tila-keyword->boolean
+  {:valittu    true
+   :ei-valittu true})
+
+(def checkbox-boolean-tila->keyword
+  {true :valittu
+   false :ei-valittu})
+
 (defn checkbox
   "Ottaa checkbox-tila atomin, joka määrittelee komponentin tilan. Tila-atomin mahdolliset arvot:
   :valittu, :ei-valittu, :osittain-valittu

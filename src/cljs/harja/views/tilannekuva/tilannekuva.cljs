@@ -57,10 +57,12 @@
 
 
 (defn checkbox-ryhma-elementti [nimi suodattimet nykyinen-tila reset-polku]
-  (log "Luodaan checkbox " nimi)
-  (let [checkbox-tila-atom (r/wrap nykyinen-tila (fn [uusi-tila]
-                                                   (log "Resetoidaan polulla " reset-polku "tilaksi " uusi-tila)
-                                                   (reset! suodattimet (assoc-in @suodattimet reset-polku uusi-tila))))]
+  (let [checkbox-tila-atom (r/wrap (checkbox/checkbox-boolean-tila->keyword nykyinen-tila) (fn [uusi-tila]
+                                                                                             (reset! suodattimet
+                                                                                                     (assoc-in
+                                                                                                       @suodattimet
+                                                                                                       reset-polku
+                                                                                                       (checkbox/checkbox-tila-keyword->boolean uusi-tila)))))]
     (fn []
       [checkbox/checkbox checkbox-tila-atom nimi {:display "block"}])))
 
