@@ -65,7 +65,7 @@
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
-        urakka-id (urakkapalvelu/hae-urakka-id-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))]
+        urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus)))]
     (if id
       (paivita-ilmoitus db id urakka-id ilmoitus)
       (luo-ilmoitus db urakka-id ilmoitus))
