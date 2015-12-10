@@ -67,15 +67,15 @@
           "muu"                             "Muu"})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(defonce suodattimet (atom {:yllapito       {:paallystys false
+(defonce suodattimet (atom {:yllapito       {:paallystys true
                                              :paikkaus   false}
                             :ilmoitukset    {:tyypit {:toimenpidepyynto false
                                                       :kysely           false
                                                       :tiedoitus        false}
                                              :tilat  #{:avoimet}}
                             :turvallisuus   {:turvallisuuspoikkeamat false}
-                            :laadunseuranta {:laatupoikkeamat true
-                                             :tarkastukset    true}
+                            :laadunseuranta {:laatupoikkeamat false
+                                             :tarkastukset    false}
 
                             ;; Näiden pitää osua työkoneen enumeihin
                             :talvi          {"auraus ja sohjonpoisto"          false
@@ -171,7 +171,13 @@
                                                (:tarkastukset tulos)))
                                    (assoc :laatupoikkeamat
                                           (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
-                                               (:laatupoikkeamat tulos)))))
+                                               (:laatupoikkeamat tulos)))
+                                   (assoc :paikkaus
+                                          (map #(assoc % :tyyppi-kartalla :paikkaus)
+                                               (:paikkaus tulos)))
+                                   (assoc :paallystys
+                                          (map #(assoc % :tyyppi-kartalla :paallystys)
+                                               (:paallystys tulos)))))
           yhdista (fn [kartta]
                     (when-not (k/virhe? kartta)
                       (apply (comp vec concat) (remove
