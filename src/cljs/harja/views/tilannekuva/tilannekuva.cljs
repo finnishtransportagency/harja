@@ -117,7 +117,7 @@
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
       (fn []
-        [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "scroll"}}
+        [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
          [tilan-vaihtaja]
          [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
          [checkbox-ryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
