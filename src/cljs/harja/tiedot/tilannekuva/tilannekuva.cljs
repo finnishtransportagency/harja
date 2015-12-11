@@ -19,7 +19,7 @@
 
 (tarkkaile! "Valittu tila: " valittu-tila)
 
-(defonce bufferi 1000)
+(defonce bufferi 500)
 (defonce hakutiheys (reaction (condp = @valittu-tila
                                 :nykytilanne 3000
                                 :historiakuva 60000)))
@@ -72,7 +72,7 @@
                         :ilmoitukset    {:tyypit {:toimenpidepyynto false
                                                   :kysely           false
                                                   :tiedoitus        false}
-                                         :tilat  #{:avoimet}}
+                                         :tilat  #{:avoimet}} ; TODO Historiakuvassa näytetään avoimet ja suljetut
                         :turvallisuus   {:turvallisuuspoikkeamat false}
                         :laadunseuranta {:laatupoikkeamat false
                                          :tarkastukset    false}
