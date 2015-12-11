@@ -12,11 +12,14 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
-            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]))
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
+            [harja.geo :as geo]))
 
-(defn tee-onnistunut-vastaus []
+(defn tee-onnistunut-vastaus [varoitukset]
   (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
-    vastauksen-data))
+    (if varoitukset
+      (assoc vastauksen-data :varoitukset varoitukset)
+      vastauksen-data)))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? tarkastus]
   (case tyyppi
@@ -29,21 +32,20 @@
                db id uusi? (:mittaus tarkastus))
     nil))
 
-(defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
-  (let [urakka-id (Long/parseLong id)]
-    (log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (doseq [tarkastus (:tarkastukset data)]
+(defn kasittele-tarkastukset [db liitteiden-hallinta kayttaja tyyppi urakka-id data]
+  (mapv
+    (fn [tarkastus]
       (let [tarkastus (:tarkastus tarkastus)
             ulkoinen-id (-> tarkastus :tunniste :id)]
-        (jdbc/with-db-transaction [db db]
+        (jdbc/with-db-transaction [transaktio db]
           (let [{tarkastus-id :id}
                 (first
                   (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
                 uusi? (nil? tarkastus-id)]
 
             (let [aika (json/pvm-string->java-sql-date (:aika tarkastus))
-                  sijainti (sijainnit/hae-sijainti db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                  tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                  geometria (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                   id (tarkastukset/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
                        {:id          tarkastus-id
@@ -51,18 +53,27 @@
                         :tyyppi      tyyppi
                         :aika        aika
                         :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
-                        :sijainti    (:geometria sijainti)
-                        :tr          {:numero        (:tie sijainti)
-                                      :alkuosa       (:aosa sijainti)
-                                      :alkuetaisyys  (:aet sijainti)
-                                      :loppuosa      (:losa sijainti)
-                                      :loppuetaisyys (:let sijainti)}
+                        :sijainti    (geo/clj->pg geometria)
+                        :tr          {:numero        (:tie tr-osoite)
+                                      :alkuosa       (:aosa tr-osoite)
+                                      :alkuetaisyys  (:aet tr-osoite)
+                                      :loppuosa      (:losa tr-osoite)
+                                      :loppuetaisyys (:let tr-osoite)}
                         :havainnot   (:havainnot tarkastus)})
                   liitteet (:liitteet tarkastus)]
 
               (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
-              (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? tarkastus))))))
-    (tee-onnistunut-vastaus)))
+              (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? tarkastus)
+              (when-not tr-osoite
+                (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
+                        (:alkusijainti data) (:loppusijainti data))))))))
+    (:tarkastukset data)))
+
+(defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
+  (let [urakka-id (Long/parseLong id)]
+    (log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (tee-onnistunut-vastaus (kasittele-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data))))
 
 (def palvelut
   [{:palvelu       :lisaa-tiestotarkastus

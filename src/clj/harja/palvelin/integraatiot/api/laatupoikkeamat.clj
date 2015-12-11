@@ -22,7 +22,7 @@
       (assoc vastauksen-data :varoitukset varoitukset)
       vastauksen-data)))
 
-(defn tallenna-laatupoikkeama [db urakka-id kirjaaja data sijainti]
+(defn tallenna-laatupoikkeama [db urakka-id kirjaaja data tr-osoite geometria]
   (let [{:keys [tunniste kuvaus kohde paivamaara]} data]
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
@@ -30,12 +30,12 @@
              (pvm-string->java-sql-date paivamaara)
              kohde
              kuvaus
-             (:geometria sijainti)
-             (:tie sijainti)
-             (:aosa sijainti)
-             (:losa sijainti)
-             (:aet sijainti)
-             (:let sijainti)
+             geometria
+             (:tie tr-osoite)
+             (:aosa tr-osoite)
+             (:losa tr-osoite)
+             (:aet tr-osoite)
+             (:let tr-osoite)
              (:id kirjaaja)
              (:id tunniste)
              (:id kirjaaja)))
@@ -48,12 +48,12 @@
              true
              (:id kirjaaja)
              kuvaus
-             (:geometria sijainti)
-             (:numero sijainti)
-             (:aosa sijainti)
-             (:losa sijainti)
-             (:aet sijainti)
-             (:let sijainti)
+             geometria
+             (:numero tr-osoite)
+             (:aosa tr-osoite)
+             (:losa tr-osoite)
+             (:aet tr-osoite)
+             (:let tr-osoite)
              (:id tunniste))))))
 
 (defn tallenna-kommentit [db laatupoikkeama-id kirjaaja kommentit]
@@ -63,15 +63,16 @@
       (laatupoikkeamat/liita-kommentti<! db laatupoikkeama-id kommentti-id))))
 
 (defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]
-  (let [sijainti (sijainnit/hae-sijainti db (:alkusijainti data) (:loppusijainti data))]
+  (let [tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti data) (:loppusijainti data))
+        geometria (sijainnit/tee-geometria (:alkusijainti data) (:loppusijainti data))]
     (jdbc/with-db-transaction [transaktio db]
-      (let [laatupoikkeama-id (tallenna-laatupoikkeama transaktio urakka-id kirjaaja data sijainti)
+      (let [laatupoikkeama-id (tallenna-laatupoikkeama transaktio urakka-id kirjaaja data tr-osoite geometria)
             kommentit (:kommentit data)
             liitteet (:liitteet data)]
-        (log/info "LIITE " (count liitteet))
         (tallenna-kommentit transaktio laatupoikkeama-id kirjaaja kommentit)
         (tallenna-liitteet-laatupoikkeamalle transaktio liitteiden-hallinta urakka-id laatupoikkeama-id kirjaaja liitteet)))
-    (when-not sijainti "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla.")))
+    (when-not tr-osoite (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
+                                (:alkusijainti data) (:loppusijainti data)))))
 
 (defn kirjaa-laatupoikkeama [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
