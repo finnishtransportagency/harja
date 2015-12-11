@@ -67,15 +67,15 @@
           "muu"                             "Muu"})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(def suodattimet (atom {:yllapito       {:paallystys false
-                                         :paikkaus   false}
-                        :ilmoitukset    {:tyypit {:toimenpidepyynto false
-                                                  :kysely           false
-                                                  :tiedoitus        false}
+(def suodattimet (atom {:yllapito       {:paallystys true
+                                         :paikkaus   true}
+                        :ilmoitukset    {:tyypit {:toimenpidepyynto true
+                                                  :kysely           true
+                                                  :tiedoitus        true}
                                          :tilat  #{:avoimet}} ; TODO Historiakuvassa näytetään avoimet ja suljetut
-                        :turvallisuus   {:turvallisuuspoikkeamat false}
-                        :laadunseuranta {:laatupoikkeamat false
-                                         :tarkastukset    false}
+                        :turvallisuus   {:turvallisuuspoikkeamat true}
+                        :laadunseuranta {:laatupoikkeamat true
+                                         :tarkastukset    true}
 
                         ;; Näiden pitää osua työkoneen enumeihin
                         :talvi          {"auraus ja sohjonpoisto"          true

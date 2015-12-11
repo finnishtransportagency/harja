@@ -45,7 +45,7 @@
                           :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
        tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
-(defn checkbox-ryhma-elementti
+(defn yksittainen-suodatincheckbox
   "Suodatinpolku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
   [nimi suodattimet-atom suodatinpolku]
   [checkbox/checkbox
@@ -59,7 +59,7 @@
                            suodatinpolku
                            (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
 
-(defn checkbox-ryhma
+(defn checkbox-suodatinryhma
   "Ryhmäpolku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa"
   [otsikko suodattimet-atom ryhma-polku]
   (let [auki? (atom false)
@@ -96,7 +96,7 @@
            [:div.tk-checkbox-ryhma-sisalto
             (doall (for [elementti (seq @ryhman-elementit-ja-tilat)]
                      ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
-                     [checkbox-ryhma-elementti
+                     [yksittainen-suodatincheckbox
                       (get tiedot/suodattimien-nimet (first elementti))
                       suodattimet-atom
                       (conj ryhma-polku (first elementti))]))])]))))
@@ -105,10 +105,13 @@
   [:div#tk-nykytila-paavalikko
    [:span "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
-   [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]]
-   [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]]
-   [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet [:laadunseuranta]]
-   [checkbox-ryhma "Turvallisuus" tiedot/suodattimet [:turvallisuus]]])
+   [:div.tk-suodatinryhmat
+    [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]]
+    [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]]]
+   [:div.tk-yksittaiset-suodattimet
+    [yksittainen-suodatincheckbox "Laatupoikkeamat" tiedot/suodattimet [:laadunseuranta :laatupoikkeamat]]
+    [yksittainen-suodatincheckbox "Tarkastukset" tiedot/suodattimet [:laadunseuranta :tarkastukset]]
+    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat]]]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
@@ -119,8 +122,8 @@
       (fn []
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
          [tilan-vaihtaja]
-         [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
-         [checkbox-ryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
+         [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
+         [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
          (when (= :nykytilanne @tiedot/valittu-tila)
            [nykytilanteen-aikasuodattimet])]))))
 
