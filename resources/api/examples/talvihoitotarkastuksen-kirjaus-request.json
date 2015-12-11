@@ -49,7 +49,7 @@
       },
       "mittaus": {
         "hoitoluokka": 1,
-        "lumisuus": 15,
+        "lumimaara": 15,
         "tasaisuus": 5,
         "kitka": 3.2,
         "lampotila": -10

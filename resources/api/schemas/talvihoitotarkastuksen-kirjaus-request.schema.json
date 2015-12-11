@@ -38,8 +38,8 @@
                 "type": "integer",
                 "required": true
               },
-              "lumisuus": {
-                "id": "urn:harja/mittaustulokset/talvihoito/lumisuus",
+              "lumimaara": {
+                "id": "urn:harja/mittaustulokset/talvihoito/lumimaara",
                 "type": "number",
                 "required": true
               },
