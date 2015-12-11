@@ -18,10 +18,11 @@
 (defn checkbox
   "Ottaa checkbox-tila atomin, joka määrittelee komponentin tilan. Tila-atomin mahdolliset arvot:
   :valittu, :ei-valittu, :osittain-valittu
-  Lisäksi ottaa nimen, joka ilmestyy checkboxin viereen (jos nimen halutaan olevan teksti tämän
-  komponentin ulkopuolella, voidaan antaa nil."
-  [tila-atom nimi opts]
-  (let [on-change-fn (:on-change opts)
+  Ottaa myös nimen, joka ilmestyy checkboxin viereen. Voi olla nil, jos tekstiä ei haluta (tai teksti
+  ei ole osa tätä komponenttia)
+  Lisäksi ottaa mapin erilaisia optioita"
+  [tila-atom nimi {:keys [on-change] :as optiot}]
+  (let [on-change-fn on-change
         checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
                                :ei-valittu       "harja-checkbox-ei-valittu"
                                :osittain-valittu "harja-checkbox-osittain-valittu"}

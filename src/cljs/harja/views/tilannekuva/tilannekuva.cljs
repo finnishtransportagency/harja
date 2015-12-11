@@ -96,7 +96,6 @@
    [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet :laadunseuranta]
    [checkbox-ryhma "Turvallisuus" tiedot/suodattimet :turvallisuus]])
 
-
 (def suodattimet
   [:span
    [tilan-vaihtaja]
