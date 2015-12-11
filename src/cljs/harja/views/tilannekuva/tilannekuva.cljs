@@ -113,6 +113,10 @@
     [yksittainen-suodatincheckbox "Tarkastukset" tiedot/suodattimet [:laadunseuranta :tarkastukset]]
     [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat]]]])
 
+(defn historiankuvan-aikasuodattimet []
+  [:div#tk-historia-paavalikko
+   [:span {:style {:color "red"}} "UNDER CONSTRUCTION! Tämä on vielä kesken :-)"]])
+
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
@@ -125,7 +129,9 @@
          [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
          [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
          (when (= :nykytilanne @tiedot/valittu-tila)
-           [nykytilanteen-aikasuodattimet])]))))
+           [nykytilanteen-aikasuodattimet])
+         (when (= :historiakuva @tiedot/valittu-tila)
+           [historiankuvan-aikasuodattimet])]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto [suodattimet]}}))
 
