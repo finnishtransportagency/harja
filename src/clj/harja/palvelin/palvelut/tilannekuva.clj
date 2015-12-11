@@ -25,9 +25,11 @@
 
 (defn kayttajan-urakoiden-idt
   [db user urakka-id hallintayksikko alku loppu]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (if-not (nil? urakka-id)
-    (when (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-      (if (vector? urakka-id) urakka-id [urakka-id]))
+    (if (vector? urakka-id)
+      urakka-id
+      [urakka-id])
 
     (let [urakat
           (if (get (:roolit user) "jarjestelmavastuuhenkilo")
