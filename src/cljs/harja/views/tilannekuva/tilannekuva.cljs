@@ -115,7 +115,7 @@
 
 (defn historiankuvan-aikasuodattimet []
   [:div#tk-historia-paavalikko
-   [:span {:style {:color "red"}} "UNDER CONSTRUCTION! Tämä on vielä kesken :-)"]])
+   [:span {:style {:color "red"}} "UNDER CONSTRUCTION! Tämän näkymän harjaaminen on vielä kesken :-)"]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
