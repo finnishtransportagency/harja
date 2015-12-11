@@ -67,7 +67,10 @@
    vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
    itse omaa auki/kiinni-tilaansa."
   [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-  (let [auki? (atom false) ; Itsenäisen auki/kiinni tilan ylläpitoon
+  (let [oma-auki-tila (atom false)
+        auki? (fn [] (or @oma-auki-tila
+                  (and kokoelma-atom
+                       (= otsikko @kokoelma-atom))))
         ryhmanjohtaja-tila-atom (reaction
                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
                                             :valittu
@@ -86,10 +89,9 @@
                                                          (reset! kokoelma-atom nil)
                                                          (reset! kokoelma-atom otsikko))
                                                        ; Ylläpitää itse omaa tilaansa
-                                                       (swap! auki? not))
+                                                       (swap! oma-auki-tila not))
                                                      (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
-           (if (or @auki? (and kokoelma-atom
-                               (= otsikko @kokoelma-atom)))
+           (if (auki?)
              (ikonit/chevron-down) (ikonit/chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox
            [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
@@ -105,8 +107,7 @@
                                             @suodattimet-atom
                                             (keys (get-in @suodattimet-atom ryhma-polku))))))}]]]
 
-         (when (or @auki? (and kokoelma-atom
-                               (= otsikko @kokoelma-atom)))
+         (when (auki?)
            [:div.tk-checkbox-ryhma-sisalto
             (doall (for [elementti (seq @ryhman-elementit-ja-tilat)]
                      ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
