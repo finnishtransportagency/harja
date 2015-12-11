@@ -8,12 +8,21 @@
             [harja.ui.kentat :as kentat]
             [reagent.core :as r]
             [harja.pvm :as pvm]
+            [goog.events :as events]
+            [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.checkbox :as checkbox]
             [harja.ui.on-off-valinta :as on-off]
             [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
+(def hallintapaneeli-max-korkeus (atom nil))
+(defn aseta-hallintapaneelin-max-korkeus [paneelin-sisalto]
+  (let [r (.getBoundingClientRect paneelin-sisalto)
+        etaisyys-alareunaan (- @yleiset/korkeus (.-top r))]
+    (reset! hallintapaneeli-max-korkeus (max
+                                          200
+                                          (- etaisyys-alareunaan 30)))))
 (defn tilan-vaihtaja []
   (let [on-off-tila (atom (if (= :nykytilanne @tiedot/valittu-tila)
                             false
@@ -66,7 +75,8 @@
         [:div.tk-checkbox-ryhma
          [:div.tk-checkbox-ryhma-otsikko
           [:span.tk-checkbox-ryhma-tila {:on-click (fn []
-                                                     (swap! auki? not))}
+                                                     (swap! auki? not)
+                                                     (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
            (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox
            [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
@@ -101,12 +111,18 @@
    [checkbox-ryhma "Turvallisuus" tiedot/suodattimet [:turvallisuus]]])
 
 (defn suodattimet []
-  [:span
-   [tilan-vaihtaja]
-   [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
-   [checkbox-ryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
-   (when (= :nykytilanne @tiedot/valittu-tila)
-     [nykytilanteen-aikasuodattimet])])
+  (let [resize-kuuntelija (fn [this _]
+                            (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
+    (komp/luo
+      (komp/dom-kuuntelija js/window
+                           EventType/RESIZE resize-kuuntelija)
+      (fn []
+        [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "scroll"}}
+         [tilan-vaihtaja]
+         [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
+         [checkbox-ryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
+         (when (= :nykytilanne @tiedot/valittu-tila)
+           [nykytilanteen-aikasuodattimet])]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto [suodattimet]}}))
 

@@ -107,8 +107,6 @@
 
                                          "l- ja p-alueiden puhdistus" true
                                          "muu"                        true}}))
-(tarkkaile! "Suodattimet " suodattimet)
-
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
