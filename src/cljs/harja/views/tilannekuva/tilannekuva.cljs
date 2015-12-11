@@ -127,7 +127,7 @@
          (when (= :nykytilanne @tiedot/valittu-tila)
            [nykytilanteen-aikasuodattimet])]))))
 
-(def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto [suodattimet]}}))
+(def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
 
 (defn tilannekuva []
   (komp/luo
@@ -140,7 +140,7 @@
                      :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit
-                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? true
+                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
                                                                    :luokka               "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
                                (kartta/tyhjenna-yleiset-kontrollit)
