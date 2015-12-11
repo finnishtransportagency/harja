@@ -98,7 +98,7 @@
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
 
 (defn selvita-laatupoikkeaman-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
+  (selvita-laadunseurannan-ikoni "havainto" tekija))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu?]
   [(assoc laatupoikkeama
