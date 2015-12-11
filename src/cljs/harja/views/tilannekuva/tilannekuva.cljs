@@ -37,13 +37,17 @@
                                                           (reset! tiedot/valittu-tila :nykytilanne)
                                                           (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
-(defn nykytilanteen-aikavalinta []
+(defn nykytilanteen-aikavalinnat []
     [:div#tk-nykytilanteen-aikavalit
       [kentat/tee-kentta {:tyyppi   :radio
                           :valinta-nayta (fn [[nimi _]] nimi)
                           :valinta-arvo (fn [[_ arvo]] arvo)
                           :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
        tiedot/nykytilanteen-aikasuodattimen-arvo]])
+
+(defn historiankuvan-aikavalinnat []
+  [:div#tk-historiakuvan-aikavalit
+   [:div {:style {:color "red" :margin-top "8px" :margin-bottom "8px"}} "UNDER CONSTRUCTION! Historiakuvan aikasuodattimien harjaaminen on vielä kesken :-)"]])
 
 (defn yksittainen-suodatincheckbox
   "suodatin-polku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
@@ -69,14 +73,14 @@
   [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
   (let [oma-auki-tila (atom false)
         auki? (fn [] (or @oma-auki-tila
-                  (and kokoelma-atom
-                       (= otsikko @kokoelma-atom))))
+                         (and kokoelma-atom
+                              (= otsikko @kokoelma-atom))))
         ryhmanjohtaja-tila-atom (reaction
                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
-                                            :valittu
-                                            (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
-                                              :ei-valittu
-                                              :osittain-valittu)))]
+                                    :valittu
+                                    (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
+                                      :ei-valittu
+                                      :osittain-valittu)))]
     (fn []
       (let [ryhman-elementit-ja-tilat (atom (get-in @suodattimet-atom ryhma-polku))]
         @suodattimet-atom
@@ -116,10 +120,13 @@
                       suodattimet-atom
                       (conj ryhma-polku (first elementti))]))])]))))
 
-(defn nykytilanteen-aikasuodattimet []
-  [:div#tk-nykytila-paavalikko
+(defn aikasuodattimet []
+  [:div#tk-paavalikko
    [:span "Näytä seuraavat aikavälillä:"]
-   [nykytilanteen-aikavalinta]
+   (when (= :nykytilanne @tiedot/valittu-tila)
+     [nykytilanteen-aikavalinnat])
+   (when (= :historiakuva @tiedot/valittu-tila)
+     [historiankuvan-aikavalinnat])
    [:div.tk-suodatinryhmat
     [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]]
@@ -127,10 +134,6 @@
     [yksittainen-suodatincheckbox "Laatupoikkeamat" tiedot/suodattimet [:laadunseuranta :laatupoikkeamat] auki-oleva-checkbox-ryhma]
     [yksittainen-suodatincheckbox "Tarkastukset" tiedot/suodattimet [:laadunseuranta :tarkastukset] auki-oleva-checkbox-ryhma]
     [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat] auki-oleva-checkbox-ryhma]]])
-
-(defn historiankuvan-aikasuodattimet []
-  [:div#tk-historia-paavalikko
-   [:span {:style {:color "red"}} "UNDER CONSTRUCTION! Tämän näkymän harjaaminen on vielä kesken :-)"]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
@@ -143,10 +146,7 @@
          [tilan-vaihtaja]
          [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
          [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]auki-oleva-checkbox-ryhma]
-         (when (= :nykytilanne @tiedot/valittu-tila)
-           [nykytilanteen-aikasuodattimet])
-         (when (= :historiakuva @tiedot/valittu-tila)
-           [historiankuvan-aikasuodattimet])]))))
+         [aikasuodattimet]]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
 
