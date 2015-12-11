@@ -93,7 +93,8 @@
    [nykytilanteen-aikavalinta]
    [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet :talvi]
    [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet :kesa]
-   [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet :laadunseuranta]])
+   [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet :laadunseuranta]
+   [checkbox-ryhma "Turvallisuus" tiedot/suodattimet :turvallisuus]])
 
 
 (def suodattimet
@@ -125,21 +126,3 @@
     (fn []
       [:span.tilannekuva
        [kartta/kartan-paikka]])))
-
-;; TODO: Vanhaa koodia vanhasta näkymästä. Veikkaanpa että yleinen pvm-komponentti ei
-;; taivu tähän näkymään, vaan kannattaa vaan tehdä uusi.
-#_(defn historiakuvan-aikavalitsin []
-    [:span#tk-aikavalitsin
-     [kentat/tee-kentta {:tyyppi :pvm :absoluuttinen? true}
-      (r/wrap (first @tiedot/historiakuvan-aikavali)
-              (fn [u]
-                (swap! tiedot/historiakuvan-aikavali assoc 0 u)
-                (when (apply pvm/jalkeen? @tiedot/historiakuvan-aikavali)
-                  (swap! tiedot/historiakuvan-aikavali assoc 1 (second (pvm/kuukauden-aikavali u))))))]
-
-     [kentat/tee-kentta {:tyyppi :pvm :absoluuttinen? true}
-      (r/wrap (second @tiedot/historiakuvan-aikavali)
-              (fn [u]
-                (swap! tiedot/historiakuvan-aikavali assoc 1 u)
-                (when (apply pvm/jalkeen? @tiedot/historiakuvan-aikavali)
-                  (swap! tiedot/historiakuvan-aikavali assoc 0 (first (pvm/kuukauden-aikavali u))))))]])
