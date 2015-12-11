@@ -27,7 +27,7 @@
                                                 (:integraatioloki jarjestelma)
                                                 "hae-urakka"
                                                 {:body kutsun-data :request-method :post :headers {"oam_remote_user" "yit-rakennus",}}
-                                                json-skeemat/+havainnon-kirjaus+
+                                                json-skeemat/+laatupoikkeaman-kirjaus+
                                                 json-skeemat/+kirjausvastaus+
                                                 (fn [_]))]
     (is (= 400 (:status vastaus)))
@@ -40,7 +40,7 @@
                                                 (:integraatioloki jarjestelma)
                                                 "hae-urakka"
                                                 {:body kutsun-data :request-method :post :headers {"oam_remote_user" "tuntematon",}}
-                                                json-skeemat/+havainnon-kirjaus+
+                                                json-skeemat/+laatupoikkeaman-kirjaus+
                                                 json-skeemat/+kirjausvastaus+
                                                 (fn [_]))]
     (is (= 400 (:status vastaus)))

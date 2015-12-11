@@ -9,21 +9,21 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
-            [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
+            [harja.palvelin.komponentit.liitteet :refer [->Liitteet]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-laatupoikkeamalle]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tee-onnistunut-vastaus []
+(defn tee-onnistunut-vastaus [varoitukset]
   (let [vastauksen-data {:ilmoitukset "Laatupoikkeama kirjattu onnistuneesti"}]
-    vastauksen-data))
+    (if varoitukset
+      (assoc vastauksen-data :varoitukset varoitukset)
+      vastauksen-data)))
 
-(defn tallenna-laatupoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde paivamaara alkusijainti loppusijainti]} data
-        sijainti (sijainnit/hae-sijainti db alkusijainti loppusijainti)]
-     (println "--------> SIJAINTI:" sijainti)
+(defn tallenna-laatupoikkeama [db urakka-id kirjaaja data sijainti]
+  (let [{:keys [tunniste kuvaus kohde paivamaara]} data]
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
              db
@@ -63,20 +63,21 @@
       (laatupoikkeamat/liita-kommentti<! db laatupoikkeama-id kommentti-id))))
 
 (defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [transaktio db]
-    (let [laatupoikkeama-id (tallenna-laatupoikkeama transaktio urakka-id kirjaaja data)
-          kommentit (:kommentit data)
-          liitteet (:liitteet data)]
-      (log/info "LIITE " (count liitteet))
-      (tallenna-kommentit transaktio laatupoikkeama-id kirjaaja kommentit)
-      (tallenna-liitteet-laatupoikkeamalle transaktio liitteiden-hallinta urakka-id laatupoikkeama-id kirjaaja liitteet))))
+  (let [sijainti (sijainnit/hae-sijainti db (:alkusijainti data) (:loppusijainti data))]
+    (jdbc/with-db-transaction [transaktio db]
+      (let [laatupoikkeama-id (tallenna-laatupoikkeama transaktio urakka-id kirjaaja data sijainti)
+            kommentit (:kommentit data)
+            liitteet (:liitteet data)]
+        (log/info "LIITE " (count liitteet))
+        (tallenna-kommentit transaktio laatupoikkeama-id kirjaaja kommentit)
+        (tallenna-liitteet-laatupoikkeamalle transaktio liitteiden-hallinta urakka-id laatupoikkeama-id kirjaaja liitteet)))
+    (when-not sijainti "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla.")))
 
 (defn kirjaa-laatupoikkeama [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi laatupoikkeama urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (tallenna liitteiden-hallinta db urakka-id kirjaaja data)
-    (tee-onnistunut-vastaus)))
+    (tee-onnistunut-vastaus (tallenna liitteiden-hallinta db urakka-id kirjaaja data))))
 
 (defrecord Laatupoikkeamat []
   component/Lifecycle
