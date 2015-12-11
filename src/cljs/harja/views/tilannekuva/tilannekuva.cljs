@@ -36,7 +36,9 @@
                           :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
        tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
-(defn checkbox-ryhma-elementti [nimi suodattimet-atom suodatinpolku]
+(defn checkbox-ryhma-elementti
+  "Suodatinpolku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
+  [nimi suodattimet-atom suodatinpolku]
   [checkbox/checkbox
    (reaction (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatinpolku)))
    nimi
@@ -48,16 +50,18 @@
                            suodatinpolku
                            (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
 
-(defn checkbox-ryhma [otsikko suodattimet-atom ryhma]
+(defn checkbox-ryhma
+  "Ryhmäpolku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa"
+  [otsikko suodattimet-atom ryhma-polku]
   (let [auki? (atom false)
         ryhmanjohtaja-tila-atom (reaction
-                                  (if (every? true? (vals (get @suodattimet-atom ryhma)))
+                                  (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
                                             :valittu
-                                            (if (every? false? (vals (get @suodattimet-atom ryhma)))
+                                            (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
                                               :ei-valittu
                                               :osittain-valittu)))]
     (fn []
-      (let [ryhman-elementit-ja-tilat (atom (get @suodattimet-atom ryhma))]
+      (let [ryhman-elementit-ja-tilat (atom (get-in @suodattimet-atom ryhma-polku))]
         @suodattimet-atom
         [:div.tk-checkbox-ryhma
          [:div.tk-checkbox-ryhma-otsikko
@@ -73,10 +77,10 @@
                             (reset! suodattimet-atom
                                     (reduce (fn [edellinen-map tehtava-avain]
                                               (assoc-in edellinen-map
-                                                        [ryhma tehtava-avain]
+                                                        (conj ryhma-polku tehtava-avain)
                                                         (checkbox/checkbox-tila-keyword->boolean uusi-tila)))
                                             @suodattimet-atom
-                                            (keys (get @suodattimet-atom ryhma))))))}]]]
+                                            (keys (get-in @suodattimet-atom ryhma-polku))))))}]]]
 
          (when @auki?
            [:div.tk-checkbox-ryhma-sisalto
@@ -85,24 +89,24 @@
                      [checkbox-ryhma-elementti
                       (get tiedot/suodattimien-nimet (first elementti))
                       suodattimet-atom
-                      [ryhma (first elementti)]]))])]))))
+                      (conj ryhma-polku (first elementti))]))])]))))
 
-(defn nykytilanteen-suodattimet []
+(defn nykytilanteen-aikasuodattimet []
   [:div#tk-nykytila-paavalikko
    [:span "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
-   [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet :talvi]
-   [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet :kesa]
-   [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet :laadunseuranta]
-   [checkbox-ryhma "Turvallisuus" tiedot/suodattimet :turvallisuus]])
+   [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]]
+   [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]]
+   [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet [:laadunseuranta]]
+   [checkbox-ryhma "Turvallisuus" tiedot/suodattimet [:turvallisuus]]])
 
 (def suodattimet
   [:span
    [tilan-vaihtaja]
-   ; [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet :ilmoitukset] ; FIXME Ei toimi nykyisillä checkbokseilla näin
-   [checkbox-ryhma "Ylläpito" tiedot/suodattimet :yllapito]
+   [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]] ; FIXME Tilat?
+   [checkbox-ryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
    (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan, ilmeisesti siksi ettei tämä ole reagent renderöintifunktio
-     [nykytilanteen-suodattimet])])
+     [nykytilanteen-aikasuodattimet])])
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
 
