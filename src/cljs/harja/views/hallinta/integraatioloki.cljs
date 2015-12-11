@@ -7,7 +7,7 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [ajax-loader livi-pudotusvalikko]]
-            [harja.ui.visualisointi :as vis]
+            [harja.visualisointi :as vis]
             [harja.ui.grid :refer [grid]]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.ikonit :as ikonit]

@@ -2,6 +2,7 @@
   "Raportoinnin elementtien renderöinti PDF:ksi"
   (:require [harja.tyokalut.xsl-fo :as fo]
             [clojure.string :as str]
+            [harja.visualisointi :as vis]
             [taoensso.timbre :as log]))
 
 (defmulti muodosta-pdf
@@ -55,12 +56,22 @@
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari piilota-arvo?]} pylvaat]]
+(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo?]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
+  (log/debug "muodosta pdf pylväät data" pylvaat)
   [:fo:block
    [:fo:block {:font-weight "bold"} otsikko]
    [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
-    [:svg {:xmlns "http://www.w3.org/2000/svg"}
+    (vis/bars {:width         180
+               :height        80
+               ;; tarvitaanko erityyppisille rapsoille eri formatteri?
+               :format-amount (or fmt str)
+               :hide-value?   piilota-arvo?
+               :margin-x 20
+               :margin-y -10
+               }
+     pylvaat)
+    #_[:svg {:xmlns "http://www.w3.org/2000/svg"}
      (let [data pylvaat
            width 180
            height 80

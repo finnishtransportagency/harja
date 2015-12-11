@@ -2,7 +2,7 @@
   "Harjan raporttielementtien HTML näyttäminen."
   (:require [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.visualisointi :as vis]
+            [harja.visualisointi :as vis]
             [harja.loki :refer [log]]))
 
 (defmulti muodosta-html
