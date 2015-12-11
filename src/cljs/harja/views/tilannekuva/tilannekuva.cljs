@@ -46,23 +46,28 @@
        tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
 (defn yksittainen-suodatincheckbox
-  "Suodatinpolku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
-  [nimi suodattimet-atom suodatinpolku]
+  "suodatin-polku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
+  [nimi suodattimet-atom suodatin-polku]
   [checkbox/checkbox
-   (reaction (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatinpolku)))
+   (reaction (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatin-polku)))
    nimi
    {:display   "block"
     :on-change (fn [uusi-tila]
                  (reset! suodattimet-atom
                          (assoc-in
                            @suodattimet-atom
-                           suodatinpolku
+                           suodatin-polku
                            (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
 
+(def auki-oleva-checkbox-ryhma (atom nil))
+
 (defn checkbox-suodatinryhma
-  "Ryhmäpolku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa"
-  [otsikko suodattimet-atom ryhma-polku]
-  (let [auki? (atom false)
+  "ryhma-polku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa
+   kokoelma-atomin antaminen tarkoittaa, että checkbox-ryhmä on osa usean checkbox-ryhmän kokoelmaa, joista
+   vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
+   itse omaa auki/kiinni-tilaansa."
+  [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
+  (let [auki? (atom false) ; Itsenäisen auki/kiinni tilan ylläpitoon
         ryhmanjohtaja-tila-atom (reaction
                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
                                             :valittu
@@ -75,9 +80,17 @@
         [:div.tk-checkbox-ryhma
          [:div.tk-checkbox-ryhma-otsikko
           [:span.tk-checkbox-ryhma-tila {:on-click (fn []
-                                                     (swap! auki? not)
+                                                     (if kokoelma-atom
+                                                       ; Osa kokoelmaa
+                                                       (if (= otsikko @kokoelma-atom)
+                                                         (reset! kokoelma-atom nil)
+                                                         (reset! kokoelma-atom otsikko))
+                                                       ; Ylläpitää itse omaa tilaansa
+                                                       (swap! auki? not))
                                                      (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
-           (if @auki? (ikonit/chevron-down) (ikonit/chevron-right))]
+           (if (or @auki? (and kokoelma-atom
+                               (= otsikko @kokoelma-atom)))
+             (ikonit/chevron-down) (ikonit/chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox
            [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
             {:display   "inline-block"
@@ -92,7 +105,8 @@
                                             @suodattimet-atom
                                             (keys (get-in @suodattimet-atom ryhma-polku))))))}]]]
 
-         (when @auki?
+         (when (or @auki? (and kokoelma-atom
+                               (= otsikko @kokoelma-atom)))
            [:div.tk-checkbox-ryhma-sisalto
             (doall (for [elementti (seq @ryhman-elementit-ja-tilat)]
                      ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
@@ -106,12 +120,16 @@
    [:span "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
    [:div.tk-suodatinryhmat
-    [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]]
-    [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]]]
+    [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]]
    [:div.tk-yksittaiset-suodattimet
-    [yksittainen-suodatincheckbox "Laatupoikkeamat" tiedot/suodattimet [:laadunseuranta :laatupoikkeamat]]
-    [yksittainen-suodatincheckbox "Tarkastukset" tiedot/suodattimet [:laadunseuranta :tarkastukset]]
-    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat]]]])
+    [yksittainen-suodatincheckbox "Laatupoikkeamat" tiedot/suodattimet [:laadunseuranta :laatupoikkeamat] auki-oleva-checkbox-ryhma]
+    [yksittainen-suodatincheckbox "Tarkastukset" tiedot/suodattimet [:laadunseuranta :tarkastukset] auki-oleva-checkbox-ryhma]
+    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat] auki-oleva-checkbox-ryhma]]])
+
+(defn historiankuvan-aikasuodattimet []
+  [:div#tk-historia-paavalikko
+   [:span {:style {:color "red"}} "UNDER CONSTRUCTION! Tämän näkymän harjaaminen on vielä kesken :-)"]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
@@ -122,10 +140,12 @@
       (fn []
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
          [tilan-vaihtaja]
-         [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
-         [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
+         [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
+         [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]auki-oleva-checkbox-ryhma]
          (when (= :nykytilanne @tiedot/valittu-tila)
-           [nykytilanteen-aikasuodattimet])]))))
+           [nykytilanteen-aikasuodattimet])
+         (when (= :historiakuva @tiedot/valittu-tila)
+           [historiankuvan-aikasuodattimet])]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto [suodattimet]}}))
 
