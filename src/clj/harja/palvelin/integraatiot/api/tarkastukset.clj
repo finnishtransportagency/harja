@@ -17,7 +17,7 @@
 
 (defn tee-onnistunut-vastaus [varoitukset]
   (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
-    (if varoitukset
+    (if (not-empty varoitukset)
       (assoc vastauksen-data :varoitukset varoitukset)
       vastauksen-data)))
 

@@ -2,7 +2,10 @@
 <b>Julkaistu: 2.9.2015</b>
 
 <b>Versiohistoria:</b>
-- Versionumero: 0.0.5. Julkaistu: - . Muutokset:
+- Versionumero: 0.0.6. Julkaistu: 11.12.2015 . Muutokset:
+    - Soratie-, talvihoito- ja tiestötarkastus rajapinnat on refaktoroitu vastaamaan uutta tietomallia
+    - Vanha havainto rajapinta on muutettu laatupoikkeama rajapinnaksi
+- Versionumero: 0.0.5. Julkaistu: 30.11.2015 . Muutokset:
     - Ilmoitusten haut siirretty urakoiden alle. Kaksi erillistä operaatiota ilmoitusten reaaliaikaiselle haulle ja massahaulle viimeisen id:n jälkeen.
     - Päivystäjätietojen haku toteutettu kolmena eri GET-palveluna: haku urakka id:llä, sijainnilla tai puhelinnumerolla
     - Toteumalle merkitty pakolliseksi alkamis- ja päättymisaika

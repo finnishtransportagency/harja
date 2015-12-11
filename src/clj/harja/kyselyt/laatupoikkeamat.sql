@@ -212,8 +212,21 @@ WHERE id = :id;
 -- voi antaa päätöstietoja.
 INSERT
 INTO laatupoikkeama
-(urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus,
- sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
+(urakka,
+ aika,
+ tekija,
+ kohde,
+ selvitys_pyydetty,
+ luoja,
+ luotu,
+ kuvaus,
+ sijainti,
+ tr_numero,
+ tr_alkuosa,
+ tr_loppuosa,
+ tr_alkuetaisyys,
+ tr_loppuetaisyys,
+ ulkoinen_id)
 VALUES (:urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
                  :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :ulkoinen_id);

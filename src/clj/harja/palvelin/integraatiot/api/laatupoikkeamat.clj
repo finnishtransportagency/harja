@@ -18,16 +18,16 @@
 
 (defn tee-onnistunut-vastaus [varoitukset]
   (let [vastauksen-data {:ilmoitukset "Laatupoikkeama kirjattu onnistuneesti"}]
-    (if varoitukset
+    (if (not-empty varoitukset)
       (assoc vastauksen-data :varoitukset varoitukset)
       vastauksen-data)))
 
 (defn tallenna-laatupoikkeama [db urakka-id kirjaaja data tr-osoite geometria]
-  (let [{:keys [tunniste kuvaus kohde paivamaara]} data]
+  (let [{:keys [tunniste kuvaus kohde aika]} data]
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
              db
-             (pvm-string->java-sql-date paivamaara)
+             (pvm-string->java-sql-date aika)
              kohde
              kuvaus
              geometria
@@ -42,7 +42,7 @@
       (:id (laatupoikkeamat/luo-laatupoikkeama<!
              db
              urakka-id
-             (pvm-string->java-sql-date paivamaara)
+             (pvm-string->java-sql-date aika)
              "urakoitsija"
              kohde
              true
