@@ -38,12 +38,12 @@
                                                           (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
 (defn nykytilanteen-aikavalinnat []
-    [:div#tk-nykytilanteen-aikavalit
-      [kentat/tee-kentta {:tyyppi   :radio
-                          :valinta-nayta (fn [[nimi _]] nimi)
-                          :valinta-arvo (fn [[_ arvo]] arvo)
-                          :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
-       tiedot/nykytilanteen-aikasuodattimen-arvo]])
+  [:div#tk-nykytilanteen-aikavalit
+   [kentat/tee-kentta {:tyyppi        :radio
+                       :valinta-nayta (fn [[nimi _]] nimi)
+                       :valinta-arvo  (fn [[_ arvo]] arvo)
+                       :valinnat      tiedot/nykytilanteen-aikasuodatin-tunteina}
+    tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
@@ -86,15 +86,18 @@
         @suodattimet-atom
         [:div.tk-checkbox-ryhma
          [:div.tk-checkbox-ryhma-otsikko
-          [:span.tk-checkbox-ryhma-tila {:on-click (fn []
-                                                     (if kokoelma-atom
-                                                       ; Osa kokoelmaa
-                                                       (if (= otsikko @kokoelma-atom)
-                                                         (reset! kokoelma-atom nil)
-                                                         (reset! kokoelma-atom otsikko))
-                                                       ; Ylläpitää itse omaa tilaansa
-                                                       (swap! oma-auki-tila not))
-                                                     (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
+          [:span {:class    (str
+                              "tk-checkbox-ryhma-tila chevron-rotate "
+                              (when-not (auki?) "chevron-rotate-down"))
+                  :on-click (fn []
+                              (if kokoelma-atom
+                                ; Osa kokoelmaa
+                                (if (= otsikko @kokoelma-atom)
+                                  (reset! kokoelma-atom nil)
+                                  (reset! kokoelma-atom otsikko))
+                                ; Ylläpitää itse omaa tilaansa
+                                (swap! oma-auki-tila not))
+                              (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
            (if (auki?)
              (ikonit/chevron-down) (ikonit/chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox
@@ -145,7 +148,7 @@
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
          [tilan-vaihtaja]
          [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
-         [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]auki-oleva-checkbox-ryhma]
+         [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]
          [aikasuodattimet]]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
