@@ -36,5 +36,10 @@
         "sisalto": "... sisältö base64 enkoodattuna  ..."
       }
     }
+  ],
+  "kommentit": [
+    {
+      "kommentti": "Kolari johtui siitä, että paikalla ei oltu hiekoitettu tietä."
+    }
   ]
 }

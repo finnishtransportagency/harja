@@ -60,6 +60,22 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+    },
+    "kommentit": {
+      "id": "urn:harja/kommentit",
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "id": "urn:harja/kommentit/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kommentti": {
+            "id": "urn:harja/kommentit/0/kommentti",
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }
