@@ -100,15 +100,15 @@
    [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet [:laadunseuranta]]
    [checkbox-ryhma "Turvallisuus" tiedot/suodattimet [:turvallisuus]]])
 
-(def suodattimet
+(defn suodattimet []
   [:span
    [tilan-vaihtaja]
-   [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]] ; FIXME Tilat?
+   [checkbox-ryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]]
    [checkbox-ryhma "Ylläpito" tiedot/suodattimet [:yllapito]]
-   (when (= :nykytilanne @tiedot/valittu-tila) ; FIXME Ei päivity jos tilaa vaihdetaan, ilmeisesti siksi ettei tämä ole reagent renderöintifunktio
+   (when (= :nykytilanne @tiedot/valittu-tila)
      [nykytilanteen-aikasuodattimet])])
 
-(def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto suodattimet}}))
+(def hallintapaneeli (atom {1 {:auki true :otsikko "Tilannekuva" :sisalto [suodattimet]}}))
 
 (defn tilannekuva []
   (komp/luo
