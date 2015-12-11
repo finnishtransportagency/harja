@@ -105,10 +105,21 @@
   [:div#tk-nykytila-paavalikko
    [:span "Näytä seuraavat aikavälillä:"]
    [nykytilanteen-aikavalinta]
-   [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]]
-   [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]]
-   [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet [:laadunseuranta]]
-   [checkbox-ryhma "Turvallisuus" tiedot/suodattimet [:turvallisuus]]])
+   [:div.tk-suodatinryhmat
+    [checkbox-ryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]]
+    [checkbox-ryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]]
+    [checkbox-ryhma "Laadunseuranta" tiedot/suodattimet [:laadunseuranta]]]
+   [:div.tk-yksittaiset-suodattimet
+    [checkbox/checkbox
+     (reaction (checkbox/boolean->checkbox-tila-keyword (get-in @tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat])))
+     "Turvallisuuspoikkeamat"
+     {:display   "block"
+      :on-change (fn [uusi-tila]
+                   (reset! tiedot/suodattimet
+                           (assoc-in
+                             @tiedot/suodattimet
+                             [:turvallisuus :turvallisuuspoikkeamat]
+                             (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}]]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
