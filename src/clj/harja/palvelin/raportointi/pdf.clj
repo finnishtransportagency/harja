@@ -56,7 +56,7 @@
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo?]} pylvaat]]
+(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
   (log/debug "muodosta pdf pylväät data" pylvaat)
   [:fo:block
@@ -72,6 +72,7 @@
                :value-font-size "4pt"
                :tick-font-size "3pt"
                :y-axis-font-size "4pt"
+               :legend legend
                }
      pylvaat)]])
 

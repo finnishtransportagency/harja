@@ -48,16 +48,16 @@
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo?]} pylvaat]]
+(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   (let [w (int (* 0.85 @yleiset/leveys))
         h (int (/ w 3))]
     [:div.pylvaat
      [:h3 otsikko]
      [vis/bars {:width         w
                 :height        h
-                ;; tarvitaanko erityyppisille rapsoille eri formatteri?
                 :format-amount (or fmt str)
                 :hide-value?   piilota-arvo?
+                :legend legend
                 }
       pylvaat]]))
 

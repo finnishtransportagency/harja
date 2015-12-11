@@ -61,21 +61,22 @@
                                     (ilmoituspalvelu/hae-ilmoitukset
                                       db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
                                       [hoitokauden-alkupvm loppupvm] ""))
-        tpp-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
-                                            (filter #(= :toimenpidepyynto (:ilmoitustyyppi %))
-                                                    (if kyseessa-kk-vali?
-                                                      ilmoitukset-hoitokaudella
-                                                      ilmoitukset))))
-        urk-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
-                                            (filter #(= :kysely (:ilmoitustyyppi %))
-                                                    (if kyseessa-kk-vali?
-                                                      ilmoitukset-hoitokaudella
-                                                      ilmoitukset))))
-        tur-kuukausittain (frequencies (map (comp vuosi-ja-kk :ilmoitettu)
-                                            (filter #(= :tiedoitus (:ilmoitustyyppi %))
-                                                    (if kyseessa-kk-vali?
-                                                      ilmoitukset-hoitokaudella
-                                                      ilmoitukset))))
+        ilmoitukset-kuukausittain (group-by ffirst
+                                            (frequencies (map (juxt (comp vuosi-ja-kk :ilmoitettu)
+                                                                    :ilmoitustyyppi)
+                                                              (if kyseessa-kk-vali?
+                                                                ilmoitukset-hoitokaudella
+                                                                ilmoitukset))))
+        _ (log/debug "ilmoitukset-kuukausittain" (pr-str ilmoitukset-kuukausittain))
+        ilmoitukset-kuukausittain-tyyppiryhmiteltyna (reduce-kv (fn [tulos kk ilmot] (assoc tulos kk
+                                                     [(some #(when (= :toimenpidepyynto (second (first %)))
+                                                              (second %)) ilmot)
+                                                      (some #(when (= :tiedoitus (second (first %)))
+                                                              (second %)) ilmot)
+                                                      (some #(when (= :kysely (second (first %)))
+                                                              (second %)) ilmot)]))
+                                                                {} ilmoitukset-kuukausittain)
+        _ (log/debug "ilmoitukset-kuukausittain-tyyppiryhmiteltyna" (pr-str ilmoitukset-kuukausittain-tyyppiryhmiteltyna))
         graafin-alkupvm (if kyseessa-kk-vali?
                           hoitokauden-alkupvm
                           alkupvm)
@@ -123,22 +124,11 @@
                      [tpp-yht urk-yht tur-yht])])))]
 
      (when nayta-pylvaat?
-       (if-not (empty? tpp-kuukausittain)
-         (pylvaat {:otsikko (str "TPP kuukausittain" hoitokaudella-tahan-asti-opt)
+       (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
+         (pylvaat {:otsikko (str "Ilmoitukset kuukausittain" hoitokaudella-tahan-asti-opt)
                    :alkupvm graafin-alkupvm :loppupvm loppupvm
-                   :kuukausittainen-data tpp-kuukausittain :piilota-arvo? #{0}})
-         (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm loppupvm)))
-     (when nayta-pylvaat?
-       (if-not (empty? urk-kuukausittain)
-         (pylvaat {:otsikko (str "URK kuukausittain" hoitokaudella-tahan-asti-opt)
-                   :alkupvm graafin-alkupvm :loppupvm loppupvm
-                   :kuukausittainen-data urk-kuukausittain :piilota-arvo? #{0}})
-         (ei-osumia-aikavalilla-teksti "URK-ilmoituksia" graafin-alkupvm loppupvm)))
-     (when nayta-pylvaat?
-       (if-not (empty? tur-kuukausittain)
-         (pylvaat {:otsikko (str "TUR kuukausittain" hoitokaudella-tahan-asti-opt)
-                   :alkupvm graafin-alkupvm :loppupvm loppupvm
-                   :kuukausittainen-data tur-kuukausittain :piilota-arvo? #{0}})
-         (ei-osumia-aikavalilla-teksti "TUR-ilmoituksia" graafin-alkupvm loppupvm)))]))
+                   :kuukausittainen-data ilmoitukset-kuukausittain-tyyppiryhmiteltyna :piilota-arvo? #{0}
+                   :legend ["TPP" "TUR" "URK"]})
+         (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm loppupvm)))]))
 
     
