@@ -17,7 +17,7 @@
             [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot-sanoma]
-            [harja.utils :as utils]
+            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -141,13 +141,13 @@
     :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-paivystajatiedot-sijainnilla db (utils/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
+                      (hae-paivystajatiedot-sijainnilla db (apurit/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
     :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-paivystajatiedot-puhelinnumerolla db (utils/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
+                      (hae-paivystajatiedot-puhelinnumerolla db (apurit/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
    {:palvelu        :lisaa-paivystajatiedot
     :polku          "/api/urakat/:id/paivystajatiedot"
     :tyyppi         :POST
