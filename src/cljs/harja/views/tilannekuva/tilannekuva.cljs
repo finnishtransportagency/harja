@@ -37,13 +37,17 @@
                                                           (reset! tiedot/valittu-tila :nykytilanne)
                                                           (reset! tiedot/valittu-tila :historiakuva)))}]])))
 
-(defn nykytilanteen-aikavalinta []
+(defn nykytilanteen-aikavalinnat []
     [:div#tk-nykytilanteen-aikavalit
       [kentat/tee-kentta {:tyyppi   :radio
                           :valinta-nayta (fn [[nimi _]] nimi)
                           :valinta-arvo (fn [[_ arvo]] arvo)
                           :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
        tiedot/nykytilanteen-aikasuodattimen-arvo]])
+
+(defn historiankuvan-aikavalinnat []
+  [:div#tk-historiakuvan-aikavalit
+   [:div {:style {:color "red" :margin-top "8px" :margin-bottom "8px"}} "UNDER CONSTRUCTION! Historiakuvan aikasuodattimien harjaaminen on vielä kesken :-)"]])
 
 (defn yksittainen-suodatincheckbox
   "suodatin-polku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
@@ -67,13 +71,16 @@
    vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
    itse omaa auki/kiinni-tilaansa."
   [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-  (let [auki? (atom false) ; Itsenäisen auki/kiinni tilan ylläpitoon
+  (let [oma-auki-tila (atom false)
+        auki? (fn [] (or @oma-auki-tila
+                         (and kokoelma-atom
+                              (= otsikko @kokoelma-atom))))
         ryhmanjohtaja-tila-atom (reaction
                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
-                                            :valittu
-                                            (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
-                                              :ei-valittu
-                                              :osittain-valittu)))]
+                                    :valittu
+                                    (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
+                                      :ei-valittu
+                                      :osittain-valittu)))]
     (fn []
       (let [ryhman-elementit-ja-tilat (atom (get-in @suodattimet-atom ryhma-polku))]
         @suodattimet-atom
@@ -86,10 +93,9 @@
                                                          (reset! kokoelma-atom nil)
                                                          (reset! kokoelma-atom otsikko))
                                                        ; Ylläpitää itse omaa tilaansa
-                                                       (swap! auki? not))
+                                                       (swap! oma-auki-tila not))
                                                      (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
-           (if (or @auki? (and kokoelma-atom
-                               (= otsikko @kokoelma-atom)))
+           (if (auki?)
              (ikonit/chevron-down) (ikonit/chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox
            [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
@@ -105,8 +111,7 @@
                                             @suodattimet-atom
                                             (keys (get-in @suodattimet-atom ryhma-polku))))))}]]]
 
-         (when (or @auki? (and kokoelma-atom
-                               (= otsikko @kokoelma-atom)))
+         (when (auki?)
            [:div.tk-checkbox-ryhma-sisalto
             (doall (for [elementti (seq @ryhman-elementit-ja-tilat)]
                      ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
@@ -115,10 +120,13 @@
                       suodattimet-atom
                       (conj ryhma-polku (first elementti))]))])]))))
 
-(defn nykytilanteen-aikasuodattimet []
-  [:div#tk-nykytila-paavalikko
+(defn aikasuodattimet []
+  [:div#tk-paavalikko
    [:span "Näytä seuraavat aikavälillä:"]
-   [nykytilanteen-aikavalinta]
+   (when (= :nykytilanne @tiedot/valittu-tila)
+     [nykytilanteen-aikavalinnat])
+   (when (= :historiakuva @tiedot/valittu-tila)
+     [historiankuvan-aikavalinnat])
    [:div.tk-suodatinryhmat
     [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]]
@@ -126,10 +134,6 @@
     [yksittainen-suodatincheckbox "Laatupoikkeamat" tiedot/suodattimet [:laadunseuranta :laatupoikkeamat] auki-oleva-checkbox-ryhma]
     [yksittainen-suodatincheckbox "Tarkastukset" tiedot/suodattimet [:laadunseuranta :tarkastukset] auki-oleva-checkbox-ryhma]
     [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat] auki-oleva-checkbox-ryhma]]])
-
-(defn historiankuvan-aikasuodattimet []
-  [:div#tk-historia-paavalikko
-   [:span {:style {:color "red"}} "UNDER CONSTRUCTION! Tämän näkymän harjaaminen on vielä kesken :-)"]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
@@ -142,10 +146,7 @@
          [tilan-vaihtaja]
          [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
          [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]auki-oleva-checkbox-ryhma]
-         (when (= :nykytilanne @tiedot/valittu-tila)
-           [nykytilanteen-aikasuodattimet])
-         (when (= :historiakuva @tiedot/valittu-tila)
-           [historiankuvan-aikasuodattimet])]))))
+         [aikasuodattimet]]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
 
