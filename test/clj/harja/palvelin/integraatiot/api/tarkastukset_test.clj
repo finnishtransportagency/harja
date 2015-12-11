@@ -5,7 +5,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
-            [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.komponentit.liitteet :as liitteet])
   (:import (java.util Date)))
