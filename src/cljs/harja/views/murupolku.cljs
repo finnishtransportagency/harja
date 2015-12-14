@@ -11,6 +11,17 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]))
 
+(defn koko-maa []
+  [:li
+   [:a.murupolkuteksti {:href     "#"
+                        :style    (when (nil? @nav/valittu-hallintayksikko)
+                                    {:text-decoration "none"
+                                     :color           "#323232"})
+                        :on-click #(do
+                                    (.preventDefault %)
+                                    (nav/valitse-hallintayksikko nil))}
+    "Koko maa"]])
+
 (defn urakoitsija []
   [:div [:span.livi-valikkonimio.urakoitsija-otsikko "Urakoitsija"]
    [livi-pudotusvalikko {:valinta    @nav/valittu-urakoitsija
@@ -51,15 +62,7 @@
                            (= @nav/sivu :about) "hide"
                            :default ""))}
          [:ol.murupolku
-          [:li
-           [:a.murupolkuteksti {:href     "#"
-                                :style    (when (nil? @nav/valittu-hallintayksikko)
-                                            {:text-decoration "none"
-                                             :color           "#323232"})
-                                :on-click #(do
-                                            (.preventDefault %)
-                                            (nav/valitse-hallintayksikko nil))}
-            "Koko maa"]]
+          [koko-maa]
           (let [valittu @nav/valittu-hallintayksikko]
             [:li.dropdown.livi-alasveto {:class (when (= :hallintayksikko @valinta-auki) "open")}
 
