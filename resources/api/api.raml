@@ -715,10 +715,10 @@ documentation:
         description: Päivystäjätietojen haku puhelinnumerolla.
         queryParameters:
           puhelinnumero:
-            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta.
+            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta. Huom. maatunnuksen plus-merkki täytyy escapeta muotoon %2B.
             type: string
             required: true
-            example: +358 41 433 21 19
+            example: 0414332119
           alkaen:
             description: Päivystykset alkaen
             type: date
