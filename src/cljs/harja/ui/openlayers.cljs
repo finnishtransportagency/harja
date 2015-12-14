@@ -467,11 +467,12 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width scale color] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})        
         nuolet (atom [])]
 
+    (log "hengissä 1")
     ;; Kerätään viivasegmenteille loppusijainnit ja viivan suunta
     (.forEachSegment
       (.getGeometry feature)
@@ -482,7 +483,7 @@
                                           (- (first end) (first start))))})
         ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
         false))
-
+    (log "hengissä")
     (doto feature
       (.setStyle
        (clj->js
@@ -510,9 +511,8 @@
                  (recur (conj nuolityylit
                               (ol.style.Style.
                                #js {:geometry (ol.geom.Point. (clj->js sijainti))
-                                    :image    (ol.style.Icon. #js {:src (if color
-                                                                          (str "images/nuoli-" color ".svg")
-                                                                          "images/nuoli-red.svg")
+                                    :image    (ol.style.Icon. #js {:src (or arrow-image 
+                                                                            "images/nuoli-red.svg")
                                                                    :opacity        1
                                                                    :scale          (or scale 2.5)
                                                                    :zIndex         6

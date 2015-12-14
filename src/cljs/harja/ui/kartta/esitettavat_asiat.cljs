@@ -141,11 +141,23 @@
             :img         "kartta-hairion-hallinta-sininen.svg"
             :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])
 
-(def toteuma-varit ["red" "green" "yellow" "blue" "magenta" "brown" "cyan"])
-(let [varien-lkm (count toteuma-varit)]
-  (defn tehtavan-vari [tehtavan-nimi]
-    (log "TEHTAVA: " tehtavan-nimi)
-    (nth toteuma-varit (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
+(def toteuma-varit-ja-nuolet
+  [["rgb(255,0,0)" "punainen"]
+   ["rgb(255,128,0)" "oranssi"]
+   ["rgb(255,255,0)" "keltainen"]
+   ["rgb(128,255,0)" "lime"]
+   ["rgb(0,255,0)" "vihrea"]
+   ["rgb(0,255,128)" "turkoosi"]
+   ["rgb(0,255,255)" "syaani"]
+   ["rgb(0,128,255)" "sininen"]
+   ["rgb(0,0,255)" "tummansininen"]
+   ["rgb(128,0,255)" "violetti"]
+   ["rgb(255,0,255)" "magenta"]
+   ["rgb(255,0,128)" "pinkki"]])
+
+(let [varien-lkm (count toteuma-varit-ja-nuolet)]
+  (defn tehtavan-vari-ja-nuoli [tehtavan-nimi]
+    (nth toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
@@ -154,7 +166,7 @@
                         (fn [[_ arvo]] (first arvo))
                         (group-by :id (:reittipisteet toteuma)))
         nimi (get-in toteuma [:tehtavat 0 :nimi])
-        vari (tehtavan-vari nimi)]
+        [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
     [(when-not (empty? reittipisteet)
        (assoc toteuma
          :type :toteuma
@@ -169,6 +181,7 @@
          :alue {:type   :arrow-line
                 :width 5
                 :color vari
+                :arrow-image (str "images/nuoli-" nuoli ".svg")
                 :scale  (if (valittu? toteuma) 2 1.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
                 :points (mapv #(get-in % [:sijainti :coordinates])
                               (sort-by :aika pvm/ennen? reittipisteet))}))]))
