@@ -141,6 +141,12 @@
             :img         "kartta-hairion-hallinta-sininen.svg"
             :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])
 
+(def toteuma-varit ["red" "green" "yellow" "blue" "magenta" "brown" "cyan"])
+(let [varien-lkm (count toteuma-varit)]
+  (defn tehtavan-vari [tehtavan-nimi]
+    (log "TEHTAVA: " tehtavan-nimi)
+    (nth toteuma-varit (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
+
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
   ;; monta kertaa fronttiin.
@@ -158,13 +164,12 @@
                      (str (:toimenpide (first (:tehtavat toteuma))))))
          :selite {:teksti "Toteuma"
                   :img    "fixme.png"}
-         :alue {
-                :type   :arrow-line
-                :scale  (if (valittu? toteuma) 0.8 0.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
-                :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
-                                                                     :aika
-                                                                     pvm/ennen?
-                                                                     reittipisteet))}))]))
+         :alue {:type   :arrow-line
+                :width 5
+                :color (tehtavan-vari (get-in toteuma [:tehtavat 0 :nimi])) ;  "green"
+                :scale  (if (valittu? toteuma) 2 1.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
+                :points (mapv #(get-in % [:sijainti :coordinates])
+                              (sort-by :aika pvm/ennen? reittipisteet))}))]))
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)

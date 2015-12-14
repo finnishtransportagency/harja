@@ -467,10 +467,10 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width scale] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale color] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
+        nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                                 :width (or width 2)})
                                                  :zIndex 4})])]
 
@@ -480,16 +480,16 @@
         (swap! nuolityylit conj
                (ol.style.Style.
                  #js {:geometry (ol.geom.Point. (clj->js end))
-                      :image    (ol.style.Icon. #js {:src            "images/nuoli.png"
-                                                     :anchor         #js [0.5 0.5]
+                      :image    (ol.style.Icon. #js {:src (if color
+                                                            (str "images/nuoli-" color ".svg")
+                                                            "images/nuoli-red.svg")
                                                      :opacity        1
-                                                     :scale          (or scale 0.5)
-                                                     :size           #js [32 32]
+                                                     :scale          (or scale 2.5)
                                                      :zIndex         6
                                                      :rotateWithView false
                                                      :rotation       (- (js/Math.atan2
-                                                                          (- (second end) (second start))
-                                                                          (- (first end) (first start))))})}))
+                                                                         (- (second end) (second start))
+                                                                         (- (first end) (first start))))})}))
         false))                                             ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
 
     (doto feature
