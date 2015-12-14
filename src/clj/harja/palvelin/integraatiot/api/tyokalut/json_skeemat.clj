@@ -7,7 +7,7 @@
 (def +urakan-haku-vastaus+ "api/schemas/urakan-haku-response.schema.json")
 (def +urakoiden-haku-vastaus+ "api/schemas/urakoiden-haku-response.schema.json")
 
-(def +havainnon-kirjaus+ "api/schemas/havainnon-kirjaus-request.schema.json")
+(def +laatupoikkeaman-kirjaus+ "api/schemas/laatupoikkeaman-kirjaus-request.schema.json")
 
 (def +ilmoitustoimenpiteen-kirjaaminen+ "api/schemas/ilmoitustoimenpiteen-kirjaaminen-request.schema.json")
 (def +ilmoitusten-haku+ "api/schemas/ilmoitusten-haku-response.schema.json")

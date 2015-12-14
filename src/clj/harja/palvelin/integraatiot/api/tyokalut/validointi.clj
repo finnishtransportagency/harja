@@ -48,7 +48,7 @@
   (when (not (:jarjestelma kayttaja))
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
-                        :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) "ei ole järjestelmä")}]})))
+                        :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) " ei ole järjestelmä")}]})))
 
 (defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja]
   (tarkista-urakka db urakka-id)

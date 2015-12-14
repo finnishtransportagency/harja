@@ -5,7 +5,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
-            [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.komponentit.liitteet :as liitteet])
   (:import (java.util Date)))
@@ -33,7 +32,6 @@
 (deftest tallenna-soratietarkastus
   (let [pvm (Date.)
         id (hae-vapaa-tarkastus-ulkoinen-id)
-
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                                          (-> "test/resurssit/api/soratietarkastus.json"
                                              slurp
@@ -41,25 +39,21 @@
                                              (.replace "__ID__" (str id))))]
 
     (is (= 200 (:status vastaus)))
-    (is (str/blank? (slurp (:body vastaus))))
-
-    ;; varmistetaan että tarkastus löytyy tietokannasta
-    (let [tark (first (q (str "SELECT t.tyyppi, t.havainnot, stm.kiinteys, l.nimi "
-                              "  FROM tarkastus t "
-                              "       JOIN soratiemittaus stm ON stm.tarkastus=t.id "
-                              "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
-                              "       JOIN liite l ON hl.liite = l.id"
-                              " WHERE t.ulkoinen_id = " id
-                              "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
-      (is (= tark ["soratie" "jotain outoa" 3 "soratietarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))))
+    (let [tarkastus (first (q (str "SELECT t.tyyppi, t.havainnot, stm.kiinteys, l.nimi "
+                                   "  FROM tarkastus t "
+                                   "       JOIN soratiemittaus stm ON stm.tarkastus=t.id "
+                                   "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
+                                   "       JOIN liite l ON hl.liite = l.id"
+                                   " WHERE t.ulkoinen_id = " id
+                                   "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
+      (is (= tarkastus ["soratie" "jotain outoa" 3 "soratietarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))))
 
 (deftest tallenna-virheellinen-soratietarkastus
   (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                                          (-> "test/resurssit/api/soratietarkastus-virhe.json"
                                              slurp))]
     (is (= 400 (:status vastaus)))
-    (is (= "invalidi-json" (some-> vastaus :body json/read-str
-                                   (get "virheet") first (get "virhe") (get "koodi"))))))
+    (is (= "invalidi-json" (some-> vastaus :body json/read-str (get "virheet") first (get "virhe") (get "koodi"))))))
 
 (deftest tallenna-talvihoitotarkastus
   (let [pvm (Date.)
@@ -72,9 +66,6 @@
                                              (.replace "__ID__" (str id))))]
 
     (is (= 200 (:status vastaus)))
-    (is (str/blank? (slurp (:body vastaus))))
-
-    ;; varmistetaan että tarkastus löytyy tietokannasta
     (let [tark (first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
                               "  FROM tarkastus t "
                               "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
