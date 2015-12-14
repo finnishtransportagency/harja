@@ -145,14 +145,14 @@
   [["rgb(255,0,0)" "punainen"]
    ["rgb(255,128,0)" "oranssi"]
    ["rgb(255,255,0)" "keltainen"]
-   ["rgb(128,255,0)" "lime"]
+   ["rgb(255,0,255)" "magenta"]
    ["rgb(0,255,0)" "vihrea"]
    ["rgb(0,255,128)" "turkoosi"]
    ["rgb(0,255,255)" "syaani"]
    ["rgb(0,128,255)" "sininen"]
    ["rgb(0,0,255)" "tummansininen"]
    ["rgb(128,0,255)" "violetti"]
-   ["rgb(255,0,255)" "magenta"]
+   ["rgb(128,255,0)" "lime"]   
    ["rgb(255,0,128)" "pinkki"]])
 
 (let [varien-lkm (count toteuma-varit-ja-nuolet)]
