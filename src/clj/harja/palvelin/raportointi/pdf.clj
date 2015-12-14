@@ -2,6 +2,7 @@
   "Raportoinnin elementtien renderöinti PDF:ksi"
   (:require [harja.tyokalut.xsl-fo :as fo]
             [clojure.string :as str]
+            [harja.visualisointi :as vis]
             [taoensso.timbre :as log]))
 
 (defmulti muodosta-pdf
@@ -55,62 +56,24 @@
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari piilota-arvo?]} pylvaat]]
+(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo?]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
+  (log/debug "muodosta pdf pylväät data" pylvaat)
   [:fo:block
    [:fo:block {:font-weight "bold"} otsikko]
    [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
-    [:svg {:xmlns "http://www.w3.org/2000/svg"}
-     (let [data pylvaat
-           width 180
-           height 80
-           label-fn first
-           value-fn second
-           color-fn (constantly (or vari "blue"))
-           ticks nil
-           mx 20 ;; margin-x
-           my -10 ;; margin-y
-           bar-width (/ (- width mx) (count data))
-           max-value (reduce max (map value-fn data))
-           min-value (reduce min (map value-fn data))
-           value-range (- max-value min-value)
-           scale (if (zero? value-range)
-                   1
-                   (/ height value-range))
-           number-of-items (count data)
-           show-every-nth-label (if (< number-of-items 13)
-                                  1
-                                  (Math/ceil (/ number-of-items 12)))
-           hide-value? (or piilota-arvo? (constantly false))]
-       [:g
-        ;; render ticks that are in the min-value - max-value range
-        (for [tick [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)]
-              :let [tick-y (- height (* tick scale) my)]]
-          [:g 
-           [:text {:font-size "4pt" :text-anchor "end" :x (- mx 3) :y tick-y}
-            (str tick)]
-           [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
-                   :style "stroke:rgb(200,200,200);stroke-width:0.5;" :stroke-dasharray "5,1"}]])
-        
-        (map-indexed (fn [i d]
-                       (let [label (label-fn d)
-                             value (value-fn d)
-                             bar-height (* value scale)
-                             x (+ mx (* i bar-width))
-                             y (- height bar-height my)] ;; FIXME: scale min-max
-                         [:g 
-                          [:rect {:x x
-                                  :y y
-                                  :width (* bar-width 0.75)
-                                  :height bar-height
-                                  :fill (color-fn d)}]
-                          (when-not (hide-value? value)
-                            [:text {:font-size "4pt" :x (+ x (/ (* bar-width 0.75) 2)) :y (- y 1) :text-anchor "middle"} (str value)])
-                          (when (zero? (rem i show-every-nth-label))
-                            [:text {:font-size "3pt" :x (+ x (/ (* bar-width 0.75) 2)) :y (+ 4 (+ y bar-height))
-                                    :text-anchor "middle"}
-                             label])]))
-                     data)])]]])
+    (vis/bars {:width         180
+               :height        80
+               ;; tarvitaanko erityyppisille rapsoille eri formatteri?
+               :format-amount (or fmt str)
+               :hide-value?   piilota-arvo?
+               :margin-x 20
+               :margin-y 20
+               :value-font-size "4pt"
+               :tick-font-size "3pt"
+               :y-axis-font-size "4pt"
+               }
+     pylvaat)]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)

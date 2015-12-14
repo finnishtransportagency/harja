@@ -19,10 +19,11 @@
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
 
-            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -450,7 +451,7 @@
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                (reset! data %)
                                                                (reset! teksti (pvm/pvm %)))
-                                :pvm                      naytettava-pvm}])]))})))
+                                                 :pvm     naytettava-pvm}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]
@@ -539,7 +540,7 @@
                                                                   (muuta-pvm! (pvm/pvm %))
                                                                   (koske-pvm!)
                                                                   (aseta!))
-                                   :pvm                      naytettava-pvm}])]
+                                                    :pvm     naytettava-pvm}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
@@ -556,12 +557,13 @@
            (pvm/pvm-aika p)
            "")])
 
-
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
-        hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
+        hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
+
+        virheet (atom nil)
 
         alkuperainen-sijainti (atom @sijainti)
 
@@ -574,7 +576,7 @@
                            (kartta/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do (kartta/nayta-geometria! :tr-valittu-osoite
-                                                          (if (= :line (:type arvo))
+                                                          (if (or (= :multiline (:type arvo)) (= :line (:type arvo)))
                                                             {:alue (assoc arvo
                                                                      :type :tack-icon-line
                                                                      :img "kartta-tr-piste-harmaa.svg"
@@ -591,14 +593,21 @@
                                    (reset! edellinen-extent e))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
-      (go-loop []
-        (let [arvo (<! tr-osoite-ch)]
-          (log "VKM/TR: " (pr-str arvo))
-          (when arvo
-            (do (reset! sijainti (:geometria arvo))
-                (nappaa-virhe
-                 (nayta-kartalla (:geometria arvo)))
-                (recur))))))
+      (go (loop []
+            (when-let [arvo (<! tr-osoite-ch)]
+              (log "VKM/TR: " (pr-str arvo))
+              (if-not (= arvo :virhe)
+                (do (reset! sijainti (if (vector? (:geometria arvo))
+                                       (first (:geometria arvo))
+                                       (:geometria arvo)))
+                    (nappaa-virhe (nayta-kartalla (if (vector? (:geometria arvo))
+                                                    (first (:geometria arvo))
+                                                    (:geometria arvo))))
+                    (recur))
+                (do
+                  (reset! sijainti nil)
+                  (kartta/poista-geometria! :tr-valittu-osoite)
+                  (recur)))))))
 
     (komp/luo
       {:component-will-update
@@ -621,10 +630,44 @@
                                    (swap! data assoc kentta (js/parseInt (-> % .-target .-value)))
                                    (swap! data assoc kentta nil))]))
               blur (when hae-sijainti
-                     #(when osoite
-                       (go (>! tr-osoite-ch osoite))))
+                     (fn []
+                       (cond
+                         (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
+                         (go
+                           (log "Haetaan viiva osoitteelle: " (pr-str osoite))
+                           (let [tulos (<! (vkm/tieosoite->viiva osoite))]
+                             (log "Saatiin tulos: " (pr-str tulos))
+                             (if-not (or (nil? tulos) (k/virhe? tulos))
+                               (do
+                                 (reset! virheet nil)
+                                 (>! tr-osoite-ch (assoc osoite :geometria tulos)))
+                               (do
+                                 (>! tr-osoite-ch :virhe)
+                                 (reset! virheet "Reitille ei löydy tietä.")))))
+
+                         (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys])
+                         (go
+                           (log "Haetaan piste osoitteelle: " (pr-str osoite))
+                           (let [tulos (<! (vkm/tieosoite->piste osoite))]
+                             (log "Saatiin tulos: " (pr-str tulos))
+                             (if-not (or (nil? tulos) (k/virhe? tulos))
+                               (do
+                                 (reset! virheet nil)
+                                 (>! tr-osoite-ch (assoc osoite :geometria tulos)))
+                               (do
+                                 (reset! virheet "Pisteelle ei löydy tietä.")
+                                 (>! tr-osoite-ch :virhe)))))
+
+                         :else
+                         (do
+                           (kartta/poista-geometria! :tr-valittu-osoite)
+                           (reset! virheet nil)))))
               kartta? @karttavalinta-kaynnissa]
-          [:span.tierekisteriosoite-kentta
+          [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
+           (when @virheet
+             [:div {:class "virheet"}
+              [:div {:class "virhe"}
+               [:span (ikonit/warning-sign) [:span @virheet]]]])
            [:table
             [:tbody
              [:tr

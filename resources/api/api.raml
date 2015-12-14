@@ -13,12 +13,11 @@ schemas:
  - pistetoteuman-kirjaus-request: !include schemas/pistetoteuman-kirjaus-request.schema.json
  - varustetoteuman-kirjaus-request: !include schemas/varustetoteuman-kirjaus-request.schema.json
  - turvallisuuspoikkeamien-kirjaus-request: !include schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json
- - tarkastuksen-kirjaus-request: !include schemas/tarkastuksen-kirjaus-request.schema.json
  - tiestotarkastuksen-kirjaus-request: !include schemas/tiestotarkastuksen-kirjaus-request.schema.json
  - talvihoitotarkastuksen-kirjaus-request: !include schemas/talvihoitotarkastuksen-kirjaus-request.schema.json
  - soratietarkastuksen-kirjaus-request.schema: !include schemas/soratietarkastuksen-kirjaus-request.schema.json
  - siltatarkastuksen-kirjaus-request.schema: !include schemas/siltatarkastuksen-kirjaus-request.schema.json
- - havainnon-kirjaus-request: !include schemas/havainnon-kirjaus-request.schema.json
+ - laatupoikkeaman-kirjaus: !include schemas/laatupoikkeaman-kirjaus-request.schema.json
  - varusteiden-haku-response: !include schemas/varusteiden-haku-response.schema.json
  - varusteen-haku-response: !include schemas/varusteen-haku-response.schema.json
  - varusteen-lisays-request: !include schemas/varusteen-lisays-request.schema.json
@@ -106,7 +105,7 @@ documentation:
       /reitti:
         post:
           is: [secured]
-          description: Toteumien kirjaaminen urakalle. Huom. suolamateriaalit kirjataan kuivatonneina.
+          description: Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat.
           body:
             application/json:
               example: !include examples/reittitoteuman-kirjaus-request.json
@@ -130,7 +129,7 @@ documentation:
       /piste:
         post:
           is: [secured]
-          description: Toteumien kirjaaminen urakalle.
+          description: Pistemäisten toteumien kirjaaminen urakalle.
           body:
             application/json:
               example: !include examples/pistetoteuman-kirjaus-request.json
@@ -154,7 +153,7 @@ documentation:
       /varuste:
         post:
           is: [secured]
-          description: Toteumien kirjaaminen urakalle.
+          description: Varustetoteuman kirjaaminen urakalle. Huom. varusteen tiedot lähetetään Tierekisteriin. Tätä varten varusteen tietolajin kuvaus täytyy hakea käyttäen Harja API:n varusterajapintaa.
           body:
             application/json:
               example: !include examples/varustetoteuman-kirjaus-request.json
@@ -175,30 +174,6 @@ documentation:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
                 schema: kirjaus-response
-      /turvallisuuspoikkeamat:
-          post:
-            is: [secured]
-            description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen.
-            body:
-              application/json:
-                example: !include examples/turvallisuuspoikkeamien-kirjaus-request.json
-                schema: turvallisuuspoikkeamien-kirjaus-request
-            responses:
-             200:
-              body:
-                application/json:
-                  example: !include examples/onnistunut-kirjaus-response.json
-                  schema: kirjaus-response
-             400:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
-             500:
-              body:
-                application/json:
-                  example: !include examples/virhe-response.json
-                  schema: virhe-response
     /tarkastus:
       description: Tarkastusten kirjaaminen
       /tiestotarkastus:
@@ -297,14 +272,14 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
-    /havainto:
+    /laatupoikkeama:
       post:
         is: [secured]
-        description: Yleisten havaintojen kirjaaminen urakalle.
+        description: Laadunalitusten kirjaaminen urakalle.
         body:
           application/json:
-            example: !include examples/havainnon-kirjaus-request.json
-            schema: havainnon-kirjaus-request
+            example: !include examples/laatupoikkeaman-kirjaus-request.json
+            schema: laatupoikkeaman-kirjaus
         responses:
              200:
               body:
@@ -321,6 +296,30 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
+    /turvallisuuspoikkeama:
+      post:
+        is: [secured]
+        description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen.
+        body:
+          application/json:
+            example: !include examples/turvallisuuspoikkeamien-kirjaus-request.json
+            schema: turvallisuuspoikkeamien-kirjaus-request
+        responses:
+         200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+         400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+         500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
     /paivystajatiedot:
       post:
         is: [secured]
@@ -376,15 +375,15 @@ documentation:
     /ilmoitukset:
         get:
          is: [secured]
-         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös viimeisimmän onnistuneesti haetun ilmoituksen, jolloin palautetaan kaikki sen jälkeen tulleet ilmoitukset. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
+         description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset palautetaan. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
          queryParameters:
           urakoitsijaId:
-            description: Urakoitsijan id, jolle haetaan ilmoituset
+            description: Urakoitsijan id, jolle haetaan ilmoitusket
             type: integer
             required: true
             example: 1
-          viimeisinId:
-            description: Viimeisen onnistuneesti haetun ilmoituksen id
+          muuttunutJalkeen:
+            description: Aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset haetaan
             type: integer
             required: false
             example: 12
@@ -716,10 +715,10 @@ documentation:
         description: Päivystäjätietojen haku puhelinnumerolla.
         queryParameters:
           puhelinnumero:
-            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta.
+            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta. Huom. maatunnuksen plus-merkki täytyy escapeta muotoon %2B.
             type: string
             required: true
-            example: +358 41 433 21 19
+            example: 0414332119
           alkaen:
             description: Päivystykset alkaen
             type: date

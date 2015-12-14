@@ -29,7 +29,6 @@
                       urakkatieto-fixture))
 
 (deftest tallenna-urakan-sopimustyyppi-testi
-  []
   (let [urakanvalvoja (oulun-urakan-tilaajan-urakanvalvoja)
         uusi-sopimustyyppi
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -41,7 +40,6 @@
 
 
 (deftest hae-urakka-testi
-  []
   (let [urakanvalvoja (oulun-urakan-tilaajan-urakanvalvoja)
         haettu-urakka
         (kutsu-palvelua (:http-palvelin jarjestelma)

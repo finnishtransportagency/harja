@@ -137,7 +137,7 @@
            integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :lisaa-turvallisuuspoikkeama
-      (POST "/api/urakat/:id/poikkeamat/turvallisuuspoikkeamat" request
+      (POST "/api/urakat/:id/turvallisuuspoikkeama" request
         (kasittele-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
                          json-skeemat/+turvallisuuspoikkeama-kirjaus+ json-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db]

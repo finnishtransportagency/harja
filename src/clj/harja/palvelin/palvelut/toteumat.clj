@@ -96,12 +96,19 @@
     (log/debug "Käsitelty toteuma: " (pr-str kasitelty-toteuma))
     kasitelty-toteuma))
 
-(defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-  (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
+(defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id]}]
+  (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id)
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
-        (q/hae-toteumien-tehtavien-summat db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm) (name tyyppi))))
+        (q/hae-toteumien-tehtavien-summat db
+                                          urakka-id
+                                          sopimus-id
+                                          (konv/sql-date alkupvm)
+                                          (konv/sql-date loppupvm)
+                                          (name tyyppi)
+                                          toimenpide-id
+                                          tehtava-id)))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
@@ -379,8 +386,7 @@
     (apply q/luo-tehtava<! toteumatehtavan-parametrit)
     (log/debug "Merkitään maksuera likaiseksi maksuerätyypin: " maksueratyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
     (q/merkitse-toteuman-maksuera-likaiseksi! c maksueratyyppi toimenpidekoodi)
-    true)
-  )
+    true))
 
 (defn tallenna-muiden-toiden-toteuma
   [db user toteuma]
@@ -532,6 +538,25 @@
                             :toteumaid)]
     kasitellyt-reitit))
 
+(defn hae-urakan-yksikkohintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (let [reitit (into []
+                     (comp
+                       (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                       (map konv/alaviiva->rakenne))
+                     (q/hae-yksikkohintaisten-toiden-reittipisteet db
+                                                              urakka-id
+                                                              sopimus-id
+                                                              (konv/sql-date alkupvm)
+                                                              (konv/sql-date loppupvm)
+                                                              toimenpide
+                                                              tehtava))
+        kasitellyt-reitit (konv/sarakkeet-vektoriin
+                            reitit
+                            {:reittipiste :reittipisteet}
+                            :toteumaid)]
+    kasitellyt-reitit))
+
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
@@ -574,15 +599,9 @@
       (julkaise-palvelu http :poista-tehtava!
                         (fn [user tiedot]
                           (poista-tehtava! db user tiedot)))
-      (julkaise-palvelu http :urakan-toteutuneet-tehtavat
-                        (fn [user tiedot]
-                          (hae-urakan-toteutuneet-tehtavat db user tiedot)))
       (julkaise-palvelu http :urakan-toteutuneet-tehtavat-toimenpidekoodilla
                         (fn [user tiedot]
                           (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot)))
-      (julkaise-palvelu http :urakan-toteuma-paivat
-                        (fn [user tiedot]
-                          (hae-urakan-toteuma-paivat db user tiedot)))
       (julkaise-palvelu http :hae-urakan-tehtavat
                         (fn [user urakka-id]
                           (hae-urakan-tehtavat db user urakka-id)))
@@ -619,6 +638,9 @@
       (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot)))
+      (julkaise-palvelu http :urakan-yksikkohintaisten-toteumien-reitit
+                        (fn [user tiedot]
+                          (hae-urakan-yksikkohintaisten-toteumien-reitit db user tiedot)))
       (julkaise-palvelu http :urakan-varustetoteumat
                         (fn [user tiedot]
                           (hae-urakan-varustetoteumat db user tiedot)))
@@ -637,6 +659,8 @@
       :paivita-yk-hint-toteumien-tehtavat
       :tallenna-erilliskustannus
       :tallenna-toteuma-ja-toteumamateriaalit
+      :urakan-yksikkohintaisten-toteumien-reitit
+      :urakan-kokonaishintaisten-toteumien-reitit
       :poista-toteuma!
       :poista-tehtava!
       :hae-toteumat-tilannekuvaan

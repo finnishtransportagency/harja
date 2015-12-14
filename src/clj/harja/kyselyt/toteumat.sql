@@ -25,7 +25,7 @@ WHERE
   t.urakka = :urakka
   AND t.sopimus = :sopimus
   AND t.alkanut >= :alkupvm
-  AND t.paattynyt <= :loppupvm
+  AND t.alkanut <= :loppupvm
   AND t.tyyppi = :tyyppi :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
 GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
@@ -37,8 +37,8 @@ SELECT
   t.alkanut,
   t.paattynyt,
   t.tyyppi,
-  t.suorittajan_nimi,
-  t.suorittajan_ytunnus,
+  t.suorittajan_nimi AS suorittaja_nimi,
+  t.suorittajan_ytunnus AS suorittaja_ytunnus,
   t.lisatieto,
   t.luoja       AS luojaid,
   o.nimi        AS organisaatio,
@@ -65,21 +65,23 @@ WHERE
 -- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
-          toimenpidekoodi AS tpk_id,
-          SUM(tt.maara)   AS maara,
-  (SELECT nimi
-   FROM toimenpidekoodi tpk
-   WHERE tpk.id = tt.toimenpidekoodi)
+  toimenpidekoodi AS tpk_id,
+  SUM(tt.maara)   AS maara,
+  nimi
 FROM toteuma_tehtava tt
+  LEFT JOIN toimenpidekoodi tk
+    ON tk.id = tt.toimenpidekoodi
   JOIN toteuma t ON tt.toteuma = t.id
                     AND t.urakka = :urakka
                     AND sopimus = :sopimus
                     AND alkanut >= :alkanut
-                    AND paattynyt <= :paattynyt
+                    AND alkanut <= :paattynyt
                     AND tyyppi = :tyyppi :: toteumatyyppi
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-GROUP BY toimenpidekoodi;
+                    AND (:toimenpide :: INTEGER IS NULL OR tk.emo = (SELECT toimenpide FROM toimenpideinstanssi WHERE id = :toimenpide))
+                    AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+GROUP BY toimenpidekoodi, nimi;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
 -- Hakee toteuma_materiaalien ja tehtävien id:t. Hyödyllinen kun poistetaan toteuma.
@@ -611,6 +613,30 @@ WHERE
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
 ORDER BY t.alkanut
 LIMIT 501;
+
+-- name: hae-yksikkohintaisten-toiden-reittipisteet
+SELECT
+  rp.id            AS reittipiste_id,
+  rp.aika          AS reittipiste_aika,
+  rp.sijainti      AS reittipiste_sijainti,
+  tt.toteuma AS toteumaid
+FROM toteuma_tehtava tt
+  JOIN reittipiste rp ON tt.toteuma = rp.toteuma
+  JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+WHERE
+  t.urakka = :urakkaid
+  AND t.sopimus = :sopimusid
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
+  AND t.tyyppi = 'yksikkohintainen' :: toteumatyyppi
+  AND t.poistettu IS NOT TRUE
+  AND (:toimenpide :: INTEGER IS NULL OR
+       tk.emo = (SELECT toimenpide
+                 FROM toimenpideinstanssi
+                 WHERE id = :toimenpide))
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+  AND t.poistettu IS NOT TRUE;
 
 -- name: hae-kokonaishintaisten-toiden-reittipisteet
 SELECT

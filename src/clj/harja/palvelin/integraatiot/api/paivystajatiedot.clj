@@ -17,7 +17,7 @@
             [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot-sanoma]
-            [harja.utils :as utils]
+            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -112,17 +112,18 @@
     {:x            "Koordinaatti X puuttuu"
      :y            "Koordinaatti Y puuttuu"
      :urakkatyyppi "Urakkatyyppi puuttuu"})
-  (let
-    [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
-     x (Double. x)
-     y (Double. y)
-     alkaen (pvm-string->java-sql-date alkaen)
-     paattyen (pvm-string->java-sql-date paattyen)
-     urakka-id (urakat/hae-urakka-id-sijainnilla db urakkatyyppi {:x x :y y})]
-    (if urakka-id
+  (let [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
+        x (Double/parseDouble x)
+        y (Double/parseDouble y)
+        alkaen (pvm-string->java-sql-date alkaen)
+        paattyen (pvm-string->java-sql-date paattyen)
+        urakka-idt (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y})]
+    (if-not (empty? urakka-idt)
       (do
-        (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-id))
-        (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja alkaen paattyen))
+        (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-idt))
+        (reduce (partial merge-with concat)
+                (map #(hae-paivystajatiedot-urakan-idlla db % kayttaja alkaen paattyen)
+                     urakka-idt)))
       (throw+ {:type    virheet/+viallinen-kutsu+
                :virheet [{:koodi  virheet/+virheellinen-sijainti+
                           :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
@@ -140,13 +141,13 @@
     :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-paivystajatiedot-sijainnilla db (utils/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
+                      (hae-paivystajatiedot-sijainnilla db (apurit/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
    {:palvelu        :hae-paivystajatiedot-puhelinnumerolla
     :polku          "/api/paivystajatiedot/haku/puhelinnumerolla"
     :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-paivystajatiedot-puhelinnumerolla db (utils/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
+                      (hae-paivystajatiedot-puhelinnumerolla db (apurit/muuta-mapin-avaimet-keywordeiksi parametrit) kayttaja-id))}
    {:palvelu        :lisaa-paivystajatiedot
     :polku          "/api/urakat/:id/paivystajatiedot"
     :tyyppi         :POST

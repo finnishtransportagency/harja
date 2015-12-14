@@ -7,7 +7,7 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
             [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva]
@@ -25,30 +25,30 @@
 
 (def geometriat (reaction
                   (loop [geometriat (transient [])
-                         [g & gs] (concat                   ;; Pohjavesi
-                                    @pohjavesialueet/pohjavesialueet
-                                    ;; Laadunseunranta
-                                    @tarkastukset/tarkastukset-kartalla
-                                    @sillat/sillat
-                                    ;; Turvallisuus
-                                    @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-                                    ;; Ilmoitukset
-                                    @ilmoitukset/ilmoitukset-kartalla
-                                    ;; TR-valitsin
-                                    @tierekisteri/tr-alkupiste-kartalla
-                                    ;; Toteumat
-                                    @toteumat/yksikkohintainen-toteuma-kartalla
-                                    @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
-                                    @varusteet/varusteet-kartalla
-                                    @muut-tyot/muut-tyot-kartalla
-                                    ;; Tilannekuva
-                                    @tilannekuva/tilannekuvan-asiat-kartalla
-                                    ;; Päällystys & paikkaus
-                                    @paallystys/paallystyskohteet-kartalla
-                                    @paallystys/paikkauskohteet-kartalla)]
-                    (if-not g
-                      (persistent! geometriat)
-                      (recur (conj! geometriat g) gs)))))
+                        [g & gs] (concat ;; Pohjavesi
+                                         @pohjavesialueet/pohjavesialueet
+                                         ;; Laadunseunranta
+                                         @tarkastukset/tarkastukset-kartalla
+                                         @sillat/sillat
+                                         ;; Turvallisuus
+                                         @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+                                         ;; Ilmoitukset
+                                         @ilmoitukset/ilmoitukset-kartalla
+                                         ;; TR-valitsin
+                                         @tierekisteri/tr-alkupiste-kartalla
+                                         ;; Toteumat
+                                         @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
+                                         @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
+                                         @varusteet/varusteet-kartalla
+                                         @muut-tyot/muut-tyot-kartalla
+                                         ;; Tilannekuva
+                                         @tilannekuva/tilannekuvan-asiat-kartalla
+                                         ;; Päällystys & paikkaus
+                                         @paallystys/paallystyskohteet-kartalla
+                                         @paallystys/paikkauskohteet-kartalla)]
+                   (if-not g
+                     (persistent! geometriat)
+                     (recur (conj! geometriat g) gs)))))
 
 (defn- taso-atom [nimi]
   (case nimi
@@ -57,7 +57,7 @@
     :tarkastukset tarkastukset/karttataso-tarkastukset
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
-    :yksikkohintainen-toteuma toteumat/karttataso-yksikkohintainen-toteuma
+    :yksikkohintainen-toteuma yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
     :kokonaishintainen-toteuma kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
     :varusteet varusteet/karttataso-varustetoteuma
     :tilannekuva tilannekuva/karttataso-tilannekuva
