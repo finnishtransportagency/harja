@@ -138,11 +138,12 @@
         value-fn (or value-fn second)
         key-fn (or key-fn hash)
         color-fn (or color-fn (constantly (or color "blue")))
+        colors ["blue" "red" "green" "yellow"]
         mx (or margin-x 40)                                 ;; margin-x
         my (or margin-y 40)                                 ;; margin-y
         hmy (/ my 2)
+        margin-y-legend 3.5
         bar-width (/ (- width mx) (count data))
-
         multiple-series? (vector? (value-fn (first data)))
         _ (log "multiple-series? " multiple-series?)
         _ (log "legend " legend)
@@ -177,6 +178,14 @@
     (log "Value range " min-value " -- " max-value " == " value-range)
     [:svg {:xmlns "http://www.w3.org/2000/svg" :width width :height height}
      [:g
+      (for [i (range (count data))]
+        (when (and multiple-series? (odd? i))
+          [:rect {:x      (+ mx (* bar-width i))
+                  :y      hmy
+                  :width  bar-width
+                  :height (- height margin-y)
+                  :fill   "#F8F8F8"
+                  }]))
       (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)])
             :let [tick-y (- height (value-height tick) hmy)]]
         ^{:key tick}
@@ -196,30 +205,62 @@
                                     value
                                     [value])
                            start-x (+ mx (* bar-width i))]
-                       [:g (when (zero? (rem i show-every-nth-label))
+                       [:g
+                        (when (zero? (rem i show-every-nth-label))
                              [:text {:x           (+ start-x (/ (* 0.75 bar-width) 2)) :y (- height 5)
                                      :text-anchor "middle"
                                      :font-size   tick-font-size}
                               label])
-                        (let [bar-width (/ bar-width (if (empty? values) 1 (count values)))]
+                        (let [bar-width-original (/ bar-width (if (empty? values) 1 (count values)))
+                              bar-width (* 0.9 bar-width-original)
+                              ;; fixme: marginaalin laskemiseen loogisesti toimiva koodi olisi kiva.
+                              ;; bar-set-margin-x pitäisi matemaattisesti olla  (* 0.05 bar-width-original)
+                              ;; mutta ainakin PDF:ssä se ei vaikuta ollenkaan!
+                              bar-set-margin-x (if multiple-series?
+                                                 1
+                                                 0)]
                           (when-not (empty? values)
                             (map-indexed
                               (fn [j value]
                                 (when value
                                   (let [_ (log "value" value)
+                                        _ (log "bar-set-margin-x" bar-set-margin-x)
+                                        _ (log "bar-width" bar-width)
+                                        _ (log "bar-width-original" bar-width-original)
                                         bar-height (value-height value)
-                                        x (+ start-x (* bar-width j))] ;; FIXME: scale min-max
+                                        x (+ bar-set-margin-x
+                                             (+ start-x (* bar-width j)))] ;; FIXME: scale min-max
                                     ^{:key i}
                                     [:g
                                      [:rect {:x      x
                                              :y      (- height bar-height hmy)
-                                             :width  (* bar-width 0.75)
+                                             :width  (* 0.90 bar-width)
                                              :height bar-height
-                                             :fill   (nth ["blue" "red" "green" "yellow"] j) #_(color-fn d)}]
+                                             :fill   (nth colors j) #_(color-fn d)}]
                                      (when-not (hide-value? value)
-                                       [:text {:x           (+ x (/ (* 0.75 bar-width) 2)) :y (- height bar-height hmy 2)
+                                       [:text {:x           (+ x (/ (* 0.90 bar-width) 2)) :y (- height bar-height hmy 2)
                                                :text-anchor "middle"
                                                :font-size   value-font-size}
                                         (format-amount value)])])))
                               values)))]))
-                     data)]]))
+                   data)]
+
+     ;; show legend if any
+     (when multiple-series?
+       (map-indexed (fn [i leg]
+                      (log "in map indexed leg " (pr-str leg) " color " (pr-str color))
+                      ^{:key i}
+                      (let [rect-x-val (+ mx (* i (/ width (count legend))))
+                            y-val height]
+                        [:g
+                         [:rect {:x      rect-x-val
+                                 :y      y-val
+                                 :height 4
+                                 :width  4
+                                 :fill   (nth colors i)}]
+                         [:text {:x         (+ 5 rect-x-val)
+                                 :y         (+ y-val margin-y-legend)
+                                 :font-size value-font-size
+                                 }
+                          leg]]))
+                    legend))]))
