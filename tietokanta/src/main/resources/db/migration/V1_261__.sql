@@ -1,91 +1,44 @@
--- Kuvaus: uudelleennimeä toimenpidekoodin historiakuvasarake tilannekuvaksi
-ALTER TABLE toimenpidekoodi DROP COLUMN historiakuva;
-ALTER TABLE toimenpidekoodi ADD COLUMN suoritettavatehtava suoritettavatehtava;
+-- kuvaus: tierekisteriosoittelle_viiva, kaistan päättely
+CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
+  tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
+  RETURNS SETOF geometry
+AS $$
+DECLARE
+   ajoratavalinta INTEGER;
+   aos INTEGER;
+   los INTEGER;
+BEGIN
+   IF aosa_ = losa_ THEN
+        IF aet_ < let_ THEN
+	  ajoratavalinta := 1;
+	ELSE
+	  ajoratavalinta := 2;
+	END IF;
+	RETURN QUERY SELECT ST_Line_Substring(geom, aet_/tr_pituus::FLOAT, let_/tr_pituus::FLOAT)
+	FROM tieverkko_paloina
+	WHERE tie=tie_
+	  AND osa=aosa_
+	  AND (ajorata=0 OR ajorata=ajoratavalinta);
+   ELSE
+        IF aosa_ < losa_ THEN
+	  ajoratavalinta := 1;
+	  aos := aosa_;
+	  los := losa_;
+	ELSE
+	  ajoratavalinta := 2;
+	  aos := losa_;
+	  los := aosa_;
+	END IF;
+        RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aos THEN ST_Line_Substring(geom, LEAST(1, aet_/ST_Length(geom)), 1)
+				      WHEN osa=los THEN ST_Line_Substring(geom, 0, LEAST(1,let_/ST_Length(geom)))
+				      ELSE geom END) ORDER BY osa)) AS geom
+		     FROM tieverkko_paloina
+		      	WHERE tie = tie_
+			AND osa >= aos
+			AND osa <= los
+			AND (ajorata=0 OR ajorata=ajoratavalinta))
+	  SELECT geom FROM q;
+   END IF;
+END;
+$$ LANGUAGE plpgsql;
 
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'suolaus' :: suoritettavatehtava
-WHERE nimi = 'Suolaus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'auraus ja sohjonpoisto' :: suoritettavatehtava
-WHERE nimi = 'Auraus ja sohjonpoisto';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'pistehiekoitus' :: suoritettavatehtava
-WHERE nimi = 'Pistehiekoitus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'linjahiekoitus' :: suoritettavatehtava
-WHERE nimi = 'Linjahiekoitus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'lumivallien madaltaminen' :: suoritettavatehtava
-WHERE nimi = 'Lumivallien madaltaminen';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'sulamisveden haittojen torjunta' :: suoritettavatehtava
-WHERE nimi = 'Sulamisveden haittojen torjunta';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'kelintarkastus' :: suoritettavatehtava
-WHERE nimi = 'Kelintarkastus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'tiestotarkastus' :: suoritettavatehtava
-WHERE nimi = 'Tiestotarkastus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'koneellinen niitto' :: suoritettavatehtava
-WHERE nimi = 'Koneellinen niitto';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'koneellinen vesakonraivaus' :: suoritettavatehtava
-WHERE nimi = 'Koneellinen vesakonraivaus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'liikennemerkkien puhdistus' :: suoritettavatehtava
-WHERE nimi = 'Liikennemerkkien puhdistus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'sorateiden muokkaushoylays' :: suoritettavatehtava
-WHERE nimi = 'Sorateiden muokkaushoylays';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'sorateiden polynsidonta' :: suoritettavatehtava
-WHERE nimi = 'Sorateiden polynsidonta';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'sorateiden tasaus' :: suoritettavatehtava
-WHERE nimi = 'Sorateiden tasaus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'sorastus' :: suoritettavatehtava
-WHERE nimi = 'Sorastus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'harjaus' :: suoritettavatehtava
-WHERE nimi = 'Harjaus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'pinnan tasaus' :: suoritettavatehtava
-WHERE nimi = 'Pinnan tasaus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'paallysteiden paikkaus' :: suoritettavatehtava
-WHERE nimi = 'Paallysteiden paikkaus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'paallysteiden juotostyot' :: suoritettavatehtava
-WHERE nimi = 'Paallysteiden juotostyot';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'siltojen puhdistus' :: suoritettavatehtava
-WHERE nimi = 'Siltojen puhdistus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'l- ja p-alueiden puhdistus' :: suoritettavatehtava
-WHERE nimi = 'L- ja p-alueiden puhdistus';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'muu' :: suoritettavatehtava
-WHERE nimi = 'Muu';
