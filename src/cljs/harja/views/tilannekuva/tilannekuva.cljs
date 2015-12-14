@@ -159,7 +159,7 @@
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
     (komp/sisaan-ulos #(reset! kartta/pida-geometriat-nakyvilla? false)
                       #(do (reset! kartta/pida-geometriat-nakyvilla? true)
-                           (reset! kartta/aseta-paivitetaan-karttaa-tila false)))
+                           (kartta/aseta-paivitetaan-karttaa-tila false)))
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
