@@ -163,12 +163,22 @@
                                               (:sijainti uusi))))))
                   vanhat uudet))))
 
-(def edellisen-haun-suodattimet (atom @suodattimet))
+(def edellisen-haun-kayttajan-suodattimet (atom {:tila @valittu-tila
+                                                 :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
+                                                 :aikavali-historia @historiakuvan-aikavali
+                                                 :suodattimet @suodattimet} ))
 (defn hae-asiat []
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
   (go
-    (when (not= @suodattimet @edellisen-haun-suodattimet)
-      (reset! edellisen-haun-suodattimet @suodattimet)
+    ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui käyttäjän vaihdettua suodattimia
+    (when (or (not= @valittu-tila(:tila @edellisen-haun-kayttajan-suodattimet))
+              (not= @nykytilanteen-aikasuodattimen-arvo (:aikavali-nykytilanne @edellisen-haun-kayttajan-suodattimet))
+              (not= @historiakuvan-aikavali (:aikavali-historia @edellisen-haun-kayttajan-suodattimet))
+              (not= @suodattimet (:suodattimet @edellisen-haun-kayttajan-suodattimet)))
+      (reset! edellisen-haun-kayttajan-suodattimet {:tila @valittu-tila
+                                                    :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
+                                                    :aikavali-historia @historiakuvan-aikavali
+                                                    :suodattimet @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila true))
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
@@ -217,12 +227,12 @@
 (def asioiden-haku (reaction<!
                      [_ @valittu-tila
                       _ @suodattimet
+                      _ @nykytilanteen-aikasuodattimen-arvo
+                      _ @historiakuvan-aikavali
                       _ @nav/kartalla-nakyva-alue
                       _ @nav/valittu-urakka
                       nakymassa? @nakymassa?
-                      _ @nav/valittu-hallintayksikko-id
-                      _ @nykytilanteen-aikasuodattimen-arvo
-                      _ @historiakuvan-aikavali]
+                      _ @nav/valittu-hallintayksikko-id]
                      {:odota bufferi}
                      (when nakymassa?
                        (hae-asiat))))

@@ -136,6 +136,10 @@
    (when (= :historiakuva @tiedot/valittu-tila)
      [historiankuvan-aikavalinnat])
    [:div.tk-suodatinryhmat
+    #_(when (= :historiakuva @tiedot/valittu-tila) ; FIXME Bugittaa oudosti
+      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
+    #_(when (= :historiakuva @tiedot/valittu-tila)
+      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
     [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]]
    [:div.tk-yksittaiset-suodattimet
@@ -152,8 +156,10 @@
       (fn []
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
          [tilan-vaihtaja]
-         [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
-         [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]
+         (when (= :nykytilanne @tiedot/valittu-tila)
+           [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
+         (when (= :nykytilanne @tiedot/valittu-tila)
+           [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
          [aikasuodattimet]]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
