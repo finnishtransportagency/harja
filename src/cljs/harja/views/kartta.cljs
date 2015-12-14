@@ -286,22 +286,26 @@
          [:div
           [:table
            [:tbody
-            (for [selite selitteet]
-              ^{:key (str (:img selite) "_" (:nimi selite))}
+            (for [{:keys [img nimi vari teksti]}  selitteet]
+              ^{:key (str (or vari img) "_" nimi)}
               [:tr
-               (if (vector? (:img selite))
+               (if vari
                  [:td.kartan-ikonien-selitykset-ikoni-sarake
-                  [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
-                   {:src (str openlayers/+karttaikonipolku+ (first (:img selite)))}]
-                  [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second (:img selite)))}]]
+                  [:div.kartan-ikoni-vari {:style {:background-color vari}}]]
+                 (if (vector? img)
+                   [:td.kartan-ikonien-selitykset-ikoni-sarake
+                    [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
+                     {:src (str openlayers/+karttaikonipolku+ (first img))}]
+                    [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second img))}]]
 
-                 [:td.kartan-ikonien-selitykset-ikoni-sarake
-                  [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (:img selite))}]])
-               [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:teksti selite)]]])]]
-          [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
-                                                                        (reset! ikonien-selitykset-auki false)
-                                                                        (.stopPropagation event)
-                                                                        (.preventDefault event))} "Sulje"]]
+                   [:td.kartan-ikonien-selitykset-ikoni-sarake
+                    [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ img)}]]))
+               [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]])]]
+          [:div.kartan-ikonien-selitykset-sulje.klikattava
+           {:on-click (fn [event]
+                        (reset! ikonien-selitykset-auki false)
+                        (.stopPropagation event)
+                        (.preventDefault event))} "Sulje"]]
          [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [event]
                                                                                                (reset! ikonien-selitykset-auki true)
                                                                                                (.stopPropagation event)

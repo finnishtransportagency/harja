@@ -152,7 +152,9 @@
   ;; monta kertaa fronttiin.
   (let [reittipisteet (keep
                         (fn [[_ arvo]] (first arvo))
-                        (group-by :id (:reittipisteet toteuma)))]
+                        (group-by :id (:reittipisteet toteuma)))
+        nimi (get-in toteuma [:tehtavat 0 :nimi])
+        vari (tehtavan-vari nimi)]
     [(when-not (empty? reittipisteet)
        (assoc toteuma
          :type :toteuma
@@ -162,11 +164,11 @@
                    (if (> 1 (count (:tehtavat toteuma)))
                      (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
                      (str (:toimenpide (first (:tehtavat toteuma))))))
-         :selite {:teksti "Toteuma"
-                  :img    "fixme.png"}
+         :selite {:teksti nimi
+                  :vari vari}
          :alue {:type   :arrow-line
                 :width 5
-                :color (tehtavan-vari (get-in toteuma [:tehtavat 0 :nimi])) ;  "green"
+                :color vari
                 :scale  (if (valittu? toteuma) 2 1.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
                 :points (mapv #(get-in % [:sijainti :coordinates])
                               (sort-by :aika pvm/ennen? reittipisteet))}))]))
