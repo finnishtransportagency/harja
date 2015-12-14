@@ -79,7 +79,8 @@
               [:li.harja-alasvetolistaitemi [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])))
 
 (defn urakoitsija []
-  [:div [:span.livi-valikkonimio.urakoitsija-otsikko "Urakoitsija"]
+  [:div
+   [:span.livi-valikkonimio.urakoitsija-otsikko "Urakoitsija"]
    [livi-pudotusvalikko {:valinta    @nav/valittu-urakoitsija
                          :format-fn  #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/valitse-urakoitsija!
@@ -94,14 +95,30 @@
                           @urakoitsijat/urakoitsijat-hoito)) ;;defaulttina hoito
                nil))]])
 
-(defn urakkatyyppi []
-  [:div [:span.livi-valikkonimio.urakoitsija-otsikko "Urakkatyyppi"]
+(defn urakkatyyppi-murupolussa []
+  [:li
    [livi-pudotusvalikko {:valinta    @nav/valittu-urakkatyyppi
                          :format-fn  #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/vaihda-urakkatyyppi!
                          :class      (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
                          :disabled   (boolean @nav/valittu-urakka)}
     nav/+urakkatyypit+]])
+
+(defn urakkatyyppi []
+  [:div
+   [:span.livi-valikkonimio.urakoitsija-otsikko "Urakkatyyppi"]
+   [livi-pudotusvalikko {:valinta    @nav/valittu-urakkatyyppi
+                         :format-fn  #(if % (:nimi %) "Kaikki")
+                         :valitse-fn nav/vaihda-urakkatyyppi!
+                         :class      (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
+                         :disabled   (boolean @nav/valittu-urakka)}
+    nav/+urakkatyypit+]])
+
+(def murupolku-muoto (atom :perus))
+(defn aseta-murupolku-muotoon [muoto]
+  (reset! murupolku-muoto muoto))
+(defn aseta-murupolku-perusmuotoon []
+  (reset! murupolku-muoto :perus))
 
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
@@ -117,13 +134,23 @@
                            (= @nav/sivu :hallinta) "hide"
                            (= @nav/sivu :about) "hide"
                            :default ""))}
-         [:ol.murupolku
-          [koko-maa]
-          [hallintayksikko valinta-auki]
-          [urakka valinta-auki]
-          [:span.pull-right.murupolku-suotimet
-           [urakoitsija]
-           [urakkatyyppi]]]]))
+         (case @murupolku-muoto
+           :tilannekuva
+           [:ol.murupolku
+            [koko-maa]
+            [hallintayksikko valinta-auki]
+            [urakkatyyppi-murupolussa]
+            [urakka valinta-auki]
+            [:span.pull-right.murupolku-suotimet
+             [urakoitsija]]]
+           ;; Perusversio
+           [:ol.murupolku
+            [koko-maa]
+            [hallintayksikko valinta-auki]
+            [urakka valinta-auki]
+            [:span.pull-right.murupolku-suotimet
+             [urakoitsija]
+             [urakkatyyppi]]])]))
 
     ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
     [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]

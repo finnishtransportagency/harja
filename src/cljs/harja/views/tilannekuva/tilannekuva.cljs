@@ -6,6 +6,7 @@
             [harja.views.kartta :as kartta]
             [harja.loki :refer [log tarkkaile!]]
             [harja.views.tilannekuva.tilannekuva-popupit :as popupit]
+            [harja.views.murupolku :as murupolku]
             [harja.ui.kentat :as kentat]
             [reagent.core :as r]
             [harja.pvm :as pvm]
@@ -157,8 +158,10 @@
 (defn tilannekuva []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
-    (komp/sisaan-ulos #(reset! kartta/pida-geometriat-nakyvilla? false)
-                      #(do (reset! kartta/pida-geometriat-nakyvilla? true)
+    (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
+                           (reset! kartta/pida-geometriat-nakyvilla? false))
+                      #(do (murupolku/aseta-murupolku-perusmuotoon)
+                           (reset! kartta/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila false)))
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
