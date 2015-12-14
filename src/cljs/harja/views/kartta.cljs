@@ -317,6 +317,15 @@
     (when (and sisalto (not= :S @nav/kartan-koko))
       [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto])))
 
+(def paivitetaan-karttaa-tila (atom false))
+
+(defn paivitetaan-karttaa
+  []
+  (when @paivitetaan-karttaa-tila
+    [:div {:style {:position "absolute" :top "50%" :left "50%"}}
+     [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
+      [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
+
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 
@@ -578,6 +587,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 
 (defn kartta []
   [:div
+   [paivitetaan-karttaa]
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
