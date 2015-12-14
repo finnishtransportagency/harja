@@ -136,10 +136,10 @@
    (when (= :historiakuva @tiedot/valittu-tila)
      [historiankuvan-aikavalinnat])
    [:div.tk-suodatinryhmat
-    #_(when (= :historiakuva @tiedot/valittu-tila) ; FIXME Bugittaa oudosti
-      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
-    #_(when (= :historiakuva @tiedot/valittu-tila)
-      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
+    (when (= :historiakuva @tiedot/valittu-tila)
+      [:div.tk-suodatinryhmat
+       [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
+       [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]])
     [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]]
    [:div.tk-yksittaiset-suodattimet
