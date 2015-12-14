@@ -140,6 +140,8 @@
   (merge
     {:hallintayksikko @nav/valittu-hallintayksikko-id
      :urakka-id       (:id @nav/valittu-urakka)
+     :urakoitsija     (:id @nav/valittu-urakoitsija)
+     :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
      :alue            @nav/kartalla-nakyva-alue
      :alku            (if (= @valittu-tila :nykytilanne)
                         (t/minus (pvm/nyt) (t/hours @nykytilanteen-aikasuodattimen-arvo))

@@ -105,7 +105,6 @@ SELECT
   t.tr_loppuetaisyys,
   t.sijainti,
   t.tarkastaja,
-  t.mittaaja,
   t.havainnot,
   t.tyyppi
 FROM tarkastus t

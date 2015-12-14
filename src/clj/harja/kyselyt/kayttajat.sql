@@ -149,6 +149,19 @@ FROM kayttaja_urakka_rooli
   LEFT JOIN organisaatio hal ON ur.hallintayksikko = hal.id
 WHERE kayttaja = :kayttaja AND poistettu = FALSE
 
+-- name: hae-kayttajan-urakat-aikavalilta
+SELECT urakka AS urakka_id
+FROM kayttaja_urakka_rooli
+  LEFT JOIN urakka ur ON urakka = ur.id
+WHERE kayttaja = :kayttaja AND
+      poistettu IS NOT TRUE AND
+      (u.loppupvm > :alku AND u.alkupvm < :loppu) OR
+      (u.loppupvm IS NULL AND u.alkupvm < :loppu) AND
+      (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
+      (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
+      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
+
+
 -- name: lisaa-urakka-rooli<!
 -- Lisää annetulle käyttäjälle roolin urakkaan.
 INSERT INTO kayttaja_urakka_rooli (luoja, luotu, kayttaja, urakka, rooli)
