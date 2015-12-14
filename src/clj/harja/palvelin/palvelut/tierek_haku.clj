@@ -41,7 +41,7 @@
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
   [db user params]
   (log/debug "Haetaan viiva osoiteelle " (pr-str params))
-  (let [korjattu-osoite (jarjestele-tr-osoite params)
+  (let [korjattu-osoite params
         geom (tv/tierekisteriosoite-viivaksi db
                                              (:numero korjattu-osoite)
                                              (:alkuosa korjattu-osoite)
