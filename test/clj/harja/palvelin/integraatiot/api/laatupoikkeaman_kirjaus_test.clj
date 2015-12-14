@@ -15,14 +15,14 @@
     kayttaja
     :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
     :api-laatupoikkeamat (component/using
-                          (api-laatupoikkeamat/->Laatupoikkeamat)
-                     [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))
+                           (api-laatupoikkeamat/->Laatupoikkeamat)
+                           [:http-palvelin :db :liitteiden-hallinta :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeamat-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM laatupoikkeama;")))
-        
+
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja portti
                                          (-> "test/resurssit/api/laatupoikkeama.json" slurp))]
     (is (contains? (cheshire/decode (:body vastaus) true) :ilmoitukset))
@@ -40,4 +40,8 @@
       (is (= (+ laatupoikkeamat-kannassa-ennen-pyyntoa 1) laatupoikkeamat-kannassa-pyynnon-jalkeen))
       (is (number? liite-id))
       (is (number? laatupoikkeama-id))
-      (is (number? kommentti-id)))))
+      (is (number? kommentti-id))
+
+      (u "DELETE FROM laatupoikkeama_kommentti WHERE laatupoikkeama = (SELECT id FROM laatupoikkeama WHERE kohde = 'testikohde36934853') ;")
+      (u "DELETE FROM laatupoikkeama_liite WHERE laatupoikkeama = (SELECT id FROM laatupoikkeama WHERE kohde = 'testikohde36934853');")
+      (u "DELETE FROM laatupoikkeama WHERE id = (SELECT id FROM laatupoikkeama WHERE kohde = 'testikohde36934853');"))))

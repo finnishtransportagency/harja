@@ -57,7 +57,7 @@
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(swap! viestit conj (.getText %)))
 
     (let [vastaus (api-tyokalut/put-kutsu ["/api/ilmoitukset/987654321/"] kayttaja portti (slurp "test/resurssit/api/ilmoitustoimenpide.json"))]
-      (is 200 (:status vastaus)) "Viestin lähetys API:n onnistui.")
+      (is (= 200 (:status vastaus))) "Viestin lähetys API:n onnistui.")
 
     (is (= 1 (hae-testi-ilmoituksen-toimenpiteiden-maara)) "Ilmoitustoimenpide löytyy tietokannasta.")
 

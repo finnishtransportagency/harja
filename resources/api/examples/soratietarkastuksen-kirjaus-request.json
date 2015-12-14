@@ -12,42 +12,48 @@
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
-  "tunniste": {
-    "id": 123
-  },
-  "paivamaara": "2015-07-06T15:01:00Z",
-  "sijainti": {
-    "tie": {
-      "numero": 1,
-      "aosa": 2,
-      "aet": 3,
-      "losa": 4,
-      "let": 5
-    }
-  },
-  "tarkastaja": {
-    "id": 123,
-    "etunimi": "Taneli",
-    "sukunimi": "Tarkastaja"
-  },
-  "havainto": {
-    "kuvaus": "Tie on aivan liian kalteva.",
-    "liitteet": [
-      {
-        "liite": {
-          "nimi": "tie.png",
-          "tyyppi": "image/png",
-          "kuvaus": "Kuva tiestä",
-          "sisalto": "... sisältö base64 enkoodattuna  ..."
-        }
+  "tarkastukset": [
+    {
+      "tarkastus": {
+        "tunniste": {
+          "id": 123
+        },
+        "tarkastusajo": {
+          "id": 123
+        },
+        "aika": "2015-07-06T15:01:00Z",
+        "alkusijainti": {
+          "x": 441057,
+          "y": 7198624
+        },
+        "loppusijainti": {
+          "x": 441037,
+          "y": 7198450
+        },
+        "tarkastaja": {
+          "id": 123,
+          "etunimi": "Taneli",
+          "sukunimi": "Tarkastaja"
+        },
+        "havainnot": "Tie on aivan liian kalteva.",
+        "liitteet": [
+          {
+            "liite": {
+              "nimi": "tie.png",
+              "tyyppi": "image/png",
+              "kuvaus": "Kuva tiestä",
+              "sisalto": "... sisältö base64 enkoodattuna  ..."
+            }
+          }
+        ]
+      },
+      "mittaus": {
+        "hoitoluokka": 1,
+        "kiinteys": 3,
+        "polyavyys": 5,
+        "sivukaltevuus": 12.6,
+        "tasaisuus": 1
       }
-    ]
-  },
-  "mittaus": {
-    "hoitoluokka": 1,
-    "kiinteys": 3,
-    "polyavyys": 5,
-    "sivukaltevuus": 12.6,
-    "tasaisuus": 1
-  }
+    }
+  ]
 }

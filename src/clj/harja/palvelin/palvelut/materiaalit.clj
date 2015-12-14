@@ -149,12 +149,13 @@
       (hae-urakan-materiaalit c user urakka-id))))
 
 (defn tallenna-toteuma-materiaaleja!
-  [db user urakka-id toteumamateriaalit hoitokausi sopimus]
   "Tallentaa toteuma-materiaaleja (yhden tai useamman), ja palauttaa urakassa käytetyt materiaalit jos
   hoitokausi on annettu.
   * Jos tehdään vain poistoja, on parempi käyttää poista-toteuma-materiaali! funktiota
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
+  [db user urakka-id toteumamateriaalit hoitokausi sopimus]
+  
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
                             urakka-id)
   (jdbc/with-db-transaction [c db]
@@ -177,11 +178,12 @@
                               (hae-urakassa-kaytetyt-materiaalit c user urakka-id (first hoitokausi) (second hoitokausi) sopimus))))
 
 (defn poista-toteuma-materiaali!
-  [db user tiedot]
   "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
   Id:n voi antaa taulukossa, jolloin poistetaan useampi kerralla.
 
   Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
+  [db user tiedot]
+  
   [db user tiedot]
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
                             (:urakka tiedot))

@@ -13,7 +13,7 @@
   (is (nil? (validoi json-skeemat/+urakan-haku-vastaus+ json-esimerkit/+urakan-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/+urakoiden-haku-vastaus+ json-esimerkit/+urakoiden-haku-vastaus+)))
 
-  (is (nil? (validoi json-skeemat/+havainnon-kirjaus+ json-esimerkit/+havainnon-kirjaus+)))
+  (is (nil? (validoi json-skeemat/+laatupoikkeaman-kirjaus+ json-esimerkit/+laatupoikkeaman-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/+ilmoitustoimenpiteen-kirjaaminen+ json-esimerkit/+ilmoitustoimenpiteen-kirjaaminen+)))
   (is (nil? (validoi json-skeemat/+ilmoitusten-haku+ json-esimerkit/+ilmoitusten-haku+)))

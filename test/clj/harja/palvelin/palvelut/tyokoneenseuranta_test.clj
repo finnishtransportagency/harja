@@ -24,7 +24,7 @@
   (kutsu-http-palvelua :hae-tyokoneseurantatiedot +kayttaja-jvh+
                        {:alue {:xmin xmin :ymin ymin :xmax xmax :ymax ymax}}))
 
-(deftest testaa-tyokoneseurantahaku []
+(deftest testaa-tyokoneseurantahaku
   (let [tyokoneet (kutsu 0 0 9000000 9000000)
         yksi-kone (kutsu 427800 7211200 427961 7211340)
         ei-koneita (kutsu 0 0 50 50)]
@@ -35,6 +35,6 @@
       (let [kone (first yksi-kone)]
         (is (= (:tyokoneid kone) 31338))
         (is (= (:tyokonetyyppi kone) "aura-auto"))
-        (is (= (:jarjestelma "Urakoitsijan järjestelmä 1")))))
+        (is (= (:jarjestelma kone) "Urakoitsijan järjestelmä 1"))))
     (testing "tyokoneita ei pitäisi löytyä alueelta jossa niitä ei ole (surprise!)"
       (is (= (count ei-koneita) 0)))))

@@ -5,8 +5,8 @@
             [harja.testi :refer :all]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
-  (:use org.httpkit.fake))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [org.httpkit.fake :refer [with-fake-http]]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
@@ -23,8 +23,8 @@
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
-        (is "tl506" (get-in vastausdata [:tietolaji :tunniste]))
-        (is 14 (count (get-in vastausdata [:tietolaji :ominaisuudet])))
+        (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))
+        (is (= 14 (count (get-in vastausdata [:tietolaji :ominaisuudet]))))
         (let [ominaisuus (first (get-in vastausdata [:tietolaji :ominaisuudet]))
               odotettu-ominaisuus {:kenttatunniste  "LMNUMERO",
                                    :selite          "Liikennemerkin tieliikenneasetuksen mukainen numero on pakollinen tieto.",

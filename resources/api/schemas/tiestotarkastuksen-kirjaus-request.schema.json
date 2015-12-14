@@ -11,51 +11,24 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "tunniste": {
-      "id": "urn:harja/tunniste",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": true
-    },
-    "havainto": {
-      "id": "urn:harja/tarkastus/havainto",
-      "type": "object",
-      "required": false,
-      "properties": {
-        "kuvaus": {
-          "id": "urn:harja/tarkastus/havainto/kuvaus",
-          "type": "string",
-          "maxLength": 4096,
-          "required": true
-        },
-        "liitteet": {
-          "id": "urn:harja/liitteet",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+    "tarkastukset": {
+      "id": "urn:harja/tarkastukset",
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "id": "urn:harja/tarkastukset/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tarkastus": {
+            "id": "urn:harja/tarkastus",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tarkastus.schema.json",
+            "required": true
+          }
         }
       }
-    },
-    "paivamaara": {
-      "id": "urn:harja/tiestotarkastus/paivamaara",
-      "type": "string",
-      "format": "date-time",
-      "required": true
-    },
-    "tarkastaja": {
-      "id": "urn:harja/tiestotarkastus/tarkastaja",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
-      "required": true
-    },
-    "sijainti": {
-      "id": "urn:harja/tiestotarkastus/sijainti",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-      "required": true
     }
   }
 }

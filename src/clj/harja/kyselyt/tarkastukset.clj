@@ -2,31 +2,35 @@
   (:require [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
-            [harja.geo :as geo]))
+            [harja.geo :as geo])
+  (:import (org.postgis PGgeometry)))
 
 (defqueries "harja/kyselyt/tarkastukset.sql")
 
 (defn luo-tai-paivita-tarkastus
-  "Luo uuden tarkastuksen, palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja mittaaja sijainti ulkoinen-id havainnot] :as tarkastus}]
+  "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti ulkoinen-id havainnot] :as tarkastus}]
   (log/info "tarkastus: " tarkastus)
-  (let [sijainti (and sijainti
-                      (geo/geometry (geo/clj->pg sijainti)))]
+  (let [sijainti (if (instance? PGgeometry sijainti)
+                   sijainti
+                   (and sijainti (geo/geometry (geo/clj->pg sijainti))))]
     (if (nil? id)
-      (:id (luo-tarkastus<! db
-                          urakka-id (konv/sql-timestamp aika)
-                          (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                          sijainti tarkastaja mittaaja (name tyyppi) (:id user) ulkoinen-id havainnot))
-      
-      (do (log/info "TARKASTUS PÄIVITETÄÄN: " id)
+      (do
+        (log/debug "Luodaan uusi tarkastus")
+        (:id (luo-tarkastus<! db
+                              urakka-id (konv/sql-timestamp aika)
+                              (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
+                              sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id havainnot)))
+
+      (do (log/debug (format "Päivitetään tarkastus id: %s " id))
           (paivita-tarkastus! db
                               (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                              sijainti tarkastaja mittaaja (name tyyppi) (:id user)
+                              sijainti tarkastaja (name tyyppi) (:id user)
                               havainnot
                               urakka-id id)
           id))))
-  
+
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
                                          {:keys [hoitoluokka lumimaara tasaisuus
                                                  kitka lampotila ajosuunta] :as talvihoitomittaus}]

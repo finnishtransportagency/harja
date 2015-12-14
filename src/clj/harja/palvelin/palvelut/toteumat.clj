@@ -576,7 +576,6 @@
                                                      (konv/sql-date loppupvm)
                                                      (if tienumero true false)
                                                      tienumero))
-        _ (log/debug "--------> Varustetoteumat: " (pr-str toteumat))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
                                   {:reittipiste :reittipisteet}
