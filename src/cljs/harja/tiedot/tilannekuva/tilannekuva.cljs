@@ -215,11 +215,14 @@
       (kartta/aseta-paivitetaan-karttaa-tila false))))
 
 (def asioiden-haku (reaction<!
-                     [_ @suodattimet
+                     [_ @valittu-tila
+                      _ @suodattimet
                       _ @nav/kartalla-nakyva-alue
                       _ @nav/valittu-urakka
                       nakymassa? @nakymassa?
-                      _ @nav/valittu-hallintayksikko-id]
+                      _ @nav/valittu-hallintayksikko-id
+                      _ @nykytilanteen-aikasuodattimen-arvo
+                      _ @historiakuvan-aikavali]
                      {:odota bufferi}
                      (when nakymassa?
                        (hae-asiat))))
