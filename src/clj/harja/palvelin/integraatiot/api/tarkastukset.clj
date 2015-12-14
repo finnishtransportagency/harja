@@ -22,8 +22,6 @@
       vastauksen-data)))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
-  (println "---> mittaus " mittaus)
-
   (case tyyppi
     :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus db id uusi? mittaus)
     :soratie (tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
@@ -42,7 +40,8 @@
 
             (let [aika (json/pvm-string->java-sql-date (:aika tarkastus))
                   tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
-                  geometria (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                  geometria (if tr-osoite (:geometria tr-osoite)
+                                          (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
                   id (tarkastukset/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
                        {:id          tarkastus-id
@@ -63,7 +62,7 @@
               (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
               (when-not tr-osoite
                 (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
-                        (:alkusijainti data) (:loppusijainti data))))))))
+                        (:alkusijainti tarkastus) (:loppusijainti tarkastus))))))))
     (:tarkastukset data)))
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
