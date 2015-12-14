@@ -135,14 +135,13 @@
                            (= @nav/sivu :about) "hide"
                            :default ""))}
          (case @murupolku-muoto
-           :tilannekuva
-           [:ol.murupolku
-            [koko-maa]
-            [hallintayksikko valinta-auki]
-            [urakkatyyppi-murupolussa]
-            [urakka valinta-auki]
-            [:span.pull-right.murupolku-suotimet
-             [urakoitsija]]]
+           :tilannekuva [:ol.murupolku
+                         [koko-maa]
+                         [hallintayksikko valinta-auki]
+                         [urakkatyyppi-murupolussa]
+                         [urakka valinta-auki]
+                         [:span.pull-right.murupolku-suotimet
+                          [urakoitsija]]]
            ;; Perusversio
            [:ol.murupolku
             [koko-maa]
@@ -153,7 +152,7 @@
              [urakkatyyppi]]])]))
 
     ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
-    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
+[:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
     #(reset! (-> % reagent/state :valinta-auki) nil)
 
     ;; Jos klikataan komponentin ulkopuolelle, vaihdetaan piilotetaan valintalistat
