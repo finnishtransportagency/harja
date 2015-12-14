@@ -17,32 +17,28 @@
 (defn tulosta-tulos! [asiaa tulos]
   (if (vector? tulos)
     (log/debug (str "  - " (count tulos) " " asiaa))
-    (log/debug (str " - " (count (keys tulos)) " " asiaa)))
+    (log/debug (str "  - " (count (keys tulos)) " " asiaa)))
   tulos)
 
 (defn haettavat [s]
   (into #{} (keep (fn [[avain arvo]] (when arvo avain)) s)))
 
 (defn kayttajan-urakoiden-idt
-  [db user urakka-id hallintayksikko alku loppu]
+  [db user urakka-id urakoitsija urakkatyyppi hallintayksikko alku loppu]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (if-not (nil? urakka-id)
-    (if (vector? urakka-id)
-      urakka-id
-      [urakka-id])
 
-    (let [urakat
-          (if (get (:roolit user) "jarjestelmavastuuhenkilo")
-            (if (and alku loppu)
-              (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
-              (mapv :id (urakat-q/hae-kaynnissa-olevat-urakat db)))
-            (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user))))]
-      (if (nil? hallintayksikko)
-        urakat
+  (cond
+    (vector? urakka-id) urakka-id
 
-        (vec (clojure.set/intersection
-               (into #{} (map :id (urakat-q/hae-hallintayksikon-urakat db hallintayksikko)))
-               (into #{} urakat)))))))
+    (not (nil? urakka-id)) [urakka-id]
+
+    (get (:roolit user) "jarjestelmavastuuhenkilo")
+    (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)
+                                                      urakoitsija (name urakkatyyppi) hallintayksikko))
+
+    :else (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakat-aikavalilta db (:id user)
+                                                                         (konv/sql-date alku) (konv/sql-date loppu)
+                                                                         urakoitsija (name urakkatyyppi) hallintayksikko))))
 
 (defn- hae-ilmoitukset
   [db user {{:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
@@ -211,27 +207,33 @@
 
 (defn hae-tilannekuvaan
   [db user tiedot]
-  (let [urakat (kayttajan-urakoiden-idt db user (:urakka-id tiedot)
+  (let [urakat (kayttajan-urakoiden-idt db user (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                         (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
 
-    ;; Huomaa, että haku voidaan tehdä, vaikka urakoita ei löytyisi: silloin haetaan ainoastaan julkista tietoa!
-    (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
-    {:toteumat               (tulosta-tulos! "toteumaa"
-                                             (hae-toteumien-reitit db user tiedot urakat))
-     :tyokoneet              (tulosta-tulos! "tyokonetta"
-                                             (hae-tyokoneet db user tiedot urakat))
-     :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
-                                             (hae-turvallisuuspoikkeamat db user tiedot urakat))
-     :tarkastukset           (tulosta-tulos! "tarkastusta"
-                                             (hae-tarkastukset db user tiedot urakat))
-     :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
-                                             (hae-laatupoikkeamat db user tiedot urakat))
-     :paikkaus               (tulosta-tulos! "paikkausta"
-                                             (hae-paikkaustyot db user tiedot urakat))
-     :paallystys             (tulosta-tulos! "paallystysta"
-                                             (hae-paallystystyot db user tiedot urakat))
-     :ilmoitukset            (tulosta-tulos! "ilmoitusta"
-                                             (hae-ilmoitukset db user tiedot urakat))}))
+    ;; Teoriassa on mahdollista, että käyttäjälle ei (näillä parametreilla) palauteta yhtään urakkaa.
+    ;; Tällöin voitaisiin hakea kaikki "julkiset" asiat, esim ilmoitukset joita ei ole sidottu mihinkään
+    ;; urakkaan. Käytännössä tästä syntyy ongelmia kyselyissä, sillä tuntuu olevan erittäin vaikeaa tehdä
+    ;; kyselyä, joka esim palauttaa ilmoituksen jos a) ilmoitus ei kuulu mihinkään urakkaan TAI b) ilmoitus
+    ;; kuuluu listassa olevaan urakkaan _jos lista urakoita ei ole tyhjä_. i.urakka IN (:urakat) epäonnistuu,
+    ;; jos annettu lista on tyhjä.
+    (when-not (empty? urakat)
+      (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
+      {:toteumat               (tulosta-tulos! "toteumaa"
+                                               (hae-toteumien-reitit db user tiedot urakat))
+       :tyokoneet              (tulosta-tulos! "tyokonetta"
+                                               (hae-tyokoneet db user tiedot urakat))
+       :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
+                                               (hae-turvallisuuspoikkeamat db user tiedot urakat))
+       :tarkastukset           (tulosta-tulos! "tarkastusta"
+                                               (hae-tarkastukset db user tiedot urakat))
+       :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
+                                               (hae-laatupoikkeamat db user tiedot urakat))
+       :paikkaus               (tulosta-tulos! "paikkausta"
+                                               (hae-paikkaustyot db user tiedot urakat))
+       :paallystys             (tulosta-tulos! "paallystysta"
+                                               (hae-paallystystyot db user tiedot urakat))
+       :ilmoitukset            (tulosta-tulos! "ilmoitusta"
+                                               (hae-ilmoitukset db user tiedot urakat))})))
 
 (defrecord Tilannekuva []
   component/Lifecycle
