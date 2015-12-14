@@ -4,6 +4,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
@@ -14,10 +16,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
-(defonce karttataso-tilannekuva (atom false))
 (defonce valittu-tila (atom :nykytilanne))
-
-(tarkkaile! "Valittu tila: " valittu-tila)
 
 (defonce bufferi 500)
 (defonce hakutiheys (reaction (condp = @valittu-tila
@@ -128,15 +127,14 @@
 
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt)))) ;; Valittu aikaväli vektorissa [alku loppu]
 (defonce nykytilanteen-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
-(tarkkaile! "Aikasuodatin: " nykytilanteen-aikasuodattimen-arvo)
 
-(defonce haetut-asiat (atom nil))
 (defonce tilannekuvan-asiat-kartalla
          (reaction
-           @haetut-asiat
-           (when @karttataso-tilannekuva
+           @tilannekuva-kartalla/haetut-asiat
+           (when @tilannekuva-kartalla/karttataso-tilannekuva
              (kartalla-esitettavaan-muotoon
-               (concat (vals (:tyokoneet @haetut-asiat)) (apply concat (vals (dissoc @haetut-asiat :tyokoneet))))))))
+               (concat (vals (:tyokoneet @tilannekuva-kartalla/haetut-asiat))
+                       (apply concat (vals (dissoc @tilannekuva-kartalla/haetut-asiat :tyokoneet))))))))
 
 (defn kasaa-parametrit []
   (merge
@@ -152,7 +150,7 @@
     @suodattimet))
 
 (defn yhdista-tyokonedata [uusi]
-  (let [vanhat (:tyokoneet @haetut-asiat)
+  (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)
         uudet (:tyokoneet uusi)]
     (assoc uusi :tyokoneet
                 (merge-with
@@ -165,9 +163,13 @@
                                               (:sijainti uusi))))))
                   vanhat uudet))))
 
+(def edellisen-haun-suodattimet (atom @suodattimet))
 (defn hae-asiat []
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
   (go
+    (when (not= @suodattimet @edellisen-haun-suodattimet)
+      (reset! edellisen-haun-suodattimet @suodattimet)
+      (kartta/aseta-paivitetaan-karttaa-tila true))
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
                                   (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
@@ -209,19 +211,20 @@
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!)
                     (lisaa-karttatyypit))]
-      (reset! haetut-asiat tulos))))
+      (reset! tilannekuva-kartalla/haetut-asiat tulos)
+      (kartta/aseta-paivitetaan-karttaa-tila false))))
 
 (def asioiden-haku (reaction<!
-                     [;;_ @valitut-suodattimet
-                      ;;_ @valitut-toteumatyypit
+                     [_ @suodattimet
                       _ @nav/kartalla-nakyva-alue
                       _ @nav/valittu-urakka
                       nakymassa? @nakymassa?
                       _ @nav/valittu-hallintayksikko-id]
                      {:odota bufferi}
-                     (when nakymassa? (hae-asiat))))
+                     (when nakymassa?
+                       (hae-asiat))))
 
-(defonce lopeta-haku (atom nil))                            ;; Säilöö funktion jolla pollaus lopetetaan
+(defonce lopeta-haku (atom nil)) ;; Säilöö funktion jolla pollaus lopetetaan
 
 (defonce pollaus
          (run! (if @nakymassa?

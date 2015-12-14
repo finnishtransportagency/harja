@@ -326,6 +326,9 @@
      [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
       [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
 
+(defn aseta-paivitetaan-karttaa-tila [uusi-tila]
+  (reset! paivitetaan-karttaa-tila uusi-tila))
+
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 

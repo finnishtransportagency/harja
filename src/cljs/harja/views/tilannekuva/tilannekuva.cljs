@@ -2,6 +2,7 @@
   (:require [reagent.core :refer [atom]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
+            [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.views.kartta :as kartta]
             [harja.loki :refer [log tarkkaile!]]
             [harja.views.tilannekuva.tilannekuva-popupit :as popupit]
@@ -155,8 +156,10 @@
 
 (defn tilannekuva []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tiedot/karttataso-tilannekuva)
-    (komp/sisaan-ulos #(reset! kartta/pida-geometriat-nakyvilla? false) #(reset! kartta/pida-geometriat-nakyvilla? true))
+    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
+    (komp/sisaan-ulos #(reset! kartta/pida-geometriat-nakyvilla? false)
+                      #(do (reset! kartta/pida-geometriat-nakyvilla? true)
+                           (reset! kartta/aseta-paivitetaan-karttaa-tila false)))
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu

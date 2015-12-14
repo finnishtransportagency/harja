@@ -10,7 +10,7 @@
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
-            [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva]
+            [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
