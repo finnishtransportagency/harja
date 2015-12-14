@@ -1,27 +1,26 @@
 (ns harja.views.kartta
   "Harjan kartta."
-  (:require [reagent.core :refer [atom] :as reagent]
-
-            [goog.events :as events]
+  (:require [cljs.core.async :refer [timeout <! >! chan] :as async]
+            [clojure.string :as str]
             [goog.events.EventType :as EventType]
-
+            [goog.events :as events]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.asiakas.tapahtumat :as t]
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.fmt :as fmt]
+            [harja.geo :as geo]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.openlayers :refer [openlayers] :as openlayers]
-            [harja.asiakas.tapahtumat :as t]
-            [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.views.kartta.tasot :as tasot]
-            [cljs.core.async :refer [timeout <! >! chan] :as async]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.geo :as geo]
-            [harja.ui.komponentti :as komp]
             [harja.ui.animaatio :as animaatio]
-            [harja.fmt :as fmt])
+            [harja.ui.komponentti :as komp]
+            [harja.ui.openlayers :refer [openlayers] :as openlayers]
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.kartta.tasot :as tasot]
+            [reagent.core :refer [atom] :as reagent])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 
 (def kartta-kontentin-vieressa? (atom false))
@@ -374,6 +373,33 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
          (poista-hover-kasittelija!)
          (async/close! kanava))))
 
+(comment
+  ;; ota tämä pois kommenteista, jos haluat piirtää linestringejä replistä
+  ;; harja.views.kartta=> (viivan-piirto-aloita)
+  ;; klikkaile kartalta pisteitä...
+  ;; harja.views.kartta=> (viivan-piirto-lopeta)
+  ;;
+  ;; js consoleen logittuu koko ajan rakentuva linestring, jonka voi sijainniksi laittaa
+  
+  (defonce viivan-piirto (cljs.core/atom nil))
+  (defn ^:export viivan-piirto-aloita []
+    (let [eventit (chan)]
+      (reset! viivan-piirto
+              (kaappaa-hiiri eventit))
+      (go-loop [e (<! eventit)
+                pisteet []]
+        (log "LINESTRING("
+             (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
+             ")")
+        (when e
+          (recur (<! eventit)
+                 (if (= :click (:tyyppi e))
+                   (conj pisteet (:sijainti e))
+                   pisteet))))))
+
+  (defn ^:export viivan-piirto-lopeta []
+    (@viivan-piirto)
+    (reset! viivan-piirto nil)))
 
 (defn nayta-geometria! [avain geometria]
   (assert (and (map? geometria)
