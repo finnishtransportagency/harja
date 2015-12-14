@@ -14,7 +14,7 @@ SELECT
   h.sijainti
 FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON h.id=s.laatupoikkeama
+  LEFT JOIN sanktio s ON h.id = s.laatupoikkeama
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu);
 
@@ -35,7 +35,7 @@ SELECT
   h.sijainti
 FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON h.id=s.laatupoikkeama
+  LEFT JOIN sanktio s ON h.id = s.laatupoikkeama
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND s.suorasanktio IS NOT TRUE;
@@ -94,7 +94,7 @@ SELECT
    LIMIT 1)                          AS kommentti
 FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON s.laatupoikkeama=h.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
 WHERE h.urakka = :urakka
       AND (aika >= :alku AND aika <= :loppu)
       AND paatos IS NOT NULL
@@ -185,13 +185,13 @@ ORDER BY k.luotu ASC;
 -- name: hae-laatupoikkeaman-liitteet
 -- Hakee annetun laatupoikkeaman kaikki liitteet
 SELECT
-  l.id                                 AS id,
-  l.tyyppi                             AS tyyppi,
-  l.koko                               AS koko,
-  l.nimi                               AS nimi,
-  l.liite_oid                          AS oid
+  l.id        AS id,
+  l.tyyppi    AS tyyppi,
+  l.koko      AS koko,
+  l.nimi      AS nimi,
+  l.liite_oid AS oid
 FROM liite l
-  JOIN laatupoikkeama_liite hl on l.id = hl.liite
+  JOIN laatupoikkeama_liite hl ON l.id = hl.liite
 WHERE hl.laatupoikkeama = :laatupoikkeamaid
 ORDER BY l.luotu ASC;
 
@@ -212,9 +212,23 @@ WHERE id = :id;
 -- voi antaa päätöstietoja.
 INSERT
 INTO laatupoikkeama
-(urakka, aika, tekija, kohde, selvitys_pyydetty, luoja, luotu, kuvaus, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ulkoinen_id)
+(urakka,
+ aika,
+ tekija,
+ kohde,
+ selvitys_pyydetty,
+ luoja,
+ luotu,
+ kuvaus,
+ sijainti,
+ tr_numero,
+ tr_alkuosa,
+ tr_loppuosa,
+ tr_alkuetaisyys,
+ tr_loppuetaisyys,
+ ulkoinen_id)
 VALUES (:urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
-        POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
+                 :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :ulkoinen_id);
 
 -- name: kirjaa-laatupoikkeaman-paatos!
@@ -255,7 +269,7 @@ SET
   aika             = :aika,
   kohde            = :kohde,
   kuvaus           = :kuvaus,
-  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti)::GEOMETRY,
+  sijainti         = :sijainti :: GEOMETRY,
   tr_numero        = :tr_numero,
   tr_alkuosa       = :tr_alkuosa,
   tr_loppuosa      = :tr_loppuosa,

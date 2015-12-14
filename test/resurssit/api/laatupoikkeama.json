@@ -1,4 +1,5 @@
-{"otsikko": {
+{
+  "otsikko": {
     "lahettaja": {
       "jarjestelma": "Urakoitsijan järjestelmä",
       "organisaatio": {
@@ -14,19 +15,9 @@
   "tunniste": {
     "id": 123
   },
-  "sijainti": {
-    "tie": {
-      "numero": 1234,
-      "nimi": "Kiviharjunlenkki",
-      "aosa": 1,
-      "losa": 73,
-      "aet": 100,
-      "let": 20
-    },
-    "koordinaatit": {
-      "x": 64.91292829999999,
-      "y": 25.503484200000003
-    }
+  "alkusijainti": {
+    "x": 430746,
+    "y": 7199055
   },
   "kuvaus": "testihavainto36934853",
   "kohde": "testikohde36934853",
@@ -35,7 +26,7 @@
     "etunimi": "Ville",
     "sukunimi": "Vaara"
   },
-  "paivamaara": "2016-01-30T12:00:00Z",
+  "aika": "2016-01-30T12:00:00Z",
   "liitteet": [
     {
       "liite": {

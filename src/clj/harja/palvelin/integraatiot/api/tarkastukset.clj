@@ -3,65 +3,76 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [join]]
+            [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
-            [clojure.java.jdbc :as jdbc]
-            [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]))
 
+(defn tee-onnistunut-vastaus [varoitukset]
+  (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
+    (if (not-empty varoitukset)
+      (assoc vastauksen-data :varoitukset varoitukset)
+      vastauksen-data)))
 
-(defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} tarkastus]
-  (let [urakka-id (Long/parseLong id)
-        ulkoinen-id (-> tarkastus :tunniste :id)]
+(defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
+  (println "---> mittaus " mittaus)
+
+  (case tyyppi
+    :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus db id uusi? mittaus)
+    :soratie (tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
+    nil))
+
+(defn kasittele-tarkastukset [db liitteiden-hallinta kayttaja tyyppi urakka-id data]
+  (mapv
+    (fn [rivi]
+      (let [tarkastus (:tarkastus rivi)
+            ulkoinen-id (-> tarkastus :tunniste :id)]
+        (jdbc/with-db-transaction [transaktio db]
+          (let [{tarkastus-id :id}
+                (first
+                  (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
+                uusi? (nil? tarkastus-id)]
+
+            (let [aika (json/pvm-string->java-sql-date (:aika tarkastus))
+                  tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                  geometria (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                  id (tarkastukset/luo-tai-paivita-tarkastus
+                       db kayttaja urakka-id
+                       {:id          tarkastus-id
+                        :ulkoinen-id ulkoinen-id
+                        :tyyppi      tyyppi
+                        :aika        aika
+                        :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
+                        :sijainti    geometria
+                        :tr          {:numero        (:tie tr-osoite)
+                                      :alkuosa       (:aosa tr-osoite)
+                                      :alkuetaisyys  (:aet tr-osoite)
+                                      :loppuosa      (:losa tr-osoite)
+                                      :loppuetaisyys (:let tr-osoite)}
+                        :havainnot   (:havainnot tarkastus)})
+                  liitteet (:liitteet tarkastus)]
+
+              (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
+              (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
+              (when-not tr-osoite
+                (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
+                        (:alkusijainti data) (:loppusijainti data))))))))
+    (:tarkastukset data)))
+
+(defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
+  (let [urakka-id (Long/parseLong id)]
+    (log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (log/info "TARKASTUS TULOSSA: " tarkastus "; käyttäjä: " kayttaja)
-    (log/debug "tyyppi: " tyyppi)
-    (jdbc/with-db-transaction [db db]
-      (let [{tarkastus-id :id laatupoikkeama-id :laatupoikkeama}
-            (first
-              (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
-            uusi? (nil? tarkastus-id)]
+    (tee-onnistunut-vastaus (join ", " (kasittele-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)))))
 
-        (let [aika (json/pvm-string->java-sql-date (:paivamaara tarkastus))
-              id (tarkastukset/luo-tai-paivita-tarkastus
-                   db kayttaja urakka-id
-                   {:id          tarkastus-id
-                    :ulkoinen-id ulkoinen-id
-                    :tyyppi      tyyppi
-                    :aika        aika
-                    :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
-                    :mittaaja    (json/henkilo->nimi (-> tarkastus :mittaus :mittaaja))
-                    :tr          (json/sijainti->tr (:sijainti tarkastus))
-                    :sijainti    (json/sijainti->point (:sijainti tarkastus))
-
-                    ;; FIXME: siirrä havainto/kuvaus suoraan havainnot kentäksi
-                    :havainnot (get-in tarkastus [:havainto :kuvaus])}
-                   )
-
-              ;; FIXME: siirrä liitteet suoraan tarkastukseen
-              liitteet (:liitteet (:havainto tarkastus))]
-
-          (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
-
-          (case tyyppi
-            :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus
-                          db id uusi? (-> tarkastus
-                                          :mittaus
-                                          (assoc :lumimaara (:lumisuus (:mittaus tarkastus)))))
-
-            :soratie (tarkastukset/luo-tai-paivita-soratiemittaus
-                       db id uusi? (:mittaus tarkastus))
-            nil)
-
-          nil)))))
-
-;; Määritellään tarkastustyypit, joiden lisäämiselle tehdään API palvelut
-(def tarkastukset
+(def palvelut
   [{:palvelu       :lisaa-tiestotarkastus
     :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
     :pyynto-skeema json-skeemat/+tiestotarkastuksen-kirjaus+
@@ -78,19 +89,18 @@
 (defrecord Tarkastukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi]} tarkastukset]
+    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi]} palvelut]
       (julkaise-reitti
         http palvelu
         (POST polku request
           (do
-            (log/info "REQUEST: " (pr-str request))
             (kasittele-kutsu db integraatioloki palvelu request
-                             pyynto-skeema nil
+                             pyynto-skeema json-skeemat/+kirjausvastaus+
                              (fn [parametrit data kayttaja db]
                                (kirjaa-tarkastus db liitteiden-hallinta kayttaja tyyppi parametrit data)))))))
 
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (apply poista-palvelut http (map :palvelu tarkastukset))
+    (apply poista-palvelut http (map :palvelu palvelut))
     this))
