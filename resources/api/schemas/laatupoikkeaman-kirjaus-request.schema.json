@@ -18,12 +18,18 @@
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
-    "sijainti": {
-      "id": "urn:harja/sijainti",
+    "alkusijainti": {
+      "id": "urn:harja/alkusijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-      "required": false
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+      "required": true
+    },
+    "loppusijainti": {
+      "id": "urn:harja/loppusijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
     },
     "kohde": {
       "id": "urn:harja/tyyppi",
@@ -43,8 +49,8 @@
       "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
       "required": true
     },
-    "paivamaara": {
-      "id": "urn:harja/paivamaara",
+    "aika": {
+      "id": "urn:harja/aika",
       "type": "string",
       "format": "date-time",
       "required": true
@@ -58,7 +64,7 @@
     "kommentit": {
       "id": "urn:harja/kommentit",
       "type": "array",
-      "maxItems" : 1000,
+      "maxItems": 1000,
       "items": {
         "id": "urn:harja/kommentit/0",
         "type": "object",

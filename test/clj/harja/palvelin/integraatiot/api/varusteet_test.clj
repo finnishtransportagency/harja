@@ -6,8 +6,8 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [clojure.java.io :as io]
-            [cheshire.core :as cheshire])
-  (:use org.httpkit.fake))
+            [cheshire.core :as cheshire]
+            [org.httpkit.fake :refer [with-fake-http]]))
 
 (def kayttaja "jvh")
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")

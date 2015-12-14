@@ -25,7 +25,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest tavallinen-kayttaja-ei-nae-mitaan []
+(deftest tavallinen-kayttaja-ei-nae-mitaan 
   (let [[lkm kayttajat] (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-kayttajat
                                         +kayttaja-tero+
@@ -33,7 +33,7 @@
     (is (= lkm 0) "ei käyttäjiä")
     (is (= kayttajat []) "tyhjä vektori")))
 
-(deftest jarjestelmavastuuhenkilo-nakee-kaikki []
+(deftest jarjestelmavastuuhenkilo-nakee-kaikki
   (let [[lkm kayttajat] (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-kayttajat +kayttaja-jvh+
                                         ["" 0 10])]

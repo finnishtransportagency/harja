@@ -7,7 +7,7 @@
 (def +urakan-haku-vastaus+ "api/examples/urakan-haku-response.json")
 (def +urakoiden-haku-vastaus+ "api/examples/urakoiden-haku-response.json")
 
-(def +havainnon-kirjaus+ "api/examples/havainnon-kirjaus-request.json")
+(def +laatupoikkeaman-kirjaus+ "api/examples/laatupoikkeaman-kirjaus-request.json")
 
 (def +ilmoitustoimenpiteen-kirjaaminen+ "api/examples/ilmoitustoimenpiteen-kirjaaminen-request.json")
 (def +ilmoitusten-haku+ "api/examples/ilmoitusten-haku-response.json")

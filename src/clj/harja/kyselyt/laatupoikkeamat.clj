@@ -10,7 +10,7 @@
 
 (defn luo-tai-paivita-laatupoikkeama
   "Luo uuden laatupoikkeaman tai päivittää olemassaolevan laatupoikkeaman perustiedot. Palauttaa laatupoikkeaman id:n."
-  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus] :as laatupoikkeama}]
+  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus]}]
   (if id
     (do (paivita-laatupoikkeaman-perustiedot<! db
                                         (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
@@ -20,6 +20,18 @@
                                         id)
         id)
 
-    (:id (luo-laatupoikkeama<! db urakka (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
-                         (if selvitys-pyydetty true false) (:id user) kuvaus
-                         nil nil nil nil nil nil nil nil))))
+    (:id (luo-laatupoikkeama<! db
+                               urakka
+                               (konv/sql-timestamp aika)
+                               (when tekija (name tekija))
+                               kohde
+                               (if selvitys-pyydetty true false)
+                               (:id user)
+                               kuvaus
+                               nil
+                               nil
+                               nil
+                               nil
+                               nil
+                               nil
+                               nil))))
