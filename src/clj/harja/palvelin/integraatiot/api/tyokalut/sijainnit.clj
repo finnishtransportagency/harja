@@ -11,7 +11,6 @@
       (if (and alku-x alku-y loppu-x loppu-y)
         (first (tieverkko/hae-tr-osoite-valille db alku-x alku-y loppu-x loppu-y threshold))
         (when (and alku-x alku-y)
-          ;; todo: hae geometria tierekisteriosoitteelle_piste
           (first (tieverkko/hae-tr-osoite db alku-x alku-y threshold))))
       (catch PSQLException e
         (log/error e "Sijainnin hakemisessa tapahtui poikkeus.")
