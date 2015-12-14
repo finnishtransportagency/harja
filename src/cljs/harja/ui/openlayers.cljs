@@ -472,7 +472,6 @@
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})        
         nuolet (atom [])]
 
-    (log "hengissä 1")
     ;; Kerätään viivasegmenteille loppusijainnit ja viivan suunta
     (.forEachSegment
       (.getGeometry feature)
@@ -483,7 +482,6 @@
                                           (- (first end) (first start))))})
         ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
         false))
-    (log "hengissä")
     (doto feature
       (.setStyle
        (clj->js
