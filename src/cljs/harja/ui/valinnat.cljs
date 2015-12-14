@@ -89,7 +89,7 @@
 
 (defn aikavali
   ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
-  ([valittu-aikavali-atom {:keys [nayta-otsikko?]}]
+  ([valittu-aikavali-atom {:keys [nayta-otsikko? salli-pitka-aikavali?]}]
   [:span.label-ja-aikavali
    (when (or (nil? nayta-otsikko?)
              (true? nayta-otsikko?)) [:span.alasvedon-otsikko "Aikaväli"])
@@ -97,13 +97,15 @@
     [tee-kentta {:tyyppi :pvm :irrallinen? true}
      (r/wrap (first @valittu-aikavali-atom)
              (fn [uusi-arvo]
-               (reset! valittu-aikavali-atom [uusi-arvo
-                                              (if-not (or
-                                                        (and (string? uusi-arvo) (empty? uusi-arvo))
-                                                        (nil? uusi-arvo))
-                                                (second (pvm/kuukauden-aikavali uusi-arvo))
-                                                (second @valittu-aikavali-atom))])
-               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
+               (if salli-pitka-aikavali?
+                 (reset! valittu-aikavali-atom [uusi-arvo (second @valittu-aikavali-atom)])
+                 (reset! valittu-aikavali-atom [uusi-arvo
+                                                (if-not (or
+                                                          (and (string? uusi-arvo) (empty? uusi-arvo))
+                                                          (nil? uusi-arvo))
+                                                  (second (pvm/kuukauden-aikavali uusi-arvo))
+                                                  (second @valittu-aikavali-atom))]))
+                 (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
     [tee-kentta {:tyyppi :pvm :irrallinen? true}
      (r/wrap (second @valittu-aikavali-atom)
