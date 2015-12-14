@@ -4,6 +4,7 @@
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.views.kartta :as kartta]
+            [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
             [harja.views.tilannekuva.tilannekuva-popupit :as popupit]
             [harja.views.murupolku :as murupolku]
@@ -15,7 +16,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.checkbox :as checkbox]
             [harja.ui.on-off-valinta :as on-off]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.valinnat :as urakka-valinnat])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
@@ -49,7 +51,7 @@
 
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
-   [:div {:style {:color "red" :margin-top "8px" :margin-bottom "8px"}} "UNDER CONSTRUCTION! Historiakuvan aikasuodattimien harjaaminen on vielä kesken :-)"]])
+   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false}]])
 
 (defn yksittainen-suodatincheckbox
   "suodatin-polku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"

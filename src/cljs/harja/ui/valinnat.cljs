@@ -88,9 +88,11 @@
    [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]])
 
 (defn aikavali
-  [valittu-aikavali-atom]
+  ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
+  ([valittu-aikavali-atom {:keys [nayta-otsikko?]}]
   [:span.label-ja-aikavali
-   [:span.alasvedon-otsikko "Aikaväli"]
+   (when (or (nil? nayta-otsikko?)
+             (true? nayta-otsikko?)) [:span.alasvedon-otsikko "Aikaväli"])
    [:div.aikavali-valinnat
     [tee-kentta {:tyyppi :pvm :irrallinen? true}
      (r/wrap (first @valittu-aikavali-atom)
@@ -110,7 +112,7 @@
                (if (and uusi-arvo (t/before? uusi-arvo (first @valittu-aikavali-atom)))
                  (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali uusi-arvo))
                  (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo])))
-               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]])
+               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
 (defn urakan-toimenpide
   [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
