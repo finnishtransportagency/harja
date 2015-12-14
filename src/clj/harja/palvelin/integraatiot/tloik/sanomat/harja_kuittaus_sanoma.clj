@@ -38,11 +38,12 @@
    [:viestiId viesti-id]
    (when virhe
      [:virhe virhe])
-   [:valitystiedot
-    [:ilmoitusId ilmoitus-id]
-    (rakenna-urakka urakka)
-    (rakenna-urakoitsija urakka)
-    (rakenna-vastaanottaja vastaanottaja)]])
+   (when ilmoitus-id
+     [:valitystiedot
+      [:ilmoitusId ilmoitus-id]
+      (rakenna-urakka urakka)
+      (rakenna-urakoitsija urakka)
+      (when vastaanottaja (rakenna-vastaanottaja vastaanottaja))])])
 
 (defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe]
   (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe)
