@@ -71,7 +71,7 @@
       (kartalla-esitettavaan-muotoon @haetut-asiat))))
 
 (defn kasaa-parametrit []
-  {:hallintayksikko @nav/valittu-hallintayksikko-id
+  {:hallintayksikko @nav/valittu-hallintayksikko
    :urakka          (:id @nav/valittu-urakka)
    :alue            @nav/kartalla-nakyva-alue
    :alku            (if (= @valittu-aikasuodatin :lyhyt)
@@ -175,7 +175,7 @@
     nakymassa? @nakymassa?
     _ @nav/kartalla-nakyva-alue
     _ @nav/valittu-urakka
-    _ @nav/valittu-hallintayksikko-id]
+    _ @nav/valittu-hallintayksikko]
    {:odota +bufferi+}
    (when (and nakymassa?
               (or

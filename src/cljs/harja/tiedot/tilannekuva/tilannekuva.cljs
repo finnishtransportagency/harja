@@ -138,7 +138,7 @@
 
 (defn kasaa-parametrit []
   (merge
-    {:hallintayksikko @nav/valittu-hallintayksikko-id
+    {:hallintayksikko @nav/valittu-hallintayksikko
      :urakka-id       (:id @nav/valittu-urakka)
      :urakoitsija     (:id @nav/valittu-urakoitsija)
      :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
@@ -234,7 +234,7 @@
                       _ @nav/kartalla-nakyva-alue
                       _ @nav/valittu-urakka
                       nakymassa? @nakymassa?
-                      _ @nav/valittu-hallintayksikko-id]
+                      _ @nav/valittu-hallintayksikko]
                      {:odota bufferi}
                      (when nakymassa?
                        (hae-asiat))))
