@@ -86,12 +86,10 @@
                                       :ei-valittu
                                       :osittain-valittu)))]
     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-      (log "Params: " otsikko (pr-str suodattimet-atom) (pr-str ryhma-polku) (pr-str kokoelma-atom))
       (let [ryhman-elementit-ja-tilat (get-in @suodattimet-atom ryhma-polku)
             auki? (fn [] (or @oma-auki-tila
                              (and kokoelma-atom
                                   (= otsikko @kokoelma-atom))))]
-        @suodattimet-atom
         [:div.tk-checkbox-ryhma
          [:div.tk-checkbox-ryhma-otsikko
           [:span {:class    (str
@@ -103,7 +101,7 @@
                                 (if (= otsikko @kokoelma-atom)
                                   (reset! kokoelma-atom nil)
                                   (reset! kokoelma-atom otsikko))
-                                ; Ylläpitää itse omaa tilaansa
+                                ; Ylläpitää itse omaa auki/kiinni-tilaansa
                                 (swap! oma-auki-tila not))
                               (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
            (if (auki?)
