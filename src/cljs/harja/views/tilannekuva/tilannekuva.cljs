@@ -97,11 +97,11 @@
                               (when-not (auki?) "chevron-rotate-down"))
                   :on-click (fn []
                               (if kokoelma-atom
-                                ; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
+                                ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
                                 (if (= otsikko @kokoelma-atom)
                                   (reset! kokoelma-atom nil)
                                   (reset! kokoelma-atom otsikko))
-                                ; Ylläpitää itse omaa auki/kiinni-tilaansa
+                                ;; Ylläpitää itse omaa auki/kiinni-tilaansa
                                 (swap! oma-auki-tila not))
                               (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
            (if (auki?)
@@ -110,7 +110,7 @@
            [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
             {:display   "inline-block"
              :on-change (fn [uusi-tila]
-                          ; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
+                          ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
                           (when (not= :osittain-valittu uusi-tila)
                             (reset! suodattimet-atom
                                     (reduce (fn [edellinen-map tehtava-avain]
