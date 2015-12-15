@@ -79,17 +79,19 @@
    itse omaa auki/kiinni-tilaansa."
   [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
   (let [oma-auki-tila (atom false)
-        auki? (fn [] (or @oma-auki-tila
-                         (and kokoelma-atom
-                              (= otsikko @kokoelma-atom))))
+
         ryhmanjohtaja-tila-atom (reaction
                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
                                     :valittu
                                     (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
                                       :ei-valittu
                                       :osittain-valittu)))]
-    (fn []
-      (let [ryhman-elementit-ja-tilat (atom (get-in @suodattimet-atom ryhma-polku))]
+    (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
+      (log "Params: " otsikko (pr-str suodattimet-atom) (pr-str ryhma-polku) (pr-str kokoelma-atom))
+      (let [ryhman-elementit-ja-tilat (get-in @suodattimet-atom ryhma-polku)
+            auki? (fn [] (or @oma-auki-tila
+                             (and kokoelma-atom
+                                  (= otsikko @kokoelma-atom))))]
         @suodattimet-atom
         [:div.tk-checkbox-ryhma
          [:div.tk-checkbox-ryhma-otsikko
@@ -123,7 +125,7 @@
 
          (when (auki?)
            [:div.tk-checkbox-ryhma-sisalto
-            (doall (for [elementti (seq @ryhman-elementit-ja-tilat)]
+            (doall (for [elementti (seq ryhman-elementit-ja-tilat)]
                      ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
                      [yksittainen-suodatincheckbox
                       (get tiedot/suodattimien-nimet (first elementti))
@@ -140,7 +142,9 @@
    [:div.tk-suodatinryhmat
     (when (= :historiakuva @tiedot/valittu-tila)
       [:div.tk-suodatinryhmat
+       ^{:key "ilmoitukset"} ; Avainta ei ehkä tarvittaisi tässä, mutta jostain syystä Reagent luulee näitä muuten samoiksi
        [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
+       ^{:key "yllapito"}
        [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]])
     [:div.tk-suodatinryhmat
      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
