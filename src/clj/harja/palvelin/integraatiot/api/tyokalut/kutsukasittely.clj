@@ -149,7 +149,7 @@
                  :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
-(defn aja-virhekasittelyn-kanssa [ajo]
+(defn aja-virhekasittelyn-kanssa [ajon-nimi ajo]
   (try+
     (ajo)
     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
@@ -168,7 +168,7 @@
       (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
     (catch SQLException e
-      (log/error e "Tapahtui SQL-poikkeus: ")
+      (log/error e (format "Ajon %s yhteyhdessä tapahtui SQL-poikkeus: " ajon-nimi))
       (let [w (StringWriter.)]
         (loop [ex (.getNextException e)]
           (when (not (nil? ex))
@@ -179,12 +179,12 @@
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]))
     (catch Exception e
-      (log/error e "Tapahtui poikkeus: ")
+      (log/error e (format "Ajon %s yhteyhdessä tapahtui poikkeus: " ajon-nimi))
       (kasittele-sisainen-kasittelyvirhe
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]))
     (catch Object e
-      (log/error (:throwable &throw-context) "Tapahtui poikkeus: " e)
+      (log/error (:throwable &throw-context) (format "Ajon %s yhteyhdessä rapahtui poikkeus: " e))
       (kasittele-sisainen-kasittelyvirhe
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]))))
@@ -202,6 +202,7 @@
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))
         vastaus (aja-virhekasittelyn-kanssa
+                  resurssi
                   #(let
                     [parametrit (:params request)
                      kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
