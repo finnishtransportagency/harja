@@ -89,17 +89,17 @@
 
 (defn aikavali
   ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
-  ([valittu-aikavali-atom {:keys [nayta-otsikko? salli-pitka-aikavali?]}]
+  ([valittu-aikavali-atom {:keys [nayta-otsikko? salli-pitka-aikavali? aloitusaika-pakota-suunta paattymisaika-pakota-suunta]}]
   [:span.label-ja-aikavali
    (when (or (nil? nayta-otsikko?)
              (true? nayta-otsikko?)) [:span.alasvedon-otsikko "Aikaväli"])
    [:div.aikavali-valinnat
-    [tee-kentta {:tyyppi :pvm :irrallinen? true}
+    [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
      (r/wrap (first @valittu-aikavali-atom)
              (fn [uusi-arvo]
                (if salli-pitka-aikavali?
                  (reset! valittu-aikavali-atom [uusi-arvo (second @valittu-aikavali-atom)])
-                 (reset! valittu-aikavali-atom [uusi-arvo
+                 (reset! valittu-aikavali-atom [uusi-arvo ; Pakotetaan aikaväliksi aina korkeintaan kuukausi
                                                 (if-not (or
                                                           (and (string? uusi-arvo) (empty? uusi-arvo))
                                                           (nil? uusi-arvo))
@@ -107,7 +107,7 @@
                                                   (second @valittu-aikavali-atom))]))
                  (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-    [tee-kentta {:tyyppi :pvm :irrallinen? true}
+    [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]
                ;; Estetään käänteinen aikaväli

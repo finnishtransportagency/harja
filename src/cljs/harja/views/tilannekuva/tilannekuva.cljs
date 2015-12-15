@@ -52,7 +52,9 @@
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
    [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
-                                                        :salli-pitka-aikavali? true}]])
+                                                        :salli-pitka-aikavali? true
+                                                        :aloitusaika-pakota-suunta :alas-oikea
+                                                        :paattymisaika-pakota-suunta :alas-vasen}]])
 
 (defn yksittainen-suodatincheckbox
   "suodatin-polku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"

@@ -389,7 +389,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -451,7 +451,8 @@
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                (reset! data %)
                                                                (reset! teksti (pvm/pvm %)))
-                                                 :pvm     naytettava-pvm}])]))})))
+                                                 :pvm     naytettava-pvm
+                                                 :pakota-suunta pakota-suunta}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]

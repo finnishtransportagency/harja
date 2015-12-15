@@ -69,20 +69,22 @@ Seuraavat optiot ovat mahdollisia:
 
   ...muita tarpeen mukaan..."
   [optiot]
-  (let [sijainti-atom (atom nil)
+  (let [pakota-suunta (:pakota-suunta optiot)
+        sijainti-atom (atom (or pakota-suunta nil))
         nyt (or (:pvm optiot) (t/now))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])
         scroll-kuuntelija (fn [this _]
                             (selvita-kalenterin-suunta this sijainti-atom))]
     (komp/luo
-     {:component-will-receive-props
-      (fn [this & [_ optiot]]
-        (when-let [pvm (:pvm optiot)]
-          ;; päivitetään näytä vuosi ja kk
-          (reset! nayta [(.getYear pvm) (.getMonth pvm)])))
-      :component-did-mount
-      (fn [this _]
-        (selvita-kalenterin-suunta this sijainti-atom))}
+      {:component-will-receive-props
+       (fn [this & [_ optiot]]
+         (when-let [pvm (:pvm optiot)]
+           ;; päivitetään näytä vuosi ja kk
+           (reset! nayta [(.getYear pvm) (.getMonth pvm)])))
+       :component-did-mount
+       (fn [this _]
+         (when (not pakota-suunta)
+           (selvita-kalenterin-suunta this sijainti-atom)))}
 
      (komp/dom-kuuntelija js/window
                           EventType/SCROLL scroll-kuuntelija)
@@ -149,5 +151,3 @@ Seuraavat optiot ovat mahdollisia:
                                    (.stopPropagation %)
                                    (valitse (pvm/nyt)))}
                   "Tänään"]]]]])))))
-
-
