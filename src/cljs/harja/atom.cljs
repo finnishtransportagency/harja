@@ -17,15 +17,17 @@
   (when-let [paivita (:paivita (get @+reaktiot+ reaktio<!))]
     (paivita)))
 
-(defn paivita-periodisesti [reaktio periodi-ms]
-  (let [paivita? (atom true)]
+(defn paivita-periodisesti
+  ([reaktio periodi-ms] (paivita-periodisesti reaktio periodi-ms nil))
+  ([reaktio periodi-ms ehto-fn]
+   (let [paivita? (atom true)]
     (go-loop []
       (<! (timeout periodi-ms))
-      (when @paivita?
+      (when (and @paivita? (ehto-fn))
         (nappaa-virhe
           (paivita! reaktio))
         (recur)))
-    #(reset! paivita? false)))
+    #(reset! paivita? false))))
 
 (defn kuristin
   "Palauttaa funktion, joka ottaa samat parametrit kuin annettu paivitys-fn, mutta

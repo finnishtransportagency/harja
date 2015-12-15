@@ -19,9 +19,7 @@
 (defonce valittu-tila (atom :nykytilanne))
 
 (defonce bufferi 500)
-(defonce hakutiheys (reaction (condp = @valittu-tila
-                                :nykytilanne 3000
-                                :historiakuva 60000)))
+(defonce hakutiheys 3000)
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
@@ -246,7 +244,8 @@
                  (do
                    (when @lopeta-haku (@lopeta-haku))
                    (log "Tilannekuva: Aloitetaan haku (tai päivitetään tiheyttä)")
-                   (reset! lopeta-haku (paivita-periodisesti asioiden-haku @hakutiheys)))
+                   (reset! lopeta-haku (paivita-periodisesti asioiden-haku @hakutiheys (fn []
+                                                                                         (= :nykytilanne @valittu-tila)))))
 
                  (when @lopeta-haku (do
                                       (@lopeta-haku)
