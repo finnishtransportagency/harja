@@ -126,7 +126,7 @@
                                               ["3 vk" (tunteja-viikoissa 3)]])
 
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt)))) ;; Valittu aikaväli vektorissa [alku loppu]
-(defonce nykytilanteen-aikasuodattimen-arvo (atom (tunteja-viikoissa 520)))
+(defonce nykytilanteen-aikasuodattimen-arvo (atom 2))
 
 (defonce tilannekuvan-asiat-kartalla
          (reaction
