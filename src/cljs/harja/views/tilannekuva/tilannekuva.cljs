@@ -73,13 +73,12 @@
 (def auki-oleva-checkbox-ryhma (atom nil))
 
 (defn checkbox-suodatinryhma
-  "ryhma-polku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa
+  "ryhma-polku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa.
    kokoelma-atomin antaminen tarkoittaa, että checkbox-ryhmä on osa usean checkbox-ryhmän kokoelmaa, joista
    vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
    itse omaa auki/kiinni-tilaansa."
   [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
   (let [oma-auki-tila (atom false)
-
         ryhmanjohtaja-tila-atom (reaction
                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
                                     :valittu
@@ -100,7 +99,7 @@
                               (when-not (auki?) "chevron-rotate-down"))
                   :on-click (fn []
                               (if kokoelma-atom
-                                ; Osa kokoelmaa
+                                ; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
                                 (if (= otsikko @kokoelma-atom)
                                   (reset! kokoelma-atom nil)
                                   (reset! kokoelma-atom otsikko))
