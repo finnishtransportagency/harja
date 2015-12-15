@@ -43,7 +43,7 @@
           (log/debug (format "Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
           true)
         (do
-          (log/debug "Ei tarvita paikallista päivitystä")
+          (log/debug (format  "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
           false)))
     (catch Exception e
       (log/warn e (format "Tarkistettaessa paikallista ajoa geometriapäivitykselle: %s tapahtui poikkeus." paivitystunnus))
