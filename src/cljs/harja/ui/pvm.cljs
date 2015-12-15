@@ -24,7 +24,9 @@
                       (if (< etaisyys-oikeaan-reunaan 100)
                         :ylos-vasen
                         :ylos-oikea)
-                      :alas)]
+                      (if (< etaisyys-oikeaan-reunaan 100)
+                        :alas-vasen
+                        :alas-oikea))]
     (reset! sijainti-atom uusi-suunta)))
 
 (defn- pilko-viikoiksi [vuosi kk]
@@ -92,10 +94,11 @@ Seuraavat optiot ovat mahdollisia:
          [:table.pvm-valinta {:style (merge
                                       {:display (if @sijainti-atom "table" "none")}
                                       (case @sijainti-atom
-                                        :oikea {:top 0 :left "100%"}
                                         :ylos-oikea {:bottom "100%" :left 0}
                                         :ylos-vasen {:bottom "100%" :right 0}
-                                        {:top "100%" :left 0}))} ; Oletusarvo, alas
+                                        :alas-oikea {:top "100%" :left 0}
+                                        :alas-vasen {:top "100%" :right 0}
+                                        {}))}
           [:tbody.pvm-kontrollit
            [:tr
             [:td.pvm-edellinen-kuukausi.klikattava
