@@ -29,6 +29,9 @@ CREATE TYPE suoritettavatehtava AS
        'paannejaan poisto'
        );
 
+-- voidaan dropata hetkeksi, ei sisällä säilöttävää dataa
+DROP TABLE tyokonehavainto;
+
 CREATE TABLE tyokonehavainto (
   tyokoneid integer NOT NULL,
   jarjestelma character varying(128) NOT NULL,
