@@ -182,8 +182,8 @@ WHERE pk.poistettu IS NOT TRUE AND
       (pi.tila :: TEXT != 'valmis' OR
        (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
        -- Historiakuva
-       ((pi.aloituspvm BETWEEN :alku AND :loppu) OR
-        (pi.valmispvm_kohde BETWEEN :alku AND :loppu)));
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde NULL OR pi.valmispvm_kohde > :alku)));
+
 -- name: hae-paikkaukset
 SELECT
   pk.id,
@@ -210,8 +210,7 @@ WHERE pk.poistettu IS NOT TRUE AND
       (pi.tila :: TEXT != 'valmis' OR
        (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
        -- Historiakuva
-       ((pi.aloituspvm BETWEEN :alku AND :loppu) OR
-        (pi.valmispvm_kohde BETWEEN :alku AND :loppu)));
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde NULL OR pi.valmispvm_kohde > :alku)));
 
 -- name: hae-toteumat
 SELECT
