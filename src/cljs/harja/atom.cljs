@@ -18,8 +18,8 @@
     (paivita)))
 
 (defn paivita-periodisesti
-  "Pakottaa reaktion päivittymään annetun ajan välein. Voi ottaa myös ehtofunktion, jonka pitää palauttaa looginen
-  true, jotta periodinen päivitys suoritetaan."
+  "Pakottaa reaktion päivittymään annetun ajan välein. Palauttaa funktion, jolla päivitys lopetetaan.
+  Voi ottaa myös ehtofunktion, jonka pitää palauttaa looginen true, jotta periodinen päivitys suoritetaan."
   ([reaktio periodi-ms] (paivita-periodisesti reaktio periodi-ms nil))
   ([reaktio periodi-ms ehto-fn]
    (let [paivita? (atom true)]
