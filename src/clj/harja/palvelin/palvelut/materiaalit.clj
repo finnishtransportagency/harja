@@ -183,8 +183,6 @@
 
   Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
-  
-  [db user tiedot]
   (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
                             (:urakka tiedot))
   (jdbc/with-db-transaction [c db]
