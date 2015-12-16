@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as time]
+            [clj-time.periodic :as time-period]
             [clj-time.coerce :as coerce]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
@@ -13,26 +14,65 @@
 (defn muodosta-kustannussuunnitelmanumero [numero]
   (str/join "" ["AK" numero]))
 
-(defn muodosta-kustannuselementti [vuosi vuosittainen-summa]
-  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm vuosi))
-        loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm vuosi))]
-    [:segment
-     {:value  vuosittainen-summa
-      :finish loppupvm
-      :start  alkupvm}]))
+(defn muodosta-kustannuselementti [alkupvm loppupvm summa]
+  [:segment
+   {:value  summa
+    :finish loppupvm
+    :start  alkupvm}])
+
+(defn aikavali
+  [alku loppu askel]
+  (let [vali (time-period/periodic-seq alku askel)
+        valilla? (fn [aika] (time/within? (time/interval alku loppu) aika))]
+    (take-while valilla? vali)))
+
+(defn muodosta-ensimmaisen-vuoden-elementti [alkupvm kuukausittainen-summa ensimmaisen-vuoden-kuukaudet]
+  (let [loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm (time/year (coerce/from-sql-date alkupvm))))
+        summa (* kuukausittainen-summa ensimmaisen-vuoden-kuukaudet)]
+    (muodosta-kustannuselementti alkupvm loppupvm summa)))
+
+(defn muodosta-valivuosien-elementit [alkuvuosi taysien-vuosien-maara kuukausittainen-summa]
+  (concat
+    (into []
+          (for [i (range taysien-vuosien-maara)]
+            (do
+              (inc i)
+              (let [vuosi (+ 1 i alkuvuosi)
+                    alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm vuosi))
+                    loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm vuosi))
+                    summa (* 12 kuukausittainen-summa)]
+                (muodosta-kustannuselementti alkupvm loppupvm summa)))))))
+
+(defn muodosta-viimeisen-vuoden-elementti [loppupvm kuukausittainen-summa viimeisen-vuoden-kuukaudet]
+  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm (time/year (coerce/from-sql-date loppupvm))))
+        summa (* kuukausittainen-summa viimeisen-vuoden-kuukaudet)]
+    (muodosta-kustannuselementti alkupvm loppupvm summa)))
 
 (defn luo-summat [alkupvm loppupvm maksuera]
-  (let [alkuvuosi (time/year (coerce/from-sql-date alkupvm))
-        loppuvuosi (time/year (coerce/from-sql-date loppupvm))
-        vuodet (range alkuvuosi (+ 1 loppuvuosi))
-        vuosien-maara (count vuodet)
+  (let [kuukausien-maara (count (aikavali alkupvm loppupvm (time/months 1)))
         summa (:summa (:kustannussuunnitelma maksuera))
-        summa-yhteensa (if summa (double summa) 0)
-        vuosittainen-summa (if (and (< 0 vuosien-maara) (and summa-yhteensa (< 0 summa-yhteensa)))
-                             (/ summa-yhteensa vuosien-maara)
-                             0)
-        segmentti-elementit (mapv #(muodosta-kustannuselementti % vuosittainen-summa) vuodet)]
-    (reduce conj [:Cost] segmentti-elementit)))
+        summa (if summa (double summa) 0)
+        kuukausittainen-summa (if (and (< 0 kuukausien-maara) summa (< 0 summa))
+                                (/ summa kuukausien-maara)
+                                0)
+        ensimmaisen-vuoden-kuukaudet (time/month alkupvm)
+        viimeisen-vuoden-kuukaudet (rem (- kuukausien-maara ensimmaisen-vuoden-kuukaudet) 12)
+        taysien-vuosien-maara (- kuukausien-maara viimeisen-vuoden-kuukaudet)
+        kustannuselementit []
+        alkuvuosi (time/year (coerce/from-sql-date alkupvm))
+        loppuvuosi (time/year (coerce/from-sql-date loppupvm))]
+
+    (into [] (-> kustannuselementit
+                 ;; ensimmäinen vuosi
+                 (concat [(muodosta-ensimmaisen-vuoden-elementti alkupvm kuukausittainen-summa ensimmaisen-vuoden-kuukaudet)])
+
+                 ;; välissä olevat täydet vuodet
+                 (when (> 0 taysien-vuosien-maara)
+                       (muodosta-valivuosien-elementit alkuvuosi taysien-vuosien-maara kuukausittainen-summa))
+
+                 ;; viimeinen vuosi
+                 (when (< alkuvuosi loppuvuosi)
+                       (concat [(muodosta-viimeisen-vuoden-elementti loppupvm kuukausittainen-summa viimeisen-vuoden-kuukaudet)]))))))
 
 (defn muodosta-custom-information [nimi arvo]
   [:CustomInformation
