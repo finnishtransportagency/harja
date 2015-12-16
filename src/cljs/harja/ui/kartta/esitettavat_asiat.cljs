@@ -168,7 +168,6 @@
         nimi (or (get-in toteuma [:tehtavat 0 :nimi])
                  (get-in toteuma [:reittipisteet 0 :tehtava :toimenpide]))
         [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
-    (log "NIMI: " nimi)
     [(when-not (empty? reittipisteet)
        (assoc toteuma
          :type :toteuma
