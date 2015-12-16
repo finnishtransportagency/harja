@@ -114,29 +114,33 @@
         nil))))
 
 (defn- hae-laatupoikkeamat
-  [db user {:keys [alku loppu laadunseuranta]} urakat]
-  (when (:laatupoikkeamat laadunseuranta)
-    (try
-      (into []
-            (comp
-              (geo/muunna-pg-tulokset :sijainti)
-              (map konv/alaviiva->rakenne)
-              (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
-              (map #(dissoc % :selvityspyydetty))
-              (map #(assoc % :tekija (keyword (:tekija %))))
-              (map #(update-in % [:paatos :paatos]
-                               (fn [p]
-                                 (when p (keyword p)))))
-              (map #(update-in % [:paatos :kasittelytapa]
-                               (fn [k]
-                                 (when k (keyword k)))))
-              (map #(if (nil? (:kasittelyaika (:paatos %)))
-                     (dissoc % :paatos)
-                     %)))
-            (q/hae-laatupoikkeamat db urakat (konv/sql-date alku) (konv/sql-date loppu)))
-      (catch Exception e
-        (tulosta-virhe! "laatupoikkeamia" e)
-        nil))))
+  [db user {:keys [alku loppu laatupoikkeamat]} urakat]
+  (let [haettavat (haettavat laatupoikkeamat)]
+    (when-not (empty? haettavat)
+      (try
+        (into []
+              (comp
+                (geo/muunna-pg-tulokset :sijainti)
+                (map konv/alaviiva->rakenne)
+                (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+                (map #(dissoc % :selvityspyydetty))
+                (map #(assoc % :tekija (keyword (:tekija %))))
+                (map #(update-in % [:paatos :paatos]
+                                 (fn [p]
+                                   (when p (keyword p)))))
+                (map #(update-in % [:paatos :kasittelytapa]
+                                 (fn [k]
+                                   (when k (keyword k)))))
+                (map #(if (nil? (:kasittelyaika (:paatos %)))
+                       (dissoc % :paatos)
+                       %)))
+              (q/hae-laatupoikkeamat db urakat
+                                     (konv/sql-date alku)
+                                     (konv/sql-date loppu)
+                                     (map name haettavat)))
+        (catch Exception e
+          (tulosta-virhe! "laatupoikkeamia" e)
+          nil)))))
 
 (defn- hae-tarkastukset
   [db user {:keys [alku loppu tarkastukset]} urakat]
@@ -155,8 +159,11 @@
                         :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
                         :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
                         :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
-             (q/hae-tarkastukset db urakat (konv/sql-date alku)
-                                 (konv/sql-date loppu) (map name haettavat)))
+             (q/hae-tarkastukset db
+                                 urakat
+                                 (konv/sql-date alku)
+                                 (konv/sql-date loppu)
+                                 (map name haettavat)))
        (catch Exception e
          (tulosta-virhe! "tarkastuksia" e)
          nil)))))

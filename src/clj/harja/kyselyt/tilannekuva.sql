@@ -97,7 +97,8 @@ WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.luotu BETWEEN :alku AND :loppu OR
            l.muokattu BETWEEN :alku AND :loppu OR
            l.aika BETWEEN :alku AND :loppu OR
-           l.kasittelyaika BETWEEN :alku AND :loppu)
+           l.kasittelyaika BETWEEN :alku AND :loppu) AND
+           l.tekija :: TEXT IN (:tekijat)
       AND l.poistettu IS NOT TRUE;
 
 -- name: hae-tarkastukset
