@@ -26,6 +26,11 @@
                    (throw+ {:type    virheet/+viallinen-kutsu+
                             :virheet [{:koodi virheet/+tuntematon-sopimus-koodi+ :viesti viesti}]}))))))
 
+(defn tarkista-koordinaattien-jarjestys [{:keys [x y]}]
+  (when (> x y)
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]})))
+
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
   (when-not
     (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
