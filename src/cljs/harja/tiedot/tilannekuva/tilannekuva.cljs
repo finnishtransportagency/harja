@@ -19,7 +19,8 @@
 (defonce valittu-tila (atom :nykytilanne))
 
 (defonce bufferi 500)
-(defonce hakutiheys 3000)
+(defonce hakutiheys-nykytilanne 3000)
+(defonce hakutiheys-historiakuva 1200000)
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
@@ -140,6 +141,7 @@
      :urakka-id       (:id @nav/valittu-urakka)
      :urakoitsija     (:id @nav/valittu-urakoitsija)
      :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
+     :nykytilanne?    (= :nykytilanne @valittu-tila)
      :alue            @nav/kartalla-nakyva-alue
      :alku            (if (= @valittu-tila :nykytilanne)
                         (t/minus (pvm/nyt) (t/hours @nykytilanteen-aikasuodattimen-arvo))
@@ -163,22 +165,22 @@
                                               (:sijainti uusi))))))
                   vanhat uudet))))
 
-(def edellisen-haun-kayttajan-suodattimet (atom {:tila @valittu-tila
+(def edellisen-haun-kayttajan-suodattimet (atom {:tila                 @valittu-tila
                                                  :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
-                                                 :aikavali-historia @historiakuvan-aikavali
-                                                 :suodattimet @suodattimet} ))
+                                                 :aikavali-historia    @historiakuvan-aikavali
+                                                 :suodattimet          @suodattimet}))
 (defn hae-asiat []
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
   (go
     ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui käyttäjän vaihdettua suodattimia
-    (when (or (not= @valittu-tila(:tila @edellisen-haun-kayttajan-suodattimet))
+    (when (or (not= @valittu-tila (:tila @edellisen-haun-kayttajan-suodattimet))
               (not= @nykytilanteen-aikasuodattimen-arvo (:aikavali-nykytilanne @edellisen-haun-kayttajan-suodattimet))
               (not= @historiakuvan-aikavali (:aikavali-historia @edellisen-haun-kayttajan-suodattimet))
               (not= @suodattimet (:suodattimet @edellisen-haun-kayttajan-suodattimet)))
-      (reset! edellisen-haun-kayttajan-suodattimet {:tila @valittu-tila
+      (reset! edellisen-haun-kayttajan-suodattimet {:tila                 @valittu-tila
                                                     :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
-                                                    :aikavali-historia @historiakuvan-aikavali
-                                                    :suodattimet @suodattimet})
+                                                    :aikavali-historia    @historiakuvan-aikavali
+                                                    :suodattimet          @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila true))
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
@@ -237,11 +239,13 @@
                      (when nakymassa?
                        (hae-asiat))))
 
-(defonce lopeta-haku (atom nil)) ;; Säilöö funktion jolla pollaus lopetetaan
+(defonce lopeta-haku (atom nil))                            ;; Säilöö funktion jolla pollaus lopetetaan
 
 (defn aloita-periodinen-haku []
   (log "Tilannekuva: Aloitetaan haku")
-  (reset! lopeta-haku (paivita-periodisesti asioiden-haku hakutiheys)))
+  (reset! lopeta-haku (paivita-periodisesti asioiden-haku (case @valittu-tila
+                                                            :nykytilanne hakutiheys-nykytilanne
+                                                            :historiakuva hakutiheys-historiakuva))))
 
 (defn lopeta-periodinen-haku []
   (when @lopeta-haku
@@ -251,7 +255,5 @@
 
 (defonce pollaus
          (run! (if @nakymassa?
-                 (if (= :nykytilanne @valittu-tila)
-                     (aloita-periodinen-haku)
-                     (lopeta-periodinen-haku))
+                 (aloita-periodinen-haku)
                  (lopeta-periodinen-haku))))
