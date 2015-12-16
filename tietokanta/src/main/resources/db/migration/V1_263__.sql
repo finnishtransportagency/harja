@@ -1,4 +1,5 @@
-DROP TYPE suoritettavatehtava CASCADE;
+
+ALTER TYPE suoritettavatehtava RENAME TO suoritettavatehtava_tmp;
 
 CREATE TYPE suoritettavatehtava AS
  ENUM ('auraus ja sohjonpoisto',
@@ -29,26 +30,9 @@ CREATE TYPE suoritettavatehtava AS
        'paannejaan poisto'
        );
 
--- voidaan dropata hetkeksi, ei sisällä säilöttävää dataa
-DROP TABLE tyokonehavainto;
+ALTER TABLE tyokonehavainto ALTER COLUMN tehtavat TYPE suoritettavatehtava[] USING tehtavat::text::suoritettavatehtava[];
 
-CREATE TABLE tyokonehavainto (
-  tyokoneid integer NOT NULL,
-  jarjestelma character varying(128) NOT NULL,
-  organisaatio integer,
-  viestitunniste integer NOT NULL,
-  lahetysaika timestamp without time zone NOT NULL,
-  vastaanotettu timestamp without time zone DEFAULT now(),
-  tyokonetyyppi character varying(64) NOT NULL,
-  sijainti point NOT NULL,
-  urakkaid integer,
-  tehtavat suoritettavatehtava[],
-  edellinensijainti point,
-  suunta real,
-  CONSTRAINT tyokonehavainto_pkey PRIMARY KEY (tyokoneid),
-  CONSTRAINT tyokonehavainto_organisaatio_fkey FOREIGN KEY (organisaatio) REFERENCES organisaatio (id),
-  CONSTRAINT tyokonehavainto_urakkaid_fkey FOREIGN KEY (urakkaid) REFERENCES urakka (id)
-);
+DROP TYPE suoritettavatehtava_tmp CASCADE;
 
 CREATE OR REPLACE FUNCTION tallenna_tai_paivita_tyokonehavainto(
   jarjestelma_ character varying,
