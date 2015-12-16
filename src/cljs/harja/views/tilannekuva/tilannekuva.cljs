@@ -156,10 +156,10 @@
        [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]])
     [:div.tk-suodatinryhmat
      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
-     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]]]
+     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]
+     [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
+     [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]]
    [:div.tk-yksittaiset-suodattimet
-    [yksittainen-suodatincheckbox "Laatupoikkeamat" tiedot/suodattimet [:laadunseuranta :laatupoikkeamat] auki-oleva-checkbox-ryhma]
-    [yksittainen-suodatincheckbox "Tarkastukset" tiedot/suodattimet [:laadunseuranta :tarkastukset] auki-oleva-checkbox-ryhma]
     [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat] auki-oleva-checkbox-ryhma]]])
 
 (defn suodattimet []

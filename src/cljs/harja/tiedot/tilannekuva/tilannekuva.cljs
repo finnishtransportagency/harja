@@ -24,9 +24,7 @@
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
-         {:laatupoikkeamat                  "Laatupoikkeamat"
-          :tarkastukset                     "Tarkastukset"
-          :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
+         {:turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
 
           :toimenpidepyynto                 "TPP"
           :tiedoitus                        "TUR"
@@ -34,6 +32,18 @@
 
           :paallystys                       "Päällystystyöt"
           :paikkaus                         "Paikkaustyöt"
+
+          :laatupoikkeamat                  "Laatupoikkeamat"
+          :tilaaja                          "Tilaaja"
+          :urakoitsija                      "Urakoitsija"
+          :konsultti                        "Konsultti"
+
+          :tarkastukset                     "Tarkastukset"
+          :tiesto                           "Tiestötarkastus"
+          :talvihoito                       "Talvihoitotarkastus"
+          :soratie                          "Soratien tarkastus"
+          :laatu                            "Laaduntarkastus"
+          :pistokoe                         "Pistokoe"
 
           "auraus ja sohjonpoisto"          "Auraus ja sohjonpoisto"
           "suolaus"                         "Suolaus"
@@ -65,46 +75,51 @@
           "muu"                             "Muu"})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(def suodattimet (atom {:yllapito       {:paallystys true
-                                         :paikkaus   true}
-                        :ilmoitukset    {:tyypit {:toimenpidepyynto true
-                                                  :kysely           true
-                                                  :tiedoitus        true}
-                                         :tilat  #{:avoimet}}
-                        :turvallisuus   {:turvallisuuspoikkeamat true}
-                        :laadunseuranta {:laatupoikkeamat true
-                                         :tarkastukset    true}
-
+(def suodattimet (atom {:yllapito        {:paallystys true
+                                          :paikkaus   true}
+                        :ilmoitukset     {:tyypit {:toimenpidepyynto true
+                                                   :kysely           true
+                                                   :tiedoitus        true}
+                                          :tilat  #{:avoimet}}
+                        :turvallisuus    {:turvallisuuspoikkeamat true}
+                        :laatupoikkeamat {:tilaaja     true
+                                          :urakoitsija true
+                                          :konsultti   true}
+                        :tarkastukset    {:tiesto     true
+                                          :talvihoito true
+                                          :soratie    true
+                                          :laatu      true
+                                          :pistokoe   true}
                         ;; Näiden pitää osua työkoneen enumeihin
-                        :talvi          {"auraus ja sohjonpoisto"          true
-                                         "suolaus"                         true
-                                         "pistehiekoitus"                  true
-                                         "linjahiekoitus"                  true
-                                         "lumivallien madaltaminen"        true
-                                         "sulamisveden haittojen torjunta" true
-                                         "kelintarkastus"                  true
-                                         "muu"                             true}
+                        :talvi           {"auraus ja sohjonpoisto"          true
+                                          "suolaus"                         true
+                                          "pistehiekoitus"                  true
+                                          "linjahiekoitus"                  true
+                                          "lumivallien madaltaminen"        true
+                                          "sulamisveden haittojen torjunta" true
+                                          "kelintarkastus"                  true
+                                          "muu"                             true}
 
-                        :kesa           {"tiestotarkastus"            true
-                                         "koneellinen niitto"         true
-                                         "koneellinen vesakonraivaus" true
+                        :kesa            {"tiestotarkastus"            true
+                                          "koneellinen niitto"         true
+                                          "koneellinen vesakonraivaus" true
 
-                                         "liikennemerkkien puhdistus" true
+                                          "liikennemerkkien puhdistus" true
 
-                                         "sorateiden muokkaushoylays" true
-                                         "sorateiden polynsidonta"    true
-                                         "sorateiden tasaus"          true
-                                         "sorastus"                   true
+                                          "sorateiden muokkaushoylays" true
+                                          "sorateiden polynsidonta"    true
+                                          "sorateiden tasaus"          true
+                                          "sorastus"                   true
 
-                                         "harjaus"                    true
-                                         "pinnan tasaus"              true
-                                         "paallysteiden paikkaus"     true
-                                         "paallysteiden juotostyot"   true
+                                          "harjaus"                    true
+                                          "pinnan tasaus"              true
+                                          "paallysteiden paikkaus"     true
+                                          "paallysteiden juotostyot"   true
 
-                                         "siltojen puhdistus"         true
+                                          "siltojen puhdistus"         true
 
-                                         "l- ja p-alueiden puhdistus" true
-                                         "muu"                        true}}))
+                                          "l- ja p-alueiden puhdistus" true
+                                          "muu"                        true}}))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
