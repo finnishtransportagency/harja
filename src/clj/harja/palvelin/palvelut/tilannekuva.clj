@@ -65,7 +65,13 @@
                              (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
                       (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
                       (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                    (q/hae-ilmoitukset db urakat avoimet? suljetut? (mapv name haettavat)))
+                    (q/hae-ilmoitukset db
+                                       (when-not (:nykytilanne? tiedot) (:alku tiedot))
+                                       (when-not (:nykytilanne? tiedot) (:loppu tiedot))
+                                       urakat
+                                       avoimet?
+                                       suljetut?
+                                       (mapv name haettavat)))
               {:kuittaus :kuittaukset})))
         (catch Exception e
           (tulosta-virhe! "ilmoituksia" e)
