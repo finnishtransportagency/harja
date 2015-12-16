@@ -258,11 +258,10 @@
 
   (let [tehtavatidt (into #{} (map #(:tehtava_id %) tehtavat))]
     (jdbc/with-db-transaction [c db]
-      (doall
-        (for [tehtava tehtavat]
-          (do
-            (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-            (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava) (:paivanhinta tehtava) (:tehtava_id tehtava)))))
+      (doseq [tehtava tehtavat]
+        (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
+        (q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
+                                     (:paivanhinta tehtava) (:tehtava_id tehtava)))
 
       (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
       (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
@@ -451,22 +450,21 @@
                         nil)))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
-      (doall
-        (for [tm toteumamateriaalit]
-          ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
-          (if (and (:id tm) (pos? (:id tm)))
-            (if (:poistettu tm)
-              (do
-                (log/debug "Poistetaan materiaalitoteuma " (:id tm))
-                (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
-              (do
-                (log/debug "Päivitä materiaalitoteuma "
-                           (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) ", " (:poistettu tm) "), toteumassa " (:id toteuma))
-                (materiaalit-q/paivita-toteuma-materiaali!
-                  c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
+      (doseq [tm toteumamateriaalit]
+        ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
+        (if (and (:id tm) (pos? (:id tm)))
+          (if (:poistettu tm)
             (do
-              (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
-              (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user))))))
+              (log/debug "Poistetaan materiaalitoteuma " (:id tm))
+              (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
+            (do
+              (log/debug "Päivitä materiaalitoteuma "
+                         (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) ", " (:poistettu tm) "), toteumassa " (:id toteuma))
+              (materiaalit-q/paivita-toteuma-materiaali!
+               c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
+          (do
+            (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
+            (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user)))))
       ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
       ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
       ;; tarvitaan tätä tietoa. -Teemu K

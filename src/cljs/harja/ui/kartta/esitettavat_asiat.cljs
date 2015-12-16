@@ -141,30 +141,51 @@
             :img         "kartta-hairion-hallinta-sininen.svg"
             :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])
 
+(def toteuma-varit-ja-nuolet
+  [["rgb(255,0,0)" "punainen"]
+   ["rgb(255,128,0)" "oranssi"]
+   ["rgb(255,255,0)" "keltainen"]
+   ["rgb(255,0,255)" "magenta"]
+   ["rgb(0,255,0)" "vihrea"]
+   ["rgb(0,255,128)" "turkoosi"]
+   ["rgb(0,255,255)" "syaani"]
+   ["rgb(0,128,255)" "sininen"]
+   ["rgb(0,0,255)" "tummansininen"]
+   ["rgb(128,0,255)" "violetti"]
+   ["rgb(128,255,0)" "lime"]   
+   ["rgb(255,0,128)" "pinkki"]])
+
+(let [varien-lkm (count toteuma-varit-ja-nuolet)]
+  (defn tehtavan-vari-ja-nuoli [tehtavan-nimi]
+    (nth toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
+
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
   ;; monta kertaa fronttiin.
   (let [reittipisteet (keep
                         (fn [[_ arvo]] (first arvo))
-                        (group-by :id (:reittipisteet toteuma)))]
+                        (group-by :id (:reittipisteet toteuma)))
+        nimi (or (get-in toteuma [:tehtavat 0 :nimi])
+                 (get-in toteuma [:reittipisteet 0 :tehtava :toimenpide]))
+        [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
     [(when-not (empty? reittipisteet)
        (assoc toteuma
          :type :toteuma
          :nimi (or (:nimi toteuma)
-                   (get-in toteuma [:tehtava :nimi])
+                   nimi
                    (get-in toteuma [:tpi :nimi])
                    (if (> 1 (count (:tehtavat toteuma)))
                      (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
                      (str (:toimenpide (first (:tehtavat toteuma))))))
-         :selite {:teksti "Toteuma"
-                  :img    "fixme.png"}
-         :alue {
-                :type   :arrow-line
-                :scale  (if (valittu? toteuma) 0.8 0.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
-                :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
-                                                                     :aika
-                                                                     pvm/ennen?
-                                                                     reittipisteet))}))]))
+         :selite {:teksti nimi
+                  :vari vari}
+         :alue {:type   :arrow-line
+                :width 5
+                :color vari
+                :arrow-image (str "images/nuoli-" nuoli ".svg")
+                :scale  (if (valittu? toteuma) 2 1.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
+                :points (mapv #(get-in % [:sijainti :coordinates])
+                              (sort-by :aika pvm/ennen? reittipisteet))}))]))
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)
@@ -176,22 +197,34 @@
         ["kartta-turvallisuuspoikkeama-toteutettu-vihrea.svg" "Turvallisuuspoikkeama, kaikki korjattu"]))))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
-  (let [[ikoni selite] (paattele-turpon-ikoni tp)]
+  (let [[ikoni selite] (paattele-turpon-ikoni tp)
+        sijainti (:sijainti tp)
+        tyyppi (:type sijainti)]
     [(assoc tp
-       :type :turvallisuuspoikkeama
-       :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-       :selite {:teksti selite
-                :img    ikoni}
-       :alue (if (= :line (get-in tp [:sijainti :type]))
-               {:type   :tack-icon-line
-                :color  "black"
-                :scale  (if (valittu? tp) 1.5 1)
-                :img    ikoni
-                :points (get-in tp [:sijainti :points])}
-               {:type        :tack-icon
-                :scale       (if (valittu? tp) 1.5 1)
-                :img         ikoni
-                :coordinates (get-in tp [:sijainti :coordinates])}))]))
+            :type :turvallisuuspoikkeama
+            :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
+            :selite {:teksti selite
+                     :img    ikoni}
+            :alue (cond
+                    (= :line tyyppi)
+                    {:type   :tack-icon-line
+                     :color  "black"
+                     :scale  (if (valittu? tp) 1.5 1)
+                     :img    ikoni
+                     :points (get-in tp [:sijainti :points])}
+
+                    (= :multiline tyyppi)
+                    {:type :tack-icon-line
+                     :color "black"
+                     :scale (if (valittu? tp) 1.5 1)
+                     :img ikoni
+                     :points (mapcat :points (:lines sijainti))}
+
+                    :default
+                    {:type        :tack-icon
+                     :scale       (if (valittu? tp) 1.5 1)
+                     :img         ikoni
+                     :coordinates (get-in tp [:sijainti :coordinates])}))]))
 
 ;; TODO: Päällystyksissä ja paikkauksissa on kommentoitua koodia, koska näille dedikoituijen näkymien käyttämät
 ;; kyselyt palauttavat datan sellaisessa muodossa, että sijainti pitää kaivaa erikseen "kohdeosista".
