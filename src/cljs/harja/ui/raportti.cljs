@@ -50,7 +50,7 @@
 
 (defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   (let [w (int (* 0.85 @yleiset/leveys))
-        h (int (/ w 3))]
+        h (int (/ w 2.9))]
     [:div.pylvaat
      [:h3 otsikko]
      [vis/bars {:width         w

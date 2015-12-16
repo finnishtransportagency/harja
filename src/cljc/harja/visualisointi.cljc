@@ -138,17 +138,37 @@
         value-fn (or value-fn second)
         key-fn (or key-fn hash)
         color-fn (or color-fn (constantly (or color "blue")))
-        colors ["blue" "red" "green" "yellow"]
+        colors ["#0066cc" "#A9D0F5" "#646464" "#afafaf" "#770000" "#ff9900"]
         mx (or margin-x 40)                                 ;; margin-x
         my (or margin-y 40)                                 ;; margin-y
+        value-font-size (or value-font-size "8pt")
+        tick-font-size (or tick-font-size "7pt")
+        y-axis-font-size (or y-axis-font-size "6pt")
+        ;; we need env specific parameters for each rendering target
+        #?@(:cljs [bars-top-y 25
+                   spacer-y 10
+                   label-area-height 10
+                   legend-area-height 40
+                   legendbox-thickness 15
+                   legend-label-x 20
+                   legend-label-y-pos 11]
+
+            :clj  [bars-top-y 5
+                   spacer-y 4
+                   label-area-height 3
+                   legend-area-height 12
+                   legendbox-thickness 4
+                   legend-label-x 5
+                   legend-label-y-pos 3.5])
+
+        bar-area-height (- height bars-top-y label-area-height legend-area-height)
+        bars-bottom-y (+ bars-top-y bar-area-height)
+        label-top-y (+ bars-bottom-y spacer-y)
+        label-bottom-y (+ label-top-y label-area-height)
+        legend-top-y (+ label-bottom-y spacer-y)
         my-half (/ my 2)
-        margin-y-legend 3.5
         bar-width (/ (- width mx) (count data))
         multiple-series? (vector? (value-fn (first data)))
-        _ (log "mx " mx)
-        _ (log "my " my)
-        _ (log "margin-y " margin-y)
-        _ (log "my-half " my-half)
         _ (assert (or (and multiple-series? legend)
                       (and (not multiple-series?) (nil? legend)))
                   "Legend must be supplied iff data has multiple series")
@@ -158,23 +178,18 @@
         min-value (reduce min (if multiple-series?
                                 (keep identity (mapcat value-fn data))
                                 (map value-fn data)))
-        _ (log "min-value" min-value)
-        _ (log "max-value" max-value)
         value-range (- max-value min-value)
         scale (if (= 0 max-value)
                 1
                 max-value)
-        value-height #(/ (* (- height my) %)
+        value-height #(/ (* bar-area-height %)
                          scale)
         format-amount (or format-amount #(.toFixed % 2))
         number-of-items (count data)
         show-every-nth-label (if (< number-of-items 13)
                                1
                                (Math/ceil (/ number-of-items 12)))
-        hide-value? (or hide-value? (constantly false))
-        value-font-size (or value-font-size "8pt")
-        tick-font-size (or tick-font-size "7pt")
-        y-axis-font-size (or y-axis-font-size "6pt")]
+        hide-value? (or hide-value? (constantly false))]
     (log "Value range " min-value " -- " max-value " == " value-range)
     [:svg {:xmlns "http://www.w3.org/2000/svg" :width width :height height}
      [:g
@@ -182,16 +197,18 @@
         (when (and multiple-series? (odd? i))
           ^{:key i}
           [:rect {:x      (+ mx (* bar-width i))
-                  :y      my-half
+                  :y      bars-top-y
                   :width  bar-width
-                  :height (- height margin-y)
+                  :height bar-area-height
                   :fill   "#F0F0F0" ;light gray
                   }]))
       (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value) 0])
-            :let [tick-y (- height (value-height tick) my-half)]]
+            :let [tick-y (- bars-bottom-y (value-height tick))]]
         ^{:key tick}
         [:g
-         [:text {:font-size y-axis-font-size :text-anchor "end" :x (- mx 3) :y tick-y}
+         [:text {:font-size y-axis-font-size :text-anchor "end"
+                 :x (- mx 3)
+                 :y tick-y}
           (str tick)]
          [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
                  #?@(:cljs [:style {:stroke           "rgb(200,200,200)"
@@ -209,18 +226,16 @@
                        ^{:key i}
                        [:g
                         (when (zero? (rem i show-every-nth-label))
-                             [:text {:x           (+ start-x (/ (* 0.9 bar-width) 2)) :y (- height 5)
+                             [:text {:x           (+ start-x (/ (* 0.9 bar-width) 2))
+                                     :y label-top-y
                                      :text-anchor "middle"
                                      :font-size   tick-font-size}
                               label])
-                        (let [bar-width-original (/ bar-width (if (empty? values) 1 (count values)))
+                        (let [all-bars-width bar-width
+                              bar-width-original (/ all-bars-width (if (empty? values) 1 (count values)))
                               bar-width (* 0.9 bar-width-original)
-                              ;; fixme: marginaalin laskemiseen loogisesti toimiva koodi olisi kiva.
-                              ;; pylväs/pylväät halutaan taustavärinsä keskelle
-                              ;; bar-set-margin-x pitäisi matemaattisesti olla  (* 0.05 bar-width-original)
-                              ;; mutta ainakin PDF:ssä se ei vaikuta ollenkaan!
                               bar-set-margin-x (if multiple-series?
-                                                 1
+                                                 (max 1 (* 0.05 all-bars-width))
                                                  0)]
                           (when-not (empty? values)
                             (map-indexed
@@ -232,12 +247,13 @@
                                     ^{:key j}
                                     [:g
                                      [:rect {:x      x
-                                             :y      (- height bar-height my-half)
+                                             :y      (- bars-bottom-y bar-height)
                                              :width  (* 0.90 bar-width)
                                              :height bar-height
                                              :fill   (nth colors j) #_(color-fn d)}]
                                      (when-not (hide-value? value)
-                                       [:text {:x           (+ x (/ (* 0.90 bar-width) 2)) :y (- height bar-height my-half 2)
+                                       [:text {:x           (+ x (/ (* 0.90 bar-width) 2))
+                                               :y (- bars-bottom-y bar-height 2)
                                                :text-anchor "middle"
                                                :font-size   value-font-size}
                                         (format-amount value)])])))
@@ -247,17 +263,16 @@
      ;; show legend if any
      (when multiple-series?
        (map-indexed (fn [i leg]
-                      (let [rect-x-val (+ mx (* i (/ width (count legend))))
-                            y-val height]
+                      (let [rect-x-val (+ mx (* i (/ width (count legend))))]
                         ^{:key i}
                         [:g
                          [:rect {:x      rect-x-val
-                                 :y      y-val
-                                 :height 4
-                                 :width  4
+                                 :y      legend-top-y
+                                 :height legendbox-thickness
+                                 :width  legendbox-thickness
                                  :fill   (nth colors i)}]
-                         [:text {:x         (+ 5 rect-x-val)
-                                 :y         (+ y-val margin-y-legend)
+                         [:text {:x         (+ legend-label-x rect-x-val)
+                                 :y         (+ legend-top-y legend-label-y-pos)
                                  :font-size value-font-size
                                  }
                           leg]]))
