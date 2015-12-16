@@ -165,13 +165,15 @@
   (let [reittipisteet (keep
                         (fn [[_ arvo]] (first arvo))
                         (group-by :id (:reittipisteet toteuma)))
-        nimi (get-in toteuma [:tehtavat 0 :nimi])
+        nimi (or (get-in toteuma [:tehtavat 0 :nimi])
+                 (get-in toteuma [:reittipisteet 0 :tehtava :toimenpide]))
         [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
+    (log "NIMI: " nimi)
     [(when-not (empty? reittipisteet)
        (assoc toteuma
          :type :toteuma
          :nimi (or (:nimi toteuma)
-                   (get-in toteuma [:tehtava :nimi])
+                   nimi
                    (get-in toteuma [:tpi :nimi])
                    (if (> 1 (count (:tehtavat toteuma)))
                      (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
