@@ -239,16 +239,19 @@
 
 (defonce lopeta-haku (atom nil)) ;; Säilöö funktion jolla pollaus lopetetaan
 
+(defn aloita-periodinen-haku []
+  (log "Tilannekuva: Aloitetaan haku")
+  (reset! lopeta-haku (paivita-periodisesti asioiden-haku hakutiheys)))
+
+(defn lopeta-periodinen-haku []
+  (when @lopeta-haku
+    (log "Tilannekuva: Lopetetaan haku")
+    (@lopeta-haku)
+    (reset! lopeta-haku nil)))
+
 (defonce pollaus
          (run! (if @nakymassa?
-                 (do
-                   (when @lopeta-haku (@lopeta-haku))
-                   (log "Tilannekuva: Aloitetaan haku (tai päivitetään tiheyttä)")
-
-                   (reset! lopeta-haku (paivita-periodisesti asioiden-haku hakutiheys (fn []
-                                                                                         (= :nykytilanne @valittu-tila)))))
-
-                 (when @lopeta-haku (do
-                                      (@lopeta-haku)
-                                      (log "Tilannekuva: Lopetetaan haku")
-                                      (reset! lopeta-haku nil))))))
+                 (if (= :nykytilanne @valittu-tila)
+                     (aloita-periodinen-haku)
+                     (lopeta-periodinen-haku))
+                 (lopeta-periodinen-haku))))
