@@ -80,7 +80,7 @@
                                   "Toimenpidepyyntö"
                                   (str/capitalize (name (:ilmoitustyyppi tapahtuma))))]]
                         [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-                        [:p "Vapaateksti: " (:vapaateksti tapahtuma)]
+                        [:p "Vapaateksti: " (:lyhytselite tapahtuma)]
                         [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
                         [:a {:href     "#"
                              :on-click #(do (.preventDefault %)
