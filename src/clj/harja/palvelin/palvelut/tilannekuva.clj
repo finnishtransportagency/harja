@@ -84,7 +84,7 @@
           nil)))))
 
 (defn- hae-paallystystyot
-  [db user {:keys [alku loppu yllapito]} urakat]
+  [db user {:keys [alku loppu yllapito nykytilanne?]} urakat]
   (when (:paallystys yllapito)
     (try
       (into []
@@ -92,13 +92,15 @@
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
               (map #(konv/string->avain % [:tila])))
-            (q/hae-paallystykset db))
+            (q/hae-paallystykset db
+                                 (when-not nykytilanne? (konv/sql-date alku))
+                                 (when-not nykytilanne? (konv/sql-date loppu))))
       (catch Exception e
         (tulosta-virhe! "paallystyksia" e)
         nil))))
 
 (defn- hae-paikkaustyot
-  [db user {:keys [alku loppu yllapito]} urakat]
+  [db user {:keys [alku loppu yllapito nykytilanne?]} urakat]
   (when (:paikkaus yllapito)
     (try
       (into []
@@ -106,7 +108,9 @@
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
               (map #(konv/string->avain % [:tila])))
-            (q/hae-paikkaukset db))
+            (q/hae-paikkaukset db
+                               (when-not nykytilanne? (konv/sql-date alku))
+                               (when-not nykytilanne? (konv/sql-date loppu))))
       (catch Exception e
         (tulosta-virhe! "paikkauksia" e)
         nil))))

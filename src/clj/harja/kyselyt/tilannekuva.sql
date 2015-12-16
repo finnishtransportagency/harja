@@ -177,9 +177,13 @@ FROM paallystysilmoitus pi
   LEFT JOIN paallystyskohde pk ON pi.paallystyskohde = pk.id
   LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
+      -- Nykytilanne
+      (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
       (pi.tila :: TEXT != 'valmis' OR
-       (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
-
+       (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
+       -- Historiakuva
+       ((pi.aloituspvm BETWEEN :alku AND :loppu) OR
+        (pi.valmispvm_kohde BETWEEN :alku AND :loppu)));
 -- name: hae-paikkaukset
 SELECT
   pk.id,
@@ -201,8 +205,13 @@ FROM paikkausilmoitus pi
   LEFT JOIN paallystyskohde pk ON pi.paikkauskohde = pk.id
   LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
+      -- Nykytilanne
+      (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
       (pi.tila :: TEXT != 'valmis' OR
-       (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
+       (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
+       -- Historiakuva
+       ((pi.aloituspvm BETWEEN :alku AND :loppu) OR
+        (pi.valmispvm_kohde BETWEEN :alku AND :loppu)));
 
 -- name: hae-toteumat
 SELECT
