@@ -117,7 +117,8 @@ FROM tarkastus t
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
       AND (t.luotu BETWEEN :alku AND :loppu OR
            t.muokattu BETWEEN :alku AND :loppu OR
-           t.aika BETWEEN :alku AND :loppu);
+           t.aika BETWEEN :alku AND :loppu) AND
+           t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
@@ -182,7 +183,7 @@ WHERE pk.poistettu IS NOT TRUE AND
       (pi.tila :: TEXT != 'valmis' OR
        (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
        -- Historiakuva
-       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde NULL OR pi.valmispvm_kohde > :alku)));
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku)));
 
 -- name: hae-paikkaukset
 SELECT
@@ -210,7 +211,7 @@ WHERE pk.poistettu IS NOT TRUE AND
       (pi.tila :: TEXT != 'valmis' OR
        (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
        -- Historiakuva
-       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde NULL OR pi.valmispvm_kohde > :alku)));
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku)));
 
 -- name: hae-toteumat
 SELECT
