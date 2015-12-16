@@ -197,22 +197,34 @@
         ["kartta-turvallisuuspoikkeama-toteutettu-vihrea.svg" "Turvallisuuspoikkeama, kaikki korjattu"]))))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
-  (let [[ikoni selite] (paattele-turpon-ikoni tp)]
+  (let [[ikoni selite] (paattele-turpon-ikoni tp)
+        sijainti (:sijainti tp)
+        tyyppi (:type sijainti)]
     [(assoc tp
-       :type :turvallisuuspoikkeama
-       :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-       :selite {:teksti selite
-                :img    ikoni}
-       :alue (if (= :line (get-in tp [:sijainti :type]))
-               {:type   :tack-icon-line
-                :color  "black"
-                :scale  (if (valittu? tp) 1.5 1)
-                :img    ikoni
-                :points (get-in tp [:sijainti :points])}
-               {:type        :tack-icon
-                :scale       (if (valittu? tp) 1.5 1)
-                :img         ikoni
-                :coordinates (get-in tp [:sijainti :coordinates])}))]))
+            :type :turvallisuuspoikkeama
+            :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
+            :selite {:teksti selite
+                     :img    ikoni}
+            :alue (cond
+                    (= :line tyyppi)
+                    {:type   :tack-icon-line
+                     :color  "black"
+                     :scale  (if (valittu? tp) 1.5 1)
+                     :img    ikoni
+                     :points (get-in tp [:sijainti :points])}
+
+                    (= :multiline tyyppi)
+                    {:type :tack-icon-line
+                     :color "black"
+                     :scale (if (valittu? tp) 1.5 1)
+                     :img ikoni
+                     :points (mapcat :points (:lines sijainti))}
+
+                    :default
+                    {:type        :tack-icon
+                     :scale       (if (valittu? tp) 1.5 1)
+                     :img         ikoni
+                     :coordinates (get-in tp [:sijainti :coordinates])}))]))
 
 (defmethod asia-kartalle :paallystyskohde [pt valittu?]
   (mapv

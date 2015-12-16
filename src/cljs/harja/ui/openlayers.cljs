@@ -645,6 +645,7 @@
             (recur new-geometries-map items)
             (let [shape (or (first (geometries-map avain))
                             (let [new-shape (luo-feature geom)]
+                              (assert (not (nil? new-shape)) (str  "luo-feature palautti nil! annettu geom: " (pr-str geom)))
                               (.setId new-shape avain)
                               (.addFeature features new-shape)
 
