@@ -5,7 +5,7 @@
                                                                  pylvaat ei-osumia-aikavalilla-teksti]]
             [harja.domain.roolit :as roolit]
             [clj-time.coerce :as tc]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne +ilmoitustilat+]]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
@@ -100,11 +100,8 @@
             (concat
               [{:otsikko "Urakka"}]
               (map (fn [ilmoitustyyppi]
-                     {:otsikko (str (ilmoitustyypin-lyhenne ilmoitustyyppi)
-                                    " ("
-                                    (ilmoitustyypin-nimi ilmoitustyyppi)
-                                    ")")})
-                   [:toimenpidepyynto :kysely :tiedoitus])))
+                     {:otsikko (ilmoitustyypin-lyhenne-ja-nimi ilmoitustyyppi)})
+                   [:toimenpidepyynto :tiedoitus :kysely])))
       (into
         []
         (concat
@@ -112,16 +109,16 @@
           (for [[urakka ilmoitukset] ilmoitukset-urakan-mukaan]
             (let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")
                   tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                  urk (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
-                  tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]
-              [urakan-nimi tpp urk tur]))
+                  tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
+                  urk (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
+              [urakan-nimi tpp tur urk]))
 
           ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
           (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))
-                tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))]
+                tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
+                urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
             [(concat ["Yhteensä"]
-                     [tpp-yht urk-yht tur-yht])])))]
+                     [tpp-yht tur-yht urk-yht])])))]
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
