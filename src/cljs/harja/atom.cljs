@@ -23,11 +23,12 @@
   ([reaktio periodi-ms] (paivita-periodisesti reaktio periodi-ms nil))
   ([reaktio periodi-ms ehto-fn]
    (let [paivita? (atom true)]
-    (go-loop []
+     (go-loop []
       (<! (timeout periodi-ms))
-      (when (and @paivita? (ehto-fn))
-        (nappaa-virhe
-          (paivita! reaktio))
+      (when @paivita?
+        (when (ehto-fn)
+          (nappaa-virhe
+            (paivita! reaktio)))
         (recur)))
     #(reset! paivita? false))))
 
