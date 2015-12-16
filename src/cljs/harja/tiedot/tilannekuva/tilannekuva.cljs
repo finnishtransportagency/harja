@@ -247,7 +247,7 @@
                                                             :nykytilanne hakutiheys-nykytilanne
                                                             :historiakuva hakutiheys-historiakuva))))
 
-(defn lopeta-periodinen-haku []
+(defn lopeta-periodinen-haku-jos-kaynnissa []
   (when @lopeta-haku
     (log "Tilannekuva: Lopetetaan haku")
     (@lopeta-haku)
@@ -255,5 +255,8 @@
 
 (defonce pollaus
          (run! (if @nakymassa?
-                 (aloita-periodinen-haku)
-                 (lopeta-periodinen-haku))))
+                 (do
+                   @valittu-tila
+                   (lopeta-periodinen-haku-jos-kaynnissa)
+                   (aloita-periodinen-haku))
+                 (lopeta-periodinen-haku-jos-kaynnissa))))
