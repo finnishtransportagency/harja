@@ -56,10 +56,13 @@ SELECT
   it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
-    AND ((:alku :: TIMESTAMP IS NULL AND :loppu :: TIMESTAMP IS NULL) OR it.kuitattu < :loppu)
 WHERE
-  ((:alku :: TIMESTAMP IS NULL AND :loppu :: TIMESTAMP IS NULL)
-   OR (i.valitetty < :loppu)) AND
+  ((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL)
+   OR ((i.valitetty BETWEEN :alku AND :loppu) OR
+   EXISTS (SELECT id FROM ilmoitustoimenpide
+   WHERE
+   ilmoitus = i.id AND
+   kuitattu BETWEEN :alku AND :loppu))) AND
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
   (:avoimet IS TRUE AND i.suljettu IS NOT TRUE OR
    :suljetut IS TRUE AND i.suljettu IS TRUE) AND

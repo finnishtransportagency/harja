@@ -7,9 +7,12 @@
             [taoensso.timbre :as log]
 
             [harja.kyselyt.kayttajat :as kayttajat-q]
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.tilannekuva :as q]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [harja.pvm :as pvm]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat ", mutta virhe tapahtui: " (.getMessage e))))
@@ -46,33 +49,36 @@
     (when-not (empty? haettavat)
       (try
         (let [suljetut? (if (:suljetut tilat) true false)
-              avoimet? (if (:avoimet tilat) true false)]
-          (mapv
-            #(assoc % :uusinkuittaus
-                      (when-not (empty? (:kuittaukset %))
-                        (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-            (konv/sarakkeet-vektoriin
-              (into []
-                    (comp
-                      (geo/muunna-pg-tulokset :sijainti)
-                      (map konv/alaviiva->rakenne)
-                      (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-                      (map #(konv/array->vec % :selitteet))
-                      (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                      (map #(assoc-in
-                             %
-                             [:kuittaus :kuittaustyyppi]
-                             (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                      (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                      (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                    (q/hae-ilmoitukset db
-                                       (when-not (:nykytilanne? tiedot) (:alku tiedot))
-                                       (when-not (:nykytilanne? tiedot) (:loppu tiedot))
-                                       urakat
-                                       avoimet?
-                                       suljetut?
-                                       (mapv name haettavat)))
-              {:kuittaus :kuittaukset})))
+              avoimet? (if (:avoimet tilat) true false)
+              tulos (mapv
+                      #(assoc % :uusinkuittaus
+                                (when-not (empty? (:kuittaukset %))
+                                  (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                      (konv/sarakkeet-vektoriin
+                        (into []
+                              (comp
+                                (geo/muunna-pg-tulokset :sijainti)
+                                (map konv/alaviiva->rakenne)
+                                (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                                (map #(konv/array->vec % :selitteet))
+                                (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                                (map #(assoc-in
+                                       %
+                                       [:kuittaus :kuittaustyyppi]
+                                       (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                                (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                                (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                              (q/hae-ilmoitukset db
+                                                 (when-not (:nykytilanne? tiedot) (konv/sql-date (:alku tiedot)))
+                                                 (when-not (:nykytilanne? tiedot) (konv/sql-date (:loppu tiedot)))
+                                                 urakat
+                                                 avoimet?
+                                                 suljetut?
+                                                 (mapv name haettavat)))
+                        {:kuittaus :kuittaukset}))]
+          (log/debug "TUlos on" (pr-str (mapv :ilmoitusid tulos)))
+          (log/debug "2 on" (pr-str (mapv :valitetty tulos)))
+          tulos)
         (catch Exception e
           (tulosta-virhe! "ilmoituksia" e)
           nil)))))
