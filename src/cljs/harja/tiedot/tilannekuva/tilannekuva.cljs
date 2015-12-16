@@ -244,7 +244,7 @@
                  (do
                    (when @lopeta-haku (@lopeta-haku))
                    (log "Tilannekuva: Aloitetaan haku (tai päivitetään tiheyttä)")
-                   (reset! lopeta-haku (paivita-periodisesti asioiden-haku @hakutiheys (fn []
+                   (reset! lopeta-haku (paivita-periodisesti asioiden-haku hakutiheys (fn []
                                                                                          (= :nykytilanne @valittu-tila)))))
 
                  (when @lopeta-haku (do
