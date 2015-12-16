@@ -69,7 +69,7 @@
                         :ilmoitukset    {:tyypit {:toimenpidepyynto true
                                                   :kysely           true
                                                   :tiedoitus        true}
-                                         :tilat  #{:avoimet}} ; TODO Historiakuvassa näytetään avoimet ja suljetut
+                                         :tilat  #{:avoimet}}
                         :turvallisuus   {:turvallisuuspoikkeamat true}
                         :laadunseuranta {:laatupoikkeamat true
                                          :tarkastukset    true}

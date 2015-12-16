@@ -37,9 +37,20 @@
        [:div.tk-tilan-vaihto-historia "Historia"]
        [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
                                            :on-change (fn []
+                                                        ;; Päivitä valittu tila
                                                         (if (false? @on-off-tila)
                                                           (reset! tiedot/valittu-tila :nykytilanne)
-                                                          (reset! tiedot/valittu-tila :historiakuva)))}]])))
+                                                          (reset! tiedot/valittu-tila :historiakuva))
+                                                        ;; Nykytilanteessa haetaan vain avoimet ilmoitukset, historiakuvassa myös suljetut
+                                                        (if (= :nykytilanne @tiedot/valittu-tila)
+                                                          (reset! tiedot/suodattimet
+                                                                  (assoc-in @tiedot/suodattimet
+                                                                            [:ilmoitukset :tilat]
+                                                                            #{:avoimet}))
+                                                          (reset! tiedot/suodattimet
+                                                                  (assoc-in @tiedot/suodattimet
+                                                                            [:ilmoitukset :tilat]
+                                                                            #{:avoimet :suljetut}))))}]])))
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
