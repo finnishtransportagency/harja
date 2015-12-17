@@ -17,8 +17,8 @@
                  :maksuera             {:nimi
                                                 "Testimaksuera"
                                         :tyyppi "kokonaishintainen"}
-                 :toimenpideinstanssi  {:alkupvm         (parsi-paivamaara "12.12.2015")
-                                        :loppupvm        (parsi-paivamaara "1.1.2017")
+                 :toimenpideinstanssi  {:alkupvm         (parsi-paivamaara "1.10.2014")
+                                        :loppupvm        (parsi-paivamaara "30.9.2019")
                                         :vastuuhenkilo   "A009717"
                                         :talousosasto    "talousosasto"
                                         :tuotepolku      "polku/tuote"
@@ -28,11 +28,30 @@
                  :urakka               {:sampoid "PR00020606"}
                  :sopimus              {:sampoid "00LZM-0033600"}
                  :kustannussuunnitelma {:summa 93999M}
-                 :tuotenumero          111})
+                 :tuotenumero          111
+                 :vuosittaiset-summat    [{:alkupvm "2014-10-01T00:00:00.0",
+                                           :loppupvm "2014-12-31T02:00:00.0",
+                                           :summa 300M}
+                                          {:alkupvm "2015-01-01T02:00:00.0",
+                                           :loppupvm "2015-12-31T02:00:00.0",
+                                           :summa 900M}
+                                          {:alkupvm "2016-01-01T02:00:00.0",
+                                           :loppupvm "2016-12-31T02:00:00.0",
+                                           :summa 0}
+                                          {:alkupvm "2017-01-01T02:00:00.0",
+                                           :loppupvm "2017-12-31T02:00:00.0",
+                                           :summa 0}
+                                          {:alkupvm "2018-01-01T02:00:00.0",
+                                           :loppupvm "2018-12-31T02:00:00.0",
+                                           :summa 0}
+                                          {:alkupvm "2019-01-01T02:00:00.0",
+                                           :loppupvm "2019-09-30T00:00:00.0",
+                                           :summa 0}]})
 
 (deftest tarkista-kustannussuunnitelman-validius
   (let [kustannussuunnitelma (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
         xsd "nikuxog_costPlan.xsd"]
+    (println "----> kustannussuunnitelma" kustannussuunnitelma)
     (is (xml/validoi +xsd-polku+ xsd kustannussuunnitelma) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-lkp-tilinnumeron-paattely
@@ -55,15 +74,31 @@
 
 (deftest tarkista-kulun-jakaminen-vuosille
   (let [segmentit (kustannussuunnitelma-sanoma/luo-summat
-                    (parsi-paivamaara "12.12.2015")
-                    (parsi-paivamaara "1.11.2017") +maksuera+)]
-    (is (= 4 (count segmentit)) "Segmentit on jaoteltu 3 vuodelle")
+                    [{:alkupvm  "2014-10-01T00:00:00.0",
+                      :loppupvm "2014-12-31T02:00:00.0",
+                      :summa    300M}
+                     {:alkupvm  "2015-01-01T02:00:00.0",
+                      :loppupvm "2015-12-31T02:00:00.0",
+                      :summa    900M}
+                     {:alkupvm  "2016-01-01T02:00:00.0",
+                      :loppupvm "2016-12-31T02:00:00.0",
+                      :summa    0}
+                     {:alkupvm  "2017-01-01T02:00:00.0",
+                      :loppupvm "2017-12-31T02:00:00.0",
+                      :summa    0}
+                     {:alkupvm  "2018-01-01T02:00:00.0",
+                      :loppupvm "2018-12-31T02:00:00.0",
+                      :summa    0}
+                     {:alkupvm  "2019-01-01T02:00:00.0",
+                      :loppupvm "2019-09-30T00:00:00.0",
+                      :summa    0}])]
+    (println segmentit)
+    (is (= 6 (count segmentit)) "Segmentit on jaoteltu 3 vuodelle")
 
-    (let [segmentti (second (second segmentit))
-          odotettu-summa (/ (double (get-in +maksuera+ [:kustannussuunnitelma :summa])) 3)]
-      (is (= odotettu-summa (:value segmentti)))
-      (is (= "2015-01-01T00:00:00.0" (:start segmentti)))
-      (is (= "2015-12-31T00:00:00.0" (:finish segmentti))))))
+    (let [segmentti (second (second segmentit))]
+      (is (= 900M (:value segmentti)))
+      (is (= "2015-01-01T02:00:00.0" (:start segmentti)))
+      (is (= "2015-12-31T02:00:00.0" (:finish segmentti))))))
 
 (deftest tarkista-kustannussuunnitelmajakson-muodostus
   (is (= "1.1.2015-31.12.2015"
