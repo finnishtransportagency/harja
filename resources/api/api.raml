@@ -629,7 +629,22 @@ documentation:
         application/json:
           example: !include examples/tyokoneenseurannan-kirjaus-request.json
           schema: tyokoneenseurannan-kirjaus-request
-
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/onnistunut-kirjaus-response.json
+              schema: kirjaus-response
+        500:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
+        400:
+          body:
+            application/json:
+              example: !include examples/virhe-response.json
+              schema: virhe-response
 /ilmoitukset:
   is: [secured]
   description: Ilmoitusten hallinta.
