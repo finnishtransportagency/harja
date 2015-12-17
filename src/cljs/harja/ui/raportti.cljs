@@ -16,23 +16,25 @@
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?]} sarakkeet data]]
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
-  [grid/grid {:otsikko (or otsikko "") :tunniste hash}
+  [grid/grid {:otsikko (or otsikko "") :tunniste hash :piilota-toiminnot? true}
    (into []
          (map-indexed (fn [i sarake]
-                        {:hae #(get % i)
-                         :leveys (:leveys sarake)
+                        {:hae     #(get % i)
+                         :leveys  (:leveys sarake)
                          :otsikko (:otsikko sarake)
-                         :nimi (str "sarake" i)})
+                         :nimi    (str "sarake" i)})
                       sarakkeet))
    (let [viimeinen-rivi (last data)]
      (into []
            (map (fn [rivi]
-                  (let [mappina (zipmap (range (count sarakkeet))
-                                        rivi)]
-                    (if (and viimeinen-rivi-yhteenveto?
-                             (= viimeinen-rivi rivi))
-                      (assoc mappina :yhteenveto true)
-                      mappina))))
+                  (if-let [otsikko (:otsikko rivi)]
+                    (grid/otsikko otsikko)
+                    (let [mappina (zipmap (range (count sarakkeet))
+                                          rivi)]
+                      (if (and viimeinen-rivi-yhteenveto?
+                               (= viimeinen-rivi rivi))
+                        (assoc mappina :yhteenveto true)
+                        mappina)))))
            data))])
 
 
@@ -48,16 +50,16 @@
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo?]} pylvaat]]
+(defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   (let [w (int (* 0.85 @yleiset/leveys))
-        h (int (/ w 3))]
+        h (int (/ w 2.9))]
     [:div.pylvaat
      [:h3 otsikko]
      [vis/bars {:width         w
                 :height        h
-                ;; tarvitaanko erityyppisille rapsoille eri formatteri?
                 :format-amount (or fmt str)
                 :hide-value?   piilota-arvo?
+                :legend legend
                 }
       pylvaat]]))
 

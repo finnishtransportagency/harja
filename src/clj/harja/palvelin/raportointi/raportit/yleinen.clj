@@ -33,11 +33,14 @@
       (kuukaudet alku))))
 
 (defn pylvaat
-  [{:keys [otsikko alkupvm loppupvm kuukausittainen-data piilota-arvo?]}]
+  [{:keys [otsikko alkupvm loppupvm kuukausittainen-data piilota-arvo? legend]}]
   [:pylvaat {:otsikko (str otsikko " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
-             :piilota-arvo? piilota-arvo?}
+             :piilota-arvo? piilota-arvo? :legend legend}
    (into []
-         (map (juxt identity #(or (kuukausittainen-data %) 0)))
+         (map (juxt identity #(or (kuukausittainen-data %)
+                                  (if legend ;jos on monta sarjaa, on mukana legend: tällöin tyhjä on oltava vektori
+                                    []
+                                    0))))
          (kuukaudet alkupvm loppupvm))])
 
 (defn ei-osumia-aikavalilla-teksti

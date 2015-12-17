@@ -42,22 +42,60 @@
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
-    (is (= fo '[:fo:block {} "Taulukko"
-                [:fo:table {:border "solid 0.1mm black"}
-                 ([:fo:table-column {:column-width "10%"}]
-                   [:fo:table-column {:column-width "60%"}]
-                   [:fo:table-column {:column-width "30%"}])
+    (is (= fo '[:fo:block
+                {}
+                "Taulukko"
+                [:fo:table
+                 {:border "solid 0.2mm black"}
+                 ([:fo:table-column
+                   {:column-width "10%"}]
+                   [:fo:table-column
+                    {:column-width "60%"}]
+                   [:fo:table-column
+                    {:column-width "30%"}])
                  [:fo:table-header
                   [:fo:table-row
-                   ([:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Eka"]]
-                     [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Toka"]]
-                     [:fo:table-cell {:border "solid 0.1mm black", :background-color "#afafaf", :font-weight "bold", :padding "1mm"} [:fo:block "Kolmas"]])]]
+                   ([:fo:table-cell
+                     {:background-color "#afafaf"
+                      :border           "solid 0.1mm black"
+                      :font-weight      "bold"
+                      :padding          "1mm"}
+                     [:fo:block
+                      "Eka"]]
+                     [:fo:table-cell
+                      {:background-color "#afafaf"
+                       :border           "solid 0.1mm black"
+                       :font-weight      "bold"
+                       :padding          "1mm"}
+                      [:fo:block
+                       "Toka"]]
+                     [:fo:table-cell
+                      {:background-color "#afafaf"
+                       :border           "solid 0.1mm black"
+                       :font-weight      "bold"
+                       :padding          "1mm"}
+                      [:fo:block
+                       "Kolmas"]])]]
                  [:fo:table-body
                   ([:fo:table-row
-                    ([:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "eka"]]
-                      [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "toka"]]
-                      [:fo:table-cell {:border "solid 0.1mm black", :padding "1mm"} [:fo:block "kolmas"]])])]]
-                [:fo:block {:space-after "1em"}]]))))
+                    ([:fo:table-cell
+                      {:border  "solid 0.1mm black"
+                       :padding "1mm"}
+                      nil
+                      [:fo:block
+                       "eka"]]
+                      [:fo:table-cell
+                       {:border  "solid 0.1mm black"
+                        :padding "1mm"}
+                       nil
+                       [:fo:block
+                        "toka"]]
+                      [:fo:table-cell
+                       {:border  "solid 0.1mm black"
+                        :padding "1mm"}
+                       nil
+                       [:fo:block
+                        "kolmas"]])])]]]))))
 
 (deftest pylvaat
   (let [fo (muodosta-pdf [:pylvaat {:otsikko "Mun pylväät"}
@@ -66,8 +104,8 @@
                             "Q3" 3700
                             "Q4" 2121]]])
         [_ _ [elt _ svg]] fo]
-    (is (= :fo:instream-foreign-object elt))
-    (is (= :svg (first svg)))))
+    (is (= :fo:block elt))
+    (is (= \M (first svg)))))
 
 (deftest yhteenveto
   (let [fo (muodosta-pdf [:yhteenveto [["otsikko" "arvo"]
