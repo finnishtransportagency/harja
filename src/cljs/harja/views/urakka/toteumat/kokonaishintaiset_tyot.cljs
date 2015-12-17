@@ -31,9 +31,17 @@
                                     (nav/vaihda-kartan-koko! :L)
                                     (reset! tiedot/valittu-paivakohtainen-tehtava %))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
-       :mahdollista-rivin-valinta true}
-      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "20%"}
-       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
+       :mahdollista-rivin-valinta true
+       :tunniste (juxt :pvm :toimenpidekoodi)
+       :vetolaatikot (into {}
+                           (map (juxt
+                                 (juxt :pvm :toimenpidekoodi)
+                                 (fn [rivi]
+                                   [:span "hephep: " (pr-str rivi)])))
+                           toteumat)}
+      [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys "3%"}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "19%"}
+       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "38%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
