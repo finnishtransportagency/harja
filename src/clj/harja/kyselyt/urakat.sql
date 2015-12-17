@@ -388,3 +388,6 @@ WHERE alueurakkanro = :alueurakkanro;
 
 -- name: tuhoa-alueurakkadata!
 DELETE FROM alueurakka;
+
+-- name: hae-urakan-geometria
+SELECT alue FROM urakka WHERE id = :id;

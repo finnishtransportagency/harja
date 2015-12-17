@@ -9,6 +9,7 @@
             [harja.kyselyt.kayttajat :as kayttajat-q]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
+            [harja.kyselyt.hallintayksikot :as hal-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.tilannekuva :as q]
             [harja.geo :as geo]
@@ -187,21 +188,25 @@
         nil))))
 
 (defn- hae-tyokoneet
-  [db user {:keys [alue alku loppu talvi kesa urakka-id]} urakat]
+  [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko]} urakat]
   (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
         tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
     (when-not (empty? haettavat-toimenpiteet)
       (try
-        (into {}
-              (comp
-                (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
-                (map #(update-in % [:edellinensijainti] (fn [pos] (when pos
-                                                                    (geo/piste-koordinaatit pos)))))
-                (map #(assoc % :tyyppi :tyokone))
-                (map #(konv/array->set % :tehtavat))
-                (map (juxt :tyokoneid identity)))
-              (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
-                               urakka-id tpi-str))
+        (let [valitun-alueen-geometria (:alue (first (if urakka-id
+                                                 (urakat-q/hae-urakan-geometria db urakka-id)
+                                                 (when hallintayksikko
+                                                   (hal-q/hae-hallintayksikon-geometria db hallintayksikko)))))]
+          (into {}
+                (comp
+                  (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
+                  (map #(update-in % [:edellinensijainti] (fn [pos] (when pos
+                                                                     (geo/piste-koordinaatit pos)))))
+                 (map #(assoc % :tyyppi :tyokone))
+                 (map #(konv/array->set % :tehtavat))
+                 (map (juxt :tyokoneid identity)))
+               (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
+                                urakka-id tpi-str)))
         (catch Exception e
           (tulosta-virhe! "tyokoneet" e)
           nil)))))

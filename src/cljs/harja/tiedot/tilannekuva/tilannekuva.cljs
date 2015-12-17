@@ -168,17 +168,20 @@
 
 (defn yhdista-tyokonedata [uusi]
   (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)
-        uudet (:tyokoneet uusi)]
+        uudet (:tyokoneet uusi)
+        uudet-idt (into #{} (keys uudet))]
     (assoc uusi :tyokoneet
-                (merge-with
-                  (fn [vanha uusi]
-                    (let [vanha-reitti (:reitti vanha)]
-                      (assoc uusi :reitti (if (= (:sijainti vanha) (:sijainti uusi))
-                                            vanha-reitti
-                                            (conj
-                                              (or vanha-reitti [(:sijainti vanha)])
-                                              (:sijainti uusi))))))
-                  vanhat uudet))))
+                (filter (fn [[id _]]
+                          (uudet-idt id))
+                        (merge-with
+                          (fn [vanha uusi]
+                            (let [vanha-reitti (:reitti vanha)]
+                              (assoc uusi :reitti (if (= (:sijainti vanha) (:sijainti uusi))
+                                                    vanha-reitti
+                                                    (conj
+                                                      (or vanha-reitti [(:sijainti vanha)])
+                                                      (:sijainti uusi))))))
+                          vanhat uudet)))))
 
 (def edellisen-haun-kayttajan-suodattimet (atom {:tila                 @valittu-tila
                                                  :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
@@ -186,11 +189,11 @@
                                                  :suodattimet          @suodattimet}))
 
 (def tyhjenna-popupit-kun-filtterit-muuttuu (run!
-                                             @valittu-tila
-                                             @nykytilanteen-aikasuodattimen-arvo
-                                             @historiakuvan-aikavali
-                                             @suodattimet
-                                             (kartta/poista-popup!)))
+                                              @valittu-tila
+                                              @nykytilanteen-aikasuodattimen-arvo
+                                              @historiakuvan-aikavali
+                                              @suodattimet
+                                              (kartta/poista-popup!)))
 
 (defn hae-asiat []
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
