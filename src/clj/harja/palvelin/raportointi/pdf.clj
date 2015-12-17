@@ -39,9 +39,7 @@
              [:fo:block otsikko]]]
            (let [korosta? (when (and viimeinen-rivi-yhteenveto?
                                      (= viimeinen-rivi rivi))
-                            {:font-weight "bold"})
-                 _ (log/debug "rivi" rivi)
-                 _ (log/debug "data" data)]
+                            {:font-weight "bold"})]
              [:fo:table-row
               (for [i (range (count sarakkeet))
                     :let [arvo (nth rivi i)]]
