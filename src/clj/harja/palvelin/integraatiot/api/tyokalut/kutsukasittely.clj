@@ -111,20 +111,20 @@
                            :viesti "Tyhja vastaus vaikka skeema annettu"}]})
        {:status status}))))
 
-(defn kasittele-invalidi-json [virheet]
-  (log/warn virheet/+invalidi-json-koodi+ virheet)
+(defn kasittele-invalidi-json [virheet resurssi]
+  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s" resurssi virheet))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
-(defn kasittele-viallinen-kutsu [virheet]
-  (log/warn "Tehty kutsu on viallinen: " virheet)
+(defn kasittele-viallinen-kutsu [virheet resurssi]
+  (log/error (format "Resurssin: %s kutsu on viallinen: %s " resurssi virheet))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
-(defn kasittele-puutteelliset-parametrit [virheet]
-  (log/warn "Kutsussa puutteelliset parametrit: " virheet)
+(defn kasittele-puutteelliset-parametrit [virheet resurssi]
+  (log/error (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
-(defn kasittele-sisainen-kasittelyvirhe [virheet]
-  (log/warn "Tapahtui sisäinen käsittelyvirhe: " virheet)
+(defn kasittele-sisainen-kasittelyvirhe [virheet resurssi]
+  (log/error (format "Resurssin: %s kutsussa tapahtui sisäinen käsittelyvirhe: %s" resurssi virheet))
   (tee-sisainen-kasittelyvirhevastaus virheet))
 
 (defn lue-kutsu
@@ -149,26 +149,26 @@
                  :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
-(defn aja-virhekasittelyn-kanssa [ajon-nimi ajo]
+(defn aja-virhekasittelyn-kanssa [resurssi ajo]
   (try+
     (ajo)
     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-      (kasittele-invalidi-json virheet))
+      (kasittele-invalidi-json virheet resurssi))
     (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
-      (kasittele-viallinen-kutsu virheet))
+      (kasittele-viallinen-kutsu virheet resurssi))
     (catch [:type virheet/+puutteelliset-parametrit+] {:keys [virheet]}
-      (kasittele-puutteelliset-parametrit virheet))
+      (kasittele-puutteelliset-parametrit virheet resurssi))
     (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
-      (kasittele-sisainen-kasittelyvirhe virheet))
+      (kasittele-sisainen-kasittelyvirhe virheet resurssi))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (kasittele-sisainen-kasittelyvirhe virheet))
+      (kasittele-sisainen-kasittelyvirhe virheet resurssi))
     (catch [:type virheet/+virheellinen-liite+] {:keys [virheet]}
-      (kasittele-sisainen-kasittelyvirhe virheet))
+      (kasittele-sisainen-kasittelyvirhe virheet resurssi))
     (catch #(get % :virheet) poikkeus
-      (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus)))
+      (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus) resurssi))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
     (catch SQLException e
-      (log/error e (format "Ajon %s yhteyhdessä tapahtui SQL-poikkeus: " ajon-nimi))
+      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui SQL-poikkeus: " resurssi))
       (let [w (StringWriter.)]
         (loop [ex (.getNextException e)]
           (when (not (nil? ex))
@@ -176,16 +176,19 @@
             (recur (.getNextException ex))))
         (log/error "Sisemmät virheet: " (.toString w)))
       (kasittele-sisainen-kasittelyvirhe
+        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]))
     (catch Exception e
-      (log/error e (format "Ajon %s yhteyhdessä tapahtui poikkeus: " ajon-nimi))
+      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " resurssi))
       (kasittele-sisainen-kasittelyvirhe
+        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]))
     (catch Object e
-      (log/error (:throwable &throw-context) (format "Ajon %s yhteyhdessä rapahtui poikkeus: " e))
+      (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " e))
       (kasittele-sisainen-kasittelyvirhe
+        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]))))
 
