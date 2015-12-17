@@ -193,10 +193,12 @@
         tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
     (when-not (empty? haettavat-toimenpiteet)
       (try
-        (let [valitun-alueen-geometria (:alue (first (if urakka-id
-                                                 (urakat-q/hae-urakan-geometria db urakka-id)
-                                                 (when hallintayksikko
-                                                   (hal-q/hae-hallintayksikon-geometria db hallintayksikko)))))]
+        (let [valitun-alueen-geometria (if urakka-id
+                                         (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
+                                           (or (:urakka_alue urakan-aluetiedot)
+                                               (:alueurakka_alue urakan-aluetiedot)))
+                                         (when hallintayksikko
+                                           (:alue (first (hal-q/hae-hallintayksikon-geometria db hallintayksikko)))))]
           (into {}
                 (comp
                   (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
