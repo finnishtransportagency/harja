@@ -18,7 +18,7 @@
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
   [:fo:block {} otsikko
-   [:fo:table {:border "solid 0.1mm black"}
+   [:fo:table {:border "solid 0.2mm black"}
     (for [{:keys [otsikko leveys]} sarakkeet]
       [:fo:table-column {:column-width leveys}])
     [:fo:table-header
@@ -29,16 +29,26 @@
     [:fo:table-body
      (let [viimeinen-rivi (last data)]
        (for [rivi data]
-         (let [korosta? (when (and viimeinen-rivi-yhteenveto?
-                                   (= viimeinen-rivi rivi))
-                          {:font-weight "bold"})]
+         (if-let [otsikko (:otsikko rivi)]
            [:fo:table-row
-            (for [i (range (count sarakkeet))
-                  :let [arvo (nth rivi i)]]
-              [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
-                                     korosta?)
-               [:fo:block (str arvo)]])])))]]
-   [:fo:block {:space-after "1em"}]])
+
+            [:fo:table-cell {:padding "1mm"
+                             :font-weight "bold"
+                             :number-columns-spanned (count sarakkeet)}
+             [:fo:block {:space-after "0.5em"}]
+             [:fo:block otsikko]]]
+           (let [korosta? (when (and viimeinen-rivi-yhteenveto?
+                                     (= viimeinen-rivi rivi))
+                            {:font-weight "bold"})
+                 _ (log/debug "rivi" rivi)
+                 _ (log/debug "data" data)]
+             [:fo:table-row
+              (for [i (range (count sarakkeet))
+                    :let [arvo (nth rivi i)]]
+                [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
+                                       korosta?)
+                 (when korosta? [:fo:block {:space-after "0.5em"}])
+                 [:fo:block (str arvo)]])]))))]]])
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
@@ -59,7 +69,7 @@
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
   (log/debug "muodosta pdf pylväät data" pylvaat)
-  [:fo:block
+  [:fo:block {:margin-top "1em"}
    [:fo:block {:font-weight "bold"} otsikko]
    [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
     (vis/bars {:width         180

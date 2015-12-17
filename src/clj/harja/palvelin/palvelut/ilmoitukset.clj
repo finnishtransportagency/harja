@@ -71,8 +71,7 @@
                           (when-not (empty? (:kuittaukset %))
                             (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
                 mankeloitu)]
-    (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
-    (log/debug "Joiden kuittaukset ovat tulleet: " (map :uusinkuittaus tulos))
+    (log/debug "Löydettiin ilmoitukset joiden ID:t ovat: " (map :id mankeloitu))
 
     tulos))
 
