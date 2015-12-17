@@ -110,8 +110,9 @@
                  [org.apache.ant/ant "1.9.6"]
                  ]
 
-  :dev-dependencies [;; Selain REPL
-
+  :dev-dependencies [
+                     [walmartlabs/system-viz "0.1.0"]
+                     
                      ;; Testaus
                      [prismatic/dommy "1.1.0"]
                      [org.clojure/test.check "0.8.1"]

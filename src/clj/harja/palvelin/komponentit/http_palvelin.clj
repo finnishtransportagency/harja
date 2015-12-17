@@ -1,23 +1,23 @@
 (ns harja.palvelin.komponentit.http-palvelin
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server :as http]
-            [compojure.core  :as compojure]
+            [compojure.core :as compojure]
             [compojure.route :as route]
             [clojure.string :as str]
             [taoensso.timbre :as log]
-            
+
             [ring.middleware.cookies :as cookies]
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
             [schema.core :as s]
-            ;; Pyyntöjen todennus (autentikointi)
+    ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.palvelin.index :as index]
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
-            
+
             [slingshot.slingshot :refer [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -40,9 +40,9 @@
         (kasittelija-fn req)))))
 
 (defn transit-vastaus [data]
-  {:status 200
-   :headers {"Content-Type" "application/transit+json"} 
-   :body (transit/clj->transit data)})
+  {:status  200
+   :headers {"Content-Type" "application/transit+json"}
+   :body    (transit/clj->transit data)})
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
@@ -53,27 +53,29 @@
                  (= polku (:uri req)))
         (let [skeema (:skeema optiot)
               kysely (try (transit/lue-transit (:body req))
-                          (catch Exception e ::ei-validi-kysely))
+                          (catch Exception e
+                            (log/warn (.getMessage e))
+                            ::ei-validi-kysely))
               kysely (if-not skeema
                        kysely
                        (try
                          (if (= kysely ::ei-validi-kysely)
                            kysely
                            (s/validate skeema kysely))
-                        (catch Exception e
-                          (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
-                          ::ei-validi-kysely)))]
+                         (catch Exception e
+                           (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
+                           ::ei-validi-kysely)))]
           (if (= kysely ::ei-validi-kysely)
             {:status 400
-             :body "Ei validi kysely"}
+             :body   "Ei validi kysely"}
             (let [vastaus (try+
-                           (palvelu-fn (:kayttaja req) kysely)
-                           (catch harja.domain.roolit.EiOikeutta eo
-                             ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
-                             eo)
-                           (catch Exception e
-                             (log/warn e "Virhe POST palvelussa " nimi)
-                             {:virhe (.getMessage e)}))]
+                            (palvelu-fn (:kayttaja req) kysely)
+                            (catch harja.domain.roolit.EiOikeutta eo
+                              ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
+                              eo)
+                            (catch Exception e
+                              (log/warn e "Virhe POST palvelussa " nimi)
+                              {:virhe (.getMessage e)}))]
               (transit-vastaus vastaus))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
@@ -96,15 +98,15 @@
                    (not (.after last-modified if-modified-since)))
             {:status 304}
             (let [vastaus (palvelu-fn (:kayttaja req))]
-              {:status 200
+              {:status  200
                :headers (merge {"Content-Type" "application/transit+json"}
                                (if last-modified
                                  {"cache-control" "private, max-age=0, must-revalidate"
                                   "Last-Modified" (.format (SimpleDateFormat. muokkaus-pvm-muoto) last-modified)}
                                  {"cache-control" "no-cache"}))
-               :body (with-open [out (java.io.ByteArrayOutputStream.)]
-                       (t/write (t/writer out :json) vastaus)
-                       (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
+               :body    (with-open [out (java.io.ByteArrayOutputStream.)]
+                          (t/write (t/writer out :json) vastaus)
+                          (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
 
 (defprotocol HttpPalvelut
   "Protokolla HTTP palveluiden julkaisemiseksi."
@@ -146,15 +148,15 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
         salattu (index/laske-mac token)]
     (when (or (= uri "/")
               (= uri "/index.html"))
-      {:status 200
-       :headers {"Content-Type" "text/html"
+      {:status  200
+       :headers {"Content-Type"  "text/html"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
-                 "Pragma" "no-cache"
-                 "Expires" "0"}
-       :cookies {"anti-csrf-token" {:value salattu
+                 "Pragma"        "no-cache"
+                 "Expires"       "0"}
+       :cookies {"anti-csrf-token" {:value     salattu
                                     :http-only true
-                                    :max-age 36000000}}
-       :body (index/tee-paasivu token kehitysmoodi)})))
+                                    :max-age   36000000}}
+       :body    (index/tee-paasivu token kehitysmoodi)})))
 
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
@@ -166,9 +168,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                (= (index/laske-mac (headers "x-csrf-token"))
                   (:value (cookies "anti-csrf-token"))))
         (f req)
-        {:status 403
+        {:status  403
          :headers {"Content-Type" "text/html"}
-         :body "Access denied"}))))
+         :body    "Access denied"}))))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
@@ -180,22 +182,22 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                       (route/resources ""))]
       (swap! lopetus-fn
              (constantly
-              (http/run-server (cookies/wrap-cookies
-                                (fn [req]
-                                  (try+
-                                   (let [ui-kasittelijat (mapv :fn @kasittelijat)
-                                         uikasittelija (-> (apply compojure/routes ui-kasittelijat) 
-                                                           (wrap-anti-forgery))]
-                                     (reitita (todennus/todenna-pyynto todennus req)
-                                              (-> (mapv :fn @sessiottomat-kasittelijat)
-                                                  (conj (partial index-kasittelija kehitysmoodi) resurssit)
-                                                  (conj uikasittelija))))
-                                   (catch [:virhe :todennusvirhe] _
-                                     {:status 403 :body "Todennusvirhe"}))))
-                               
-                               {:port (or (:portti asetukset) asetukset)
-                                :thread (or (:threads asetukset) 8)
-                                :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
+               (http/run-server (cookies/wrap-cookies
+                                  (fn [req]
+                                    (try+
+                                      (let [ui-kasittelijat (mapv :fn @kasittelijat)
+                                            uikasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                                              (wrap-anti-forgery))]
+                                        (reitita (todennus/todenna-pyynto todennus req)
+                                                 (-> (mapv :fn @sessiottomat-kasittelijat)
+                                                     (conj (partial index-kasittelija kehitysmoodi) resurssit)
+                                                     (conj uikasittelija))))
+                                      (catch [:virhe :todennusvirhe] _
+                                        {:status 403 :body "Todennusvirhe"}))))
+
+                                {:port     (or (:portti asetukset) asetukset)
+                                 :thread   (or (:threads asetukset) 8)
+                                 :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
@@ -208,9 +210,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
     (if (:ring-kasittelija? optiot)
       (swap! sessiottomat-kasittelijat conj {:nimi nimi
-                                             :fn (if (= false (:tarkista-polku? optiot))
-                                                   palvelu-fn
-                                                   (ring-kasittelija nimi palvelu-fn))})
+                                             :fn   (if (= false (:tarkista-polku? optiot))
+                                                     palvelu-fn
+                                                     (ring-kasittelija nimi palvelu-fn))})
       (let [ar (arityt palvelu-fn)
             liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
         (when liikaa-parametreja
@@ -233,9 +235,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti [http nimi reitti]
-  (julkaise-palvelu http nimi  (wrap-params reitti)
+  (julkaise-palvelu http nimi (wrap-params reitti)
                     {:ring-kasittelija? true
-                     :tarkista-polku? false}))
+                     :tarkista-polku?   false}))
 
 
 (defn julkaise-palvelut [http & palveluiden-nimet-ja-funktiot]

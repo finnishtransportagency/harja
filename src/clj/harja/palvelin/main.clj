@@ -51,6 +51,7 @@
    [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
    [harja.palvelin.palvelut.raportit :as raportit]
    [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
+   [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
 
    ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
    [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
@@ -253,6 +254,10 @@
      :geometriapaivitykset (component/using (geometriapaivitykset/->Geometriapaivitykset
                                              (:geometriapaivitykset asetukset))
                                             [:db :integraatioloki])
+
+     :tilannekuva (component/using
+                    (tilannekuva/->Tilannekuva)
+                    [:http-palvelin :db])
 
      ;; Harja API
      :api-urakat (component/using

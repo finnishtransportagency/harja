@@ -175,8 +175,9 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   [rivi & kentat]
   (muunna rivi kentat keyword))
 
-(defn string->avain [data avainpolku]
+(defn string->avain
   "Muuntaa annetussa polussa olevan stringin Clojure-keywordiksi"
+  [data avainpolku]
   (-> data
       (assoc-in avainpolku (keyword (get-in data avainpolku)))))
 
@@ -223,8 +224,9 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   (when dt
     (java.sql.Timestamp. (.getTime dt))))
 
-(defn jsonb->clojuremap [json avain]
+(defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"
+  [json avain]
   (-> json
       (assoc avain
              (some-> json

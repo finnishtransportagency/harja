@@ -45,7 +45,7 @@ FROM toimenpidekoodi
 WHERE poistettu IS NOT TRUE AND
       emo = :emo;
 
---name: hae-toimenpidekoodit-historiakuvaan
+--name: hae-toimenpidekoodit-tilannekuvaan
 SELECT
   tpk4.id,
   tpk4.koodi,
