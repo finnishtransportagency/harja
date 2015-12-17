@@ -577,6 +577,12 @@
     (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
     kasitellyt-toteumarivit))
 
+(defn hae-kokonaishintaisen-toteuman-tiedot [db user urakka-id pvm toimenpidekoodi]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (map konv/alaviiva->rakenne)
+        (q/hae-kokonaishintaisen-toteuman-tiedot db urakka-id pvm toimenpidekoodi)))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
@@ -633,6 +639,9 @@
       (julkaise-palvelu http :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat db user tiedot)))
+      (julkaise-palvelu http :kokonaishintaisen-toteuman-tiedot
+                        (fn [user {:keys [urakka-id pvm toimenpidekoodi]}]
+                          (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi)))
       (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot)))
