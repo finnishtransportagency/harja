@@ -9,7 +9,9 @@
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [com.stuartsierra.component :as component]))
+    [com.stuartsierra.component :as component]
+    [clj-time.core :as t]
+    [clj-time.coerce :as tc]))
 
 (def jarjestelma nil)
 
@@ -386,3 +388,10 @@
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan tulosten vertailussa."
   [eka toka marginaali]
   (< (Math/abs (double (- eka toka))) marginaali))
+
+(def suomen-aikavyohyke (t/time-zone-for-id "EET"))
+
+(defn paikallinen-aika [dt]
+  (-> dt
+      tc/from-sql-date
+      (t/to-time-zone suomen-aikavyohyke)))

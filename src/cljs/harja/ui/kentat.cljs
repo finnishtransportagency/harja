@@ -262,7 +262,8 @@
                             arvo (arvo valinta)]
                         ^{:key otsikko}
                         [:span.radiovalinta
-                         [:input {:type      "radio" :value i
+                         [:input {:type      "radio"
+                                  :value i
                                   :checked   (= nykyinen-arvo arvo)
                                   :on-change #(reset! data arvo)}]
                          [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
@@ -289,7 +290,7 @@
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
     [:span
-     ;; Esimerkiksi historiakuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
+     ;; Esimerkiksi tilannekuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
      ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
      ;; ei voi vain yksinkertaisesti resetoida datan sisältöä tyhjäksi tai kaikiksi vaihtoehdoiksi.
      (when tyhjenna-kaikki?
@@ -388,7 +389,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -450,7 +451,8 @@
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                (reset! data %)
                                                                (reset! teksti (pvm/pvm %)))
-                                                 :pvm     naytettava-pvm}])]))})))
+                                                 :pvm     naytettava-pvm
+                                                 :pakota-suunta pakota-suunta}])]))})))
 
 (defmethod nayta-arvo :pvm [_ data]
   [:span (if-let [p @data]

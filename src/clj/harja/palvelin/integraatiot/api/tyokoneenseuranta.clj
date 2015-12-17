@@ -20,6 +20,7 @@
   (doseq [havainto (:havainnot data)]
     (let [urakka-id (get-in havainto [:havainto :urakkaid])]
       (when urakka-id (validointi/tarkista-urakka db urakka-id))
+      (validointi/tarkista-koordinaattien-jarjestys (get-in havainto [:havainto :sijainti :koordinaatit]))
       (tks/tallenna-tyokonehavainto db
                                     (get-in data [:otsikko :lahettaja :jarjestelma])
                                     (get-in data [:otsikko :lahettaja :organisaatio :nimi])

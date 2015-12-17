@@ -92,7 +92,7 @@
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
 ; FIXME Siivoa tallennettu data
 
-(deftest hae-laatupoikkeaman-tiedot []
+(deftest hae-laatupoikkeaman-tiedot
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id   urakka-id
@@ -101,7 +101,7 @@
     (is (string? (:kuvaus vastaus)))
     (is (>= (count (:kuvaus vastaus)) 10))))
 
-(deftest hae-urakan-laatupoikkeamat []
+(deftest hae-urakan-laatupoikkeamat
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-laatupoikkeamat +kayttaja-jvh+
@@ -112,7 +112,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-(deftest hae-urakan-sanktiot []
+(deftest hae-urakan-sanktiot 
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
@@ -121,13 +121,13 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-(deftest hae-sanktiotyypit []
+(deftest hae-sanktiotyypit 
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-sanktiotyypit +kayttaja-jvh+)]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 9))))
 
-(deftest hae-urakan-tarkastukset []
+(deftest hae-urakan-tarkastukset
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-tarkastukset +kayttaja-jvh+ {:urakka-id urakka-id
@@ -138,7 +138,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-(deftest hae-tarkastus []
+(deftest hae-tarkastus 
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tarkastus +kayttaja-jvh+ {:urakka-id    urakka-id
