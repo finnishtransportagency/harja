@@ -220,8 +220,7 @@
                       (map konv/alaviiva->rakenne)
                       (map #(assoc % :tyyppi :toteuma)))
                     (q/hae-toteumat db (konv/sql-date alku) (konv/sql-date loppu) toimenpidekoodit
-                                    (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)
-                                    urakat))
+                                    urakat (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)))
               {:tehtava     :tehtavat
                :materiaali  :materiaalit
                :reittipiste :reittipisteet})))

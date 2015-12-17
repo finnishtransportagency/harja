@@ -267,9 +267,6 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   INNER JOIN reittipiste rp ON rp.toteuma = t.id
-                               -- Haettavan reittipisteen pitää ensinnäkin mahtua kartalla näkyvälle alueelle
-                               AND st_contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), rp.sijainti :: GEOMETRY)
-                               AND (rp.aika BETWEEN :alku AND :loppu)
   LEFT JOIN reitti_materiaali rm ON rm.reittipiste = rp.id
   LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
@@ -277,7 +274,9 @@ FROM toteuma_tehtava tt
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
-      (t.paattynyt BETWEEN :alku AND :loppu)
+      (t.paattynyt BETWEEN :alku AND :loppu) AND
+      EXISTS(SELECT id FROM reittipiste WHERE toteuma = t.id AND
+      st_contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti :: GEOMETRY))
 ORDER BY rp.aika ASC;
 
 -- name: hae-tyokoneet
