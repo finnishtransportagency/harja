@@ -192,7 +192,7 @@ urakkaid, tehtavat) VALUES (
   current_timestamp,
   31337,
   'aura-auto',
-  ST_MakePoint(7207739,429493)::POINT,
+  ST_MakePoint(429493,7207739)::POINT,
   45,
   (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
   ARRAY['harjaus', 'suolaus']::suoritettavatehtava[]
@@ -206,7 +206,7 @@ urakkaid, tehtavat) VALUES (
   current_timestamp,
   31338,
   'aura-auto',
-  ST_MakePoint(7211247,427861)::POINT,
+  ST_MakePoint(427861,7211247)::POINT,
   45,
   (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
   ARRAY['pistehiekoitus']::suoritettavatehtava[]
@@ -220,7 +220,7 @@ urakkaid, tehtavat) VALUES (
   current_timestamp,
   31339,
   'aura-auto',
-  ST_MakePoint(7249077,499399)::POINT,
+  ST_MakePoint(499399,7249077)::POINT,
   45,
   (SELECT id FROM urakka WHERE nimi = 'Pudasjärven alueurakka 2007-2012'),
   ARRAY['muu']::suoritettavatehtava[]

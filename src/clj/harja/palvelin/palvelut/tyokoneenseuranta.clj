@@ -7,16 +7,12 @@
             [harja.kyselyt.konversio :as konversiot]
             [harja.kyselyt.tyokoneseuranta :as tks]))
 
-(defn- swap-coords [[x y]]
-  [y x])
-
 (defn- formatoi-vastaus [tyokone]
   (-> tyokone
-      (update-in [:sijainti] (comp swap-coords geo/piste-koordinaatit))
+      (update-in [:sijainti] geo/piste-koordinaatit)
       
       (update-in [:edellinensijainti] #(some-> %
-                                               geo/piste-koordinaatit
-                                               swap-coords))
+                                               geo/piste-koordinaatit))
       (assoc :tyyppi :tyokone)
       (konversiot/array->set :tehtavat)))
 
@@ -27,15 +23,15 @@
     (map formatoi-vastaus (if urakka
                             (tks/urakan-tyokoneet-alueella db
                                                            urakka
-                                                           (:ymin alue)
                                                            (:xmin alue)
-                                                           (:ymax alue)
-                                                           (:xmax alue))
+                                                           (:ymin alue)
+                                                           (:xmax alue)
+                                                           (:ymax alue))
                             (tks/tyokoneet-alueella db
-                                                    (:ymin alue)
                                                     (:xmin alue)
-                                                    (:ymax alue)
-                                                    (:xmax alue))))))
+                                                    (:ymin alue)
+                                                    (:xmax alue)
+                                                    (:ymax alue))))))
 
 (defrecord TyokoneseurantaHaku []
   component/Lifecycle
