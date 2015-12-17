@@ -1,5 +1,5 @@
 (ns harja.palvelin.index
-  (:use [hiccup.core])
+  (:require [hiccup.core :refer [html]])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]))

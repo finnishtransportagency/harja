@@ -81,3 +81,26 @@ ssh -L7777:localhost:5432 harja-dfb1-stg
     bash-4.2$ psql harja <br/>
 </code>
  * Tee temput
+
+
+## Autogeneroi nuolikuvat SVG:nä
+
+(def varit {"punainen" "rgb(255,0,0)"
+            "oranssi" "rgb(255,128,0)"
+            "keltainen" "rgb(255,255,0)"
+            "lime" "rgb(128,255,0)"
+	    "vihrea" "rgb(0,255,0)"
+ 	    "turkoosi" "rgb(0,255,128)"
+ 	    "syaani" "rgb(0,255,255)"
+ 	    "sininen" "rgb(0,128,255)"
+ 	    "tummansininen" "rgb(0,0,255)"
+ 	    "violetti" "rgb(128,0,255)"
+ 	    "magenta" "rgb(255,0,255)"
+ 	    "pinkki" "rgb(255,0,128)"})
+
+(for [[vari rgb] varit]
+  (spit (str "resources/public/images/nuoli-" vari ".svg")
+  	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\">
+   <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
+</svg>")))

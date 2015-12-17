@@ -100,31 +100,31 @@ SELECT
   k.sukunimi,
   k.sahkoposti,
   k.puhelin,
-                                                                                                        o.id           AS org_id,
-                                                                                                        o.nimi         AS org_nimi,
-                                                                                                        o.tyyppi       AS org_tyyppi,
-                                                                                                        array_cat(
-                                                                                                            (SELECT
-                                                                                                        array_agg(rooli)
-                                                                                                             FROM
-                                                                                                               kayttaja_rooli
-                                                                                                             WHERE
-                                                                                                               kayttaja
-                                                                                                               = k.id
-                                                                                                               AND
-                                                                                                               poistettu
-                                                                                                               = FALSE),
-                                                                                                            (SELECT
-                                                                                                        array_agg(rooli)
-                                                                                                             FROM
-                                                                                                               kayttaja_urakka_rooli
-                                                                                                             WHERE
-                                                                                                               kayttaja
-                                                                                                               = k.id
-                                                                                                               AND
-                                                                                                               poistettu
-                                                                                                               =
-                                                                                                               FALSE)) AS roolit,
+  o.id           AS org_id,
+  o.nimi         AS org_nimi,
+  o.tyyppi       AS org_tyyppi,
+  array_cat(
+      (SELECT
+  array_agg(rooli)
+       FROM
+         kayttaja_rooli
+       WHERE
+         kayttaja
+         = k.id
+         AND
+         poistettu
+         = FALSE),
+      (SELECT
+  array_agg(rooli)
+       FROM
+         kayttaja_urakka_rooli
+       WHERE
+         kayttaja
+         = k.id
+         AND
+         poistettu
+         =
+         FALSE)) AS roolit,
   k.jarjestelma
 FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
@@ -148,6 +148,19 @@ FROM kayttaja_urakka_rooli
   LEFT JOIN organisaatio urk ON ur.urakoitsija = urk.id
   LEFT JOIN organisaatio hal ON ur.hallintayksikko = hal.id
 WHERE kayttaja = :kayttaja AND poistettu = FALSE
+
+-- name: hae-kayttajan-urakat-aikavalilta
+SELECT urakka AS urakka_id
+FROM kayttaja_urakka_rooli
+  LEFT JOIN urakka ur ON urakka = ur.id
+WHERE kayttaja = :kayttaja AND
+      poistettu IS NOT TRUE AND
+      (u.loppupvm > :alku AND u.alkupvm < :loppu) OR
+      (u.loppupvm IS NULL AND u.alkupvm < :loppu) AND
+      (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
+      (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
+      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
+
 
 -- name: lisaa-urakka-rooli<!
 -- Lisää annetulle käyttäjälle roolin urakkaan.

@@ -1,0 +1,105 @@
+.haitari-tilannekuva {
+  .haitari-sisalto {
+    background-color: @harmaa9;
+  }
+
+  .haitari-sisalto.haitari-auki {
+    max-width: 300px;
+    min-width: 300px;
+  }
+}
+
+#tk-tilan-vaihto {
+  position: relative;
+  height: 22px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+
+  > .tk-tilan-vaihto-nykytilanne {
+    left: 5px;
+    position: absolute;
+  }
+
+  > .tk-tilan-vaihto-historia {
+    position: absolute;
+    left: 180px;
+  }
+
+  > .on-off-tilannekuva {
+    position: absolute;
+    left: 100px;
+  }
+}
+
+#tk-nykytilanteen-aikavalit {
+  .radiovalinta {
+    width: 70px;
+    padding: 2px;
+    display: inline-block;
+  }
+
+  margin-bottom: 10px;
+}
+
+#tk-historiakuvan-aikavalit {
+  .label-ja-aikavali {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+}
+
+.tk-checkbox-ryhma {
+  border: 1px solid @harmaa3;
+  background-color: @harmaa10;
+  margin-bottom: 2px;
+}
+
+.tk-checkbox-ryhma-otsikko {
+  height: 26px;
+  background-color: @harmaa10;
+}
+
+.tk-checkbox-ryhma-tila {
+  cursor: pointer;
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.tk-checkbox-ryhma-checkbox {
+  display: inline-block;
+  position: relative;
+  top: 4px;
+}
+
+.tk-checkbox-ryhma-kiinni {
+  display: none;
+}
+
+.tk-checkbox-ryhma-sisalto {
+  padding: 5px;
+}
+
+#tk-paavalikko {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid @harmaa5;
+  background-color: @harmaa10;
+}
+
+.tk-suodatinryhmat {
+  margin-bottom: 10px;
+}
+
+.chevron-rotate { transition: all .2s ease-in-out; }
+
+.chevron-rotate-down:hover {
+  -webkit-transform: rotate(0.25turn);
+  -moz-transform: rotate(0.25turn);
+  -ms-transform: rotate(0.25turn);
+  -o-transform: rotate(0.25turn);
+  transform: rotate(0.25turn);
+}

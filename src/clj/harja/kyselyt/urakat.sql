@@ -4,9 +4,10 @@ SELECT
   u.nimi,
   u.tyyppi
 FROM urakka u
-WHERE loppupvm BETWEEN :alku AND :loppu
-      OR alkupvm BETWEEN :alku AND :loppu
-      OR loppupvm IS NULL AND :loppu > NOW();
+WHERE ((u.loppupvm > :alku AND u.alkupvm < :loppu) OR (u.loppupvm IS NULL AND u.alkupvm < :loppu)) AND
+      (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
+      (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
+      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
@@ -14,8 +15,20 @@ SELECT
   u.nimi,
   u.tyyppi
 FROM urakka u
-WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
-      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date);
+WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
+      (u.loppupvm IS NULL OR u.loppupvm >= current_date) AND
+      (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
+      (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
+      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
+
+-- name: hae-hallintayksikon-urakat
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi
+FROM urakka u
+  JOIN organisaatio o ON o.id = u.hallintayksikko
+WHERE o.id = :hy;
 
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
@@ -212,9 +225,9 @@ SELECT EXISTS(SELECT id
 -- name: paivita-hankkeen-tiedot-urakalle!
 -- Päivittää hankkeen sampo id:n avulla urakalle
 UPDATE urakka
-SET hanke         = (SELECT id
-                     FROM hanke
-                     WHERE sampoid = :hanke_sampo_id)
+SET hanke = (SELECT id
+             FROM hanke
+             WHERE sampoid = :hanke_sampo_id)
 WHERE hanke_sampoid = :hanke_sampo_id;
 
 -- name: luo-urakka<!
@@ -351,12 +364,12 @@ SELECT EXISTS(
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 SELECT u.id
-  FROM urakoiden_alueet ua
-       JOIN urakka u ON ua.id = u.id
- WHERE ua.tyyppi = :urakkatyyppi :: urakkatyyppi
-   AND (st_contains(ua.alue, ST_MakePoint(:x, :y)))
-   AND (u.alkupvm IS NULL OR u.alkupvm <= current_timestamp)
-   AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
+FROM urakoiden_alueet ua
+  JOIN urakka u ON ua.id = u.id
+WHERE ua.tyyppi = :urakkatyyppi :: urakkatyyppi
+      AND (st_contains(ua.alue, ST_MakePoint(:x, :y)))
+      AND (u.alkupvm IS NULL OR u.alkupvm <= current_timestamp)
+      AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
 
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero)

@@ -110,8 +110,9 @@
                  [org.apache.ant/ant "1.9.6"]
                  ]
 
-  :dev-dependencies [;; Selain REPL
-
+  :dev-dependencies [
+                     [walmartlabs/system-viz "0.1.0"]
+                     
                      ;; Testaus
                      [prismatic/dommy "1.1.0"]
                      [org.clojure/test.check "0.8.1"]
@@ -137,7 +138,7 @@
             [lein-figwheel "0.4.1"]
             [cider/cider-nrepl "0.10.0"]
             [codox "0.8.11"]
-            [jonase/eastwood "0.2.1"]
+            [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             ;;[mvxcvi/whidbey "0.5.1"]

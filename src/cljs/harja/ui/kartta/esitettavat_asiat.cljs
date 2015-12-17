@@ -50,7 +50,7 @@
         aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
         ikoni (cond
-                lopetettu? "kartta-kysely-violetti.svg" ;; TODO Lisää harmaat ikonit kun valmistuvat.
+                lopetettu? "kartta-kysely-violetti.svg"     ;; TODO Lisää harmaat ikonit kun valmistuvat.
                 aloitettu? "kartta-kysely-violetti.svg"
                 :else "kartta-kysely-kesken-punainen.svg")]
     [(assoc ilmoitus
@@ -98,7 +98,7 @@
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
 
 (defn selvita-laatupoikkeaman-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
+  (selvita-laadunseurannan-ikoni "havainto" tekija))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu?]
   [(assoc laatupoikkeama
@@ -124,13 +124,13 @@
      :selite {:teksti (str "Tarkastus (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
      :alue (if (= :line (get-in tarkastus [:sijainti :type]))
-             {:type  :tack-icon-line
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
+             {:type   :tack-icon-line
+              :scale  (if (valittu? tarkastus) 1.5 1)
+              :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :points (get-in tarkastus [:sijainti :points])}
-             {:type  :tack-icon
-              :scale (if (valittu? tarkastus) 1.5 1)
-              :img   (selvita-tarkastuksen-ikoni (:tekija tarkastus))
+             {:type        :tack-icon
+              :scale       (if (valittu? tarkastus) 1.5 1)
+              :img         (selvita-tarkastuksen-ikoni (:tekija tarkastus))
               :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
@@ -141,30 +141,51 @@
             :img         "kartta-hairion-hallinta-sininen.svg"
             :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])
 
+(def toteuma-varit-ja-nuolet
+  [["rgb(255,0,0)" "punainen"]
+   ["rgb(255,128,0)" "oranssi"]
+   ["rgb(255,255,0)" "keltainen"]
+   ["rgb(255,0,255)" "magenta"]
+   ["rgb(0,255,0)" "vihrea"]
+   ["rgb(0,255,128)" "turkoosi"]
+   ["rgb(0,255,255)" "syaani"]
+   ["rgb(0,128,255)" "sininen"]
+   ["rgb(0,0,255)" "tummansininen"]
+   ["rgb(128,0,255)" "violetti"]
+   ["rgb(128,255,0)" "lime"]   
+   ["rgb(255,0,128)" "pinkki"]])
+
+(let [varien-lkm (count toteuma-varit-ja-nuolet)]
+  (defn tehtavan-vari-ja-nuoli [tehtavan-nimi]
+    (nth toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
+
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
   ;; monta kertaa fronttiin.
   (let [reittipisteet (keep
                         (fn [[_ arvo]] (first arvo))
-                        (group-by :id (:reittipisteet toteuma)))]
+                        (group-by :id (:reittipisteet toteuma)))
+        nimi (or (get-in toteuma [:tehtavat 0 :nimi])
+                 (get-in toteuma [:reittipisteet 0 :tehtava :toimenpide]))
+        [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
     [(when-not (empty? reittipisteet)
        (assoc toteuma
          :type :toteuma
          :nimi (or (:nimi toteuma)
-                   (get-in toteuma [:tehtava :nimi])
+                   nimi
                    (get-in toteuma [:tpi :nimi])
                    (if (> 1 (count (:tehtavat toteuma)))
                      (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
                      (str (:toimenpide (first (:tehtavat toteuma))))))
-         :selite {:teksti "Toteuma"
-                  :img    "fixme.png"}
-         :alue {
-                :type   :arrow-line
-                :scale  (if (valittu? toteuma) 0.8 0.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
-                :points (mapv #(get-in % [:sijainti :coordinates]) (sort-by
-                                                                     :aika
-                                                                     pvm/ennen?
-                                                                     reittipisteet))}))]))
+         :selite {:teksti nimi
+                  :vari vari}
+         :alue {:type   :arrow-line
+                :width 5
+                :color vari
+                :arrow-image (str "images/nuoli-" nuoli ".svg")
+                :scale  (if (valittu? toteuma) 2 1.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
+                :points (mapv #(get-in % [:sijainti :coordinates])
+                              (sort-by :aika pvm/ennen? reittipisteet))}))]))
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)
@@ -176,41 +197,67 @@
         ["kartta-turvallisuuspoikkeama-toteutettu-vihrea.svg" "Turvallisuuspoikkeama, kaikki korjattu"]))))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
-  (let [[ikoni selite] (paattele-turpon-ikoni tp)]
+  (let [[ikoni selite] (paattele-turpon-ikoni tp)
+        sijainti (:sijainti tp)
+        tyyppi (:type sijainti)]
     [(assoc tp
-       :type :turvallisuuspoikkeama
-       :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-       :selite {:teksti selite
-                :img    ikoni}
-       :alue (if (= :line (get-in tp [:sijainti :type]))
-               {:type   :tack-icon-line
-                :color  "black"
-                :scale  (if (valittu? tp) 1.5 1)
-                :img    ikoni
-                :points (get-in tp [:sijainti :points])}
-               {:type        :tack-icon
-                :scale       (if (valittu? tp) 1.5 1)
-                :img         ikoni
-                :coordinates (get-in tp [:sijainti :coordinates])}))]))
+            :type :turvallisuuspoikkeama
+            :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
+            :selite {:teksti selite
+                     :img    ikoni}
+            :alue (cond
+                    (= :line tyyppi)
+                    {:type   :tack-icon-line
+                     :color  "black"
+                     :scale  (if (valittu? tp) 1.5 1)
+                     :img    ikoni
+                     :points (get-in tp [:sijainti :points])}
 
-(defmethod asia-kartalle :paallystyskohde [pt valittu?]
-  (mapv
-    (fn [kohdeosa]
-      (assoc kohdeosa
-        :type :paallystyskohde
-        :nimi (or (:nimi pt) "Päällystyskohde")
-        :alue (:sijainti kohdeosa)))
-    (:kohdeosat pt)))
+                    (= :multiline tyyppi)
+                    {:type :tack-icon-line
+                     :color "black"
+                     :scale (if (valittu? tp) 1.5 1)
+                     :img ikoni
+                     :points (mapcat :points (:lines sijainti))}
 
-(defmethod asia-kartalle :paikkaustoteuma [pt valittu?]
-  ;; Saattaa olla, että yhdelle kohdeosalle pitää antaa jokin viittaus paikkaustoteumaan.
-  (mapv
-    (fn [kohdeosa]
-      (assoc kohdeosa
-        :type :paikkaustoteuma
-        :nimi (or (:nimi pt) "Paikkaus")
-        :alue (:sijainti kohdeosa)))
-    (:kohdeosat pt)))
+                    :default
+                    {:type        :tack-icon
+                     :scale       (if (valittu? tp) 1.5 1)
+                     :img         ikoni
+                     :coordinates (get-in tp [:sijainti :coordinates])}))]))
+
+;; TODO: Päällystyksissä ja paikkauksissa on kommentoitua koodia, koska näille dedikoituijen näkymien käyttämät
+;; kyselyt palauttavat datan sellaisessa muodossa, että sijainti pitää kaivaa erikseen "kohdeosista".
+;; Tilannekuvassa tämä sijaintitieto palautetaan suoraan samassa kyselyssä. Tilannekuva on tällä hetkellä
+;; ainoa paikka jossa piirretään päällystyksiä/paikkauksia tämän namespacen avulla, joten päätettiin toteuttaa
+;; metodit uudelleen. Kun päällystys/paikkaus-näkymät laitetaan käyttämään tätä uutta paradigmaa, voidaan joko
+;; toteuttaa näille omat metodit TAI miettiä, tarviiko tosiaan näiden käyttämä data palauttaa sellaisessa muodossa?
+(defmethod asia-kartalle :paallystys [pt valittu?]
+  [(assoc pt
+     :type :paallystys
+     :nimi (or (:nimi pt) "Päällystys")
+     :alue (:sijainti pt))]
+
+  #_(mapv
+      (fn [kohdeosa]
+        (assoc kohdeosa
+          :type :paallystys
+          :nimi (or (:nimi pt) "Päällystyskohde")
+          :alue (:sijainti kohdeosa)))
+      (:kohdeosat pt)))
+
+(defmethod asia-kartalle :paikkaus [pt valittu?]
+  [(assoc pt
+     :type :paikkaus
+     :nimi (or (:nimi pt) "Paikkaus")
+     :alue (:sijainti pt))]
+  #_(mapv
+      (fn [kohdeosa]
+        (assoc kohdeosa
+          :type :paikkaus
+          :nimi (or (:nimi pt) "Paikkaus")
+          :alue (:sijainti kohdeosa)))
+      (:kohdeosat pt)))
 
 (defn- paattele-tyokoneen-ikoni
   [tehtavat lahetetty valittu?]
@@ -266,10 +313,15 @@
        :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
        :selite {:teksti selite-teksti
                 :img    ["kartta-suuntanuoli-sininen.svg" selite-img]}
-       :alue {:type        :sticker-icon
-              :coordinates (:sijainti tyokone)
-              :direction   (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
-              :img         img})]))
+       :alue (if-let [reitti (:reitti tyokone)]
+               {:type      :tack-icon-line
+                :points    reitti
+                :direction (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
+                :img       img}
+               {:type        :sticker-icon
+                :coordinates (:sijainti tyokone)
+                :direction   (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
+                :img         img}))]))
 
 (defmethod asia-kartalle :default [_ _ _])
 
@@ -291,6 +343,7 @@
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
+   (log (pr-str asiat))
     ;; tarkastetaan että edes jollain on..
    (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")
    (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))

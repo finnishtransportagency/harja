@@ -36,7 +36,7 @@
       (kartalla-esitettavaan-muotoon @haetut-asiat))))
 
 (defn kasaa-parametrit []
-  {:hallintayksikko @nav/valittu-hallintayksikko-id
+  {:hallintayksikko @nav/valittu-hallintayksikko
    :urakka          (:id @nav/valittu-urakka)
    :alue            @nav/kartalla-nakyva-alue
    :alku            (pvm/nyt)

@@ -65,6 +65,7 @@
   (fn [ilmoitukset]
     (send! kanava
            (aja-virhekasittelyn-kanssa
+             "laheta-ilmoitus"
              (fn []
                (let [data {:ilmoitukset (mapv (fn [ilmoitus] (sanomat/rakenna-ilmoitus (konversio/alaviiva->rakenne ilmoitus))) ilmoitukset)}
                      vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
@@ -76,6 +77,7 @@
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
   (aja-virhekasittelyn-kanssa
+    "hae-ilmoitukset"
    (fn []
      (let [parametrit (:params request)
            urakka-id (when (:id parametrit) (Integer/parseInt (:id parametrit)))
