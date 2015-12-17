@@ -25,7 +25,8 @@
 (defmulti nayta-popup :aihe)
 
 (defn- viivan-keskella [tapahtuma]
-  (let [reittipisteet (get-in tapahtuma [:alue :points])]
+  (if-let [reittipisteet (or (get-in tapahtuma [:alue :points])
+                             (mapcat :points (get-in tapahtuma [:sijainti :lines])))]
     (nth reittipisteet (int (/ (count reittipisteet) 2)))))
 
 (defn geometrian-koordinaatti [tapahtuma]
