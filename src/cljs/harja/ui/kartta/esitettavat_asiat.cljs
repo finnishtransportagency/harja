@@ -343,7 +343,6 @@
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
-   (log (pr-str asiat))
     ;; tarkastetaan että edes jollain on..
    (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")
    (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))
