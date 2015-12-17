@@ -110,7 +110,7 @@
   (if (lukitse-kustannussuunnitelma db numero)
     (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
           vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
-          maksueran-tiedot (:assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat)
+          maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat)
           kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
       (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
         kustannussuunnitelma-xml
