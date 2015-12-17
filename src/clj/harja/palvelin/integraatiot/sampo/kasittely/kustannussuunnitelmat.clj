@@ -5,7 +5,11 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [clj-time.coerce :as coerce]
+            [clj-time.core :as time]
+            [harja.pvm :as pvm]
+            [clj-time.periodic :as time-period])
   (:import (java.util UUID)))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
@@ -34,9 +38,64 @@
   (log/debug "Merkitään kustannussuunnitelma (numero:" numero ") lähetetyksi.")
   (= 1 (qk/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
 
+
+(defn tee-kokonaishintaiset-vuosisummat [db numero vuodet]
+
+  )
+
+(defn tee-yksikköhintaiset-vuosisummat [db numero vuodet]
+  )
+
+(defn tee-oletus-vuosisummat [vuodet]
+  (map #(hash-map :alkupvm (:alkupvm %), :loppupvm (:loppupvm %), :summa 1) vuodet))
+
+
+(defn aikavali
+  [alku loppu askel]
+  (let [vali (time-period/periodic-seq alku askel)
+        valilla? (fn [aika] (time/within? (time/interval alku loppu) aika))]
+    (take-while valilla? vali)))
+
+(defn muodosta-vuosi [alkupvm loppupvm]
+  {:alkupvm  alkupvm
+   :loppupvm loppupvm})
+
+(defn muodosta-valivuosien-elementit [alkuvuosi taysien-vuosien-maara]
+  (vec
+    (for [i (range taysien-vuosien-maara)]
+      (do
+        (inc i)
+        (let [vuosi (+ 1 i alkuvuosi)]
+          (muodosta-vuosi (time/first-day-of-the-month vuosi 1) (time/last-day-of-the-month vuosi 12)))))))
+
+(defn luo-vuodet [alkupvm loppupvm]
+  (let [alkuvuosi (time/year alkupvm)
+        loppuvuosi (time/year loppupvm)
+        kuukausien-maara (count (aikavali alkupvm loppupvm (time/months 1)))
+        ensimmaisen-vuoden-kuukaudet (- 13 (time/month alkupvm))
+        viimeisen-vuoden-kuukaudet (rem (- kuukausien-maara ensimmaisen-vuoden-kuukaudet) 12)
+        taysien-vuosien-maara (/ (- kuukausien-maara ensimmaisen-vuoden-kuukaudet viimeisen-vuoden-kuukaudet) 12)
+        ensimmainen-vuosi [(muodosta-vuosi alkupvm (time/last-day-of-the-month (time/year alkupvm) 12))]
+        valivuodet (when (< 0 taysien-vuosien-maara)
+                     (muodosta-valivuosien-elementit alkuvuosi taysien-vuosien-maara))
+        viimeinen-vuosi (when (< alkuvuosi loppuvuosi)
+                          [(muodosta-vuosi (time/first-day-of-the-month loppuvuosi 1) loppupvm)])
+    (vec (concat ensimmainen-vuosi valivuodet viimeinen-vuosi))))
+
+(defn tee-vuosittaiset-summat [db numero maksueran-tiedot]
+  (let [alkupvm (coerce/from-sql-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
+        loppupvm (coerce/from-sql-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))
+        vuodet (luo-vuodet alkupvm loppupvm)]
+    (case (:tyyppi (:maksuera maksueran-tiedot))
+      "kokonaishintainen" (tee-kokonaishintaiset-vuosisummat db numero vuodet)
+      "yksikkohintainen" (tee-yksikköhintaiset-vuosisummat db numero vuodet)
+      (tee-oletus-vuosisummat vuodet))))
+
 (defn muodosta-kustannussuunnitelma [db numero]
   (if (lukitse-kustannussuunnitelma db numero)
     (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
+          vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
+          maksueran-tiedot (:assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat)
           kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
       (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
         kustannussuunnitelma-xml

@@ -39,3 +39,27 @@ WHERE maksuera = :numero;
 -- Luo uuden kustannussuunnitelman.
 INSERT INTO kustannussuunnitelma (maksuera, likainen, luotu)
 VALUES (:maksuera, true, current_timestamp);
+
+-- name: hae-kustannussuunnitelman-kokonaishintaiset-summat
+SELECT
+  kht.summa,
+  kht.kuukausi,
+  kht.vuosi
+FROM maksuera m
+  JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+  JOIN kokonaishintainen_tyo kht ON kht.toimenpideinstanssi = tpi.id
+WHERE m.numero = :maksuera;
+
+-- name: hae-kustannussuunnitelman-yksikkohintaiset-summat
+SELECT
+  yht.maara * yht.yksikkohinta,
+  yht.alkupvm,
+  yht.loppupvm
+FROM maksuera m
+  JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+  JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+  JOIN yksikkohintainen_tyo yht ON yht.tehtava IN
+                                   (SELECT id
+                                    FROM toimenpidekoodi
+                                    WHERE emo = tpk.id)
+WHERE m.numero = :maksuera;

@@ -27,7 +27,7 @@
     (take-while valilla? vali)))
 
 (defn muodosta-ensimmaisen-vuoden-elementti [alkupvm kuukausittainen-summa ensimmaisen-vuoden-kuukaudet]
-  (let [loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm (time/year (coerce/from-sql-date alkupvm))))
+  (let [loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm (time/year alkupvm)))
         summa (* kuukausittainen-summa ensimmaisen-vuoden-kuukaudet)]
     (muodosta-kustannuselementti alkupvm loppupvm summa)))
 
@@ -44,12 +44,16 @@
                 (muodosta-kustannuselementti alkupvm loppupvm summa)))))))
 
 (defn muodosta-viimeisen-vuoden-elementti [loppupvm kuukausittainen-summa viimeisen-vuoden-kuukaudet]
-  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm (time/year (coerce/from-sql-date loppupvm))))
+  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm (time/year loppupvm)))
         summa (* kuukausittainen-summa viimeisen-vuoden-kuukaudet)]
     (muodosta-kustannuselementti alkupvm loppupvm summa)))
 
 (defn luo-summat [alkupvm loppupvm maksuera]
-  (let [kuukausien-maara (count (aikavali alkupvm loppupvm (time/months 1)))
+  (let [alkupvm (coerce/from-sql-date alkupvm)
+        _ (println alkupvm)
+        loppupvm (coerce/from-sql-date loppupvm)
+        kuukausien-maara (count (aikavali alkupvm loppupvm (time/months 1)))
+        _ (println kuukausien-maara)
         summa (:summa (:kustannussuunnitelma maksuera))
         summa (if summa (double summa) 0)
         kuukausittainen-summa (if (and (< 0 kuukausien-maara) summa (< 0 summa))
@@ -59,8 +63,8 @@
         viimeisen-vuoden-kuukaudet (rem (- kuukausien-maara ensimmaisen-vuoden-kuukaudet) 12)
         taysien-vuosien-maara (- kuukausien-maara viimeisen-vuoden-kuukaudet)
         kustannuselementit []
-        alkuvuosi (time/year (coerce/from-sql-date alkupvm))
-        loppuvuosi (time/year (coerce/from-sql-date loppupvm))]
+        alkuvuosi (time/year alkupvm)
+        loppuvuosi (time/year loppupvm)]
 
     (into [] (-> kustannuselementit
                  ;; ensimmäinen vuosi
