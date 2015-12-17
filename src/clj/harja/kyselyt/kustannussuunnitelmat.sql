@@ -52,7 +52,7 @@ WHERE m.numero = :maksuera;
 
 -- name: hae-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
-  yht.maara * yht.yksikkohinta,
+  yht.maara * yht.yksikkohinta AS summa,
   yht.alkupvm,
   yht.loppupvm
 FROM maksuera m
@@ -62,4 +62,6 @@ FROM maksuera m
                                    (SELECT id
                                     FROM toimenpidekoodi
                                     WHERE emo = tpk.id)
+                                   AND
+                                   yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera;

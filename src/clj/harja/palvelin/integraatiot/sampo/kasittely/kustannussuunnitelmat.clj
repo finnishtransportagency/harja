@@ -1,14 +1,14 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat
-  (:require [harja.kyselyt.kustannussuunnitelmat :as qk]
-            [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
-            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
-            [taoensso.timbre :as log]
+  (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]
             [harja.tyokalut.xml :as xml]
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [harja.pvm :as pvm]
+            [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
+            [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [clj-time.periodic :as time-period])
   (:import (java.util UUID)))
 
@@ -18,33 +18,48 @@
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
 (defn hae-kustannussuunnitelman-maksuera [db lahetys-id]
-  (:maksuera (first (qk/hae-maksuera-lahetys-idlla db lahetys-id))))
+  (:maksuera (first (kustannussuunnitelmat/hae-maksuera-lahetys-idlla db lahetys-id))))
 
 (defn lukitse-kustannussuunnitelma [db numero]
   (let [lukko (str (UUID/randomUUID))]
     (log/debug "Lukitaan kustannussuunnitelma:" numero ", lukolla:" lukko)
-    (let [onnistuiko? (= 1 (qk/lukitse-kustannussuunnitelma! db lukko numero))]
+    (let [onnistuiko? (= 1 (kustannussuunnitelmat/lukitse-kustannussuunnitelma! db lukko numero))]
       onnistuiko?)))
 
 (defn merkitse-kustannussuunnitelma-odottamaan-vastausta [db numero lahetys-id]
   (log/debug "Merkitään kustannussuuunnitelma: " numero " odottamaan vastausta ja avataan lukko. ")
-  (= 1 (qk/merkitse-kustannussuunnitelma-odottamaan-vastausta! db lahetys-id numero)))
+  (= 1 (kustannussuunnitelmat/merkitse-kustannussuunnitelma-odottamaan-vastausta! db lahetys-id numero)))
 
 (defn merkitse-kustannussuunnitelmalle-lahetysvirhe [db numero]
   (log/debug "Merkitään lähetysvirhe kustannussuunnitelmalle (numero:" numero ").")
-  (= 1 (qk/merkitse-kustannussuunnitelmalle-lahetysvirhe! db numero)))
+  (= 1 (kustannussuunnitelmat/merkitse-kustannussuunnitelmalle-lahetysvirhe! db numero)))
 
 (defn merkitse-kustannussuunnitelma-lahetetyksi [db numero]
   (log/debug "Merkitään kustannussuunnitelma (numero:" numero ") lähetetyksi.")
-  (= 1 (qk/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
+  (= 1 (kustannussuunnitelmat/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
 
+
+(defn luo-vuosisumma [vuosi summa]
+  {:alkupvm  (pvm/aika-iso8601 (coerce/to-date (:alkupvm vuosi)))
+   :loppupvm (pvm/aika-iso8601 (coerce/to-date (:loppupvm vuosi)))
+   :summa    summa})
 
 (defn tee-kokonaishintaiset-vuosisummat [db numero vuodet]
-
-  )
+  (let [summat (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero)
+        summat-vuosittain (group-by :vuosi summat)]
+    (mapv (fn [vuosi]
+            (let [summa (reduce + (map :summa (get summat-vuosittain (time/year (:alkupvm vuosi)))))]
+              (luo-vuosisumma vuosi summa))) vuodet)))
 
 (defn tee-yksikköhintaiset-vuosisummat [db numero vuodet]
-  )
+  (let [summat (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero)
+        summat-vuosittain (group-by #(time/year
+                                      (time/to-time-zone
+                                        (coerce/from-sql-date (:alkupvm %))
+                                        (time/time-zone-for-offset 2))) summat)]
+    (mapv (fn [vuosi]
+            (let [summa (reduce + (map :summa (get summat-vuosittain (time/year (:alkupvm vuosi)))))]
+              (luo-vuosisumma vuosi summa))) vuodet)))
 
 (defn tee-oletus-vuosisummat [vuodet]
   (map #(hash-map :alkupvm (:alkupvm %), :loppupvm (:loppupvm %), :summa 1) vuodet))
@@ -79,7 +94,7 @@
         valivuodet (when (< 0 taysien-vuosien-maara)
                      (muodosta-valivuosien-elementit alkuvuosi taysien-vuosien-maara))
         viimeinen-vuosi (when (< alkuvuosi loppuvuosi)
-                          [(muodosta-vuosi (time/first-day-of-the-month loppuvuosi 1) loppupvm)])
+                          [(muodosta-vuosi (time/first-day-of-the-month loppuvuosi 1) loppupvm)])]
     (vec (concat ensimmainen-vuosi valivuodet viimeinen-vuosi))))
 
 (defn tee-vuosittaiset-summat [db numero maksueran-tiedot]
