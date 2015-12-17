@@ -314,7 +314,7 @@
        :selite {:teksti selite-teksti
                 :img    ["kartta-suuntanuoli-sininen.svg" selite-img]}
        :alue (if-let [reitti (:reitti tyokone)]
-               {:type      :tack-icon-line
+               {:type      :sticker-icon-line
                 :points    reitti
                 :direction (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
                 :img       img}

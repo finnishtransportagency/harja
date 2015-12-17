@@ -523,7 +523,6 @@
                         nuolet)))))))))))
 
 (defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
-  #_(assert (not (nil? points)) "Viivalla pitää olla pisteitä") 
   (let [feature (if (not (nil? lines))
                   (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (map :points lines)))})
                   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
@@ -574,6 +573,31 @@
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
+
+(defmethod luo-feature :sticker-icon-line [{:keys [points img width zindex color direction] :as spec}]
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
+        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
+                                                                     :width (or width 2)})
+                                      :zIndex (or zindex 4)})
+
+                (ol.style.Style.
+                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
+                       :image  (ol.style.Icon.
+                                 #js {:src      (str +karttaikonipolku+ "kartta-suuntanuoli-sininen.svg")
+                                      :rotation (or direction 0)
+                                      :opacity  1
+                                      :anchor   #js [0.5 0.5]})
+                       :zIndex 4})
+
+                (ol.style.Style.
+                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
+                       :image  (ol.style.Icon.
+                                 #js {:src     (str +karttaikonipolku+ img)
+                                      :opacity 1
+                                      :anchor  #js [0.5 0.5]})
+                       :zIndex 5})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
+    (doto feature
+      (.setStyle (clj->js tyylit)))))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
