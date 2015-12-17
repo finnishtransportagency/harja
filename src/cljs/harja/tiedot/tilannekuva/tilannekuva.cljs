@@ -152,7 +152,7 @@
 
 (defn kasaa-parametrit []
   (merge
-    {:hallintayksikko @nav/valittu-hallintayksikko
+    {:hallintayksikko (:id @nav/valittu-hallintayksikko)
      :urakka-id       (:id @nav/valittu-urakka)
      :urakoitsija     (:id @nav/valittu-urakoitsija)
      :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
