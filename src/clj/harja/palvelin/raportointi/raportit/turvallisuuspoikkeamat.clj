@@ -48,17 +48,17 @@
         _ (log/debug "turpot" turpot)
         _ (log/debug "turpo määrät kuukausittain" turpo-maarat-kuukausittain)
         turpomaarat-tyypeittain (reduce-kv
-                                                  (fn [tulos kk turpot]
-                                                    (let [maarat (reduce (fn [eka toka] (merge-with + eka toka))
-                                                                         (map ilmoituksen-tyyppi turpot))
-                                                          _ (log/debug "TURPO turpot: " turpot)
-                                                          _ (log/debug "TURPO määrät: " maarat)]
-                                                      (assoc tulos
-                                                        kk
-                                                        [(get maarat "turvallisuuspoikkeama")
-                                                         (get maarat "prosessipoikkeama")
-                                                         (get maarat "tyoturvallisuuspoikkeama")])))
-                                                  {} turpo-maarat-kuukausittain)
+                                  (fn [tulos kk turpot]
+                                    (let [maarat (reduce (fn [eka toka] (merge-with + eka toka))
+                                                         (map ilmoituksen-tyyppi turpot))
+                                          _ (log/debug "TURPO turpot: " turpot)
+                                          _ (log/debug "TURPO määrät: " maarat)]
+                                      (assoc tulos
+                                        kk
+                                        [(get maarat "turvallisuuspoikkeama")
+                                         (get maarat "prosessipoikkeama")
+                                         (get maarat "tyoturvallisuuspoikkeama")])))
+                                  {} turpo-maarat-kuukausittain)
         _ (log/debug "turpomaarat-tyypeittain" turpomaarat-tyypeittain)
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
