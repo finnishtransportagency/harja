@@ -47,7 +47,10 @@
 (defn tee-kokonaishintaiset-vuosisummat [db numero vuodet]
   (let [summat (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero)
         summat-vuosittain (group-by :vuosi summat)]
+    (println "------> VUODET:" vuodet)
     (mapv (fn [vuosi]
+            (println "------> vuosi:" vuosi)
+            (println "-------> summat-vuosittain" summat-vuosittain)
             (let [summa (reduce + (map :summa (get summat-vuosittain (time/year (:alkupvm vuosi)))))]
               (luo-vuosisumma vuosi summa))) vuodet)))
 

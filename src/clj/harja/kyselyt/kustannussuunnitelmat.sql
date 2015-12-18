@@ -38,11 +38,11 @@ WHERE maksuera = :numero;
 -- name: luo-kustannussuunnitelma<!
 -- Luo uuden kustannussuunnitelman.
 INSERT INTO kustannussuunnitelma (maksuera, likainen, luotu)
-VALUES (:maksuera, true, current_timestamp);
+VALUES (:maksuera, TRUE, current_timestamp);
 
 -- name: hae-kustannussuunnitelman-kokonaishintaiset-summat
 SELECT
-  kht.summa,
+  COALESCE(kht.summa, 0) AS summa,
   kht.kuukausi,
   kht.vuosi
 FROM maksuera m
@@ -52,7 +52,7 @@ WHERE m.numero = :maksuera;
 
 -- name: hae-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
-  yht.maara * yht.yksikkohinta AS summa,
+  COALESCE(yht.maara, 0) * COALESCE(yht.yksikkohinta, 0) AS summa,
   yht.alkupvm,
   yht.loppupvm
 FROM maksuera m
