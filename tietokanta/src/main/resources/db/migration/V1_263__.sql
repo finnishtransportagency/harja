@@ -30,9 +30,7 @@ CREATE TYPE suoritettavatehtava AS
        'paannejaan poisto'
        );
 
-ALTER TABLE tyokonehavainto ALTER COLUMN tehtavat TYPE suoritettavatehtava_tmp[] USING tehtavat::text::suoritettavatehtava[];
-
-ALTER TABLE toimenpidekoodi ALTER COLUMN suoritettavatehtava TYPE suoritettavatehtava_tmp USING suoritettavatehtava::text::suoritettavatehtava;
+ALTER TABLE tyokonehavainto ALTER COLUMN tehtavat TYPE suoritettavatehtava[] USING tehtavat::text::suoritettavatehtava[];
 
 DROP TYPE suoritettavatehtava_tmp CASCADE;
 
