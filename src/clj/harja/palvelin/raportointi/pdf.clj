@@ -81,7 +81,8 @@
                :y-axis-font-size "4pt"
                :legend legend
                }
-     pylvaat)]])
+     pylvaat)]
+   [:fo:block {:space-after "1em"}]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)
