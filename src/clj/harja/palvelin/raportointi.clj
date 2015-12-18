@@ -56,7 +56,7 @@
                 t)
 
               (if (= "koko maa" konteksti)
-                (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))])
+                (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db nil nil nil))])
                 t))))
 
 (defrecord Raportointi [raportit]
