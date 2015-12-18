@@ -1,86 +1,91 @@
+-- Kuvaus: uudelleennimeä toimenpidekoodin historiakuvasarake tilannekuvaksi
+ALTER TABLE toimenpidekoodi DROP COLUMN historiakuva;
+ALTER TABLE toimenpidekoodi ADD COLUMN suoritettavatehtava suoritettavatehtava;
 
-ALTER TYPE suoritettavatehtava RENAME TO suoritettavatehtava_tmp;
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'suolaus' :: suoritettavatehtava
+WHERE nimi = 'Suolaus';
 
-CREATE TYPE suoritettavatehtava AS
- ENUM ('auraus ja sohjonpoisto',
-       'suolaus',
-       'pistehiekoitus',
-       'linjahiekoitus',
-       'pinnan tasaus',
-       'liikennemerkkien puhdistus',
-       'lumivallien madaltaminen',
-       'sulamisveden haittojen torjunta',
-       'tiestotarkastus',
-       'kelintarkastus',
-       'harjaus',
-       'koneellinen niitto',
-       'koneellinen vesakonraivaus',
-       'sorateiden muokkaushoylays',
-       'sorateiden polynsidonta',
-       'sorateiden tasaus',
-       'sorastus',
-       'paallysteiden paikkaus',
-       'paallysteiden juotostyot',
-       'siltojen puhdistus',
-       'l- ja p-alueiden puhdistus',
-       'muu',
-       'liuossuolaus',
-       'aurausviitoitus ja kinostimet',
-       'lumensiirto',
-       'paannejaan poisto'
-       );
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'auraus ja sohjonpoisto' :: suoritettavatehtava
+WHERE nimi = 'Auraus ja sohjonpoisto';
 
-ALTER TABLE tyokonehavainto ALTER COLUMN tehtavat TYPE suoritettavatehtava[] USING tehtavat::text::suoritettavatehtava[];
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'pistehiekoitus' :: suoritettavatehtava
+WHERE nimi = 'Pistehiekoitus';
 
-DROP TYPE suoritettavatehtava_tmp CASCADE;
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'linjahiekoitus' :: suoritettavatehtava
+WHERE nimi = 'Linjahiekoitus';
 
-CREATE OR REPLACE FUNCTION tallenna_tai_paivita_tyokonehavainto(
-  jarjestelma_ character varying,
-  organisaationimi_ character varying,
-  ytunnus_ character varying,
-  viestitunniste_ integer,
-  lahetysaika_ timestamp,
-  tyokoneid_ integer,
-  tyokonetyyppi_ character varying,
-  sijainti_ point,
-  suunta_ real,
-  urakkaid_ integer,
-  tehtavat_ suoritettavatehtava[]
-) RETURNS VOID AS
-$$
-DECLARE
-  organisaatioid integer;
-BEGIN  
-  SELECT id INTO organisaatioid FROM organisaatio WHERE nimi=organisaationimi_ AND ytunnus=ytunnus_;
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'lumivallien madaltaminen' :: suoritettavatehtava
+WHERE nimi = 'Lumivallien madaltaminen';
 
-  LOOP
-    UPDATE tyokonehavainto
-  	 SET jarjestelma=jarjestelma_,
-	     organisaatio=organisaatioid,
-	     viestitunniste=viestitunniste_,
-	     lahetysaika=lahetysaika_,
-	     vastaanotettu=DEFAULT,
-	     tyokonetyyppi=tyokonetyyppi_,
-	     sijainti=sijainti_,
-	     suunta=suunta_,
-	     urakkaid=urakkaid_,
-	     tehtavat=tehtavat_,
-	     edellinensijainti=sijainti
-  	 WHERE tyokoneid=tyokoneid_;
-    IF FOUND THEN
-       RETURN;
-    END IF;
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'sulamisveden haittojen torjunta' :: suoritettavatehtava
+WHERE nimi = 'Sulamisveden haittojen torjunta';
 
-    BEGIN
-     INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika,
-     	    	 		  tyokoneid, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
-	    VALUES (jarjestelma_, organisaatioid, viestitunniste_, lahetysaika_, tyokoneid_, tyokonetyyppi_, sijainti_,
-	    	   urakkaid_, tehtavat_, suunta_);
-	RETURN;
-    EXCEPTION WHEN unique_violation THEN
-      -- retry
-    END;
-  END LOOP;
-END;
-$$
-LANGUAGE plpgsql;
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'kelintarkastus' :: suoritettavatehtava
+WHERE nimi = 'Kelintarkastus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'tiestotarkastus' :: suoritettavatehtava
+WHERE nimi = 'Tiestotarkastus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'koneellinen niitto' :: suoritettavatehtava
+WHERE nimi = 'Koneellinen niitto';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'koneellinen vesakonraivaus' :: suoritettavatehtava
+WHERE nimi = 'Koneellinen vesakonraivaus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'liikennemerkkien puhdistus' :: suoritettavatehtava
+WHERE nimi = 'Liikennemerkkien puhdistus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'sorateiden muokkaushoylays' :: suoritettavatehtava
+WHERE nimi = 'Sorateiden muokkaushoylays';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'sorateiden polynsidonta' :: suoritettavatehtava
+WHERE nimi = 'Sorateiden polynsidonta';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'sorateiden tasaus' :: suoritettavatehtava
+WHERE nimi = 'Sorateiden tasaus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'sorastus' :: suoritettavatehtava
+WHERE nimi = 'Sorastus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'harjaus' :: suoritettavatehtava
+WHERE nimi = 'Harjaus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'pinnan tasaus' :: suoritettavatehtava
+WHERE nimi = 'Pinnan tasaus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'paallysteiden paikkaus' :: suoritettavatehtava
+WHERE nimi = 'Paallysteiden paikkaus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'paallysteiden juotostyot' :: suoritettavatehtava
+WHERE nimi = 'Paallysteiden juotostyot';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'siltojen puhdistus' :: suoritettavatehtava
+WHERE nimi = 'Siltojen puhdistus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'l- ja p-alueiden puhdistus' :: suoritettavatehtava
+WHERE nimi = 'L- ja p-alueiden puhdistus';
+
+UPDATE toimenpidekoodi
+SET suoritettavatehtava = 'muu' :: suoritettavatehtava
+WHERE nimi = 'Muu';

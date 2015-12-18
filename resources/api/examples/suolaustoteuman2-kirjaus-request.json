@@ -68,10 +68,6 @@
       {"reittipiste": {"aika": "2015-02-01T15:19:00Z", "koordinaatit": {"x": 427156.0968170314, "y": 7215276.818041536}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
       {"reittipiste": {"aika": "2015-02-01T15:20:00Z", "koordinaatit": {"x": 426850.3487038907, "y": 7215964.751296103}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
       {"reittipiste": {"aika": "2015-02-01T15:21:00Z", "koordinaatit": {"x": 426773.9116756055, "y": 7216270.499409243}, "tehtavat": [{"tehtava":{"id":1369}}], "materiaalit": []}}
-	  	  
-	  
-	  
   	]
-	
   }
 }

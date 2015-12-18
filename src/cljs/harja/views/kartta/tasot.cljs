@@ -10,8 +10,7 @@
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
-            [harja.tiedot.tilannekuva.historiakuva :as historiakuva]
-            [harja.tiedot.tilannekuva.nykytilanne :as nykytilanne]
+            [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
@@ -21,7 +20,7 @@
 
 ;; Lisää uudet karttatasot tänne
 (def +karttatasot+ #{:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
-                    :historiakuva :nykytilanne :paallystyskohteet :tr-alkupiste :yksikkohintainen-toteuma
+                     :tilannekuva :paallystyskohteet :tr-alkupiste :yksikkohintainen-toteuma
                      :kokonaishintainen-toteuma :varusteet})
 
 (def geometriat (reaction
@@ -43,8 +42,7 @@
                                          @varusteet/varusteet-kartalla
                                          @muut-tyot/muut-tyot-kartalla
                                          ;; Tilannekuva
-                                         @historiakuva/historiakuvan-asiat-kartalla
-                                         @nykytilanne/nykytilanteen-asiat-kartalla
+                                         @tilannekuva/tilannekuvan-asiat-kartalla
                                          ;; Päällystys & paikkaus
                                          @paallystys/paallystyskohteet-kartalla
                                          @paallystys/paikkauskohteet-kartalla)]
@@ -59,25 +57,24 @@
     :tarkastukset tarkastukset/karttataso-tarkastukset
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
     :turvallisuuspoikkeamat turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
-    :historiakuva historiakuva/karttataso-historiakuva
     :yksikkohintainen-toteuma yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
     :kokonaishintainen-toteuma kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
     :varusteet varusteet/karttataso-varustetoteuma
-    :nykytilanne nykytilanne/karttataso-nykytilanne
+    :tilannekuva tilannekuva/karttataso-tilannekuva
     :paallystyskohteet paallystys/karttataso-paallystyskohteet
     :tr-alkupiste tierekisteri/karttataso-tr-alkuosoite
     :muut-tyot muut-tyot/karttataso-muut-tyot))
 
 (defonce nykyiset-karttatasot
-  (reaction (into #{}
-                  (keep (fn [nimi]
-                          (when @(taso-atom nimi)
-                            nimi)))
-                  +karttatasot+)))
+         (reaction (into #{}
+                         (keep (fn [nimi]
+                                 (when @(taso-atom nimi)
+                                   nimi)))
+                         +karttatasot+)))
 
 (defonce karttatasot-muuttuneet
-  (ratom/run! (let [tasot @nykyiset-karttatasot]
-                (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :karttatasot tasot}))))
+         (ratom/run! (let [tasot @nykyiset-karttatasot]
+                       (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :karttatasot tasot}))))
 
 (defn taso-paalle! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-paalle nimi})

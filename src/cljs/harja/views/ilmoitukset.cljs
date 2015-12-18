@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -30,7 +30,7 @@
   (when (and (:urakka ilmoitus) (:hallintayksikko ilmoitus))
     [napit/urakan-sivulle "Urakan sivulle" (fn [e]
                                              (if e (.stopPropagation e))
-                                             (reset! nav/valittu-hallintayksikko-id (:hallintayksikko ilmoitus))
+                                             (reset! nav/valittu-hallintayksikko (:hallintayksikko ilmoitus))
                                              (reset! nav/valittu-urakka-id (:urakka ilmoitus))
                                              (reset! nav/sivu :urakat))]))
 
@@ -207,8 +207,8 @@
 
                        {:nimi             :tyypit :otsikko "Tyyppi"
                         :tyyppi           :boolean-group
-                        :vaihtoehdot      [:kysely :toimenpidepyynto :tiedoitus]
-                        :vaihtoehto-nayta ilmoitustyypin-nimi})]
+                        :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
+                        :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi})]
 
         @tiedot/valinnat
         ]

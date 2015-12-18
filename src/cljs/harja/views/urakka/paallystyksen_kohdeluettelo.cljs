@@ -60,7 +60,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
-    (komp/kuuntelija :paallystyskohde-klikattu kohdeosan-reitti-klikattu)
+    (komp/kuuntelija :paallystys-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (fn [ur]
       [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}

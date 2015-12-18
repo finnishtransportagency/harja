@@ -2,9 +2,8 @@
 SELECT
   i.id,
   i.urakka,
-  (SELECT hallintayksikko
-   FROM urakka
-   WHERE id = i.urakka)               AS hallintayksikko,
+  hy.id AS hallintayksikko_id,
+  hy.nimi AS hallintayksikko_nimi,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
@@ -61,6 +60,8 @@ SELECT
 
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
+  LEFT JOIN urakka u ON i.urakka = u.id
+  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE
   -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
   (
