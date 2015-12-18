@@ -42,19 +42,18 @@ VALUES (:maksuera, TRUE, current_timestamp);
 
 -- name: hae-kustannussuunnitelman-kokonaishintaiset-summat
 SELECT
-  COALESCE(kht.summa, 0) AS summa,
-  kht.kuukausi,
-  kht.vuosi
+  kht.vuosi,
+  Sum(COALESCE(kht.summa, 0)) AS summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN kokonaishintainen_tyo kht ON kht.toimenpideinstanssi = tpi.id
-WHERE m.numero = :maksuera;
+WHERE m.numero = :maksuera
+GROUP BY vuosi;
 
 -- name: hae-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
-  COALESCE(yht.maara, 0) * COALESCE(yht.yksikkohinta, 0) AS summa,
-  yht.alkupvm,
-  yht.loppupvm
+  Extract(YEAR FROM yht.alkupvm)                              AS vuosi,
+  Sum(COALESCE(yht.maara, 0) * COALESCE(yht.yksikkohinta, 0)) AS summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
@@ -64,4 +63,5 @@ FROM maksuera m
                                     WHERE emo = tpk.id)
                                    AND
                                    yht.urakka = tpi.urakka
-WHERE m.numero = :maksuera;
+WHERE m.numero = :maksuera
+GROUP BY Extract(YEAR FROM yht.alkupvm);

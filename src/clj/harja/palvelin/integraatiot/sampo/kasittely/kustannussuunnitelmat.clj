@@ -42,31 +42,19 @@
 (defn luo-vuosisumma [vuosi summa]
   {:alkupvm  (pvm/aika-iso8601 (coerce/to-date (:alkupvm vuosi)))
    :loppupvm (pvm/aika-iso8601 (coerce/to-date (:loppupvm vuosi)))
-   :summa    summa})
+   :summa    (if summa summa 0)})
 
-(defn tee-kokonaishintaiset-vuosisummat [db numero vuodet]
-  (let [summat (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero)
-        summat-vuosittain (group-by :vuosi summat)]
-    (println "------> VUODET:" vuodet)
-    (mapv (fn [vuosi]
-            (println "------> vuosi:" vuosi)
-            (println "-------> summat-vuosittain" summat-vuosittain)
-            (let [summa (reduce + (map :summa (get summat-vuosittain (time/year (:alkupvm vuosi)))))]
-              (luo-vuosisumma vuosi summa))) vuodet)))
+(defn jarjesta-summat [summat]
+  (zipmap (mapv #(int (:vuosi %)) summat) (mapv #(:summa %) summat)))
 
-(defn tee-yksikköhintaiset-vuosisummat [db numero vuodet]
-  (let [summat (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero)
-        summat-vuosittain (group-by #(time/year
-                                      (time/to-time-zone
-                                        (coerce/from-sql-date (:alkupvm %))
-                                        (time/time-zone-for-offset 2))) summat)]
+(defn tee-vuosisummat [vuodet summat]
+  (let [summat (jarjesta-summat summat)]
     (mapv (fn [vuosi]
-            (let [summa (reduce + (map :summa (get summat-vuosittain (time/year (:alkupvm vuosi)))))]
+            (let [summa (get summat (time/year (:alkupvm vuosi)))]
               (luo-vuosisumma vuosi summa))) vuodet)))
 
 (defn tee-oletus-vuosisummat [vuodet]
   (map #(hash-map :alkupvm (:alkupvm %), :loppupvm (:loppupvm %), :summa 1) vuodet))
-
 
 (defn aikavali
   [alku loppu askel]
@@ -105,8 +93,8 @@
         loppupvm (coerce/from-sql-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))
         vuodet (luo-vuodet alkupvm loppupvm)]
     (case (:tyyppi (:maksuera maksueran-tiedot))
-      "kokonaishintainen" (tee-kokonaishintaiset-vuosisummat db numero vuodet)
-      "yksikkohintainen" (tee-yksikköhintaiset-vuosisummat db numero vuodet)
+      "kokonaishintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
+      "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
       (tee-oletus-vuosisummat vuodet))))
 
 (defn muodosta-kustannussuunnitelma [db numero]
