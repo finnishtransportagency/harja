@@ -37,34 +37,29 @@
                 "id": "urn:harja/soratie/hoitoluokka",
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 2,
-                "required": true
+                "maximum": 2
               },
               "tasaisuus": {
                 "id": "urn:harja/soratie/tasaisuus",
                 "type": "integer",
-                "required": true,
                 "minimum": 1,
                 "maximum": 5
               },
               "kiinteys": {
                 "id": "urn:harja/soratie/kiinteys",
                 "type": "integer",
-                "required": true,
                 "minimum": 1,
                 "maximum": 5
               },
               "polyavyys": {
                 "id": "urn:harja/soratie/polyavyys",
                 "type": "integer",
-                "required": true,
                 "minimum": 1,
                 "maximum": 5
               },
               "sivukaltevuus": {
                 "id": "urn:harja/soratie/sivukaltevuus",
-                "type": "number",
-                "required": true
+                "type": "number"
               }
             }
           }

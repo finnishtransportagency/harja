@@ -3,8 +3,8 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as time]
-            [clj-time.coerce :as coerce]
-            [harja.pvm :as pvm])
+            [clj-time.periodic :as time-period]
+            [clj-time.coerce :as coerce])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn muodosta-maksueranumero [numero]
@@ -13,26 +13,19 @@
 (defn muodosta-kustannussuunnitelmanumero [numero]
   (str/join "" ["AK" numero]))
 
-(defn muodosta-kustannuselementti [vuosi vuosittainen-summa]
-  (let [alkupvm (pvm/aika-iso8601 (pvm/vuoden-eka-pvm vuosi))
-        loppupvm (pvm/aika-iso8601 (pvm/vuoden-viim-pvm vuosi))]
-    [:segment
-     {:value  vuosittainen-summa
-      :finish loppupvm
-      :start  alkupvm}]))
+(defn aikavali
+  [alku loppu askel]
+  (let [vali (time-period/periodic-seq alku askel)
+        valilla? (fn [aika] (time/within? (time/interval alku loppu) aika))]
+    (take-while valilla? vali)))
 
-(defn luo-summat [alkupvm loppupvm maksuera]
-  (let [alkuvuosi (time/year (coerce/from-sql-date alkupvm))
-        loppuvuosi (time/year (coerce/from-sql-date loppupvm))
-        vuodet (range alkuvuosi (+ 1 loppuvuosi))
-        vuosien-maara (count vuodet)
-        summa (:summa (:kustannussuunnitelma maksuera))
-        summa-yhteensa (if summa (double summa) 0)
-        vuosittainen-summa (if (and (< 0 vuosien-maara) (and summa-yhteensa (< 0 summa-yhteensa)))
-                             (/ summa-yhteensa vuosien-maara)
-                             0)
-        segmentti-elementit (mapv #(muodosta-kustannuselementti % vuosittainen-summa) vuodet)]
-    (reduce conj [:Cost] segmentti-elementit)))
+(defn luo-summat [vuosisummat]
+  (mapv (fn [vuosisumma]
+          [:segment
+           {:value  (:summa vuosisumma)
+            :finish (:loppupvm vuosisumma)
+            :start  (:alkupvm vuosisumma)}])
+        vuosisummat))
 
 (defn muodosta-custom-information [nimi arvo]
   [:CustomInformation
@@ -107,7 +100,7 @@
         [:GroupingAttribute "lov1_id"]]
        [:Details
         [:Detail
-         (luo-summat alkupvm loppupvm maksuera)
+         (reduce conj [:Cost] (luo-summat (:vuosittaiset-summat maksuera)))
          [:GroupingAttributes
           (muodosta-grouping-attribute "lov1_id" "3110201")
           (muodosta-grouping-attribute "role_id" (valitse-lkp-tilinumero koodi tuotenumero))]
