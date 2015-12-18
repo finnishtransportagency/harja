@@ -51,7 +51,6 @@
 (deftest tarkista-kustannussuunnitelman-validius
   (let [kustannussuunnitelma (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
         xsd "nikuxog_costPlan.xsd"]
-    (println "----> kustannussuunnitelma" kustannussuunnitelma)
     (is (xml/validoi +xsd-polku+ xsd kustannussuunnitelma) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-lkp-tilinnumeron-paattely

@@ -38,60 +38,24 @@
   (log/debug "Merkitään kustannussuunnitelma (numero:" numero ") lähetetyksi.")
   (= 1 (kustannussuunnitelmat/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
 
-
-(defn luo-vuosisumma [vuosi summa]
-  {:alkupvm  (pvm/aika-iso8601 (coerce/to-date (:alkupvm vuosi)))
-   :loppupvm (pvm/aika-iso8601 (coerce/to-date (:loppupvm vuosi)))
-   :summa    (if summa summa 0)})
-
-(defn jarjesta-summat [summat]
-  (zipmap (mapv #(int (:vuosi %)) summat) (mapv #(:summa %) summat)))
-
-(defn tee-vuosisummat [vuodet summat]
-  (let [summat (jarjesta-summat summat)]
-    (mapv (fn [vuosi]
-            (let [summa (get summat (time/year (:alkupvm vuosi)))]
-              (luo-vuosisumma vuosi summa))) vuodet)))
-
 (defn tee-oletus-vuosisummat [vuodet]
   (map #(hash-map :alkupvm (:alkupvm %), :loppupvm (:loppupvm %), :summa 1) vuodet))
 
-(defn aikavali
-  [alku loppu askel]
-  (let [vali (time-period/periodic-seq alku askel)
-        valilla? (fn [aika] (time/within? (time/interval alku loppu) aika))]
-    (take-while valilla? vali)))
-
-(defn muodosta-vuosi [alkupvm loppupvm]
-  {:alkupvm  alkupvm
-   :loppupvm loppupvm})
-
-(defn muodosta-valivuosien-elementit [alkuvuosi taysien-vuosien-maara]
-  (vec
-    (for [i (range taysien-vuosien-maara)]
-      (do
-        (inc i)
-        (let [vuosi (+ 1 i alkuvuosi)]
-          (muodosta-vuosi (time/first-day-of-the-month vuosi 1) (time/last-day-of-the-month vuosi 12)))))))
-
-(defn luo-vuodet [alkupvm loppupvm]
-  (let [alkuvuosi (time/year alkupvm)
-        loppuvuosi (time/year loppupvm)
-        kuukausien-maara (count (aikavali alkupvm loppupvm (time/months 1)))
-        ensimmaisen-vuoden-kuukaudet (- 13 (time/month alkupvm))
-        viimeisen-vuoden-kuukaudet (rem (- kuukausien-maara ensimmaisen-vuoden-kuukaudet) 12)
-        taysien-vuosien-maara (/ (- kuukausien-maara ensimmaisen-vuoden-kuukaudet viimeisen-vuoden-kuukaudet) 12)
-        ensimmainen-vuosi [(muodosta-vuosi alkupvm (time/last-day-of-the-month (time/year alkupvm) 12))]
-        valivuodet (when (< 0 taysien-vuosien-maara)
-                     (muodosta-valivuosien-elementit alkuvuosi taysien-vuosien-maara))
-        viimeinen-vuosi (when (< alkuvuosi loppuvuosi)
-                          [(muodosta-vuosi (time/first-day-of-the-month loppuvuosi 1) loppupvm)])]
-    (vec (concat ensimmainen-vuosi valivuodet viimeinen-vuosi))))
+(defn tee-vuosisummat [vuodet summat]
+  (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
+    (mapv (fn [vuosi]
+            (let [summa (get summat (time/year (:loppupvm vuosi)) 0)]
+              {:alkupvm  (pvm/aika-iso8601 (coerce/to-date (:alkupvm vuosi)))
+               :loppupvm (pvm/aika-iso8601 (coerce/to-date (:loppupvm vuosi)))
+               :summa    summa}))
+          vuodet)))
 
 (defn tee-vuosittaiset-summat [db numero maksueran-tiedot]
-  (let [alkupvm (coerce/from-sql-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
-        loppupvm (coerce/from-sql-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))
-        vuodet (luo-vuodet alkupvm loppupvm)]
+  (let [vuodet (mapv (fn [vuosi]
+                       {:alkupvm  (coerce/from-sql-date (first vuosi))
+                        :loppupvm (coerce/from-sql-date (second vuosi))})
+                     (pvm/urakan-vuodet (:alkupvm (:toimenpideinstanssi maksueran-tiedot))
+                                        (:loppupvm (:toimenpideinstanssi maksueran-tiedot))))]
     (case (:tyyppi (:maksuera maksueran-tiedot))
       "kokonaishintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
@@ -119,5 +83,4 @@
           (merkitse-kustannussuunnitelmalle-lahetysvirhe transaktio maksuera))
         (merkitse-kustannussuunnitelma-lahetetyksi transaktio maksuera))
       (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
-
 
