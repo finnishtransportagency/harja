@@ -31,7 +31,6 @@
        (for [rivi data]
          (if-let [otsikko (:otsikko rivi)]
            [:fo:table-row
-
             [:fo:table-cell {:padding "1mm"
                              :font-weight "bold"
                              :number-columns-spanned (count sarakkeet)}

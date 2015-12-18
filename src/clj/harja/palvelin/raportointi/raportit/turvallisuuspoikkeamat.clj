@@ -20,6 +20,11 @@
    "tyoturvallisuuspoikkeama" "Työturvallisuuspoikkeama"
    "prosessipoikkeama" "Prosessipoikkeama"})
 
+(defn ilmoituksen-tyyppi [{tyyppi :tyyppi}]
+  (into {}
+        (map (juxt identity (constantly 1)))
+        tyyppi))
+
 (defn rivi [& asiat]
   (into [] (keep identity asiat)))
 
@@ -37,11 +42,28 @@
                                                  (if urakka-id true false) urakka-id
                                                  (if hallintayksikko-id true false) hallintayksikko-id
                                                  alkupvm loppupvm))
-        turpo-maarat-kuukausittain (frequencies (map (comp vuosi-ja-kk :tapahtunut) turpot))
+        turpo-maarat-kuukausittain (group-by
+                                     (comp vuosi-ja-kk :tapahtunut)
+                                     turpot)
+        _ (log/debug "turpot" turpot)
+        _ (log/debug "turpo määrät kuukausittain" turpo-maarat-kuukausittain)
+        turpomaarat-tyypeittain (reduce-kv
+                                                  (fn [tulos kk turpot]
+                                                    (let [maarat (reduce (fn [eka toka] (merge-with + eka toka))
+                                                                         (map ilmoituksen-tyyppi turpot))
+                                                          _ (log/debug "TURPO turpot: " turpot)
+                                                          _ (log/debug "TURPO määrät: " maarat)]
+                                                      (assoc tulos
+                                                        kk
+                                                        [(get maarat "turvallisuuspoikkeama")
+                                                         (get maarat "prosessipoikkeama")
+                                                         (get maarat "tyoturvallisuuspoikkeama")])))
+                                                  {} turpo-maarat-kuukausittain)
+        _ (log/debug "turpomaarat-tyypeittain" turpomaarat-tyypeittain)
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
@@ -61,14 +83,15 @@
                       (if urakoittain?
                         (group-by :urakka turpot)
                         [[nil turpot]]))
-              [(rivi (when urakoittain? "") "Yhteensä: " (count turpot))])]
+              [(rivi (when urakoittain? "") "Yksittäisiä ilmoituksia yhteensä" (count turpot))])]
      
      (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
        (pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"
                  :alkupvm alkupvm :loppupvm loppupvm
-                  :kuukausittainen-data turpo-maarat-kuukausittain
-                :piilota-arvo? #{0}}))
+                 :kuukausittainen-data turpomaarat-tyypeittain
+                 :piilota-arvo? #{0}
+                 :legend               ["Turvallisuuspoikkeamat" "Prosessipoikkeamat" "Työturvallisuuspoikkeamat"]}))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []
@@ -80,14 +103,14 @@
                      {:otsikko "Työtehtävä"}
                      {:otsikko "Sairaala\u00advuorokaudet"}
                      {:otsikko "Sairaus\u00adpoissaolot\u00adpäivät"}]))
-      
+
       (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
                          (pvm/pvm-aika (:tapahtunut %))
                          (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                          (:tyontekijanammatti %) (:tyotehtava %)
                          (:sairaalavuorokaudet %) (:sairauspoissaolopaivat %))
-                  
-                  turpot)
-            (rivi (if urakoittain? "" nil) "" "" "" "Yhteensä: "
+
+                  (sort-by :tapahtunut turpot))
+            (rivi (if urakoittain? "" nil) "" "" "" "Yhteensä"
                   (reduce + 0 (keep :sairaalavuorokaudet turpot))
                   (reduce + 0 (keep :sairauspoissaolopaivat turpot))))]]))
