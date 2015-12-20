@@ -2,14 +2,14 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.48"]
+                 [org.clojure/clojurescript "1.7.170"] ; .48
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [prismatic/schema "0.4.3"]
-                 [org.clojure/core.async "0.2.371"]
+                 [prismatic/schema "1.0.4"]
+                 [org.clojure/core.async "0.2.374"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.220"]
-                 [com.cognitect/transit-clj "0.8.275"]
+                 [com.cognitect/transit-cljs "0.8.232"]
+                 [com.cognitect/transit-clj "0.8.285"]
 
                  ;;;;;;; Palvelin ;;;;;;;
 
@@ -63,18 +63,18 @@
                  [spyscope "0.1.5"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
-                 [cljs-ajax "0.3.13"]
-                 [figwheel "0.4.1"]
+                 [cljs-ajax "0.5.2"]
+                 [figwheel "0.5.0-2"]
 
-                 [reagent "0.5.0" :exclusions [[cljsjs/react :classifier "*"]]]
+                 [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
-
+                 
                  [alandipert/storage-atom "1.2.4"]
 
                  [clj-time "0.11.0"]
-                 [com.andrewmcveigh/cljs-time "0.3.3"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
+                 [com.andrewmcveigh/cljs-time "0.3.14"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
 
-                 [cljsjs/openlayers "3.5.0-1"]
+                 [cljsjs/openlayers "3.10.1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.13"]                ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
@@ -83,7 +83,7 @@
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjastoe
-                 [jarohen/chime "0.1.6"]
+                 [jarohen/chime "0.1.7"]
 
                  ;; Pikkukuvien muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
@@ -135,7 +135,7 @@
   :plugins [[lein-cljsbuild "1.0.5"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.4.1"]
+            [lein-figwheel "0.5.0-2"]
             [cider/cider-nrepl "0.10.0"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
