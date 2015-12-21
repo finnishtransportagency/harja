@@ -23,16 +23,26 @@
 
       :else [:div [:b (pr-str avain)] (pr-str (get kartta avain))])))
 
-(defn tee-popup [otsikko otsikko-arvo-parit]
-  [:div.kartta-popup
-   [:p [:b otsikko]]
-  [:table.otsikot-ja-arvot
-  (for [[otsikko arvo] otsikko-arvo-parit]
-    ^{:key otsikko}
-    (when arvo
-      [:tr
-       [:td.otsikko otsikko]
-       [:td.arvo arvo]]))]])
+(defn tee-arvolistaus-popup
+  ([otsikko nimi-arvo-parit] (tee-arvolistaus-popup otsikko nimi-arvo-parit nil))
+  ([otsikko nimi-arvo-parit {:keys [paaluokka linkki]}]
+   [:div {:class (str "kartta-popup " (when paaluokka
+                                        paaluokka))}
+    [:p [:b otsikko]]
+    [:table.otsikot-ja-arvot
+     (for [[nimi arvo] nimi-arvo-parit]
+       (when arvo
+         ^{:key (str nimi arvo)}
+         [:tr
+          [:td.otsikko nimi]
+          [:td.arvo arvo]]))]
+
+    (when linkki
+      (let [nimi (:nimi linkki)
+            on-click (:on-click (:nimi linkki))]
+        [:a.arvolistaus-linkki {:href     "#"
+                                :on-click on-click}
+         nimi]))]))
 
 (defmulti nayta-popup :aihe)
 
@@ -88,24 +98,22 @@
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       [:div.kartta-ilmoitus-popup
-                        [:p [:b (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
-                                  "Toimenpidepyyntö"
-                                  (str/capitalize (name (:ilmoitustyyppi tapahtuma))))]]
-                        [:p "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-                        [:p "Vapaateksti: " (:lyhytselite tapahtuma)]
-                        [:p (count (:kuittaukset tapahtuma)) " kuittausta."]
-                        [:a {:href     "#"
-                             :on-click #(do (.preventDefault %)
-                                            (let [putsaa (fn [asia]
-                                                           (dissoc asia :type :alue))]
-                                              (reset! nav/sivu :ilmoitukset)
-                                              (reset! ilmoitukset/haetut-ilmoitukset
-                                                      (map putsaa (filter
-                                                                    (fn [asia] (= (:type asia) :ilmoitus))
-                                                                    @tiedot/historiakuvan-asiat-kartalla)))
-                                              (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}
-                         "Siirry ilmoitusnäkymään"]]))
+                       (tee-arvolistaus-popup (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
+                                                "Toimenpidepyyntö"
+                                                (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
+                                              [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+                                               ["Selite" (:lyhytselite tapahtuma)]
+                                               ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
+                                              {:linkki {:nimi "Siirry ilmoitusnäkymään"
+                                                        :on-click #(do (.preventDefault %)
+                                                                       (let [putsaa (fn [asia]
+                                                                                      (dissoc asia :type :alue))]
+                                                                         (reset! nav/sivu :ilmoitukset)
+                                                                         (reset! ilmoitukset/haetut-ilmoitukset
+                                                                                 (map putsaa (filter
+                                                                                               (fn [asia] (= (:type asia) :ilmoitus))
+                                                                                               @tiedot/historiakuvan-asiat-kartalla)))
+                                                                         (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
@@ -133,43 +141,39 @@
 
 (defmethod nayta-popup :laatupoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-popup "Laatupoikkeama"
-                                  [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
-                                   ["Tekijä" (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
-                                   ["Päätös" (str (laatupoikkeamat/kuvaile-paatostyyppi (get-in tapahtuma [:paatos :paatos]))
-                                                  " ("  (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika])) ")")]])))
+                       (tee-arvolistaus-popup "Laatupoikkeama"
+                                              [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
+                                               ["Tekijä" (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
+                                               ["Päätös" (str (laatupoikkeamat/kuvaile-paatostyyppi (get-in tapahtuma [:paatos :paatos]))
+                                                              " (" (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika])) ")")]])))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-popup (str/capitalize (name (:tyyppi tapahtuma)))
-                                  [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
-                                   ["Mittaaja" (:mittaaja tapahtuma)]])))
+                       (tee-arvolistaus-popup (str/capitalize (name (:tyyppi tapahtuma)))
+                                              [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
+                                               ["Mittaaja" (:mittaaja tapahtuma)]])))
 
 (defmethod nayta-popup :turvallisuuspoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-popup "Turvallisuuspoikkeama"
-                                  [["Tapahtunut" (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
-                                   ["Käsitelty" (pvm/pvm-aika (:kasitelty tapahtuma))]
-                                   ["Työ\u00ADtehtävä" (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
-                                   ["Vammat" (:vammat tapahtuma)]
-                                   ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
-                                   ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
-                                   ["Kuvaus" (:kuvaus tapahtuma)]
-                                   ["Korjaavat toimen\u00ADpiteet" (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
-                                    "/" (count (:korjaavattoimenpiteet tapahtuma))]])))
+                       (tee-arvolistaus-popup "Turvallisuuspoikkeama"
+                                              [["Tapahtunut" (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
+                                               ["Käsitelty" (pvm/pvm-aika (:kasitelty tapahtuma))]
+                                               ["Työ\u00ADtehtävä" (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                                               ["Vammat" (:vammat tapahtuma)]
+                                               ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
+                                               ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
+                                               ["Kuvaus" (:kuvaus tapahtuma)]
+                                               ["Korjaavat toimen\u00ADpiteet" (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
+                                                "/" (count (:korjaavattoimenpiteet tapahtuma))]])))
 
 (defmethod nayta-popup :paallystys-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       [:div.kartta-popup
-                        [:p [:b "Päällystyskohde"]]
-                        [:div (:nimi tapahtuma)]
-                        [:div "Toimenpide: " (:toimenpide tapahtuma)]
-                        [:div "Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))
+                       (tee-arvolistaus-popup "Päällystyskohde" [["Nimi" (:nimi tapahtuma)]
+                                                                 ["Toimenpide" (:toimenpide tapahtuma)]
+                                                                 ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))) ; FIXME Ei näy nykyinen päällyste
 
 (defmethod nayta-popup :paikkaus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       [:div.kartta-popup
-                        [:p [:b "Paikkaustoteuma"]]
-                        [:div (:nimi tapahtuma)]
-                        [:div "Toimenpide: " (:toimenpide tapahtuma)]
-                        [:div "Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))
+                       (tee-arvolistaus-popup "Paikkauskohde" [["Nimi" (:nimi tapahtuma)]
+                                                               ["Toimenpide" (:toimenpide tapahtuma)]
+                                                               ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))) ; FIXME Ei näy nykyinen päällyste
