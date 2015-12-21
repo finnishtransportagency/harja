@@ -133,14 +133,6 @@
 (defonce historiakuvan-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt)))) ;; Valittu aikaväli vektorissa [alku loppu]
 (defonce nykytilanteen-aikasuodattimen-arvo (atom 2))
 
-(defonce tilannekuvan-asiat-kartalla
-         (reaction
-           @tilannekuva-kartalla/haetut-asiat
-           (when @tilannekuva-kartalla/karttataso-tilannekuva
-             (kartalla-esitettavaan-muotoon
-               (concat (vals (:tyokoneet @tilannekuva-kartalla/haetut-asiat))
-                       (apply concat (vals (dissoc @tilannekuva-kartalla/haetut-asiat :tyokoneet))))))))
-
 (defn kasaa-parametrit []
   (merge
     {:hallintayksikko (:id @nav/valittu-hallintayksikko)
