@@ -511,7 +511,7 @@
                                #js {:geometry (ol.geom.Point. (clj->js sijainti))
                                     :image    (ol.style.Icon. #js {:src (or arrow-image 
                                                                             "images/nuoli-red.svg")
-                                                                   :size (clj->js arrow-image-size)
+                                                                   :size #js [32 32] ;(clj->js arrow-image-size)
                                                                    :opacity        1
                                                                    :scale          (or scale 2.5)
                                                                    :zIndex         6
