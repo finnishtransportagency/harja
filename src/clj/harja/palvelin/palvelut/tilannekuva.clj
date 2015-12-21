@@ -90,7 +90,7 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
-              (map #(konv/string->avain % [:tila])))
+              (map #(konv/string->avain % [:paallystysilmoitus :tila])))
             (q/hae-paallystykset db
                                  (when-not nykytilanne? (konv/sql-date alku))
                                  (when-not nykytilanne? (konv/sql-date loppu))))
@@ -106,7 +106,7 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
-              (map #(konv/string->avain % [:tila])))
+              (map #(konv/string->avain % [:paikkausilmoitus :tila])))
             (q/hae-paikkaukset db
                                (when-not nykytilanne? (konv/sql-date alku))
                                (when-not nykytilanne? (konv/sql-date loppu))))

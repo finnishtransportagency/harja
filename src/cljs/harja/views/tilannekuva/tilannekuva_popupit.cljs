@@ -163,7 +163,7 @@
                                                            (get-in tapahtuma [:tr :loppuetaisyys]))]
                                                ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
                                                ["Toimenpide" (:toimenpide tapahtuma)]
-                                               ["Tila" (paallystys/kuvaile-kohteen-tila (:toimenpide tapahtuma))]
+                                               ["Tila" (paallystys/kuvaile-kohteen-tila (get-in tapahtuma [:paallystysilmoitus :tila]))]
                                                ["Aloitettu" (pvm/pvm-aika (:aloituspvm tapahtuma))]
                                                ["Päällystys valmistunut" (pvm/pvm-aika (:paallystysvalmispvm tapahtuma))]
                                                ["Kohde valmistunut" (pvm/pvm-aika (:kohdevalmispvm tapahtuma))]])))
@@ -181,7 +181,7 @@
                                                            (get-in tapahtuma [:tr :loppuetaisyys]))]
                                                ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
                                                ["Toimenpide" (:toimenpide tapahtuma)]
-                                               ["Tila" (paikkaus/kuvaile-kohteen-tila (:toimenpide tapahtuma))]
+                                               ["Tila" (paikkaus/kuvaile-kohteen-tila (get-in tapahtuma [:paikkausilmoitus :tila]))]
                                                ["Aloitettu" (pvm/pvm-aika (:aloituspvm tapahtuma))]
                                                ["Päällystys valmistunut" (pvm/pvm-aika (:paikkausvalmispvm tapahtuma))]
                                                ["Kohde valmistunut" (pvm/pvm-aika (:kohdevalmispvm tapahtuma))]])))

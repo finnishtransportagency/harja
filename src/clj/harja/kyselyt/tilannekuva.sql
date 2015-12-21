@@ -202,15 +202,15 @@ SELECT
   pko.tr_loppuetaisyys,
   pko.nykyinen_paallyste,
   pko.toimenpide,
-  pi.id   AS paallystysilmoitus_id,
-  pi.tila AS paallystysilmoitus_tila,
+  pi.id   AS paikkausilmoitus_id,
+  pi.tila AS paikkausilmoitus_tila,
   pi.aloituspvm,
-  pi.valmispvm_paallystys AS paikkausvalmispvm,
+  pi.valmispvm_paikkaus AS paikkausvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
 FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
       -- Nykytilanne
       (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
