@@ -174,8 +174,8 @@ SELECT
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
   pi.aloituspvm,
-  pi.valmispvm_paallystys,
-  pi.valmispvm_kohde,
+  pi.valmispvm_paallystys AS paallystysvalmispvm,
+  pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
 FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
@@ -205,8 +205,8 @@ SELECT
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
   pi.aloituspvm,
-  pi.valmispvm_paikkaus,
-  pi.valmispvm_kohde,
+  pi.valmispvm_paallystys AS paikkausvalmispvm,
+  pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
 FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
