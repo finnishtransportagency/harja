@@ -8,7 +8,10 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]))
+            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset])
+  (:import (java.net URLEncoder)
+           (java.text SimpleDateFormat)
+           (java.util Date)))
 
 (def kayttaja "jvh")
 
@@ -68,19 +71,16 @@
     (poista-ilmoitus)))
 
 (deftest hae-muuttuneet-ilmoitukset
-  (let [nyt (.format (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (java.util.Date.))
-        _ (do (Thread/sleep 10) ; varmista, että on kulunut joitain millisekunteja
-              (u (str "UPDATE ilmoitus SET muokattu = NOW() WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)")))
-        vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?muuttunutJalkeen="
-                                         (java.net.URLEncoder/encode nyt)] kayttaja portti)
-        kaikkien-ilmoitusten-maara-suoraan-kannasta (ffirst (q
-                                                             (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
-    (println "%%%% VASTAUS: " vastaus)
+  (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour' WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)"))
+  (let [nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?muuttunutJalkeen=" (URLEncoder/encode nyt)]
+                                        kayttaja portti)
+        kaikkien-ilmoitusten-maara-suoraan-kannasta (ffirst (q (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
     (is (= 200 (:status vastaus)))
     (let [vastausdata (cheshire/decode (:body vastaus))
           ilmoitukset (get vastausdata "ilmoitukset")
           ilmoituksia (count ilmoitukset)]
       (is (> kaikkien-ilmoitusten-maara-suoraan-kannasta ilmoituksia))
-      (is (= 1 ilmoituksia)))
+      (is (< 0 ilmoituksia)))
 
     (poista-ilmoitus)))
