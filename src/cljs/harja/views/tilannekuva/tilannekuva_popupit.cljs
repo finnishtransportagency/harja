@@ -151,7 +151,6 @@
                                                 "/" (count (:korjaavattoimenpiteet tapahtuma))]])))
 
 (defmethod nayta-popup :paallystys-klikattu [tapahtuma]
-  (log "Tapahtuma:" (pr-str tapahtuma))
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Päällystyskohde"
                                               [["Nimi" (get-in tapahtuma [:kohde :nimi])]
