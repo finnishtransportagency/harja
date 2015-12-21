@@ -19,12 +19,12 @@
   (let [pvm-input-solmu (.-parentNode (r/dom-node kalenteri-komponentti))
         r (.getBoundingClientRect pvm-input-solmu)
         etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
-        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
+        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-left r))
         uusi-suunta (if (< etaisyys-alareunaan 250)
-                      (if (< etaisyys-oikeaan-reunaan 100)
+                      (if (< etaisyys-oikeaan-reunaan 200)
                         :ylos-vasen
                         :ylos-oikea)
-                      (if (< etaisyys-oikeaan-reunaan 100)
+                      (if (< etaisyys-oikeaan-reunaan 200)
                         :alas-vasen
                         :alas-oikea))]
     (reset! sijainti-atom uusi-suunta)))
