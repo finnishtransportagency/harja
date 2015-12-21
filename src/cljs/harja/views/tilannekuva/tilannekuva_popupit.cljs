@@ -36,7 +36,7 @@
                      (empty? arvo))
          ^{:key (str nimi arvo)}
          [:tr
-          [:td.otsikko nimi]
+          [:td.otsikko [:b nimi]]
           [:td.arvo arvo]]))]
 
     (when linkki
