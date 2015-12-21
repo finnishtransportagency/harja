@@ -6,7 +6,11 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.tilannekuva.historiakuva :as tiedot]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkaus]
+            [harja.views.urakka.paallystyksen-kohdeluettelo :as paallystys]
+            [harja.domain.paallystys.pot :as paallystys-pot]))
 
 (def klikattu-tyokone (atom nil))
 
@@ -86,7 +90,7 @@
                                               [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
                                                ["Selite" (:lyhytselite tapahtuma)]
                                                ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-                                              {:linkki {:nimi "Siirry ilmoitusnäkymään" ; FIXME Ei vaikuta toimivan?
+                                              {:linkki {:nimi     "Siirry ilmoitusnäkymään" ; FIXME Ei vaikuta toimivan?
                                                         :on-click #(do (.preventDefault %)
                                                                        (let [putsaa (fn [asia]
                                                                                       (dissoc asia :type :alue))]
@@ -149,12 +153,30 @@
 (defmethod nayta-popup :paallystys-klikattu [tapahtuma]
   (log "Tapahtuma:" (pr-str tapahtuma))
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-arvolistaus-popup "Päällystyskohde" [["Nimi" (:nimi tapahtuma)]
-                                                                 ["Toimenpide" (:toimenpide tapahtuma)]
-                                                                 ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]])))
+                       (tee-arvolistaus-popup "Päällystyskohde"
+                                              [["Nimi" (get-in tapahtuma [:kohde :nimi])]
+                                               ["Tie\u00ADrekisteri\u00ADkohde" (get-in tapahtuma [:kohdeosa :nimi])]
+                                               ["Osoite" (yleiset/tierekisteriosoite
+                                                           (get-in tapahtuma [:tr :numero])
+                                                           (get-in tapahtuma [:tr :alkuosa])
+                                                           (get-in tapahtuma [:tr :alkuetaisyys])
+                                                           (get-in tapahtuma [:tr :loppuosa])
+                                                           (get-in tapahtuma [:tr :loppuetaisyys]))]
+                                               ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
+                                               ["Toimenpide" (:toimenpide tapahtuma)]
+                                               ["Tila" (paallystys/kuvaile-kohteen-tila (:toimenpide tapahtuma))]])))
 
 (defmethod nayta-popup :paikkaus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-arvolistaus-popup "Paikkauskohde" [["Nimi" (:nimi tapahtuma)]
-                                                               ["Toimenpide" (:toimenpide tapahtuma)]
-                                                               ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]])))
+                       (tee-arvolistaus-popup "Paikkauskohde"
+                                              [["Nimi" (get-in tapahtuma [:kohde :nimi])]
+                                               ["Tie\u00ADrekisteri\u00ADkohde" (get-in tapahtuma [:kohdeosa :nimi])]
+                                               ["Osoite" (yleiset/tierekisteriosoite
+                                                           (get-in tapahtuma [:tr :numero])
+                                                           (get-in tapahtuma [:tr :alkuosa])
+                                                           (get-in tapahtuma [:tr :alkuetaisyys])
+                                                           (get-in tapahtuma [:tr :loppuosa])
+                                                           (get-in tapahtuma [:tr :loppuetaisyys]))]
+                                               ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
+                                               ["Toimenpide" (:toimenpide tapahtuma)]
+                                               ["Tila" (paikkaus/kuvaile-kohteen-tila (:toimenpide tapahtuma))]])))

@@ -160,20 +160,22 @@ WHERE
 -- name: hae-paallystykset
 SELECT
   pk.id,
+  pk.kohdenumero,
+  pk.nimi AS kohde_nimi,
+  pko.nimi AS kohdeosa_nimi,
+  pko.sijainti,
+  pko.tr_numero,
+  pko.tr_alkuosa,
+  pko.tr_alkuetaisyys,
+  pko.tr_loppuosa,
+  pko.tr_loppuetaisyys,
+  pko.nykyinen_paallyste,
+  pko.toimenpide,
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paallystys,
   pi.valmispvm_kohde,
-  kohdenumero,
-  pk.nimi,
-  sopimuksen_mukaiset_tyot,
-  muu_tyo,
-  arvonvahennykset,
-  bitumi_indeksi,
-  kaasuindeksi,
-  muutoshinta,
-  pko.sijainti,
   pi.tila
 FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
@@ -189,19 +191,22 @@ WHERE pk.poistettu IS NOT TRUE AND
 -- name: hae-paikkaukset
 SELECT
   pk.id,
+  pk.kohdenumero,
+  pk.nimi AS kohde_nimi,
+  pko.nimi AS kohdeosa_nimi,
+  pko.sijainti,
+  pko.tr_numero,
+  pko.tr_alkuosa,
+  pko.tr_alkuetaisyys,
+  pko.tr_loppuosa,
+  pko.tr_loppuetaisyys,
+  pko.nykyinen_paallyste,
+  pko.toimenpide,
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paikkaus,
   pi.valmispvm_kohde,
-  kohdenumero,
-  pk.nimi,
-  sopimuksen_mukaiset_tyot,
-  muu_tyo,
-  arvonvahennykset,
-  bitumi_indeksi,
-  kaasuindeksi,
-  pko.sijainti,
   pi.tila
 FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id

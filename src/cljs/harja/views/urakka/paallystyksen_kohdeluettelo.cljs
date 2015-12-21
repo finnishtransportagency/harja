@@ -26,6 +26,12 @@
 
 (defonce kohdeluettelo-valilehti (atom :paallystyskohteet))
 
+(defn kuvaile-kohteen-tila [tila]
+  (case tila
+    :valmis "Valmis"
+    :aloitettu "Aloitettu"
+    "Ei aloitettu"))
+
 (defn kohdeosan-reitti-klikattu [_ {:keys [klikkaus-koordinaatit] :as kohdeosa}]
   (let [osa (:osa kohdeosa)
         kohde (:kohde kohdeosa)
@@ -44,10 +50,7 @@
         "Osoite" (yleiset/tierekisteriosoite tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys)
         "Nykyinen päällyste" (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste osa))
         "Toimenpide" (:toimenpide osa)
-        "Tila" (case (:tila kohdeosa)
-                 :valmis "Valmis"
-                 :aloitettu "Aloitettu"
-                 "Ei aloitettu")]
+        "Tila" (kuvaile-kohteen-tila (:tila kohdeosa))]
        (if (:tila kohdeosa)
          [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
           (ikonit/eye-open) " Päällystysilmoitus"]
