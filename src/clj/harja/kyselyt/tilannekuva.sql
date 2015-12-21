@@ -175,9 +175,9 @@ SELECT
   muutoshinta,
   pko.sijainti,
   pi.tila
-FROM paallystysilmoitus pi
-  LEFT JOIN paallystyskohde pk ON pi.paallystyskohde = pk.id
-  LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
+FROM paallystyskohdeosa pko
+  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
       -- Nykytilanne
       (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
@@ -203,9 +203,9 @@ SELECT
   kaasuindeksi,
   pko.sijainti,
   pi.tila
-FROM paikkausilmoitus pi
-  LEFT JOIN paallystyskohde pk ON pi.paikkauskohde = pk.id
-  LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
+FROM paallystyskohdeosa pko
+  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
       -- Nykytilanne
       (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
