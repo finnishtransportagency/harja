@@ -4,6 +4,7 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.tilannekuva.historiakuva :as tiedot]
             [clojure.string :as str]))
 
@@ -21,6 +22,17 @@
       [:div [:b (pr-str avain)] (clojure.string/join ", " (get kartta avain))]
 
       :else [:div [:b (pr-str avain)] (pr-str (get kartta avain))])))
+
+(defn tee-popup [otsikko otsikko-arvo-parit]
+  [:div.kartta-popup
+   [:p [:b otsikko]]
+  [:table.otsikot-ja-arvot
+  (for [[otsikko arvo] otsikko-arvo-parit]
+    ^{:key otsikko}
+    (when arvo
+      [:tr
+       [:td.otsikko otsikko]
+       [:td.arvo arvo]]))]])
 
 (defmulti nayta-popup :aihe)
 
@@ -121,32 +133,30 @@
 
 (defmethod nayta-popup :laatupoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       [:div.kartta-popup
-                        [:p [:b "Laatupoikkeama"]]
-                        [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
-                        [:div "Tekijä: " (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
-                        [:div "Päätös: " (name (get-in tapahtuma [:paatos :paatos])) ", "
-                         (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika]))]]))
+                       (tee-popup "Laatupoikkeama"
+                                  [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
+                                   ["Tekijä" (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
+                                   ["Päätös" (str (laatupoikkeamat/kuvaile-paatostyyppi (get-in tapahtuma [:paatos :paatos]))
+                                                  " ("  (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika])) ")")]])))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       [:div.kartta-popup
-                        [:p [:b (str/capitalize (name (:tyyppi tapahtuma)))]]
-                        [:div "Aika: " (pvm/pvm-aika-sek (:aika tapahtuma))]
-                        [:div "Mittaaja: " (:mittaaja tapahtuma)]]))
+                       (tee-popup (str/capitalize (name (:tyyppi tapahtuma)))
+                                  [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
+                                   ["Mittaaja" (:mittaaja tapahtuma)]])))
 
 (defmethod nayta-popup :turvallisuuspoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       [:div.kartta-popup
-                        [:p [:b (str/join ", " (map (comp str/capitalize name) (:tyyppi tapahtuma)))]]
-                        [:div (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
-                        [:div "Käsitelty: " (pvm/pvm-aika (:kasitelty tapahtuma))]
-                        [:div "Työtehtävä: " (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
-                        [:div (:vammat tapahtuma) ", " (:sairaalavuorokaudet tapahtuma) "/" (:sairauspoissaolopaivat tapahtuma)]
-                        [:div (:kuvaus tapahtuma)]
-                        [:div "Korjaavat toimenpiteet: "
-                         (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
-                         "/" (count (:korjaavattoimenpiteet tapahtuma))]]))
+                       (tee-popup "Turvallisuuspoikkeama"
+                                  [["Tapahtunut" (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
+                                   ["Käsitelty" (pvm/pvm-aika (:kasitelty tapahtuma))]
+                                   ["Työ\u00ADtehtävä" (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                                   ["Vammat" (:vammat tapahtuma)]
+                                   ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
+                                   ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
+                                   ["Kuvaus" (:kuvaus tapahtuma)]
+                                   ["Korjaavat toimen\u00ADpiteet" (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
+                                    "/" (count (:korjaavattoimenpiteet tapahtuma))]])))
 
 (defmethod nayta-popup :paallystys-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
