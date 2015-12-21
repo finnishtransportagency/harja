@@ -16,9 +16,9 @@
 
 
 (def turvallisuuspoikkeama-tyyppi
-  {"turvallisuuspoikkeama" "Turvallisuuspoikkeama"
-   "tyoturvallisuuspoikkeama" "Työturvallisuuspoikkeama"
-   "prosessipoikkeama" "Prosessipoikkeama"})
+  {"turvallisuuspoikkeama" "Turvallisuus\u00ADpoikkeama"
+   "tyoturvallisuuspoikkeama" "Työ\u00ADturvallisuus\u00ADpoikkeama"
+   "prosessipoikkeama" "Prosessi\u00ADpoikkeama"})
 
 (defn ilmoituksen-tyyppi [{tyyppi :tyyppi}]
   (into {}
@@ -96,13 +96,13 @@
                  :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat (when urakoittain?
-                      [{:otsikko "Urakka"}])
-                    [{:otsikko "Pvm"}
-                     {:otsikko "Tyyppi"}
-                     {:otsikko "Ammatti"}
-                     {:otsikko "Työtehtävä"}
-                     {:otsikko "Sairaala\u00advuorokaudet"}
-                     {:otsikko "Sairaus\u00adpoissaolot\u00adpäivät"}]))
+                      [{:otsikko "Urakka" :leveys 14}])
+                    [{:otsikko "Pvm" :leveys 14}
+                     {:otsikko "Tyyppi" :leveys 24}
+                     {:otsikko "Ammatti" :leveys 14}
+                     {:otsikko "Työ\u00ADtehtävä" :leveys 14}
+                     {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
+                      {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}]))
 
       (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
                          (pvm/pvm-aika (:tapahtunut %))

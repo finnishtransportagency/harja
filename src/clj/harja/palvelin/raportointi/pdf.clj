@@ -3,7 +3,8 @@
   (:require [harja.tyokalut.xsl-fo :as fo]
             [clojure.string :as str]
             [harja.visualisointi :as vis]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.ui.skeema :as skeema]))
 
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -17,35 +18,36 @@
     (first elementti)))
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
-  [:fo:block {} otsikko
-   [:fo:table {:border "solid 0.2mm black"}
-    (for [{:keys [otsikko leveys]} sarakkeet]
-      [:fo:table-column {:column-width leveys}])
-    [:fo:table-header
-     [:fo:table-row
-      (for [otsikko (map :otsikko sarakkeet)]
-        [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
-         [:fo:block otsikko]])]]
-    [:fo:table-body
-     (let [viimeinen-rivi (last data)]
-       (for [rivi data]
-         (if-let [otsikko (:otsikko rivi)]
-           [:fo:table-row
-            [:fo:table-cell {:padding "1mm"
-                             :font-weight "bold"
-                             :number-columns-spanned (count sarakkeet)}
-             [:fo:block {:space-after "0.5em"}]
-             [:fo:block otsikko]]]
-           (let [korosta? (when (and viimeinen-rivi-yhteenveto?
-                                     (= viimeinen-rivi rivi))
-                            {:font-weight "bold"})]
-             [:fo:table-row
-              (for [i (range (count sarakkeet))
-                    :let [arvo (nth rivi i)]]
-                [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
-                                       korosta?)
-                 (when korosta? [:fo:block {:space-after "0.5em"}])
-                 [:fo:block (str arvo)]])]))))]]])
+  (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
+    [:fo:block {} otsikko
+    [:fo:table {:border "solid 0.2mm black"}
+     (for [{:keys [otsikko leveys]} sarakkeet]
+       [:fo:table-column {:column-width leveys}])
+     [:fo:table-header
+      [:fo:table-row
+       (for [otsikko (map :otsikko sarakkeet)]
+         [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
+          [:fo:block otsikko]])]]
+     [:fo:table-body
+      (let [viimeinen-rivi (last data)]
+        (for [rivi data]
+          (if-let [otsikko (:otsikko rivi)]
+            [:fo:table-row
+             [:fo:table-cell {:padding                "1mm"
+                              :font-weight            "bold"
+                              :number-columns-spanned (count sarakkeet)}
+              [:fo:block {:space-after "0.5em"}]
+              [:fo:block otsikko]]]
+            (let [korosta? (when (and viimeinen-rivi-yhteenveto?
+                                      (= viimeinen-rivi rivi))
+                             {:font-weight "bold"})]
+              [:fo:table-row
+               (for [i (range (count sarakkeet))
+                     :let [arvo (nth rivi i)]]
+                 [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
+                                        korosta?)
+                  (when korosta? [:fo:block {:space-after "0.5em"}])
+                  [:fo:block (str arvo)]])]))))]]]))
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]

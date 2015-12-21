@@ -97,9 +97,10 @@
                  :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat
-              [{:otsikko "Urakka"}]
+              [{:otsikko "Urakka" :leveys 31}]
               (map (fn [ilmoitustyyppi]
-                     {:otsikko (ilmoitustyypin-lyhenne-ja-nimi ilmoitustyyppi)})
+                     {:otsikko (ilmoitustyypin-lyhenne-ja-nimi ilmoitustyyppi)
+                      :leveys 23})
                    [:toimenpidepyynto :tiedoitus :kysely])))
       (into
         []
@@ -117,14 +118,14 @@
                        [urakan-nimi tpp tur urk])
                      ;; TODO: hallintayksikön summarivi
                      ;[(seq [ "ELY yhteensä" 5 5 5])]
-                     )))
+                     ))
 
-          ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
-          (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
-                urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
-            [(concat ["Yhteensä"]
-                     [tpp-yht tur-yht urk-yht])])))]
+                 ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
+                 (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
+                       tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
+                       urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
+                   [(concat ["Yhteensä"]
+                            [tpp-yht tur-yht urk-yht])]))))]
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
