@@ -26,12 +26,14 @@
 (defn tee-arvolistaus-popup
   ([otsikko nimi-arvo-parit] (tee-arvolistaus-popup otsikko nimi-arvo-parit nil))
   ([otsikko nimi-arvo-parit {:keys [paaluokka linkki]}]
+   (log "Arvot " (pr-str nimi-arvo-parit))
    [:div {:class (str "kartta-popup " (when paaluokka
                                         paaluokka))}
     [:p [:b otsikko]]
     [:table.otsikot-ja-arvot
      (for [[nimi arvo] nimi-arvo-parit]
-       (when arvo
+       (when-not (or (nil? arvo)
+                     (empty? arvo))
          ^{:key (str nimi arvo)}
          [:tr
           [:td.otsikko nimi]
@@ -58,28 +60,22 @@
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
   (kartta/nayta-popup! (viivan-keskella tapahtuma)
-                       [:div.kartta-toteuma-popup
-                        [:p [:b "Toteuma"]]
-                        [:p "Aika: " (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
-                        (when (:suorittaja tapahtuma)
-                          [:span
-                           [:p "Suorittaja: " (get-in tapahtuma [:suorittaja :nimi])]])
-                        (when-not (empty? (:tehtavat tapahtuma))
-                          (doall
-                            (for [tehtava (:tehtavat tapahtuma)]
-                              [:span
-                               [:p "Toimenpide: " (:toimenpide tehtava)]
-                               [:p "Määrä: " (:maara tehtava)]
-                               [:p "Päivän hinta: " (:paivanhinta tehtava)]
-                               [:p "Lisätieto: " (:lisatieto tehtava)]])))
-                        (when-not (empty? (:materiaalit tapahtuma))
-                          (doall
-                            (for [toteuma (:materiaalit tapahtuma)]
-                              [:span
-                               [:p "Materiaali: " (get-in toteuma [:materiaali :nimi])]
-                               [:p "Määrä: " (:maara toteuma)]])))
-                        (when (:lisatieto tapahtuma)
-                          [:p "Lisätieto: " (:lisatieto tapahtuma)])]))
+                       (tee-arvolistaus-popup "Toteuma"
+                                              [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                                               ["Suorittaja" (get-in tapahtuma [:suorittaja :nimi])]
+                                               ["Tehtävät" (doall
+                                                             (for [tehtava (:tehtavat tapahtuma)]
+                                                               [:div.toteuma-tehtavat
+                                                                [:div "Toimenpide: " (:toimenpide tehtava)]
+                                                                [:div "Määrä: " (:maara tehtava)]
+                                                                [:div "Päivän hinta: " (:paivanhinta tehtava)]
+                                                                (when (:lisatieto tehtava)
+                                                                  [:div "Lisätieto: " (:lisatieto tehtava)])]))]
+                                               ["Materiaalit" (for [toteuma (:materiaalit tapahtuma)]
+                                                                [:div.toteuma-materiaalit
+                                                                 [:div "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                                                 [:div "Määrä: " (:maara toteuma)]])]
+                                               ["Lisätieto" (:lisatieto tapahtuma)]])))
 
 
 (defmethod nayta-popup :reittipiste-klikattu [tapahtuma]
@@ -104,7 +100,7 @@
                                               [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
                                                ["Selite" (:lyhytselite tapahtuma)]
                                                ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-                                              {:linkki {:nimi "Siirry ilmoitusnäkymään"
+                                              {:linkki {:nimi "Siirry ilmoitusnäkymään" ; FIXME Ei vaikuta toimivan?
                                                         :on-click #(do (.preventDefault %)
                                                                        (let [putsaa (fn [asia]
                                                                                       (dissoc asia :type :alue))]
