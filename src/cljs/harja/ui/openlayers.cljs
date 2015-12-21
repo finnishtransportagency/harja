@@ -279,10 +279,10 @@
       (.removeOverlay ol3 popup))
     (let [popup (luo-overlay koordinaatti
                              [:div.ol-popup
-                              [:a.ol-popup-closer {:on-click #(do
-                                                               (.stopPropagation %)
-                                                               (.preventDefault %)
-                                                               (poista-popup! this))}]
+                              [:a.ol-popup-closer.klikattava {:on-click #(do
+                                                                          (.stopPropagation %)
+                                                                          (.preventDefault %)
+                                                                          (poista-popup! this))}]
                               sisalto])]
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
