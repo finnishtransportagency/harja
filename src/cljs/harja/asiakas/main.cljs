@@ -32,7 +32,7 @@
                 (.apply alkuperainen-drawImage (js* "this") (clj->js args))))))))
 
 (defn ^:export harja []
-  (asenna-surullinen-IE-drawImage-korjaus)
+  #_(asenna-surullinen-IE-drawImage-korjaus)
   (ymparisto/alusta {:on-reload #(try
                                    (render)
                                    (catch js/Error e

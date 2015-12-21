@@ -467,7 +467,7 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image arrow-image-size] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})        
         nuolet (atom [])]
@@ -511,6 +511,7 @@
                                #js {:geometry (ol.geom.Point. (clj->js sijainti))
                                     :image    (ol.style.Icon. #js {:src (or arrow-image 
                                                                             "images/nuoli-red.svg")
+                                                                   :size (clj->js arrow-image-size)
                                                                    :opacity        1
                                                                    :scale          (or scale 2.5)
                                                                    :zIndex         6
