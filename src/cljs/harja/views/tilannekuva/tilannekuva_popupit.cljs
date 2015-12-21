@@ -68,7 +68,8 @@
                                                                [:div.toteuma-tehtavat
                                                                 [:div "Toimenpide: " (:toimenpide tehtava)]
                                                                 [:div "Määrä: " (:maara tehtava)]
-                                                                [:div "Päivän hinta: " (:paivanhinta tehtava)]
+                                                                (when (:paivanhinta tehtava)
+                                                                  [:div "Päivän hinta: " (:paivanhinta tehtava)])
                                                                 (when (:lisatieto tehtava)
                                                                   [:div "Lisätieto: " (:lisatieto tehtava)])]))]
                                                ["Materiaalit" (for [toteuma (:materiaalit tapahtuma)]
@@ -78,7 +79,7 @@
                                                ["Lisätieto" (:lisatieto tapahtuma)]])))
 
 
-(defmethod nayta-popup :reittipiste-klikattu [tapahtuma]
+(defmethod nayta-popup :reittipiste-klikattu [tapahtuma] ; TODO Käytetäänkö tätä missään?
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        [:div.kartta-reittipiste-popup
                         [:p [:b "Reittipiste"]]
@@ -116,15 +117,13 @@
   (kartta/keskita-kartta-pisteeseen (:sijainti tapahtuma))
 
   (kartta/nayta-popup! (:sijainti tapahtuma)
-                       [:div.kartta-tyokone-popup
-                        [:p [:b "Työkone"]]
-                        [:div "Tyyppi: " (:tyokonetyyppi tapahtuma)]
-                        [:div "Viimeisin paikkatieto (lähetetty): " (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
-                        [:div "Organisaatio: " (:organisaationimi tapahtuma)]
-                        [:div "Urakka: " (:urakkanimi tapahtuma)]
-                        [:div "Tehtävät: "
-                         (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
-                           [:span tehtavat])]]))
+                       (tee-arvolistaus-popup "Työkone"
+                                              [["Tyyppi" (:tyokonetyyppi tapahtuma)]
+                                               ["Viimeisin paikka\u00ADtieto" (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
+                                               ["Organisaatio" (:organisaationimi tapahtuma)]
+                                               ["Urakka" (:urakkanimi tapahtuma)]
+                                               ["Tehtävät" (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
+                                                             [:span tehtavat])]])))
 
 (defmethod nayta-popup :uusi-tyokonedata [data]
   (when-let [tk @klikattu-tyokone]
