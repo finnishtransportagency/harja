@@ -45,7 +45,7 @@
                (let [urakat (mapv :id (filter
                                         (fn [{:keys [tyyppi]}]
                                           (= (keyword tyyppi) urakan-tyyppi))
-                                        (urakat-q/hae-kaynnissa-olevat-urakat db)))]
+                                        (urakat-q/hae-kaynnissa-olevat-urakat db nil nil nil)))]
                  (when-not (empty? urakat) urakat))
 
                (if (vector? urakka) urakka [urakka]))]

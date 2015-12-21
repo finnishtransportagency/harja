@@ -24,7 +24,9 @@
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
-         {:turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
+         {:laatupoikkeamat                  "Laatupoikkeamat"
+          :tarkastukset                     "Tarkastukset"
+          :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
 
           :toimenpidepyynto                 "TPP"
           :tiedoitus                        "TUR"
@@ -33,46 +35,32 @@
           :paallystys                       "Päällystystyöt"
           :paikkaus                         "Paikkaustyöt"
 
-          :laatupoikkeamat                  "Laatupoikkeamat"
-          :tilaaja                          "Tilaaja"
-          :urakoitsija                      "Urakoitsija"
-          :konsultti                        "Konsultti"
-
-          :tarkastukset                     "Tarkastukset"
-          :tiesto                           "Tiestötarkastus"
-          :talvihoito                       "Talvihoitotarkastus"
-          :soratie                          "Soratien tarkastus"
-          :laatu                            "Laaduntarkastus"
-          :pistokoe                         "Pistokoe"
-
           "auraus ja sohjonpoisto"          "Auraus ja sohjonpoisto"
           "suolaus"                         "Suolaus"
           "pistehiekoitus"                  "Pistehiekoitus"
           "linjahiekoitus"                  "Linjahiekoitus"
+          "pinnan tasaus"                   "Pinnan tasaus"
+          "liikennemerkkien puhdistus"      "Liikennemerkkien puhdistus"
           "lumivallien madaltaminen"        "Lumivallien madaltaminen"
           "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"
-          "kelintarkastus"                  "Kelintarkastus"
-
           "tiestotarkastus"                 "Tiestötarkastus"
+          "kelintarkastus"                  "Kelintarkastus"
+          "harjaus"                         "Harjaus"
           "koneellinen niitto"              "Koneellinen niitto"
           "koneellinen vesakonraivaus"      "Koneellinen vesakonraivaus"
-
-          "liikennemerkkien puhdistus"      "Liikennemerkkien puhdistus"
-
           "sorateiden muokkaushoylays"      "Sorateiden muokkaushöyläys"
           "sorateiden polynsidonta"         "Sorateiden pölynsidonta"
           "sorateiden tasaus"               "Sorateiden tasaus"
           "sorastus"                        "Sorastus"
-
-          "harjaus"                         "Harjaus"
-          "pinnan tasaus"                   "Pinnan tasaus"
           "paallysteiden paikkaus"          "Päällysteiden paikkaus"
           "paallysteiden juotostyot"        "Päällysteiden juotostyöt"
-
           "siltojen puhdistus"              "Siltojen puhdistus"
-
           "l- ja p-alueiden puhdistus"      "L- ja P-alueiden puhdistus"
-          "muu"                             "Muu"})
+          "muu"                             "Muu"
+          "liuossuolaus"                    "Liuossuolaus"
+          "aurausviitoitus ja kinostimet"   "Aurausviitoitus ja kinostimet"
+          "lumensiirto"                     "Lumensiirto"
+          "paannejaan poisto"               "Paannejään poisto"})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (def suodattimet (atom {:yllapito        {:paallystys true
@@ -98,8 +86,11 @@
                                           "lumivallien madaltaminen"        true
                                           "sulamisveden haittojen torjunta" true
                                           "kelintarkastus"                  true
+                                          "liuossuolaus"                    true
+                                          "aurausviitoitus ja kinostimet"   true
+                                          "lumensiirto"                     true
+                                          "paannejaan poisto"               true
                                           "muu"                             true}
-
                         :kesa            {"tiestotarkastus"            true
                                           "koneellinen niitto"         true
                                           "koneellinen vesakonraivaus" true
