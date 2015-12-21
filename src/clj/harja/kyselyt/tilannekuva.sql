@@ -210,7 +210,7 @@ SELECT
   pi.tila
 FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
-  LEFT JOIN paikkausilmoitus pi ON pi.paallystyskohde = pk.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
       -- Nykytilanne
       (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
