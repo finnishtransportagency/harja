@@ -26,10 +26,10 @@
 (defn tee-arvolistaus-popup
   ([otsikko nimi-arvo-parit] (tee-arvolistaus-popup otsikko nimi-arvo-parit nil))
   ([otsikko nimi-arvo-parit {:keys [paaluokka linkki]}]
-   (log "Arvot " (pr-str nimi-arvo-parit))
    [:div {:class (str "kartta-popup " (when paaluokka
                                         paaluokka))}
     [:p [:b otsikko]]
+
     [:table.otsikot-ja-arvot
      (for [[nimi arvo] nimi-arvo-parit]
        (when-not (or (nil? arvo)
@@ -77,21 +77,6 @@
                                                                  [:div "Materiaali: " (get-in toteuma [:materiaali :nimi])]
                                                                  [:div "Määrä: " (:maara toteuma)]])]
                                                ["Lisätieto" (:lisatieto tapahtuma)]])))
-
-
-(defmethod nayta-popup :reittipiste-klikattu [tapahtuma] ; TODO Käytetäänkö tätä missään?
-  (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       [:div.kartta-reittipiste-popup
-                        [:p [:b "Reittipiste"]]
-                        [:p "Aika: " (pvm/pvm (:aika tapahtuma))]
-                        (when (get-in tapahtuma [:tehtava :id])
-                          [:span
-                           [:p "Toimenpide: " (get-in tapahtuma [:tehtava :toimenpide])]
-                           [:p "Määrä: " (get-in tapahtuma [:tehtava :maara])]])
-                        (when (get-in tapahtuma [:materiaali :id])
-                          [:span
-                           [:p "Materiaali: " (get-in tapahtuma [:materiaali :nimi])]
-                           [:p "Määrä: " (get-in tapahtuma [:materiaali :maara])]])]))
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
@@ -162,13 +147,14 @@
                                                 "/" (count (:korjaavattoimenpiteet tapahtuma))]])))
 
 (defmethod nayta-popup :paallystys-klikattu [tapahtuma]
+  (log "Tapahtuma:" (pr-str tapahtuma))
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Päällystyskohde" [["Nimi" (:nimi tapahtuma)]
                                                                  ["Toimenpide" (:toimenpide tapahtuma)]
-                                                                 ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))) ; FIXME Ei näy nykyinen päällyste
+                                                                 ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]])))
 
 (defmethod nayta-popup :paikkaus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Paikkauskohde" [["Nimi" (:nimi tapahtuma)]
                                                                ["Toimenpide" (:toimenpide tapahtuma)]
-                                                               ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]]))) ; FIXME Ei näy nykyinen päällyste
+                                                               ["Nykyinen päällyste: " (:nykyinen_paallyste tapahtuma)]])))
