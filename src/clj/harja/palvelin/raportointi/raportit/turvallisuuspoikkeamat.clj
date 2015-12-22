@@ -107,8 +107,10 @@
       (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
                          (pvm/pvm-aika (:tapahtunut %))
                          (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
-                         (:tyontekijanammatti %) (:tyotehtava %)
-                         (:sairaalavuorokaudet %) (:sairauspoissaolopaivat %))
+                         (or (:tyontekijanammatti %) "")
+                         (or (:tyotehtava %) "")
+                         (or (:sairaalavuorokaudet %) "")
+                         (or (:sairauspoissaolopaivat %) ""))
 
                   (sort-by :tapahtunut turpot))
             (rivi (if urakoittain? "" nil) "" "" "" "Yhteensä"
