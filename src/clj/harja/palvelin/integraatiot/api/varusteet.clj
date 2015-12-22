@@ -117,7 +117,7 @@
 
     (julkaise-reitti
       http :hae-tietueet
-      (GET "/api/varusteet/varusteet" request
+      (GET "/api/varusteet/haku" request
         (kasittele-kutsu db integraatioloki :hae-tietueet request nil json-skeemat/+varusteiden-haku-vastaus+
                          (fn [parametrit _ kayttaja _]
                            (hae-varusteet tierekisteri parametrit kayttaja)))))
