@@ -19,20 +19,7 @@
 (defn render []
   (reagent/render [#'main-view/main] (.getElementById js/document "app")))
 
-(defn asenna-surullinen-IE-drawImage-korjaus []
-  (let [ua (-> js/window .-navigator .-userAgent)]
-    (when true #_(or (not= -1 (.indexOf ua "MSIE "))
-              (not= -1 (.indexOf ua "Trident/"))
-              (not= -1 (.indexOf ua "Edge/")))
-      (let [prototyyppi (.-prototype js/CanvasRenderingContext2D)
-            alkuperainen-drawImage (.-drawImage prototyyppi)]
-        (set! (.-drawImage prototyyppi)
-              (fn [& args]
-                (log "ARGS: " (pr-str args))
-                (.apply alkuperainen-drawImage (js* "this") (clj->js args))))))))
-
 (defn ^:export harja []
-  #_(asenna-surullinen-IE-drawImage-korjaus)
   (ymparisto/alusta {:on-reload #(try
                                    (render)
                                    (catch js/Error e

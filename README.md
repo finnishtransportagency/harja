@@ -101,7 +101,7 @@ ssh -L7777:localhost:5432 harja-dfb1-stg
 (for [[vari rgb] varit]
   (spit (str "resources/public/images/nuoli-" vari ".svg")
   	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"32px\" height=\"32px\">
+<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
    <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
 </svg>")))
 

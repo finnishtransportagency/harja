@@ -580,14 +580,14 @@
                                                           (if (or (= :multiline (:type arvo)) (= :line (:type arvo)))
                                                             {:alue (assoc arvo
                                                                      :type :tack-icon-line
-                                                                     :img "kartta-tr-piste-harmaa.png"
+                                                                     :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
                                                                      :zindex 6
                                                                      :color "gray")
                                                              :type :tr-valittu-osoite}
 
                                                             {:alue (assoc arvo
                                                                      :type :tack-icon
-                                                                     :img "kartta-tr-piste-harmaa.png"
+                                                                     :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
                                                                      :zindex 6)
                                                              :type :tr-valittu-osoite}))
                                  (let [e (geo/extent arvo)]
