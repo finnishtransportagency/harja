@@ -115,3 +115,24 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
+
+(deftest ala-hae-tarkastuksia
+  (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :tarkastukset)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (= (count (:tarkastukset vastaus)) 0))))
+
+(deftest ala-hae-turvallisuuspoikkeamia
+  (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :turvallisuus)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (= (count (:turvallisuus vastaus)) 0))))
+
+(deftest ala-hae-ilmoituksia
+  (let [parametrit (assoc parametrit-laaja-historia :ilmoitukset {:tyypit {:toimenpidepyynto false
+                                                                           :kysely           false
+                                                                           :tiedoitus        false}
+                                                                  :tilat  #{:avoimet :suljetut}})
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (= (count (:ilmoitukset vastaus)) 0))))
