@@ -510,7 +510,7 @@
                               (ol.style.Style.
                                #js {:geometry (ol.geom.Point. (clj->js sijainti))
                                     :image    (ol.style.Icon. #js {:src (or arrow-image 
-                                                                            "images/nuoli-red.svg")
+                                                                            "images/nuoli-punainen.png")
                                                                    :size #js [32 32] ;(clj->js arrow-image-size)
                                                                    :opacity        1
                                                                    :scale          (or scale 2.5)
@@ -574,7 +574,7 @@
                       :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
-  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
+  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.png" img direction [0.5 0.5]))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})

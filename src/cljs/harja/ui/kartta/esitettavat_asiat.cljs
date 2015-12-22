@@ -39,10 +39,10 @@
        :type :ilmoitus
        :nimi tooltip
        :selite {:teksti "Tiedotus"
-                :img    "kartta-tiedotus-violetti.svg"}
+                :img    "kartta-tiedotus-violetti.png"}
        :alue {:type        :tack-icon
               :scale       (if (valittu? ilmoitus) 1.5 1)
-              :img         "kartta-tiedotus-violetti.svg"
+              :img         "kartta-tiedotus-violetti.png"
               :coordinates (get-in ilmoitus [:sijainti :coordinates])})]))
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
@@ -50,9 +50,9 @@
         aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
         ikoni (cond
-                lopetettu? "kartta-kysely-violetti.svg"     ;; TODO Lisää harmaat ikonit kun valmistuvat.
-                aloitettu? "kartta-kysely-violetti.svg"
-                :else "kartta-kysely-kesken-punainen.svg")]
+                lopetettu? "kartta-kysely-violetti.png"     ;; TODO Lisää harmaat ikonit kun valmistuvat.
+                aloitettu? "kartta-kysely-violetti.png"
+                :else "kartta-kysely-kesken-punainen.png")]
     [(assoc ilmoitus
        :type :ilmoitus
        :nimi tooltip
@@ -71,9 +71,9 @@
         vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
         ikoni (cond
-                lopetettu? "kartta-toimenpidepyynto-violetti.svg" ;; TODO
-                vastaanotettu? "kartta-toimenpidepyynto-violetti.svg"
-                :else "kartta-toimenpidepyynto-kesken-punainen.svg")]
+                lopetettu? "kartta-toimenpidepyynto-violetti.png" ;; TODO
+                vastaanotettu? "kartta-toimenpidepyynto-violetti.png"
+                :else "kartta-toimenpidepyynto-kesken-punainen.png")]
     [(assoc ilmoitus
        :type :ilmoitus
        :nimi tooltip
@@ -89,10 +89,10 @@
 
 (defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
   (case tekija
-    :urakoitsija (str "kartta-" ikonityyppi "-urakoitsija-violetti.svg")
-    :tilaaja (str "kartta-" ikonityyppi "-tilaaja-violetti.svg")
-    :konsultti (str "kartta-" ikonityyppi "-konsultti-violetti.svg")
-    (str "kartta-" ikonityyppi "-violetti.svg")))
+    :urakoitsija (str "kartta-" ikonityyppi "-urakoitsija-violetti.png")
+    :tilaaja (str "kartta-" ikonityyppi "-tilaaja-violetti.png")
+    :konsultti (str "kartta-" ikonityyppi "-konsultti-violetti.png")
+    (str "kartta-" ikonityyppi "-violetti.png")))
 
 (defn selvita-tarkastuksen-ikoni [tekija]
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
@@ -138,7 +138,7 @@
      :type :varustetoteuma
      :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
      :alue {:type        :tack-icon
-            :img         "kartta-hairion-hallinta-sininen.svg"
+            :img         "kartta-hairion-hallinta-sininen.png"
             :coordinates (get-in (first (:reittipisteet varustetoteuma)) [:sijainti :coordinates])})])
 
 (def toteuma-varit-ja-nuolet
@@ -189,12 +189,12 @@
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)
-      ["kartta-turvallisuuspoikkeama-avoin-oranssi.svg" "Turvallisuuspoikkeama, avoin"]
+      ["kartta-turvallisuuspoikkeama-avoin-oranssi.png" "Turvallisuuspoikkeama, avoin"]
 
       (if (some (comp nil? :suoritettu) kt)
-        ["kartta-turvallisuuspoikkeama-ei-toteutettu-punainen.svg" "Turvallisuuspoikkeama, ei korjauksia"]
+        ["kartta-turvallisuuspoikkeama-ei-toteutettu-punainen.png" "Turvallisuuspoikkeama, ei korjauksia"]
 
-        ["kartta-turvallisuuspoikkeama-toteutettu-vihrea.svg" "Turvallisuuspoikkeama, kaikki korjattu"]))))
+        ["kartta-turvallisuuspoikkeama-toteutettu-vihrea.png" "Turvallisuuspoikkeama, kaikki korjattu"]))))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
   (let [[ikoni selite] (paattele-turpon-ikoni tp)
@@ -301,7 +301,7 @@
                "sininen"
                :else "harmaa")
         [ikoni selite] (or (get ikonikartta (first tehtavat)) ["hairion-hallinta" "Häiriön hallinta"])]
-    [(str "kartta-" ikoni "-" tila ".svg") (str "kartta-" ikoni "-sininen.svg") selite]))
+    [(str "kartta-" ikoni "-" tila ".png") (str "kartta-" ikoni "-sininen.png") selite]))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
   (let [[img selite-img selite-teksti] (paattele-tyokoneen-ikoni
@@ -312,7 +312,7 @@
        :type :tyokone
        :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
        :selite {:teksti selite-teksti
-                :img    ["kartta-suuntanuoli-sininen.svg" selite-img]}
+                :img    ["kartta-suuntanuoli-sininen.png" selite-img]}
        :alue (if-let [reitti (:reitti tyokone)]
                {:type      :tack-icon-line
                 :points    reitti
