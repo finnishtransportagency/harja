@@ -10,10 +10,10 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 
-(def ie? let [ua (-> js/window .-navigator .-userAgent)]
-  (or (not= -1 (.indexOf ua "MSIE "))
-      (not= -1 (.indexOf ua "Trident/"))
-      (not= -1 (.indexOf ua "Edge/"))))
+(def ie? (let [ua (-> js/window .-navigator .-userAgent)]
+           (or (not= -1 (.indexOf ua "MSIE "))
+               (not= -1 (.indexOf ua "Trident/"))
+               (not= -1 (.indexOf ua "Edge/")))))
 
 (defn karttakuva
   "Palauttaa kuvatiedoston nimen, jos käytössä IE palauttaa .png kuvan, muuten .svg"
