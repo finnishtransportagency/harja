@@ -154,3 +154,14 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
     (is (= (count (:ilmoitukset vastaus)) 0))))
+
+(deftest ala-hae-tyokoneita-historianakymaan
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)]
+    (is (= (count (:tyokoneet vastaus)) 0))))
+
+(deftest hae-tyokoneita-nykytilaan
+  (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (>= (count (:tyokoneet vastaus)) 1))))
