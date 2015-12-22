@@ -363,6 +363,12 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (defn poista-popup! []
   (openlayers/hide-popup!))
 
+(defn poista-popup-ilman-eventtia!
+  "Poistaa pop-upin ilmoittamatta siitä kuuntelijoille. Kätevä esim. silloin kun pop-up poistetaan
+   ja luodaan uudelleen uuteen sijaintiin."
+  []
+  (openlayers/hide-popup-without-event!))
+
 (defonce poista-popup-kun-tasot-muuttuvat
          (tapahtumat/kuuntele! :karttatasot-muuttuneet
                                (fn [_]

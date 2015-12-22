@@ -78,6 +78,9 @@
 (defn hide-popup! []
   (go (>! komento-ch [::hide-popup])))
 
+(defn hide-popup-without-event! []
+  (go (>! komento-ch [::hide-popup-without-event])))
+
 (defn invalidate-size! []
   (go (>! komento-ch [::invalidate-size])))
 
@@ -254,14 +257,24 @@
         extent (.getExtent (.getGeometry feature))]
     (.fitExtent view extent (.getSize ol3))))
 
-(defn- poista-popup!
-  "Poistaa kartan popupin, jos sellainen on."
+(defn- poista-openlayers-popup!
+  "Älä käytä tätä suoraan, vaan kutsu poista-popup! tai poista-popup-ilman-eventtia!"
   [this]
-  (t/julkaise! {:aihe :popup-suljettu})
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
       (.removeOverlay ol3 popup)
       (reagent/set-state this {:popup nil}))))
+
+(defn- poista-popup!
+  "Poistaa kartan popupin, jos sellainen on."
+  [this]
+  (t/julkaise! {:aihe :popup-suljettu})
+  (poista-openlayers-popup! this))
+
+(defn- poista-popup-ilman-eventtia!
+  "Poistaa kartan popupin, jos sellainen on, eikä julkaise popup-suljettu eventtiä."
+  [this]
+  (poista-openlayers-popup! this))
 
 (defn luo-overlay [koordinaatti sisalto]
   (let [elt (js/document.createElement "span")
@@ -348,6 +361,9 @@
 
                   ::hide-popup
                   (poista-popup! this)
+
+                  ::hide-popup-without-event
+                  (poista-popup-ilman-eventtia! this)
 
                   ::cursor
                   (let [[cursor] args

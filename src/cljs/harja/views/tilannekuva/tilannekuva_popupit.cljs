@@ -121,7 +121,7 @@
     (when-let [haettu (first (filter #(= tk (:tyokoneid %))
                                      (:tyokoneet data)))]
       (kartta/keskita-kartta-pisteeseen (:sijainti haettu))
-      (kartta/poista-popup!)
+      (kartta/poista-popup-ilman-eventtia!)
       (nayta-popup (assoc haettu :aihe :tyokone-klikattu)))))
 
 
