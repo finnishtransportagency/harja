@@ -223,6 +223,7 @@
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!)
                     (lisaa-karttatyypit))]
+      (log "Asiat tilannekuvaan: " (pr-str tulos))
       (reset! tilannekuva-kartalla/haetut-asiat tulos)
       (kartta/aseta-paivitetaan-karttaa-tila false))))
 
