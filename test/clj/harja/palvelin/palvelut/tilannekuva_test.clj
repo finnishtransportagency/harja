@@ -84,6 +84,13 @@
                      "l- ja p-alueiden puhdistus" true
                      "muu"                        true}})
 
+(defn aseta-filtterit-falseksi [parametrit ryhma]
+  (assoc parametrit ryhma (reduce
+                            (fn [eka toka]
+                              (assoc eka toka false))
+                            (ryhma parametrit)
+                            (keys (ryhma parametrit)))))
+
 (deftest hae-toteumat
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)]
@@ -94,3 +101,17 @@
     (is (>= (count (:paikkaus vastaus)) 1))
     (is (>= (count (:paallystys vastaus)) 1))
     (is (>= (count (:ilmoitukset vastaus)) 1))))
+
+(deftest ala-hae-laatupoikkeamia
+  (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (= (count (:laatupoikkeamat vastaus)) 0))))
+
+(deftest ala-hae-toteumia
+  (let [parametrit (-> parametrit-laaja-historia
+                       (aseta-filtterit-falseksi :kesa)
+                       (aseta-filtterit-falseksi :talvi))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (= (count (:toteumat vastaus)) 0))))
