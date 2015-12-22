@@ -1,6 +1,6 @@
 (ns harja.views.tilannekuva.tilannekuva-popupit
   (:require [harja.tiedot.navigaatio :as nav]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
@@ -14,13 +14,13 @@
 
 (def klikattu-tyokone (atom nil))
 
-(defn- rakenna [kartta]
+(defn- map->hiccup [kartta]
   "Funktio, joka rakentaa mapistä hiccup-rakenteen. Ei ole tarkoituskaan olla kovin älykäs, vaan helpottaa lähinnä
   kehitystyötä."
   (log (pr-str kartta))
   (for [avain (keys kartta)]
     (cond
-      (map? (get kartta avain)) (into [:div [:b (pr-str avain)]] (rakenna (get kartta avain)))
+      (map? (get kartta avain)) (into [:div [:b (pr-str avain)]] (map->hiccup (get kartta avain)))
 
       (or (set? (get kartta avain)) (vector? (get kartta avain)))
       [:div [:b (pr-str avain)] (clojure.string/join ", " (get kartta avain))]
@@ -44,9 +44,8 @@
 
     (when linkki
       (let [nimi (:nimi linkki)
-            on-click (:on-click (:nimi linkki))]
-        [:a.arvolistaus-linkki {:href     "#"
-                                :on-click on-click}
+            on-click (:on-click linkki)]
+        [:a.arvolistaus-linkki.klikattava {:on-click on-click}
          nimi]))]))
 
 (defmulti nayta-popup :aihe)
@@ -92,16 +91,21 @@
                                               [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
                                                ["Selite" (:lyhytselite tapahtuma)]
                                                ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-                                              {:linkki {:nimi     "Siirry ilmoitusnäkymään" ; FIXME Ei vaikuta toimivan?
-                                                        :on-click #(do (.preventDefault %)
+                                              {:linkki {:nimi     "Siirry ilmoitusnäkymään"
+                                                        :on-click #(do
+                                                                    (.preventDefault %)
                                                                        (let [putsaa (fn [asia]
                                                                                       (dissoc asia :type :alue))]
+                                                                         (log "TIL Resetoidaan sivuksi ilmoitukset")
                                                                          (reset! nav/sivu :ilmoitukset)
+                                                                         (log "TIL Reset valmis!")
                                                                          (reset! ilmoitukset/haetut-ilmoitukset
                                                                                  (map putsaa (filter
                                                                                                (fn [asia] (= (:type asia) :ilmoitus))
                                                                                                @tiedot/historiakuvan-asiat-kartalla)))
                                                                          (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}})))
+
+(tarkkaile! "TIL Sivu: " nav/sivu)
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
