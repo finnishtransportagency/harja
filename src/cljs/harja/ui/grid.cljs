@@ -685,7 +685,7 @@ Optiot on mappi optioita:
                                        (if (otsikko? rivi)
                                          [^{:key (:teksti rivi)}
                                          [:tr.otsikko
-                                          [:td {:colSpan (inc (count skeema))}
+                                          [:td {:colSpan colspan}
                                            [:h5 (:teksti rivi)]]]]
 
                                          (let [id ((or tunniste :id) rivi)]

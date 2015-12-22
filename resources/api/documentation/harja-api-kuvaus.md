@@ -1,17 +1,19 @@
 Harja -järjestelmän julkinen API
 
-API on jaettu neljään pääosioon:
+API on jaettu kuuteen pääosioon:
 <ol>
   <li>urakat:
     <ul>
       <li>Urakoiden perustietojen haku joko urakoitsijan id:llä tai yksittäisen urakan id:llä</li>
-      <li>Urakan seurantatietojen kirjaus: toteumat, poikkeukset, tarkastukset ja havainnot</li>
+      <li>Urakan seurantatietojen kirjaus: toteumat, tarkastukset, turvallisuuspoikkeamat, päivystäjätiedot, laatupoikkeamat sekä tietyöilmoitukset</li>
+      <li>Urakan Tieliikennekeskuksen tekemien ilmoitusten haku</li>
     </ul>
   </li>
   <li>varusteet:
     <ul>
+      <li>Varustetietojen tietolajikuvausten haku Tierekisteristä</li>
       <li>Varustetietojen haku Tierekisteristä</li>
-      <li>Varustetietojen päivitys Tierekisteriin.</li>
+      <li>Varustetietojen lisäys, poisto ja päivitys Tierekisteriin.</li>
     </ul>
   </li>
   <li>seuranta:
@@ -21,8 +23,18 @@ API on jaettu neljään pääosioon:
     </li>
   <li>ilmoitukset: 
     <ul>
-      <li>Ilmoitusten haku urakoitsijakohtaisesti</li>
-      <li>Ilmoitusten ilmoitusten kuittaaminen</li>
+      <li>Tieliikennekeskuksen urakalle tekemien ilmoitusten haku</li>
+      <li>Kuittausten eli toimenpiteiden tekeminen ilmoituksille</li>
     </ul>   
   </li>
+  <li>tieluvat:
+      <ul>
+        <li>Tielupien haku</li>
+      </ul>
+  </li>
+  <li>päivystäjätiedot:
+        <ul>
+          <li>Päivystäjätietojen haku</li>
+        </ul>
+    </li>
 </ol>

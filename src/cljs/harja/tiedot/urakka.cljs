@@ -43,8 +43,10 @@
   urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
   ja viimeinen voivat olla vajaat)."
   [ur]
-  (let [ensimmainen-vuosi (pvm/vuosi (:alkupvm ur))
-        viimeinen-vuosi (pvm/vuosi (:loppupvm ur))]
+  (let [alkupvm (:alkupvm ur)
+        loppupvm (:loppupvm ur)
+        ensimmainen-vuosi (pvm/vuosi alkupvm)
+        viimeinen-vuosi (pvm/vuosi loppupvm)]
     (if (= :hoito (:tyyppi ur))
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
@@ -52,16 +54,7 @@
                (pvm/hoitokauden-loppupvm (inc vuosi))])
             (range ensimmainen-vuosi viimeinen-vuosi))
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
-      (if (= ensimmainen-vuosi viimeinen-vuosi)
-        ;; Jos alku- ja loppuvuosi on sama, palautetaan vain 1 kausi
-        [[(:alkupvm ur) (:loppupvm ur)]]
-
-        ;; Muutoin palautetaan [ensimmäisen vuoden osa] .. [täydet vuodet] .. [viimeisen vuoden osa]
-        (vec (concat [[(:alkupvm ur) (pvm/vuoden-viim-pvm ensimmainen-vuosi)]]
-                     (mapv (fn [vuosi]
-                             [(pvm/vuoden-eka-pvm vuosi) (pvm/vuoden-viim-pvm vuosi)])
-                           (range (inc ensimmainen-vuosi) viimeinen-vuosi))
-                     [[(pvm/vuoden-eka-pvm viimeinen-vuosi) (:loppupvm ur)]]))))))
+      (pvm/urakan-vuodet alkupvm loppupvm))))
 
 (defn urakoiden-hoitokaudet
   "Palauttaa urakoiden hoitokaudet aikaisimmasta viimeiseen. Ei kuitenkaan palauta yli N vuotta

@@ -101,6 +101,18 @@ ssh -L7777:localhost:5432 harja-dfb1-stg
 (for [[vari rgb] varit]
   (spit (str "resources/public/images/nuoli-" vari ".svg")
   	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\">
+<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
    <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
 </svg>")))
+
+
+## Konvertoi SVG kuvia PNG:ksi
+
+Käytä inkscape sovellusta ilman UI:ta. Muista käyttää täysiä tiedostopolkuja:
+> /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=/Users/minä/kuva/jossain/image.png /Users/minä/kuva/jossain/image.svg
+
+Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
+
+kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
+
+> for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end

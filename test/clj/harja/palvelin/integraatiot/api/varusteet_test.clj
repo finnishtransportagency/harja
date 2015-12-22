@@ -46,8 +46,8 @@
 
 (deftest tarkista-tietueiden-haku
   (let [vastaus-xml "xsd/tierekisteri/examples/hae-tietueet-response.xml"
-        validi-kutsu "/api/varusteet/varusteet?numero=3002&aet=2295&aosa=5&ajr=0&let=1&puoli=1&voimassaolopvm=2014-11-08&tietolajitunniste=tl506&losa=1"
-        virheellinen-kutsu "/api/varusteet/varusteet"
+        validi-kutsu "/api/varusteet/haku?numero=3002&aet=2295&aosa=5&ajr=0&let=1&puoli=1&voimassaolopvm=2014-11-08&tietolajitunniste=tl506&losa=1"
+        virheellinen-kutsu "/api/varusteet/haku"
         tierekisteri-resurssi "/haetietueet"
         oletettu-vastaus "Tietueita ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)"]
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))

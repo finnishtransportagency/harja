@@ -467,7 +467,7 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image arrow-image-size] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})        
         nuolet (atom [])]
@@ -510,7 +510,7 @@
                               (ol.style.Style.
                                #js {:geometry (ol.geom.Point. (clj->js sijainti))
                                     :image    (ol.style.Icon. #js {:src (or arrow-image 
-                                                                            "images/nuoli-red.svg")
+                                                                            "images/nuoli-punainen.png")
                                                                    :opacity        1
                                                                    :scale          (or scale 2.5)
                                                                    :zIndex         6
@@ -574,7 +574,7 @@
                       :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
-  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
+  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.png" img direction [0.5 0.5]))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})

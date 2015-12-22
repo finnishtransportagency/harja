@@ -84,7 +84,6 @@
                 mankeloitu)]
     (log/debug "Löydettiin ilmoitukset: " (map :id mankeloitu))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
-
     tulos))
 
 (defrecord Ilmoitukset []

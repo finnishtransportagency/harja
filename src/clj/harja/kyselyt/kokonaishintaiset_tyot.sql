@@ -23,16 +23,18 @@ SELECT
   nimi,
   yksikko
 FROM toimenpidekoodi
-WHERE id IN
-      (SELECT DISTINCT (id)
-       FROM toimenpidekoodi
-       WHERE emo IN
-             (SELECT DISTINCT (tpi.toimenpide)
-              FROM kokonaishintainen_tyo kht
-                INNER JOIN toimenpideinstanssi tpi ON tpi.id = kht.toimenpideinstanssi
-              WHERE tpi.urakka = :urakkaid AND
-                    kht.sopimus = :sopimusid))
-      AND kokonaishintainen
+WHERE
+  NOT poistettu AND
+  id IN
+  (SELECT DISTINCT (id)
+   FROM toimenpidekoodi
+   WHERE emo IN
+         (SELECT DISTINCT (tpi.toimenpide)
+          FROM kokonaishintainen_tyo kht
+            INNER JOIN toimenpideinstanssi tpi ON tpi.id = kht.toimenpideinstanssi
+          WHERE tpi.urakka = :urakkaid AND
+                kht.sopimus = :sopimusid))
+  AND kokonaishintainen
 ORDER BY id;
 
 -- name: paivita-kokonaishintainen-tyo!
