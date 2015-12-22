@@ -182,8 +182,7 @@
          :alue {:type   :arrow-line
                 :width 5
                 :color vari
-                :arrow-image (str "images/nuoli-" nuoli ".svg")
-                :arrow-image-size [32 32]
+                :arrow-image (str "images/nuoli-" nuoli ".png")
                 :scale  (if (valittu? toteuma) 2 1.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
                 :points (mapv #(get-in % [:sijainti :coordinates])
                               (sort-by :aika pvm/ennen? reittipisteet))}))]))
