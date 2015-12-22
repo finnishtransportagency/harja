@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [harja.kyselyt.organisaatiot :as organisaatiot])
+            [harja.kyselyt.organisaatiot :as organisaatiot]
+            [harja.tyokalut.merkkijono :as merkkijono])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi hallintayksikko]
@@ -52,7 +53,7 @@
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
     (let [urakkatyyppi (paattele-urakkatyyppi db hanke-sampo-id)
-          ely-id (:id (first (organisaatiot/hae-ely-id-sampo-hashilla db ely-hash)))
+          ely-id (:id (first (organisaatiot/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
           urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi ely-id)]
       (log/debug "Käsiteltävän urakan id on:" urakka-id)
       (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
