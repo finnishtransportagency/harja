@@ -188,30 +188,31 @@
         nil))))
 
 (defn- hae-tyokoneet
-  [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko]} urakat]
-  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
-        tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
-    (when-not (empty? haettavat-toimenpiteet)
-      (try
-        (let [valitun-alueen-geometria (if urakka-id
-                                         (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
-                                           (or (:urakka_alue urakan-aluetiedot)
-                                               (:alueurakka_alue urakan-aluetiedot)))
-                                         (when hallintayksikko
-                                           (:alue (first (hal-q/hae-hallintayksikon-geometria db hallintayksikko)))))]
-          (into {}
-                (comp
-                  (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
-                  (map #(update-in % [:edellinensijainti] (fn [pos] (when pos
-                                                                     (geo/piste-koordinaatit pos)))))
-                 (map #(assoc % :tyyppi :tyokone))
-                 (map #(konv/array->set % :tehtavat))
-                 (map (juxt :tyokoneid identity)))
-               (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
-                                urakka-id tpi-str)))
-        (catch Exception e
-          (tulosta-virhe! "tyokoneet" e)
-          nil)))))
+  [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?]} urakat]
+  (when nykytilanne?
+    (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
+         tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
+     (when-not (empty? haettavat-toimenpiteet)
+       (try
+         (let [valitun-alueen-geometria (if urakka-id
+                                          (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
+                                            (or (:urakka_alue urakan-aluetiedot)
+                                                (:alueurakka_alue urakan-aluetiedot)))
+                                          (when hallintayksikko
+                                            (:alue (first (hal-q/hae-hallintayksikon-geometria db hallintayksikko)))))]
+           (into {}
+                 (comp
+                   (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
+                   (map #(update-in % [:edellinensijainti] (fn [pos] (when pos
+                                                                       (geo/piste-koordinaatit pos)))))
+                   (map #(assoc % :tyyppi :tyokone))
+                   (map #(konv/array->set % :tehtavat))
+                   (map (juxt :tyokoneid identity)))
+                 (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
+                                  urakka-id tpi-str)))
+         (catch Exception e
+           (tulosta-virhe! "tyokoneet" e)
+           nil))))))
 
 (defn- hae-toteumien-reitit
   [db user {:keys [alue alku loppu talvi kesa]} urakat]
