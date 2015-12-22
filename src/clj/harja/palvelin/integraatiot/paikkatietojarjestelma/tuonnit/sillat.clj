@@ -45,5 +45,6 @@
       (jdbc/with-db-transaction [transaktio db]
         (doseq [silta (shapefile/tuo shapefile)]
           (vie-silta-entry transaktio silta)))
+      (s/paivita-urakoiden-sillat! db)
       (log/debug "Siltojen tuonti kantaan valmis."))
     (log/debug "Siltojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
