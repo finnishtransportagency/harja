@@ -33,7 +33,6 @@ WHERE
           FROM kokonaishintainen_tyo kht
             INNER JOIN toimenpideinstanssi tpi ON tpi.id = kht.toimenpideinstanssi
           WHERE tpi.urakka = :urakkaid AND
-          WHERE tpi.urakka = :urakkaid AND
                 kht.sopimus = :sopimusid))
   AND kokonaishintainen
 ORDER BY id;
