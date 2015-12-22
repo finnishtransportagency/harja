@@ -34,8 +34,8 @@
    :urakkatyyppi    :hoito
    :nykytilanne?    false
    :alue            {:xmin -550093.049087613, :ymin 6372322.595126259, :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
-   :alku            (c/to-date (t/minus (t/now) (t/years 15)))
-   :loppu           (c/to-date (t/now))
+   :alku            (c/to-date (t/local-date 2000 1 1))
+   :loppu           (c/to-date (t/local-date 2030 1 1))
    :yllapito        {:paallystys true
                      :paikkaus   true}
    :ilmoitukset     {:tyypit {:toimenpidepyynto true
@@ -160,11 +160,21 @@
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)]
     (is (= (count (:tyokoneet vastaus)) 0))))
 
-(deftest hae-tyokoneita-nykytilaan
+(deftest loyda-vahemman-asioita-tiukalla-aikavalilla
+  (let [vastaus-pitka-aikavali (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)
+        parametrit (-> parametrit-laaja-historia
+                       (assoc :alku (c/to-date (t/local-date 2005 1 1)))
+                       (assoc :loppu (c/to-date (t/local-date 2010 1 1))))
+        vastaus-lyhyt-aikavali (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (< (count (:toteumat vastaus-lyhyt-aikavali)) (count (:toteumat vastaus-pitka-aikavali))))))
+
+(deftest hae-tyokoneet-nykytilaan
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
-    (is (>= (count (:tyokoneet vastaus)) 1))))
+    (is (>= (count (vals (:tyokoneet vastaus))) 1))))
 
 (deftest ala-hae-toteumia-liian-lahelle-zoomatussa-historianakymassa
   (let [parametrit (assoc parametrit-laaja-historia :alue {:xmin 0,
@@ -184,4 +194,4 @@
                        (assoc :nykytilanne? true))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
-    (is (= (count (:tyokoneet vastaus)) 0))))
+    (is (= (count (vals (:tyokoneet vastaus))) 0))))
