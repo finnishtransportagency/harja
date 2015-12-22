@@ -54,7 +54,6 @@ documentation:
  - title: Versiohistoria
    content: !include documentation/harja-api-versiohistoria.md
 
-
 /urakat:
   is: [secured]
   description: Urakoiden tietojen hallinta.
@@ -384,9 +383,9 @@ documentation:
             example: 1
           muuttunutJalkeen:
             description: Aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset haetaan
-            type: integer
+            type: date
             required: false
-            example: 12
+            example: 2011-01-30T12:00:00Z
           stream:
             description: Jos kytketty päälle, vastaukset palautetaan streamina, jolloin uutta requestia ei tarvitse tehdä jokaisen responsen jälkeen, vaan uudet ilmoitukset palautetaan streamina.
             type: boolean
