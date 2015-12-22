@@ -190,7 +190,8 @@
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
-                      :uusi-tyokonedata] (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
+                      :uusi-tyokonedata]
+                     (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
                      :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit

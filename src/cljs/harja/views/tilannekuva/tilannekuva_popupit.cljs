@@ -36,8 +36,7 @@
 
     [:table.otsikot-ja-arvot
      (for [[nimi arvo] nimi-arvo-parit]
-       (when-not (or (nil? arvo)
-                     (empty? arvo))
+       (when-not (nil? arvo)
          ^{:key (str nimi arvo)}
          [:tr
           [:td.otsikko [:b nimi]]
@@ -67,8 +66,9 @@
                        (tee-arvolistaus-popup "Toteuma"
                                               [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
                                                ["Suorittaja" (get-in tapahtuma [:suorittaja :nimi])]
-                                               ["Tehtävät" (doall
+                                               ["Tehtävät" (when (not-empty (:tehtavat tapahtuma))
                                                              (for [tehtava (:tehtavat tapahtuma)]
+                                                               ^{:key tehtava}
                                                                [:div.toteuma-tehtavat
                                                                 [:div "Toimenpide: " (:toimenpide tehtava)]
                                                                 [:div "Määrä: " (:maara tehtava)]
@@ -76,10 +76,12 @@
                                                                   [:div "Päivän hinta: " (:paivanhinta tehtava)])
                                                                 (when (:lisatieto tehtava)
                                                                   [:div "Lisätieto: " (:lisatieto tehtava)])]))]
-                                               ["Materiaalit" (for [toteuma (:materiaalit tapahtuma)]
-                                                                [:div.toteuma-materiaalit
-                                                                 [:div "Materiaali: " (get-in toteuma [:materiaali :nimi])]
-                                                                 [:div "Määrä: " (:maara toteuma)]])]
+                                               ["Materiaalit" (when (not-empty (:materiaalit tapahtuma))
+                                                                (for [toteuma (:materiaalit tapahtuma)]
+                                                                  ^{:key toteuma}
+                                                                  [:div.toteuma-materiaalit
+                                                                   [:div "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                                                   [:div "Määrä: " (:maara toteuma)]]))]
                                                ["Lisätieto" (:lisatieto tapahtuma)]])))
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
