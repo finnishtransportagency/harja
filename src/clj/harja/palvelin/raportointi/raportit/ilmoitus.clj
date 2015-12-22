@@ -128,10 +128,10 @@
           ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
           (when-not (= :urakka konteksti)
             (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                 tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
-                 urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
-             [(concat ["Yhteensä"]
-                      [tpp-yht tur-yht urk-yht])]))))]
+                  tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
+                  urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
+              [(concat ["Yhteensä"]
+                       [tpp-yht tur-yht urk-yht])]))))]
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
