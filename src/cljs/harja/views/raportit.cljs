@@ -120,11 +120,17 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
     (fn [_ _]
       (let [ur @ur
             hoitourakassa? @hoitourakassa?
-            hal @nav/valittu-hallintayksikko]
+            hal @nav/valittu-hallintayksikko
+            vuosi-eka (if ur
+                        (pvm/vuosi (:alkupvm ur))
+                        2010)
+            vuosi-vika (if ur
+                         (pvm/vuosi (:loppupvm ur))
+                         (pvm/vuosi (pvm/nyt)))]
         [:span
          [:div 
           [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
-           2010 (pvm/vuosi (pvm/nyt)) valittu-vuosi
+           vuosi-eka vuosi-vika valittu-vuosi
            #(do
               (reset! valittu-vuosi %)
               (reset! valittu-hoitokausi nil)
