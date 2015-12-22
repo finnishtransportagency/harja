@@ -15,7 +15,6 @@
                (not= -1 (.indexOf ua "Trident/"))
                (not= -1 (.indexOf ua "Edge/")))))
 
-(js/alert (str  "ie? " ie?))
 
 (defn karttakuva
   "Palauttaa kuvatiedoston nimen, jos käytössä IE palauttaa .png kuvan, muuten .svg"
