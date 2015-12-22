@@ -91,16 +91,27 @@
                             (ryhma parametrit)
                             (keys (ryhma parametrit)))))
 
-(deftest hae-toteumat
+(deftest hae-asioita-tilannekuvaan
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)]
-    (is (>= (count (:toteumat vastaus)) 0))
+    (is (>= (count (:toteumat vastaus)) 1))
+    ;; Testaa, että toteumat tulivat useasta urakasta
+    (is (not-every? #(= (first (:urakka (:toteumat vastaus))) %)
+                       (mapv :urakka (:toteumat vastaus))))
     (is (>= (count (:turvallisuuspoikkeamat vastaus)) 1))
     (is (>= (count (:tarkastukset vastaus)) 1))
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
     (is (>= (count (:paikkaus vastaus)) 1))
     (is (>= (count (:paallystys vastaus)) 1))
     (is (>= (count (:ilmoitukset vastaus)) 1))))
+
+(deftest hae-urakan-toteumat
+  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+        parametrit (assoc parametrit-laaja-historia :urakka-id urakka-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (true? (every? #(= % urakka-id)
+                       (mapv :urakka (:toteumat vastaus)))))))
 
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)
@@ -112,6 +123,13 @@
   (let [parametrit (-> parametrit-laaja-historia
                        (aseta-filtterit-falseksi :kesa)
                        (aseta-filtterit-falseksi :talvi))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (= (count (:toteumat vastaus)) 0))))
+
+;; Päällystysurakoista ei löydy toteumia
+(deftest urakkatyyppi-filter-toimii
+  (let [parametrit (assoc parametrit-laaja-historia :urakkatyyppi :paallystys)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
