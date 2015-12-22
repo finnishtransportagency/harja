@@ -165,3 +165,18 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
     (is (>= (count (:tyokoneet vastaus)) 1))))
+
+(deftest hae-mitaan-liian-lahelle-zoomatussa-nakymassa
+  (let [parametrit (assoc parametrit-laaja-historia :alue {:xmin 0,
+                                                           :ymin 0,
+                                                           :xmax 1,
+                                                           :ymax 1})
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+    (is (= (count (:toteumat vastaus)) 0))
+    (is (= (count (:turvallisuuspoikkeamat vastaus)) 0))
+    (is (= (count (:tarkastukset vastaus)) 0))
+    (is (= (count (:laatupoikkeamat vastaus)) 0))
+    (is (= (count (:paikkaus vastaus)) 0))
+    (is (= (count (:paallystys vastaus)) 0))
+    (is (= (count (:ilmoitukset vastaus)) 0))))

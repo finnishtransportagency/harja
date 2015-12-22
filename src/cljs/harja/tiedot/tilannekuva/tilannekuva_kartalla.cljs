@@ -18,4 +18,4 @@
              (kartalla-esitettavaan-muotoon
                (concat (vals (:tyokoneet @haetut-asiat)) (apply concat (vals (dissoc @haetut-asiat :tyokoneet))))))))
 
-(tarkkaile! "Haetut asiat tilannekuvassa: " (pr-str haetut-asiat))
+(tarkkaile! "Haetut asiat tilannekuvassa: " haetut-asiat)
