@@ -96,16 +96,12 @@
                                                                     (.preventDefault %)
                                                                        (let [putsaa (fn [asia]
                                                                                       (dissoc asia :type :alue))]
-                                                                         (log "TIL Resetoidaan sivuksi ilmoitukset")
                                                                          (reset! nav/sivu :ilmoitukset)
-                                                                         (log "TIL Reset valmis!")
                                                                          (reset! ilmoitukset/haetut-ilmoitukset
                                                                                  (map putsaa (filter
                                                                                                (fn [asia] (= (:type asia) :ilmoitus))
                                                                                                @tiedot/historiakuvan-asiat-kartalla)))
                                                                          (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}})))
-
-(tarkkaile! "TIL Sivu: " nav/sivu)
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
