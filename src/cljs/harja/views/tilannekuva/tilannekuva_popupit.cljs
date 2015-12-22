@@ -127,11 +127,14 @@
 
 (defmethod nayta-popup :laatupoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
+                       (let [paatos (get-in tapahtuma [:paatos :paatos])
+                             kasittelyaika (get-in tapahtuma [:paatos :kasittelyaika])]
                        (tee-arvolistaus-popup "Laatupoikkeama"
                                               [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
                                                ["Tekijä" (:tekijanimi tapahtuma) ", " (name (:tekija tapahtuma))]
-                                               ["Päätös" (str (laatupoikkeamat/kuvaile-paatostyyppi (get-in tapahtuma [:paatos :paatos]))
-                                                              " (" (pvm/pvm-aika (get-in tapahtuma [:paatos :kasittelyaika])) ")")]])))
+                                               (when (and paatos kasittelyaika)
+                                                 ["Päätös" (str (laatupoikkeamat/kuvaile-paatostyyppi paatos)
+                                                                " (" (pvm/pvm-aika kasittelyaika) ")")])]))))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
@@ -141,19 +144,27 @@
 
 (defmethod nayta-popup :turvallisuuspoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-arvolistaus-popup "Turvallisuuspoikkeama"
-                                              [["Tapahtunut" (pvm/pvm-aika (:tapahtunut tapahtuma)) " - " (pvm/pvm-aika (:paattynyt tapahtuma))]
-                                               ["Käsitelty" (pvm/pvm-aika (:kasitelty tapahtuma))]
-                                               ["Työ\u00ADtehtävä" (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
-                                               ["Vammat" (:vammat tapahtuma)]
-                                               ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
-                                               ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
-                                               ["Kuvaus" (:kuvaus tapahtuma)]
-                                               ["Korjaavat toimen\u00ADpiteet" (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
-                                                "/" (count (:korjaavattoimenpiteet tapahtuma))]])))
+                       (let [tapahtunut (:tapahtunut tapahtuma)
+                             paattynyt (:paattynyt tapahtuma)
+                             kasitelty (:kasitelty tapahtuma)]
+                         (tee-arvolistaus-popup "Turvallisuuspoikkeama"
+                                               [(when (and tapahtunut paattynyt)
+                                                  ["Tapahtunut" (pvm/pvm-aika tapahtunut) " - " (pvm/pvm-aika paattynyt)])
+                                                (when kasitelty
+                                                  ["Käsitelty" (pvm/pvm-aika kasitelty)])
+                                                ["Työ\u00ADtehtävä" (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                                                ["Vammat" (:vammat tapahtuma)]
+                                                ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
+                                                ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
+                                                ["Kuvaus" (:kuvaus tapahtuma)]
+                                                ["Korjaavat toimen\u00ADpiteet" (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
+                                                 "/" (count (:korjaavattoimenpiteet tapahtuma))]]))))
 
 (defmethod nayta-popup :paallystys-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
+                       (let [aloitettu (:aloituspvm tapahtuma)
+                             paallystys-valmis (:paallystysvalmispvm tapahtuma)
+                             kohde-valmis (:kohdevalmispvm tapahtuma)]
                        (tee-arvolistaus-popup "Päällystyskohde"
                                               [["Nimi" (get-in tapahtuma [:kohde :nimi])]
                                                ["Tie\u00ADrekisteri\u00ADkohde" (get-in tapahtuma [:kohdeosa :nimi])]
@@ -166,12 +177,18 @@
                                                ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
                                                ["Toimenpide" (:toimenpide tapahtuma)]
                                                ["Tila" (paallystys/kuvaile-kohteen-tila (get-in tapahtuma [:paallystysilmoitus :tila]))]
-                                               ["Aloitettu" (pvm/pvm-aika (:aloituspvm tapahtuma))]
-                                               ["Päällystys valmistunut" (pvm/pvm-aika (:paallystysvalmispvm tapahtuma))]
-                                               ["Kohde valmistunut" (pvm/pvm-aika (:kohdevalmispvm tapahtuma))]])))
+                                               (when aloitettu
+                                                 ["Aloitettu" (pvm/pvm-aika aloitettu)])
+                                               (when paallystys-valmis
+                                                 ["Päällystys valmistunut" (pvm/pvm-aika paallystys-valmis)])
+                                               (when kohde-valmis
+                                                 ["Kohde valmistunut" (pvm/pvm-aika kohde-valmis)])]))))
 
 (defmethod nayta-popup :paikkaus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
+                       (let [aloitettu (:aloituspvm tapahtuma)
+                             paikkaus-valmis (:paikkausvalmispvm tapahtuma)
+                             kohde-valmis (:kohdevalmispvm tapahtuma)]
                        (tee-arvolistaus-popup "Paikkauskohde"
                                               [["Nimi" (get-in tapahtuma [:kohde :nimi])]
                                                ["Tie\u00ADrekisteri\u00ADkohde" (get-in tapahtuma [:kohdeosa :nimi])]
@@ -184,6 +201,9 @@
                                                ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
                                                ["Toimenpide" (:toimenpide tapahtuma)]
                                                ["Tila" (paikkaus/kuvaile-kohteen-tila (get-in tapahtuma [:paikkausilmoitus :tila]))]
-                                               ["Aloitettu" (pvm/pvm-aika (:aloituspvm tapahtuma))]
-                                               ["Päällystys valmistunut" (pvm/pvm-aika (:paikkausvalmispvm tapahtuma))]
-                                               ["Kohde valmistunut" (pvm/pvm-aika (:kohdevalmispvm tapahtuma))]])))
+                                               (when aloitettu
+                                                 ["Aloitettu" (pvm/pvm-aika aloitettu)])
+                                               (when paikkaus-valmis
+                                                 ["Paikkaus valmistunut" (pvm/pvm-aika paikkaus-valmis)])
+                                               (when kohde-valmis
+                                                 ["Kohde valmistunut" (pvm/pvm-aika kohde-valmis)])]))))
