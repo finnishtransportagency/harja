@@ -399,8 +399,7 @@
      [alkupvm]
      (str (kuukauden-nimi (kuukausi alkupvm)) "ssa "
           (vuosi alkupvm))))
-<<<<<<< HEAD
-=======
+
 
 (defn urakan-vuodet [alkupvm loppupvm]
   (let [ensimmainen-vuosi (vuosi alkupvm)
@@ -414,4 +413,4 @@
                          (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                    [[(vuoden-eka-pvm viimeinen-vuosi) loppupvm]])))))
 
->>>>>>> b4725a9d576c34bff86834a18a82749a9cd998dc
+
