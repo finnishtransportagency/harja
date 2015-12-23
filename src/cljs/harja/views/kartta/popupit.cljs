@@ -222,7 +222,7 @@
                                                    ["Paikkaus valmistunut" (pvm/pvm-aika paikkaus-valmis)])
                                                  (when kohde-valmis
                                                    ["Kohde valmistunut" (pvm/pvm-aika kohde-valmis)])]
-                                                {:nappi {:nimi     (if (get-in tapahtuma [:paallystysilmoitus :tila])
+                                                {:nappi {:nimi     (if (get-in tapahtuma [:paikkaussilmoitus :tila])
                                                                      "Paikkausilmoitus"
                                                                      "Aloita paikkausilmoitus")
                                                          :on-click   #()
