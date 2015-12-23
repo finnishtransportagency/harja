@@ -1,0 +1,1 @@
+ALTER TABLE kayttaja ALTER COLUMN kayttajanimi TYPE VARCHAR(32);

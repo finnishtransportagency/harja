@@ -22,6 +22,19 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn tarkista-parametrit [parametrit]
+  (parametrivalidointi/tarkista-parametrit
+    parametrit
+    {:x            "Koordinaatti X puuttuu"
+     :y            "Koordinaatti Y puuttuu"
+     :urakkatyyppi "Urakkatyyppi puuttuu"})
+  (when (not (some #(= % (:urakkatyyppi parametrit))
+                   ["hoito" "paallystys" "paikkaus" "tiemerkinta" "valaistus" "siltakorjaus"]))
+
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi  virheet/+puutteelliset-parametrit+
+                        :viesti (format "Tuntematon urakkatyyppi: %s" (:urakkatyyppi parametrit))}]})))
+
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
     (do
@@ -54,9 +67,9 @@
 (defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
-                            (doseq [paivystys (:paivystykset data)]
-                              (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
-                                (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
+    (doseq [paivystys (:paivystykset data)]
+      (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
+        (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
 
 (defn kirjaa-paivystajatiedot
   "Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
@@ -107,11 +120,7 @@
 
 (defn hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]
   (log/debug "Haetaan päivystäjätiedot sijainnilla parametreillä: " parametrit)
-  (parametrivalidointi/tarkista-parametrit
-    parametrit
-    {:x            "Koordinaatti X puuttuu"
-     :y            "Koordinaatti Y puuttuu"
-     :urakkatyyppi "Urakkatyyppi puuttuu"})
+  (tarkista-parametrit parametrit)
   (let [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
         x (Double/parseDouble x)
         y (Double/parseDouble y)
