@@ -257,16 +257,30 @@
                                                               :nykytilanne hakutiheys-nykytilanne
                                                               :historiakuva hakutiheys-historiakuva))))
 
-  (defn lopeta-periodinen-haku-jos-kaynnissa []
-    (when @lopeta-haku
-      (log "Tilannekuva: Lopetetaan haku")
-      (@lopeta-haku)
-      (reset! lopeta-haku nil)))
+(defn lopeta-periodinen-haku-jos-kaynnissa []
+  (when @lopeta-haku
+    (log "Tilannekuva: Lopetetaan haku")
+    (@lopeta-haku)
+    (reset! lopeta-haku nil)))
 
-  (defonce pollaus
-           (run! (if @nakymassa?
-                   (do
-                     @valittu-tila
-                     (lopeta-periodinen-haku-jos-kaynnissa)
-                     (aloita-periodinen-haku))
-                   (lopeta-periodinen-haku-jos-kaynnissa))))
+(defn pollaus-muuttui []
+  (let [nakymassa? @nakymassa?
+        valittu-tila @valittu-tila]
+    (log "nakymassa? " nakymassa? "; valittu-tila: " (pr-str valittu-tila))
+    (if nakymassa?
+      (do
+        (lopeta-periodinen-haku-jos-kaynnissa)
+        (aloita-periodinen-haku))
+      (lopeta-periodinen-haku-jos-kaynnissa))))
+
+
+(add-watch nakymassa? :pollaus-muuttui
+           (fn [_ _ old new]
+             (log "nakymassa? muuttui " old " => " new )
+             (pollaus-muuttui)))
+(add-watch valittu-tila :pollaus-muuttui
+           (fn [_ _ old new]
+             (log "valittu-tila muuttui " old " => " new )
+             (pollaus-muuttui)))
+
+
