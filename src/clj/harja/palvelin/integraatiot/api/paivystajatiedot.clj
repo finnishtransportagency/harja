@@ -84,9 +84,7 @@
   (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
   (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
                                                                 urakka-id
-                                                                (not (nil? alkaen))
                                                                 (konv/sql-timestamp alkaen)
-                                                                (not (nil? paattyen))
                                                                 (konv/sql-timestamp paattyen))
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus))
@@ -99,9 +97,7 @@
         alkaen (parsi-paivamaara alkaen)
         paattyen (parsi-paivamaara paattyen)
         kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db
-                                                                       (not (nil? alkaen))
                                                                        (konv/sql-timestamp alkaen)
-                                                                       (not (nil? paattyen))
                                                                        (konv/sql-timestamp paattyen))
         paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
                                                              ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
@@ -131,8 +127,7 @@
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-idt))
         (reduce (partial merge-with concat)
-                (map #(hae-paivystajatiedot-urakan-idlla db % kayttaja alkaen paattyen)
-                     urakka-idt)))
+                (map #(hae-paivystajatiedot-urakan-idlla db % kayttaja alkaen paattyen) urakka-idt)))
       (throw+ {:type    virheet/+viallinen-kutsu+
                :virheet [{:koodi  virheet/+virheellinen-sijainti+
                           :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))

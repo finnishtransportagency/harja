@@ -33,22 +33,22 @@ SELECT
   y.tyopuhelin,
   y.matkapuhelin,
   y.organisaatio,
-  org.id     AS organisaatio_id,
-  org.nimi   AS organisaatio_nimi,
-  org.tyyppi AS organisaatio_tyyppi,
+§  org.id      AS organisaatio_id,
+  org.nimi    AS organisaatio_nimi,
+  org.tyyppi  AS organisaatio_tyyppi,
   org.ytunnus AS organisaatio_ytunnus,
-  u.id AS urakka_id,
-  u.nimi AS urakka_nimi,
-  u.alkupvm AS urakka_alkupvm,
-  u.loppupvm AS urakka_loppupvm,
-  u.tyyppi AS urakka_tyyppi
+  u.id        AS urakka_id,
+  u.nimi      AS urakka_nimi,
+  u.alkupvm   AS urakka_alkupvm,
+  u.loppupvm  AS urakka_loppupvm,
+  u.tyyppi    AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
   LEFT JOIN urakka u ON p.urakka = u.id
 WHERE p.urakka = :urakka
-AND (:alkaen_annettu = FALSE OR p.alku >= :alkaen)
-AND (:paattyen_annettu = FALSE OR p.alku <= :paattyen);
+      AND (:alkaen :: DATE IS NULL OR p.alku >= :alkaen :: DATE)
+      AND (:paattyen :: DATE IS NULL OR p.alku <= :paattyen :: DATE);
 
 -- name: hae-kaikki-paivystajat
 -- Hakee kaikki päivystykset
@@ -64,21 +64,21 @@ SELECT
   y.tyopuhelin,
   y.matkapuhelin,
   y.organisaatio,
-  org.id     AS organisaatio_id,
-  org.nimi   AS organisaatio_nimi,
-  org.tyyppi AS organisaatio_tyyppi,
+  org.id      AS organisaatio_id,
+  org.nimi    AS organisaatio_nimi,
+  org.tyyppi  AS organisaatio_tyyppi,
   org.ytunnus AS organisaatio_ytunnus,
-  u.id AS urakka_id,
-  u.nimi AS urakka_nimi,
-  u.alkupvm AS urakka_alkupvm,
-  u.loppupvm AS urakka_loppupvm,
-  u.tyyppi AS urakka_tyyppi
+  u.id        AS urakka_id,
+  u.nimi      AS urakka_nimi,
+  u.alkupvm   AS urakka_alkupvm,
+  u.loppupvm  AS urakka_loppupvm,
+  u.tyyppi    AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON p.urakka = u.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
-  WHERE (:alkaen_annettu = FALSE OR p.alku >= :alkaen)
-  AND (:paattyen_annettu = FALSE OR p.alku <= :paattyen);
+WHERE (:alkaen :: DATE IS NULL OR p.alku >= :alkaen :: DATE) AND
+      (:paattyen :: DATE IS NULL OR p.alku <= :paattyen :: DATE);
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
@@ -171,10 +171,10 @@ WHERE id = :id AND urakka = :urakka;
 -- name: paivita-paivystys-yhteyshenkilon-idlla<!
 -- Päivittää päivystyksen tiedot
 UPDATE paivystys
-SET alku = :alku,
-loppu = :loppu,
-varahenkilo = :varahenkilo,
-vastuuhenkilo = :vastuuhenkilo
+SET alku        = :alku,
+  loppu         = :loppu,
+  varahenkilo   = :varahenkilo,
+  vastuuhenkilo = :vastuuhenkilo
 WHERE yhteyshenkilo = :yhteyshenkilo_id
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
