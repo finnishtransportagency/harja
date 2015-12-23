@@ -33,7 +33,7 @@ SELECT
   y.tyopuhelin,
   y.matkapuhelin,
   y.organisaatio,
-§  org.id      AS organisaatio_id,
+  org.id      AS organisaatio_id,
   org.nimi    AS organisaatio_nimi,
   org.tyyppi  AS organisaatio_tyyppi,
   org.ytunnus AS organisaatio_ytunnus,
