@@ -66,6 +66,7 @@
     (:klikkaus-koordinaatit tapahtuma)))
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
+  (log "Klikkasit toteumaa: " (pr-str tapahtuma))
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Toteuma"
                                               [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
