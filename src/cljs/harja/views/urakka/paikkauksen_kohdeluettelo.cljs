@@ -10,6 +10,7 @@
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
             [cljs.core.async :refer [<! >! chan]]
+            [harja.views.kartta.popupit :as popupit]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.komponentti :as komp]
@@ -31,8 +32,24 @@
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
 
-(defn kohdeosan-reitti-klikattu [_ {:keys [klikkaus-koordinaatit] :as kohdeosa}]
-  (let [osa (:osa kohdeosa)
+(defn kohdeosan-reitti-klikattu [_ kohde]
+  (log "Klikkasit paikkausta")
+  (popupit/nayta-popup (-> kohde
+                           (assoc :aihe :paikkaus-klikattu)
+                           (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
+                           (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
+                           (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
+                           (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
+                           (assoc :tila (:tila kohde))
+                           (assoc :tr {:numero (get-in kohde [:osa :tr_numero])
+                                       :alkuosa (get-in kohde [:osa :tr_alkuosa])
+                                       :alkuetaisyys (get-in kohde [:osa :tr_alkuetaisyys])
+                                       :loppuosa (get-in kohde [:osa :tr_loppuosa])
+                                       :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})))
+  ; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste ja linkki kohteeseen
+
+  ; TODO Wanha versio, poista kun ylempi toimii
+  #_(let [osa (:osa kohdeosa)
         kohde (:kohde kohdeosa)
         paikkauskohde-id (:paikkauskohde-id kohdeosa)
         {:keys [tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys]} osa
@@ -60,7 +77,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
-    (komp/kuuntelija :paikkauskohde-klikattu kohdeosan-reitti-klikattu)
+    (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paikkauskohteet)
     (fn [ur]
       [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}

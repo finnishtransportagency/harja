@@ -7,6 +7,7 @@
             [harja.views.urakka.kohdeluettelo.paallystyskohteet :as paallystyskohteet-yhteenveto]
             [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.popupit :as popupit]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.komponentti :as komp]
@@ -31,8 +32,23 @@
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
 
-(defn kohdeosan-reitti-klikattu [_ {:keys [klikkaus-koordinaatit] :as kohdeosa}]
-  (let [osa (:osa kohdeosa)
+(defn kohdeosan-reitti-klikattu [_ kohde]
+  (popupit/nayta-popup (-> kohde
+                           (assoc :aihe :paallystys-klikattu)
+                           (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
+                           (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
+                           (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
+                           (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
+                           (assoc :tila (:tila kohde))
+                           (assoc :tr {:numero (get-in kohde [:osa :tr_numero])
+                                       :alkuosa (get-in kohde [:osa :tr_alkuosa])
+                                       :alkuetaisyys (get-in kohde [:osa :tr_alkuetaisyys])
+                                       :loppuosa (get-in kohde [:osa :tr_loppuosa])
+                                       :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})))
+  ; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste ja linkki kohteeseen
+
+  ; TODO Wanha versio alla, poistettava kun uusi toimii
+  #_(let [osa (:osa kohdeosa)
         kohde (:kohde kohdeosa)
         paallystyskohde-id (:paallystyskohde-id kohdeosa)
         {:keys [tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys]} osa
@@ -55,8 +71,6 @@
           (ikonit/eye-open) " Päällystysilmoitus"]
          [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
           "Aloita päällystysilmoitus"])])))
-
-
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
