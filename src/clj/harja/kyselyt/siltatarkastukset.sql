@@ -167,3 +167,6 @@ UPDATE silta
        tr_alkuosa = :aosa,
        tr_alkuetaisyys = :aet
  WHERE siltanro = :siltanro;
+
+-- name: paivita-urakoiden-sillat!
+REFRESH MATERIALIZED VIEW sillat_alueurakoittain;

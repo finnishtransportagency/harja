@@ -1,8 +1,7 @@
 (ns harja.views.urakka.toteumat.kokonaishintaiset-tyot
   "Urakan 'Toteumat' välilehden 'Kokonaishintaiset työt' osio"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! chan]]
-            [cljs.core.async :refer [<! timeout]]
+            [cljs.core.async :refer [<! >! chan timeout]]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -14,10 +13,29 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
+
+(defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
+  (let [tiedot (atom nil)]
+    (go (reset! tiedot
+                (<! (tiedot/hae-kokonaishintaisen-toteuman-tiedot (:id @nav/valittu-urakka) pvm toimenpidekoodi))))
+    (fn [pvm toimenpidekoodi]
+      (if-not @tiedot
+        [yleiset/ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
+        [grid/grid {:otsikko "Päivän toteumat"
+                    :tunniste :id}
+         [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 3}
+          {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
+          {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
+          {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus}
+          {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
+         
+         @tiedot]))))
 
 (defn tee-taulukko []
   (let [toteumat (into [] (map-indexed ; Summatuilla riveillä ei ole yksilöivää id:tä, generoidaan omat
@@ -31,9 +49,17 @@
                                     (nav/vaihda-kartan-koko! :L)
                                     (reset! tiedot/valittu-paivakohtainen-tehtava %))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
-       :mahdollista-rivin-valinta true}
-      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "20%"}
-       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "40%"}
+       :mahdollista-rivin-valinta true
+       :tunniste (juxt :pvm :toimenpidekoodi)
+       :vetolaatikot (into {}
+                           (map (juxt
+                                 (juxt :pvm :toimenpidekoodi)
+                                 (fn [{:keys [pvm toimenpidekoodi]}]
+                                   [tehtavan-paivakohtaiset-tiedot pvm toimenpidekoodi])))
+                           toteumat)}
+      [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys "3%"}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "19%"}
+       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "38%"}
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
