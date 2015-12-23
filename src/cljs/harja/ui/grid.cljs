@@ -6,6 +6,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
+            [harja.ui.skeema :as skeema]
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
@@ -294,17 +295,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
    (when (and (not piilota-toiminnot?)
            tallenna) [:td.toiminnot])])
 
-(defn laske-sarakkeiden-leveys [skeema]
-  (if (every? number? (map :leveys skeema))
-    ;; Jos kaikki leveydet ovat numeroita (ei siis prosentti stringejä),
-    ;; voidaan niille laskea suhteelliset leveydet
-    (let [yhteensa (reduce + (map :leveys skeema))]
-      (mapv (fn [{lev :leveys :as kentta}]
-              (assoc kentta
-                :leveys (str (.toFixed (* 100.0 (/ lev yhteensa)) 1) "%")))
-            skeema))
-    skeema))
-
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
@@ -553,7 +543,7 @@ Optiot on mappi optioita:
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu] :as opts} skeema tiedot]
-         (let [skeema (laske-sarakkeiden-leveys (keep identity skeema))
+         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
                colspan (if piilota-toiminnot?
                          (count skeema)
                          (inc (count skeema)))
@@ -838,7 +828,7 @@ Optiot on mappi optioita:
        (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota? rivi-klikattu rivinumerot?
                     muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot uusi-id validoi-aina?] :as opts} skeema muokatut]
          (let [virheet (or (:virheet opts) virheet-atom)
-               skeema (laske-sarakkeiden-leveys skeema)
+               skeema (skeema/laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
                ohjaus (ohjaus-fn muokatut virheet)
                voi-muokata? (if (nil? voi-muokata?)

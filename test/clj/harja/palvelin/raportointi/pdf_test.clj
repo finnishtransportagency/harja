@@ -43,7 +43,7 @@
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
     (is (= fo '[:fo:block
-                {}
+                {:space-before "1em"}
                 "Taulukko"
                 [:fo:table
                  {:border "solid 0.2mm black"}
@@ -95,7 +95,9 @@
                         :padding "1mm"}
                        nil
                        [:fo:block
-                        "kolmas"]])])]]]))))
+                        "kolmas"]])])]]
+                [:fo:block
+                 {:space-after "1em"}]]))))
 
 (deftest pylvaat
   (let [fo (muodosta-pdf [:pylvaat {:otsikko "Mun pylväät"}

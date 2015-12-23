@@ -24,18 +24,20 @@
                          :otsikko (:otsikko sarake)
                          :nimi    (str "sarake" i)})
                       sarakkeet))
-   (let [viimeinen-rivi (last data)]
-     (into []
-           (map (fn [rivi]
-                  (if-let [otsikko (:otsikko rivi)]
-                    (grid/otsikko otsikko)
-                    (let [mappina (zipmap (range (count sarakkeet))
-                                          rivi)]
-                      (if (and viimeinen-rivi-yhteenveto?
-                               (= viimeinen-rivi rivi))
-                        (assoc mappina :yhteenveto true)
-                        mappina)))))
-           data))])
+   (if (empty? data)
+     [(grid/otsikko "Ei tietoja")]
+     (let [viimeinen-rivi (last data)]
+      (into []
+            (map (fn [rivi]
+                   (if-let [otsikko (:otsikko rivi)]
+                     (grid/otsikko otsikko)
+                     (let [mappina (zipmap (range (count sarakkeet))
+                                           rivi)]
+                       (if (and viimeinen-rivi-yhteenveto?
+                                (= viimeinen-rivi rivi))
+                         (assoc mappina :yhteenveto true)
+                         mappina)))))
+            data)))])
 
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
