@@ -1,5 +1,5 @@
-(ns harja.tiedot.urakka.kohdeluettelo.paallystys
-  "Tämä nimiavaruus hallinnoi urakan päällystys - ja paikkaustietoja."
+(ns harja.tiedot.urakka.paallystys
+  "Tämä nimiavaruus hallinnoi urakan päällystys- ja paikkaustietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
@@ -10,7 +10,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus])
+            [harja.tiedot.urakka.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))

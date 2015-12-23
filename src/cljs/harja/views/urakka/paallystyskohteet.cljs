@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kohdeluettelo.paallystyskohteet
+(ns harja.views.urakka.paallystyskohteet
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
@@ -10,7 +10,7 @@
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [paallystyskohderivit paallystys-tai-paikkauskohteet-nakymassa paivita-kohde!] :as paallystys]
+            [harja.tiedot.urakka.paallystys :refer [paallystyskohderivit paallystys-tai-paikkauskohteet-nakymassa paivita-kohde!] :as paallystys]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.tiedot.navigaatio :as nav]

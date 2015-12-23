@@ -4,8 +4,8 @@
             [harja.ui.bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
-            [harja.views.urakka.kohdeluettelo.paallystyskohteet :as paallystyskohteet-yhteenveto]
-            [harja.views.urakka.kohdeluettelo.paikkausilmoitukset :as paikkausilmoitukset]
+            [harja.views.urakka.paallystyskohteet :as paallystyskohteet-yhteenveto]
+            [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
@@ -18,7 +18,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.paallystys.pot :as paallystys-pot]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
+            [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))

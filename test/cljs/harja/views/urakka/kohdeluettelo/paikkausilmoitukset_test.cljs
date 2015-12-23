@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test
+(ns harja.views.urakka.paikkausilmoitukset-test
   (:require
     [cljs-time.core :as t]
     [cljs.test :as test :refer-macros [deftest is]]
@@ -7,7 +7,7 @@
     [harja.domain.paikkaus.minipot :as minipot]
     [harja.loki :refer [log]]
     [harja.domain.paallystys.pot :as pot]
-    [harja.views.urakka.kohdeluettelo.paikkausilmoitukset :as paikkausilmoitukset]))
+    [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]))
 
 
 (deftest hinta-alv-laskettu-oikein

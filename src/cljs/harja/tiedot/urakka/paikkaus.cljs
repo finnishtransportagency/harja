@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.kohdeluettelo.paikkaus
+(ns harja.tiedot.urakka.paikkaus
   "Tämä nimiavaruus hallinnoi urakan paikkaustietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]

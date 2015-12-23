@@ -1,5 +1,5 @@
-(ns harja.views.urakka.kohdeluettelo.paikkausilmoitukset
-  "Urakan kohdeluettelon paikkausilmoitukset"
+(ns harja.views.urakka.paikkausilmoitukset
+  "Urakan paikkausilmoitukset"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -7,9 +7,7 @@
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-
             [harja.tiedot.muokkauslukko :as lukko]
-
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
             [harja.loki :refer [log tarkkaile!]]
@@ -17,18 +15,16 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
+            [harja.tiedot.urakka.paikkaus :as paikkaus]
+            [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.domain.paikkaus.minipot :as minipot]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.views.kartta :as kartta]
             [harja.ui.tierekisteri :as tierekisteri])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
-
-
 
 (def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
                                                (lukko/nykyinen-nakyma-lukittu?))))
@@ -60,7 +56,7 @@
 
 
 (defn laske-tyon-alv
-  "Ottaa työn hinnan (esim 100) ja arvolisäveron (esim. 24) palauttaa työn hinnan alv:n kera"
+  "Ottaa työn hinnan (esim. 100) ja arvolisäveron (esim. 24) palauttaa työn hinnan alv:n kera"
   [tyon-hinta alv]
   (* tyon-hinta (+ (/ (double alv) 100) 1)))
 
