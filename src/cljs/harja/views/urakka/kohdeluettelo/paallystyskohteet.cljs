@@ -1,7 +1,6 @@
 (ns harja.views.urakka.kohdeluettelo.paallystyskohteet
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
@@ -12,9 +11,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [paallystyskohderivit paallystys-tai-paikkauskohteet-nakymassa paivita-kohde!] :as paallystys]
-            [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]

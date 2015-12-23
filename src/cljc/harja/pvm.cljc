@@ -5,6 +5,7 @@
     #?(:cljs [cljs-time.core :as t])
     #?(:cljs [cljs-time.coerce :as tc])
     #?(:cljs [harja.loki :refer [log]])
+    #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.format :as df])
     #?(:clj
             [clj-time.core :as t])
@@ -27,18 +28,7 @@
    (extend-type DateTime
      IHash
      (-hash [o]
-       (hash (tc/to-long o)))
-
-     IEquiv
-     (-equiv [o other]
-       (and (instance? DateTime other)
-            (= (tc/to-long o) (tc/to-long other))))
-
-     IComparable
-     (-compare [x y]
-       (if (instance? DateTime y)
-         (compare (tc/to-long x) (tc/to-long y))
-         (throw (js/Error. (str "Ei voi verrata " x " (goog.date.DateTime) ja " y " (" (type y) ")")))))))
+       (hash (tc/to-long o)))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -121,8 +111,9 @@
   #?(:cljs (df/unparse format date)
      :clj  (.format format date)))
 (defn parsi [format teksti]
-  #?(:cljs (df/parse format teksti)
-     :clj  (.parse format teksti)))
+  #?(:cljs (df/parse-local format teksti)
+     :clj (.parse format teksti)))
+
 
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"
@@ -409,6 +400,7 @@
      (str (kuukauden-nimi (kuukausi alkupvm)) "ssa "
           (vuosi alkupvm))))
 
+
 (defn urakan-vuodet [alkupvm loppupvm]
   (let [ensimmainen-vuosi (vuosi alkupvm)
         viimeinen-vuosi (vuosi loppupvm)]
@@ -420,4 +412,5 @@
                            [(vuoden-eka-pvm vuosi) (vuoden-viim-pvm vuosi)])
                          (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                    [[(vuoden-eka-pvm viimeinen-vuosi) loppupvm]])))))
+
 

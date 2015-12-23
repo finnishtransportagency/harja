@@ -760,3 +760,21 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
 ORDER BY t.alkanut
 LIMIT 501;
+
+
+-- name: hae-kokonaishintaisen-toteuman-tiedot
+-- Hakee urakan kokonaishintaiset toteumat annetun päivän ja toimenpidekoodin perusteella
+SELECT t.id, t.luotu, t.alkanut, t.paattynyt, t.lisatieto,
+       t.suorittajan_ytunnus as suorittaja_ytunnus,
+       t.suorittajan_nimi as suorittaja_nimi,
+       k.jarjestelma, 
+       ST_Length(reitti) as pituus
+  FROM toteuma t
+       JOIN kayttaja k ON t.luoja = k.id
+ WHERE t.urakka = :urakka
+       AND t.alkanut::date = :pvm::date
+       AND EXISTS (SELECT id FROM toteuma_tehtava tt
+                    WHERE tt.toteuma = t.id AND tt.toimenpidekoodi = :toimenpidekoodi);
+
+
+       

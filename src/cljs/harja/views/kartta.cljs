@@ -389,33 +389,32 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
          (poista-hover-kasittelija!)
          (async/close! kanava))))
 
-(comment
-  ;; ota tämä pois kommenteista, jos haluat piirtää linestringejä replistä
-  ;; harja.views.kartta=> (viivan-piirto-aloita)
-  ;; klikkaile kartalta pisteitä...
-  ;; harja.views.kartta=> (viivan-piirto-lopeta)
-  ;;
-  ;; js consoleen logittuu koko ajan rakentuva linestring, jonka voi sijainniksi laittaa
-  
-  (defonce viivan-piirto (cljs.core/atom nil))
-  (defn ^:export viivan-piirto-aloita []
-    (let [eventit (chan)]
-      (reset! viivan-piirto
-              (kaappaa-hiiri eventit))
-      (go-loop [e (<! eventit)
-                pisteet []]
-        (log "LINESTRING("
-             (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
-             ")")
-        (when e
-          (recur (<! eventit)
-                 (if (= :click (:tyyppi e))
-                   (conj pisteet (:sijainti e))
-                   pisteet))))))
 
-  (defn ^:export viivan-piirto-lopeta []
-    (@viivan-piirto)
-    (reset! viivan-piirto nil)))
+
+;; harja.views.kartta=> (viivan-piirto-aloita)
+;; klikkaile kartalta pisteitä...
+;; harja.views.kartta=> (viivan-piirto-lopeta)
+;;
+;; js consoleen logittuu koko ajan rakentuva linestring, jonka voi sijainniksi laittaa
+(defonce viivan-piirto (cljs.core/atom nil))
+(defn ^:export viivan-piirto-aloita []
+  (let [eventit (chan)]
+    (reset! viivan-piirto
+            (kaappaa-hiiri eventit))
+    (go-loop [e (<! eventit)
+              pisteet []]
+      (log "LINESTRING("
+           (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
+           ")")
+      (when e
+        (recur (<! eventit)
+               (if (= :click (:tyyppi e))
+                 (conj pisteet (:sijainti e))
+                 pisteet))))))
+
+(defn ^:export viivan-piirto-lopeta []
+  (@viivan-piirto)
+  (reset! viivan-piirto nil))
 
 (defn nayta-geometria! [avain geometria]
   (assert (and (map? geometria)

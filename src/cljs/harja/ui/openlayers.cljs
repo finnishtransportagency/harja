@@ -108,7 +108,7 @@
   (assert (= 4 (count alue)) "Alueen tulee olla vektori [minx miny maxx maxy]")
   (when-let [ol3 @the-kartta]
     (let [view (.getView ol3)]
-      (.fitExtent view (clj->js alue) (.getSize ol3)))))
+      (.fit view (clj->js alue) (.getSize ol3)))))
 
 (defn extent-sisaltaa-extent? [iso pieni]
   (assert (and (vector? iso) (vector? pieni)) "Alueen tulee vektori numeroita")
@@ -252,7 +252,7 @@
   [ol3 feature]
   (let [view (.getView ol3)
         extent (.getExtent (.getGeometry feature))]
-    (.fitExtent view extent (.getSize ol3))))
+    (.fit view extent (.getSize ol3))))
 
 (defn- poista-popup!
   "Poistaa kartan popupin, jos sellainen on."
@@ -521,6 +521,7 @@
                  (recur nuolityylit
                         viimeisin-nuolen-sijainti
                         nuolet)))))))))))
+
 
 (defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
   #_(assert (not (nil? points)) "Viivalla pitää olla pisteitä") 

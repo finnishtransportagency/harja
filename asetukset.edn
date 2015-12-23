@@ -15,9 +15,9 @@
  :fim                  {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
  :log                  {:gelf    {:taso     :debug
                                   :palvelin "localhost"}
-                        :hipchat {:taso     :warn
-                                  :huone-id 1396730
-                                  :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
+                        ;; :hipchat {:taso     :warn
+                        ;;           :huone-id 1396730
+                        ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
 
                         :email   {:taso          :error
                                   :palvelin      "solita-service-1.solita.fi"
