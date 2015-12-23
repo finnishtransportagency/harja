@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -24,9 +24,6 @@
   (into {}
         (map (juxt identity (constantly 1)))
         tyyppi))
-
-(defn rivi [& asiat]
-  (into [] (keep identity asiat)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
                                alkupvm loppupvm] :as parametrit}]
