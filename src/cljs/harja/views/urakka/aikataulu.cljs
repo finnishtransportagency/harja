@@ -6,6 +6,7 @@
             [harja.tiedot.urakka.valitavoitteet :as vt]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as y]
+            [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.pvm :as pvm]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.fmt :as fmt]
@@ -15,10 +16,7 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-
-
 (defn aikataulu
-  "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   []
   (let [_ 2]
     (komp/luo
@@ -44,8 +42,8 @@
                                :type     "button"
                                :on-click #(log "Painettu")} "Valmis tiemerkintään"]))
             :leveys      "14%"}]
-
-          [{:kohdenumero       1 :kohdenimi "Mt 4 Ylä-Laakkola":tr-osoite "4/1/100/4/534" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
+          @paallystys/paallystyskohderivit
+          #_[{:kohdenumero       1 :kohdenimi "Mt 4 Ylä-Laakkola":tr-osoite "4/1/100/4/534" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
             :paall-aloitusaika "10.6.2015" :paall-valmistumisaika "5.7.2015" :tm-alkuaika "6.7.2015" :tm-valmistumisaika "14.7.2015"
             :valmis-tiemerkintaan "Kyllä" :kohde-valmis "Ei"}
            {:kohdenumero       2 :kohdenimi "Mt 4 Ala-Laakkola":tr-osoite "4/4/534/6/134" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
