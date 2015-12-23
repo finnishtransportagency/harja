@@ -139,7 +139,7 @@
                                                            (get-in m [:tehtava :paivanhinta])
                                                            (get-in m [:tehtava :maara]))))))
               tallennus-kaynnissa (atom false)
-              tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+              tehtavat-tasoineen @u/urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
               tehtavat (map #(nth % 3) tehtavat-tasoineen)
               toimenpideinstanssit @u/urakan-toimenpideinstanssit
               jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)

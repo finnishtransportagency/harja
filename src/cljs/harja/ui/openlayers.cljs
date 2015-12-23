@@ -108,7 +108,7 @@
   (assert (= 4 (count alue)) "Alueen tulee olla vektori [minx miny maxx maxy]")
   (when-let [ol3 @the-kartta]
     (let [view (.getView ol3)]
-      (.fitExtent view (clj->js alue) (.getSize ol3)))))
+      (.fit view (clj->js alue) (.getSize ol3)))))
 
 (defn extent-sisaltaa-extent? [iso pieni]
   (assert (and (vector? iso) (vector? pieni)) "Alueen tulee vektori numeroita")
@@ -252,7 +252,7 @@
   [ol3 feature]
   (let [view (.getView ol3)
         extent (.getExtent (.getGeometry feature))]
-    (.fitExtent view extent (.getSize ol3))))
+    (.fit view extent (.getSize ol3))))
 
 (defn- poista-popup!
   "Poistaa kartan popupin, jos sellainen on."
@@ -467,37 +467,67 @@
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width scale] :as line}]
+(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image arrow-image-size] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        nuolityylit (atom [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "black"
-                                                                                :width (or width 2)})
-                                                 :zIndex 4})])]
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})        
+        nuolet (atom [])]
 
+    ;; Kerätään viivasegmenteille loppusijainnit ja viivan suunta
     (.forEachSegment
       (.getGeometry feature)
       (fn [start end]
-        (swap! nuolityylit conj
-               (ol.style.Style.
-                 #js {:geometry (ol.geom.Point. (clj->js end))
-                      :image    (ol.style.Icon. #js {:src            "images/nuoli.png"
-                                                     :anchor         #js [0.5 0.5]
-                                                     :opacity        1
-                                                     :scale          (or scale 0.5)
-                                                     :size           #js [32 32]
-                                                     :zIndex         6
-                                                     :rotateWithView false
-                                                     :rotation       (- (js/Math.atan2
-                                                                          (- (second end) (second start))
-                                                                          (- (first end) (first start))))})}))
-        false))                                             ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
-
+        (swap! nuolet conj {:sijainti (js->clj  end)
+                            :rotaatio (- (js/Math.atan2
+                                          (- (second end) (second start))
+                                          (- (first end) (first start))))})
+        ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
+        false))
     (doto feature
-      (.setStyle (clj->js @nuolityylit)))))
+      (.setStyle
+       (clj->js
+        (concat
+         [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
+                                                               :width (or width 2)})
+                                :zIndex 4})]
+         (loop [nuolityylit []
+                viimeisin-nuolen-sijainti [0 0]
+                [{:keys [sijainti rotaatio]} & nuolet] @nuolet]
+           (if-not sijainti
+             ;; Kaikki käsitelty, palauta nuolet
+             nuolityylit
+             
+             ;; Tee uusi nuoli, jos aiempaan on matkaa yli 3000 yksikköä
+             ;; tai jos tämä on viimeinen
+             (let [[x1 y1] viimeisin-nuolen-sijainti
+                   [x2 y2] sijainti
+                   dx (- x1 x2)
+                   dy (- y1 y2)
+                   dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
+               
+               (if (or (> dist 3000)
+                       (empty? nuolet))
+                 (recur (conj nuolityylit
+                              (ol.style.Style.
+                               #js {:geometry (ol.geom.Point. (clj->js sijainti))
+                                    :image    (ol.style.Icon. #js {:src (or arrow-image 
+                                                                            "images/nuoli-punainen.png")
+                                                                   :opacity        1
+                                                                   :scale          (or scale 2.5)
+                                                                   :zIndex         6
+                                                                   :rotateWithView false
+                                                                   :rotation       rotaatio})}))
+                        sijainti
+                        nuolet)
+                 (recur nuolityylit
+                        viimeisin-nuolen-sijainti
+                        nuolet)))))))))))
 
-(defmethod luo-feature :tack-icon-line [{:keys [points img scale width zindex color] :as spec}]
-  (assert (not (nil? points)) "Viivalla pitää olla pisteitä")
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
+
+(defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
+  #_(assert (not (nil? points)) "Viivalla pitää olla pisteitä") 
+  (let [feature (if (not (nil? lines))
+                  (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (map :points lines)))})
+                  (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
         tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
                                       :zIndex (or zindex 4)})
@@ -544,7 +574,7 @@
                       :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
-  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.svg" img direction [0.5 0.5]))
+  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.png" img direction [0.5 0.5]))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -616,6 +646,7 @@
             (recur new-geometries-map items)
             (let [shape (or (first (geometries-map avain))
                             (let [new-shape (luo-feature geom)]
+                              (assert (not (nil? new-shape)) (str  "luo-feature palautti nil! annettu geom: " (pr-str geom)))
                               (.setId new-shape avain)
                               (.addFeature features new-shape)
 

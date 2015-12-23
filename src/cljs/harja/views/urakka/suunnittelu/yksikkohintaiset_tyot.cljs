@@ -6,7 +6,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
-            [harja.ui.visualisointi :as vis]
+            [harja.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]

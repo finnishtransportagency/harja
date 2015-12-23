@@ -19,12 +19,14 @@
   (let [pvm-input-solmu (.-parentNode (r/dom-node kalenteri-komponentti))
         r (.getBoundingClientRect pvm-input-solmu)
         etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
-        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-right r))
+        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-left r))
         uusi-suunta (if (< etaisyys-alareunaan 250)
-                      (if (< etaisyys-oikeaan-reunaan 100)
+                      (if (< etaisyys-oikeaan-reunaan 200)
                         :ylos-vasen
                         :ylos-oikea)
-                      :alas)]
+                      (if (< etaisyys-oikeaan-reunaan 200)
+                        :alas-vasen
+                        :alas-oikea))]
     (reset! sijainti-atom uusi-suunta)))
 
 (defn- pilko-viikoiksi [vuosi kk]
@@ -67,20 +69,22 @@ Seuraavat optiot ovat mahdollisia:
 
   ...muita tarpeen mukaan..."
   [optiot]
-  (let [sijainti-atom (atom nil)
+  (let [pakota-suunta (:pakota-suunta optiot)
+        sijainti-atom (atom (or pakota-suunta nil))
         nyt (or (:pvm optiot) (t/now))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])
         scroll-kuuntelija (fn [this _]
                             (selvita-kalenterin-suunta this sijainti-atom))]
     (komp/luo
-     {:component-will-receive-props
-      (fn [this & [_ optiot]]
-        (when-let [pvm (:pvm optiot)]
-          ;; päivitetään näytä vuosi ja kk
-          (reset! nayta [(.getYear pvm) (.getMonth pvm)])))
-      :component-did-mount
-      (fn [this _]
-        (selvita-kalenterin-suunta this sijainti-atom))}
+      {:component-will-receive-props
+       (fn [this & [_ optiot]]
+         (when-let [pvm (:pvm optiot)]
+           ;; päivitetään näytä vuosi ja kk
+           (reset! nayta [(.getYear pvm) (.getMonth pvm)])))
+       :component-did-mount
+       (fn [this _]
+         (when (not pakota-suunta)
+           (selvita-kalenterin-suunta this sijainti-atom)))}
 
      (komp/dom-kuuntelija js/window
                           EventType/SCROLL scroll-kuuntelija)
@@ -92,10 +96,11 @@ Seuraavat optiot ovat mahdollisia:
          [:table.pvm-valinta {:style (merge
                                       {:display (if @sijainti-atom "table" "none")}
                                       (case @sijainti-atom
-                                        :oikea {:top 0 :left "100%"}
                                         :ylos-oikea {:bottom "100%" :left 0}
                                         :ylos-vasen {:bottom "100%" :right 0}
-                                        {:top "100%" :left 0}))} ; Oletusarvo, alas
+                                        :alas-oikea {:top "100%" :left 0}
+                                        :alas-vasen {:top "100%" :right 0}
+                                        {}))}
           [:tbody.pvm-kontrollit
            [:tr
             [:td.pvm-edellinen-kuukausi.klikattava
@@ -146,5 +151,3 @@ Seuraavat optiot ovat mahdollisia:
                                    (.stopPropagation %)
                                    (valitse (pvm/nyt)))}
                   "Tänään"]]]]])))))
-
-

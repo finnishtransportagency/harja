@@ -21,7 +21,6 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.domain.paikkaus.minipot :as minipot]
-            [harja.views.urakka.kohdeluettelo.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.views.kartta :as kartta]
             [harja.ui.tierekisteri :as tierekisteri])

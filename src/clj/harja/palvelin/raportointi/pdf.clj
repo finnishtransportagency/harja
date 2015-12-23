@@ -2,7 +2,9 @@
   "Raportoinnin elementtien renderöinti PDF:ksi"
   (:require [harja.tyokalut.xsl-fo :as fo]
             [clojure.string :as str]
-            [taoensso.timbre :as log]))
+            [harja.visualisointi :as vis]
+            [taoensso.timbre :as log]
+            [harja.ui.skeema :as skeema]))
 
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -16,28 +18,44 @@
     (first elementti)))
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
-  [:fo:block {} otsikko
-   [:fo:table {:border "solid 0.1mm black"}
-    (for [{:keys [otsikko leveys]} sarakkeet]
-      [:fo:table-column {:column-width leveys}])
-    [:fo:table-header
-     [:fo:table-row
-      (for [otsikko (map :otsikko sarakkeet)]
-        [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
-         [:fo:block otsikko]])]]
-    [:fo:table-body
-     (let [viimeinen-rivi (last data)]
-       (for [rivi data]
-         (let [korosta? (when (and viimeinen-rivi-yhteenveto?
-                                   (= viimeinen-rivi rivi))
-                          {:font-weight "bold"})]
-           [:fo:table-row
-            (for [i (range (count sarakkeet))
-                  :let [arvo (nth rivi i)]]
-              [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
-                                     korosta?)
-               [:fo:block (str arvo)]])])))]]
-   [:fo:block {:space-after "1em"}]])
+  (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
+    [:fo:block {:space-before "1em"} otsikko
+     [:fo:table {:border "solid 0.2mm black"}
+      (for [{:keys [otsikko leveys]} sarakkeet]
+        [:fo:table-column {:column-width leveys}])
+      [:fo:table-header
+       [:fo:table-row
+        (for [otsikko (map :otsikko sarakkeet)]
+          [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
+           [:fo:block otsikko]])]]
+      [:fo:table-body
+       (if (empty? data)
+         [:fo:table-row
+          [:fo:table-cell {:padding                "1mm"
+                           :number-columns-spanned (count sarakkeet)}
+           [:fo:block {:space-after "0.5em"}]
+           [:fo:block "Ei tietoja"]]]
+         (let [viimeinen-rivi (last data)]
+           (for [rivi data]
+             (if-let [otsikko (:otsikko rivi)]
+               [:fo:table-row
+                [:fo:table-cell {:padding                "1mm"
+                                 :font-weight            "bold"
+                                 :background-color       "#e1e1e1"
+                                 :number-columns-spanned (count sarakkeet)}
+                 [:fo:block {:space-after "0.5em"}]
+                 [:fo:block otsikko]]]
+               (let [korosta? (when (and viimeinen-rivi-yhteenveto?
+                                         (= viimeinen-rivi rivi))
+                                {:font-weight "bold"})]
+                 [:fo:table-row
+                  (for [i (range (count sarakkeet))
+                        :let [arvo (or (nth rivi i) "")]]
+                    [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
+                                           korosta?)
+                     (when korosta? [:fo:block {:space-after "0.5em"}])
+                     [:fo:block (str arvo)]])])))))]]
+     [:fo:block {:space-after "1em"}]]))
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
@@ -55,62 +73,26 @@
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
-(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari piilota-arvo?]} pylvaat]]
+(defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
-  [:fo:block
+  (log/debug "muodosta pdf pylväät data" pylvaat)
+  [:fo:block {:margin-top "1em"}
    [:fo:block {:font-weight "bold"} otsikko]
    [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
-    [:svg {:xmlns "http://www.w3.org/2000/svg"}
-     (let [data pylvaat
-           width 180
-           height 80
-           label-fn first
-           value-fn second
-           color-fn (constantly (or vari "blue"))
-           ticks nil
-           mx 20 ;; margin-x
-           my -10 ;; margin-y
-           bar-width (/ (- width mx) (count data))
-           max-value (reduce max (map value-fn data))
-           min-value (reduce min (map value-fn data))
-           value-range (- max-value min-value)
-           scale (if (zero? value-range)
-                   1
-                   (/ height value-range))
-           number-of-items (count data)
-           show-every-nth-label (if (< number-of-items 13)
-                                  1
-                                  (Math/ceil (/ number-of-items 12)))
-           hide-value? (or piilota-arvo? (constantly false))]
-       [:g
-        ;; render ticks that are in the min-value - max-value range
-        (for [tick [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value)]
-              :let [tick-y (- height (* tick scale) my)]]
-          [:g 
-           [:text {:font-size "4pt" :text-anchor "end" :x (- mx 3) :y tick-y}
-            (str tick)]
-           [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
-                   :style "stroke:rgb(200,200,200);stroke-width:0.5;" :stroke-dasharray "5,1"}]])
-        
-        (map-indexed (fn [i d]
-                       (let [label (label-fn d)
-                             value (value-fn d)
-                             bar-height (* value scale)
-                             x (+ mx (* i bar-width))
-                             y (- height bar-height my)] ;; FIXME: scale min-max
-                         [:g 
-                          [:rect {:x x
-                                  :y y
-                                  :width (* bar-width 0.75)
-                                  :height bar-height
-                                  :fill (color-fn d)}]
-                          (when-not (hide-value? value)
-                            [:text {:font-size "4pt" :x (+ x (/ (* bar-width 0.75) 2)) :y (- y 1) :text-anchor "middle"} (str value)])
-                          (when (zero? (rem i show-every-nth-label))
-                            [:text {:font-size "3pt" :x (+ x (/ (* bar-width 0.75) 2)) :y (+ 4 (+ y bar-height))
-                                    :text-anchor "middle"}
-                             label])]))
-                     data)])]]])
+    (vis/bars {:width         180
+               :height        80
+               ;; tarvitaanko erityyppisille rapsoille eri formatteri?
+               :format-amount (or fmt str)
+               :hide-value?   piilota-arvo?
+               :margin-x 20
+               :margin-y 20
+               :value-font-size "4pt"
+               :tick-font-size "3pt"
+               :y-axis-font-size "4pt"
+               :legend legend
+               }
+     pylvaat)]
+   [:fo:block {:space-after "1em"}]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)

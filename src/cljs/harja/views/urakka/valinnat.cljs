@@ -7,8 +7,7 @@
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [reagent.core :as r]
-            [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]))
+            [reagent.core :as r]))
 
 (defn tienumero [tienumero-atom]
   [:span.label-ja-kentta

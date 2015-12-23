@@ -11,7 +11,7 @@
   [tyyppi]
   (case tyyppi
     :kysely "Kysely"
-    :toimenpidepyynto "Toimenpidepyyntö"
+    :toimenpidepyynto "Toimenpide\u00ADpyyntö"
     :tiedoitus "Tiedoksi"))
 
 (defn ilmoitustyypin-lyhenne
@@ -20,5 +20,9 @@
     :kysely "URK"
     :toimenpidepyynto "TPP"
     :tiedoitus "TUR"))
+
+(defn ilmoitustyypin-lyhenne-ja-nimi
+  [tyyppi]
+  (str (ilmoitustyypin-lyhenne tyyppi) " (" (ilmoitustyypin-nimi tyyppi) ")"))
 
 (def +ilmoitustilat+ #{:suljetut :avoimet})

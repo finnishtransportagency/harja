@@ -1,27 +1,26 @@
 (ns harja.views.kartta
   "Harjan kartta."
-  (:require [reagent.core :refer [atom] :as reagent]
-
-            [goog.events :as events]
+  (:require [cljs.core.async :refer [timeout <! >! chan] :as async]
+            [clojure.string :as str]
             [goog.events.EventType :as EventType]
-
+            [goog.events :as events]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.asiakas.tapahtumat :as t]
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.fmt :as fmt]
+            [harja.geo :as geo]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.openlayers :refer [openlayers] :as openlayers]
-            [harja.asiakas.tapahtumat :as t]
-            [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.views.kartta.tasot :as tasot]
-            [cljs.core.async :refer [timeout <! >! chan] :as async]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.geo :as geo]
-            [harja.ui.komponentti :as komp]
             [harja.ui.animaatio :as animaatio]
-            [harja.fmt :as fmt])
+            [harja.ui.komponentti :as komp]
+            [harja.ui.openlayers :refer [openlayers] :as openlayers]
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.kartta.tasot :as tasot]
+            [reagent.core :refer [atom] :as reagent])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 
 (def kartta-kontentin-vieressa? (atom false))
@@ -287,22 +286,26 @@
          [:div
           [:table
            [:tbody
-            (for [selite selitteet]
-              ^{:key (str (:img selite) "_" (:nimi selite))}
+            (for [{:keys [img nimi vari teksti]}  selitteet]
+              ^{:key (str (or vari img) "_" nimi)}
               [:tr
-               (if (vector? (:img selite))
+               (if vari
                  [:td.kartan-ikonien-selitykset-ikoni-sarake
-                  [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
-                   {:src (str openlayers/+karttaikonipolku+ (first (:img selite)))}]
-                  [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second (:img selite)))}]]
+                  [:div.kartan-ikoni-vari {:style {:background-color vari}}]]
+                 (if (vector? img)
+                   [:td.kartan-ikonien-selitykset-ikoni-sarake
+                    [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
+                     {:src (str openlayers/+karttaikonipolku+ (first img))}]
+                    [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second img))}]]
 
-                 [:td.kartan-ikonien-selitykset-ikoni-sarake
-                  [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ (:img selite))}]])
-               [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys (:teksti selite)]]])]]
-          [:div.kartan-ikonien-selitykset-sulje.klikattava {:on-click (fn [event]
-                                                                        (reset! ikonien-selitykset-auki false)
-                                                                        (.stopPropagation event)
-                                                                        (.preventDefault event))} "Sulje"]]
+                   [:td.kartan-ikonien-selitykset-ikoni-sarake
+                    [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ img)}]]))
+               [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]])]]
+          [:div.kartan-ikonien-selitykset-sulje.klikattava
+           {:on-click (fn [event]
+                        (reset! ikonien-selitykset-auki false)
+                        (.stopPropagation event)
+                        (.preventDefault event))} "Sulje"]]
          [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [event]
                                                                                                (reset! ikonien-selitykset-auki true)
                                                                                                (.stopPropagation event)
@@ -316,6 +319,18 @@
   (let [sisalto @kartan-yleiset-kontrollit-sisalto]
     (when (and sisalto (not= :S @nav/kartan-koko))
       [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto])))
+
+(def paivitetaan-karttaa-tila (atom false))
+
+(defn paivitetaan-karttaa
+  []
+  (when @paivitetaan-karttaa-tila
+    [:div {:style {:position "absolute" :top "50%" :left "50%"}}
+     [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
+      [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
+
+(defn aseta-paivitetaan-karttaa-tila [uusi-tila]
+  (reset! paivitetaan-karttaa-tila uusi-tila))
 
 (defn aseta-yleiset-kontrollit [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
@@ -374,6 +389,32 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
          (poista-hover-kasittelija!)
          (async/close! kanava))))
 
+
+
+;; harja.views.kartta=> (viivan-piirto-aloita)
+;; klikkaile kartalta pisteitä...
+;; harja.views.kartta=> (viivan-piirto-lopeta)
+;;
+;; js consoleen logittuu koko ajan rakentuva linestring, jonka voi sijainniksi laittaa
+(defonce viivan-piirto (cljs.core/atom nil))
+(defn ^:export viivan-piirto-aloita []
+  (let [eventit (chan)]
+    (reset! viivan-piirto
+            (kaappaa-hiiri eventit))
+    (go-loop [e (<! eventit)
+              pisteet []]
+      (log "LINESTRING("
+           (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
+           ")")
+      (when e
+        (recur (<! eventit)
+               (if (= :click (:tyyppi e))
+                 (conj pisteet (:sijainti e))
+                 pisteet))))))
+
+(defn ^:export viivan-piirto-lopeta []
+  (@viivan-piirto)
+  (reset! viivan-piirto nil))
 
 (defn nayta-geometria! [avain geometria]
   (assert (and (map? geometria)
@@ -578,6 +619,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 
 (defn kartta []
   [:div
+   [paivitetaan-karttaa]
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]

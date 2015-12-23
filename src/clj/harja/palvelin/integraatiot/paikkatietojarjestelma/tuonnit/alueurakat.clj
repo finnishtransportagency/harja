@@ -27,5 +27,6 @@
                                 (u/tuhoa-alueurakkadata! transaktio)
                                 (doseq [urakka (shapefile/tuo shapefile)]
                                   (vie-urakka-entry transaktio urakka)))
+      (u/paivita-urakka-alaueiden-nakyma db)
       (log/debug "Alueurakoiden tuonti kantaan valmis."))
     (log/debug "Alueurakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

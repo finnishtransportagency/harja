@@ -12,7 +12,7 @@
          lisaa-toimenpidekoodi
          poista-toimenpidekoodi
          muokkaa-toimenpidekoodi
-         hae-toimenpidekoodit-historiakuvaan)
+         hae-toimenpidekoodit-tilannekuvaan)
 
 
 (defrecord Toimenpidekoodit []
@@ -29,8 +29,8 @@
                              (tallenna-tehtavat (:db this) user tiedot)))
 
       (julkaise-palvelu
-        :hae-toimenpidekoodit-historiakuvaan (fn [user tiedot]
-                                               (hae-toimenpidekoodit-historiakuvaan (:db this) user tiedot))))
+        :hae-toimenpidekoodit-tilannekuvaan (fn [user tiedot]
+                                               (hae-toimenpidekoodit-tilannekuvaan (:db this) user tiedot))))
     this)
 
   (stop [this]
@@ -38,20 +38,20 @@
       (poista-palvelu (:http-palvelin this) p))
     this))
 
-(defn hae-toimenpidekoodit-historiakuvaan [db user {:keys [urakka urakan-tyyppi]}]
-  (log/debug "Haetaan toimenpidekoodit historiakuvaan urakalle " urakka ", tyypeille " urakan-tyyppi)
+(defn hae-toimenpidekoodit-tilannekuvaan [db user {:keys [urakka urakan-tyyppi]}]
+  (log/debug "Haetaan toimenpidekoodit tilannekuvaan urakalle " urakka ", tyypeille " urakan-tyyppi)
   (jdbc/with-db-transaction [db db]
     (let [ur (if (nil? urakka)
                (let [urakat (mapv :id (filter
                                         (fn [{:keys [tyyppi]}]
                                           (= (keyword tyyppi) urakan-tyyppi))
-                                        (urakat-q/hae-kaynnissa-olevat-urakat db)))]
+                                        (urakat-q/hae-kaynnissa-olevat-urakat db nil nil nil)))]
                  (when-not (empty? urakat) urakat))
 
                (if (vector? urakka) urakka [urakka]))]
       (when ur
         (log/debug "Haetaan urakoille: " (pr-str ur))
-        (q/hae-toimenpidekoodit-historiakuvaan db ur)))))
+        (q/hae-toimenpidekoodit-tilannekuvaan db ur)))))
 
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]

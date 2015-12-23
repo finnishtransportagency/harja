@@ -7,8 +7,6 @@
   (:import (java.text SimpleDateFormat ParseException)
            (java.sql Date)))
 
-(def +xsd-polku+ "xsd/tloik/")
-
 (defn parsi-paivamaara [teksti]
   (if teksti
     (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") teksti)))
@@ -47,14 +45,11 @@
    :ytunnus (z/xml1-> vastaanottaja :ytunnus z/text)})
 
 (defn lue-viesti [viesti]
-  (when (not (xml/validoi +xsd-polku+ "harja-tloik.xsd" viesti))
-    (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman harja-tloik.xsd mukaan validi.")))
-
   (let [data (xml/lue viesti)
         ilmoitus {:ilmoitettu         (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))
                   :ilmoitus-id        (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
                   :ilmoitustyyppi     (z/xml1-> data :ilmoitustyyppi z/text)
-                  :valitettu          (parsi-paivamaara (z/xml1-> data :valitettu z/text))
+                  :valitetty          (parsi-paivamaara (z/xml1-> data :valitetty z/text))
                   :urakkatyyppi       (z/xml1-> data :urakkatyyppi z/text)
                   :otsikko            (z/xml1-> data :otsikko z/text)
                   :lyhytselite        (z/xml1-> data :lyhytSelite z/text)

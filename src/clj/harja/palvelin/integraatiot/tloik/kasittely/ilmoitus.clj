@@ -24,13 +24,13 @@
     (:sahkoposti lahettaja)
     id))
 
-(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   (ilmoitukset/paivita-ilmoitus!
     db
     urakka-id
     ilmoitus-id
     ilmoitettu
-    valitettu
+    valitetty
     yhteydenottopyynto
     otsikko
     lyhytselite
@@ -42,13 +42,13 @@
   (paivita-lahettaja db id lahettaja)
   (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id))
 
-(defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitettu urakkatyyppi otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty urakkatyyppi otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   urakka-id
                   ilmoitus-id
                   ilmoitettu
-                  valitettu
+                  valitetty
                   yhteydenottopyynto
                   otsikko
                   lyhytselite
@@ -65,7 +65,7 @@
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
-        urakka-id (urakkapalvelu/hae-urakka-id-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus))]
+        urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus)))]
     (if id
       (paivita-ilmoitus db id urakka-id ilmoitus)
       (luo-ilmoitus db urakka-id ilmoitus))

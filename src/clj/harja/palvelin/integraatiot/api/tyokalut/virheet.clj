@@ -2,6 +2,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +invalidi-json+ ::invalidi-json)
+(def +invalidi-xml+ ::invalidi-xml)
 (def +viallinen-kutsu+ ::viallinen-kutsu)
 (def +sisainen-kasittelyvirhe+ ::sisainen-kasittelyvirhe)
 

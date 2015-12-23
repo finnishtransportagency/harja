@@ -243,8 +243,8 @@ FROM toteuma_tehtava tt
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja;
 
--- name: hae-toteumat-historiakuvaan
--- Hakee toteumat historiakuvaan toimenpidekoodin perusteella.
+-- name: hae-toteumat-tilannekuvaan
+-- Hakee toteumat tilannekuvaan toimenpidekoodin perusteella.
 -- Hakua saatetaan suodattaa myös hallintayksikön, urakan, tai päivämäärän perusteella
 SELECT
   t.id,
@@ -760,3 +760,21 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
 ORDER BY t.alkanut
 LIMIT 501;
+
+
+-- name: hae-kokonaishintaisen-toteuman-tiedot
+-- Hakee urakan kokonaishintaiset toteumat annetun päivän ja toimenpidekoodin perusteella
+SELECT t.id, t.luotu, t.alkanut, t.paattynyt, t.lisatieto,
+       t.suorittajan_ytunnus as suorittaja_ytunnus,
+       t.suorittajan_nimi as suorittaja_nimi,
+       k.jarjestelma, 
+       ST_Length(reitti) as pituus
+  FROM toteuma t
+       JOIN kayttaja k ON t.luoja = k.id
+ WHERE t.urakka = :urakka
+       AND t.alkanut::date = :pvm::date
+       AND EXISTS (SELECT id FROM toteuma_tehtava tt
+                    WHERE tt.toteuma = t.id AND tt.toimenpidekoodi = :toimenpidekoodi);
+
+
+       

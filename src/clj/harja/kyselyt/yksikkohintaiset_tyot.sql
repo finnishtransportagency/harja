@@ -23,11 +23,13 @@ SELECT
   nimi,
   yksikko
 FROM toimenpidekoodi
-WHERE id IN (
-  SELECT DISTINCT (tehtava)
-  FROM yksikkohintainen_tyo
-  WHERE urakka = :urakkaid AND sopimus = :sopimusid) AND
-      (kokonaishintainen IS NULL OR NOT kokonaishintainen);
+WHERE
+  NOT poistettu AND
+  id IN (
+    SELECT DISTINCT (tehtava)
+    FROM yksikkohintainen_tyo
+    WHERE urakka = :urakkaid AND sopimus = :sopimusid) AND
+  (kokonaishintainen IS NULL OR NOT kokonaishintainen);
 
 -- name: paivita-urakan-yksikkohintainen-tyo!
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot

@@ -8,9 +8,16 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]))
+            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
+            [harja.tyokalut.xml :as xml]
+            [clojure.data.zip.xml :as z])
+  (:import (java.net URLEncoder)
+           (java.text SimpleDateFormat)
+           (java.util Date)))
 
 (def kayttaja "jvh")
+
+(def +kuittausjono+ "tloik-ilmoituskuittausjono")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -51,12 +58,14 @@
                         [{"selite" "auraustarve"} {"selite" "aurausvallitNakemaesteena"}],
    "tienumero"          4,
    "lyhytselite"        nil,
-   "pitkaselite"
-                        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
+   "pitkaselite"        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
 
 (deftest kuuntele-urakan-ilmoituksia
-  (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))]
+  (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
+        tloik-kuittaukset (atom [])]
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
+    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
+
     (odota #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
     (is (= 200 (:status @vastaus)))
 
@@ -65,22 +74,23 @@
       (is (= 1 (count (get vastausdata "ilmoitukset"))))
       (is (= odotettu-ilmoitus ilmoitus)))
 
-    (poista-ilmoitus)))
+    (odota #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 10000)
+
+    (let [xml (first @tloik-kuittaukset)
+          data (xml/lue xml)]
+      (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text))))))
 
 (deftest hae-muuttuneet-ilmoitukset
-  (let [nyt (.format (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (java.util.Date.))
-        _ (do (Thread/sleep 10) ; varmista, että on kulunut joitain millisekunteja
-              (u (str "UPDATE ilmoitus SET muokattu = NOW() WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)")))
-        vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?muuttunutJalkeen="
-                                         (java.net.URLEncoder/encode nyt)] kayttaja portti)
-        kaikkien-ilmoitusten-maara-suoraan-kannasta (ffirst (q
-                                                             (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
-    (println "%%%% VASTAUS: " vastaus)
+  (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour' WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)"))
+
+  (let [nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?muuttunutJalkeen=" (URLEncoder/encode nyt)]
+                                        kayttaja portti)
+        kaikkien-ilmoitusten-maara-suoraan-kannasta (ffirst (q (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
     (is (= 200 (:status vastaus)))
+
     (let [vastausdata (cheshire/decode (:body vastaus))
           ilmoitukset (get vastausdata "ilmoitukset")
           ilmoituksia (count ilmoitukset)]
       (is (> kaikkien-ilmoitusten-maara-suoraan-kannasta ilmoituksia))
-      (is (= 1 ilmoituksia)))
-
-    (poista-ilmoitus)))
+      (is (< 0 ilmoituksia)))))

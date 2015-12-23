@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "tunniste": {
+      "id": "urn:harja/tunniste",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "required": true
+    },
+    "tarkastusajo": {
+      "id": "urn:harja/tarkastusajo",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+      "required": false
+    },
+    "havainnot": {
+      "id": "urn:harja/tarkastus/havainnot",
+      "type": "object",
+      "required": false,
+      "type": "string",
+      "maxLength": 4096
+    },
+    "liitteet": {
+      "id": "urn:harja/liitteet",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+    },
+    "aika": {
+      "id": "urn:harja/talvihoitotarkastus/paivamaara",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "tarkastaja": {
+      "id": "urn:harja/talvihoitotarkastus/tarkastaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "required": true
+    },
+    "alkusijainti": {
+      "id": "urn:harja/talvihoitotarkastus/alkusijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+      "required": true
+    },
+    "loppusijainti": {
+      "id": "urn:harja/talvihoitotarkastus/loppusijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
+    }
+  }
+}

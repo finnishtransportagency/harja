@@ -24,7 +24,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot []
+(deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot 
     (let [db (apply tietokanta/luo-tietokanta testitietokanta)
           urakka-id @oulun-alueurakan-2005-2010-id
           maara-kannassa (ffirst (q
@@ -39,16 +39,14 @@
     (is (not (nil? response)))
     (is (= (count response) maara-kannassa))
 
-    (mapv (fn [rivi]
-              (is (= (:taso (first rivi)) 1))
-              (is (= (:koodi (first rivi)) "23000")))
-              response)
+    (doseq [rivi response]
+      (is (= (:taso (first rivi)) 1))
+      (is (= (:koodi (first rivi)) "23000"))
+      (is (= (:taso (nth rivi 1)) 2))
+      (is (= (:taso (nth rivi 2)) 3))
+      (is (= (:taso (nth rivi 3)) 4)))))
 
-    (mapv (fn [rivi] (is (= (:taso (nth rivi 1)) 2))) response)
-    (mapv (fn [rivi] (is (= (:taso (nth rivi 2)) 3))) response)
-    (mapv (fn [rivi] (is (= (:taso (nth rivi 3)) 4))) response)))
-
-(deftest hae-pudun-urakan-toimenpiteet-ja-tehtavat-tasot []
+(deftest hae-pudun-urakan-toimenpiteet-ja-tehtavat-tasot 
     (let [db (apply tietokanta/luo-tietokanta testitietokanta)
        urakka-id @pudasjarven-alueurakan-id
           maara-kannassa (ffirst (q

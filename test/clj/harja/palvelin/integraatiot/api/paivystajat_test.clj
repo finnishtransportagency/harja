@@ -129,3 +129,5 @@
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
+
+
