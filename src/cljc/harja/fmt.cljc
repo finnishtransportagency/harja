@@ -109,3 +109,8 @@
                             (str "0" (subs puhdas-numero 4 (count puhdas-numero)))
                             puhdas-numero)]
     siivottu-etuliite))
+
+(defn pituus [metria]
+  (if (< metria 1000)
+    (str (desimaaliluku metria 0) " m")
+    (str (desimaaliluku (/ metria 1000.0) 2) " km")))

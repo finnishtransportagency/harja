@@ -639,7 +639,7 @@
       (julkaise-palvelu http :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
                         (fn [user tiedot]
                           (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat db user tiedot)))
-      (julkaise-palvelu http :kokonaishintaisen-toteuman-tiedot
+      (julkaise-palvelu http :hae-kokonaishintaisen-toteuman-tiedot
                         (fn [user {:keys [urakka-id pvm toimenpidekoodi]}]
                           (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi)))
       (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit

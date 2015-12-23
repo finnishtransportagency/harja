@@ -12,6 +12,13 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn hae-kokonaishintaisen-toteuman-tiedot
+  "Hakee annetun toimenpidekoodin ja päivämäärän yksityiskohtaiset tiedot."
+  [urakka-id pvm toimenpidekoodi]
+  (k/post! :hae-kokonaishintaisen-toteuman-tiedot {:urakka-id urakka-id
+                                                   :pvm pvm
+                                                   :toimenpidekoodi toimenpidekoodi}))
+
 (defn hae-toteumatehtavien-paivakohtaiset-summat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
   (log "Haetaan " urakka-id sopimus-id toimenpide tehtava)
   (k/post! :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
