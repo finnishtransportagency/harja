@@ -61,7 +61,7 @@
     (viivan-keskella tapahtuma)))
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
-  (kartta/nayta-popup! (viivan-keskella tapahtuma)
+  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
                        (tee-arvolistaus-popup "Toteuma"
                                               [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
                                                ["Suorittaja" (get-in tapahtuma [:suorittaja :nimi])]
