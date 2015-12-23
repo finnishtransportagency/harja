@@ -563,7 +563,10 @@ SELECT
   rp.aika          AS reittipiste_aika,
   rp.sijainti      AS reittipiste_sijainti,
   tt.toteuma       AS toteumaid,
-  t.alkanut        AS pvm,
+  t.alkanut        AS alkanut,
+  t.paattynyt      AS paattynyt,
+  t.suorittajan_nimi AS suorittaja_nimi,
+  t.lisatieto,
   tk.nimi          AS tehtava_nimi,
   tk.id            AS tehtava_id
 FROM toteuma_tehtava tt

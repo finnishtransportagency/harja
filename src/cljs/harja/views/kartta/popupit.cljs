@@ -71,21 +71,21 @@
                                               [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
                                                ["Suorittaja" (get-in tapahtuma [:suorittaja :nimi])]
                                                ["Tehtävät" (when (not-empty (:tehtavat tapahtuma))
-                                                             (for [tehtava (:tehtavat tapahtuma)]
-                                                               ^{:key tehtava}
-                                                               [:div.toteuma-tehtavat
-                                                                [:div "Toimenpide: " (:toimenpide tehtava)]
-                                                                [:div "Määrä: " (:maara tehtava)]
-                                                                (when (:paivanhinta tehtava)
-                                                                  [:div "Päivän hinta: " (:paivanhinta tehtava)])
-                                                                (when (:lisatieto tehtava)
-                                                                  [:div "Lisätieto: " (:lisatieto tehtava)])]))]
+                                                               (for [tehtava (:tehtavat tapahtuma)]
+                                                                 ^{:key tehtava}
+                                                                 [:div.toteuma-tehtavat
+                                                                  [:div "Toimenpide: " (:toimenpide tehtava)]
+                                                                  [:div "Määrä: " (:maara tehtava)]
+                                                                  (when (:paivanhinta tehtava)
+                                                                    [:div "Päivän hinta: " (:paivanhinta tehtava)])
+                                                                  (when (:lisatieto tehtava)
+                                                                    [:div "Lisätieto: " (:lisatieto tehtava)])]))]
                                                ["Materiaalit" (when (not-empty (:materiaalit tapahtuma))
-                                                                (for [toteuma (:materiaalit tapahtuma)]
-                                                                  ^{:key toteuma}
-                                                                  [:div.toteuma-materiaalit
-                                                                   [:div "Materiaali: " (get-in toteuma [:materiaali :nimi])]
-                                                                   [:div "Määrä: " (:maara toteuma)]]))]
+                                                                  (for [toteuma (:materiaalit tapahtuma)]
+                                                                    ^{:key toteuma}
+                                                                    [:div.toteuma-materiaalit
+                                                                     [:div "Materiaali: " (get-in toteuma [:materiaali :nimi])]
+                                                                     [:div "Määrä: " (:maara toteuma)]]))]
                                                ["Lisätieto" (:lisatieto tapahtuma)]])))
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
