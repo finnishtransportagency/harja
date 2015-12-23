@@ -559,20 +559,24 @@ WHERE
 
 -- name: hae-kokonaishintaisten-toiden-reittipisteet
 SELECT
-  rp.id            AS reittipiste_id,
-  rp.aika          AS reittipiste_aika,
-  rp.sijainti      AS reittipiste_sijainti,
-  tt.toteuma       AS toteumaid,
-  t.alkanut        AS alkanut,
-  t.paattynyt      AS paattynyt,
-  t.suorittajan_nimi AS suorittaja_nimi,
+  rp.id               AS reittipiste_id,
+  rp.aika              AS reittipiste_aika,
+  rp.sijainti         AS reittipiste_sijainti,
+  tt.toteuma          AS toteumaid,
+  t.alkanut           AS alkanut,
+  t.paattynyt         AS paattynyt,
+  t.suorittajan_nimi  AS suorittaja_nimi,
   t.lisatieto,
-  tk.nimi          AS tehtava_nimi,
-  tk.id            AS tehtava_id
+  tk.nimi             AS tehtava_nimi,
+  tk.id               AS tehtava_id,
+  mk.nimi             AS materiaali_nimi,
+  tm.maara            AS materiaali_maara
 FROM toteuma_tehtava tt
   JOIN reittipiste rp ON tt.toteuma = rp.toteuma
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
@@ -584,8 +588,7 @@ WHERE
        tk.emo = (SELECT toimenpide
                  FROM toimenpideinstanssi
                  WHERE id = :toimenpide))
-  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
-
+  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava);
 
 -- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
 SELECT
