@@ -46,20 +46,17 @@
                                      (comp vuosi-ja-kk :tapahtunut)
                                      turpot)
         _ (log/debug "turpot" turpot)
-        _ (log/debug "turpo määrät kuukausittain" turpo-maarat-kuukausittain)
         turpomaarat-tyypeittain (reduce-kv
                                   (fn [tulos kk turpot]
-                                    (let [maarat (reduce (fn [eka toka] (merge-with + eka toka))
-                                                         (map ilmoituksen-tyyppi turpot))
-                                          _ (log/debug "TURPO turpot: " turpot)
-                                          _ (log/debug "TURPO määrät: " maarat)]
+                                    (let [maarat (reduce (fn [eka toka]
+                                                           (merge-with + eka toka))
+                                                         (map ilmoituksen-tyyppi turpot))]
                                       (assoc tulos
                                         kk
                                         [(get maarat "turvallisuuspoikkeama")
                                          (get maarat "prosessipoikkeama")
                                          (get maarat "tyoturvallisuuspoikkeama")])))
                                   {} turpo-maarat-kuukausittain)
-        _ (log/debug "turpomaarat-tyypeittain" turpomaarat-tyypeittain)
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
