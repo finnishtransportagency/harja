@@ -20,6 +20,10 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn kokonaishintainen-reitti-klikattu [_ {:keys [klikkaus-koordinaatit] :as kohdeosa}]
+  ; FIXME Käytä yleistä popupin tekevää funktiota täällä kun historianäkymä on mergetty
+  (log "Klikkasit reittiä"))
+
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
   (let [tiedot (atom nil)]
     (go (reset! tiedot
@@ -34,7 +38,6 @@
           {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
           {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus}
           {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
-         
          @tiedot]))))
 
 (defn tee-taulukko []
@@ -86,6 +89,7 @@
 
 (defn kokonaishintaiset-toteumat []
   (komp/luo
+    (komp/kuuntelija :toteuma-klikattu kokonaishintainen-reitti-klikattu)
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
 
     (fn []
