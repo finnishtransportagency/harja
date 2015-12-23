@@ -59,10 +59,15 @@
 (defn geometrian-koordinaatti [tapahtuma]
   (if-let [piste (get-in tapahtuma [:sijainti :coordinates])]
     piste
-    (viivan-keskella tapahtuma)))
+    ;; PENDING: tässä on epäselvyyttä mikä on optimaalisin tapa valita
+    ;; viivan-keskella on huono, koska pitkässä reitissä se voi olla
+    ;; näkyvän ruudun ulkopuolellakin.
+    ;; Toisaalta klikkauspisteen sijainti voi zoomatessa olla jossain ihan muualla.
+    ;; Parasta olisi kai projisoida klikkauskoordinaatti lähimpään geometrian pisteeseen.
+    (:klikkaus-koordinaatit tapahtuma)))
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
-  (kartta/nayta-popup! (:klikkaus-koordinaatit tapahtuma)
+  (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Toteuma"
                                               [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
                                                ["Suorittaja" (get-in tapahtuma [:suorittaja :nimi])]
