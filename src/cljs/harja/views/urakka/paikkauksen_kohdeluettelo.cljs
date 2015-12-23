@@ -32,8 +32,8 @@
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
 
+; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste ja linkki kohteeseen
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (log "Klikkasit paikkausta")
   (popupit/nayta-popup (-> kohde
                            (assoc :aihe :paikkaus-klikattu)
                            (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
@@ -45,33 +45,7 @@
                                        :alkuosa (get-in kohde [:osa :tr_alkuosa])
                                        :alkuetaisyys (get-in kohde [:osa :tr_alkuetaisyys])
                                        :loppuosa (get-in kohde [:osa :tr_loppuosa])
-                                       :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})))
-  ; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste ja linkki kohteeseen
-
-  ; TODO Wanha versio, poista kun ylempi toimii
-  #_(let [osa (:osa kohdeosa)
-        kohde (:kohde kohdeosa)
-        paikkauskohde-id (:paikkauskohde-id kohdeosa)
-        {:keys [tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys]} osa
-        avaa-ilmoitus #(do (kartta/poista-popup!)
-                           (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
-                           (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id}))]
-
-    (kartta/nayta-popup!
-      klikkaus-koordinaatit
-      [:div.paallystyskohde
-       [yleiset/tietoja {:otsikot-omalla-rivilla? true}
-        "Kohde" (:nimi kohde)
-        "Tierekisterikohde" (:nimi osa)
-        "Osoite" (yleiset/tierekisteriosoite tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys)
-        "Nykyinen päällyste" (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste osa))
-        "Toimenpide" (:toimenpide osa)
-        "Tila" (kuvaile-kohteen-tila (:tila kohdeosa))]
-       (if (:tila kohdeosa)
-         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
-          (ikonit/eye-open) " Paikkausilmoitus"]
-         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
-          "Aloita paikkausilmoitus"])])))
+                                       :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])}))))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
