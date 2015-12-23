@@ -22,7 +22,6 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn kokonaishintainen-reitti-klikattu [_ toteuma]
-  ; FIXME Ei toimi, koska tietoja puuttuu vielä
   (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
 
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
