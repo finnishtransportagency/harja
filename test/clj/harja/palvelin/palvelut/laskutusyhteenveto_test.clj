@@ -5,7 +5,8 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -28,9 +29,9 @@
     (let [haetut-tiedot (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
                           (:db jarjestelma)
                           +kayttaja-jvh+
-                          {:urakka-id          @oulun-alueurakan-2014-2019-id
-                           :alkupvm   (java.sql.Date. 115 7 1)
-                           :loppupvm (java.sql.Date. 115 7 30)})
+                          {:urakka-id @oulun-alueurakan-2014-2019-id
+                           :alkupvm   (pvm/->pvm "1.8.2015")
+                           :loppupvm (pvm/->pvm "31.8.2015")})
           haetut-tiedot-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot))
           haetut-tiedot-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot))
           haetut-tiedot-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot))

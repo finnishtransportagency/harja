@@ -46,3 +46,6 @@
 (defn ei-osumia-aikavalilla-teksti
   [nimi alkupvm loppupvm]
   [:otsikko-kuin-pylvaissa (str "Ei " nimi " aikana " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))])
+
+(defn rivi [& asiat]
+  (into [] (keep identity asiat)))

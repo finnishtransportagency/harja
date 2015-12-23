@@ -43,11 +43,11 @@
 
 (def testmode {})
 
-(defn- kysely [palvelu metodi parametrit transducer]
+(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi?]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
-               (if (virhe? vastaus)
+               (if (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (do (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus))
                      (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe))
                      ;; kaataa seleniumin testiajon, oikea ongelma taustalla, pidä toistaiseksi kommentoituna
@@ -73,18 +73,20 @@
 (defn post!
   "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
 Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
-  ([service payload] (post! service payload nil))
-  ([service payload transducer]
-   (kysely service :post payload transducer)))
+  ([service payload] (post! service payload nil false))
+  ([service payload transducer] (post! service payload transducer false))
+  ([service payload transducer paasta-virhe-lapi?]
+   (kysely service :post payload transducer paasta-virhe-lapi?)))
 
 
 
 (defn get!
   "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
 Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
-  ([service] (get! service nil))
-  ([service transducer]
-   (kysely service :get nil transducer)))
+  ([service] (get! service nil false))
+  ([service transducer] (get! service transducer false))
+  ([service transducer paasta-virhe-lapi?]
+   (kysely service :get nil transducer paasta-virhe-lapi?)))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
