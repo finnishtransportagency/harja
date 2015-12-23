@@ -316,7 +316,7 @@
        :selite {:teksti selite-teksti
                 :img    [(karttakuva "kartta-suuntanuoli-sininen") selite-img]}
        :alue (if-let [reitti (:reitti tyokone)]
-               {:type      :tack-icon-line
+               {:type      :sticker-icon-line
                 :points    reitti
                 :direction (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
                 :img       img}
@@ -345,7 +345,6 @@
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
-   (log (pr-str asiat))
     ;; tarkastetaan että edes jollain on..
    (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")
    (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))

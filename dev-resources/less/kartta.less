@@ -153,7 +153,8 @@
   border: solid 1px black;
   width: 20px;
   height: 20px;
-  
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #kartta-container {
@@ -170,11 +171,6 @@
   #kartta {
     display: none;
   }
-}
-
-.kartta-tyokone-popup {
-    width: 300px;
-    cursor: default;
 }
 
 .kartta-tooltip {
@@ -199,5 +195,40 @@
         background-position: 0 0;
         background-repeat: no-repeat;
         background-image: url("../images/pohjavesialue.png");
+    }
+}
+
+.kartta-popup {
+    > .otsikot-ja-arvot {
+        font-size: 0.875rem;
+
+        .otsikko {
+            vertical-align: top;
+            min-width: 100px;
+            max-width: 100px;
+            padding-bottom: 0.3em;
+        }
+
+        .arvo {
+            vertical-align: top;
+            padding-left: 10px;
+            min-width: 200px;
+            max-width: 200px;
+        }
+    }
+
+    > .arvolistaus-linkki {
+        margin-top: 5px;
+        margin-bottom: 5px;
+        display: block;
+        text-align: center;
+    }
+
+    .toteuma-tehtavat {
+        margin-bottom: 1em;
+    }
+
+    .toteuma-materiaalit {
+        margin-bottom: 1em 1em;
     }
 }

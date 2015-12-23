@@ -388,3 +388,11 @@ WHERE alueurakkanro = :alueurakkanro;
 
 -- name: tuhoa-alueurakkadata!
 DELETE FROM alueurakka;
+
+-- name: hae-urakan-geometria
+SELECT u.alue AS urakka_alue,
+       alueurakka.alue AS alueurakka_alue
+FROM urakka u
+JOIN hanke ON u.hanke = hanke.id
+JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+WHERE u.id = :id;
