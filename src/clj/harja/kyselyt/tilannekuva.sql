@@ -57,6 +57,12 @@ SELECT
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE
+  ((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL)
+   OR ((i.valitetty BETWEEN :alku AND :loppu) OR
+   EXISTS (SELECT id FROM ilmoitustoimenpide
+   WHERE
+   ilmoitus = i.id AND
+   kuitattu BETWEEN :alku AND :loppu))) AND
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
   (:avoimet IS TRUE AND i.suljettu IS NOT TRUE OR
    :suljetut IS TRUE AND i.suljettu IS TRUE) AND
@@ -91,7 +97,8 @@ WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.luotu BETWEEN :alku AND :loppu OR
            l.muokattu BETWEEN :alku AND :loppu OR
            l.aika BETWEEN :alku AND :loppu OR
-           l.kasittelyaika BETWEEN :alku AND :loppu)
+           l.kasittelyaika BETWEEN :alku AND :loppu) AND
+           l.tekija :: TEXT IN (:tekijat)
       AND l.poistettu IS NOT TRUE;
 
 -- name: hae-tarkastukset
@@ -111,7 +118,8 @@ FROM tarkastus t
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
       AND (t.luotu BETWEEN :alku AND :loppu OR
            t.muokattu BETWEEN :alku AND :loppu OR
-           t.aika BETWEEN :alku AND :loppu);
+           t.aika BETWEEN :alku AND :loppu) AND
+           t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
@@ -152,51 +160,64 @@ WHERE
 -- name: hae-paallystykset
 SELECT
   pk.id,
+  pk.kohdenumero,
+  pk.nimi AS kohde_nimi,
+  pko.nimi AS kohdeosa_nimi,
+  pko.sijainti,
+  pko.tr_numero,
+  pko.tr_alkuosa,
+  pko.tr_alkuetaisyys,
+  pko.tr_loppuosa,
+  pko.tr_loppuetaisyys,
+  pko.nykyinen_paallyste,
+  pko.toimenpide,
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
   pi.aloituspvm,
-  pi.valmispvm_paallystys,
-  pi.valmispvm_kohde,
-  kohdenumero,
-  pk.nimi,
-  sopimuksen_mukaiset_tyot,
-  muu_tyo,
-  arvonvahennykset,
-  bitumi_indeksi,
-  kaasuindeksi,
-  muutoshinta,
-  pko.sijainti,
+  pi.valmispvm_paallystys AS paallystysvalmispvm,
+  pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
-FROM paallystysilmoitus pi
-  LEFT JOIN paallystyskohde pk ON pi.paallystyskohde = pk.id
-  LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
+FROM paallystyskohdeosa pko
+  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
+      -- Nykytilanne
+      (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
       (pi.tila :: TEXT != 'valmis' OR
-       (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
+       (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
+       -- Historiakuva
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku)));
 
 -- name: hae-paikkaukset
 SELECT
   pk.id,
-  pi.id   AS paallystysilmoitus_id,
-  pi.tila AS paallystysilmoitus_tila,
-  pi.aloituspvm,
-  pi.valmispvm_paikkaus,
-  pi.valmispvm_kohde,
-  kohdenumero,
-  pk.nimi,
-  sopimuksen_mukaiset_tyot,
-  muu_tyo,
-  arvonvahennykset,
-  bitumi_indeksi,
-  kaasuindeksi,
+  pk.kohdenumero,
+  pk.nimi AS kohde_nimi,
+  pko.nimi AS kohdeosa_nimi,
   pko.sijainti,
+  pko.tr_numero,
+  pko.tr_alkuosa,
+  pko.tr_alkuetaisyys,
+  pko.tr_loppuosa,
+  pko.tr_loppuetaisyys,
+  pko.nykyinen_paallyste,
+  pko.toimenpide,
+  pi.id   AS paikkausilmoitus_id,
+  pi.tila AS paikkausilmoitus_tila,
+  pi.aloituspvm,
+  pi.valmispvm_paikkaus AS paikkausvalmispvm,
+  pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
-FROM paikkausilmoitus pi
-  LEFT JOIN paallystyskohde pk ON pi.paikkauskohde = pk.id
-  LEFT JOIN paallystyskohdeosa pko ON pko.paallystyskohde = pk.id
+FROM paallystyskohdeosa pko
+  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
+      -- Nykytilanne
+      (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
       (pi.tila :: TEXT != 'valmis' OR
-       (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
+       (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
+       -- Historiakuva
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku)));
 
 -- name: hae-toteumat
 SELECT
@@ -251,9 +272,6 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   INNER JOIN reittipiste rp ON rp.toteuma = t.id
-                               -- Haettavan reittipisteen pitää ensinnäkin mahtua kartalla näkyvälle alueelle
-                               AND st_contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), rp.sijainti :: GEOMETRY)
-                               AND (rp.aika BETWEEN :alku AND :loppu)
   LEFT JOIN reitti_materiaali rm ON rm.reittipiste = rp.id
   LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
@@ -261,7 +279,9 @@ FROM toteuma_tehtava tt
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
-      (t.paattynyt BETWEEN :alku AND :loppu)
+      (t.paattynyt BETWEEN :alku AND :loppu) AND
+      EXISTS(SELECT id FROM reittipiste WHERE toteuma = t.id AND
+      st_contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti :: GEOMETRY))
 ORDER BY rp.aika ASC;
 
 -- name: hae-tyokoneet
@@ -287,6 +307,7 @@ SELECT
 FROM tyokonehavainto t
 WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
                   CAST(sijainti AS GEOMETRY)) AND
+      (:valittugeometria :: GEOMETRY IS NULL OR ST_Contains(:valittugeometria, CAST(sijainti AS GEOMETRY))) AND
       (:urakka :: INTEGER IS NULL OR
        t.urakkaid = :urakka OR t.urakkaid IS NULL) AND
       t.tehtavat && :toimenpiteet :: suoritettavatehtava[];

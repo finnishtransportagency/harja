@@ -45,26 +45,6 @@ FROM toimenpidekoodi
 WHERE poistettu IS NOT TRUE AND
       emo = :emo;
 
---name: hae-toimenpidekoodit-tilannekuvaan
-SELECT
-  tpk4.id,
-  tpk4.koodi,
-  tpk4.nimi,
-  (SELECT nimi
-   FROM toimenpidekoodi t2
-   WHERE t2.taso = 2
-         AND t2.id =
-             (SELECT emo
-              FROM toimenpidekoodi t3
-              WHERE t3.id = tpk4.emo)) AS emo,
-  tpk4.taso,
-  tpk4.yksikko
-FROM toimenpidekoodi tpk4
-  INNER JOIN toimenpideinstanssi tpi ON tpk4.emo = tpi.toimenpide
-                                        AND tpi.urakka IN (:urakat)
-WHERE poistettu IS NOT TRUE
-      AND tpk4.taso = 4;
-
 --name: hae-emon-nimi
 SELECT nimi
 FROM toimenpidekoodi
