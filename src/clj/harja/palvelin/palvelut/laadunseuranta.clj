@@ -53,8 +53,7 @@
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
   (jdbc/with-db-transaction [db db]
-    (let [listaus (or listaus :tilannekuva)
-          urakka-idt (if-not (nil? urakka-id)
+    (let [urakka-idt (if-not (nil? urakka-id)
                        (if (vector? urakka-id) urakka-id [urakka-id])
 
                        (if (get (:roolit user) "jarjestelmavastuuhenkilo")
@@ -72,8 +71,7 @@
                                  (apply (case listaus
                                           :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
                                           :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
-                                          :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat
-                                          :tilannekuva laatupoikkeamat/hae-laatupoikkeamat-tilannekuvaan)
+                                          :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat)
                                         [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)])))))]
       (log/debug "Löydettiin laatupoikkeamat: " (pr-str (mapv :id tulos)))
       tulos)))

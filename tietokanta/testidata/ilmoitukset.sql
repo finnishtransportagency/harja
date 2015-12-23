@@ -234,7 +234,7 @@ INSERT INTO ilmoitus
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet,
  ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
-VALUES (12348, '2006-02-13 00:00:00', '2005-02-13 00:00:00', FALSE, 'Täällä joku pommi räjähti!!',
+VALUES (12348, '2005-02-13 00:00:00', '2005-02-13 00:01:00', FALSE, 'Täällä joku pommi räjähti!!',
         ST_MakePoint(249863, 6723867) :: GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus' :: ilmoitustyyppi,
         ARRAY ['virkaApupyynto'] :: ilmoituksenselite [],
         'George', 'Doe', '05079163872', '05079163872', '', 'tienkayttaja' :: ilmoittajatyyppi,
