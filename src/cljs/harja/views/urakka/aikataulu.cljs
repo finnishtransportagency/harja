@@ -3,15 +3,9 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.valitavoitteet :as vt]
+            [harja.tiedot.urakka.aikataulu :as aikataulu]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as y]
-            [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.pvm :as pvm]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.fmt :as fmt]
-            [cljs-time.core :as t]
-            [harja.domain.roolit :as roolit]
             [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -42,7 +36,8 @@
                                :type     "button"
                                :on-click #(log "Painettu")} "Valmis tiemerkintään"]))
             :leveys      "14%"}]
-          @paallystys/paallystyskohderivit
+          @aikataulu/aikataulurivit
+          ;; Alla hardcoodattu testidata. Poistetaan kun kannasta haku toimii
           #_[{:kohdenumero       1 :kohdenimi "Mt 4 Ylä-Laakkola":tr-osoite "4/1/100/4/534" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
             :paall-aloitusaika "10.6.2015" :paall-valmistumisaika "5.7.2015" :tm-alkuaika "6.7.2015" :tm-valmistumisaika "14.7.2015"
             :valmis-tiemerkintaan "Kyllä" :kohde-valmis "Ei"}
@@ -52,5 +47,4 @@
            {:kohdenumero       3 :kohdenimi "Mt 4 Päkylä":tr-osoite "4/6/134/7/1534" :kvl 123 :toimenpide "MPKJ" :yp-lk "1"
             :paall-aloitusaika "12.6.2015" :paall-valmistumisaika "7.7.2015" :tm-alkuaika "8.7.2015" :tm-valmistumisaika "14.7.2015"
             :valmis-tiemerkintaan "Ei" :kohde-valmis "Ei"}
-
            ]]]))))
