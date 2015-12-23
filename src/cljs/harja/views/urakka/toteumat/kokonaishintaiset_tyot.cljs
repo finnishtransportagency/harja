@@ -6,6 +6,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
+            [harja.views.kartta.popupit :as popupit]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -20,9 +21,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn kokonaishintainen-reitti-klikattu [_ {:keys [klikkaus-koordinaatit] :as kohdeosa}]
-  ; FIXME Käytä yleistä popupin tekevää funktiota täällä kun historianäkymä on mergetty
-  (log "Klikkasit reittiä"))
+(defn kokonaishintainen-reitti-klikattu [_ toteuma]
+  (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
 
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
   (let [tiedot (atom nil)]
