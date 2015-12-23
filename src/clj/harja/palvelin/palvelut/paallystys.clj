@@ -328,6 +328,13 @@
       (log/debug "Tallennus suoritettu. Tuoreet päällystyskohdeosat: " (pr-str paallystyskohdeosat))
       paallystyskohdeosat)))
 
+
+(defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
+  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  (log/debug "Haetaan urakan aikataulutiedot.")
+  (jdbc/with-db-transaction [db db]
+                            (q/hae-urakan-aikataulu db urakka-id sopimus-id)))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -354,6 +361,9 @@
       (julkaise-palvelu http :tallenna-paallystyskohdeosat
                         (fn [user tiedot]
                           (tallenna-paallystyskohdeosat db user tiedot)))
+      (julkaise-palvelu http :hae-aikataulut
+                        (fn [user tiedot]
+                          (hae-urakan-aikataulu db user tiedot)))
       this))
 
   (stop [this]

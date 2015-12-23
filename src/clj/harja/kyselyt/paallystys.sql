@@ -239,3 +239,15 @@ WHERE id = :id;
 
 -- name: paivita-paallystys-tai-paikkausurakan-geometria
 SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka::INTEGER)
+
+-- name: hae-urakan-aikataulu
+-- Hakee urakan aikataulunäkymän tiedot
+SELECT
+  id,
+  kohdenumero, -- TODO Palauta myös aikataulut, täytyy lisätä paallystyskohde-tauluun.
+  nimi
+FROM paallystyskohde
+WHERE
+  urakka = :urakka
+  AND sopimus = :sopimus
+  AND paallystyskohde.poistettu IS NOT TRUE;
