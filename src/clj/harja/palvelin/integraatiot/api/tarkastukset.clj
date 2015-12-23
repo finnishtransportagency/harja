@@ -38,7 +38,7 @@
                   (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
                 uusi? (nil? tarkastus-id)]
 
-            (let [aika (json/pvm-string->java-sql-date (:aika tarkastus))
+            (let [aika (json/aika-string->java-sql-date (:aika tarkastus))
                   tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                   geometria (if tr-osoite (:geometria tr-osoite)
                                           (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))

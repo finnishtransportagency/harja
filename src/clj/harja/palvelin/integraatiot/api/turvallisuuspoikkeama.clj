@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-turvallisuuspoikkeamalle]]
 
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -37,9 +37,9 @@
         (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
           db
           urakka-id
-          (pvm-string->java-sql-date tapahtumapaivamaara)
-          (pvm-string->java-sql-date paattynyt)
-          (pvm-string->java-sql-date kasitelty)
+          (aika-string->java-sql-date tapahtumapaivamaara)
+          (aika-string->java-sql-date paattynyt)
+          (aika-string->java-sql-date kasitelty)
           tyontekijanammatti
           tyotehtava
           kuvaus
@@ -66,9 +66,9 @@
             tp-id (:id (turvallisuuspoikkeamat/luo-turvallisuuspoikkeama<!
                          db
                          urakka-id
-                         (pvm-string->java-sql-date tapahtumapaivamaara)
-                         (pvm-string->java-sql-date paattynyt)
-                         (pvm-string->java-sql-date kasitelty)
+                         (aika-string->java-sql-date tapahtumapaivamaara)
+                         (aika-string->java-sql-date paattynyt)
+                         (aika-string->java-sql-date kasitelty)
                          tyontekijanammatti
                          tyotehtava
                          kuvaus
@@ -103,7 +103,7 @@
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count korjaavat) " korjaavaa toimenpidettä.")
   (doseq [korjaava korjaavat]
     (turvallisuuspoikkeamat/luo-korjaava-toimenpide<! db tp-id (:kuvaus korjaava)
-                                                      (pvm-string->java-sql-date (:suoritettu korjaava))
+                                                      (aika-string->java-sql-date (:suoritettu korjaava))
                                                       (str
                                                         (get-in korjaava [:vastaavahenkilo :etunimi])
                                                         " "

@@ -11,7 +11,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-laatupoikkeamalle]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -27,7 +27,7 @@
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
              db
-             (pvm-string->java-sql-date aika)
+             (aika-string->java-sql-date aika)
              kohde
              kuvaus
              geometria
@@ -42,7 +42,7 @@
       (:id (laatupoikkeamat/luo-laatupoikkeama<!
              db
              urakka-id
-             (pvm-string->java-sql-date aika)
+             (aika-string->java-sql-date aika)
              "urakoitsija"
              kohde
              true

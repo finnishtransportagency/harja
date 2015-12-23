@@ -10,7 +10,7 @@
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.urakat :as urakat]
@@ -22,21 +22,30 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn parsi-paivamaara [paivamaara]
+  (try
+    (pvm-string->java-sql-date paivamaara)
+    (catch Exception e
+      (throw+
+        {:type    virheet/+viallinen-kutsu+
+         :virheet [{:koodi  virheet/+virheellinen-paivamaara+
+                    :viesti (format "Päivämäärää: %s ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD." paivamaara)}]}))))
+
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
     (do
       (log/debug "Päivitetään päivystäjään liittyvän päivystyksen tiedot.")
       (yhteyshenkilot/paivita-paivystys-yhteyshenkilon-idlla<! db
-                                                               (pvm-string->java-sql-date alku)
-                                                               (pvm-string->java-sql-date loppu)
+                                                               (aika-string->java-sql-date alku)
+                                                               (aika-string->java-sql-date loppu)
                                                                varahenkilo
                                                                vastuuhenkilo
                                                                paivystaja-id))
     (do
       (log/debug "Päivystäjällä ei ole päivystystä. Luodaan uusi päivystys.")
       (yhteyshenkilot/luo-paivystys<! db
-                                      (pvm-string->java-sql-date alku)
-                                      (pvm-string->java-sql-date loppu)
+                                      (aika-string->java-sql-date alku)
+                                      (aika-string->java-sql-date loppu)
                                       urakka-id
                                       paivystaja-id
                                       varahenkilo
@@ -54,9 +63,9 @@
 (defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
-                            (doseq [paivystys (:paivystykset data)]
-                              (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
-                                (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
+    (doseq [paivystys (:paivystykset data)]
+      (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
+        (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
 
 (defn kirjaa-paivystajatiedot
   "Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
@@ -87,8 +96,8 @@
   (parametrivalidointi/tarkista-parametrit parametrit {:puhelinnumero "Puhelinnumero puuttuu"})
   (validointi/tarkista-rooli kayttaja roolit/liikennepaivystaja)
   (let [{puhelinnumero :puhelinnumero alkaen :alkaen paattyen :paattyen} parametrit
-        alkaen (pvm-string->java-sql-date alkaen)
-        paattyen (pvm-string->java-sql-date paattyen)
+        alkaen (parsi-paivamaara alkaen)
+        paattyen (parsi-paivamaara paattyen)
         kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db
                                                                        (not (nil? alkaen))
                                                                        (konv/sql-timestamp alkaen)
@@ -115,8 +124,8 @@
   (let [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
         x (Double/parseDouble x)
         y (Double/parseDouble y)
-        alkaen (pvm-string->java-sql-date alkaen)
-        paattyen (pvm-string->java-sql-date paattyen)
+        alkaen (parsi-paivamaara alkaen)
+        paattyen (parsi-paivamaara paattyen)
         urakka-idt (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y})]
     (if-not (empty? urakka-idt)
       (do
