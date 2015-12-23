@@ -39,7 +39,7 @@
                            (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
                            (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
                            (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
-                           (assoc :tila (:tila kohde))
+                           (assoc :paallystysilmoitus {:tila (:tila kohde)})
                            (assoc :tr {:numero (get-in kohde [:osa :tr_numero])
                                        :alkuosa (get-in kohde [:osa :tr_alkuosa])
                                        :alkuetaisyys (get-in kohde [:osa :tr_alkuetaisyys])
