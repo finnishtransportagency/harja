@@ -14,7 +14,7 @@
             [reagent.core :as r]
             [harja.views.kartta :as kartta]
 
-            [harja.views.tilannekuva.tilannekuva-popupit :refer [nayta-popup]])
+            [harja.views.kartta.popupit :refer [nayta-popup]])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
 (defn lyhytsuodatin []

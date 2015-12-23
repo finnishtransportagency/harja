@@ -1,7 +1,7 @@
 (ns harja.views.tilannekuva.nykytilanne
   "Harjan tilannekuvan pääsivu."
   (:require [reagent.core :refer [atom]]
-            [harja.views.tilannekuva.tilannekuva-popupit :refer [nayta-popup] :as popupit]
+            [harja.views.kartta.popupit :refer [nayta-popup] :as popupit]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.tilannekuva.nykytilanne :as tiedot]

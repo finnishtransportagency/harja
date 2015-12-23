@@ -6,7 +6,7 @@
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.views.tilannekuva.tilannekuva-popupit :as popupit]
+            [harja.views.kartta.popupit :as popupit]
             [harja.views.murupolku :as murupolku]
             [harja.ui.kentat :as kentat]
             [reagent.core :as r]

@@ -1,4 +1,5 @@
-(ns harja.views.tilannekuva.tilannekuva-popupit
+(ns harja.views.kartta.popupit
+  "Yleinen nayta-popup multimetodi, joka osaa eri tyyppisistä asioista tehdä popupin."
   (:require [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
