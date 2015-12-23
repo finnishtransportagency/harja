@@ -6,7 +6,6 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.tiedot.tilannekuva.historiakuva :as tiedot]
             [clojure.string :as str]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkaus]
@@ -103,10 +102,6 @@
                                                                        (let [putsaa (fn [asia]
                                                                                       (dissoc asia :type :alue))]
                                                                          (reset! nav/sivu :ilmoitukset)
-                                                                         (reset! ilmoitukset/haetut-ilmoitukset
-                                                                                 (map putsaa (filter
-                                                                                               (fn [asia] (= (:type asia) :ilmoitus))
-                                                                                               @tiedot/historiakuvan-asiat-kartalla)))
                                                                          (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
