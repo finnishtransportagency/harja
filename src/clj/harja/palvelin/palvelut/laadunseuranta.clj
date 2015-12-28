@@ -201,24 +201,13 @@
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
 
   (jdbc/with-db-transaction [db db]
-    (let [urakka-idt (if-not (nil? urakka-id)
-                       (if (vector? urakka-id) urakka-id [urakka-id])
-
-                       (if (get (:roolit user) "jarjestelmavastuuhenkilo")
-                         (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
-                         (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
-          _ (log/debug "Haetaan tarkastuksia urakoista " (pr-str urakka-idt))
-          tulos (apply (comp vec flatten merge)
-                       (for [urakka-id urakka-idt]
-                         (into []
-                               tarkastus-xf
-                               (tarkastukset/hae-urakan-tarkastukset db urakka-id
-                                                                     (konv/sql-timestamp alkupvm)
-                                                                     (konv/sql-timestamp loppupvm)
-                                                                     (if tienumero true false) tienumero
-                                                                     (if tyyppi true false) (and tyyppi (name tyyppi))))))]
-      (log/debug "Löydettiin tarkastukset: " (pr-str (mapv :id tulos)))
-      tulos)))
+    (into []
+          tarkastus-xf
+          (tarkastukset/hae-urakan-tarkastukset db urakka-id
+                                                (konv/sql-timestamp alkupvm)
+                                                (konv/sql-timestamp loppupvm)
+                                                (if tienumero true false) tienumero
+                                                (if tyyppi true false) (and tyyppi (name tyyppi))))))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
