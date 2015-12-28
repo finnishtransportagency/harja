@@ -3,11 +3,38 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.urakat :as q]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
+
+;; Tämä funktio on toteutettu alunperin tilannekuvan palveluun, ja tämän takia haluaa esimerkiksi aina
+;; aikavälin. En alkanut kehittämään tätä eteenpäin, koska kirjoittamisen hetkellä ainoat paikat missä tätä
+;; käytetään on ilmoitukset ja tilannekuva.
+(defn kayttajan-urakat-aikavalilta
+  "Palauttaa parametrien mukaiset urakoiden id:t vektorissa."
+  ([db user] (kayttajan-urakat-aikavalilta db user nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user urakka-id urakoitsija urakkatyyppi hallintayksikko alku loppu]
+   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+
+   (let [alku (or alku (pvm/nyt))
+         loppu (or loppu (pvm/nyt))]
+     (cond
+      (vector? urakka-id) urakka-id
+
+      (not (nil? urakka-id)) [urakka-id]
+
+      (get (:roolit user) "jarjestelmavastuuhenkilo")
+      (mapv :id (q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)
+                                                 urakoitsija (when urakkatyyppi (name urakkatyyppi)) hallintayksikko))
+
+      :else (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakat-aikavalilta db (:id user)
+                                                                           (konv/sql-date alku) (konv/sql-date loppu)
+                                                                           urakoitsija
+                                                                           (when urakkatyyppi (name urakkatyyppi))
+                                                                           hallintayksikko))))))
 
 (defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y))]

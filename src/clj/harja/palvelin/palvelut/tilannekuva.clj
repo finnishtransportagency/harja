@@ -1,17 +1,14 @@
 (ns harja.palvelin.palvelut.tilannekuva
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.konversio :as konv]
-            [harja.domain.roolit :as roolit]
-
             [taoensso.timbre :as log]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
 
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [clj-time.core :as t]
-            [clj-time.coerce :as tc]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.hallintayksikot :as hal-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.tilannekuva :as q]
+            [harja.palvelin.palvelut.urakat :as urakat]
+
             [harja.geo :as geo]
             [harja.pvm :as pvm]))
 
@@ -27,22 +24,7 @@
 (defn haettavat [s]
   (into #{} (keep (fn [[avain arvo]] (when arvo avain)) s)))
 
-(defn kayttajan-urakoiden-idt
-  [db user urakka-id urakoitsija urakkatyyppi hallintayksikko alku loppu]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
 
-  (cond
-    (vector? urakka-id) urakka-id
-
-    (not (nil? urakka-id)) [urakka-id]
-
-    (get (:roolit user) "jarjestelmavastuuhenkilo")
-    (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)
-                                                      urakoitsija (name urakkatyyppi) hallintayksikko))
-
-    :else (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakat-aikavalilta db (:id user)
-                                                                         (konv/sql-date alku) (konv/sql-date loppu)
-                                                                         urakoitsija (name urakkatyyppi) hallintayksikko))))
 
 (defn- hae-ilmoitukset
   [db user {{:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
@@ -147,27 +129,27 @@
   [db user {:keys [alku loppu tarkastukset]} urakat]
   (let [haettavat (haettavat tarkastukset)]
     (when-not (empty? haettavat)
-     (try
-       (into []
-             (comp
-               (geo/muunna-pg-tulokset :sijainti)
-               (map konv/alaviiva->rakenne)
-               (map #(konv/string->keyword % :tyyppi))
-               (map (fn [tarkastus]
-                      (condp = (:tyyppi tarkastus)
-                        :talvihoito (dissoc tarkastus :soratiemittaus)
-                        :soratie (dissoc tarkastus :talvihoitomittaus)
-                        :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                        :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                        :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
-             (q/hae-tarkastukset db
-                                 urakat
-                                 (konv/sql-date alku)
-                                 (konv/sql-date loppu)
-                                 (map name haettavat)))
-       (catch Exception e
-         (tulosta-virhe! "tarkastuksia" e)
-         nil)))))
+      (try
+        (into []
+              (comp
+                (geo/muunna-pg-tulokset :sijainti)
+                (map konv/alaviiva->rakenne)
+                (map #(konv/string->keyword % :tyyppi))
+                (map (fn [tarkastus]
+                       (condp = (:tyyppi tarkastus)
+                         :talvihoito (dissoc tarkastus :soratiemittaus)
+                         :soratie (dissoc tarkastus :talvihoitomittaus)
+                         :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                         :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                         :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
+              (q/hae-tarkastukset db
+                                  urakat
+                                  (konv/sql-date alku)
+                                  (konv/sql-date loppu)
+                                  (map name haettavat)))
+        (catch Exception e
+          (tulosta-virhe! "tarkastuksia" e)
+          nil)))))
 
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [alku loppu turvallisuus]} urakat]
@@ -191,28 +173,28 @@
   [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?]} urakat]
   (when nykytilanne?
     (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
-         tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
-     (when-not (empty? haettavat-toimenpiteet)
-       (try
-         (let [valitun-alueen-geometria (if urakka-id
-                                          (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
-                                            (or (:urakka_alue urakan-aluetiedot)
-                                                (:alueurakka_alue urakan-aluetiedot)))
-                                          (when hallintayksikko
-                                            (:alue (first (hal-q/hae-hallintayksikon-geometria db hallintayksikko)))))]
-           (into {}
-                 (comp
-                   (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
-                   (map #(update-in % [:edellinensijainti] (fn [pos] (when pos
-                                                                       (geo/piste-koordinaatit pos)))))
-                   (map #(assoc % :tyyppi :tyokone))
-                   (map #(konv/array->set % :tehtavat))
-                   (map (juxt :tyokoneid identity)))
-                 (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
-                                  urakka-id tpi-str)))
-         (catch Exception e
-           (tulosta-virhe! "tyokoneet" e)
-           nil))))))
+          tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
+      (when-not (empty? haettavat-toimenpiteet)
+        (try
+          (let [valitun-alueen-geometria (if urakka-id
+                                           (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
+                                             (or (:urakka_alue urakan-aluetiedot)
+                                                 (:alueurakka_alue urakan-aluetiedot)))
+                                           (when hallintayksikko
+                                             (:alue (first (hal-q/hae-hallintayksikon-geometria db hallintayksikko)))))]
+            (into {}
+                  (comp
+                    (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
+                    (map #(update-in % [:edellinensijainti] (fn [pos] (when pos
+                                                                        (geo/piste-koordinaatit pos)))))
+                    (map #(assoc % :tyyppi :tyokone))
+                    (map #(konv/array->set % :tehtavat))
+                    (map (juxt :tyokoneid identity)))
+                  (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
+                                   urakka-id tpi-str)))
+          (catch Exception e
+            (tulosta-virhe! "tyokoneet" e)
+            nil))))))
 
 (defn- hae-toteumien-reitit
   [db user {:keys [alue alku loppu talvi kesa]} urakat]
@@ -238,8 +220,9 @@
 
 (defn hae-tilannekuvaan
   [db user tiedot]
-  (let [urakat (kayttajan-urakoiden-idt db user (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-                                        (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
+  (let [urakat (urakat/kayttajan-urakat-aikavalilta db user
+                                                    (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+                                                    (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
 
     ;; Teoriassa on mahdollista, että käyttäjälle ei (näillä parametreilla) palauteta yhtään urakkaa.
     ;; Tällöin voitaisiin hakea kaikki "julkiset" asiat, esim ilmoitukset joita ei ole sidottu mihinkään
