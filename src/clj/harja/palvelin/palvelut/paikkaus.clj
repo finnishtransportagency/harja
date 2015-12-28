@@ -26,35 +26,24 @@
 (defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
   (jdbc/with-db-transaction [db db]
-    (let [urakka-idt (if-not (nil? urakka-id)
-                       (if (vector? urakka-id) urakka-id [urakka-id])
+    (let [sopimukset (if-not (nil? sopimus-id)
+                       [sopimus-id]
 
-                       (if (get (:roolit user) "jarjestelmavastuuhenkilo")
-                         (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
-                         (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
+                       (mapv :id (urakat-q/hae-urakan-sopimukset db urakka-id)))
 
-          sopimukset (if-not (nil? sopimus-id)
-                       {urakka-id [sopimus-id]}
-
-                       (apply merge
-                              (for [urakka-id urakka-idt]
-                                {urakka-id (mapv :id (urakat-q/hae-urakan-sopimukset db urakka-id))})))
-
-          _ (log/debug "Haetaan paikkaustoteumat urakoista/sopimuksista: " (pr-str sopimukset))
+          _ (log/debug "Haetaan paikkaustoteumat urakan " urakka-id " sopimuksista: " (pr-str sopimukset))
           vastaus (apply (comp vec flatten merge)
-
-                         (for [urakka-id urakka-idt]
-                           (for [sopimus-id (get sopimukset urakka-id)]
-                             (into []
-                                   (comp
-                                     (map #(konv/string->avain % [:paatos]))
-                                     (map #(konv/string->avain % [:tila]))
-                                     (map #(assoc % :kohdeosat
-                                                    (into []
-                                                          paallystys/kohdeosa-xf
-                                                          (paallystys-q/hae-urakan-paallystyskohteen-paallystyskohdeosat
-                                                            db urakka-id sopimus-id (:paikkauskohde_id %))))))
-                                   (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id)))))]
+                         (for [sopimus-id (get sopimukset urakka-id)]
+                           (into []
+                                 (comp
+                                   (map #(konv/string->avain % [:paatos]))
+                                   (map #(konv/string->avain % [:tila]))
+                                   (map #(assoc % :kohdeosat
+                                                  (into []
+                                                        paallystys/kohdeosa-xf
+                                                        (paallystys-q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                                          db urakka-id sopimus-id (:paikkauskohde_id %))))))
+                                 (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id))))]
       (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
       vastaus)))
 
