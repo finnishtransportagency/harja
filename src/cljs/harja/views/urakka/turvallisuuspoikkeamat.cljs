@@ -117,6 +117,11 @@
                                                         uusi)))))]}]
         @muokattu]])))
 
+(defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
+  (go
+    (reset! tiedot/valittu-turvallisuuspoikkeama
+            (<! (tiedot/hae-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))))
+
 (defc turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
@@ -129,10 +134,7 @@
      [grid/grid
       {:otsikko       "Turvallisuuspoikkeamat"
        :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
-       :rivi-klikattu #(go
-                        (reset! tiedot/valittu-turvallisuuspoikkeama
-                                (<! (tiedot/hae-turvallisuuspoikkeama (:id urakka)
-                                                                      (:id %)))))}
+       :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
       [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
        {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
        {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
@@ -147,7 +149,7 @@
 (defn turvallisuuspoikkeamat []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
-    (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(reset! tiedot/valittu-turvallisuuspoikkeama %2))
+    (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(valitse-turvallisuuspoikkeama (:id @nav/valittu-urakka) (:id %2)))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :L))
