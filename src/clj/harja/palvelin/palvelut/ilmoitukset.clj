@@ -63,7 +63,7 @@
                 (mapv
                   #(assoc % :uusinkuittaus
                             (when-not (empty? (:kuittaukset %))
-                              (:kuitattu (last (sort-by :kuitattu (:kuittaukaset %))))))
+                              (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
                   (konv/sarakkeet-vektoriin
                     (into []
                           (comp
