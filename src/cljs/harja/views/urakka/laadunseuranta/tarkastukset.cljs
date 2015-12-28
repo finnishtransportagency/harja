@@ -147,15 +147,23 @@
                    :valinnat [1 2]})))
                  
 (defn tarkastus [tarkastus-atom]
-  (let [tarkastus @tarkastus-atom]
+  (let [tarkastus @tarkastus-atom
+        jarjestelmasta? (:jarjestelma tarkastus)]
     (log (pr-str @tarkastus-atom))
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
-      {:muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? @tiedot-laatupoikkeamat/voi-kirjata?}
-      [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
+      {:muokkaa!     #(reset! tarkastus-atom %)
+       :voi-muokata? (and @tiedot-laatupoikkeamat/voi-kirjata?
+                          (not jarjestelmasta?))}
+      [(when jarjestelmasta?
+         {:otsikko     "Lähde" :nimi :luoja :tyyppi :string
+          :hae         (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
+          :muokattava? (constantly false)
+          :vihje       "Tietojärjestelmästä tulleen tiedon muokkaus ei ole sallittu."})
+
+       {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
