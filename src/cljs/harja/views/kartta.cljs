@@ -457,9 +457,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   []
   (when @pida-geometriat-nakyvilla?
     (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))
-          extendin-margin-metreina 750]
+          extentin-margin-metreina 750]
       (if-not (empty? geometriat)
-        (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extendin-margin-metreina))
+        (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
