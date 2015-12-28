@@ -53,28 +53,17 @@
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
   (jdbc/with-db-transaction [db db]
-    (let [urakka-idt (if-not (nil? urakka-id)
-                       (if (vector? urakka-id) urakka-id [urakka-id])
+    (into []
+          laatupoikkeama-xf
 
-                       (if (get (:roolit user) "jarjestelmavastuuhenkilo")
-                         (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
-                         (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
-          _ (log/debug "Haetaan laatupoikkeamia urakoista " (pr-str urakka-idt))
-          tulos (apply (comp vec flatten merge)
-                       (for [urakka-id urakka-idt]
-                         (into []
-                               laatupoikkeama-xf
-
-                               (if (= :omat listaus)
-                                 (apply laatupoikkeamat/hae-omat-laatupoikkeamat
-                                        (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
-                                 (apply (case listaus
-                                          :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
-                                          :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
-                                          :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat)
-                                        [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)])))))]
-      (log/debug "Löydettiin laatupoikkeamat: " (pr-str (mapv :id tulos)))
-      tulos)))
+          (if (= :omat listaus)
+            (apply laatupoikkeamat/hae-omat-laatupoikkeamat
+                   (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
+            (apply (case listaus
+                     :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
+                     :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
+                     :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat)
+                   [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)])))))
 
 
 (defn hae-laatupoikkeaman-tiedot
