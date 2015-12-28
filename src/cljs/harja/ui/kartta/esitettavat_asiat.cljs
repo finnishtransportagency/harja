@@ -1,7 +1,7 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log warn]]
             [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
@@ -335,7 +335,9 @@
                 :direction   (+ (- Math/PI) (* (/ Math/PI 180) (:suunta tyokone)))
                 :img         img}))]))
 
-(defmethod asia-kartalle :default [_ _ _])
+(defmethod asia-kartalle :default [asia _]
+  (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, sain: " (pr-str asia))
+  nil)
 
 (defn- valittu? [valittu tunniste asia]
   (and
@@ -357,8 +359,6 @@
   ([asiat valittu tunniste]
    (kartalla-esitettavaan-muotoon asiat valittu tunniste nil))
   ([asiat valittu tunniste asia-xf]
-   ;; tarkastetaan että edes jollain on..
-   (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!")
    (into []
          (comp (or asia-xf identity)
                (mapcat #(kartalla-xf % valittu tunniste)))
