@@ -125,15 +125,22 @@
                (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")"))
      :selite {:teksti (str "Tarkastus (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")")
               :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
-     :alue (if (= :line (get-in tarkastus [:sijainti :type]))
-             {:type   :tack-icon-line
-              :scale  (if (valittu? tarkastus) 1.5 1)
-              :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))
-              :points (get-in tarkastus [:sijainti :points])}
-             {:type        :tack-icon
-              :scale       (if (valittu? tarkastus) 1.5 1)
-              :img         (selvita-tarkastuksen-ikoni (:tekija tarkastus))
-              :coordinates (get-in tarkastus [:sijainti :coordinates])}))])
+     :alue (let [ikoni (selvita-tarkastuksen-ikoni (:tekija tarkastus))
+                 skaala (if (valittu? tarkastus) 1.5 1)
+                 sijainti (:sijainti tarkastus)]
+             (case (:type sijainti)
+               :line {:type   :tack-icon-line
+                      :scale  skaala
+                      :img    ikoni
+                      :points (:points sijainti)}
+               :multiline {:type :tack-icon-line
+                           :scale skaala
+                           :img ikoni
+                           :points (mapcat :points (:lines sijainti))}
+               :point {:type        :tack-icon
+                       :scale       skaala
+                       :img         ikoni
+                       :coordinates (:coordinates sijainti)})))])
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma]
   [(assoc varustetoteuma
@@ -201,31 +208,32 @@
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu?]
   (let [[ikoni selite] (paattele-turpon-ikoni tp)
         sijainti (:sijainti tp)
-        tyyppi (:type sijainti)]
+        tyyppi (:type sijainti)
+        skaala (if (valittu? tp) 1.5 1)]
     [(assoc tp
             :type :turvallisuuspoikkeama
             :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
             :selite {:teksti selite
                      :img    ikoni}
-            :alue (cond
-                    (= :line tyyppi)
+            :alue (case tyyppi
+                    :line
                     {:type   :tack-icon-line
                      :color  "black"
-                     :scale  (if (valittu? tp) 1.5 1)
+                     :scale  skaala
                      :img    ikoni
                      :points (get-in tp [:sijainti :points])}
 
-                    (= :multiline tyyppi)
+                    :multiline
                     {:type :tack-icon-line
                      :color "black"
-                     :scale (if (valittu? tp) 1.5 1)
+                     :scale skaala
                      :img ikoni
                      :points (mapcat :points (:lines sijainti))}
 
-                    :default
-                    {:type        :tack-icon
-                     :scale       (if (valittu? tp) 1.5 1)
-                     :img         ikoni
+                    :point
+                    {:type :tack-icon
+                     :scale skaala
+                     :img ikoni
                      :coordinates (get-in tp [:sijainti :coordinates])}))]))
 
 ;; TODO: Päällystyksissä ja paikkauksissa on kommentoitua koodia, koska näille dedikoituijen näkymien käyttämät
