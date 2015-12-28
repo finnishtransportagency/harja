@@ -23,22 +23,11 @@
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
-  (let [urakka-idt (if-not (nil? urakka-id)
-                     (if (vector? urakka-id) urakka-id [urakka-id])
-
-                     (if (get (:roolit user) "jarjestelmavastuuhenkilo")
-                       (mapv :id (urakat-q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)))
-                       (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakka-roolit db (:id user)))))
-        _ (log/debug "Haetaan turvallisuuspoikkeamia urakoista " (pr-str urakka-idt) ", aikaväliltä " alku " - " loppu)
-        tulos (apply (comp vec flatten merge)
-                     (for [urakka-id urakka-idt]
-                       (konv/sarakkeet-vektoriin
-                         (into []
-                               turvallisuuspoikkeama-xf
-                               (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
-                         {:korjaavatoimenpide :korjaavattoimenpiteet})))]
-    (log/debug "Löydettiin turvallisuuspoikkeamat: " (pr-str (mapv :id tulos)))
-    tulos))
+  (konv/sarakkeet-vektoriin
+    (into []
+          turvallisuuspoikkeama-xf
+          (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+    {:korjaavatoimenpide :korjaavattoimenpiteet}))
 
 (defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
