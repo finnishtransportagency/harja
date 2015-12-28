@@ -456,9 +456,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   valittuun hallintayksikköön tai urakkaan"
   []
   (when @pida-geometriat-nakyvilla?
-    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))]
+    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))
+          extendin-margin-metreina 750]
       (if-not (empty? geometriat)
-        (keskita-kartta-alueeseen! (geo/extent-monelle geometriat))
+        (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extendin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
