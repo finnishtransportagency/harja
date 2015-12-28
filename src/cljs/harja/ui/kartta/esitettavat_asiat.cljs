@@ -103,20 +103,21 @@
   (selvita-laadunseurannan-ikoni "havainto" tekija))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu?]
-  [(assoc laatupoikkeama
-     :type :laatupoikkeama
-     :nimi (or (:nimi laatupoikkeama)
-               (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
-     :selite {:teksti (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")
-              :img    (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))}
-     :alue {:type        :tack-icon
-            :scale       (if (valittu? laatupoikkeama) 1.5 1)
-            :img         (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
-            :coordinates (if (= :line (get-in laatupoikkeama [:sijainti :type]))
-                           ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
-                           (first (get-in laatupoikkeama [:sijainti :points]))
+  (when-let [sijainti (:sijainti laatupoikkeama)]
+    [(assoc laatupoikkeama
+            :type :laatupoikkeama
+            :nimi (or (:nimi laatupoikkeama)
+                      (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
+            :selite {:teksti (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")
+                     :img    (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))}
+            :alue {:type        :tack-icon
+                   :scale       (if (valittu? laatupoikkeama) 1.5 1)
+                   :img         (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+                   :coordinates (if (= :line (get-in laatupoikkeama [:sijainti :type]))
+                                  ;; Lopetuspiste. Kai? Ainakin "viimeinen klikkaus" kun käyttää tr-komponenttia
+                                  (first (get-in laatupoikkeama [:sijainti :points]))
 
-                           (get-in laatupoikkeama [:sijainti :coordinates]))})])
+                                  (get-in laatupoikkeama [:sijainti :coordinates]))})]))
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   [(assoc tarkastus
@@ -177,24 +178,25 @@
         nimi (or (get-in toteuma [:tehtavat 0 :nimi])
                  (get-in toteuma [:reittipisteet 0 :tehtava :toimenpide]))
         [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
-    [(when-not (empty? reittipisteet)
-       (assoc toteuma
-         :type :toteuma
-         :nimi (or (:nimi toteuma)
-                   nimi
-                   (get-in toteuma [:tpi :nimi])
-                   (if (> 1 (count (:tehtavat toteuma)))
-                     (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
-                     (str (:toimenpide (first (:tehtavat toteuma))))))
-         :selite {:teksti nimi
-                  :vari vari}
-         :alue {:type   :arrow-line
-                :width 5
-                :color vari
-                :arrow-image (karttakuva (str "images/nuoli-" nuoli))
-                :scale  (if (valittu? toteuma) 2 1.5)     ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
-                :points (mapv #(get-in % [:sijainti :coordinates])
-                              (sort-by :aika pvm/ennen? reittipisteet))}))]))
+    (when-not (empty? reittipisteet)
+      [(assoc toteuma
+               :type :toteuma
+               :nimi (or (:nimi toteuma)
+                         nimi
+                         (get-in toteuma [:tpi :nimi])
+                         (if (> 1 (count (:tehtavat toteuma)))
+                           (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
+                           (str (:toimenpide (first (:tehtavat toteuma))))))
+               :selite {:teksti nimi
+                        :vari vari}
+               :alue {:type   :arrow-line
+                      :width 5
+                      :color vari
+                      :arrow-image (karttakuva (str "images/nuoli-" nuoli))
+                      :scale  (if (valittu? toteuma) 2 1.5) ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
+                      :points (mapv #(get-in % [:sijainti :coordinates])
+                                    (sort-by :aika pvm/ennen? reittipisteet))})])))
+
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)
@@ -353,6 +355,11 @@
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
-    ;; tarkastetaan että edes jollain on..
-   (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla avain :tyyppi-kartalla!")
-   (remove nil? (mapcat #(kartalla-xf % valittu tunniste) asiat))))
+   (kartalla-esitettavaan-muotoon asiat valittu tunniste nil))
+  ([asiat valittu tunniste asia-xf]
+   ;; tarkastetaan että edes jollain on..
+   (assert (or (nil? asiat) (empty? asiat) (some :tyyppi-kartalla asiat)) "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!")
+   (into []
+         (comp (or asia-xf identity)
+               (mapcat #(kartalla-xf % valittu tunniste)))
+         asiat)))
