@@ -47,8 +47,8 @@ FROM paivystys p
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
   LEFT JOIN urakka u ON p.urakka = u.id
 WHERE p.urakka = :urakka
-      AND (:alkaen :: DATE IS NULL OR p.alku >= :alkaen :: DATE)
-      AND (:paattyen :: DATE IS NULL OR p.alku <= :paattyen :: DATE);
+      AND (:alkaen :: DATE IS NULL OR p.alku <= :alkaen :: DATE)
+      AND (:paattyen :: DATE IS NULL OR p.loppu >= :paattyen :: DATE);
 
 -- name: hae-kaikki-paivystajat
 -- Hakee kaikki päivystykset
@@ -77,8 +77,8 @@ FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON p.urakka = u.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (:alkaen :: DATE IS NULL OR p.alku >= :alkaen :: DATE) AND
-      (:paattyen :: DATE IS NULL OR p.alku <= :paattyen :: DATE);
+WHERE (:alkaen :: DATE IS NULL OR p.alku <= :alkaen :: DATE) AND
+      (:paattyen :: DATE IS NULL OR p.loppu >= :paattyen :: DATE);
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
@@ -175,7 +175,7 @@ SET alku        = :alku,
   loppu         = :loppu,
   varahenkilo   = :varahenkilo,
   vastuuhenkilo = :vastuuhenkilo
-WHERE yhteyshenkilo = :yhteyshenkilo_id
+WHERE yhteyshenkilo = :yhteyshenkilo_id;
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan Sampo id:llä
@@ -204,7 +204,7 @@ SET yhteyshenkilo = (
   SELECT id
   FROM yhteyshenkilo
   WHERE sampoid = :yhteyshenkilo_sampoid)
-WHERE yhteyshenkilo_sampoid = :yhteyshenkilo_sampoid
+WHERE yhteyshenkilo_sampoid = :yhteyshenkilo_sampoid;
 
 -- name: onko-olemassa-yhteyshenkilo-ulkoisella-idlla
 SELECT exists(
