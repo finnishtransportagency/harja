@@ -42,7 +42,7 @@ server {
 
     location ~ /wmts/(?<path>.*)$ {
     	proxy_set_header Host "karttakuva.maanmittauslaitos.fi:443";
-        proxy_set_header Authorization "Basic TGlpa2VubmV2aXJrb2U6VGFtbWlrdXUyMDE2";
+        proxy_set_header Authorization "Basic bGlpa2VubmV2aXJrb2U6VG9yczIydGFp";
         proxy_pass   https://wmts/$path$is_args$args;
         proxy_cache  kartat;
 	
