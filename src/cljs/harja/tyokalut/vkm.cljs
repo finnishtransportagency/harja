@@ -99,13 +99,13 @@ Palautettavassa datassa:
 
 (defn tieosoite->piste [trosoite]
   (log "Haetaan piste tieosoitteelle")
-  (k/post! :hae-tr-pisteeksi trosoite))
+  (k/post! :hae-tr-pisteeksi trosoite nil true))
 
 (defn tieosoite->viiva [trosoite]
-  (k/post! :hae-tr-viivaksi trosoite))
+  (k/post! :hae-tr-viivaksi trosoite nil true))
 
 (defn koordinaatti->trosoite [[x y]]
-  (k/post! :hae-tr-pisteella {:x x :y y}))
+  (k/post! :hae-tr-pisteella {:x x :y y} nil true))
 
 (defn virhe?
   "Tarkistaa epäonnistuiko VKM kutsu"

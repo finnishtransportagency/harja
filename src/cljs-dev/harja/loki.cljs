@@ -1,6 +1,8 @@
 (ns harja.loki
   "Apufunktioita lokittamiseen.")
 
+(defn warn [& things]
+  (.apply js/console.warn (apply array things)))
 
 (defn log [& things]
   (.apply js/console.log js/console (apply array things)))

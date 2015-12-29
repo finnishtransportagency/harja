@@ -31,6 +31,19 @@
          :virheet [{:koodi  virheet/+virheellinen-paivamaara+
                     :viesti (format "Päivämäärää: %s ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD." paivamaara)}]}))))
 
+(defn tarkista-parametrit [parametrit]
+  (parametrivalidointi/tarkista-parametrit
+    parametrit
+    {:x            "Koordinaatti X puuttuu"
+     :y            "Koordinaatti Y puuttuu"
+     :urakkatyyppi "Urakkatyyppi puuttuu"})
+  (when (not (some #(= % (:urakkatyyppi parametrit))
+                   ["hoito" "paallystys" "paikkaus" "tiemerkinta" "valaistus" "siltakorjaus"]))
+
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi  virheet/+puutteelliset-parametrit+
+                        :viesti (format "Tuntematon urakkatyyppi: %s" (:urakkatyyppi parametrit))}]})))
+
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
     (do
@@ -112,11 +125,7 @@
 
 (defn hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]
   (log/debug "Haetaan päivystäjätiedot sijainnilla parametreillä: " parametrit)
-  (parametrivalidointi/tarkista-parametrit
-    parametrit
-    {:x            "Koordinaatti X puuttuu"
-     :y            "Koordinaatti Y puuttuu"
-     :urakkatyyppi "Urakkatyyppi puuttuu"})
+  (tarkista-parametrit parametrit)
   (let [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
         x (Double/parseDouble x)
         y (Double/parseDouble y)

@@ -11,8 +11,7 @@
          tallenna-tehtavat
          lisaa-toimenpidekoodi
          poista-toimenpidekoodi
-         muokkaa-toimenpidekoodi
-         hae-toimenpidekoodit-tilannekuvaan)
+         muokkaa-toimenpidekoodi)
 
 
 (defrecord Toimenpidekoodit []
@@ -26,32 +25,13 @@
                                           (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
       (julkaise-palvelu
         :tallenna-tehtavat (fn [user tiedot]
-                             (tallenna-tehtavat (:db this) user tiedot)))
-
-      (julkaise-palvelu
-        :hae-toimenpidekoodit-tilannekuvaan (fn [user tiedot]
-                                               (hae-toimenpidekoodit-tilannekuvaan (:db this) user tiedot))))
+                             (tallenna-tehtavat (:db this) user tiedot))))
     this)
 
   (stop [this]
     (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat]]
       (poista-palvelu (:http-palvelin this) p))
     this))
-
-(defn hae-toimenpidekoodit-tilannekuvaan [db user {:keys [urakka urakan-tyyppi]}]
-  (log/debug "Haetaan toimenpidekoodit tilannekuvaan urakalle " urakka ", tyypeille " urakan-tyyppi)
-  (jdbc/with-db-transaction [db db]
-    (let [ur (if (nil? urakka)
-               (let [urakat (mapv :id (filter
-                                        (fn [{:keys [tyyppi]}]
-                                          (= (keyword tyyppi) urakan-tyyppi))
-                                        (urakat-q/hae-kaynnissa-olevat-urakat db nil nil nil)))]
-                 (when-not (empty? urakat) urakat))
-
-               (if (vector? urakka) urakka [urakka]))]
-      (when ur
-        (log/debug "Haetaan urakoille: " (pr-str ur))
-        (q/hae-toimenpidekoodit-tilannekuvaan db ur)))))
 
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]

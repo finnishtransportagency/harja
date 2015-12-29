@@ -35,13 +35,13 @@
 (def karttataso-turvallisuuspoikkeamat (atom false))
 
 (defonce turvallisuuspoikkeamat-kartalla
-         (reaction (when @karttataso-turvallisuuspoikkeamat
-                     (kartalla-esitettavaan-muotoon
-                      (into []
-                            (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
-                                  (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))
-                            @haetut-turvallisuuspoikkeamat)
-                       @valittu-turvallisuuspoikkeama))))
+  (reaction (when @karttataso-turvallisuuspoikkeamat
+              (kartalla-esitettavaan-muotoon
+               @haetut-turvallisuuspoikkeamat
+               @valittu-turvallisuuspoikkeama
+               nil
+               (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
+                     (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))))))
 
 (defn kasaa-tallennuksen-parametrit
   [tp]

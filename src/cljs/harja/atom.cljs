@@ -18,19 +18,16 @@
     (paivita)))
 
 (defn paivita-periodisesti
-  "Pakottaa reaktion päivittymään annetun ajan välein. Palauttaa funktion, jolla päivitys lopetetaan.
-  Voi ottaa myös ehtofunktion, jonka pitää palauttaa looginen true, jotta periodinen päivitys suoritetaan."
-  ([reaktio periodi-ms] (paivita-periodisesti reaktio periodi-ms nil))
-  ([reaktio periodi-ms ehto-fn]
+  "Pakottaa reaktion päivittymään annetun ajan välein. Palauttaa funktion, jolla päivitys lopetetaan."
+  [reaktio periodi-ms]
    (let [paivita? (atom true)]
      (go-loop []
-      (<! (timeout periodi-ms))
-      (when @paivita?
-        (when (ehto-fn)
+        (<! (timeout periodi-ms))
+        (when @paivita?
           (nappaa-virhe
-            (paivita! reaktio)))
-        (recur)))
-    #(reset! paivita? false))))
+            (paivita! reaktio))
+          (recur)))
+     #(reset! paivita? false)))
 
 (defn kuristin
   "Palauttaa funktion, joka ottaa samat parametrit kuin annettu paivitys-fn, mutta
