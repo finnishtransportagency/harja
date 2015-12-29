@@ -400,16 +400,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 (defn laatupoikkeamat []
   (komp/luo
-    (komp/lippu kartta/kartta-kontentin-vieressa?)
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :XL))
+                        (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
      [:span.laatupoikkeamat
-      [kartta/sisalto-ja-kartta-2-palstana (if @valittu-laatupoikkeama
-                                             [laatupoikkeama {} valittu-laatupoikkeama]
-                                             [laatupoikkeamalistaus])]])))
-
-  
-  
+      [kartta/kartan-paikka]
+      (if @valittu-laatupoikkeama
+        [laatupoikkeama {} valittu-laatupoikkeama]
+        [laatupoikkeamalistaus])])))
