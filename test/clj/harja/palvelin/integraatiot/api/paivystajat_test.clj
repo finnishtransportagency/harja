@@ -144,5 +144,35 @@
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?alkaen=2016-09-30&paattyen=2016-01-02"] kayttaja-yit portti)]
     (is (= 400 (:status vastaus)))
     (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Alkupäivämäärä: 2016-09-30 00:00:00.0 on päättymispäivämäärän: 2016-01-02 00:00:00.0 jälkeen.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=rikki&paattyen=2016-09-30"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2016-09-30&paattyen=rikki"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2016-09-30&paattyen=2016-01-02"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Alkupäivämäärä: 2016-09-30 00:00:00.0 on päättymispäivämäärän: 2016-01-02 00:00:00.0 jälkeen.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555&alkaen=rikki&paattyen=2016-09-30"] kayttaja-jvh portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555&alkaen=2016-09-30&paattyen=rikki"] kayttaja-jvh portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555&alkaen=2016-09-30&paattyen=2016-01-02"] kayttaja-jvh portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Alkupäivämäärä: 2016-09-30 00:00:00.0 on päättymispäivämäärän: 2016-01-02 00:00:00.0 jälkeen.\"}}]}"
            (:body vastaus)))))
 
