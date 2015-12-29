@@ -12,7 +12,10 @@
            @tarkastukset/urakan-tarkastukset
            (when @karttataso-tarkastukset
              (kartalla-esitettavaan-muotoon
-              (filter #(not (nil? (:sijainti %)))
-                      (map #(assoc % :tyyppi-kartalla :tarkastus) @tarkastukset/urakan-tarkastukset))
-               @tarkastukset/valittu-tarkastus))))
+               @tarkastukset/urakan-tarkastukset
+               @tarkastukset/valittu-tarkastus
+               nil
+               (comp
+                 (filter #(not (nil? (:sijainti %))))
+                 (map #(assoc % :tyyppi-kartalla :tarkastus)))))))
 

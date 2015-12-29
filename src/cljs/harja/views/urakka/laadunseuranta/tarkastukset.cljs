@@ -53,26 +53,23 @@
    (fn []
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
+        [valinnat/urakan-hoitokausi urakka]
+        [valinnat/aikavali]
 
-        [yleiset/taulukko2 "col-md-6" "col-md-6" "350px" "350px"
-         
-         [valinnat/urakan-hoitokausi urakka]
-         [valinnat/aikavali]
+        [valinnat/tienumero tarkastukset/tienumero]
 
-         [valinnat/tienumero tarkastukset/tienumero]
-
-         [:span.label-ja-kentta
-          [:span.kentan-otsikko "Tyyppi"]
-          [:div.kentta
-           [tee-kentta {:tyyppi :valinta :valinnat (conj +tarkastustyyppi+ nil)
-                        :valinta-nayta #(case %
-                                          nil "Kaikki"
-                                          :tiesto "Tiestötarkastukset"
-                                          :talvihoito "Talvihoitotarkastukset"
-                                          :soratie "Soratien tarkastukset"
-                                          :laatu "Laaduntarkastus"
-                                          :pistokoe "Pistokoe")}
-            tarkastukset/tarkastustyyppi]]]]
+        [:span.label-ja-kentta
+         [:span.kentan-otsikko "Tyyppi"]
+         [:div.kentta
+          [tee-kentta {:tyyppi        :valinta :valinnat (conj +tarkastustyyppi+ nil)
+                       :valinta-nayta #(case %
+                                        nil "Kaikki"
+                                        :tiesto "Tiestötarkastukset"
+                                        :talvihoito "Talvihoitotarkastukset"
+                                        :soratie "Soratien tarkastukset"
+                                        :laatu "Laaduntarkastus"
+                                        :pistokoe "Pistokoe")}
+           tarkastukset/tarkastustyyppi]]]
 
         (when @tiedot-laatupoikkeamat/voi-kirjata?
           [napit/uusi "Uusi tarkastus"
@@ -82,7 +79,8 @@
         [grid/grid
          {:otsikko "Tarkastukset"
           :tyhja "Ei tarkastuksia"
-          :rivi-klikattu #(valitse-tarkastus %)}
+          :rivi-klikattu #(valitse-tarkastus %)
+          :jarjesta :aika}
          
          [{:otsikko "Pvm ja aika"
            :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
@@ -147,15 +145,23 @@
                    :valinnat [1 2]})))
                  
 (defn tarkastus [tarkastus-atom]
-  (let [tarkastus @tarkastus-atom]
+  (let [tarkastus @tarkastus-atom
+        jarjestelmasta? (:jarjestelma tarkastus)]
     (log (pr-str @tarkastus-atom))
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
-      {:muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? @tiedot-laatupoikkeamat/voi-kirjata?}
-      [{:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
+      {:muokkaa!     #(reset! tarkastus-atom %)
+       :voi-muokata? (and @tiedot-laatupoikkeamat/voi-kirjata?
+                          (not jarjestelmasta?))}
+      [(when jarjestelmasta?
+         {:otsikko     "Lähde" :nimi :luoja :tyyppi :string
+          :hae         (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
+          :muokattava? (constantly false)
+          :vihje       "Tietojärjestelmästä tulleen tiedon muokkaus ei ole sallittu."})
+
+       {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
        {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :nimi :tr
         :tyyppi :tierekisteriosoite
@@ -226,16 +232,17 @@
 
     ;; Laitetaan laadunseurannan karttataso päälle kun ollaan
     ;; tarkastuslistauksessa
-    (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset kartta/kartta-kontentin-vieressa?)
+    (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset)
     (komp/kuuntelija :tarkastus-klikattu #(reset! tarkastukset/valittu-tarkastus %2))
     (komp/ulos (kartta/kuuntele-valittua! tarkastukset/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :XL))
+                        (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
 
     (fn []
       [:span.tarkastukset
-       [kartta/sisalto-ja-kartta-2-palstana (if @tarkastukset/valittu-tarkastus
-                                       [tarkastus tarkastukset/valittu-tarkastus]
-                                       [tarkastuslistaus])]])))
+       [kartta/kartan-paikka]
+       (if @tarkastukset/valittu-tarkastus
+         [tarkastus tarkastukset/valittu-tarkastus]
+         [tarkastuslistaus])])))

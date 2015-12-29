@@ -80,6 +80,10 @@
    :tarkastaja                         Teksti
    :havainnot                          s/Str
    (s/optional-key :mittaaja)          (s/maybe Teksti)
+   (s/optional-key :kayttajanimi)      (s/maybe Teksti)
+   (s/optional-key :luoja)             s/Int
+   (s/optional-key :organisaatio)      (s/maybe Teksti)
+   (s/optional-key :jarjestelma)       s/Bool
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus})
 

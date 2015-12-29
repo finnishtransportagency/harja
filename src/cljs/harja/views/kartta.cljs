@@ -32,7 +32,7 @@
                             kork @yleiset/korkeus]
                         (case koko
                           :S +kartan-korkeus-s+
-                          :M (int (* 0.20 kork))
+                          :M (int (* 0.25 kork))
                           :L (int (* 0.60 kork))
                           :XL (int (* 0.80 kork))
                           (int (* 0.60 kork))))))
@@ -456,9 +456,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   valittuun hallintayksikköön tai urakkaan"
   []
   (when @pida-geometriat-nakyvilla?
-    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))]
+    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))
+          extentin-margin-metreina 750]
       (if-not (empty? geometriat)
-        (keskita-kartta-alueeseen! (geo/extent-monelle geometriat))
+        (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
