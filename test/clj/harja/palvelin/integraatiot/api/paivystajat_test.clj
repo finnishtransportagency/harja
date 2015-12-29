@@ -15,8 +15,8 @@
   (laajenna-integraatiojarjestelmafixturea kayttaja-yit
                                            :api-paivystajatiedot
                                            (component/using
-                                            (api-paivystajatiedot/->Paivystajatiedot)
-                                            [:http-palvelin :db :integraatioloki])))
+                                             (api-paivystajatiedot/->Paivystajatiedot)
+                                             [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -29,15 +29,15 @@
   (let [ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja-yit portti
                                                 (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
-                                                   slurp
-                                                   (.replace "__ID__" (str ulkoinen-id))
-                                                   (.replace "__ETUNIMI__" "Päivi")
-                                                   (.replace "__SUKUNIMI__" "Päivystäjä")
-                                                   (.replace "__EMAIL__" "paivi.paivystaja@sahkoposti.com")
-                                                   (.replace "__MATKAPUHELIN__" "04001234567")
-                                                   (.replace "__TYOPUHELIN__" "04005555555")))]
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__ETUNIMI__" "Päivi")
+                                                    (.replace "__SUKUNIMI__" "Päivystäjä")
+                                                    (.replace "__EMAIL__" "paivi.paivystaja@sahkoposti.com")
+                                                    (.replace "__MATKAPUHELIN__" "04001234567")
+                                                    (.replace "__TYOPUHELIN__" "04005555555")))]
     (is (= 200 (:status vastaus-lisays)))
-    (let [paivystaja-id (ffirst (q (str "SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id)"';")))
+    (let [paivystaja-id (ffirst (q (str "SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
           paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi, sahkoposti, matkapuhelin, tyopuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
           paivystys (first (q (str "SELECT yhteyshenkilo, vastuuhenkilo, varahenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
       (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä" "paivi.paivystaja@sahkoposti.com" "04001234567" "04005555555"]))
@@ -45,28 +45,28 @@
 
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paivystajatiedot"] kayttaja-yit portti
                                                       (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
-                                                        slurp
-                                                        (.replace "__ID__" (str ulkoinen-id))
-                                                        (.replace "__ETUNIMI__" "Taneli")
-                                                        (.replace "__SUKUNIMI__" "Tähystäjä")
-                                                        (.replace "__EMAIL__" "taneli.tahystaja@gmail.com")
-                                                        (.replace "__MATKAPUHELIN__" "05001234567")))]
+                                                          slurp
+                                                          (.replace "__ID__" (str ulkoinen-id))
+                                                          (.replace "__ETUNIMI__" "Taneli")
+                                                          (.replace "__SUKUNIMI__" "Tähystäjä")
+                                                          (.replace "__EMAIL__" "taneli.tahystaja@gmail.com")
+                                                          (.replace "__MATKAPUHELIN__" "05001234567")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [paivystaja (first (q (str "SELECT ulkoinen_id, etunimi, sukunimi, sahkoposti, matkapuhelin FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
               paivystys (first (q (str "SELECT yhteyshenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
           (is (= paivystaja [(str ulkoinen-id) "Taneli" "Tähystäjä" "taneli.tahystaja@gmail.com" "05001234567"]))
           (is (= paivystys [paivystaja-id]))
 
-        (u (str "DELETE FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';"))
-        (u (str "DELETE FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))))))
+          (u (str "DELETE FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';"))
+          (u (str "DELETE FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))))))
 
 (deftest hae-paivystajatiedot-urakan-idlla
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
-  (is (= 200 (:status vastaus)))
-  (is (= (count (:paivystajatiedot encoodattu-body)) 1))
-  (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
+    (is (= 200 (:status vastaus)))
+    (is (= (count (:paivystajatiedot encoodattu-body)) 1))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
 
 (deftest testaa-puhelinnumeron-trimmaus
   (is (= (fmt/trimmaa-puhelinnumero "0400123123") (fmt/trimmaa-puhelinnumero "+358400123123")))
@@ -130,4 +130,19 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
 
+(deftest hae-tarkista-paivamaarakasittelyt
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?alkaen=rikki&paattyen=2016-09-30"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?alkaen=2016-09-30&paattyen=rikki"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?alkaen=2016-09-30&paattyen=2016-01-02"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Alkupäivämäärä: 2016-09-30 00:00:00.0 on päättymispäivämäärän: 2016-01-02 00:00:00.0 jälkeen.\"}}]}"
+           (:body vastaus)))))
 

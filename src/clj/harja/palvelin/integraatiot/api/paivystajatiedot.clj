@@ -23,13 +23,35 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn parsi-paivamaara [paivamaara]
-  (try
-    (pvm-string->java-sql-date paivamaara)
-    (catch Exception e
+  (when paivamaara
+    (try
+      (konv/sql-timestamp (pvm-string->java-sql-date paivamaara))
+      (catch Exception e
+        (log/error e (format "Poikkeus parsittaessa päivämäärää: %s." paivamaara))
+        (throw+
+          {:type    virheet/+viallinen-kutsu+
+           :virheet [{:koodi  virheet/+virheellinen-paivamaara+
+                      :viesti (format "Päivämäärää: %s ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD." paivamaara)}]})))))
+
+
+(defn parsi-pvm-vali [alkaen paattyen]
+  (let [alkaen (parsi-paivamaara alkaen)
+        paattyen (parsi-paivamaara paattyen)]
+    (if (and alkaen paattyen (.after alkaen paattyen))
       (throw+
         {:type    virheet/+viallinen-kutsu+
          :virheet [{:koodi  virheet/+virheellinen-paivamaara+
-                    :viesti (format "Päivämäärää: %s ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD." paivamaara)}]}))))
+                    :viesti (format "Alkupäivämäärä: %s on päättymispäivämäärän: %s jälkeen." alkaen paattyen)}]})
+      [alkaen paattyen])))
+
+
+(defn suodata-puhelinnumerolla [puhelinnumero paivystajatiedot]
+  (into [] (filter (fn [paivystys]
+                     (or (= (fmt/trimmaa-puhelinnumero (:tyopuhelin paivystys))
+                            (fmt/trimmaa-puhelinnumero puhelinnumero))
+                         (= (fmt/trimmaa-puhelinnumero (:matkapuhelin paivystys))
+                            (fmt/trimmaa-puhelinnumero puhelinnumero))))
+                   paivystajatiedot)))
 
 (defn tarkista-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
@@ -48,12 +70,13 @@
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
     (do
       (log/debug "Päivitetään päivystäjään liittyvän päivystyksen tiedot.")
-      (yhteyshenkilot/paivita-paivystys-yhteyshenkilon-idlla<! db
-                                                               (aika-string->java-sql-date alku)
-                                                               (aika-string->java-sql-date loppu)
-                                                               varahenkilo
-                                                               vastuuhenkilo
-                                                               paivystaja-id))
+      (yhteyshenkilot/paivita-paivystys-yhteyshenkilon-idlla<!
+        db
+        (aika-string->java-sql-date alku)
+        (aika-string->java-sql-date loppu)
+        varahenkilo
+        vastuuhenkilo
+        paivystaja-id))
     (do
       (log/debug "Päivystäjällä ei ole päivystystä. Luodaan uusi päivystys.")
       (yhteyshenkilot/luo-paivystys<! db
@@ -91,14 +114,11 @@
     (tallenna-paivystajatiedot db urakka-id data)
     (paivystajatiedot-sanoma/tee-onnistunut-kirjaus-vastaus)))
 
-(defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja alkaen paattyen]
-  (log/debug "Haetaan päivystäjätiedot urakan id:llä: " urakka-id " alkaen " (pr-str alkaen) " päättyen " (pr-str paattyen))
+(defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja pvm-vali]
+  (log/debug (format "Haetaan päivystäjätiedot urakan id:llä: %s, alkaen: %s, päättyen: %s." urakka-id (first pvm-vali) (second pvm-vali)))
   (validointi/tarkista-urakka db urakka-id)
   (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
-  (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db
-                                                                urakka-id
-                                                                (konv/sql-timestamp alkaen)
-                                                                (konv/sql-timestamp paattyen))
+  (let [paivystajatiedot (yhteyshenkilot/hae-urakan-paivystajat db urakka-id (first pvm-vali) (second pvm-vali))
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus))
 
@@ -107,19 +127,9 @@
   (parametrivalidointi/tarkista-parametrit parametrit {:puhelinnumero "Puhelinnumero puuttuu"})
   (validointi/tarkista-rooli kayttaja roolit/liikennepaivystaja)
   (let [{puhelinnumero :puhelinnumero alkaen :alkaen paattyen :paattyen} parametrit
-        alkaen (parsi-paivamaara alkaen)
-        paattyen (parsi-paivamaara paattyen)
-        kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db
-                                                                       (konv/sql-timestamp alkaen)
-                                                                       (konv/sql-timestamp paattyen))
-        paivystajatiedot-puhelinnumerolla (into [] (filter (fn [paivystys]
-                                                             ; Ei voida helposti filtteröidä kantatasolla, koska puhelinnumeron
-                                                             ; kirjoitusasu voi vaihdella.
-                                                             (or (= (fmt/trimmaa-puhelinnumero (:tyopuhelin paivystys))
-                                                                    (fmt/trimmaa-puhelinnumero puhelinnumero))
-                                                                 (= (fmt/trimmaa-puhelinnumero (:matkapuhelin paivystys))
-                                                                    (fmt/trimmaa-puhelinnumero puhelinnumero))))
-                                                           kaikki-paivystajatiedot))
+        pvm-vali (parsi-pvm-vali alkaen paattyen)
+        kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db (first pvm-vali) (second pvm-vali))
+        paivystajatiedot-puhelinnumerolla (suodata-puhelinnumerolla puhelinnumero kaikki-paivystajatiedot)
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
@@ -129,17 +139,16 @@
   (let [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
         x (Double/parseDouble x)
         y (Double/parseDouble y)
-        alkaen (parsi-paivamaara alkaen)
-        paattyen (parsi-paivamaara paattyen)
+        pvm-vali (parsi-pvm-vali alkaen paattyen)
         urakka-idt (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y})]
-    (if-not (empty? urakka-idt)
+    (if (empty? urakka-idt)
+      (throw+ {:type    virheet/+viallinen-kutsu+
+               :virheet [{:koodi  virheet/+virheellinen-sijainti+
+                          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]})
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-idt))
         (reduce (partial merge-with concat)
-                (map #(hae-paivystajatiedot-urakan-idlla db % kayttaja alkaen paattyen) urakka-idt)))
-      (throw+ {:type    virheet/+viallinen-kutsu+
-               :virheet [{:koodi  virheet/+virheellinen-sijainti+
-                          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]}))))
+                (map #(hae-paivystajatiedot-urakan-idlla db % kayttaja pvm-vali) urakka-idt))))))
 
 (def palvelutyypit
   [{:palvelu        :hae-paivystajatiedot-urakka-idlla
@@ -147,8 +156,9 @@
     :tyyppi         :GET
     :vastaus-skeema json-skeemat/+paivystajatietojen-haku-vastaus+
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (let [urakka-id (Integer/parseInt (:id parametrit))]
-                        (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja-id nil nil)))}
+                      (let [urakka-id (Integer/parseInt (:id parametrit))
+                            pvm-vali (parsi-pvm-vali (get parametrit "alkaen") (get parametrit "paattyen"))]
+                        (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja-id pvm-vali)))}
    {:palvelu        :hae-paivystajatiedot-sijainnilla
     :polku          "/api/paivystajatiedot/haku/sijainnilla"
     :tyyppi         :GET
