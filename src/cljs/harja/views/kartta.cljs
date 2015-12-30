@@ -443,7 +443,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
     (if-let [alue (and v-ur (:alue v-ur))]
       (keskita-kartta-alueeseen! (geo/extent alue))
       (if-let [alue (and v-hal (:alue v-hal))]
-        (keskita-kartta-alueeseen! (geo/extent alue))))))
+        (keskita-kartta-alueeseen! (geo/extent alue))
+        (keskita-kartta-alueeseen! (geo/extent-monelle (map :alue @hal/hallintayksikot)))))))
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
