@@ -19,8 +19,7 @@
             [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot-sanoma]
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
-  (:use [slingshot.slingshot :only [throw+]]))
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]))
 
 (defn parsi-paivamaara [paivamaara]
   (when paivamaara
@@ -28,22 +27,28 @@
       (konv/sql-timestamp (pvm-string->java-sql-date paivamaara))
       (catch Exception e
         (log/error e (format "Poikkeus parsittaessa päivämäärää: %s." paivamaara))
-        (throw+
-          {:type    virheet/+viallinen-kutsu+
-           :virheet [{:koodi  virheet/+virheellinen-paivamaara+
-                      :viesti (format "Päivämäärää: %s ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD." paivamaara)}]})))))
-
+        (virheet/heita-viallinen-apikutsu-poikkeus
+          {:koodi  virheet/+virheellinen-paivamaara+
+           :viesti (format "Päivämäärää: %s ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD." paivamaara)})))))
 
 (defn parsi-pvm-vali [alkaen paattyen]
+  (when (and alkaen (not paattyen))
+    (virheet/heita-puutteelliset-parametrit-poikkeus
+      {:koodi  virheet/+puutteelliset-parametrit+
+       :viesti (format "Päivämäärävälillä ei voi hakea ilman loppupäivämäärää")}))
+
+  (when (and paattyen (not alkaen))
+    (virheet/heita-puutteelliset-parametrit-poikkeus
+      {:koodi  virheet/+puutteelliset-parametrit+
+       :viesti (format "Päivämäärävälillä ei voi hakea ilman alkupäivämäärää")}))
+
   (let [alkaen (parsi-paivamaara alkaen)
         paattyen (parsi-paivamaara paattyen)]
     (if (and alkaen paattyen (.after alkaen paattyen))
-      (throw+
-        {:type    virheet/+viallinen-kutsu+
-         :virheet [{:koodi  virheet/+virheellinen-paivamaara+
-                    :viesti (format "Alkupäivämäärä: %s on päättymispäivämäärän: %s jälkeen." alkaen paattyen)}]})
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi  virheet/+virheellinen-paivamaara+
+         :viesti (format "Alkupäivämäärä: %s on päättymispäivämäärän: %s jälkeen." alkaen paattyen)})
       [alkaen paattyen])))
-
 
 (defn suodata-puhelinnumerolla [puhelinnumero paivystajatiedot]
   (into [] (filter (fn [paivystys]
@@ -62,9 +67,9 @@
   (when (not (some #(= % (:urakkatyyppi parametrit))
                    ["hoito" "paallystys" "paikkaus" "tiemerkinta" "valaistus" "siltakorjaus"]))
 
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi  virheet/+puutteelliset-parametrit+
-                        :viesti (format "Tuntematon urakkatyyppi: %s" (:urakkatyyppi parametrit))}]})))
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi  virheet/+puutteelliset-parametrit+
+       :viesti (format "Tuntematon urakkatyyppi: %s" (:urakkatyyppi parametrit))})))
 
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo]} paivystaja-id]
   (if (yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id? db paivystaja-id)
@@ -142,9 +147,9 @@
         pvm-vali (parsi-pvm-vali alkaen paattyen)
         urakka-idt (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y})]
     (if (empty? urakka-idt)
-      (throw+ {:type    virheet/+viallinen-kutsu+
-               :virheet [{:koodi  virheet/+virheellinen-sijainti+
-                          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."}]})
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi  virheet/+virheellinen-sijainti+
+         :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."})
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-idt))
         (reduce (partial merge-with concat)

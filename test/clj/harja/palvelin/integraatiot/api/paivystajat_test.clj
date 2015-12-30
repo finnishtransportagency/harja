@@ -123,6 +123,16 @@
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
 
 (deftest hae-tarkista-paivamaarakasittelyt
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?paattyen=2016-09-30"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Päivämäärävälillä ei voi hakea ilman alkupäivämäärää\"}}]}"
+           (:body vastaus))))
+
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?alkaen=2016-09-30"] kayttaja-yit portti)]
+    (is (= 400 (:status vastaus)))
+    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Päivämäärävälillä ei voi hakea ilman loppupäivämäärää\"}}]}"
+           (:body vastaus))))
+
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?alkaen=rikki&paattyen=2016-09-30"] kayttaja-yit portti)]
     (is (= 400 (:status vastaus)))
     (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
