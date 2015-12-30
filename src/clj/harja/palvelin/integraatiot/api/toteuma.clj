@@ -7,7 +7,7 @@
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -19,8 +19,8 @@
 
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
-         (pvm-string->java-sql-date (:alkanut toteuma))
-         (pvm-string->java-sql-date (:paattynyt toteuma))
+         (aika-string->java-sql-date (:alkanut toteuma))
+         (aika-string->java-sql-date (:paattynyt toteuma))
          (:id kirjaaja)
          (get-in toteuma [:suorittaja :nimi])
          (get-in toteuma [:suorittaja :ytunnus])
@@ -40,8 +40,8 @@
          db
          urakka-id
          (:sopimusId toteuma)
-         (pvm-string->java-sql-date (:alkanut toteuma))
-         (pvm-string->java-sql-date (:paattynyt toteuma))
+         (aika-string->java-sql-date (:alkanut toteuma))
+         (aika-string->java-sql-date (:paattynyt toteuma))
          (:toteumatyyppi toteuma)
          (:id kirjaaja)
          (get-in toteuma [:suorittaja :nimi])
