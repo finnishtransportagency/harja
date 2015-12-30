@@ -4,7 +4,7 @@ SELECT
   u.nimi,
   u.tyyppi
 FROM urakka u
-WHERE ((u.loppupvm > :alku AND u.alkupvm < :loppu) OR (u.loppupvm IS NULL AND u.alkupvm < :loppu)) AND
+WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu)) AND
       (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
       (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
       (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
@@ -388,3 +388,11 @@ WHERE alueurakkanro = :alueurakkanro;
 
 -- name: tuhoa-alueurakkadata!
 DELETE FROM alueurakka;
+
+-- name: hae-urakan-geometria
+SELECT u.alue AS urakka_alue,
+       alueurakka.alue AS alueurakka_alue
+FROM urakka u
+JOIN hanke ON u.hanke = hanke.id
+JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+WHERE u.id = :id;

@@ -25,6 +25,7 @@
 (def +kayttajalla-puutteelliset-oikeudet+ "kayttajalla-puutteelliset-oikeudet")
 (def +puutteelliset-parametrit+ "puutteelliset-parametrit")
 (def +virheellinen-sijainti+ "virheellinen-sijainti")
+(def +virheellinen-paivamaara+ "virheellinen-paivamaara")
 
 (defn heita-poikkeus [tyyppi virheet]
   (throw+

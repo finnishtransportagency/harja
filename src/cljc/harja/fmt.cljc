@@ -114,3 +114,8 @@
   (if (< metria 1000)
     (str (desimaaliluku metria 0) " m")
     (str (desimaaliluku (/ metria 1000.0) 2) " km")))
+
+(defn pituus-opt [metria]
+  (if (nil? metria)
+    ""
+    (pituus metria)))

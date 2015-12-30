@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.parametrit
   "Apureita parametrien käsittelyyn"
-  (:require [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+  (:require [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :refer [heita-puutteelliset-parametrit-poikkeus]])
   (:import (java.text ParseException SimpleDateFormat)
            (java.util Date)))

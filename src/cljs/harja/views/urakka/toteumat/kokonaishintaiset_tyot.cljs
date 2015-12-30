@@ -32,7 +32,7 @@
          [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 3}
           {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
           {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
-          {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus}
+          {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
           {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
          
          @tiedot]))))

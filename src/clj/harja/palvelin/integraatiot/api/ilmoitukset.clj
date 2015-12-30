@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
@@ -41,7 +41,7 @@
                db
                id
                ilmoitusid
-               (pvm-string->java-sql-date (:aika ilmoitustoimenpide))
+               (aika-string->java-sql-date (:aika ilmoitustoimenpide))
                (:vapaateksti ilmoitustoimenpide)
                (:tyyppi ilmoitustoimenpide)
                (get-in ilmoittaja [:henkilo :etunimi])

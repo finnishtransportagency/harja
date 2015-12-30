@@ -78,6 +78,9 @@
 (defn hide-popup! []
   (go (>! komento-ch [::hide-popup])))
 
+(defn hide-popup-without-event! []
+  (go (>! komento-ch [::hide-popup-without-event])))
+
 (defn invalidate-size! []
   (go (>! komento-ch [::invalidate-size])))
 
@@ -254,14 +257,24 @@
         extent (.getExtent (.getGeometry feature))]
     (.fit view extent (.getSize ol3))))
 
-(defn- poista-popup!
-  "Poistaa kartan popupin, jos sellainen on."
+(defn- poista-openlayers-popup!
+  "Älä käytä tätä suoraan, vaan kutsu poista-popup! tai poista-popup-ilman-eventtia!"
   [this]
-  (t/julkaise! {:aihe :popup-suljettu})
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
       (.removeOverlay ol3 popup)
       (reagent/set-state this {:popup nil}))))
+
+(defn- poista-popup!
+  "Poistaa kartan popupin, jos sellainen on."
+  [this]
+  (t/julkaise! {:aihe :popup-suljettu})
+  (poista-openlayers-popup! this))
+
+(defn- poista-popup-ilman-eventtia!
+  "Poistaa kartan popupin, jos sellainen on, eikä julkaise popup-suljettu eventtiä."
+  [this]
+  (poista-openlayers-popup! this))
 
 (defn luo-overlay [koordinaatti sisalto]
   (let [elt (js/document.createElement "span")
@@ -279,10 +292,10 @@
       (.removeOverlay ol3 popup))
     (let [popup (luo-overlay koordinaatti
                              [:div.ol-popup
-                              [:a.ol-popup-closer {:on-click #(do
-                                                               (.stopPropagation %)
-                                                               (.preventDefault %)
-                                                               (poista-popup! this))}]
+                              [:a.ol-popup-closer.klikattava {:on-click #(do
+                                                                          (.stopPropagation %)
+                                                                          (.preventDefault %)
+                                                                          (poista-popup! this))}]
                               sisalto])]
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
@@ -348,6 +361,9 @@
 
                   ::hide-popup
                   (poista-popup! this)
+
+                  ::hide-popup-without-event
+                  (poista-popup-ilman-eventtia! this)
 
                   ::cursor
                   (let [[cursor] args
@@ -524,7 +540,6 @@
 
 
 (defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
-  #_(assert (not (nil? points)) "Viivalla pitää olla pisteitä") 
   (let [feature (if (not (nil? lines))
                   (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (map :points lines)))})
                   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
@@ -575,6 +590,31 @@
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.png" img direction [0.5 0.5]))
+
+(defmethod luo-feature :sticker-icon-line [{:keys [points img width zindex color direction] :as spec}]
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
+        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
+                                                                     :width (or width 2)})
+                                      :zIndex (or zindex 4)})
+
+                (ol.style.Style.
+                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
+                       :image  (ol.style.Icon.
+                                 #js {:src      (str +karttaikonipolku+ "kartta-suuntanuoli-sininen.svg")
+                                      :rotation (or direction 0)
+                                      :opacity  1
+                                      :anchor   #js [0.5 0.5]})
+                       :zIndex 4})
+
+                (ol.style.Style.
+                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
+                       :image  (ol.style.Icon.
+                                 #js {:src     (str +karttaikonipolku+ img)
+                                      :opacity 1
+                                      :anchor  #js [0.5 0.5]})
+                       :zIndex 5})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
+    (doto feature
+      (.setStyle (clj->js tyylit)))))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -645,10 +685,16 @@
           (if-not geom
             (recur new-geometries-map items)
             (let [shape (or (first (geometries-map avain))
-                            (let [new-shape (luo-feature geom)]
-                              (assert (not (nil? new-shape)) (str  "luo-feature palautti nil! annettu geom: " (pr-str geom)))
+                            (when-let [new-shape (try
+                                              (luo-feature geom)
+                                              (catch js/Error e
+                                                (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+                                                nil))]
                               (.setId new-shape avain)
-                              (.addFeature features new-shape)
+                              (try
+                                (.addFeature features new-shape)
+                                (catch js/Error e
+                                  (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
 
                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
                               (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line

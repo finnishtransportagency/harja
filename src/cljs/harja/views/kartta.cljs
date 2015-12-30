@@ -32,7 +32,7 @@
                             kork @yleiset/korkeus]
                         (case koko
                           :S +kartan-korkeus-s+
-                          :M (int (* 0.20 kork))
+                          :M (int (* 0.25 kork))
                           :L (int (* 0.60 kork))
                           :XL (int (* 0.80 kork))
                           (int (* 0.60 kork))))))
@@ -363,6 +363,12 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (defn poista-popup! []
   (openlayers/hide-popup!))
 
+(defn poista-popup-ilman-eventtia!
+  "Poistaa pop-upin ilmoittamatta siitä kuuntelijoille. Kätevä esim. silloin kun pop-up poistetaan
+   ja luodaan uudelleen uuteen sijaintiin."
+  []
+  (openlayers/hide-popup-without-event!))
+
 (defonce poista-popup-kun-tasot-muuttuvat
          (tapahtumat/kuuntele! :karttatasot-muuttuneet
                                (fn [_]
@@ -437,7 +443,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
     (if-let [alue (and v-ur (:alue v-ur))]
       (keskita-kartta-alueeseen! (geo/extent alue))
       (if-let [alue (and v-hal (:alue v-hal))]
-        (keskita-kartta-alueeseen! (geo/extent alue))))))
+        (keskita-kartta-alueeseen! (geo/extent alue))
+        (keskita-kartta-alueeseen! (geo/extent-monelle (map :alue @hal/hallintayksikot)))))))
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
@@ -450,9 +457,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   valittuun hallintayksikköön tai urakkaan"
   []
   (when @pida-geometriat-nakyvilla?
-    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))]
+    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))
+          extentin-margin-metreina 750]
       (if-not (empty? geometriat)
-        (keskita-kartta-alueeseen! (geo/extent-monelle geometriat))
+        (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
@@ -513,7 +521,6 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                      (map
                                        (fn [vanha uusi] (= (dissoc vanha :alue) (dissoc uusi :alue)))
                                        vanha uusi)))
-
                          (zoomaa-geometrioihin)))))))
     (fn []
       (let [hals @hal/hallintayksikot
@@ -553,10 +560,13 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :on-dblclick        nil
 
           :on-dblclick-select (fn [item event]
-                                (kun-geometriaa-klikattu item event)
-                                (.stopPropagation event)
-                                (.preventDefault event)
-                                (keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
+                                ;; Zoomaa kartta tuplaklikattuun asiaan (ei kuitenkaan urakka/hallintayksikkö)
+                                (when-not (or (= :ur (:type item))
+                                              (= :hy (:type item)))
+                                  (kun-geometriaa-klikattu item event)
+                                  (.stopPropagation event)
+                                  (.preventDefault event)
+                                  (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))))
 
           :tooltip-fn         (fn [geom]
                                 (and geom

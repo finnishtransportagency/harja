@@ -35,20 +35,20 @@
 (def karttataso-turvallisuuspoikkeamat (atom false))
 
 (defonce turvallisuuspoikkeamat-kartalla
-         (reaction (when @karttataso-turvallisuuspoikkeamat
-                     (kartalla-esitettavaan-muotoon
-                      (into []
-                            (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
-                                  (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))
-                            @haetut-turvallisuuspoikkeamat)
-                       @valittu-turvallisuuspoikkeama))))
+  (reaction (when @karttataso-turvallisuuspoikkeamat
+              (kartalla-esitettavaan-muotoon
+               @haetut-turvallisuuspoikkeamat
+               @valittu-turvallisuuspoikkeama
+               nil
+               (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
+                     (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))))))
 
 (defn kasaa-tallennuksen-parametrit
   [tp]
   {:tp                    (assoc
                             (dissoc tp :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
                             :urakka (:id @nav/valittu-urakka))
-   :korjaavattoimenpiteet (:korjaavattoimenpiteet tp)
+   :korjaavattoimenpiteet (remove #(empty? (dissoc % :id :koskematon)) (:korjaavattoimenpiteet tp))
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
    ;:liitteet           (:liitteet tp)
