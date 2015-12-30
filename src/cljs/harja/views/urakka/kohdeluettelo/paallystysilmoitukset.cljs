@@ -27,7 +27,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.views.kartta :as kartta]
-            [harja.ui.tierekisteri :as tierekisteri])
+            [harja.ui.tierekisteri :as tierekisteri]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -280,8 +281,7 @@
                                               (assoc-in lomakedata-nyt [:ilmoitustiedot :tyot] (grid/filteroi-uudet-poistetut uusi-arvo)))))]
           [:div.paallystysilmoituslomake
 
-           [:button.nappi-toissijainen {:on-click #(reset! paallystysilmoitus-lomakedata nil)}
-            (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
+           [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paallystysilmoitus-lomakedata nil)]
 
            (when @lomake-lukittu-muokkaukselta?
              (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))

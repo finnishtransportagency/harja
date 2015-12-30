@@ -23,7 +23,8 @@
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.views.kartta :as kartta]
-            [harja.ui.tierekisteri :as tierekisteri])
+            [harja.ui.tierekisteri :as tierekisteri]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -203,9 +204,7 @@
                                               (not (= tila :aloitettu))
                                               (not (nil? valmispvm-kohde)))))]
           [:div.paikkausilmoituslomake
-
-           [:button.nappi-toissijainen {:on-click #(reset! paallystys/paikkausilmoitus-lomakedata nil)}
-            (ikonit/chevron-left) " Takaisin ilmoitusluetteloon"]
+           [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paallystys/paikkausilmoitus-lomakedata nil)]
 
            (when @lomake-lukittu-muokkaukselta?
              (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))

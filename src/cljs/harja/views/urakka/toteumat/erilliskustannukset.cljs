@@ -136,8 +136,7 @@
     (komp/luo
       (fn []
         [:div.erilliskustannuksen-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! valittu-kustannus nil)}
-          (ikonit/chevron-left) " Takaisin kustannusluetteloon"]
+         [napit/takaisin " Takaisin kustannusluetteloon" #(reset! valittu-kustannus nil)]
          (if (:id @valittu-kustannus)
            [:h3 "Muokkaa kustannusta"]
            [:h3 "Luo uusi kustannus"])
