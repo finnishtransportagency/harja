@@ -90,6 +90,13 @@
              ))
          ]))))
 
+;; Takaisin-nappia käytetään erityisesti lomakkeissa. Kommentin
+;; hetkellä ainoat paikat missä geometrioden seuraaminen asetetaan
+;; falseksi on tilannekuva, sekä kun tr-osoitetta valitaan tr-komponentin
+;; kautta. Aiemmin tr-komponentti asetti itse arvon takaisin trueksi,
+;; mutta tämä aiheutti sen, että heti valinnan päätteeksi kartta
+;; resetoitui eri tasolle. Nyt seuraaminen laitetaan päälle kun
+;; lomakkeesta palataan.
 (defn takaisin
   ([teksti takaisin-fn] (takaisin teksti takaisin-fn true))
   ([teksti takaisin-fn seuraa-geometrioita?]
