@@ -48,7 +48,7 @@
   {:tp                    (assoc
                             (dissoc tp :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
                             :urakka (:id @nav/valittu-urakka))
-   :korjaavattoimenpiteet (:korjaavattoimenpiteet tp)
+   :korjaavattoimenpiteet (remove #(empty? (dissoc % :id :koskematon)) (:korjaavattoimenpiteet tp))
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
    ;:liitteet           (:liitteet tp)

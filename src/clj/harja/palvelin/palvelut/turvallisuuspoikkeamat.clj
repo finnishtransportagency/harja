@@ -113,7 +113,6 @@
 
 (defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
-
   (jdbc/with-db-transaction [c db]
     (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
 
@@ -132,7 +131,7 @@
                                                    (:id user))]
           (q/liita-kommentti<! c id (:id kommentti))))
 
-      (when korjaavattoimenpiteet
+      (when-not (empty? korjaavattoimenpiteet)
         (doseq [korjaavatoimenpide korjaavattoimenpiteet]
           (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
 
