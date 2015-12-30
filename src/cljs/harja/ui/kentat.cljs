@@ -617,7 +617,9 @@
       (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
-                   (kartta/poista-geometria! :tr-valittu-osoite)))
+                   (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
+                   (kartta/poista-geometria! :tr-valittu-osoite)
+                   (kartta/zoomaa-geometrioihin)))
 
       (fn [{:keys [lomake? sijainti]} data]
         (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
