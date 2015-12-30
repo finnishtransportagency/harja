@@ -54,28 +54,28 @@
             kun-valmis (:kun-valmis asetukset)
             kun-virhe (:kun-virhe asetukset)
             kun-onnistuu (:kun-onnistuu asetukset)]
-        
+
         [:span
          [:button
           {:class    (if (or @kysely-kaynnissa? (:disabled asetukset))
                        (str luokka " disabled")
                        luokka)
            :on-click #(do
-                        (.preventDefault %)
-                        (reset! kysely-kaynnissa? true)
-                        (reset! nayta-virheviesti? false)
-                        (go (let [tulos (<! (kysely))]
-                              (when kun-valmis (kun-valmis tulos))
-                              (if (not (k/virhe? tulos))
-                                (do
-                                  (reset! kysely-kaynnissa? false)
-                                  (when kun-onnistuu (kun-onnistuu tulos)))
-                                (do
-                                  (reset! kysely-kaynnissa? false)
-                                  (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
-                                  (reset! nayta-virheviesti? true)
-                                  (when kun-virhe (kun-virhe tulos)))))))
-           :title (:title asetukset)}
+                       (.preventDefault %)
+                       (reset! kysely-kaynnissa? true)
+                       (reset! nayta-virheviesti? false)
+                       (go (let [tulos (<! (kysely))]
+                             (when kun-valmis (kun-valmis tulos))
+                             (if (not (k/virhe? tulos))
+                               (do
+                                 (reset! kysely-kaynnissa? false)
+                                 (when kun-onnistuu (kun-onnistuu tulos)))
+                               (do
+                                 (reset! kysely-kaynnissa? false)
+                                 (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
+                                 (reset! nayta-virheviesti? true)
+                                 (when kun-virhe (kun-virhe tulos)))))))
+           :title    (:title asetukset)}
 
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
          (when @nayta-virheviesti?
@@ -90,24 +90,14 @@
              ))
          ]))))
 
-;; Takaisin-nappia käytetään erityisesti lomakkeissa. Kommentin
-;; hetkellä ainoat paikat missä geometrioden seuraaminen asetetaan
-;; falseksi on tilannekuva, sekä kun tr-osoitetta valitaan tr-komponentin
-;; kautta. Aiemmin tr-komponentti asetti itse arvon takaisin trueksi,
-;; mutta tämä aiheutti sen, että heti valinnan päätteeksi kartta
-;; resetoitui eri tasolle. Nyt seuraaminen laitetaan päälle kun
-;; lomakkeesta palataan.
 (defn takaisin
-  ([teksti takaisin-fn] (takaisin teksti takaisin-fn true))
-  ([teksti takaisin-fn seuraa-geometrioita?]
-  [:button.nappi-toissijainen {:on-click #(do (when seuraa-geometrioita?
-                                                (reset! harja.views.kartta/pida-geometriat-nakyvilla? true))
-                                                (takaisin-fn))}
-   [:span.livicon-chevron-left " " teksti]]))
+  [teksti takaisin-fn]
+  [:button.nappi-toissijainen {:on-click #(takaisin-fn)}
+   [:span.livicon-chevron-left " " teksti]])
 
 (defn urakan-sivulle [teksti click-fn]
   [:button.nappi-toissijainen {:on-click #(click-fn)}
-   [:span.livicon-chevron-left  " " teksti]])
+   [:span.livicon-chevron-left " " teksti]])
 
 (defn uusi
   "Nappi 'uuden asian' luonnille. 
