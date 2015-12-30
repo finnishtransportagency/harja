@@ -90,9 +90,13 @@
              ))
          ]))))
 
-(defn takaisin [teksti takaisin-fn]
-  [:button.nappi-toissijainen {:on-click #(takaisin-fn)}
-   [:span.livicon-chevron-left " " teksti]])
+(defn takaisin
+  ([teksti takaisin-fn] (takaisin teksti takaisin-fn true))
+  ([teksti takaisin-fn seuraa-geometrioita?]
+  [:button.nappi-toissijainen {:on-click #(do (when seuraa-geometrioita?
+                                                (reset! harja.views.kartta/pida-geometriat-nakyvilla? true))
+                                                (takaisin-fn))}
+   [:span.livicon-chevron-left " " teksti]]))
 
 (defn urakan-sivulle [teksti click-fn]
   [:button.nappi-toissijainen {:on-click #(click-fn)}
