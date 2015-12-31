@@ -241,13 +241,38 @@ WHERE id = :id;
 SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka::INTEGER)
 
 -- name: hae-urakan-aikataulu
--- Hakee urakan aikataulunäkymän tiedot
+-- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
   id,
-  kohdenumero, -- TODO Palauta myös aikataulut, täytyy lisätä paallystyskohde-tauluun.
-  nimi
+  kohdenumero,
+  nimi,
+  urakka,
+  sopimus,
+  aikataulu_paallystys_alku,
+  aikataulu_paallystys_loppu,
+  aikataulu_tiemerkinta_alku,
+  aikataulu_tiemerkinta_loppu,
+  aikataulu_kohde_valmis,
+  aikataulu_muokattu,
+  aikataulu_muokkaaja,
+  valmis_tiemerkintaan
 FROM paallystyskohde
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
   AND paallystyskohde.poistettu IS NOT TRUE;
+
+-- name: tallenna-paallystyskohteen-aikataulu
+-- Tallentaa päällystyskohteen aikataulun
+UPDATE paallystyskohde SET
+  aikataulu_paallystys_alku = :aikataulu_paallystys_alku,
+  aikataulu_paallystys_loppu = :aikataulu_paallystys_loppu,
+  aikataulu_tiemerkinta_alku = :aikataulu_tiemerkinta_alku,
+  aikataulu_tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
+  aikataulu_kohde_valmis = :aikataulu_kohde_valmis,
+  aikataulu_muokattu = NOW(),
+  aikataulu_muokkaaja = :aikataulu_muokattu
+FROM paallystyskohde
+WHERE
+id = :id AND  urakka = :urakka AND sopimus = :sopimus
+AND paallystyskohde.poistettu IS NOT TRUE;

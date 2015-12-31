@@ -325,6 +325,28 @@
   (jdbc/with-db-transaction [db db]
                             (q/hae-urakan-aikataulu db urakka-id sopimus-id)))
 
+(defn tallenna-paallystyskohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
+  (when urakka-id (roolit/vaadi-rooli-urakassa user roolit/paallystysaikataulun-kirjaus urakka-id))
+  (log/debug "Tallennetaan urakan " urakka-id " päällystyskohteiden aikataulutiedot: " kohteet)
+  (jdbc/with-db-transaction [db db]
+                            (doseq [rivi kohteet]
+                              ;; aikataulu_paallystys_alku = :aikataulu_paallystys_alku,
+                              ;aikataulu_paallystys_loppu = :;aikataulu_paallystys_loppu,
+                              ;aikataulu_tiemerkinta_alku = :;aikataulu_tiemerkinta_alku,
+                              ;aikataulu_tiemerkinta_loppu = :;aikataulu_tiemerkinta_loppu,
+                              ;aikataulu_kohde_valmis = :;aikataulu_kohde_valmis,
+                              ;aikataulu_muokattu = NOW(),
+                              (q/tallenna-paallystyskohteen-aikataulu db
+                                                           (:aikataulu_paallystys_alku rivi)
+                                                           (:aikataulu_paallystys_loppu rivi)
+                                                           (:aikataulu_tiemerkinta_alku rivi)
+                                                           (:aikataulu_tiemerkinta_loppu rivi)
+                                                           (:aikataulu_kohde_valmis rivi)
+                                                           (:id user)
+                                                           (:id rivi)
+                                                           urakka-id
+                                                           sopimus-id))))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -354,6 +376,9 @@
       (julkaise-palvelu http :hae-aikataulut
                         (fn [user tiedot]
                           (hae-urakan-aikataulu db user tiedot)))
+      (julkaise-palvelu http :tallenna-paallystyskohteiden-aikataulu
+                        (fn [user tiedot]
+                          (tallenna-paallystyskohteiden-aikataulu db user tiedot)))
       this))
 
   (stop [this]
@@ -365,5 +390,7 @@
       :urakan-paallystysilmoitus-paallystyskohteella
       :tallenna-paallystysilmoitus
       :tallenna-paallystyskohteet
-      :tallenna-paallystyskohdeosat)
+      :tallenna-paallystyskohdeosat
+      :hae-aikataulut
+      :tallenna-paallystyskohteiden-aikataulu)
     this))
