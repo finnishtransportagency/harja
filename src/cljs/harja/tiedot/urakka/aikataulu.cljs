@@ -12,6 +12,7 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+
 (defonce aikataulu-nakymassa? (atom false))
 
 (defn hae-aikataulut [urakka-id sopimus-id]
@@ -25,6 +26,9 @@
                                   (hae-aikataulut valittu-urakka-id valittu-sopimus-id))))
 
 (defn tallenna-paallystyskohteiden-aikataulu [urakka-id sopimus-id kohteet]
-  (k/post! tallenna-paallystyskohteiden-aikataulu {:urakka-id  urakka-id
-                                                   :sopimus-id sopimus-id
-                                                   :kohteet kohteet}))
+  (go
+    (let [vastaus (<! (k/post! :tallenna-paallystyskohteiden-aikataulu
+                               {:urakka-id  urakka-id
+                                :sopimus-id sopimus-id
+                                :kohteet    kohteet}))]
+      (reset! aikataulurivit vastaus))))

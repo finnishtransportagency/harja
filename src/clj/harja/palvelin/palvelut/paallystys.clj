@@ -11,15 +11,10 @@
             [harja.domain.paallystys.pot :as pot]
 
             [harja.kyselyt.paallystys :as q]
-            [harja.kyselyt.materiaalit :as materiaalit-q]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.kyselyt.urakat :as urakat-q]
 
-            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
-            [clj-time.format :as format]
-            [clj-time.coerce :as coerce]
             [harja.geo :as geo]))
 
 (defn tyot-tyyppi-string->avain [json avainpolku]
@@ -320,13 +315,14 @@
 
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
-  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan urakan aikataulutiedot.")
-  (jdbc/with-db-transaction [db db]
-                            (q/hae-urakan-aikataulu db urakka-id sopimus-id)))
+  (q/hae-urakan-aikataulu db urakka-id sopimus-id))
 
 (defn tallenna-paallystyskohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
-  (when urakka-id (roolit/vaadi-rooli-urakassa user roolit/paallystysaikataulun-kirjaus urakka-id))
+  (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
+  (roolit/vaadi-rooli-urakassa user roolit/paallystysaikataulun-kirjaus urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " päällystyskohteiden aikataulutiedot: " kohteet)
   (jdbc/with-db-transaction [db db]
                             (doseq [rivi kohteet]
@@ -336,16 +332,17 @@
                               ;aikataulu_tiemerkinta_loppu = :;aikataulu_tiemerkinta_loppu,
                               ;aikataulu_kohde_valmis = :;aikataulu_kohde_valmis,
                               ;aikataulu_muokattu = NOW(),
-                              (q/tallenna-paallystyskohteen-aikataulu db
-                                                           (:aikataulu_paallystys_alku rivi)
-                                                           (:aikataulu_paallystys_loppu rivi)
-                                                           (:aikataulu_tiemerkinta_alku rivi)
-                                                           (:aikataulu_tiemerkinta_loppu rivi)
-                                                           (:aikataulu_kohde_valmis rivi)
-                                                           (:id user)
-                                                           (:id rivi)
-                                                           urakka-id
-                                                           sopimus-id))))
+                              (log/debug "tallennetaan rivi " (q/tallenna-paallystyskohteen-aikataulu!
+                                                                db
+                                                                (:aikataulu_paallystys_alku rivi)
+                                                                (:aikataulu_paallystys_loppu rivi)
+                                                                (:aikataulu_tiemerkinta_alku rivi)
+                                                                (:aikataulu_tiemerkinta_loppu rivi)
+                                                                (:aikataulu_kohde_valmis rivi)
+                                                                (:id user)
+                                                                (:id rivi))))
+                            (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id})))
 
 (defrecord Paallystys []
   component/Lifecycle

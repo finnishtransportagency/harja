@@ -262,9 +262,10 @@ WHERE
   AND sopimus = :sopimus
   AND paallystyskohde.poistettu IS NOT TRUE;
 
--- name: tallenna-paallystyskohteen-aikataulu
+-- name: tallenna-paallystyskohteen-aikataulu!
 -- Tallentaa päällystyskohteen aikataulun
-UPDATE paallystyskohde SET
+UPDATE paallystyskohde
+SET
   aikataulu_paallystys_alku = :aikataulu_paallystys_alku,
   aikataulu_paallystys_loppu = :aikataulu_paallystys_loppu,
   aikataulu_tiemerkinta_alku = :aikataulu_tiemerkinta_alku,
@@ -272,7 +273,4 @@ UPDATE paallystyskohde SET
   aikataulu_kohde_valmis = :aikataulu_kohde_valmis,
   aikataulu_muokattu = NOW(),
   aikataulu_muokkaaja = :aikataulu_muokattu
-FROM paallystyskohde
-WHERE
-id = :id AND  urakka = :urakka AND sopimus = :sopimus
-AND paallystyskohde.poistettu IS NOT TRUE;
+WHERE id = :id;
