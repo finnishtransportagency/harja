@@ -1,3 +1,4 @@
+-- kuvaus: laske piste tierekisteriosoitteelle
 CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_piste(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER)
   RETURNS geometry
