@@ -199,8 +199,7 @@
                                               (not (= tila :aloitettu))
                                               (not (nil? valmispvm-kohde)))))]
           [:div.paikkausilmoituslomake
-           [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paallystys/paikkausilmoitus-lomakedata nil)]
-
+           [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paikkaus/paikkausilmoitus-lomakedata nil)]
 
            (when @lomake-lukittu-muokkaukselta?
              (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
