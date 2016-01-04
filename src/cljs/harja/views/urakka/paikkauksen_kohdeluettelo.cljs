@@ -4,8 +4,8 @@
             [harja.ui.bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
                                       livi-pudotusvalikko]]
-            [harja.views.urakka.kohdeluettelo.paallystyskohteet :as paallystyskohteet-yhteenveto]
-            [harja.views.urakka.kohdeluettelo.paikkausilmoitukset :as paikkausilmoitukset]
+            [harja.views.urakka.paallystyskohteet :as paallystyskohteet-yhteenveto]
+            [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
@@ -16,7 +16,7 @@
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
+            [harja.tiedot.urakka.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -45,8 +45,8 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
-    (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
-    (komp/lippu paallystys/karttataso-paikkauskohteet)
+    (komp/kuuntelija :paikkauskohde-klikattu kohdeosan-reitti-klikattu)
+    (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn [ur]
       [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}
 

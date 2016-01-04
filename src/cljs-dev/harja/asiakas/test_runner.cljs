@@ -11,8 +11,8 @@
    [harja.tiedot.muokkauslukko-test]
    [harja.tiedot.urakka.suunnittelu-test]
    [harja.views.urakka.siltatarkastukset-test]
-   [harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test]
-   [harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test]
+   [harja.views.urakka.paallystysilmoitukset-test]
+   [harja.views.urakka.paikkausilmoitukset-test]
    [harja.pvm-test]))
 
 
@@ -56,8 +56,8 @@
                   'harja.tiedot.urakka.suunnittelu-test
                   'harja.tiedot.muokkauslukko-test
                   'harja.views.urakka.siltatarkastukset-test
-                  'harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test
-                  'harja.views.urakka.kohdeluettelo.paikkausilmoitukset-test
+                  'harja.views.urakka.paallystysilmoitukset-test
+                  'harja.views.urakka.paikkausilmoitukset-test
                   'harja.pvm-test)) 
 
 (defn change-favicon [ico]
