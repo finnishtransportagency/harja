@@ -11,7 +11,8 @@
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
+            [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot])
@@ -45,7 +46,7 @@
                                          @tilannekuva/tilannekuvan-asiat-kartalla
                                          ;; Päällystys & paikkaus
                                          @paallystys/paallystyskohteet-kartalla
-                                         @paallystys/paikkauskohteet-kartalla)]
+                                         @paikkaus/paikkauskohteet-kartalla)]
                    (if-not g
                      (persistent! geometriat)
                      (recur (conj! geometriat g) gs)))))

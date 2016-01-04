@@ -6,7 +6,8 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -324,3 +325,41 @@
         (is (not (nil? kohdeosat-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
         (u (str "DELETE FROM paallystyskohdeosa WHERE nimi = 'Testiosa123456';"))))))
+
+(deftest tallenna-paallystysurakan-aikataulut
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        maara-ennen-lisaysta (ffirst (q
+                                       (str "SELECT count(*) FROM paallystyskohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+        kohteet [{:kohdenumero                 "L03", :aikataulu_paallystys_alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu_muokkaaja 2, :urakka 5,
+                  :aikataulu_kohde_valmis      (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
+                  :valmis_tiemerkintaan        (pvm/->pvm-aika "23.5.2016 12:00"), :aikataulu_paallystys_loppu (pvm/->pvm-aika "20.5.2016 12:00"),
+                  :id                          1, :sopimus 8, :aikataulu_muokattu (pvm/->pvm-aika "29.5.2016 12:00"), :aikataulu_tiemerkinta_alku nil,
+                  :aikataulu_tiemerkinta_loppu (pvm/->pvm "26.5.2016")}]
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-paallystyskohteiden-aikataulu +kayttaja-jvh+ {:urakka-id  urakka-id
+                                                                                        :sopimus-id sopimus-id
+                                                                                        :kohteet    kohteet})
+        maara-paivityksen-jalkeen (ffirst (q
+                                            (str "SELECT count(*) FROM paallystyskohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+        vastaus-leppajarven-ramppi (first (filter #(= "L03" (:kohdenumero %)) vastaus))
+        odotettu {:aikataulu_kohde_valmis       (pvm/->pvm "29.5.2016")
+                  :aikataulu_muokkaaja         2
+                  :aikataulu_paallystys_alku   (pvm/->pvm-aika "19.5.2016 12:00")
+                  :aikataulu_paallystys_loppu   (pvm/->pvm-aika "20.5.2016 12:00")
+                  :aikataulu_tiemerkinta_alku  nil
+                  :aikataulu_tiemerkinta_loppu (pvm/->pvm "26.5.2016")
+                  :id                          1
+                  :kohdenumero                 "L03"
+                  :nimi                        "Leppäjärven ramppi"
+                  :sopimus                     8
+                  :urakka                      5
+                  :valmis_tiemerkintaan       (pvm/->pvm-aika "23.5.2016 12:00")}]
+    (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
+    (is (= (:aikataulu_paallystys_alku odotettu) (:aikataulu_paallystys_alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_paallystys_alku")
+    (is (= (:aikataulu_paallystys_loppu odotettu) (:aikataulu_paallystys_loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_paallystys_loppu")
+    (is (= (:aikataulu_tiemerkinta_alku odotettu) (:aikataulu_tiemerkinta_alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_tiemerkinta_alku")
+    (is (= (:aikataulu_tiemerkinta_loppu odotettu) (:aikataulu_tiemerkinta_loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_tiemerkinta_loppu")
+    (is (= (:aikataulu_kohde_valmis odotettu) (:aikataulu_kohde_valmis vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_kohde_valmis")))
