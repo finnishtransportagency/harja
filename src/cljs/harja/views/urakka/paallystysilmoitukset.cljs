@@ -1,5 +1,5 @@
-(ns harja.views.urakka.kohdeluettelo.paallystysilmoitukset
-  "Urakan kohdeluettelon toteumat"
+(ns harja.views.urakka.paallystysilmoitukset
+  "Urakan päällystysilmoitukset"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
 
@@ -17,7 +17,7 @@
             [harja.domain.roolit :as roolit]
 
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.kohdeluettelo.paallystys :refer [paallystystoteumat paallystysilmoitus-lomakedata] :as paallystys]
+            [harja.tiedot.urakka.paallystys :refer [paallystystoteumat paallystysilmoitus-lomakedata] :as paallystys]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.muokkauslukko :as lukko]
 
@@ -32,8 +32,6 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
-
-
 
 (def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
                                                (lukko/nykyinen-nakyma-lukittu?))))
