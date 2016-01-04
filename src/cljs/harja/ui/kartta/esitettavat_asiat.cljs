@@ -185,18 +185,22 @@
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
   ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
-    (let [nimi (get-in toteuma [:tehtavat 0 :nimi])
+    (let [nimi (or
+                ;; toteumalla on suoraan nimi
+                (:nimi toteuma)
+                
+                ;; tai nimi muodostetaan yhdistämällä tehtävien toimenpiteet 
+                (reduce str
+                        (butlast
+                         (interleave (map :toimenpide (:tehtavat toteuma))
+                                     (repeat ", ")))))
           [vari nuoli] (tehtavan-vari-ja-nuoli nimi)
           toteuma (assoc toteuma
                          :type :toteuma
-                         :nimi (or (:nimi toteuma)
-                                   nimi
-                                   (get-in toteuma [:tpi :nimi])
-                                   (if (> 1 (count (:tehtavat toteuma)))
-                                     (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
-                                     (str (:toimenpide (first (:tehtavat toteuma))))))
+                         :nimi nimi
                          :selite {:teksti nimi
                                   :vari vari})]
+      (log "TOTEUMA: " (pr-str toteuma))
       [(assoc toteuma
               :alue (arrow-line {:width 5
                                  :color vari

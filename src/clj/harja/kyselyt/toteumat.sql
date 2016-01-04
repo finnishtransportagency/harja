@@ -562,7 +562,7 @@ SELECT
   tt.toteuma       AS toteumaid,
   t.alkanut        AS pvm,
   t.reitti,
-  tk.nimi          AS tehtava_nimi,
+  tk.nimi          AS tehtava_toimenpide,
   tk.id            AS tehtava_id
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
