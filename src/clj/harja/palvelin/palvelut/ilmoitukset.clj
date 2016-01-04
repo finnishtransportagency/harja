@@ -11,7 +11,7 @@
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]))
 
-(defn annettu? [p]
+(defn hakuehto-annettu? [p]
   (if (nil? p)
     false
     (do
@@ -22,19 +22,19 @@
           (do
             (if (empty? p)
               false
-              (some true? (map annettu? p))))
+              (some true? (map hakuehto-annettu? p))))
 
           (if (map? p)
             (do
               (if (empty? p)
                 false
-                (some true? (map #(annettu? (val %)) p))))
+                (some true? (map #(hakuehto-annettu? (val %)) p))))
 
             true))))))
 
 (defn- viesti [mille mista ilman]
   (str ", "
-       (if (annettu? mille)
+       (if (hakuehto-annettu? mille)
          (str mista " " (pr-str mille))
          (str ilman))))
 
@@ -77,10 +77,10 @@
                             (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
                           (q/hae-ilmoitukset db
                                              urakat
-                                             (annettu? aikavali-alku) (annettu? aikavali-loppu)
+                                             (hakuehto-annettu? aikavali-alku) (hakuehto-annettu? aikavali-loppu)
                                              aikavali-alku aikavali-loppu
-                                             (annettu? tyypit) tyypit
-                                             (annettu? hakuehto) (str "%" hakuehto "%")
+                                             (hakuehto-annettu? tyypit) tyypit
+                                             (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
                                              (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
                                              (if (:avoimet tilat) true false) ;; falseksi
                                              ))
