@@ -96,3 +96,7 @@
       [:span
        [kartta/kartan-paikka]
        [kokonaishintaisten-toteumien-listaus]])))
+
+(def tyhjenna-popupit-kun-filtterit-muuttuu (run!
+                                              @tiedot/haetut-toteumat
+                                              (kartta/poista-popup!)))
