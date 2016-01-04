@@ -212,31 +212,32 @@
         sijainti (:sijainti tp)
         tyyppi (:type sijainti)
         skaala (if (valittu? tp) 1.5 1)]
-    [(assoc tp
-            :type :turvallisuuspoikkeama
-            :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
-            :selite {:teksti selite
-                     :img    ikoni}
-            :alue (case tyyppi
-                    :line
-                    {:type   :tack-icon-line
-                     :color  "black"
-                     :scale  skaala
-                     :img    ikoni
-                     :points (get-in tp [:sijainti :points])}
+    (when sijainti
+      [(assoc tp
+              :type :turvallisuuspoikkeama
+              :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
+              :selite {:teksti selite
+                       :img    ikoni}
+              :alue (case tyyppi
+                      :line
+                      {:type   :tack-icon-line
+                       :color  "black"
+                       :scale  skaala
+                       :img    ikoni
+                       :points (get-in tp [:sijainti :points])}
 
-                    :multiline
-                    {:type :tack-icon-line
-                     :color "black"
-                     :scale skaala
-                     :img ikoni
-                     :points (mapcat :points (:lines sijainti))}
+                      :multiline
+                      {:type :tack-icon-line
+                       :color "black"
+                       :scale skaala
+                       :img ikoni
+                       :points (mapcat :points (:lines sijainti))}
 
-                    :point
-                    {:type :tack-icon
-                     :scale skaala
-                     :img ikoni
-                     :coordinates (get-in tp [:sijainti :coordinates])}))]))
+                      :point
+                      {:type :tack-icon
+                       :scale skaala
+                       :img ikoni
+                       :coordinates (get-in tp [:sijainti :coordinates])}))])))
 
 ;; TODO: Päällystyksissä ja paikkauksissa on kommentoitua koodia, koska näille dedikoituijen näkymien käyttämät
 ;; kyselyt palauttavat datan sellaisessa muodossa, että sijainti pitää kaivaa erikseen "kohdeosista".
