@@ -8,8 +8,7 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
-            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
-            [clj-time.periodic :as time-period])
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera])
   (:import (java.util UUID)))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
@@ -44,16 +43,16 @@
 (defn tee-vuosisummat [vuodet summat]
   (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
     (mapv (fn [vuosi]
-            (let [summa (get summat (time/year (:loppupvm vuosi)) 0)]
-              {:alkupvm  (pvm/aika-iso8601 (coerce/to-date (:alkupvm vuosi)))
-               :loppupvm (pvm/aika-iso8601 (coerce/to-date (:loppupvm vuosi)))
+            (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
+              {:alkupvm  (pvm/aika-iso8601 (:alkupvm vuosi))
+               :loppupvm (.replace (pvm/aika-iso8601 (:loppupvm vuosi)) "00:00:00.0" "17:00:00.0")
                :summa    summa}))
           vuodet)))
 
 (defn tee-vuosittaiset-summat [db numero maksueran-tiedot]
   (let [vuodet (mapv (fn [vuosi]
-                       {:alkupvm  (coerce/from-sql-date (first vuosi))
-                        :loppupvm (coerce/from-sql-date (second vuosi))})
+                       {:alkupvm  (first vuosi)
+                        :loppupvm (second vuosi)})
                      (pvm/urakan-vuodet (:alkupvm (:toimenpideinstanssi maksueran-tiedot))
                                         (:loppupvm (:toimenpideinstanssi maksueran-tiedot))))]
     (case (:tyyppi (:maksuera maksueran-tiedot))
