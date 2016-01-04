@@ -102,3 +102,9 @@
                              (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                           kohderivit)
                                      toteumarivit))))))
+
+(defn kuvaile-kohteen-tila [tila]
+  (case tila
+    :valmis "Valmis"
+    :aloitettu "Aloitettu"
+    "Ei aloitettu"))
