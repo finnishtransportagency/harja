@@ -194,10 +194,7 @@
                                                  {:nappi {:nimi     (if (get-in tapahtuma [:paallystysilmoitus :tila])
                                                                       "Päällystysilmoitus"
                                                                       "Aloita päällystysilmoitus")
-                                                          :on-click   #()
-                                                                      #_(do (kartta/poista-popup!) ; FIXME Ei toimi vielä
-                                                                         (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
-                                                                         (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id}))}}))))
+                                                          :on-click   (:kohde-click tapahtuma)}}))))
 
 (defmethod nayta-popup :paikkaus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
@@ -225,7 +222,4 @@
                                                 {:nappi {:nimi     (if (get-in tapahtuma [:paikkausilmoitus :tila])
                                                                      "Paikkausilmoitus"
                                                                      "Aloita paikkausilmoitus")
-                                                         :on-click   #()
-                                                         #_(do (kartta/poista-popup!) ; FIXME Ei toimi vielä
-                                                              (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
-                                                              (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id}))}}))))
+                                                         :on-click   (:kohde-click tapahtuma)}}))))

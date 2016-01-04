@@ -17,7 +17,6 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -32,20 +31,24 @@
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
 
-; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste ja linkki kohteeseen
+; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (popupit/nayta-popup (-> kohde
-                           (assoc :aihe :paallystys-klikattu)
-                           (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
-                           (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
-                           (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
-                           (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
-                           (assoc :paallystysilmoitus {:tila (:tila kohde)})
-                           (assoc :tr {:numero (get-in kohde [:osa :tr_numero])
-                                       :alkuosa (get-in kohde [:osa :tr_alkuosa])
-                                       :alkuetaisyys (get-in kohde [:osa :tr_alkuetaisyys])
-                                       :loppuosa (get-in kohde [:osa :tr_loppuosa])
-                                       :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])}))))
+  (let [paallystyskohde-id (get-in kohde [:osa :paallystyskohde-id])]
+    (popupit/nayta-popup (-> kohde
+                             (assoc :aihe :paallystys-klikattu)
+                             (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
+                             (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
+                             (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
+                             (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
+                             (assoc :paallystysilmoitus {:tila (:tila kohde)})
+                             (assoc :tr {:numero        (get-in kohde [:osa :tr_numero])
+                                         :alkuosa       (get-in kohde [:osa :tr_alkuosa])
+                                         :alkuetaisyys  (get-in kohde [:osa :tr_alkuetaisyys])
+                                         :loppuosa      (get-in kohde [:osa :tr_loppuosa])
+                                         :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
+                             (assoc :kohde-click #(do (kartta/poista-popup!)
+                                                      (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
+                                                    (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id}))))))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"

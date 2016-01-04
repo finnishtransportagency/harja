@@ -16,9 +16,6 @@
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.ikonit :as ikonit]
-            [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -32,20 +29,24 @@
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
 
-; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste ja linkki kohteeseen
+; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (popupit/nayta-popup (-> kohde
-                           (assoc :aihe :paikkaus-klikattu)
-                           (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
-                           (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
-                           (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
-                           (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
-                           (assoc :paikkausilmoitus {:tila (:tila kohde)})
-                           (assoc :tr {:numero (get-in kohde [:osa :tr_numero])
-                                       :alkuosa (get-in kohde [:osa :tr_alkuosa])
-                                       :alkuetaisyys (get-in kohde [:osa :tr_alkuetaisyys])
-                                       :loppuosa (get-in kohde [:osa :tr_loppuosa])
-                                       :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])}))))
+  (let [paikkauskohde-id (get-in kohde [:osa :paikkauskohde-id])]
+    (popupit/nayta-popup (-> kohde
+                             (assoc :aihe :paikkaus-klikattu)
+                             (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
+                             (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
+                             (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
+                             (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
+                             (assoc :paikkausilmoitus {:tila (:tila kohde)})
+                             (assoc :tr {:numero        (get-in kohde [:osa :tr_numero])
+                                         :alkuosa       (get-in kohde [:osa :tr_alkuosa])
+                                         :alkuetaisyys  (get-in kohde [:osa :tr_alkuetaisyys])
+                                         :loppuosa      (get-in kohde [:osa :tr_loppuosa])
+                                         :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
+                             (assoc :kohde-click (do (kartta/poista-popup!) ä
+                                                     (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
+                                                     (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id})))))))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
