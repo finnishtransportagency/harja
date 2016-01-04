@@ -200,7 +200,6 @@
                          :nimi nimi
                          :selite {:teksti nimi
                                   :vari vari})]
-      (log "TOTEUMA: " (pr-str toteuma))
       [(assoc toteuma
               :alue (arrow-line {:width 5
                                  :color vari
