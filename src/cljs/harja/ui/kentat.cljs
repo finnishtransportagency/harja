@@ -517,7 +517,7 @@
                                (pvm/->pvm nykyinen-pvm-teksti)
                                nykyinen-pvm
                                (pvm-tyhjana rivi))]
-          [:span.pvm-kentta
+          [:span.pvm-aika-kentta
            [:table
             [:tbody
              [:tr
@@ -735,4 +735,6 @@
      [:span.alkuetaisyys alkuetaisyys]
      [:span.loppuosa loppuosa] " / "
      [:span.loppuetaisyys loppuetaisyys]]))
-         
+
+(defmethod tee-kentta :komponentti [{:keys [lomake? komponentti rivi]}]
+  (komponentti rivi))

@@ -71,7 +71,7 @@ WHERE
     (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
     (:loppu_annettu IS FALSE AND i.ilmoitettu :: DATE >= :alku) OR
     (:alku_annettu IS FALSE AND i.ilmoitettu :: DATE <= :loppu) OR
-    (i.ilmoitettu BETWEEN :alku AND :loppu)
+    (i.ilmoitettu :: DATE BETWEEN :alku AND :loppu)
   ) AND
 
   -- Tarkasta ilmoituksen tyypit
