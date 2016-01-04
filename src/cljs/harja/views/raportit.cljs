@@ -46,9 +46,10 @@
                   urakkatyypin-raportit (filter
                                           #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
                                           (vals @raporttityypit))]
-              (into []
-                    (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                    urakkatyypin-raportit))))
+              (sort-by :kuvaus
+                       (into []
+                             (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                             urakkatyypin-raportit)))))
 
 (defonce poista-ei-mahdollinen-raporttityyppivalinta
   (run! (let [mahdolliset (into #{} @mahdolliset-raporttityypit)
