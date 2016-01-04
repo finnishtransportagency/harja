@@ -49,7 +49,7 @@
         [:a.arvolistaus-linkki.klikattava {:on-click on-click}
          nimi]))
 
-    (when nappi
+    (when (and (:nimi nappi) (:on-click nappi))
       (let [nimi (:nimi nappi)
             on-click (:on-click nappi)]
         [:button.arvolistaus-nappi.nappi-ensisijainen {:on-click on-click}

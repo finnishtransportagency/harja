@@ -24,7 +24,7 @@
 (defonce kohdeluettelo-valilehti (atom :paikkauskohteet))
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paikkauskohde-id (get-in kohde [:osa :paikkauskohde-id])]
+  (let [paikkauskohde-id (:paikkauskohde-id kohde)]
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paikkaus-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
@@ -45,7 +45,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
-    (komp/kuuntelija :paikkauskohde-klikattu kohdeosan-reitti-klikattu)
+    (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn [ur]
       [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}

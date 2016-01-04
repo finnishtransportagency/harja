@@ -26,7 +26,7 @@
 (defonce kohdeluettelo-valilehti (atom :paallystyskohteet))
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paallystyskohde-id (get-in kohde [:osa :paallystyskohde-id])]
+  (let [paallystyskohde-id (:paallystyskohde-id kohde)]
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paallystys-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
