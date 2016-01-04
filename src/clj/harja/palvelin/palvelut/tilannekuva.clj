@@ -206,7 +206,7 @@
             (konv/sarakkeet-vektoriin
               (into []
                     (comp
-                      (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                      (harja.geo/muunna-pg-tulokset :reitti)
                       (map konv/alaviiva->rakenne)
                       (map #(assoc % :tyyppi :toteuma)))
                     (q/hae-toteumat db (konv/sql-date alku) (konv/sql-date loppu) toimenpidekoodit
