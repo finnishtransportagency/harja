@@ -9,4 +9,4 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi) VALUES (
  '#''harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain/suorita'
 );
 
-UPDATE raportti SET kuvaus 'Yksikköhintaiset työt päivittäin' WHERE nimi = 'yks-hint-tyot';
+UPDATE raportti SET kuvaus = 'Yksikköhintaiset työt päivittäin' WHERE nimi = 'yks-hint-tyot';
