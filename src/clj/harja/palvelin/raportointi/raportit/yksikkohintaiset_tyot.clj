@@ -21,7 +21,7 @@
                                                                urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
 
-        raportin-nimi "Yksikköhintaisten töiden raportti"
+        raportin-nimi "Yksikköhintaiset työt päivittäin"
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
                   (case konteksti
