@@ -43,9 +43,9 @@
                                          :alkuetaisyys  (get-in kohde [:osa :tr_alkuetaisyys])
                                          :loppuosa      (get-in kohde [:osa :tr_loppuosa])
                                          :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
-                             (assoc :kohde-click (do (kartta/poista-popup!)
-                                                     (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
-                                                     (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id})))))))
+                             (assoc :kohde-click #(do (kartta/poista-popup!)
+                                                      (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
+                                                      (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id})))))))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"

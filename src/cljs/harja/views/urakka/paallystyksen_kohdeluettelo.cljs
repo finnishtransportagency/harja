@@ -47,7 +47,7 @@
                                          :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
                              (assoc :kohde-click #(do (kartta/poista-popup!)
                                                       (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
-                                                    (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id})))))))
+                                                      (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id})))))))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
