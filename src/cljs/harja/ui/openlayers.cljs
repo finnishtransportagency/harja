@@ -5,6 +5,7 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -599,12 +600,12 @@
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image  (ol.style.Icon.
-                                 #js {:src      (str +karttaikonipolku+ "kartta-suuntanuoli-sininen.svg")
-                                      :rotation (or direction 0)
-                                      :opacity  1
-                                      :anchor   #js [0.5 0.5]})
-                       :zIndex 4})
+                       :image    (ol.style.Icon.
+                                   #js {:src      (yleiset/karttakuva (str +karttaikonipolku+ "kartta-suuntanuoli-sininen"))
+                                        :rotation (or direction 0)
+                                        :opacity  1
+                                        :anchor   #js [0.5 0.5]})
+                       :zIndex   4})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
