@@ -1,7 +1,7 @@
 -- Yksikköhintaisten töiden kuukausiraportti
 
 INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi) VALUES (
- 'yks-hint-kuukausiraportti', 'Yksikköhintaisten työt kuukausittain',
+ 'yks-hint-kuukausiraportti', 'Yksikköhintaiset työt kuukausittain',
  ARRAY['urakka'::raporttikonteksti],
  ARRAY[('Hoitokausi', 'hoitokausi',true,NULL)::raporttiparametri,
        ('Kuukausi','hoitokauden-kuukausi',true,NULL)::raporttiparametri,
