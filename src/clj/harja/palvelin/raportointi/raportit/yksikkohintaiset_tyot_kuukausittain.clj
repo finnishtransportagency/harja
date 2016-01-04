@@ -27,7 +27,7 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       [{:leveys "25%" :otsikko "Tehtävä"}
-       {:leveys "25%" :otsikko "Yksikkö"}
+       {:leveys "10%" :otsikko "Yksikkö"}
        ; TODO Tähän kuukaudet
        {:leveys "15%" :otsikko "Yhteensä"}
        {:leveys "15%" :otsikko "Tot.%"}
