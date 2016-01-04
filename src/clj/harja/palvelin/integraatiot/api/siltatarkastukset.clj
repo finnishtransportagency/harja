@@ -10,7 +10,7 @@
             [harja.kyselyt.siltatarkastukset :as silta-q]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -56,7 +56,7 @@
          db
          (:id silta)
          urakka-id
-         (pvm-string->java-sql-date (:tarkastusaika tarkastus))
+         (aika-string->java-sql-date (:tarkastusaika tarkastus))
          (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))
          (:id kayttaja)
          ulkoinen-id)))
@@ -67,7 +67,7 @@
          db
          (:id silta)
          urakka-id
-         (pvm-string->java-sql-date (:tarkastusaika tarkastus))
+         (aika-string->java-sql-date (:tarkastusaika tarkastus))
          (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))
          (:id kayttaja)
          false

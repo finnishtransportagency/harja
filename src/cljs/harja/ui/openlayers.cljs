@@ -685,10 +685,16 @@
           (if-not geom
             (recur new-geometries-map items)
             (let [shape (or (first (geometries-map avain))
-                            (let [new-shape (luo-feature geom)]
-                              (assert (not (nil? new-shape)) (str  "luo-feature palautti nil! annettu geom: " (pr-str geom)))
+                            (when-let [new-shape (try
+                                              (luo-feature geom)
+                                              (catch js/Error e
+                                                (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+                                                nil))]
                               (.setId new-shape avain)
-                              (.addFeature features new-shape)
+                              (try
+                                (.addFeature features new-shape)
+                                (catch js/Error e
+                                  (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
 
                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
                               (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line

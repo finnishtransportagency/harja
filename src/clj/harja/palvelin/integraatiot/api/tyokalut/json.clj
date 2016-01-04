@@ -7,9 +7,13 @@
             [clj-time.coerce :as coerce])
   (:import (java.text SimpleDateFormat)))
 
-(defn pvm-string->java-sql-date [paivamaara]
+(defn aika-string->java-sql-date [paivamaara]
   (when paivamaara
     (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))))
+
+(defn pvm-string->java-sql-date [paivamaara]
+  (when paivamaara
+    (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd") paivamaara))))
 
 (defn json-pvm [paivamaara]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))
@@ -48,5 +52,5 @@
       (assoc-in avainpolku
                 (when-let [vector (some-> map (get-in avainpolku))]
                   (mapv (fn [item]
-                          (assoc item pvm-avain (pvm-string->java-sql-date (pvm-avain item))))
+                          (assoc item pvm-avain (aika-string->java-sql-date (pvm-avain item))))
                         vector)))))

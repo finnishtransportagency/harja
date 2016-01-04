@@ -1,11 +1,14 @@
 (ns harja.loki
-  "Tuotantomoodin lokitus: NOP")
+  "Tuotantomoodin lokitus. Lokita, jos erikseen laitettu päälle.")
 
 (def +lokitetaan+ false)
 
 (defn log [& things]
   (when +lokitetaan+
     (.apply js/console.log js/console (apply array things))))
+
+(defn warn [& things]
+  (.apply js/console.warn js/console (apply array things)))
 
 (defn logt [data])
 

@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -23,7 +23,7 @@
     (let [toteuma (assoc (get-in data [:pistetoteuma :toteuma]) :reitti nil)
           toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
           sijainti (get-in data [:pistetoteuma :sijainti])
-          aika (pvm-string->java-sql-date (get-in data [:pistetoteuma :toteuma :alkanut]))]
+          aika (aika-string->java-sql-date (get-in data [:pistetoteuma :toteuma :alkanut]))]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
       (log/debug "Aloitetaan sijainnin tallennus")
       (api-toteuma/tallenna-sijainti transaktio sijainti aika toteuma-id)
