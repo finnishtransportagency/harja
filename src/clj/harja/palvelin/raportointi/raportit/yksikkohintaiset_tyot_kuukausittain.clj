@@ -29,8 +29,8 @@
       [{:leveys "25%" :otsikko "Tehtävä"}
        {:leveys "10%" :otsikko "Yksikkö"}
        ; TODO Tähän kuukaudet
-       {:leveys "15%" :otsikko "Yhteensä"}
-       {:leveys "15%" :otsikko "Tot.%"}
+       {:leveys "15%" :otsikko "Määrä yhteensä"}
+       {:leveys "15%" :otsikko "Tot-%"}
        {:leveys "15%" :otsikko "Suunniteltu määrä hoitokaudella"}]
 
       (mapv (juxt :nimi

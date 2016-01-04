@@ -63,8 +63,11 @@ WHERE maksuera IN (SELECT m.numero
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna päivittäin.
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
 SELECT date_trunc('day', tot.alkanut) as pvm,
-       t4.nimi, yht.yksikko, yht.yksikkohinta,
-       yht.maara as suunniteltu_maara, SUM(tt.maara) as toteutunut_maara,
+       t4.nimi,
+       yht.yksikko,
+       yht.yksikkohinta,
+       yht.maara as suunniteltu_maara,
+       SUM(tt.maara) as toteutunut_maara,
        (yht.maara * yksikkohinta) as suunnitellut_kustannukset,
        (SUM(tt.maara) * yksikkohinta) as toteutuneet_kustannukset
   FROM toteuma tot
@@ -82,11 +85,12 @@ SELECT date_trunc('day', tot.alkanut) as pvm,
 -- name: hae-yksikkohintaiset-tyot-per-kuukausi
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna kuukausittain
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
-SELECT date_trunc('day', tot.alkanut) as pvm,
-       t4.nimi, yht.yksikko, yht.yksikkohinta,
-       yht.maara as suunniteltu_maara, SUM(tt.maara) as toteutunut_maara,
-       (yht.maara * yksikkohinta) as suunnitellut_kustannukset,
-       (SUM(tt.maara) * yksikkohinta) as toteutuneet_kustannukset
+SELECT t4.nimi,
+       yht.yksikko,
+       yht.yksikkohinta,
+       yht.maara as suunniteltu_maara,
+       SUM(tt.maara) as toteutunut_maara,
+       ROUND(SUM(tt.maara) / yht.maara, 2) as toteumaprosentti
   FROM toteuma tot
        JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
        JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
@@ -96,5 +100,5 @@ SELECT date_trunc('day', tot.alkanut) as pvm,
        AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
        AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 
- GROUP BY pvm, t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
- ORDER BY pvm ASC;
+ GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
+ ORDER BY nimi ASC;
