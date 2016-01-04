@@ -29,7 +29,6 @@
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
 
-; FIXME Puuttuu vielä: aloituspvm, valmispvm kohde, valmispvm päällyste
 (defn kohdeosan-reitti-klikattu [_ kohde]
   (let [paikkauskohde-id (get-in kohde [:osa :paikkauskohde-id])]
     (popupit/nayta-popup (-> kohde
