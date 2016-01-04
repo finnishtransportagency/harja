@@ -27,3 +27,9 @@
   (k/post! :tallenna-paikkausilmoitus {:urakka-id        urakka-id
                                        :sopimus-id       sopimus-id
                                        :paikkausilmoitus lomakedata}))
+
+(defn kuvaile-kohteen-tila [tila]
+  (case tila
+    :valmis "Valmis"
+    :aloitettu "Aloitettu"
+    "Ei aloitettu"))

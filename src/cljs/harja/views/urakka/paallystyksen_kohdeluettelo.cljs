@@ -25,12 +25,6 @@
 
 (defonce kohdeluettelo-valilehti (atom :paallystyskohteet))
 
-(defn kuvaile-kohteen-tila [tila]
-  (case tila
-    :valmis "Valmis"
-    :aloitettu "Aloitettu"
-    "Ei aloitettu"))
-
 (defn kohdeosan-reitti-klikattu [_ kohde]
   (let [paallystyskohde-id (get-in kohde [:osa :paallystyskohde-id])]
     (popupit/nayta-popup (-> kohde

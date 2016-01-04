@@ -9,8 +9,8 @@
             [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkaus]
-            [harja.views.urakka.paallystyksen-kohdeluettelo :as paallystys]
+            [harja.tiedot.urakka.kohdeluettelo.paikkaus :as paikkaus]
+            [harja.tiedot.urakka.kohdeluettelo.paallystys :as paallystys]
             [harja.domain.paallystys.pot :as paallystys-pot]))
 
 (def klikattu-tyokone (atom nil))
