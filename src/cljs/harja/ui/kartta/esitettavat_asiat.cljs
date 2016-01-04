@@ -169,33 +169,40 @@
   (defn tehtavan-vari-ja-nuoli [tehtavan-nimi]
     (nth toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
+(defn arrow-line [optiot geometria]
+  (merge optiot
+         {:type :arrow-line}
+         (case (:type geometria)
+           :line
+           {:points (:points geometria)}
+           
+           :multiline
+           {:points (mapcat :points (:lines geometria))}
+
+           :point
+           {:points [(:coordinates geometria)]})))
+
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
-  ;; Yhdellä reittipisteellä voidaan tehdä montaa asiaa, ja tämän takia yksi reittipiste voi tulla
-  ;; monta kertaa fronttiin.
-  (let [reittipisteet (keep
-                        (fn [[_ arvo]] (first arvo))
-                        (group-by :id (:reittipisteet toteuma)))
-        nimi (or (get-in toteuma [:tehtavat 0 :nimi])
-                 (get-in toteuma [:reittipisteet 0 :tehtava :toimenpide]))
-        [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
-    (when-not (empty? reittipisteet)
+  ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä (ei yksittäisistä reittipisteistä)
+  (when-let [reitti (:reitti toteuma)]
+    (let [nimi (get-in toteuma [:tehtavat 0 :nimi])
+          [vari nuoli] (tehtavan-vari-ja-nuoli nimi)
+          toteuma (assoc toteuma
+                         :type :toteuma
+                         :nimi (or (:nimi toteuma)
+                                   nimi
+                                   (get-in toteuma [:tpi :nimi])
+                                   (if (> 1 (count (:tehtavat toteuma)))
+                                     (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
+                                     (str (:toimenpide (first (:tehtavat toteuma))))))
+                         :selite {:teksti nimi
+                                  :vari vari})]
       [(assoc toteuma
-               :type :toteuma
-               :nimi (or (:nimi toteuma)
-                         nimi
-                         (get-in toteuma [:tpi :nimi])
-                         (if (> 1 (count (:tehtavat toteuma)))
-                           (str (:toimenpide (first (:tehtavat toteuma))) " & ...")
-                           (str (:toimenpide (first (:tehtavat toteuma))))))
-               :selite {:teksti nimi
-                        :vari vari}
-               :alue {:type   :arrow-line
-                      :width 5
-                      :color vari
-                      :arrow-image (karttakuva (str "images/nuoli-" nuoli))
-                      :scale  (if (valittu? toteuma) 2 1.5) ;; TODO: Vaihda tämä joksikin paremmaksi kun saadaan oikeat ikonit :)
-                      :points (mapv #(get-in % [:sijainti :coordinates])
-                                    (sort-by :aika pvm/ennen? reittipisteet))})])))
+              :alue (arrow-line {:width 5
+                                 :color vari
+                                 :arrow-image (karttakuva (str "images/nuoli-" nuoli))
+                                 :scale (if (valittu? toteuma) 1.0 0.75)}
+                                reitti))])))
 
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]

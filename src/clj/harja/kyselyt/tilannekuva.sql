@@ -228,6 +228,8 @@ SELECT
   t.paattynyt,
   t.tyyppi,
   t.lisatieto,
+  t.reitti,
+  
   t.suorittajan_ytunnus           AS suorittaja_ytunnus,
   t.suorittajan_nimi              AS suorittaja_nimi,
   t.ulkoinen_id                   AS ulkoinenid,
@@ -246,43 +248,22 @@ SELECT
 
   mk.id                           AS materiaali_materiaali_id,
   mk.nimi                         AS materiaali_materiaali_nimi,
-  mk.kohdistettava                AS materiaali_materiaali_kohdistettava,
-
-  rp.id                           AS reittipiste_id,
-  rp.aika                         AS reittipiste_aika,
-  rp.sijainti                     AS reittipiste_sijainti,
-
-  rt.id                           AS reittipiste_tehtava_id,
-  rt.toimenpidekoodi              AS reittipiste_tehtava_toimenpidekoodi,
-  rt.maara                        AS reittipiste_tehtava_maara,
-  (SELECT nimi
-   FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi) AS reittipiste_tehtava_toimenpide,
-
-
-  rm.id                           AS reittipiste_materiaali_id,
-  rm.materiaalikoodi              AS reittipiste_materiaali_materiaalikoodi,
-  rm.maara                        AS reittipiste_materiaali_maara,
-  mk.nimi                         AS reittipiste_materiaali_nimi
+  mk.kohdistettava                AS materiaali_materiaali_kohdistettava
 FROM toteuma_tehtava tt
-  INNER JOIN toteuma t ON tt.toteuma = t.id
-                          AND t.alkanut >= :alku
-                          AND t.paattynyt <= :loppu
-                          AND tt.toimenpidekoodi IN (:toimenpidekoodit)
-                          AND tt.poistettu IS NOT TRUE
-                          AND t.poistettu IS NOT TRUE
-  INNER JOIN reittipiste rp ON rp.toteuma = t.id
-  LEFT JOIN reitti_materiaali rm ON rm.reittipiste = rp.id
-  LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
-  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+     JOIN toteuma t ON tt.toteuma = t.id
+                    AND t.alkanut >= :alku
+                    AND t.paattynyt <= :loppu
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                    AND tt.poistettu IS NOT TRUE
+                    AND t.poistettu IS NOT TRUE
+
+     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                                      AND tm.poistettu IS NOT TRUE
-  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
-      EXISTS(SELECT id FROM reittipiste WHERE toteuma = t.id AND
-      st_contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti :: GEOMETRY))
-ORDER BY rp.aika ASC;
+      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
 
 -- name: hae-tyokoneet
 SELECT

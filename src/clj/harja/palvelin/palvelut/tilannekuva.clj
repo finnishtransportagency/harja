@@ -216,15 +216,17 @@
 
 (defn- hae-toteumien-reitit
   [db user {:keys [alue alku loppu talvi kesa]} urakat]
+  (log/debug "TOTEUMAT ALUEELTA: " alue "; ajalle " alku " -- " loppu)
   (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
     (when-not (empty? haettavat-toimenpiteet)
       (try
         (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit db haettavat-toimenpiteet))]
+          (log/debug "toimenpidekoodit: " toimenpidekoodit)
           (when-not (empty? toimenpidekoodit)
             (konv/sarakkeet-vektoriin
               (into []
                     (comp
-                      (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                      (harja.geo/muunna-pg-tulokset :reitti)
                       (map konv/alaviiva->rakenne)
                       (map #(assoc % :tyyppi :toteuma)))
                     (q/hae-toteumat db (konv/sql-date alku) (konv/sql-date loppu) toimenpidekoodit
