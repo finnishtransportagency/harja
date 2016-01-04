@@ -484,8 +484,11 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
            (go (loop [edellinen-koko @nav/kartan-koko]
                  (let [nykyinen-koko (<! ch)]
                    (<! (timeout 150))
-                   ;; Aiemmin zoomattiin vain kun edellinen koko oli S ja nykyinen ei ole S. Miksi..?
-                   (zoomaa-geometrioihin)
+                   ;; Aiemmin tässä kutsuttiin (zoomaa-geometriohin)
+                   ;; Ajatuksena oli varmasti se, että pidetään kartalla näkyvät jutut näkyvillä, vaikka
+                   ;; kartan kokoa mennäänkiin muuttamaan. Käytännössä tämä ominaisuus tuntui loppujen lopuksi
+                   ;; vaan nihkeältä, koska saattoi käydä vaikka niin, että käyttäjä zoomaa lähelle merkatakseen
+                   ;; tr-osoitteen, aloittaa valinnan -> kartta kasvaa -> zoomaustaso menee jonnekkin ihan muualle.
                    (recur nykyinen-koko))))))
 
 (defn- kun-geometriaa-klikattu
