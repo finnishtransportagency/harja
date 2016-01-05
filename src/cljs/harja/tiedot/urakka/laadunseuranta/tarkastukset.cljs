@@ -54,23 +54,10 @@
 
 (defonce valittu-tarkastus (atom nil))
 
-(def tarkastus-xf
-  (map
-    #(assoc %
-      :tyyppi-kartalla :tarkastus
-      :type :tarkastus
-      :alue {:type        :icon
-             :coordinates (geo/ikonin-sijainti (:sijainti %))
-             :direction   0
-             :img         (if (= (:id %) (:id @valittu-tarkastus))
-                            "images/tyokone_highlight.png"
-                            "images/tyokone.png")})))
-
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
   [{:keys [aika id] :as tarkastus}]
   (let [[alkupvm loppupvm] @tiedot-urakka/valittu-aikavali
-        tarkastus (first (sequence tarkastus-xf [tarkastus]))
         sijainti-listassa (first (keep-indexed (fn [i {tarkastus-id :id}]
                                                  (when (= id tarkastus-id) i))
                                                @urakan-tarkastukset))]

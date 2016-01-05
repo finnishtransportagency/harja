@@ -48,7 +48,7 @@
 ;; PENDING:
 ;; Tämä namespace kaipaa rakkautta... cleanup olisi tarpeen.
 ;; Alunperin englanniksi Leafletille tehty karttaimplementaatio on kopioitu
-;; ja pala palalta portattu toiminnallisuutta ol3 päälle.
+;; ja pala palalta portattu toiminnallitta ol3 päälle.
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
@@ -591,7 +591,7 @@
                       :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
-  (tee-kaksiosainen-ikoni coordinates "kartta-suuntanuoli-sininen.png" img direction [0.5 0.5]))
+  (tee-kaksiosainen-ikoni coordinates "sticker-sininen.png" img direction [0.5 0.5]))
 
 (defmethod luo-feature :sticker-icon-line [{:keys [points img width zindex color direction] :as spec}]
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
@@ -602,7 +602,7 @@
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
                        :image    (ol.style.Icon.
-                                   #js {:src      (yleiset/karttakuva (str +karttaikonipolku+ "kartta-suuntanuoli-sininen"))
+                                   #js {:src      (yleiset/karttakuva (str +karttaikonipolku+ "sticker-sininen"))
                                         :rotation (or direction 0)
                                         :opacity  1
                                         :anchor   #js [0.5 0.5]})
@@ -641,14 +641,6 @@
 (defmethod luo-feature :circle [{:keys [coordinates radius]}]
   (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
 
-(defmethod luo-feature :clickable-area [{:keys [coordinates zindex]}]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (ol.style.Style. #js {:image  (ol.style.Icon. #js {:src          "images/tyokone.png"
-                                                                  :offsetOrigin "top-left"
-                                                                  :anchor       #js [0.5 0.5]
-                                                                  :opacity      1
-                                                                  :size         #js [62 62]})
-                                     :zIndex (or zindex 4)}))))
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
