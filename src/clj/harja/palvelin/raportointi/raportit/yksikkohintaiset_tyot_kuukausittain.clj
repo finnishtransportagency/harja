@@ -7,6 +7,9 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]))
 
+(defn pvm->str [pvm]
+  (str (subs (str (:vuosi pvm)) 2 4) "/" (:kuukausi pvm)))
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (let [tehtavat-kuukausittain-summattuna (hae-yksikkohintaiset-tyot-per-kuukausi db
                                                                urakka-id alkupvm loppupvm
@@ -24,7 +27,7 @@
                                         kuukausittaiset-summat (reduce
                                                                  (fn [map tehtava]
                                                                    (assoc map
-                                                                     (str (subs (str (:vuosi tehtava)) 2 4) "/" (:kuukausi tehtava))
+                                                                     (pvm->str tehtava)
                                                                      (or (:toteutunut_maara tehtava) 0)))
                                                                  {}
                                                                  taman-tehtavan-rivit)]
@@ -55,7 +58,7 @@
       (flatten [{:leveys "20%" :otsikko "Tehtävä"}
                 {:leveys "10%" :otsikko "Yksikkö"}
                 (mapv (fn [rivi]
-                        {:otsikko (str (subs (str (:vuosi rivi)) 2 4) "/" (:kuukausi rivi))})
+                        {:otsikko (pvm->str rivi)})
                       listattavat-pvmt)
                 {:leveys "10%" :otsikko "Määrä yhteensä"}
                 {:leveys "10%" :otsikko "Tot-%"}
@@ -65,7 +68,7 @@
                         (:yksikko rivi)
                         (mapv (fn [pvm]
                                 (or
-                                  (get rivi (str (subs (str (:vuosi pvm)) 2 4) "/" (:kuukausi pvm)))
+                                  (get rivi (pvm->str pvm))
                                   0))
                               listattavat-pvmt)
                         (:toteutunut_maara rivi)
