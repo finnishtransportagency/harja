@@ -228,7 +228,7 @@ SELECT
   t.paattynyt,
   t.tyyppi,
   t.lisatieto,
-  t.reitti,
+  ST_Simplify(t.reitti, :toleranssi) as reitti,
   
   t.suorittajan_ytunnus           AS suorittaja_ytunnus,
   t.suorittajan_nimi              AS suorittaja_nimi,
