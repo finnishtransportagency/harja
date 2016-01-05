@@ -8,7 +8,7 @@
             [taoensso.timbre :as log]))
 
 (defn pvm->str [pvm]
-  (str (subs (str (:vuosi pvm)) 2 4) "/" (:kuukausi pvm)))
+  (str (:kuukausi pvm) "/" (subs (str (:vuosi pvm)) 2 4)))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (let [tehtavat-kuukausittain-summattuna (hae-yksikkohintaiset-tyot-per-kuukausi db
@@ -39,6 +39,7 @@
                                         (assoc :toteutunut_maara maara-yhteensa)
                                         (assoc :toteumaprosentti toteumaprosentti))))
                                 (distinct (mapv :nimi tehtavat-kuukausittain-summattuna)))
+        ;; Gridissä listataan vain sellaiset pvm:t, joille löytyi toteumia
         listattavat-pvmt (distinct (mapv (fn [rivi]
                                            {:vuosi (:vuosi rivi) :kuukausi (:kuukausi rivi)})
                                          (sort-by #(vec (map % [:vuosi :kuukausi])) tehtavat-kuukausittain-summattuna)))
