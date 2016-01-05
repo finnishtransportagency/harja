@@ -197,11 +197,12 @@ BEGIN
                   tot.id,
                   tt.toimenpidekoodi
                 FROM toteuma_tehtava tt
-                  JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi)
+                  JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
+                                       AND tot.poistettu IS NOT TRUE)
                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
-                                                    AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.paattynyt
+                                                    AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut
                                                     AND yht.yksikkohinta IS NOT NULL
                                                     AND tpk3.id = t.tpk3_id)
                 WHERE yht.urakka = ur
@@ -236,11 +237,12 @@ BEGIN
       tt.toimenpidekoodi,
       tot.id
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi)
+      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
+                           AND tot.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
-                                        AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.paattynyt
+                                        AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut
                                         AND yht.yksikkohinta IS NOT NULL
                                         AND tpk3.id = t.tpk3_id)
     WHERE yht.urakka = ur
@@ -367,12 +369,15 @@ BEGIN
                   SUM(tt.maara * mht.yksikkohinta) AS mht_summa,
                   tot.alkanut                      AS tot_alkanut
                 FROM toteuma_tehtava tt
-                  JOIN toteuma tot ON tt.toteuma = tot.id
-                                      AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
+                  JOIN toteuma tot ON (tt.toteuma = tot.id
+                                       AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
+                                       AND tot.poistettu IS NOT TRUE)
                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
-                                                   AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
+                                                   AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
+                                                   AND mht.yksikkohinta IS NOT NULL
+                                                   AND mht.poistettu IS NOT TRUE
                                                    AND tpk3.id = t.tpk3_id)
                 WHERE mht.urakka = ur
                       AND tt.paivan_hinta IS NULL
@@ -395,8 +400,9 @@ BEGIN
     muutostyot_laskutettu_paivanhinnalla := 0.0;
     SELECT SUM(tt.paivan_hinta)
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON tt.toteuma = tot.id
-                          AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
+      JOIN toteuma tot ON (tt.toteuma = tot.id
+                           AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
+                           AND tot.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
@@ -421,12 +427,15 @@ BEGIN
       tot.alkanut                      AS tot_alkanut,
       SUM(tt.maara * mht.yksikkohinta) AS mht_summa
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset'))
+      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
+                           AND tot.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-      JOIN muutoshintainen_tyo mht ON tt.toimenpidekoodi = mht.tehtava
-                                      AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
-                                      AND tpk3.id = t.tpk3_id
+      JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
+                                       AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
+                                       AND mht.yksikkohinta IS NOT NULL
+                                       AND mht.poistettu IS NOT TRUE
+                                       AND tpk3.id = t.tpk3_id)
     WHERE tt.paivan_hinta IS NULL
           AND mht.urakka = ur
           AND tot.urakka = ur
@@ -450,8 +459,9 @@ BEGIN
     muutostyot_laskutetaan_paivanhinnalla := 0.0;
     SELECT SUM(tt.paivan_hinta)
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON tt.toteuma = tot.id
-                          AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
+      JOIN toteuma tot ON (tt.toteuma = tot.id
+                           AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
+                           AND tot.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
@@ -483,12 +493,15 @@ BEGIN
                    SUM(tt.maara * mht.yksikkohinta) AS mht_summa,
                    tot.alkanut                      AS tot_alkanut
                  FROM toteuma_tehtava tt
-                   JOIN toteuma tot ON tt.toteuma = tot.id
-                                       AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
+                   JOIN toteuma tot ON (tt.toteuma = tot.id
+                                        AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
+                                        AND tot.poistettu IS NOT TRUE)
                    JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                    JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                    JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
-                                                    AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
+                                                    AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
+                                                    AND mht.yksikkohinta IS NOT NULL
+                                                    AND mht.poistettu IS NOT TRUE
                                                     AND tpk3.id = t.tpk3_id)
                  WHERE mht.urakka = ur
                        AND tt.paivan_hinta IS NULL
@@ -511,8 +524,9 @@ BEGIN
     akilliset_hoitotyot_laskutettu_paivanhinnalla := 0.0;
     SELECT SUM(tt.paivan_hinta)
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON tt.toteuma = tot.id
-                          AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
+      JOIN toteuma tot ON (tt.toteuma = tot.id
+                           AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
+                           AND tot.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
@@ -537,12 +551,15 @@ BEGIN
       tot.alkanut                      AS tot_alkanut,
       SUM(tt.maara * mht.yksikkohinta) AS mht_summa
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('akillinen-hoitotyo'::toteumatyyppi))
+      JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('akillinen-hoitotyo'::toteumatyyppi)
+                           AND tot.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-      JOIN muutoshintainen_tyo mht ON tt.toimenpidekoodi = mht.tehtava
-                                      AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.paattynyt
-                                      AND tpk3.id = t.tpk3_id
+      JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
+                                       AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
+                                       AND mht.yksikkohinta IS NOT NULL
+                                       AND mht.poistettu IS NOT TRUE
+                                       AND tpk3.id = t.tpk3_id)
     WHERE tt.paivan_hinta IS NULL
           AND mht.urakka = ur
           AND tot.urakka = ur
@@ -566,8 +583,9 @@ BEGIN
     akilliset_hoitotyot_laskutetaan_paivanhinnalla := 0.0;
     SELECT SUM(tt.paivan_hinta)
     FROM toteuma_tehtava tt
-      JOIN toteuma tot ON tt.toteuma = tot.id
-                          AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
+      JOIN toteuma tot ON (tt.toteuma = tot.id
+                           AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
+                           AND tot.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
@@ -605,6 +623,7 @@ BEGIN
              AND ek.toimenpideinstanssi = t.tpi
              AND ek.pvm >= hk_alkupvm AND ek.pvm <= hk_loppupvm
              AND ek.pvm < aikavali_alkupvm
+             AND ek.poistettu IS NOT TRUE
     LOOP
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki_laskutettu.pvm) :: INTEGER),
@@ -632,6 +651,7 @@ BEGIN
              AND ek.toimenpideinstanssi = t.tpi
              AND ek.pvm >= hk_alkupvm AND ek.pvm <= hk_loppupvm
              AND ek.pvm >= aikavali_alkupvm AND ek.pvm <= aikavali_loppupvm
+             AND ek.poistettu IS NOT TRUE
     LOOP
       SELECT *
       FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki_laskutetaan.pvm) :: INTEGER),
@@ -661,6 +681,7 @@ BEGIN
              AND b.toimenpideinstanssi = t.tpi
              AND b.pvm >= hk_alkupvm AND b.pvm <= hk_loppupvm
              AND b.pvm < aikavali_alkupvm
+             AND b.poistettu IS NOT TRUE
     LOOP
       SELECT *
       FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutettu.pvm, ind, bi_laskutettu.rahasumma)
@@ -686,6 +707,7 @@ BEGIN
              AND b.toimenpideinstanssi = t.tpi
              AND b.pvm >= hk_alkupvm AND b.pvm <= hk_loppupvm
              AND b.pvm >= aikavali_alkupvm AND b.pvm <= aikavali_loppupvm
+             AND b.poistettu IS NOT TRUE
     LOOP
       SELECT *
       FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutetaan.pvm, ind, bi_laskutetaan.rahasumma)
