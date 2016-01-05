@@ -8,3 +8,5 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
  '#''harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain/suorita',
  'hoito'::urakkatyyppi
 );
+
+UPDATE raportti SET kuvaus = 'Yksikköhintaiset työt päivittäin' WHERE nimi = 'yks-hint-tyot';
