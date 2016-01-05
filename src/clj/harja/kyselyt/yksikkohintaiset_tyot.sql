@@ -86,8 +86,8 @@ SELECT date_trunc('day', tot.alkanut) as pvm,
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna kuukausittain
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
 SELECT
-  extract(YEAR FROM tot.alkanut) as vuosi,
-  extract(MONTH FROM tot.alkanut) as kuukausi,
+  extract(YEAR FROM tot.alkanut)::INT as vuosi,
+  extract(MONTH FROM tot.alkanut)::INT as kuukausi,
   t4.nimi,
   yht.yksikko,
   yht.yksikkohinta,

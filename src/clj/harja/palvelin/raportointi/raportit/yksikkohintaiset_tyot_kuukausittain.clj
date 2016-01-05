@@ -11,13 +11,6 @@
   (let [tehtavat-kuukausittain-summattuna (hae-yksikkohintaiset-tyot-per-kuukausi db
                                                                urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
-        ;; FIXME Jostain syystä kannasta nostettu kuukausi / vuosi tulee desimaaliarvona, täytyy selvittää
-        ;; mistä johtuu mutta toistaiseksi korjataan varmistamalla että ovat integerejä
-        tehtavat-kuukausittain-summattuna (mapv (fn [tehtava]
-                                                  (-> tehtava
-                                                      (assoc :kuukausi (int (:kuukausi tehtava)))
-                                                      (assoc :vuosi (int (:vuosi tehtava)))))
-                                                tehtavat-kuukausittain-summattuna)
         ;; Muutetaan tehtävät muotoon, jossa jokainen tehtävä ensiintyy kerran ja kuukausittaiset
         ;; summat esitetään avaimina
         naytettavat-rivit (mapv (fn [tehtava-nimi]
@@ -26,15 +19,16 @@
                                         suunniteltu-maara (:suunniteltu_maara (first taman-tehtavan-rivit))
                                         maara-yhteensa (reduce + (mapv :toteutunut_maara taman-tehtavan-rivit))
                                         toteumaprosentti (if suunniteltu-maara
-                                                           (format "%.2f" (float (with-precision 10 (/ maara-yhteensa suunniteltu-maara))))
+                                                           (format "%.2f" (with-precision 10 (/ maara-yhteensa suunniteltu-maara)))
                                                            "-")
                                         kuukausittaiset-summat (reduce
-                                                                 (fn [eka toka]
-                                                                   (assoc eka
-                                                                     (str (:vuosi toka) "/" (:kuukausi toka))
-                                                                     (or (:toteutunut_maara toka) 0)))
+                                                                 (fn [map tehtava]
+                                                                   (assoc map
+                                                                     (str (:vuosi tehtava) "/" (:kuukausi tehtava))
+                                                                     (or (:toteutunut_maara tehtava) 0)))
                                                                  {}
                                                                  taman-tehtavan-rivit)]
+                                    ;; Kasataan näytettävä rivi
                                     (-> kuukausittaiset-summat
                                         (assoc :nimi tehtava-nimi)
                                         (assoc :yksikko (:yksikko (first taman-tehtavan-rivit)))
