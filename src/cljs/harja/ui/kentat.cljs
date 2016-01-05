@@ -190,13 +190,15 @@
                   ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
                   ;; numeron syöttö (esim. "4,") ennen desimaalin kirjoittamista ylikirjoittuu
                   ;; Lisäksi esim. "4,0" parsitaan float-arvona kokonaisluvuksi 4, jolloin lukua "4,01" ei voi kirjoittaa.
-                  (let [uusi (str @data)]
-                    (if (or (and (gstr/startsWith olemassaoleva-teksti uusi)
-                                 (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi))))
-                            (when-not (:vaadi-ei-negatiivinen? kentta)
-                              (= olemassaoleva-teksti (str "-" uusi))))
-                      olemassaoleva-teksti
-                      uusi)))))
+                  (if (nil? @data)
+                    ""
+                    (let [uusi-teksti (str @data)]
+                      (if (or (and (gstr/startsWith olemassaoleva-teksti uusi-teksti)
+                                   (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi-teksti))))
+                              (when-not (:vaadi-ei-negatiivinen? kentta)
+                                (= olemassaoleva-teksti (str "-" uusi-teksti))))
+                        olemassaoleva-teksti
+                        uusi-teksti))))))
 
        :reagent-render
        (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
