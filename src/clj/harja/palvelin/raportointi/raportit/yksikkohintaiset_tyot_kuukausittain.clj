@@ -8,11 +8,23 @@
             [taoensso.timbre :as log]))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
-  ; TODO Implementoi
-  (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-kuukausi db
+  (let [tehtavat-kuukausittain-summattuna (hae-yksikkohintaiset-tyot-per-kuukausi db
                                                                urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
-
+        naytettavat-rivit (mapv (fn [tehtava]
+                                  (let [taman-tehtavan-rivit (filter #(= (:nimi %) tehtava)
+                                                                      tehtavat-kuukausittain-summattuna)
+                                        kuukausittaiset-summat (reduce
+                                                                 (fn [eka toka]
+                                                                   (assoc eka
+                                                                     (str (int (:kuukausi toka)) "/" (int (:vuosi toka)))
+                                                                     (:toteutunut_maara  toka)))
+                                                                 (first taman-tehtavan-rivit)
+                                                                 taman-tehtavan-rivit)]
+                                    (-> kuukausittaiset-summat
+                                        (dissoc :kuukausi)
+                                        (dissoc :vuosi))))
+                                (distinct (mapv :nimi tehtavat-kuukausittain-summattuna)))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
@@ -28,14 +40,12 @@
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       [{:leveys "25%" :otsikko "Tehtävä"}
        {:leveys "10%" :otsikko "Yksikkö"}
-       ; TODO Tähän kuukaudet
        {:leveys "15%" :otsikko "Määrä yhteensä"}
        {:leveys "15%" :otsikko "Tot-%"}
        {:leveys "15%" :otsikko "Suunniteltu määrä hoitokaudella"}]
 
       (mapv (juxt :nimi
                   :yksikko
-                  ; TODO Tähän kuukaudet
                   :toteutunut_maara
                   :toteumaprosentti
                   :suunniteltu_maara)
