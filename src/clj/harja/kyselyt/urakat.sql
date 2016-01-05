@@ -16,10 +16,7 @@ SELECT
   u.tyyppi
 FROM urakka u
 WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
-      (u.loppupvm IS NULL OR u.loppupvm >= current_date) AND
-      (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
-      (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
-      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
+      (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
 -- name: hae-hallintayksikon-urakat
 SELECT

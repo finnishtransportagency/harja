@@ -82,6 +82,6 @@
                                 ;; pvm. Lisäksi reitillä on tehty kyseistä tehtävää.
                                 (and (= (pvm/paivan-alussa (:pvm reitti))
                                         (pvm/paivan-alussa (:pvm valittu-paivakohtainen-tehtava)))
-                                     ((into #{} (mapv :nimi (:tehtavat reitti))) (:nimi valittu-paivakohtainen-tehtava)))))
+                                     ((into #{} (mapv :toimenpide (:tehtavat reitti))) (:nimi valittu-paivakohtainen-tehtava)))))
                 identity)
               (map #(assoc % :tyyppi-kartalla :toteuma))))))))
