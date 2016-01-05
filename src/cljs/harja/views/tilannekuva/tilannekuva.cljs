@@ -183,7 +183,8 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
     (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
-                           (reset! kartta/pida-geometriat-nakyvilla? false))
+                           (reset! kartta/pida-geometriat-nakyvilla? false)
+                           (kartta/aseta-paivitetaan-karttaa-tila true))
                       #(do (murupolku/aseta-murupolku-perusmuotoon)
                            (reset! kartta/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila false)))

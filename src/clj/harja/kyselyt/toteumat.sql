@@ -557,17 +557,14 @@ WHERE
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
   AND t.poistettu IS NOT TRUE;
 
--- name: hae-kokonaishintaisten-toiden-reittipisteet
+-- name: hae-kokonaishintaisten-toiden-reitit
 SELECT
-  rp.id            AS reittipiste_id,
-  rp.aika          AS reittipiste_aika,
-  rp.sijainti      AS reittipiste_sijainti,
   tt.toteuma       AS toteumaid,
   t.alkanut        AS pvm,
-  tk.nimi          AS tehtava_nimi,
+  t.reitti,
+  tk.nimi          AS tehtava_toimenpide,
   tk.id            AS tehtava_id
 FROM toteuma_tehtava tt
-  JOIN reittipiste rp ON tt.toteuma = rp.toteuma
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE

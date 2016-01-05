@@ -13,7 +13,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def +polku+ (let [host (.-host js/location)]
-               (if (#{"10.0.2.2" "10.0.2.2:8000" "localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host)
+               (if (#{"10.0.2.2" "10.0.2.2:8000" "10.0.2.2:3000" "localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host)
                  "/"
                  "/harja/")))
 (defn polku []

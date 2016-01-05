@@ -133,7 +133,6 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu jut
 NOW(),
 st_makepoint(499820, 7249885) ::POINT, 2);
 
-
 INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 1'),
         '2005-11-11 10:01.00',
@@ -418,3 +417,12 @@ NOW(), 1350, 10);
 INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
 VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:09.00' :: TIMESTAMP ),
 NOW(), 1350, 10);
+
+
+-- Päivitetään kaikille toteumille reitti reittipisteiden mukaan.
+-- Oikeissa toteumissa nämä tulevat projisoituna tieverkolle, mutta nyt vain tehdään viivat.
+
+UPDATE toteuma t
+   SET reitti = (SELECT ST_MakeLine(p.sij)
+                   FROM (SELECT rp.sijainti::geometry as sij FROM reittipiste rp WHERE rp.toteuma = t.id ORDER BY rp.aika) p)
+ WHERE reitti IS NULL;
