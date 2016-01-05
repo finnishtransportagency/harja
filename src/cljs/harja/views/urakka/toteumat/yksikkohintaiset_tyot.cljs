@@ -23,7 +23,8 @@
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.kartta :as kartta]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -131,8 +132,7 @@
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)}
-          (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
+         [napit/takaisin "Takaisin toteumaluetteloon" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)]
          (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
            (if jarjestelman-lisaama-toteuma?
              [:h3 "Tarkastele toteumaa"]

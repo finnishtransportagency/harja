@@ -655,56 +655,53 @@
 
 (defn- update-ol3-geometries [component items]
   "Update the Ol3JS layers based on the data, mutates the Ol3JS map object."
-  ;;(.log js/console "geometries: " (pr-str items))
-  (mittaa-aika
-   "update-ol3-geometries"
-   (let [{:keys [ol3 geometries-map geometry-layer mapspec hover fit-bounds]} (reagent/state component)
-         geometry-fn (or (:geometry-fn mapspec) identity)
-         geometries-set (into #{} (map geometria-avain) items)
-         features (.getSource geometry-layer)]
+  (let [{:keys [ol3 geometries-map geometry-layer mapspec hover fit-bounds]} (reagent/state component)
+        geometry-fn (or (:geometry-fn mapspec) identity)
+        geometries-set (into #{} (map geometria-avain) items)
+        features (.getSource geometry-layer)]
 
-     ;;(log "GEOMETRY layer: " geometry-layer)
-     ;; Remove all Ol3JS shape objects that are no longer in the new geometries
-     (doseq [[avain [shape _]] (seq geometries-map)
-             :when (not (geometries-set avain))]
-       (.removeFeature features shape))
+    ;;(log "GEOMETRY layer: " geometry-layer)
+    ;; Remove all Ol3JS shape objects that are no longer in the new geometries
+    (doseq [[avain [shape _]] (seq geometries-map)
+            :when (not (geometries-set avain))]
+      (.removeFeature features shape))
 
-     ;; Create new shapes for new geometries and update the geometries map
-     (loop [new-geometries-map {}
-            [item & items] items]
-       (if-not item
-         ;; Update component state with the new geometries map
-         (reagent/set-state component {:geometries-map new-geometries-map})
+    ;; Create new shapes for new geometries and update the geometries map
+    (loop [new-geometries-map {}
+           [item & items] items]
+      (if-not item
+        ;; Update component state with the new geometries map
+        (reagent/set-state component {:geometries-map new-geometries-map})
 
-         (let [geom (geometry-fn item)
-               avain (geometria-avain item)]
-           (if-not geom
-             (recur new-geometries-map items)
-             (let [shape (or (first (geometries-map avain))
-                             (when-let [new-shape (try
-                                                    (luo-feature geom)
-                                                    (catch js/Error e
-                                                      (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
-                                                      nil))]
-                               (.setId new-shape avain)
-                               (try
-                                 (.addFeature features new-shape)
-                                 (catch js/Error e
-                                   (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
+        (let [geom (geometry-fn item)
+              avain (geometria-avain item)]
+          (if-not geom
+            (recur new-geometries-map items)
+            (let [shape (or (first (geometries-map avain))
+                            (when-let [new-shape (try
+                                                   (luo-feature geom)
+                                                   (catch js/Error e
+                                                     (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+                                                     nil))]
+                              (.setId new-shape avain)
+                              (try
+                                (.addFeature features new-shape)
+                                (catch js/Error e
+                                  (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
 
-                               ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                               (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
-                                                         :sticker-icon :sticker-icon-line :clickable-area})
-                                 (aseta-tyylit new-shape geom))
+                              ;; ikoneilla on jo oma tyyli, luo-feature tekee
+                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
+                                                        :sticker-icon :sticker-icon-line :clickable-area})
+                                (aseta-tyylit new-shape geom))
 
-                               ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
-                               ;; vai pitääkö ne antaa suoraan geometrian tyyppinä?
-                               #_(when (:marker geom)
-                                   (.addOverlay ol3 (luo-overlay (keskipiste (.getGeometry new-shape))
-                                                                 [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
-                               new-shape))]
+                              ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
+                              ;; vai pitääkö ne antaa suoraan geometrian tyyppinä?
+                              #_(when (:marker geom)
+                                  (.addOverlay ol3 (luo-overlay (keskipiste (.getGeometry new-shape))
+                                                                [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
+                              new-shape))]
 
-               (recur (assoc new-geometries-map avain [shape item]) items)))))))))
+              (recur (assoc new-geometries-map avain [shape item]) items))))))))
 
 
 ;;;;;;;;;

@@ -147,8 +147,7 @@
                                        (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
                                        (not jarjestelman-lisaama-toteuma?))]
           [:div.muun-tyon-tiedot
-           [:button.nappi-toissijainen {:on-click #(reset! muut-tyot/valittu-toteuma nil)}
-            (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
+           [napit/takaisin " Takaisin muiden töiden luetteloon" #(reset! muut-tyot/valittu-toteuma nil)]
            (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
              (if lomaketta-voi-muokata?
                [:h3 "Muokkaa toteumaa"]

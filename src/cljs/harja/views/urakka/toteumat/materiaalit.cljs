@@ -162,8 +162,7 @@
         (log "Uusi toteuma?" vanha-toteuma?)
         (log (pr-str @u/urakan-organisaatio))
         [:div.toteuman-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! valittu-materiaalin-kaytto nil)}
-          (ikonit/chevron-left) " Takaisin materiaaliluetteloon"]
+         [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! valittu-materiaalin-kaytto nil)]
          (if vanha-toteuma?
            [:h3 "Muokkaa toteumaa"]
            [:h3 "Luo uusi toteuma"])
