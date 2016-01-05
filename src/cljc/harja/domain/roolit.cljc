@@ -26,6 +26,7 @@
 (def urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
 (def urakoitsijan-kayttaja             "urakoitsijan kayttaja")
 (def urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
+(def urakan-tiemerkitsija                "urakan tiemerkitsija")
 
 ;; Esimääriteltyjä settejä rooleista
 (def urakoitsijan-urakkaroolit-kirjoitus #{urakoitsijan-paakayttaja urakoitsijan-urakan-vastuuhenkilo
@@ -40,6 +41,12 @@
 
 
 ;; YHTEISET
+(def paallystysaikataulun-kirjaus
+  "Roolit, joilla on oikeus muuttaa päällystysaikatauluja"
+  #{urakoitsijan-paakayttaja
+    urakoitsijan-urakan-vastuuhenkilo})
+
+
 (def toteumien-kirjaus
   "Roolit, joilla on oikeus kirjoittaa urakkaan toteumatietoja."
   #{urakanvalvoja

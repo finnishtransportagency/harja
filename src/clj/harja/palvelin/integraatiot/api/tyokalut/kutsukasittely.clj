@@ -70,7 +70,7 @@
 (defn tee-virhevastaus
   "Luo virhevastauksen annetulla statuksella ja asettaa vastauksen bodyksi JSON muodossa virheet."
   [status virheet]
-  (let [body (cheshire/encode
+   (let [body (cheshire/encode
                {:virheet
                 (mapv (fn [virhe]
                         {:virhe

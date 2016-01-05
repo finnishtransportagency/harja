@@ -64,34 +64,14 @@ FROM ilmoitus i
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE
   -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
-  (
-    -- Joko haetaan koko maasta
-    (:hallintayksikko_annettu IS FALSE AND :urakka_annettu IS FALSE) OR
-
-    -- Tai hallintayksikön tasolla
-    (:urakka_annettu IS FALSE AND
-     st_contains(
-         (SELECT alue
-          FROM organisaatio
-          WHERE id = :hallintayksikko),
-         i.sijainti :: GEOMETRY)) OR
-
-    -- Tai urakan tasolla..
-    -- Joko ilmoituksen urakka-id osuu valittuun urakkaan..
-    (i.urakka = :urakka OR
-     -- Tai ilmoitukselle ei ole annettu urakka-id:tä, mutta se on urakan alueella
-     (i.urakka IS NULL AND
-      st_contains((SELECT alue
-                   FROM urakoiden_alueet
-                   WHERE id = :urakka), i.sijainti :: GEOMETRY)))
-  ) AND
+  (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
 
   -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
   (
     (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
     (:loppu_annettu IS FALSE AND i.ilmoitettu :: DATE >= :alku) OR
     (:alku_annettu IS FALSE AND i.ilmoitettu :: DATE <= :loppu) OR
-    (i.ilmoitettu BETWEEN :alku AND :loppu)
+    (i.ilmoitettu :: DATE BETWEEN :alku AND :loppu)
   ) AND
 
   -- Tarkasta ilmoituksen tyypit

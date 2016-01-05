@@ -11,7 +11,7 @@
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.kyselyt.tieverkko :as tieverkko]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
@@ -79,7 +79,7 @@
     (let [reittipiste-id (:id (toteumat/luo-reittipiste<!
                                 db
                                 toteuma-id
-                                (pvm-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
+                                (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
                                 (get-in reittipiste [:reittipiste :koordinaatit :x])
                                 (get-in reittipiste [:reittipiste :koordinaatit :y])))]
       (log/debug "Reittipiste tallennettu, id: " reittipiste-id)

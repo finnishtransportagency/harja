@@ -69,7 +69,7 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
   (laske-pisteiden-extent (mapcat :points lines)))
 
 ;; Kuinka paljon yksittäisen pisteen extentiä laajennetaan joka suuntaan
-(def pisteen-extent-laajennus 350)
+(def pisteen-extent-laajennus 2000)
 
 (defn- extent-point-circle [c]
   (let [d pisteen-extent-laajennus

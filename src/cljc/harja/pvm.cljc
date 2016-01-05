@@ -394,6 +394,34 @@
             (= paivia-kkssa loppu-pv)))))
 
 #?(:clj
+   (defn kyseessa-hoitokausi-vali?
+     "Kertoo onko annettu pvm-väli täysi hoitokausi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
+     [alkupvm loppupvm]
+
+     (let [alku (l/to-local-date-time alkupvm)
+           loppu (l/to-local-date-time loppupvm)
+           _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu )]
+       (and (= 1 (paiva alku))
+            (= 10 (kuukausi alku))
+            (= 30 (paiva loppu))
+            (= 9 (kuukausi loppu))
+            (= (inc (vuosi alku)) (vuosi loppu))))))
+
+#?(:clj
+   (defn kyseessa-vuosi-vali?
+     "Kertoo onko annettu pvm-väli täysi vuosi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
+     [alkupvm loppupvm]
+
+     (let [alku (l/to-local-date-time alkupvm)
+           loppu (l/to-local-date-time loppupvm)
+           _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu )]
+       (and (= 1 (paiva alku))
+            (= 1 (kuukausi alku))
+            (= 31 (paiva loppu))
+            (= 12 (kuukausi loppu))
+            (=  (vuosi alku) (vuosi loppu))))))
+
+#?(:clj
    (defn kuukautena-ja-vuonna
      "Palauttaa tekstiä esim tammikuussa 2016"
      [alkupvm]

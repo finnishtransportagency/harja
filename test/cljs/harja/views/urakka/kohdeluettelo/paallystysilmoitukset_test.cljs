@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kohdeluettelo.paallystysilmoitukset-test
+(ns harja.views.urakka.paallystysilmoitukset-test
   (:require
     [cljs-time.core :as t]
     [cljs.test :as test :refer-macros [deftest is]]

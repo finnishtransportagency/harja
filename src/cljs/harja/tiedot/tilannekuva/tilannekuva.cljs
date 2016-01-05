@@ -18,8 +18,13 @@
 (defonce nakymassa? (atom false))
 (defonce valittu-tila (atom :nykytilanne))
 
-(defonce bufferi 500)
-(defonce hakutiheys-nykytilanne 3000)
+;; odota sekunti ennen hakemista kun muutoksia tehdään
+(defonce bufferi 1000)
+
+;; 10s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
+;; karttaa siirretään tai zoomataan
+(defonce hakutiheys-nykytilanne 10000)
+
 (defonce hakutiheys-historiakuva 1200000)
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
@@ -179,94 +184,108 @@
                                                 @suodattimet
                                                 (kartta/poista-popup!)))
 
-  (defn hae-asiat []
-    (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
-    (go
-      ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui käyttäjän vaihdettua suodattimia
-      (when (or (not= @valittu-tila (:tila @edellisen-haun-kayttajan-suodattimet))
-                (not= @nykytilanteen-aikasuodattimen-arvo (:aikavali-nykytilanne @edellisen-haun-kayttajan-suodattimet))
-                (not= @historiakuvan-aikavali (:aikavali-historia @edellisen-haun-kayttajan-suodattimet))
-                (not= @suodattimet (:suodattimet @edellisen-haun-kayttajan-suodattimet)))
-        (reset! edellisen-haun-kayttajan-suodattimet {:tila                 @valittu-tila
-                                                      :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
-                                                      :aikavali-historia    @historiakuvan-aikavali
-                                                      :suodattimet          @suodattimet})
-        (kartta/aseta-paivitetaan-karttaa-tila true))
-      (let [yhteiset-parametrit (kasaa-parametrit)
-            julkaise-tyokonedata! (fn [tulos]
-                                    (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
-                                                           :tyokoneet (vals (:tyokoneet tulos))})
-                                    tulos)
-            lisaa-karttatyypit (fn [tulos]
-                                 (as-> tulos t
-                                       (assoc t :ilmoitukset
-                                                (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
-                                                     (:ilmoitukset t)))
-                                       (assoc t :turvallisuuspoikkeamat
-                                                (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
-                                                     (:turvallisuuspoikkeamat t)))
-                                       (assoc t :tarkastukset
-                                                (map #(assoc % :tyyppi-kartalla :tarkastus)
-                                                     (:tarkastukset t)))
-                                       (assoc t :laatupoikkeamat
-                                                (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
-                                                     (:laatupoikkeamat t)))
-                                       (assoc t :paikkaus
-                                                (map #(assoc % :tyyppi-kartalla :paikkaus)
-                                                     (:paikkaus t)))
-                                       (assoc t :paallystys
-                                                (map #(assoc % :tyyppi-kartalla :paallystys)
-                                                     (:paallystys t)))
+(defn hae-asiat []
+  (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
+  (go
+    ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui käyttäjän vaihdettua suodattimia
+    (when (or (not= @valittu-tila (:tila @edellisen-haun-kayttajan-suodattimet))
+              (not= @nykytilanteen-aikasuodattimen-arvo (:aikavali-nykytilanne @edellisen-haun-kayttajan-suodattimet))
+              (not= @historiakuvan-aikavali (:aikavali-historia @edellisen-haun-kayttajan-suodattimet))
+              (not= @suodattimet (:suodattimet @edellisen-haun-kayttajan-suodattimet)))
+      (reset! edellisen-haun-kayttajan-suodattimet {:tila                 @valittu-tila
+                                                    :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
+                                                    :aikavali-historia    @historiakuvan-aikavali
+                                                    :suodattimet          @suodattimet})
+      (kartta/aseta-paivitetaan-karttaa-tila true))
+    (let [yhteiset-parametrit (kasaa-parametrit)
+          julkaise-tyokonedata! (fn [tulos]
+                                  (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
+                                                         :tyokoneet (vals (:tyokoneet tulos))})
+                                  tulos)
+          lisaa-karttatyypit (fn [tulos]
+                               (as-> tulos t
+                                 (assoc t :ilmoitukset
+                                        (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                                             (:ilmoitukset t)))
+                                 (assoc t :turvallisuuspoikkeamat
+                                        (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
+                                             (:turvallisuuspoikkeamat t)))
+                                 (assoc t :tarkastukset
+                                        (map #(assoc % :tyyppi-kartalla :tarkastus)
+                                             (:tarkastukset t)))
+                                 (assoc t :laatupoikkeamat
+                                        (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
+                                             (:laatupoikkeamat t)))
+                                 (assoc t :paikkaus
+                                        (map #(assoc % :tyyppi-kartalla :paikkaus)
+                                             (:paikkaus t)))
+                                 (assoc t :paallystys
+                                        (map #(assoc % :tyyppi-kartalla :paallystys)
+                                             (:paallystys t)))
 
-                                       ;; Tyokoneet on mäp, id -> työkone
-                                       (assoc t :tyokoneet (into {}
-                                                                 (map
-                                                                   (fn [[id tyokone]]
-                                                                     {id (assoc tyokone :tyyppi-kartalla :tyokone)})
-                                                                   (:tyokoneet t))))
+                                 ;; Tyokoneet on mäp, id -> työkone
+                                 (assoc t :tyokoneet (into {}
+                                                           (map
+                                                            (fn [[id tyokone]]
+                                                              {id (assoc tyokone :tyyppi-kartalla :tyokone)})
+                                                            (:tyokoneet t))))
 
-                                       (assoc t :toteumat
-                                                (map #(assoc % :tyyppi-kartalla :toteuma)
-                                                     (:toteumat t)))))
+                                 (assoc t :toteumat
+                                        (map #(assoc % :tyyppi-kartalla :toteuma)
+                                             (:toteumat t)))))
 
-            tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
-                      (yhdista-tyokonedata)
-                      (julkaise-tyokonedata!)
-                      (lisaa-karttatyypit))]
-        (reset! tilannekuva-kartalla/haetut-asiat tulos)
-        (kartta/aseta-paivitetaan-karttaa-tila false))))
+          tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
+                    (yhdista-tyokonedata)
+                    (julkaise-tyokonedata!)
+                    (lisaa-karttatyypit))]
+      (reset! tilannekuva-kartalla/haetut-asiat tulos)
+      (kartta/aseta-paivitetaan-karttaa-tila false))))
 
-  (def asioiden-haku (reaction<!
-                       [_ @valittu-tila
-                        _ @suodattimet
-                        _ @nykytilanteen-aikasuodattimen-arvo
-                        _ @historiakuvan-aikavali
-                        _ @nav/kartalla-nakyva-alue
-                        _ @nav/valittu-urakka
-                        nakymassa? @nakymassa?
-                        _ @nav/valittu-hallintayksikko]
-                       {:odota bufferi}
-                       (when nakymassa?
-                         (hae-asiat))))
+(def asioiden-haku (reaction<!
+                    [_ @valittu-tila
+                     _ @suodattimet
+                     _ @nykytilanteen-aikasuodattimen-arvo
+                     _ @historiakuvan-aikavali
+                     _ @nav/kartalla-nakyva-alue
+                     _ @nav/valittu-urakka
+                     nakymassa? @nakymassa?
+                     _ @nav/valittu-hallintayksikko]
+                    {:odota bufferi}
+                    (when nakymassa?
+                      (hae-asiat))))
 
-  (defonce lopeta-haku (atom nil))                          ;; Säilöö funktion jolla pollaus lopetetaan
+(defonce lopeta-haku (atom nil))                          ;; Säilöö funktion jolla pollaus lopetetaan
 
-  (defn aloita-periodinen-haku []
-    (log "Tilannekuva: Aloitetaan haku")
-    (reset! lopeta-haku (paivita-periodisesti asioiden-haku (case @valittu-tila
-                                                              :nykytilanne hakutiheys-nykytilanne
-                                                              :historiakuva hakutiheys-historiakuva))))
+(defn aloita-periodinen-haku []
+  (log "Tilannekuva: Aloitetaan haku")
+  (reset! lopeta-haku (paivita-periodisesti asioiden-haku (case @valittu-tila
+                                                            :nykytilanne hakutiheys-nykytilanne
+                                                            :historiakuva hakutiheys-historiakuva))))
 
-  (defn lopeta-periodinen-haku-jos-kaynnissa []
-    (when @lopeta-haku
-      (log "Tilannekuva: Lopetetaan haku")
-      (@lopeta-haku)
-      (reset! lopeta-haku nil)))
+(defn lopeta-periodinen-haku-jos-kaynnissa []
+  (when @lopeta-haku
+    (log "Tilannekuva: Lopetetaan haku")
+    (@lopeta-haku)
+    (reset! lopeta-haku nil)))
 
-  (defonce pollaus
-           (run! (if @nakymassa?
-                   (do
-                     @valittu-tila
-                     (lopeta-periodinen-haku-jos-kaynnissa)
-                     (aloita-periodinen-haku))
-                   (lopeta-periodinen-haku-jos-kaynnissa))))
+(defn pollaus-muuttui []
+  (let [nakymassa? @nakymassa?
+        valittu-tila @valittu-tila]
+    (log "nakymassa? " nakymassa? "; valittu-tila: " (pr-str valittu-tila))
+    (if nakymassa?
+      (do
+        (lopeta-periodinen-haku-jos-kaynnissa)
+        (aloita-periodinen-haku))
+      (lopeta-periodinen-haku-jos-kaynnissa))))
+
+
+(add-watch nakymassa? :pollaus-muuttui
+           (fn [_ _ old new]
+             (log "nakymassa? muuttui " old " => " new )
+             (pollaus-muuttui)))
+(add-watch valittu-tila :pollaus-muuttui
+           (fn [_ _ old new]
+             (log "valittu-tila muuttui " old " => " new )
+             (pollaus-muuttui)))
+
+

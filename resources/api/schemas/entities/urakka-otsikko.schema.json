@@ -22,8 +22,7 @@
       "properties": {
         "ytunnus": {
           "id": "urn:harja/urakoitsija/ytunnus",
-          "type": "string",
-          "required": true
+          "type": "string"
         },
         "nimi": {
           "id": "urn:harja/urakoitsija/nimi",
