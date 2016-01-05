@@ -426,3 +426,6 @@ UPDATE toteuma t
    SET reitti = (SELECT ST_MakeLine(p.sij)
                    FROM (SELECT rp.sijainti::geometry as sij FROM reittipiste rp WHERE rp.toteuma = t.id ORDER BY rp.aika) p)
  WHERE reitti IS NULL;
+
+-- Varmistetaan, että kaikilla toteumilla on käyttäjä
+UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'fastroi') WHERE luoja IS NULL;

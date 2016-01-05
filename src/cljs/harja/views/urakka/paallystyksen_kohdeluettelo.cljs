@@ -7,6 +7,7 @@
             [harja.views.urakka.paallystyskohteet :as paallystyskohteet-yhteenveto]
             [harja.views.urakka.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.popupit :as popupit]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.komponentti :as komp]
@@ -16,7 +17,6 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -25,38 +25,23 @@
 
 (defonce kohdeluettelo-valilehti (atom :paallystyskohteet))
 
-(defn kuvaile-kohteen-tila [tila]
-  (case tila
-    :valmis "Valmis"
-    :aloitettu "Aloitettu"
-    "Ei aloitettu"))
-
-(defn kohdeosan-reitti-klikattu [_ {:keys [klikkaus-koordinaatit] :as kohdeosa}]
-  (let [osa (:osa kohdeosa)
-        kohde (:kohde kohdeosa)
-        paallystyskohde-id (:paallystyskohde-id kohdeosa)
-        {:keys [tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys]} osa
-        avaa-ilmoitus #(do (kartta/poista-popup!)
-                           (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
-                           (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id}))]
-
-    (kartta/nayta-popup!
-      klikkaus-koordinaatit
-      [:div.paallystyskohde
-       [yleiset/tietoja {:otsikot-omalla-rivilla? true}
-        "Kohde" (:nimi kohde)
-        "Tierekisterikohde" (:nimi osa)
-        "Osoite" (yleiset/tierekisteriosoite tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys)
-        "Nykyinen päällyste" (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste osa))
-        "Toimenpide" (:toimenpide osa)
-        "Tila" (kuvaile-kohteen-tila (:tila kohdeosa))]
-       (if (:tila kohdeosa)
-         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
-          (ikonit/eye-open) " Päällystysilmoitus"]
-         [:button.nappi-ensisijainen {:on-click avaa-ilmoitus}
-          "Aloita päällystysilmoitus"])])))
-
-
+(defn kohdeosan-reitti-klikattu [_ kohde]
+  (let [paallystyskohde-id (:paallystyskohde-id kohde)]
+    (popupit/nayta-popup (-> kohde
+                             (assoc :aihe :paallystys-klikattu)
+                             (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
+                             (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
+                             (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
+                             (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
+                             (assoc :paallystysilmoitus {:tila (:tila kohde)})
+                             (assoc :tr {:numero        (get-in kohde [:osa :tr_numero])
+                                         :alkuosa       (get-in kohde [:osa :tr_alkuosa])
+                                         :alkuetaisyys  (get-in kohde [:osa :tr_alkuetaisyys])
+                                         :loppuosa      (get-in kohde [:osa :tr_loppuosa])
+                                         :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
+                             (assoc :kohde-click #(do (kartta/poista-popup!)
+                                                      (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
+                                                      (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id})))))))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
@@ -74,4 +59,3 @@
        "Päällystysilmoitukset"
        :paallystysilmoitukset
        [paallystysilmoitukset/paallystysilmoitukset]])))
-
