@@ -469,28 +469,6 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                                   (zoomaa-geometrioihin))))
   #(remove-watch atomi :kartan-valittu-kuuntelija))
 
-(defonce zoomaa-valittuun-hallintayksikkoon-tai-urakkaan-runner
-         (let [ch (chan)]
-           (run! @nav/valittu-hallintayksikko
-                 @nav/valittu-urakka
-                 ;; Reagoidaan hallintayksikön tai urakan muutokseen vain jos geometriat ovat tyhjiä
-                 ;; Tälle ei pitäisi olla tarvetta, mutta tuntui että tätä runia ajettiin joskus turhaan, ja kartta
-                 ;; käyttäytyi oudosti. Nyt tässä halutaan reagoida vain kun vaihdetaan urakkaa tai hy:tä, ts. kun
-                 ;; geometriat ovat tyhjät.
-                 (when (empty? @tasot/geometriat)
-                   (zoomaa-geometrioihin)))
-           (run! (let [koko @nav/kartan-koko]
-                   (go (>! ch koko))))
-           (go (loop [edellinen-koko @nav/kartan-koko]
-                 (let [nykyinen-koko (<! ch)]
-                   (<! (timeout 150))
-                   ;; Aiemmin tässä kutsuttiin (zoomaa-geometriohin)
-                   ;; Ajatuksena oli varmasti se, että pidetään kartalla näkyvät jutut näkyvillä, vaikka
-                   ;; kartan kokoa mennäänkiin muuttamaan. Käytännössä tämä ominaisuus tuntui loppujen lopuksi
-                   ;; vaan nihkeältä, koska saattoi käydä vaikka niin, että käyttäjä zoomaa lähelle merkatakseen
-                   ;; tr-osoitteen, aloittaa valinnan -> kartta kasvaa -> zoomaustaso menee jonnekkin ihan muualle.
-                   (recur nykyinen-koko))))))
-
 (defn- kun-geometriaa-klikattu
   "Event handler geometrioiden yksi- ja tuplaklikkauksille"
   [item event]
@@ -522,9 +500,30 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                ;; Tässä vertaillaan järjestyksessä, joten periaatteessa voi tulla false positive
                                (some false?
                                      (map
-                                       (fn [vanha uusi] (= (dissoc vanha :alue) (dissoc uusi :alue)))
+                                       (fn [vanha uusi] (= (dissoc vanha :alue :selite :nimi) (dissoc uusi :alue :selite :nimi)))
                                        vanha uusi)))
-                         (zoomaa-geometrioihin)))))))
+                         (zoomaa-geometrioihin)))))
+
+        ;; Hallintayksikön ja urakan valintaa seurattiin aiemmin run!-blokissa.
+        ;; Tämä ei kuitenkaan toiminut toivotulla tavalla. Bugi ilmeni esimerkiksi, kun avasi lomakkeen
+        ;; tarkastunäkymässä, kun valitussa hoitokaudessa ei ollut yhtään tarkastuksia - jostain syystä
+        ;; run!-blokki triggeröityi. Blokissa oli ehto, että (zoomaa-geometrioihin) kutsutaan vain jos
+        ;; yhtään asiaa ei ole piirretty kartalle.
+        ;;
+        ;; Näiden add-watchien avulla voidaan tarkastaa, onko valittu HY/urakka oikeasti muuttunut vai ei.
+        (add-watch nav/valittu-hallintayksikko :valitun-hallintayksikon-kuuntelija
+                   (fn [_ _ vanha uusi]
+                     (when (and @pida-geometriat-nakyvilla?
+                                (empty? @tasot/geometriat)
+                                (not= (:id vanha) (:id uusi)))
+                       (zoomaa-geometrioihin))))
+
+        (add-watch nav/valittu-urakka :valitun-urakan-kuuntelija
+                   (fn [_ _ vanha uusi]
+                     (when (and @pida-geometriat-nakyvilla?
+                                (empty? @tasot/geometriat)
+                                (not= (:id vanha) (:id uusi)))
+                       (zoomaa-geometrioihin))))))
     (fn []
       (let [hals @hal/hallintayksikot
             v-hal @nav/valittu-hallintayksikko
