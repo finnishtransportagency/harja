@@ -60,7 +60,7 @@
   (let [parametrit {:hallintayksikko nil
                     :urakka          nil
                     :hoitokausi      nil
-                    :aikavali        [nil nil]
+                    :aikavali        [(java.util.Date. 0 0 0) (java.util.Date.)]
                     :tyypit          +ilmoitustyypit+
                     :tilat           +ilmoitustilat+
                     :hakuehto        ""}

@@ -28,7 +28,8 @@
         bindings (mapv vec (partition 2 let-bindings))
         nimi-symbolit (vec (take (count bindings) (repeatedly #(gensym "ARG"))))
         nimet (mapv first bindings)]
-    `(let [arvo# (reagent.core/atom nil)
+    `(let [odota# ~(or (get asetukset :odota) 20)
+           arvo# (reagent.core/atom nil)
            parametrit-ch# (cljs.core.async/chan)
            paivita# (reagent.core/atom 0)]
        (cljs.core.async.macros/go
@@ -36,7 +37,7 @@
                 parametrit# (cljs.core.async/<! parametrit-ch#)]
 
            ;; Jos parametrit on, katsotaan muuttuvatko ne kurista ajan sisällä
-           (let [timeout-ch# (when parametrit# (cljs.core.async/timeout ~(or (get asetukset :odota) 20)))
+           (let [timeout-ch# (when parametrit# (cljs.core.async/timeout odota#))
                  kanavat# (if timeout-ch#
                             [parametrit-ch# timeout-ch#]
                             [parametrit-ch#])
