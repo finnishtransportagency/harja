@@ -308,14 +308,14 @@
                      "liikennemerkkien puhdistus"      ["liikennemerkkien-puhdistus" "Liikennemerkkien puhdistus" ]
 
                      "sorateiden muokkaushoylays"      ["sorateiden-muokkaushoylays" "Sorateiden muokkaushöyläys" ]
-                     "sorateiden polynsidonta"         ["sorateiden-polynsidonta" "Sorateiden polynsidonta" ]
+                     "sorateiden polynsidonta"         ["sorateiden-polynsidonta" "Sorateiden pölynsidonta" ]
                      "sorateiden tasaus"               ["sorateiden-tasaus" "Sorateiden tasaus" ]
                      "sorastus"                        ["sorastus" "Sorastus" ]
 
                      "harjaus"                         ["harjaus" "Harjaus" ]
                      "pinnan tasaus"                   ["pinnan-tasaus" "Pinnan tasaus" ]
                      "paallysteiden paikkaus"          ["paallysteiden-paikkaus" "Päällysteiden paikkaus" ]
-                     "paallysteiden juotostyot"        ["paallysteiden-juotostyot" "Päällysteiden juotostyot" ]
+                     "paallysteiden juotostyot"        ["paallysteiden-juotostyot" "Päällysteiden juotostyöt" ]
 
                      "siltojen puhdistus"              ["siltojen-puhdistus" "Siltojen puhdistus" ]
 
