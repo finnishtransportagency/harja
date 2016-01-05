@@ -5,12 +5,15 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn pvm->str [pvm]
   (str (:kuukausi pvm) "/" (subs (str (:vuosi pvm)) 2 4)))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
+  (log/debug "Muodostetaan yks. hint. kuukausiraportti urakalle " urakka-id " ja toimenpiteelle " toimenpide-id " aikaväliltä " (pr-str alkupvm loppupvm))
   (let [tehtavat-kuukausittain-summattuna (hae-yksikkohintaiset-tyot-per-kuukausi db
                                                                urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
@@ -39,10 +42,14 @@
                                         (assoc :toteutunut_maara maara-yhteensa)
                                         (assoc :toteumaprosentti toteumaprosentti))))
                                 (distinct (mapv :nimi tehtavat-kuukausittain-summattuna)))
-        ;; Gridissä listataan vain sellaiset pvm:t, joille löytyi toteumia
-        listattavat-pvmt (distinct (mapv (fn [rivi]
-                                           {:vuosi (:vuosi rivi) :kuukausi (:kuukausi rivi)})
-                                         (sort-by #(vec (map % [:vuosi :kuukausi])) tehtavat-kuukausittain-summattuna)))
+        listattavat-pvmt (mapv (fn [pvm]
+                                 {:vuosi (t/year pvm) :kuukausi (t/month pvm)})
+                               (take-while (fn [pvm]
+                                             (or (t/equal? pvm (c/from-date loppupvm))
+                                                 (t/before? pvm (c/from-date loppupvm))))
+                                           (iterate (fn [pvm]
+                                                      (t/plus pvm (t/months 1)))
+                                                    (c/from-date alkupvm))))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
