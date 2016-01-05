@@ -157,10 +157,10 @@
           (reset! optiot uudet-optiot))}
 
        (komp/sisaan-ulos #(do
+                            (reset! kartta/pida-geometriat-nakyvilla? false) ; Emme halua, että zoom-taso muuttuu kun TR:ää valitaan
                             (reset! nav/kartan-edellinen-koko kartan-koko)
                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
-                            (reset! kartta/pida-geometriat-nakyvilla?) ; Emme halua, että zoom-taso muuttuu kun TR:ää valitaan
                             (kartta/aseta-kursori! :crosshair))
                          #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
