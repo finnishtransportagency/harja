@@ -80,8 +80,8 @@
                 (filter (fn [reitti]
                                 ;; Reittiin liittyvä toteuma on tapahtunut samana päivänä kuin gridistä valitun summarivin
                                 ;; pvm. Lisäksi reitillä on tehty kyseistä tehtävää.
-                                (and (= (pvm/paivan-alussa (:pvm reitti))
-                                        (pvm/paivan-alussa (:pvm valittu-paivakohtainen-tehtava)))
+                                (and (= (pvm/paivan-alussa (:alkanut reitti))
+                                        (pvm/paivan-alussa (:alkanut valittu-paivakohtainen-tehtava)))
                                      ((into #{} (mapv :toimenpide (:tehtavat reitti))) (:nimi valittu-paivakohtainen-tehtava)))))
                 identity)
               (map #(assoc % :tyyppi-kartalla :toteuma))))))))

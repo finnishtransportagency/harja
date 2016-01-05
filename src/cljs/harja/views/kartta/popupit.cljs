@@ -68,6 +68,7 @@
     (:klikkaus-koordinaatit tapahtuma)))
 
 (defmethod nayta-popup :toteuma-klikattu [tapahtuma]
+  (log "Näytetään popuppi" (pr-str tapahtuma))
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Toteuma"
                                               [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
@@ -88,7 +89,8 @@
                                                                   [:div.toteuma-materiaalit
                                                                    [:div "Materiaali: " (get-in toteuma [:materiaali :nimi])]
                                                                    [:div "Määrä: " (:maara toteuma)]]))]
-                                               ["Lisätieto" (:lisatieto tapahtuma)]])))
+                                               ["Lisätieto" (when (:lisatieto tapahtuma)
+                                                              (:lisatieto tapahtuma))]])))
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)

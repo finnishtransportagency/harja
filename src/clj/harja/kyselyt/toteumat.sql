@@ -559,13 +559,17 @@ WHERE
 
 -- name: hae-kokonaishintaisten-toiden-reitit
 SELECT
-  mk.nimi          AS materiaali_nimi,
-  tm.maara         AS materiaali_maara,
-  tt.toteuma       AS toteumaid,
-  t.alkanut        AS pvm,
+  mk.nimi             AS materiaali_nimi,
+  tm.maara            AS materiaali_maara,
+  tt.toteuma          AS toteumaid,
+  t.alkanut           AS alkanut,
+  t.paattynyt         AS paattynyt,
   t.reitti,
-  tk.nimi          AS tehtava_toimenpide,
-  tk.id            AS tehtava_id
+  t.suorittajan_nimi  AS suorittaja_nimi,
+  t.lisatieto         AS lisatieto,
+  tk.nimi             AS tehtava_toimenpide,
+  tt.maara            AS tehtava_maara,
+  tk.id               AS tehtava_id
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
