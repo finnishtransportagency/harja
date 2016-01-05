@@ -428,4 +428,4 @@ UPDATE toteuma t
  WHERE reitti IS NULL;
 
 -- Varmistetaan, että kaikilla toteumilla on käyttäjä
-UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'fastroi') WHERE kayttajanimi IS NULL;
+UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'fastroi') WHERE luoja IS NULL;
