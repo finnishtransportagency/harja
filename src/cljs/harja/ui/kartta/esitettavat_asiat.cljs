@@ -225,6 +225,7 @@
         sijainti (:sijainti tp)
         tyyppi (:type sijainti)
         skaala (if (valittu? tp) 1.5 1)]
+
     (when sijainti
       [(assoc tp
               :type :turvallisuuspoikkeama
@@ -354,9 +355,10 @@
   nil)
 
 (defn- valittu? [valittu tunniste asia]
-  (and
-    (not (nil? valittu))
-    (= (get-in asia tunniste) (get-in valittu tunniste))))
+  (let [tunniste (if (vector? tunniste) tunniste [tunniste])]
+    (and
+     (not (nil? valittu))
+     (= (get-in asia tunniste) (get-in valittu tunniste)))))
 
 ;; Palauttaa joukon vektoreita joten kutsu (mapcat kartalla-xf @jutut)
 ;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
@@ -375,5 +377,5 @@
   ([asiat valittu tunniste asia-xf]
    (into []
          (comp (or asia-xf identity)
-               (mapcat #(kartalla-xf % valittu tunniste)))
+               (mapcat #(kartalla-xf % valittu (or tunniste [:id]))))
          asiat)))
