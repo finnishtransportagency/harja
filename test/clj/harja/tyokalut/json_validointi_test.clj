@@ -1,7 +1,7 @@
 (ns harja.tyokalut.json-validointi-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.tyokalut.json_validointi :as json]
+            [harja.tyokalut.json-validointi :as json]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.java.io :as io]

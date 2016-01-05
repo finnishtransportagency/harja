@@ -1,22 +1,25 @@
-{
-  "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "x": {
-      "id": "urn:harja/sijainti/koordinaatit/x",
-      "type": "number",
-      "required": true
-    },
-    "y": {
-      "id": "urn:harja/sijainti/koordinaatit/y",
-      "type": "number",
-      "required": true
-    },
-    "z": {
-      "id": "urn:harja/sijainti/koordinaatit/z",
-      "type": "number"
-    }
-  }
+{"$schema": "http://json-schema.org/draft-03/schema#",
+ "id": "urn:harja",
+ "type": "object",
+ "additionalProperties": false,
+ "properties": {
+     "x": {
+	 "id": "urn:harja/sijainti/koordinaatit/x",
+	 "type": "number",
+	 "minimum": 60000,
+	 "maximum": 736400,
+	 "required": true
+     },
+     "y": {
+	 "id": "urn:harja/sijainti/koordinaatit/y",
+	 "type": "number",
+	 "minimum": 6613000,
+	 "maximum": 7780300,
+	 "required": true
+     },
+     "z": {
+	 "id": "urn:harja/sijainti/koordinaatit/z",
+	 "type": "number"
+     }
+ }
 }
