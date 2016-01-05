@@ -199,7 +199,7 @@ BEGIN
                 FROM toteuma_tehtava tt
                   JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
                                        AND tot.poistettu IS NOT TRUE)
-                  JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+                  JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
                                                     AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut
@@ -239,7 +239,7 @@ BEGIN
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
                                         AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut
@@ -372,7 +372,7 @@ BEGIN
                   JOIN toteuma tot ON (tt.toteuma = tot.id
                                        AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                                        AND tot.poistettu IS NOT TRUE)
-                  JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+                  JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                                    AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -403,7 +403,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL
@@ -429,7 +429,7 @@ BEGIN
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                        AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -462,7 +462,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL
@@ -496,7 +496,7 @@ BEGIN
                    JOIN toteuma tot ON (tt.toteuma = tot.id
                                         AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
                                         AND tot.poistettu IS NOT TRUE)
-                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+                   JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
                    JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                    JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                                     AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -527,7 +527,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL
@@ -553,7 +553,7 @@ BEGIN
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('akillinen-hoitotyo'::toteumatyyppi)
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                        AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -586,7 +586,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
+      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL
