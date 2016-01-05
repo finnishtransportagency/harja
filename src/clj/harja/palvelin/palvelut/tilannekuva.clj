@@ -196,9 +196,24 @@
             (tulosta-virhe! "tyokoneet" e)
             nil))))))
 
+(defn alueen-hypotenuusa
+  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [{:keys [xmin ymin xmax ymax]}]
+  (let [dx (- xmax xmin)
+        dy (- ymax ymin)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn karkeistustoleranssi
+  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
+  [alue]
+  (let [pit (alueen-hypotenuusa alue)]
+    (log/debug "Alueen pit: " pit " => karkeistus toleranssi: " (/ pit 200))
+    (/ pit 200)))
+
 (defn- hae-toteumien-reitit
   [db user {:keys [alue alku loppu talvi kesa]} urakat]
-  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
+  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
+        toleranssi (karkeistustoleranssi alue)]
     (when-not (empty? haettavat-toimenpiteet)
       (try
         (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit db haettavat-toimenpiteet))]
@@ -206,10 +221,11 @@
             (konv/sarakkeet-vektoriin
               (into []
                     (comp
-                      (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                      (harja.geo/muunna-pg-tulokset :reitti)
                       (map konv/alaviiva->rakenne)
                       (map #(assoc % :tyyppi :toteuma)))
-                    (q/hae-toteumat db (konv/sql-date alku) (konv/sql-date loppu) toimenpidekoodit
+                    (q/hae-toteumat db toleranssi
+                                    (konv/sql-date alku) (konv/sql-date loppu) toimenpidekoodit
                                     urakat (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)))
               {:tehtava     :tehtavat
                :materiaali  :materiaalit

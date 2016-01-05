@@ -256,7 +256,7 @@
                                   :toimenpide nil
                                   :tehtava    nil})]
     (is (>= (count toteumat) 3))
-    (is (>= (count (:reittipisteet (first toteumat))) 3))))
+    (is (= :line (get-in toteumat [0 :reitti :type])))))
 
 (deftest yks-hint-toteumien-reitit-haettu-oikein
   (let [alkupvm (java.sql.Date. 100 9 1)
