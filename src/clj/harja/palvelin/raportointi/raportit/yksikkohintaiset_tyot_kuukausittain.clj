@@ -24,7 +24,7 @@
                                         kuukausittaiset-summat (reduce
                                                                  (fn [map tehtava]
                                                                    (assoc map
-                                                                     (str (:vuosi tehtava) "/" (:kuukausi tehtava))
+                                                                     (str (subs (str (:vuosi tehtava)) 2 4) "/" (:kuukausi tehtava))
                                                                      (or (:toteutunut_maara tehtava) 0)))
                                                                  {}
                                                                  taman-tehtavan-rivit)]
@@ -55,7 +55,7 @@
       (flatten [{:leveys "20%" :otsikko "Tehtävä"}
                 {:leveys "10%" :otsikko "Yksikkö"}
                 (mapv (fn [rivi]
-                        {:otsikko (str (:vuosi rivi) "/" (:kuukausi rivi))})
+                        {:otsikko (str (subs (str (:vuosi rivi)) 2 4) "/" (:kuukausi rivi))})
                       listattavat-pvmt)
                 {:leveys "10%" :otsikko "Määrä yhteensä"}
                 {:leveys "10%" :otsikko "Tot-%"}
@@ -65,7 +65,7 @@
                         (:yksikko rivi)
                         (mapv (fn [pvm]
                                 (or
-                                  (get rivi (str (:vuosi pvm) "/" (:kuukausi pvm)))
+                                  (get rivi (str (subs (str (:vuosi pvm)) 2 4) "/" (:kuukausi pvm)))
                                   0))
                               listattavat-pvmt)
                         (:toteutunut_maara rivi)
