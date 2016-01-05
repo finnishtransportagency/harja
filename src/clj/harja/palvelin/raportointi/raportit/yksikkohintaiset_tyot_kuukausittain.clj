@@ -20,19 +20,27 @@
                                                 tehtavat-kuukausittain-summattuna)
         ;; Muutetaan tehtävät muotoon, jossa jokainen tehtävä ensiintyy kerran ja kuukausittaiset
         ;; summat esitetään avaimina
-        naytettavat-rivit (mapv (fn [tehtava]
-                                  (let [taman-tehtavan-rivit (filter #(= (:nimi %) tehtava)
+        naytettavat-rivit (mapv (fn [tehtava-nimi]
+                                  (let [taman-tehtavan-rivit (filter #(= (:nimi %) tehtava-nimi)
                                                                       tehtavat-kuukausittain-summattuna)
+                                        suunniteltu-maara (:suunniteltu_maara (first taman-tehtavan-rivit))
+                                        maara-yhteensa (reduce + (mapv :toteutunut_maara taman-tehtavan-rivit))
+                                        toteumaprosentti (if suunniteltu-maara
+                                                           (format "%.2f" (float (with-precision 10 (/ maara-yhteensa suunniteltu-maara))))
+                                                           "-")
                                         kuukausittaiset-summat (reduce
                                                                  (fn [eka toka]
                                                                    (assoc eka
                                                                      (str (:vuosi toka) "/" (:kuukausi toka))
-                                                                     (:toteutunut_maara  toka)))
-                                                                 (first taman-tehtavan-rivit)
+                                                                     (or (:toteutunut_maara toka) 0)))
+                                                                 {}
                                                                  taman-tehtavan-rivit)]
                                     (-> kuukausittaiset-summat
-                                        (dissoc :kuukausi)
-                                        (dissoc :vuosi))))
+                                        (assoc :nimi tehtava-nimi)
+                                        (assoc :yksikko (:yksikko (first taman-tehtavan-rivit)))
+                                        (assoc :suunniteltu_maara suunniteltu-maara)
+                                        (assoc :toteutunut_maara maara-yhteensa)
+                                        (assoc :toteumaprosentti toteumaprosentti))))
                                 (distinct (mapv :nimi tehtavat-kuukausittain-summattuna)))
         listattavat-pvmt (distinct (mapv (fn [rivi]
                                            {:vuosi (:vuosi rivi) :kuukausi (:kuukausi rivi)})
@@ -50,22 +58,24 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      (flatten [{:leveys "25%" :otsikko "Tehtävä"}
+      (flatten [{:leveys "20%" :otsikko "Tehtävä"}
                 {:leveys "10%" :otsikko "Yksikkö"}
                 (mapv (fn [rivi]
                         {:otsikko (str (:vuosi rivi) "/" (:kuukausi rivi))})
                       listattavat-pvmt)
-                {:leveys "15%" :otsikko "Määrä yhteensä"}
-                {:leveys "15%" :otsikko "Tot-%"}
-                {:leveys "15%" :otsikko "Suunniteltu määrä hoitokaudella"}])
+                {:leveys "10%" :otsikko "Määrä yhteensä"}
+                {:leveys "10%" :otsikko "Tot-%"}
+                {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}])
       (mapv (fn [rivi]
               (flatten [(:nimi rivi)
                         (:yksikko rivi)
                         (mapv (fn [pvm]
-                                (get rivi (str (:vuosi pvm) "/" (:kuukausi pvm))))
+                                (or
+                                  (get rivi (str (:vuosi pvm) "/" (:kuukausi pvm)))
+                                  0))
                               listattavat-pvmt)
-                        ; (:toteutunut_maara rivi) TODO SUMMAA NÄMÄ OIKEIN
-                        ; (:toteumaprosentti rivi)
+                        (:toteutunut_maara rivi)
+                        (:toteumaprosentti rivi)
                         (:suunniteltu_maara rivi)]))
             naytettavat-rivit)]]))
 
