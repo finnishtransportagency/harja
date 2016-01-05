@@ -38,7 +38,7 @@
           {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
           {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
           {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
-         @tiedot]))))
+         (sort-by :alkanut @tiedot)]))))
 
 (defn tee-taulukko []
   (let [toteumat (into [] (map-indexed ; Summatuilla riveillä ei ole yksilöivää id:tä, generoidaan omat
