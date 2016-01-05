@@ -13,7 +13,7 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-summittain]
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
             [harja.palvelin.raportointi.raportit.suolasakko]
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
