@@ -14,14 +14,14 @@
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (log/debug "Muodostetaan yks. hint. kuukausiraportti urakalle " urakka-id " ja toimenpiteelle " toimenpide-id " aikaväliltä " (pr-str alkupvm loppupvm))
-  (let [tehtavat-kuukausittain-summattuna (hae-yksikkohintaiset-tyot-per-kuukausi db
-                                                               urakka-id alkupvm loppupvm
-                                                               (if toimenpide-id true false) toimenpide-id)
+  (let [tehtavarivit (hae-yksikkohintaiset-tyot-per-kuukausi db
+                                                             urakka-id alkupvm loppupvm
+                                                             (if toimenpide-id true false) toimenpide-id)
         ;; Muutetaan tehtävät muotoon, jossa jokainen tehtävä ensiintyy kerran ja kuukausittaiset
         ;; summat esitetään avaimina
         naytettavat-rivit (mapv (fn [tehtava-nimi]
                                   (let [taman-tehtavan-rivit (filter #(= (:nimi %) tehtava-nimi)
-                                                                      tehtavat-kuukausittain-summattuna)
+                                                                     tehtavarivit)
                                         suunniteltu-maara (:suunniteltu_maara (first taman-tehtavan-rivit))
                                         maara-yhteensa (reduce + (mapv :toteutunut_maara taman-tehtavan-rivit))
                                         toteumaprosentti (if suunniteltu-maara
@@ -41,7 +41,7 @@
                                         (assoc :suunniteltu_maara suunniteltu-maara)
                                         (assoc :toteutunut_maara maara-yhteensa)
                                         (assoc :toteumaprosentti toteumaprosentti))))
-                                (distinct (mapv :nimi tehtavat-kuukausittain-summattuna)))
+                                (distinct (mapv :nimi tehtavarivit)))
         listattavat-pvmt (mapv (fn [pvm]
                                  {:vuosi (t/year pvm) :kuukausi (t/month pvm)})
                                (take-while (fn [pvm]
@@ -54,7 +54,7 @@
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     ;:hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     ;:koko-maa "KOKO MAA"
                     )
