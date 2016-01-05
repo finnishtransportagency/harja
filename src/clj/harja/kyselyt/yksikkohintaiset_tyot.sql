@@ -96,3 +96,4 @@ FROM toteuma tot
        AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
        AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
+ORDER BY toteutuneet_kustannukset
