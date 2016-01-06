@@ -1,34 +1,59 @@
 (ns harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain
   (:require [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.roolit :as roolit]))
 
-(defn muodosta-raportti-urakalle []
-  )
+(defn muodosta-raportti-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
+  (q/hae-yksikkohintaiset-tehtavittain-summattuna-urakalle db
+                                                           urakka-id alkupvm loppupvm
+                                                           (if toimenpide-id true false) toimenpide-id))
 
-(defn muodosta-raportti-hallintayksikolle []
-  )
+(defn muodosta-raportti-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id]}]
+  (q/hae-yksikkohintaiset-tehtavittain-summattuna-hallintayksikolle db
+                                                                    hallintayksikko-id alkupvm loppupvm
+                                                                    (if toimenpide-id true false) toimenpide-id))
 
-(defn muodosta-raportti-koko-maalle []
-  )
+(defn muodosta-raportti-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id]}]
+  (q/hae-yksikkohintaiset-tehtavittain-summattuna-koko-maalle db
+                                                              alkupvm loppupvm
+                                                              (if toimenpide-id true false) toimenpide-id))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
-  (let [naytettavat-rivit (q/hae-yksikkohintaiset-tehtavittain-summattuna-urakalle db
-                                                                                   urakka-id alkupvm loppupvm
-                                                                                   (if toimenpide-id true false) toimenpide-id)
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id] :as parametrit}]
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        naytettavat-rivit (case konteksti
+                            :urakka
+                            (muodosta-raportti-urakalle db
+                                                        {:urakka-id     urakka-id
+                                                         :alkupvm       alkupvm
+                                                         :loppupvm      loppupvm
+                                                         :toimenpide-id toimenpide-id})
+                            :hallintayksikko
+                            (muodosta-raportti-hallintayksikolle db
+                                                                 {:hallintayksikko-id hallintayksikko-id
+                                                                  :alkupvm            alkupvm
+                                                                  :loppupvm           loppupvm
+                                                                  :toimenpide-id      toimenpide-id})
+                            :koko-maa
+                            (muodosta-raportti-koko-maalle db
+                                                           {:alkupvm       alkupvm
+                                                            :loppupvm      loppupvm
+                                                            :toimenpide-id toimenpide-id}))
 
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
-        konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    ;:hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                    ;:koko-maa "KOKO MAA"
-                    )
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
