@@ -97,7 +97,7 @@
 
                                  ;; Yhteensä, toteumaprosentti ja maksimimäärä
                                  [yhteensa
-                                  (if maksimi (format "%.2f%%" (/ (* 100.0 yhteensa) maksimi)) "-")
+                                  (if maksimi (format "%.1f%%" (/ (* 100.0 yhteensa) maksimi)) "-")
                                   (or maksimi "-")]))]
 
                          ;; Mahdolliset hoitoluokkakohtaiset rivit
