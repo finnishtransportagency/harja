@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain
   (:require [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.yksikkohintaiset-tyot :refer [hae-yksikkohintaiset-tyot-per-kuukausi]]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
+            [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -10,14 +11,46 @@
             [clj-time.coerce :as c]
             [harja.domain.roolit :as roolit]))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
+(defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
+  (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
+                                                      urakka-id alkupvm loppupvm
+                                                      (if toimenpide-id true false) toimenpide-id))
+
+(defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id]}]
+  (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle db
+                                                               hallintayksikko-id alkupvm loppupvm
+                                                               (if toimenpide-id true false) toimenpide-id))
+
+(defn hae-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id]}]
+  (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle db
+                                                         alkupvm loppupvm
+                                                         (if toimenpide-id true false) toimenpide-id))
+
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (log/debug "Muodostetaan yks. hint. kuukausiraportti urakalle " urakka-id " ja toimenpiteelle " toimenpide-id " aikaväliltä " (pr-str alkupvm loppupvm))
-  (let [kuukausittaiset-summat (hae-yksikkohintaiset-tyot-per-kuukausi db
-                                                             urakka-id alkupvm loppupvm
-                                                             (if toimenpide-id true false) toimenpide-id)
-        ;; Muutetaan tehtävät muotoon, jossa jokainen tehtävä ensiintyy kerran ja kuukausittaiset
-        ;; summat esitetään avaimina
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        kuukausittaiset-summat (case konteksti
+                                 :urakka
+                                 (hae-tehtavat-urakalle db
+                                                        {:urakka-id     urakka-id
+                                                         :alkupvm       alkupvm
+                                                         :loppupvm      loppupvm
+                                                         :toimenpide-id toimenpide-id})
+                                 :hallintayksikko
+                                 (hae-tehtavat-hallintayksikolle db
+                                                                 {:hallintayksikko-id hallintayksikko-id
+                                                                  :alkupvm            alkupvm
+                                                                  :loppupvm           loppupvm
+                                                                  :toimenpide-id      toimenpide-id})
+                                 :koko-maa
+                                 (hae-tehtavat-koko-maalle db
+                                                           {:alkupvm       alkupvm
+                                                            :loppupvm      loppupvm
+                                                            :toimenpide-id toimenpide-id}))
+        ;; Muutetaan tehtävät vectoriksi mappeja, jossa jokainen tehtävä ensiintyy kerran mapissa ja kuukausittaiset
+        ;; summat esitetään avaimina ("kuukausi/vuosi" on avain ja sen arvo on summa)
         naytettavat-rivit (mapv (fn [tehtava-nimi]
                                   (let [taman-tehtavan-rivit (filter #(= (:nimi %) tehtava-nimi)
                                                                      kuukausittaiset-summat)
@@ -33,7 +66,7 @@
                                                                      (or (:toteutunut_maara tehtava) 0)))
                                                                  {}
                                                                  taman-tehtavan-rivit)]
-                                    ;; Kasataan näytettävä rivi
+                                    ;; Kasataan tehtävästä näytettävä rivi
                                     (-> kuukausittaiset-summat
                                         (assoc :nimi tehtava-nimi)
                                         (assoc :yksikko (:yksikko (first taman-tehtavan-rivit)))
@@ -48,13 +81,11 @@
                                                       (t/plus pvm (t/days 32)))
                                                     (c/from-date alkupvm)))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
-        konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    ;:hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                    ;:koko-maa "KOKO MAA"
-                    )
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}

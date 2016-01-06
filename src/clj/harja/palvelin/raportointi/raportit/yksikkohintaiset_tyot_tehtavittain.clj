@@ -10,17 +10,17 @@
             [harja.domain.roolit :as roolit]))
 
 (defn muodosta-raportti-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tehtavittain-summattuna-urakalle db
+  (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
                                                            urakka-id alkupvm loppupvm
                                                            (if toimenpide-id true false) toimenpide-id))
 
 (defn muodosta-raportti-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tehtavittain-summattuna-hallintayksikolle db
+  (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
                                                                     hallintayksikko-id alkupvm loppupvm
                                                                     (if toimenpide-id true false) toimenpide-id))
 
 (defn muodosta-raportti-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tehtavittain-summattuna-koko-maalle db
+  (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
                                                               alkupvm loppupvm
                                                               (if toimenpide-id true false) toimenpide-id))
 

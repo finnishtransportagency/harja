@@ -82,7 +82,7 @@ SELECT date_trunc('day', tot.alkanut) as pvm,
  GROUP BY pvm, t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
  ORDER BY pvm ASC;
        
--- name: hae-yksikkohintaiset-tyot-per-kuukausi
+-- name: hae-yksikkohintaiset-tyot-kuukausittain-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna kuukausittain
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
 SELECT
@@ -105,7 +105,55 @@ FROM toteuma tot
 GROUP BY t4.nimi, yht.yksikko,yht.yksikkohinta, yht.maara, vuosi, kuukausi
 ORDER BY vuosi, kuukausi;
 
--- name: hae-yksikkohintaiset-tehtavittain-summattuna-urakalle
+-- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle
+-- Hakee yksikköhintaiset työt annetulle hallintayksikolle ja aikavälille summattuna kuukausittain
+-- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
+SELECT
+  extract(YEAR FROM tot.alkanut)::INT as vuosi,
+  extract(MONTH FROM tot.alkanut)::INT as kuukausi,
+  t4.nimi,
+  yht.yksikko,
+  yht.yksikkohinta,
+  yht.maara as suunniteltu_maara,
+  SUM(tt.maara) as toteutunut_maara,
+  ROUND(SUM(tt.maara) / yht.maara, 2) as toteumaprosentti
+FROM toteuma tot
+  JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
+                                    yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
+ WHERE tot.urakka IN (SELECT id
+                     FROM urakka
+                     WHERE hallintayksikko = :hallintayksikko)
+       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+GROUP BY t4.nimi, yht.yksikko,yht.yksikkohinta, yht.maara, vuosi, kuukausi
+ORDER BY vuosi, kuukausi;
+
+-- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle
+-- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain
+-- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
+SELECT
+  extract(YEAR FROM tot.alkanut)::INT as vuosi,
+  extract(MONTH FROM tot.alkanut)::INT as kuukausi,
+  t4.nimi,
+  yht.yksikko,
+  yht.yksikkohinta,
+  yht.maara as suunniteltu_maara,
+  SUM(tt.maara) as toteutunut_maara,
+  ROUND(SUM(tt.maara) / yht.maara, 2) as toteumaprosentti
+FROM toteuma tot
+  JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
+                                    yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
+ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+GROUP BY t4.nimi, yht.yksikko,yht.yksikkohinta, yht.maara, vuosi, kuukausi
+ORDER BY vuosi, kuukausi;
+
+-- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna tehtävittäin
 SELECT
   t4.nimi,
@@ -128,8 +176,8 @@ WHERE tot.urakka = :urakka
 GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
 ORDER BY toteutuneet_kustannukset
 
--- name: hae-yksikkohintaiset-tehtavittain-summattuna-hallintayksikolle
--- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna tehtävittäin
+-- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle
+-- Hakee yksikköhintaiset työt annetulle hallintayksikölle ja aikavälille summattuna tehtävittäin
 SELECT
   t4.nimi,
   yht.yksikko,
@@ -153,8 +201,8 @@ WHERE tot.urakka IN (SELECT id
 GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
 ORDER BY toteutuneet_kustannukset;
 
--- name: hae-yksikkohintaiset-tehtavittain-summattuna-koko-maalle
--- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna tehtävittäin
+-- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle
+-- Hakee yksikköhintaiset työt koko maasta aikavälille summattuna tehtävittäin
 SELECT
   t4.nimi,
   yht.yksikko,
