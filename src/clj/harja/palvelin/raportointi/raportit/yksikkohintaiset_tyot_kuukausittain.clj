@@ -7,9 +7,11 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.domain.roolit :as roolit]))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (log/debug "Muodostetaan yks. hint. kuukausiraportti urakalle " urakka-id " ja toimenpiteelle " toimenpide-id " aikaväliltä " (pr-str alkupvm loppupvm))
   (let [kuukausittaiset-summat (hae-yksikkohintaiset-tyot-per-kuukausi db
                                                              urakka-id alkupvm loppupvm
