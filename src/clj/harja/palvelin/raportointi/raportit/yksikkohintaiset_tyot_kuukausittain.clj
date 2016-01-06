@@ -91,24 +91,26 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      (flatten [{:leveys "20%" :otsikko "Tehtävä"}
-                {:leveys "5%" :otsikko "Yk\u00ADsik\u00ADkö"}
-                (mapv (fn [rivi]
-                        {:otsikko (pvm/kuukausi-ja-vuosi (c/to-date rivi))})
-                      listattavat-pvmt)
-                {:leveys "10%" :otsikko "Määrä yhteensä"}
-                {:leveys "5%" :otsikko "Tot-%"}
-                {:leveys "10%" :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])
+      (flatten (keep identity [{:leveys "20%" :otsikko "Tehtävä"}
+                               {:leveys "5%" :otsikko "Yk\u00ADsik\u00ADkö"}
+                               (mapv (fn [rivi]
+                                       {:otsikko (pvm/kuukausi-ja-vuosi (c/to-date rivi))})
+                                     listattavat-pvmt)
+                               {:leveys "10%" :otsikko "Määrä yhteensä"}
+                               (when (= konteksti :urakka)
+                                 [{:leveys "5%" :otsikko "Tot-%"}
+                                 {:leveys "10%" :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
       (mapv (fn [rivi]
-              (flatten [(:nimi rivi)
-                        (:yksikko rivi)
-                        (mapv (fn [pvm]
-                                (or
-                                  (get rivi (pvm/kuukausi-ja-vuosi (c/to-date pvm)))
-                                  0))
-                              listattavat-pvmt)
-                        (:toteutunut_maara rivi)
-                        (:toteumaprosentti rivi)
-                        (:suunniteltu_maara rivi)]))
+              (flatten (keep identity [(:nimi rivi)
+                                       (:yksikko rivi)
+                                       (mapv (fn [pvm]
+                                               (or
+                                                 (get rivi (pvm/kuukausi-ja-vuosi (c/to-date pvm)))
+                                                 0))
+                                             listattavat-pvmt)
+                                       (:toteutunut_maara rivi)
+                                       (when (= konteksti :urakka)
+                                         [(:toteumaprosentti rivi)
+                                         (:suunniteltu_maara rivi)])])))
             naytettavat-rivit)]]))
 
