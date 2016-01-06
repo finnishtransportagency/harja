@@ -105,21 +105,72 @@ FROM toteuma tot
 GROUP BY t4.nimi, yht.yksikko,yht.yksikkohinta, yht.maara, vuosi, kuukausi
 ORDER BY vuosi, kuukausi;
 
--- name: hae-yksikkohintaiset-tehtavittain-summattuna
+-- name: hae-yksikkohintaiset-tehtavittain-summattuna-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna tehtävittäin
-SELECT t4.nimi,
-       yht.yksikko,
-       yht.yksikkohinta,
-       yht.maara as suunniteltu_maara, SUM(tt.maara) as toteutunut_maara,
-       (yht.maara * yksikkohinta) as suunnitellut_kustannukset,
-       (SUM(tt.maara) * yksikkohinta) as toteutuneet_kustannukset
+SELECT
+  t4.nimi,
+  yht.yksikko,
+  yht.yksikkohinta,
+  yht.maara                      AS suunniteltu_maara,
+  SUM(tt.maara)                  AS toteutunut_maara,
+  (yht.maara * yksikkohinta)     AS suunnitellut_kustannukset,
+  (SUM(tt.maara) * yksikkohinta) AS toteutuneet_kustannukset
 FROM toteuma tot
-  JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
-  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
+  JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava AND yht.urakka = tot.urakka AND
                                     yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
- WHERE tot.urakka = :urakka
-       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
-GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
+WHERE tot.urakka = :urakka
+      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+      AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
+                                                        FROM toimenpidekoodi tpk
+                                                        WHERE tpk.emo = :tpi))
+GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
 ORDER BY toteutuneet_kustannukset
+
+-- name: hae-yksikkohintaiset-tehtavittain-summattuna-hallintayksikolle
+-- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna tehtävittäin
+SELECT
+  t4.nimi,
+  yht.yksikko,
+  yht.yksikkohinta,
+  yht.maara                      AS suunniteltu_maara,
+  SUM(tt.maara)                  AS toteutunut_maara,
+  (yht.maara * yksikkohinta)     AS suunnitellut_kustannukset,
+  (SUM(tt.maara) * yksikkohinta) AS toteutuneet_kustannukset
+FROM toteuma tot
+  JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava AND yht.urakka = tot.urakka AND
+                                    yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
+WHERE tot.urakka IN (SELECT id
+                     FROM urakka
+                     WHERE hallintayksikko = :hallintayksikko)
+      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+      AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
+                                                        FROM toimenpidekoodi tpk
+                                                        WHERE tpk.emo = :tpi))
+GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
+ORDER BY toteutuneet_kustannukset;
+
+-- name: hae-yksikkohintaiset-tehtavittain-summattuna-koko-maalle
+-- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna tehtävittäin
+SELECT
+  t4.nimi,
+  yht.yksikko,
+  yht.yksikkohinta,
+  yht.maara                      AS suunniteltu_maara,
+  SUM(tt.maara)                  AS toteutunut_maara,
+  (yht.maara * yksikkohinta)     AS suunnitellut_kustannukset,
+  (SUM(tt.maara) * yksikkohinta) AS toteutuneet_kustannukset
+FROM toteuma tot
+  JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava AND yht.urakka = tot.urakka AND
+                                    yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
+WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+      AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
+                                                        FROM toimenpidekoodi tpk
+                                                        WHERE tpk.emo = :tpi))
+GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
+ORDER BY toteutuneet_kustannukset;

@@ -7,10 +7,19 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]))
 
+(defn muodosta-raportti-urakalle []
+  )
+
+(defn muodosta-raportti-hallintayksikolle []
+  )
+
+(defn muodosta-raportti-koko-maalle []
+  )
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
-  (let [naytettavat-rivit (hae-yksikkohintaiset-tehtavittain-summattuna db
-                                                                        urakka-id alkupvm loppupvm
-                                                                        (if toimenpide-id true false) toimenpide-id)
+  (let [naytettavat-rivit (hae-yksikkohintaiset-tehtavittain-summattuna-urakalle db
+                                                                                 urakka-id alkupvm loppupvm
+                                                                                 (if toimenpide-id true false) toimenpide-id)
 
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
