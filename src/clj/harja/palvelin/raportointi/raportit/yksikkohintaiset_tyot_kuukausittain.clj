@@ -9,9 +9,6 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
-(defn pvm->str [pvm]
-  (str (:kuukausi pvm) "/" (subs (str (:vuosi pvm)) 2 4)))
-
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (log/debug "Muodostetaan yks. hint. kuukausiraportti urakalle " urakka-id " ja toimenpiteelle " toimenpide-id " aikaväliltä " (pr-str alkupvm loppupvm))
   (let [kuukausittaiset-summat (hae-yksikkohintaiset-tyot-per-kuukausi db
@@ -30,7 +27,7 @@
                                         kuukausittaiset-summat (reduce
                                                                  (fn [map tehtava]
                                                                    (assoc map
-                                                                     (pvm->str tehtava)
+                                                                     (pvm/kuukausi-ja-vuosi (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
                                                                      (or (:toteutunut_maara tehtava) 0)))
                                                                  {}
                                                                  taman-tehtavan-rivit)]
@@ -42,14 +39,14 @@
                                         (assoc :toteutunut_maara maara-yhteensa)
                                         (assoc :toteumaprosentti toteumaprosentti))))
                                 (distinct (mapv :nimi kuukausittaiset-summat)))
-        listattavat-pvmt (mapv (fn [pvm]
-                                 {:vuosi (t/year pvm) :kuukausi (t/month pvm)})
-                               (take-while (fn [pvm]
+        listattavat-pvmt (take-while (fn [pvm]
                                              (or (t/equal? pvm (c/from-date loppupvm))
                                                  (t/before? pvm (c/from-date loppupvm))))
                                            (iterate (fn [pvm]
-                                                      (t/plus pvm (t/months 1)))
-                                                    (c/from-date alkupvm))))
+                                                      (t/plus pvm (t/days 32)))
+                                                    (c/from-date alkupvm)))
+        _ (log/debug (pr-str listattavat-pvmt))
+        _ (log/debug (pr-str loppupvm))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
@@ -64,19 +61,19 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten [{:leveys "20%" :otsikko "Tehtävä"}
-                {:leveys "10%" :otsikko "Yksikkö"}
+                {:leveys "5%" :otsikko "Yk\u00ADsik\u00ADkö"}
                 (mapv (fn [rivi]
-                        {:otsikko (pvm->str rivi)})
+                        {:otsikko (pvm/kuukausi-ja-vuosi (c/to-date rivi))})
                       listattavat-pvmt)
                 {:leveys "10%" :otsikko "Määrä yhteensä"}
-                {:leveys "10%" :otsikko "Tot-%"}
-                {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}])
+                {:leveys "5%" :otsikko "Tot-%"}
+                {:leveys "10%" :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])
       (mapv (fn [rivi]
               (flatten [(:nimi rivi)
                         (:yksikko rivi)
                         (mapv (fn [pvm]
                                 (or
-                                  (get rivi (pvm->str pvm))
+                                  (get rivi (pvm/kuukausi-ja-vuosi (c/to-date pvm)))
                                   0))
                               listattavat-pvmt)
                         (:toteutunut_maara rivi)
