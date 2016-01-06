@@ -1,11 +1,11 @@
--- Yksikköhintaisten töiden summat
+-- Yksikköhintaisten töiden kuukausiraportti
 
 INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) VALUES (
- 'yks-hint-tehtavien-summat', 'Yksikköhintaiset työt tehtävittäin',
+ 'yks-hint-kuukausiraportti', 'Yksikköhintaiset työt kuukausittain',
  ARRAY['urakka'::raporttikonteksti],
  ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri,
  ('Toimenpide','urakan-toimenpide',false,NULL)::raporttiparametri],
- '#''harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain/suorita',
+ '#''harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain/suorita',
  'hoito'::urakkatyyppi
 );
 

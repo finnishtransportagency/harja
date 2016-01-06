@@ -85,16 +85,22 @@
     ""))
 
 (defn desimaaliluku
-  ([luku] (desimaaliluku luku 2))
-  ([luku tarkkuus]
-   (.toFixed luku tarkkuus)))
+  #?(:cljs([luku] (desimaaliluku luku 2)))
+  #?(:cljs([luku tarkkuus] (.toFixed luku tarkkuus)))
+  #?(:clj ([luku] (desimaaliluku luku 2)))
+  #?(:clj ([luku tarkkuus] (format (str "%." tarkkuus "f") luku tarkkuus))))
 
 (defn desimaaliluku-opt
-  ([luku] (desimaaliluku-opt luku 2))
-  ([luku tarkkuus]
-   (if luku
-     (.toFixed luku tarkkuus)
-     "")))
+  #?(:cljs ([luku] (desimaaliluku-opt luku 2)))
+  #?(:cljs ([luku tarkkuus]
+             (if luku
+               (desimaaliluku luku tarkkuus)
+               "")))
+  #?(:clj ([luku] (desimaaliluku-opt luku 2)))
+  #?(:clj ([luku tarkkuus]
+           (if luku
+             (desimaaliluku luku tarkkuus)
+             ""))))
 
 (defn trimmaa-puhelinnumero
   "Ottaa suomalaisen puhelinnumeron teksimuodossa ja palauttaa sen yksinkertaistetussa numeromuodossa ilman etuliitettä
