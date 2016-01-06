@@ -45,8 +45,6 @@
                                            (iterate (fn [pvm]
                                                       (t/plus pvm (t/days 32)))
                                                     (c/from-date alkupvm)))
-        _ (log/debug (pr-str listattavat-pvmt))
-        _ (log/debug (pr-str loppupvm))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
         otsikko (raportin-otsikko
