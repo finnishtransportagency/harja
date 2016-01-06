@@ -1,6 +1,6 @@
 (ns harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain
   (:require [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.yksikkohintaiset-tyot :refer [hae-yksikkohintaiset-tehtavittain-summattuna]]
+            [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -17,9 +17,9 @@
   )
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
-  (let [naytettavat-rivit (hae-yksikkohintaiset-tehtavittain-summattuna-urakalle db
-                                                                                 urakka-id alkupvm loppupvm
-                                                                                 (if toimenpide-id true false) toimenpide-id)
+  (let [naytettavat-rivit (q/hae-yksikkohintaiset-tehtavittain-summattuna-urakalle db
+                                                                                   urakka-id alkupvm loppupvm
+                                                                                   (if toimenpide-id true false) toimenpide-id)
 
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
         konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
