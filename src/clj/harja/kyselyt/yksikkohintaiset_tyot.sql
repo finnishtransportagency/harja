@@ -114,9 +114,7 @@ SELECT
   t4.nimi,
   yht.yksikko,
   yht.yksikkohinta,
-  yht.maara as suunniteltu_maara,
-  SUM(tt.maara) as toteutunut_maara,
-  ROUND(SUM(tt.maara) / yht.maara, 2) as toteumaprosentti
+  SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
@@ -140,9 +138,7 @@ SELECT
   t4.nimi,
   yht.yksikko,
   yht.yksikkohinta,
-  yht.maara as suunniteltu_maara,
-  SUM(tt.maara) as toteutunut_maara,
-  ROUND(SUM(tt.maara) / yht.maara, 2) as toteumaprosentti
+  SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
@@ -182,10 +178,7 @@ SELECT
   t4.nimi,
   yht.yksikko,
   yht.yksikkohinta,
-  yht.maara                      AS suunniteltu_maara,
-  SUM(tt.maara)                  AS toteutunut_maara,
-  (yht.maara * yksikkohinta)     AS suunnitellut_kustannukset,
-  (SUM(tt.maara) * yksikkohinta) AS toteutuneet_kustannukset
+  SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
@@ -199,7 +192,6 @@ WHERE tot.urakka IN (SELECT id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
 GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
-ORDER BY toteutuneet_kustannukset;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle
 -- Hakee yksikköhintaiset työt koko maasta aikavälille summattuna tehtävittäin
@@ -207,10 +199,7 @@ SELECT
   t4.nimi,
   yht.yksikko,
   yht.yksikkohinta,
-  yht.maara                      AS suunniteltu_maara,
-  SUM(tt.maara)                  AS toteutunut_maara,
-  (yht.maara * yksikkohinta)     AS suunnitellut_kustannukset,
-  (SUM(tt.maara) * yksikkohinta) AS toteutuneet_kustannukset
+  SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
@@ -221,4 +210,3 @@ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
 GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
-ORDER BY toteutuneet_kustannukset;
