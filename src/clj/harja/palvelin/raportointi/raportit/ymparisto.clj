@@ -5,7 +5,8 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.fmt :as fmt]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql")
 
@@ -97,7 +98,7 @@
 
                                  ;; Yhteensä, toteumaprosentti ja maksimimäärä
                                  [yhteensa
-                                  (if maksimi (format "%.1f%%" (/ (* 100.0 yhteensa) maksimi)) "-")
+                                  (if maksimi (fmt/desimaaliluku (/ (* 100.0 yhteensa) maksimi) 1) "-")
                                   (or maksimi "-")]))]
 
                          ;; Mahdolliset hoitoluokkakohtaiset rivit

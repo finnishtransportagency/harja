@@ -22,7 +22,7 @@
                                         suunniteltu-maara (:suunniteltu_maara (first taman-tehtavan-rivit))
                                         maara-yhteensa (reduce + (mapv :toteutunut_maara taman-tehtavan-rivit))
                                         toteumaprosentti (if suunniteltu-maara
-                                                           (format "%.1f" (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100)))
+                                                           (fmt/desimaaliluku (float (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100))) 1)
                                                            "-")
                                         kuukausittaiset-summat (reduce
                                                                  (fn [map tehtava]
