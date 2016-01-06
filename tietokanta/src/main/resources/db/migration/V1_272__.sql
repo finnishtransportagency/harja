@@ -6,3 +6,5 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
  ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri,
  ('Toimenpide','urakan-toimenpide',false,NULL)::raporttiparametri],
  '#''harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain/suorita',
+  'hoito'::urakkatyyppi
+);
