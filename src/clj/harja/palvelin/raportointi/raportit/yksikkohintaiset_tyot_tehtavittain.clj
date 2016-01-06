@@ -60,23 +60,26 @@
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      [{:leveys "25%" :otsikko "Tehtävä"}
-       {:leveys "5%"  :otsikko "Yks."}
-       {:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
-       {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}
-       {:leveys "10%" :otsikko "Toteutunut määrä"}
-       {:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-       {:leveys "15%" :otsikko "Toteutuneet kustannukset"}]
-
-      (conj (mapv (juxt :nimi
-                        :yksikko
-                        (comp fmt/euro-opt :yksikkohinta)
-                        :suunniteltu_maara
-                        :toteutunut_maara
-                        (comp fmt/euro-opt :suunnitellut_kustannukset)
-                        (comp fmt/euro-opt :toteutuneet_kustannukset))
+      (flatten (keep identity [{:leveys "25%" :otsikko "Tehtävä"}
+                               {:leveys "5%" :otsikko "Yks."}
+                               (when (= konteksti :urakka)
+                                 [{:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
+                                  {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}])
+                               {:leveys "10%" :otsikko "Toteutunut määrä"}
+                               (when (= konteksti :urakka)
+                                 [{:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
+                                  {:leveys "15%" :otsikko "Toteutuneet kustannukset"}])]))
+      (conj (mapv (fn [rivi]
+              (flatten (keep identity [(:nimi rivi)
+                                       (:yksikko rivi)
+                                       (when (= konteksti :urakka)
+                                         [(fmt/euro-opt (:yksikkohinta rivi))
+                                          (:suunniteltu_maara rivi)])
+                                       (:toteutunut_maara rivi)
+                                       (when (= konteksti :urakka)
+                                         [(fmt/euro-opt (:suunnitellut_kustannukset rivi))
+                                          (fmt/euro-opt (:toteutuneet_kustannukset rivi))])])))
                   naytettavat-rivit)
             ["Yhteensä" nil nil nil nil
              (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
              (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])]]))
-
