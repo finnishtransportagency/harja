@@ -45,6 +45,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
+    (komp/ulos (kartta/poista-popup!))
     (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn [ur]
