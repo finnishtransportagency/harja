@@ -22,7 +22,6 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
-(declare zoomaa-geometrioihin)
 
 (def kartta-kontentin-vieressa? (atom false))
 
@@ -253,9 +252,7 @@
                                       :z-index    100}}
       (if (= :S koko)
         [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right
-         {:on-click #(do
-                      (nav/vaihda-kartan-koko! :L)
-                      (zoomaa-geometrioihin))}
+         {:on-click #(nav/vaihda-kartan-koko! :L)}
          "Näytä kartta"]
         [:span
          (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
@@ -468,7 +465,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           extentin-margin-metreina geo/pisteen-extent-laajennus]
       (if-not (empty? geometriat)
         (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
-        (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
+        (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
+
+      (reset! zoom-taso (or (openlayers/nykyinen-zoom-taso) +koko-suomi-zoom-taso+)))))
 
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
@@ -490,10 +489,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 (defn kartta-openlayers []
   (komp/luo
 
+    {:component-did-mount
+     #(zoomaa-geometrioihin)}
     (komp/sisaan
       (fn [_]
-        (zoomaa-geometrioihin)
-
         (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
                    (fn [_ _ vanha uusi]
                      ;; Jos vektoreissa olevissa mäpeissä ei ole samat avaimet,
