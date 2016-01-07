@@ -58,7 +58,7 @@
                                  (assoc :toteutunut_maara maara-yhteensa)
                                  (assoc :toteumaprosentti toteumaprosentti))))]
     (if urakoittain?
-      ;; Käydään jokainen urakka läpi, etsitään sille kuuluvat tehtävät
+      ;; Käydään jokainen urakka läpi, etsitään sille kuuluvat tehtävätyypit
       ;; ja muodostetaan jokaisesta tehtävätyypistä yksi rivi
       (flatten (mapv (fn [urakka-nimi]
                        (mapv
