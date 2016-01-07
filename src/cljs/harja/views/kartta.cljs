@@ -22,6 +22,7 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
+(declare zoomaa-geometrioihin)
 
 (def kartta-kontentin-vieressa? (atom false))
 
@@ -251,7 +252,10 @@
                                       :width      "100%"
                                       :z-index    100}}
       (if (= :S koko)
-        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
+        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right
+         {:on-click #(do
+                      (nav/vaihda-kartan-koko! :L)
+                      (zoomaa-geometrioihin))}
          "Näytä kartta"]
         [:span
          (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
@@ -286,7 +290,7 @@
          [:div
           [:table
            [:tbody
-            (for [{:keys [img nimi vari teksti]}  selitteet]
+            (for [{:keys [img nimi vari teksti]} selitteet]
               ^{:key (str (or vari img) "_" nimi)}
               [:tr
                (if vari
@@ -409,14 +413,14 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
             (kaappaa-hiiri eventit))
     (go-loop [e (<! eventit)
               pisteet []]
-      (log "LINESTRING("
-           (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
-           ")")
-      (when e
-        (recur (<! eventit)
-               (if (= :click (:tyyppi e))
-                 (conj pisteet (:sijainti e))
-                 pisteet))))))
+             (log "LINESTRING("
+                  (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
+                  ")")
+             (when e
+               (recur (<! eventit)
+                      (if (= :click (:tyyppi e))
+                        (conj pisteet (:sijainti e))
+                        pisteet))))))
 
 (defn ^:export viivan-piirto-lopeta []
   (@viivan-piirto)
@@ -458,7 +462,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   []
   (when @pida-geometriat-nakyvilla?
     (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))
-          extentin-margin-metreina 750]
+          ;; Käytetään pisteen-extent-laajennusta jotta vältetään tilanne,
+          ;; jossa karttaa "zoomaa taaksepäin" kun kasa pisteitä on todella
+          ;; lähellä toisiaan, ja tuplaklikataan jotain pistettä.
+          extentin-margin-metreina (geo/pisteen-extent-laajennus)]
       (if-not (empty? geometriat)
         (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
