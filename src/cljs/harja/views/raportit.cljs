@@ -51,11 +51,13 @@
                              (filter #(some mahdolliset-kontekstit (:konteksti %)))
                              urakkatyypin-raportit)))))
 
-(defonce poista-ei-mahdollinen-raporttityyppivalinta
-  (run! (let [mahdolliset (into #{} @mahdolliset-raporttityypit)
-              valittu @valittu-raporttityyppi]
-          (when-not (mahdolliset valittu)
-            (reset! valittu-raporttityyppi nil)))))
+(add-watch mahdolliset-raporttityypit :konteksti-muuttui
+           (fn [_ _ old new]
+             (let [mahdolliset (into #{} @mahdolliset-raporttityypit)
+                   valittu @valittu-raporttityyppi]
+               (when-not (mahdolliset valittu)
+                 (log "Resetoidaan valittu raportti, ei enää mahdollinen")
+                 (reset! valittu-raporttityyppi nil)))))
 
 ;; Raportin parametrit, parametrityypin lisäämiseksi luo
 ;; defmethodit parametrin tyypin mukaan
