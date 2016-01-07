@@ -606,9 +606,9 @@ Optiot on mappi optioita:
                [:table.grid
                 [:thead
                  [:tr
-                  (for [{:keys [otsikko leveys nimi]} skeema]
+                  (for [{:keys [otsikko leveys nimi luokka]} skeema]
                     ^{:key (str nimi)}
-                    [:th {:width (or leveys "5%")} otsikko])
+                    [:th {:class luokka :width (or leveys "5%")} otsikko])
                   (when (and (not piilota-toiminnot?)
                              tallenna)
                     [:th.toiminnot {:width "40px"} " "])]]
