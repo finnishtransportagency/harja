@@ -35,6 +35,7 @@
                                                            (if toimenpide-id true false) toimenpide-id)))
 
 (defn muodosta-raportin-rivit [kuukausittaiset-summat urakoittain?]
+  (log/debug "Summat sisään: " kuukausittaiset-summat)
   (let [yhdista-tehtavat (fn [tehtavat]
                            "Ottaa vectorin tehtävä-mappeja ja tekee niistä yhden mapin, jossa kuukausittaiset summat
                             esiintyvät avaimissa"
@@ -63,7 +64,8 @@
                        (mapv
                          (fn [tehtava-nimi]
                            (yhdista-tehtavat (filter
-                                               #(= (:nimi %) tehtava-nimi)
+                                               #(and (= (:nimi %) tehtava-nimi)
+                                                     (= (:urakka_nimi %) urakka-nimi))
                                                kuukausittaiset-summat)))
                          (into #{} (map :nimi (filter
                                                 #(= (:urakka_nimi %) urakka-nimi)
