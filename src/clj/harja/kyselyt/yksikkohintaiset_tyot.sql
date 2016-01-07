@@ -103,7 +103,6 @@ WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, t4.yksikko, yht.yksikkohinta, yht.maara, vuosi, kuukausi
-ORDER BY vuosi, kuukausi;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle
 -- Hakee yksikköhintaiset työt annetulle hallintayksikolle ja aikavälille summattuna kuukausittain
@@ -124,7 +123,6 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
-ORDER BY vuosi, kuukausi;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle
 -- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain
@@ -142,7 +140,6 @@ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
-ORDER BY vuosi, kuukausi;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain
 -- Hakee yksikköhintaiset työt annetulle hallintayksikolle ja aikavälille summattuna kuukausittain, eriteltynä urakoittain
@@ -166,7 +163,6 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
-ORDER BY vuosi, kuukausi;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain
 -- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain, eriteltynä urakoittain
@@ -187,7 +183,6 @@ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
-ORDER BY vuosi, kuukausi;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille, summattuna tehtävittäin
@@ -264,7 +259,8 @@ WHERE tot.urakka IN (SELECT id
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
-GROUP BY t4.nimi, t4.yksikko, u.id;
+GROUP BY t4.nimi, t4.yksikko, u.id
+ORDER BY urakka_nimi;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain
 -- Hakee yksikköhintaiset työt koko maasta aikavälille, summattuna tehtävittäin ja eriteltynä urakoittain
@@ -282,4 +278,5 @@ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
-GROUP BY t4.nimi, t4.yksikko, u.id;
+GROUP BY t4.nimi, t4.yksikko, u.id
+ORDER BY urakka_nimi;
