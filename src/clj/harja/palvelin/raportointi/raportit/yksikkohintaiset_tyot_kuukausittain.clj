@@ -106,7 +106,7 @@
                                                             :toimenpide-id toimenpide-id
                                                             :urakoittain?  urakoittain?}))
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
-        listattavat-pvmt (rest (take-while (fn [pvm]
+        listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
                                        (not (t/after?
                                               (t/local-date (t/year pvm)
@@ -116,11 +116,8 @@
                                                             (t/month (c/from-date loppupvm))
                                                             1))))
                                      (iterate (fn [pvm]
-                                                (t/plus (t/local-date (t/year pvm)
-                                                                      (t/month pvm)
-                                                                      1)
-                                                        (t/months 1)))
-                                              (c/from-date alkupvm))))
+                                                (t/plus pvm (t/months 1)))
+                                              (t/to-time-zone (c/from-date alkupvm) (t/time-zone-for-offset 3))))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         otsikko (raportin-otsikko
                   (case konteksti
