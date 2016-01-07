@@ -7,7 +7,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -82,26 +83,24 @@
                          avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
                      (when (and taso
                                 (or kohderivit toteumarivit))
-                       (into []
-                             (mapcat #(keep (fn [{sij :sijainti nimi :nimi :as osa}]
-                                              (when sij
-                                                (let [paallystyskohde-id (:paallystyskohde_id %)]
-                                                  {:type               :paallystys
-                                                   :kohde              %
-                                                   :paallystyskohde-id paallystyskohde-id
-                                                   :tila               (or (:paallystysilmoitus_tila %) (:tila %)) ; Eri keywordissa lähetetystä pyynnöstä riippuen
-                                                   :nimi               (str (:nimi %) ": " nimi)
-                                                   :osa                osa
-                                                   :alue               (assoc sij
-                                                                         :stroke {:color (case (or (:paallystysilmoitus_tila %) (:tila %))
-                                                                                           :aloitettu "blue"
-                                                                                           :valmis "green"
-                                                                                           "orange")
-                                                                                  :width (if (= paallystyskohde-id avoin-paallystysilmoitus) 8 6)})})))
-                                            (:kohdeosat %)))
-                             (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                                          kohderivit)
-                                     toteumarivit))))))
+                       (kartalla-esitettavaan-muotoon
+                         (into []
+                              (mapcat (fn [kohde]
+                                        (keep (fn [kohdeosa]
+                                                (assoc (merge kohdeosa
+                                                              (dissoc kohde :kohdeosat))
+                                                  :tila (or (:paallystysilmoitus_tila kohde) (:tila kohde))
+                                                  :avoin? (= (:paallystyskohde_id kohde) avoin-paallystysilmoitus)
+                                                  :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
+                                                  :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
+                                              (:kohdeosat kohde))))
+                              (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                                           kohderivit)
+                                      toteumarivit))
+                         nil
+                         nil
+                         (comp (keep #(and (:sijainti %) %))
+                               (map #(assoc % :tyyppi-kartalla :paallystys))))))))
 
 (defn kuvaile-kohteen-tila [tila]
   (case tila
