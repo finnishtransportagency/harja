@@ -35,46 +35,47 @@
                                                            (if toimenpide-id true false) toimenpide-id)))
 
 (defn muodosta-raportin-rivit [kuukausittaiset-summat urakoittain?]
-  "Muuttaa tehtävät vectoriksi mappeja, jossa jokainen tehtävä ensiintyy kerran mapissa ja kuukausittaiset
-  ;; summat esitetään avaimina ('kuukausi/vuosi' on avain ja sen arvo on summa)."
-  (let [urakat-set (into #{} (map :urakka_nimi kuukausittaiset-summat))
-        tehtavat-set (into #{} (map :nimi kuukausittaiset-summat))
-        muodosta-tehtava-rivi (fn [tehtava-nimi urakka-nimi]
-                                (let [taman-tehtavan-rivit (if urakka-nimi
-                                                             (filter #(and (= (:nimi %) tehtava-nimi)
-                                                                           (= (:urakka_nimi %) urakka-nimi))
-                                                                     kuukausittaiset-summat)
-                                                             (filter #(= (:nimi %) tehtava-nimi)
-                                                                     kuukausittaiset-summat))
-                                      suunniteltu-maara (:suunniteltu_maara (first taman-tehtavan-rivit))
-                                      maara-yhteensa (reduce + (mapv :toteutunut_maara taman-tehtavan-rivit))
-                                      toteumaprosentti (if suunniteltu-maara
-                                                         (fmt/desimaaliluku (float (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100))) 1)
-                                                         "-")
-                                      kuukausittaiset-summat (reduce
-                                                               (fn [map tehtava]
-                                                                 (assoc map
-                                                                   (pvm/kuukausi-ja-vuosi (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
-                                                                   (or (:toteutunut_maara tehtava) 0)))
-                                                               {}
-                                                               taman-tehtavan-rivit)]
-                                  ;; Kasataan tehtävästä näytettävä rivi
-                                  (-> kuukausittaiset-summat
-                                      (assoc :urakka_nimi urakka-nimi)
-                                      (assoc :nimi tehtava-nimi)
-                                      (assoc :yksikko (:yksikko (first taman-tehtavan-rivit)))
-                                      (assoc :suunniteltu_maara suunniteltu-maara)
-                                      (assoc :toteutunut_maara maara-yhteensa)
-                                      (assoc :toteumaprosentti toteumaprosentti))))]
+  (let [urakkanimet-set (into #{} (map :urakka_nimi kuukausittaiset-summat))
+        tehtavanimet-set (into #{} (map :nimi kuukausittaiset-summat))
+        yhdista-tehtavat (fn [tehtavat]
+                           "Ottaa vectorin tehtävä-mappeja ja tekee niistä yhden mapin, jossa kuukausittaiset summat
+                            esiintyvät avaimissa"
+                           (when (not (empty? tehtavat))
+                             (let [suunniteltu-maara (:suunniteltu_maara (first tehtavat))
+                                   maara-yhteensa (reduce + (mapv :toteutunut_maara tehtavat))
+                                   toteumaprosentti (if suunniteltu-maara
+                                                      (fmt/desimaaliluku (float (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100))) 1)
+                                                      "-")
+                                   kuukausittaiset-summat (reduce
+                                                            (fn [map tehtava]
+                                                              (assoc map
+                                                                (pvm/kuukausi-ja-vuosi (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
+                                                                (or (:toteutunut_maara tehtava) 0)))
+                                                            {}
+                                                            tehtavat)]
+                               ;; Kasataan tehtävästä näytettävä rivi
+                               (-> kuukausittaiset-summat
+                                   (assoc :urakka_nimi (:urakka_nimi (first tehtavat)))
+                                   (assoc :nimi (:nimi (first tehtavat)))
+                                   (assoc :yksikko (:yksikko (first tehtavat)))
+                                   (assoc :suunniteltu_maara suunniteltu-maara)
+                                   (assoc :toteutunut_maara maara-yhteensa)
+                                   (assoc :toteumaprosentti toteumaprosentti)))))]
     (if urakoittain?
       (flatten (mapv (fn [urakka-nimi]
-                       (mapv
-                         (fn [tehtava] (muodosta-tehtava-rivi tehtava urakka-nimi))
-                         tehtavat-set))
-                     urakat-set))
+                       (keep
+                         (fn [tehtava-nimi]
+                           (yhdista-tehtavat (filter #(and (= (:nimi %) tehtava-nimi)
+                                                           (= (:urakka_nimi %) urakka-nimi))
+                                                     kuukausittaiset-summat)))
+                         tehtavanimet-set))
+                     urakkanimet-set))
       (mapv
-        (fn [tehtava] (muodosta-tehtava-rivi tehtava nil))
-        tehtavat-set))))
+        (fn [tehtava-nimi]
+          (yhdista-tehtavat (filter
+                              #(= (:nimi %) tehtava-nimi)
+                              kuukausittaiset-summat)))
+        tehtavanimet-set))))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
   (roolit/vaadi-rooli user "tilaajan kayttaja")
