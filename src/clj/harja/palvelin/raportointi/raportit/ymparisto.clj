@@ -64,8 +64,7 @@
              (->> materiaalit first second
                   (keep :kk)
                   sort
-                  (map (comp (fn [o] {:otsikko (clojure.string/replace o #"/" "/\u00AD") :leveys kk-lev})
-                             pvm/kuukausi-ja-vuosi)))
+                  (map (comp (fn [o] {:otsikko o :leveys kk-lev}) pvm/kuukausi-ja-vuosi)))
 
              [{:otsikko "Määrä yhteensä" :leveys "8%"}
               {:otsikko "Tot-%" :leveys "8%"}
