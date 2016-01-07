@@ -84,7 +84,7 @@
                                                             (t/month (c/from-date loppupvm))
                                                             1))))
                                        (iterate (fn [pvm]
-                                                  (t/plus pvm (t/days 32)))
+                                                  (t/plus pvm (t/months 1)))
                                                 (c/from-date alkupvm)))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         otsikko (raportin-otsikko
