@@ -36,8 +36,8 @@
 
 (defn muodosta-raportin-rivit [kuukausittaiset-summat urakoittain?]
   (let [yhdista-tehtavat (fn [tehtavat]
-                           "Ottaa vectorin tehtävä-mappeja ja tekee niistä yhden mapin, jossa kuukausittaiset summat
-                            esiintyvät avaimissa"
+                           ;; Ottaa vectorin tehtävä-mappeja ja tekee niistä yhden mapin, jossa kuukausittaiset summat
+                           ;; esiintyvät avaimissa
                            (let [suunniteltu-maara (:suunniteltu_maara (first tehtavat))
                                  maara-yhteensa (reduce + (mapv :toteutunut_maara tehtavat))
                                  toteumaprosentti (if suunniteltu-maara
@@ -50,7 +50,6 @@
                                                               (or (:toteutunut_maara tehtava) 0)))
                                                           {}
                                                           tehtavat)]
-                             ;; Kasataan tehtävästä näytettävä rivi
                              (-> kuukausittaiset-summat
                                  (assoc :urakka_nimi (:urakka_nimi (first tehtavat)))
                                  (assoc :nimi (:nimi (first tehtavat)))
@@ -59,6 +58,8 @@
                                  (assoc :toteutunut_maara maara-yhteensa)
                                  (assoc :toteumaprosentti toteumaprosentti))))]
     (if urakoittain?
+      ;; Käydään jokainen urakka läpi, etsitään sille kuuluvat tehtävät
+      ;; ja muodostetaan jokaisesta tehtävätyypistä yksi rivi
       (flatten (mapv (fn [urakka-nimi]
                        (mapv
                          (fn [tehtava-nimi]
@@ -70,6 +71,7 @@
                                                 #(= (:urakka_nimi %) urakka-nimi)
                                                 kuukausittaiset-summat)))))
                      (into #{} (map :urakka_nimi kuukausittaiset-summat))))
+      ;; Muodostetaan jokaisesta tehtävätyypistä yksi rivi
       (mapv
         (fn [tehtava-nimi]
           (yhdista-tehtavat (filter
