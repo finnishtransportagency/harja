@@ -147,6 +147,7 @@ rooleista."
          (backlog/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 
+
 (defn tilaajan-kayttaja?
   [kayttaja]
   (roolissa? kayttaja
@@ -173,7 +174,20 @@ urakoitsija."
            (roolissa? kayttaja urakoitsijan-paakayttaja))
       (rooli-urakassa? kayttaja urakoitsijan-urakan-vastuuhenkilo urakka-id)))
 
+(defn voi-kirjata-toteumia?
+  "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli 
+  tai jos hän on urakan urakoitsijaorganisaation pääkäyttäjä"
+  #?(:cljs ([urakka-id] (voi-kirjata-toteumia? @istunto/kayttaja urakka-id)))
+  ([kayttaja urakka-id]
+   (or (rooli-urakassa? kayttaja toteumien-kirjaus urakka-id)
+       (and (organisaation-urakka? kayttaja urakka-id)
+            (roolissa? kayttaja urakoitsijan-paakayttaja)))))
 
+#?(:clj
+   (defn vaadi-toteumien-kirjaus-urakkaan [kayttaja urakka-id]
+     (when-not (voi-kirjata-toteumia? kayttaja urakka-id)
+       (let [viest (format "Käyttäjällä '%1$s' ei toteumien kirjauksen roolia (tai ei urakoitsijan pk) urakassa, jonka id on %2$s"
+                           (:kayttajanimi kayttaja) urakka-id)]))))
 
 #?(:clj
    (defn vaadi-lukuoikeus-urakkaan

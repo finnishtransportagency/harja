@@ -108,7 +108,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (jdbc/with-db-transaction [c db]
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
@@ -125,7 +125,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
   [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (jdbc/with-db-transaction [c db]
     (do
       (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))

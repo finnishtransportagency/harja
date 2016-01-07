@@ -143,7 +143,7 @@
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
              ", paikkauskohde-id:" (:paikkauskohde-id paikkausilmoitus))
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (skeema/validoi minipot/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]
