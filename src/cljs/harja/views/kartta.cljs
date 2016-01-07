@@ -465,7 +465,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           ;; Käytetään pisteen-extent-laajennusta jotta vältetään tilanne,
           ;; jossa karttaa "zoomaa taaksepäin" kun kasa pisteitä on todella
           ;; lähellä toisiaan, ja tuplaklikataan jotain pistettä.
-          extentin-margin-metreina (geo/pisteen-extent-laajennus)]
+          extentin-margin-metreina geo/pisteen-extent-laajennus]
       (if-not (empty? geometriat)
         (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
