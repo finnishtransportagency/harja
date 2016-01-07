@@ -5,6 +5,7 @@
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
@@ -105,7 +106,7 @@
                                                             :toimenpide-id toimenpide-id
                                                             :urakoittain?  urakoittain?}))
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
-        listattavat-pvmt (take-while (fn [pvm]
+        listattavat-pvmt (rest (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
                                        (not (t/after?
                                               (t/local-date (t/year pvm)
@@ -114,9 +115,12 @@
                                               (t/local-date (t/year (c/from-date loppupvm))
                                                             (t/month (c/from-date loppupvm))
                                                             1))))
-                                       (iterate (fn [pvm]
-                                                  (t/plus pvm (t/months 1)))
-                                                (c/from-date alkupvm)))
+                                     (iterate (fn [pvm]
+                                                (t/plus (t/local-date (t/year pvm)
+                                                                      (t/month pvm)
+                                                                      1)
+                                                        (t/months 1)))
+                                              (c/from-date alkupvm))))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         otsikko (raportin-otsikko
                   (case konteksti

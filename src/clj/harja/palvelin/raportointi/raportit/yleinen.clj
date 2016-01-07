@@ -18,9 +18,13 @@
 
 
 (def vuosi-ja-kk-fmt (tf/with-zone (tf/formatter "YYYY/MM") (t/time-zone-for-id "EET")))
+(def kk-ja-vuosi-fmt (tf/with-zone (tf/formatter "MM/YYYY") (t/time-zone-for-id "EET")))
 
 (defn vuosi-ja-kk [pvm]
   (tf/unparse vuosi-ja-kk-fmt (l/to-local-date-time pvm)))
+
+(defn kk-ja-vuosi [pvm]
+  (tf/unparse kk-ja-vuosi-fmt (l/to-local-date-time pvm)))
 
 (defn kuukaudet [alku loppu]
   (let [alku  (l/to-local-date-time alku)
