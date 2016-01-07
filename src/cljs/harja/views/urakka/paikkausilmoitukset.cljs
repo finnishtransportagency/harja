@@ -158,7 +158,7 @@
   (let [kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat])))]
 
     (komp/luo
-      (komp/ulos (kartta/poista-popup!))
+      (komp/ulos #(kartta/poista-popup!))
       (komp/lukko (lukko/muodosta-lukon-id "paikkausilmoitus" (:kohdenumero @paikkaus/paikkausilmoitus-lomakedata)))
       (fn []
         (let [kohteen-tiedot (r/wrap {:aloituspvm         (:aloituspvm @paikkaus/paikkausilmoitus-lomakedata)
@@ -307,7 +307,7 @@
 (defn ilmoitusluettelo
   []
   (komp/luo
-    (komp/ulos (kartta/poista-popup!))
+    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :avaa-paikkausilmoitus
                      (fn [_ rivi]
                        (avaa-paikkausilmoitus (:paikkauskohde-id rivi))))
@@ -342,7 +342,7 @@
 
 (defn paikkausilmoitukset []
   (komp/luo
-    (komp/ulos (kartta/poista-popup!))
+    (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
 
     (fn []

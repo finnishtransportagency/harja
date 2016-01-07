@@ -59,7 +59,7 @@
         ;; virheelliset TR sijainnit 
         tr-virheet (atom {})]
     (komp/luo
-      (komp/ulos (kartta/poista-popup!))
+      (komp/ulos #(kartta/poista-popup!))
       (fn [{:keys [kohdeosat id] :as rivi}]
         [:div
          [grid/grid
@@ -159,7 +159,7 @@
                                :kokonaishinta            kokonaishinta}]))]
 
     (komp/luo
-      (komp/ulos (kartta/poista-popup!))
+      (komp/ulos #(kartta/poista-popup!))
       (komp/lippu paallystys-tai-paikkauskohteet-nakymassa)
       (fn []
         (let [paallystysnakyma? (= :paallystys (:tyyppi @nav/valittu-urakka))]

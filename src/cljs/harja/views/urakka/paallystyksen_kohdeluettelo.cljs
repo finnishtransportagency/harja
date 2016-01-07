@@ -47,7 +47,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
-    (komp/ulos (kartta/poista-popup!))
+    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paallystys-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (fn [ur]
