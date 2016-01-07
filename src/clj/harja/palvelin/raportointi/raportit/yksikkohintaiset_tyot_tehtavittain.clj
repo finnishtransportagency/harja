@@ -14,15 +14,23 @@
                                                            urakka-id alkupvm loppupvm
                                                            (if toimenpide-id true false) toimenpide-id))
 
-(defn muodosta-raportti-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
-                                                                    hallintayksikko-id alkupvm loppupvm
-                                                                    (if toimenpide-id true false) toimenpide-id))
+(defn muodosta-raportti-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
+  (if urakoittain?
+    (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
+                                                                                       hallintayksikko-id alkupvm loppupvm
+                                                                                       (if toimenpide-id true false) toimenpide-id)
+    (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
+                                                                           hallintayksikko-id alkupvm loppupvm
+                                                                           (if toimenpide-id true false) toimenpide-id)))
 
-(defn muodosta-raportti-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
-                                                              alkupvm loppupvm
-                                                              (if toimenpide-id true false) toimenpide-id))
+(defn muodosta-raportti-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
+  (if urakoittain?
+    (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain db
+                                                                                 alkupvm loppupvm
+                                                                                 (if toimenpide-id true false) toimenpide-id)
+    (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
+                                                                     alkupvm loppupvm
+                                                                     (if toimenpide-id true false) toimenpide-id)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
   (roolit/vaadi-rooli user "tilaajan kayttaja")
@@ -41,12 +49,14 @@
                                                                  {:hallintayksikko-id hallintayksikko-id
                                                                   :alkupvm            alkupvm
                                                                   :loppupvm           loppupvm
-                                                                  :toimenpide-id      toimenpide-id})
+                                                                  :toimenpide-id      toimenpide-id
+                                                                  :urakoittain?       urakoittain?})
                             :koko-maa
                             (muodosta-raportti-koko-maalle db
                                                            {:alkupvm       alkupvm
                                                             :loppupvm      loppupvm
-                                                            :toimenpide-id toimenpide-id}))
+                                                            :toimenpide-id toimenpide-id
+                                                            :urakoittain?  urakoittain?}))
 
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
         otsikko (raportin-otsikko
@@ -60,7 +70,9 @@
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      (flatten (keep identity [{:leveys "25%" :otsikko "Tehtävä"}
+      (flatten (keep identity [(when urakoittain?
+                                 {:leveys "25%" :otsikko "Urakka"})
+                               {:leveys "25%" :otsikko "Tehtävä"}
                                {:leveys "5%" :otsikko "Yks."}
                                (when (= konteksti :urakka)
                                  [{:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
@@ -70,15 +82,17 @@
                                  [{:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
                                   {:leveys "15%" :otsikko "Toteutuneet kustannukset"}])]))
       (conj (mapv (fn [rivi]
-              (flatten (keep identity [(:nimi rivi)
-                                       (:yksikko rivi)
-                                       (when (= konteksti :urakka)
-                                         [(fmt/euro-opt (:yksikkohinta rivi))
-                                          (:suunniteltu_maara rivi)])
-                                       (:toteutunut_maara rivi)
-                                       (when (= konteksti :urakka)
-                                         [(fmt/euro-opt (:suunnitellut_kustannukset rivi))
-                                          (fmt/euro-opt (:toteutuneet_kustannukset rivi))])])))
+                    (flatten (keep identity [(when urakoittain?
+                                               (:urakka_nimi rivi))
+                                             (:nimi rivi)
+                                             (:yksikko rivi)
+                                             (when (= konteksti :urakka)
+                                               [(fmt/euro-opt (:yksikkohinta rivi))
+                                                (:suunniteltu_maara rivi)])
+                                             (:toteutunut_maara rivi)
+                                             (when (= konteksti :urakka)
+                                               [(fmt/euro-opt (:suunnitellut_kustannukset rivi))
+                                                (fmt/euro-opt (:toteutuneet_kustannukset rivi))])])))
                   naytettavat-rivit)
             ["Yhteensä" nil nil nil nil
              (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
