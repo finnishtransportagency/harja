@@ -75,11 +75,17 @@
                                         (assoc :toteumaprosentti toteumaprosentti))))
                                 (distinct (mapv :nimi kuukausittaiset-summat)))
         listattavat-pvmt (take-while (fn [pvm]
-                                             (or (t/equal? pvm (c/from-date loppupvm))
-                                                 (t/before? pvm (c/from-date loppupvm))))
-                                           (iterate (fn [pvm]
-                                                      (t/plus pvm (t/days 32)))
-                                                    (c/from-date alkupvm)))
+                                       ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
+                                       (not (t/after?
+                                              (t/local-date (t/year pvm)
+                                                            (t/month pvm)
+                                                            1)
+                                              (t/local-date (t/year (c/from-date loppupvm))
+                                                            (t/month (c/from-date loppupvm))
+                                                            1))))
+                                       (iterate (fn [pvm]
+                                                  (t/plus pvm (t/days 32)))
+                                                (c/from-date alkupvm)))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         otsikko (raportin-otsikko
                   (case konteksti
