@@ -67,6 +67,40 @@
     tulos))
 
 
+(defn poista-urakan-materiaalit
+  [hoitokaudet hoitokausi tulevat-hoitokaudet-mukana? urakka-id sopimus-id user c]
+  (if tulevat-hoitokaudet-mukana?
+    (do
+      (doseq [i hoitokaudet]
+        (if (or
+              (t/equal? (c/from-date (first i)) (c/from-date (first hoitokausi)))
+              (t/after? (c/from-date (first i)) (c/from-date (first hoitokausi))))
+          (do (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str i))
+              (q/poista-urakan-materiaalinkaytto! c (:id user)
+                                                  urakka-id sopimus-id
+                                                  (konv/sql-date (first i)) (konv/sql-date (second i)))))))
+    (do
+      (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str hoitokausi))
+      (q/poista-urakan-materiaalinkaytto! c (:id user)
+                                          urakka-id sopimus-id
+                                          (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))))))
+
+(defn poista-pohjavesialueiden-materiaalit-joita-ei-enaa-ole
+  [poistetut-materiaalit urakka-id sopimus-id user c]
+  (doseq [{:keys [alkupvm loppupvm materiaali pohjavesialue]} poistetut-materiaalit
+          :when pohjavesialue]
+    (q/poista-pohjavesialueen-materiaalinkaytto! c (:id user)
+                                                 urakka-id sopimus-id
+                                                 (konv/sql-date alkupvm) (konv/sql-date loppupvm)
+                                                 (:id materiaali) (:id pohjavesialue))))
+
+(defn poista-materiaalit-joita-ei-sisaan-tulevissa
+  [materiaalit materiaalit-sisaan user c]
+  (doseq [[avain {id :id}] materiaalit
+          :when (not (materiaalit-sisaan avain))]
+    (log/debug "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
+    (q/poista-materiaalinkaytto-id! c (:id user) id)))
+
 (defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana?  materiaalit] :as tiedot}]
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
@@ -79,22 +113,7 @@
       (when (empty? materiaalit)
         (log/debug "YHTÄÄN MATERIAALIA EI SAATU, poistetaan materiaalit valitulta hoitokaudelta")
         (log/debug "Poistetaanko myös tulevilta? " tulevat-hoitokaudet-mukana?)
-
-        (if tulevat-hoitokaudet-mukana?
-          (do
-            (doseq [i hoitokaudet]
-              (if (or
-                    (t/equal? (c/from-date (first i)) (c/from-date (first hoitokausi)))
-                    (t/after? (c/from-date (first i)) (c/from-date (first hoitokausi))))
-                (do (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str i))
-                    (q/poista-urakan-materiaalinkaytto! c (:id user)
-                                                        urakka-id sopimus-id
-                                                        (konv/sql-date (first i)) (konv/sql-date (second i)))))))
-          (do
-            (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str hoitokausi))
-            (q/poista-urakan-materiaalinkaytto! c (:id user)
-                                                urakka-id sopimus-id
-                                                (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))))))
+        (poista-urakan-materiaalit hoitokaudet hoitokausi tulevat-hoitokaudet-mukana? urakka-id sopimus-id user c))
 
       (doseq [[hoitokausi materiaalit] (ryhmittele materiaalit)]
         (log/debug "PÄIVITETÄÄN saadut materiaalit")
@@ -110,18 +129,10 @@
 
           ;; Käydään läpi poistot
           ;; Poistetaan kaikki pohjavesialueen materiaalit, joita ei enää ole
-          (doseq [{:keys [alkupvm loppupvm materiaali pohjavesialue]} (filter :poistettu materiaalit)
-                  :when pohjavesialue]
-            (q/poista-pohjavesialueen-materiaalinkaytto! c (:id user)
-                                                  urakka-id sopimus-id
-                                                  (konv/sql-date alkupvm) (konv/sql-date loppupvm)
-                                                  (:id materiaali) (:id pohjavesialue)))
+          (poista-pohjavesialueiden-materiaalit-joita-ei-enaa-ole (filter :poistettu materiaalit) urakka-id sopimus-id user c)
 
           ;; Muille materiaaleille, poistetaan jos ei ole enää sisääntulevissa
-          (doseq [[avain {id :id}] materiaalit-kannassa
-                  :when (not (materiaalit-sisaan avain))]
-            (log/debug "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
-            (q/poista-materiaalinkaytto-id! c (:id user) id))
+          (poista-materiaalit-joita-ei-sisaan-tulevissa materiaalit-kannassa materiaalit-sisaan user c)
 
 
           ;; Käydään läpi frontin lähettämät uudet materiaalit

@@ -25,8 +25,3 @@
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-pohjavesialueet)
     this))
-
-                    
-
-  
-                                        
