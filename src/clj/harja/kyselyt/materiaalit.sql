@@ -44,6 +44,7 @@ FROM materiaalin_kaytto mk
   LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
   LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
 WHERE mk.urakka = :urakka AND
+      mk.poistettu = FALSE AND
       m.materiaalityyppi != 'talvisuola' :: materiaalityyppi;
 
 -- name: hae-urakassa-kaytetyt-materiaalit
