@@ -156,8 +156,7 @@
   toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
   [db user urakka-id toteumamateriaalit hoitokausi sopimus]
   
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
-                            urakka-id)
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (jdbc/with-db-transaction [c db]
                             (doseq [tm toteumamateriaalit]
                               ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
@@ -183,8 +182,7 @@
 
   Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
-                            (:urakka tiedot))
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka tiedot))
   (jdbc/with-db-transaction [c db]
                             (q/poista-toteuma-materiaali! c (:id user) (:id tiedot))
                             (when (:hk-alku tiedot)
@@ -214,7 +212,7 @@
      (:maara toteuma) (:id user))))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
