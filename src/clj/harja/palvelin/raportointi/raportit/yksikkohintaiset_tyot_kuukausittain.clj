@@ -134,7 +134,8 @@
                                {:leveys "20%" :otsikko "Tehtävä"}
                                {:leveys "5%" :otsikko "Yk\u00ADsik\u00ADkö"}
                                (mapv (fn [rivi]
-                                       {:otsikko (pvm/kuukausi-ja-vuosi (c/to-date rivi))})
+                                       {:otsikko (clojure.string/replace (pvm/kuukausi-ja-vuosi
+                                                                           (c/to-date rivi)) #"/" "/\u00AD")})
                                      listattavat-pvmt)
                                {:leveys "10%" :otsikko "Määrä yhteensä"}
                                (when (= konteksti :urakka)
