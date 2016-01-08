@@ -57,3 +57,14 @@
                                                  :loppupvm  (c/to-date (t/local-date 2030 10 10))}))]
     (is (not (empty? vastaus)))
     (is (every? #(> % 0) (map :toteutunut_maara vastaus)))))
+
+(deftest kuukausittaisten-summien-yhdistaminen-toimii
+  (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Kevätharjaus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1}
+               {:kuukausi 11 :vuosi 2005 :nimi "Kevätharjaus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 2}
+               {:kuukausi 12 :vuosi 2005 :nimi "Kevätharjaus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 3}]
+        vastaus (harja.palvelin.main/with-db  db
+                                              (raportti/muodosta-raportin-rivit rivit false))]
+    (is (= 1 (count vastaus)))
+    (is (= (get (first vastaus) "10 / 05") 1))
+    (is (= (get (first vastaus) "11 / 05") 2))
+    (is (= (get (first vastaus) "12 / 05") 3))))
