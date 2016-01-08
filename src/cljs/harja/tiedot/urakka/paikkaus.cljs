@@ -37,7 +37,7 @@
                                       (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                         (hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
 
-(defonce paikkausilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
+(defonce paikkausilmoitus-lomakedata (atom nil))            ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
 (defonce paikkauskohteet-kartalla
          (reaction (let [taso @karttataso-paikkauskohteet
@@ -47,23 +47,23 @@
                      (when (and taso
                                 (or kohderivit toteumarivit))
                        (kartalla-esitettavaan-muotoon
-                         (into []
-                               (mapcat (fn [kohde]
-                                         (keep (fn [kohdeosa]
-                                                 (assoc (merge kohdeosa
-                                                               (dissoc kohde :kohdeosat))
-                                                   :tila (or (:paikkausilmoitus_tila kohde) (:tila kohde))
-                                                   :avoin? (= (:paikkauskohde_id kohde) avoin-paikkausilmoitus)
-                                                   :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
-                                                   :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
-                                               (:kohdeosat kohde))))
-                               (concat (map #(assoc % :paikkauskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                                            kohderivit)
-                                       toteumarivit))
-                         nil
-                         nil
-                         (comp (keep #(and (:sijainti %) %))
-                               (map #(assoc % :tyyppi-kartalla :paikkaus))))))))
+                         (concat (map #(assoc % :paikkauskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                                      kohderivit)
+                                 toteumarivit)
+                         @paikkausilmoitus-lomakedata
+                         [:paikkauskohde_id]
+                         (comp
+                           (mapcat (fn [kohde]
+                                     (keep (fn [kohdeosa]
+                                             (assoc (merge kohdeosa
+                                                           (dissoc kohde :kohdeosat))
+                                               :tila (or (:paikkausilmoitus_tila kohde) (:tila kohde))
+                                               :avoin? (= (:paikkauskohde_id kohde) avoin-paikkausilmoitus)
+                                               :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
+                                               :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
+                                           (:kohdeosat kohde))))
+                           (keep #(and (:sijainti %) %))
+                           (map #(assoc % :tyyppi-kartalla :paikkaus))))))))
 
 (defn kuvaile-kohteen-tila [tila]
   (case tila
