@@ -1,4 +1,4 @@
-(ns harja.tyokalut.json_validointi
+(ns harja.tyokalut.json-validointi
   (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]

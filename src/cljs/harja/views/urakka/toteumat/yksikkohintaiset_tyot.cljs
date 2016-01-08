@@ -23,7 +23,8 @@
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.kartta :as kartta]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -131,8 +132,7 @@
     (komp/luo
       (fn [ur]
         [:div.toteuman-tiedot
-         [:button.nappi-toissijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)}
-          (ikonit/chevron-left) " Takaisin toteumaluetteloon"]
+         [napit/takaisin "Takaisin toteumaluetteloon" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)]
          (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
            (if jarjestelman-lisaama-toteuma?
              [:h3 "Tarkastele toteumaa"]
@@ -140,12 +140,12 @@
            [:h3 "Luo uusi toteuma"])
 
          [lomake {:luokka       :horizontal
-                  :voi-muokata? (and (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                  :voi-muokata? (and (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
                                      (not jarjestelman-lisaama-toteuma?))
                   :muokkaa!     (fn [uusi]
                                   (log "Muokataan toteumaa: " (pr-str uusi))
                                   (reset! lomake-toteuma uusi))
-                  :footer       (when (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                  :footer       (when (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
                                   [harja.ui.napit/palvelinkutsu-nappi
                                    "Tallenna toteuma"
                                    #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
@@ -183,7 +183,7 @@
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
           @lomake-toteuma]
-         (when-not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+         (when-not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
            "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")]))))
 
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
@@ -260,7 +260,7 @@
          [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
          [:button.nappi-ensisijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
-                                      :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka)))}
+                                      :disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}
           (ikonit/plus) " Lisää toteuma"]
 
          [grid/grid

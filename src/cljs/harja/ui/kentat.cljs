@@ -190,13 +190,15 @@
                   ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
                   ;; numeron syöttö (esim. "4,") ennen desimaalin kirjoittamista ylikirjoittuu
                   ;; Lisäksi esim. "4,0" parsitaan float-arvona kokonaisluvuksi 4, jolloin lukua "4,01" ei voi kirjoittaa.
-                  (let [uusi (str @data)]
-                    (if (or (and (gstr/startsWith olemassaoleva-teksti uusi)
-                                 (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi))))
-                            (when-not (:vaadi-ei-negatiivinen? kentta)
-                              (= olemassaoleva-teksti (str "-" uusi))))
-                      olemassaoleva-teksti
-                      uusi)))))
+                  (if (nil? @data)
+                    ""
+                    (let [uusi-teksti (str @data)]
+                      (if (or (and (gstr/startsWith olemassaoleva-teksti uusi-teksti)
+                                   (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi-teksti))))
+                              (when-not (:vaadi-ei-negatiivinen? kentta)
+                                (= olemassaoleva-teksti (str "-" uusi-teksti))))
+                        olemassaoleva-teksti
+                        uusi-teksti))))))
 
        :reagent-render
        (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
@@ -571,7 +573,6 @@
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
 
-        edellinen-extent (atom nil)
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (kartta/poista-geometria! :tr-valittu-osoite)
@@ -589,9 +590,7 @@
                                                                      :type :tack-icon
                                                                      :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
                                                                      :zindex 6)
-                                                             :type :tr-valittu-osoite}))
-                                 (let [e (geo/extent arvo)]
-                                   (reset! edellinen-extent e))))))]
+                                                             :type :tr-valittu-osoite}))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go (loop []
@@ -620,7 +619,9 @@
       (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
-                   (kartta/poista-geometria! :tr-valittu-osoite)))
+                   (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
+                   (kartta/poista-geometria! :tr-valittu-osoite)
+                   (kartta/zoomaa-geometrioihin)))
 
       (fn [{:keys [lomake? sijainti]} data]
         (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data

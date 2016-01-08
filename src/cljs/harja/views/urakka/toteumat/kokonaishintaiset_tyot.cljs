@@ -6,6 +6,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
+            [harja.views.kartta.popupit :as popupit]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -19,6 +20,9 @@
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
+
+(defn kokonaishintainen-reitti-klikattu [_ toteuma]
+  (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
 
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
   (let [tiedot (atom nil)]
@@ -34,8 +38,7 @@
           {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
           {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
           {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
-         
-         @tiedot]))))
+         (sort-by :alkanut @tiedot)]))))
 
 (defn tee-taulukko []
   (let [toteumat (into [] (map-indexed ; Summatuilla riveillä ei ole yksilöivää id:tä, generoidaan omat
@@ -86,9 +89,14 @@
 
 (defn kokonaishintaiset-toteumat []
   (komp/luo
+    (komp/kuuntelija :toteuma-klikattu kokonaishintainen-reitti-klikattu)
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
 
     (fn []
       [:span
        [kartta/kartan-paikka]
        [kokonaishintaisten-toteumien-listaus]])))
+
+(def tyhjenna-popupit-kun-filtterit-muuttuu (run!
+                                              @tiedot/haetut-toteumat
+                                              (kartta/poista-popup!)))

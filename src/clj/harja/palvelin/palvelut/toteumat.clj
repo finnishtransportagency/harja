@@ -179,7 +179,7 @@
 (defn tallenna-toteuma-ja-yksikkohintaiset-tehtavat
   "Tallentaa toteuman. Palauttaa sen ja tehtävien summat."
   [db user toteuma]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus (:urakka-id toteuma))
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [c db]
     (let [id
@@ -248,9 +248,7 @@
         (q/listaa-urakan-hoitokauden-erilliskustannukset db urakka-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
 
 (defn tallenna-erilliskustannus [db user ek]
-  (roolit/vaadi-rooli-urakassa user
-                               roolit/toteumien-kirjaus
-                               (:urakka-id ek))
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka-id ek))
   (jdbc/with-db-transaction [c db]
     (let [parametrit [c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
                       (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
@@ -363,8 +361,7 @@
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   materiaalit/tallenna-toteumamateriaaleja! funktioon (todnäk)"
   [db user t toteumamateriaalit hoitokausi sopimus]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
-                               (:urakka t))
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka t))
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
   (jdbc/with-db-transaction [c db]
     ;; Jos toteumalla on positiivinen id, toteuma on olemassa
@@ -438,8 +435,7 @@
   "Poistaa toteuma-tehtävän id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
   {:urakka X, :id [A, B, ..]}"
   [db user tiedot]
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus
-                               (:urakka tiedot))
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka tiedot))
   (let [tehtavaid (:id tiedot)]
     (log/debug "Merkitään tehtava: " tehtavaid " maksuerä likaiseksi")
     (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! db tehtavaid)

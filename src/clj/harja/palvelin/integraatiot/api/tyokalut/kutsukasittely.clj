@@ -2,7 +2,7 @@
   "API:n kutsujen käsittely funktiot"
   (:require [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
-            [harja.tyokalut.json_validointi :as json]
+            [harja.tyokalut.json-validointi :as json]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.kayttajat :as q]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]

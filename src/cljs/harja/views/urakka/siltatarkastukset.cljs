@@ -23,7 +23,8 @@
             [harja.pvm :as pvm]
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
-            [harja.asiakas.tapahtumat :as tapahtumat])
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -246,9 +247,7 @@
                                               (siltatarkastusten-rivit tark muut)
                                               [])))]
         [:div.siltatarkastukset
-         [:button.nappi-toissijainen {:on-click #(reset! st/valittu-silta nil)
-                                      :style    {:display "block"}}
-          (ikonit/chevron-left) " Takaisin siltaluetteloon"]
+         [napit/takaisin "Takaisin siltaluetteloon" #(reset! st/valittu-silta nil)]
 
          [sillan-perustiedot @st/valittu-silta]
 
@@ -331,9 +330,7 @@
     (komp/luo
       (fn []
         [:div.uusi-siltatarkastus
-         [:button.nappi-toissijainen {:on-click #(reset! uuden-syottaminen false)
-                                      :style {:display "block"}}
-          (ikonit/chevron-left) " Palaa tallentamatta"]
+         [napit/takaisin "Palaa tallentamatta" #(reset! uuden-syottaminen false)]
         [:h3 "Luo uusi siltatarkastus"]
          [lomake {:luokka   :horizontal
                   :virheet  lomakkeen-virheet

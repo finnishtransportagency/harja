@@ -144,11 +144,10 @@
               toimenpideinstanssit @u/urakan-toimenpideinstanssit
               jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
               lomaketta-voi-muokata? (and
-                                       (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                                       (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
                                        (not jarjestelman-lisaama-toteuma?))]
           [:div.muun-tyon-tiedot
-           [:button.nappi-toissijainen {:on-click #(reset! muut-tyot/valittu-toteuma nil)}
-            (ikonit/chevron-left) " Takaisin muiden töiden luetteloon"]
+           [napit/takaisin " Takaisin muiden töiden luetteloon" #(reset! muut-tyot/valittu-toteuma nil)]
            (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
              (if lomaketta-voi-muokata?
                [:h3 "Muokkaa toteumaa"]
@@ -158,7 +157,7 @@
                     :voi-muokata? lomaketta-voi-muokata?
                     :muokkaa!     (fn [uusi]
                                     (reset! muokattu uusi))
-                    :footer       (when (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+                    :footer       (when (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
                                     [:span
                                      [napit/palvelinkutsu-nappi
                                       " Tallenna toteuma"
@@ -345,7 +344,7 @@
              ]
 
             @muokattu]
-           (when-not (roolit/rooli-urakassa? roolit/toteumien-kirjaus (:id @nav/valittu-urakka))
+           (when-not (roolit/voi-kirjata-toteumia?  (:id @nav/valittu-urakka))
              "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")])))))
 
 (defn muut-tyot-toteumalistaus
@@ -382,8 +381,7 @@
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
            [:button.nappi-ensisijainen {:on-click #(reset! muut-tyot/valittu-toteuma {})
-                                        :disabled (not (roolit/rooli-urakassa? roolit/toteumien-kirjaus
-                                                                               (:id @nav/valittu-urakka)))}
+                                        :disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}
             (ikonit/plus) " Lisää toteuma"]
 
            [grid/grid
