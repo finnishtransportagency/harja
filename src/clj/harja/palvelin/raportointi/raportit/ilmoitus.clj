@@ -14,38 +14,6 @@
             [harja.pvm :as pvm]))
 
 
-(defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan ilmoitukset raporttia varten. Urakka-id: " urakka-id
-             " alkupvm: " alkupvm " loppupvm: " loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [;; [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
-        ;; haetaan urakan konttekstissa aina kuukauden tiedot. Sopii yhteen työmaakokouskäytännön kanssa.
-        ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
-                      db user nil urakka-id +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "")
-        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
-    ilmoitukset))
-
-(defn muodosta-ilmoitusraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
-  (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
-                      db user hallintayksikko-id nil +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "")
-        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
-    ilmoitukset))
-
-(defn muodosta-ilmoitusraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
-  (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
-                      db user nil nil +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "")
-        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
-    ilmoitukset))
-
-
-
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
