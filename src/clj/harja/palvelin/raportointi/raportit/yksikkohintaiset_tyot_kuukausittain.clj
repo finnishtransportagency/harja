@@ -80,31 +80,41 @@
                               kuukausittaiset-summat)))
         (into #{} (map :nimi kuukausittaiset-summat))))))
 
+(defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id
+                                          urakoittain?]}]
+  (case konteksti
+    :urakka
+    (hae-tehtavat-urakalle db
+                           {:urakka-id     urakka-id
+                            :alkupvm       alkupvm
+                            :loppupvm      loppupvm
+                            :toimenpide-id toimenpide-id})
+    :hallintayksikko
+    (hae-tehtavat-hallintayksikolle db
+                                    {:hallintayksikko-id hallintayksikko-id
+                                     :alkupvm            alkupvm
+                                     :loppupvm           loppupvm
+                                     :toimenpide-id      toimenpide-id
+                                     :urakoittain?       urakoittain?})
+    :koko-maa
+    (hae-tehtavat-koko-maalle db
+                              {:alkupvm       alkupvm
+                               :loppupvm      loppupvm
+                               :toimenpide-id toimenpide-id
+                               :urakoittain?  urakoittain?})))
+
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
+  (log/debug "User on: " user)
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        kuukausittaiset-summat (case konteksti
-                                 :urakka
-                                 (hae-tehtavat-urakalle db
-                                                        {:urakka-id     urakka-id
-                                                         :alkupvm       alkupvm
-                                                         :loppupvm      loppupvm
-                                                         :toimenpide-id toimenpide-id})
-                                 :hallintayksikko
-                                 (hae-tehtavat-hallintayksikolle db
-                                                                 {:hallintayksikko-id hallintayksikko-id
-                                                                  :alkupvm            alkupvm
-                                                                  :loppupvm           loppupvm
-                                                                  :toimenpide-id      toimenpide-id
-                                                                  :urakoittain?       urakoittain?})
-                                 :koko-maa
-                                 (hae-tehtavat-koko-maalle db
-                                                           {:alkupvm       alkupvm
-                                                            :loppupvm      loppupvm
-                                                            :toimenpide-id toimenpide-id
-                                                            :urakoittain?  urakoittain?}))
+        kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti     konteksti
+                                                               :urakka-id     urakka-id
+                                                               :alkupvm       alkupvm
+                                                               :loppupvm      loppupvm
+                                                               :toimenpide-id toimenpide-id
+                                                               :urakoittain?  urakoittain?})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
         listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
