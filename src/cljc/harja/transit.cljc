@@ -21,8 +21,9 @@
            (tag [_ v] "dt")
            (rep [_ v] (pvm/pvm-aika-sek v))))
 
-(def write-optiot {:handlers
-                   #?(:clj
+#?(:clj
+   (def write-optiot {:handlers
+
                       {java.util.Date
                        (t/write-handler (constantly "dt")
                                         #(.format (SimpleDateFormat. +fi-date-time-format+) %))
@@ -34,17 +35,19 @@
                        (t/write-handler (constantly "pp") geo/pg->clj)
 
                        harja.domain.roolit.EiOikeutta
-                       (t/write-handler (constantly "eo") #(:syy %))}
+                       (t/write-handler (constantly "eo") #(:syy %))}})
                       
-                      :cljs
+   :cljs
+   (def write-optiot {:handlers
                       {DateTime (DateTimeHandler.)
-                       UtcDateTime (DateTimeHandler.)})})
+                       UtcDateTime (DateTimeHandler.)}}))
 
-(def read-optiot {:handlers
-                  #?(:clj
-                     {"dt" (t/read-handler #(.parse (SimpleDateFormat. +fi-date-time-format+) %))}
+#?(:clj
+   (def read-optiot {:handlers
+                     {"dt" (t/read-handler #(.parse (SimpleDateFormat. +fi-date-time-format+) %))}})
 
-                     :cljs
+   :cljs
+   (def read-optiot {:handlers
                      {"dt" #(pvm/->pvm-aika-sek %)
 
                       ;; Serveri lähettää java.math.BigDecimal typen doubleksi
@@ -56,7 +59,7 @@
                       "pp" js->clj
 
                       ;; EiOikeutta tulee serveriltä "eo" tägillä ja pelkkänä syy stringiä
-                      "eo" #(roolit/->EiOikeutta %)})})
+                      "eo" #(roolit/->EiOikeutta %)}}))
 
 
 (defn clj->transit

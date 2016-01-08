@@ -172,7 +172,7 @@
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
              ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
-  (roolit/vaadi-rooli-urakassa user roolit/toteumien-kirjaus urakka-id)
+  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (skeema/validoi pot/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
 
   (jdbc/with-db-transaction [c db]
