@@ -86,7 +86,8 @@
   (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1 :urakka_id 1 :urakka_nimi "Sepon urakka"}
                {:kuukausi 11 :vuosi 2005 :nimi "Suolaus" :yksikko "kg" :suunniteltu_maara 1 :toteutunut_maara 2 :urakka_id 1 :urakka_nimi "Sepon urakka"}
                {:kuukausi 12 :vuosi 2005 :nimi "Suolaus" :yksikko "kg" :suunniteltu_maara 1 :toteutunut_maara 666 :urakka_id 1 :urakka_nimi "Sepon urakka"}
-               {:kuukausi 12 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 3 :urakka_id 2 :urakka_nimi "Paavon urakka"}]
+               {:kuukausi 12 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 3 :urakka_id 2 :urakka_nimi "Paavon urakka"}
+               {:kuukausi 12 :vuosi 2006 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 123 :urakka_id 2 :urakka_nimi "Paavon urakka"}]
         vastaus (harja.palvelin.main/with-db db
                                              (raportti/muodosta-raportin-rivit rivit true))]
     (is (= 3 (count vastaus)))
@@ -102,4 +103,5 @@
       (is (= (get sepon-auraus "10 / 05") 1))
       (is (= (get sepon-suolaus "11 / 05") 2))
       (is (= (get sepon-suolaus "12 / 05") 666))
-      (is (= (get paavon-auraus "12 / 05") 3)))))
+      (is (= (get paavon-auraus "12 / 05") 3))
+      (is (= (get paavon-auraus "12 / 06") 123)))))
