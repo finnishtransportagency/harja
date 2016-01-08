@@ -80,7 +80,7 @@
         aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
         ikoni (cond
-                lopetettu? (karttakuva "kysely-tack-harmaa") ;; TODO Lisää harmaat ikonit kun valmistuvat.
+                lopetettu? (karttakuva "kysely-tack-harmaa")
                 aloitettu? (karttakuva "kysely-tack-violetti")
                 :else (karttakuva "kysely-tack-punainen"))]
     [(assoc ilmoitus
@@ -100,7 +100,7 @@
         vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
         ikoni (cond
-                lopetettu? (karttakuva "toimenpidepyynto-tack-harmaa") ;; TODO
+                lopetettu? (karttakuva "toimenpidepyynto-tack-harmaa")
                 vastaanotettu? (karttakuva "toimenpidepyynto-tack-violetti")
                 :else (karttakuva "toimenpidepyynto-tack-punainen"))]
     [(assoc ilmoitus
@@ -147,7 +147,8 @@
     [(assoc tarkastus
        :type :tarkastus
        :nimi (or (:nimi tarkastus)
-                 (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")"))
+                 (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) " ("
+                      (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")"))
        :selite {:teksti (str "Tarkastus (" (laatupoikkeamat/kuvaile-tekija (:tekija tarkastus)) ")")
                 :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
        :alue (tack-icon
