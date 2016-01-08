@@ -23,6 +23,27 @@
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
+(deftest raportin-suoritus-hallintayksikolle-toimii
+  (let [vastaus (harja.palvelin.main/with-db  db
+                                              (raportti/suorita
+                                                db
+                                                +kayttaja-jvh+
+                                                {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                                 :alkupvm   (c/to-date (t/local-date 2005 10 10))
+                                                 :loppupvm  (c/to-date (t/local-date 2010 10 10))}))]
+    (is (vector? vastaus))
+    (is (= :raportti (first vastaus)))))
+
+(deftest raportin-suoritus-koko-maalle-toimii
+  (let [vastaus (harja.palvelin.main/with-db  db
+                                              (raportti/suorita
+                                                db
+                                                +kayttaja-jvh+
+                                                {:alkupvm   (c/to-date (t/local-date 2005 10 10))
+                                                 :loppupvm  (c/to-date (t/local-date 2010 10 10))}))]
+    (is (vector? vastaus))
+    (is (= :raportti (first vastaus)))))
+
 (deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (harja.palvelin.main/with-db  db
                                             (raportti/muodosta-raportti-urakalle
