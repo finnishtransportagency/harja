@@ -143,7 +143,7 @@
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
 
 (def kuukausi-ja-vuosi-fmt
-  (luo-format "MM/yy"))
+  (luo-format "MM / yy"))
 
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
@@ -188,7 +188,7 @@
   (formatoi iso8601-aikaleimalla pvm))
 
 (defn kuukausi-ja-vuosi
-  "Formatoi MM/yy lyhyen vuosi ja kuukausi tekstin. Esim \"01/15\" tammikuulle 2015."
+  "Formatoi MM/yy lyhyen vuosi ja kuukausi tekstin. Esim \"0115\" tammikuulle 2015."
   [pvm]
   (formatoi kuukausi-ja-vuosi-fmt pvm))
 
