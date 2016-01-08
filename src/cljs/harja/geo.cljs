@@ -24,6 +24,12 @@
 (defn laajenna-extent [[minx miny maxx maxy] d]
   [(- minx d) (- miny d) (+ maxx d) (+ maxy d)])
 
+(defn extent-keskipiste [[minx miny maxx maxy]]
+  (let [width (- maxx minx)
+        height (- maxy miny)]
+    [(+ minx (/ width 2))
+     (+ miny (/ height 2))]))
+
 (defn- pisteet
   "Palauttaa annetun geometrian pisteet sekvenssinä"
   [{type :type :as g}]
