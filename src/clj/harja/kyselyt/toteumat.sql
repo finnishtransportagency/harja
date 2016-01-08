@@ -313,6 +313,7 @@ SELECT exists(
 SELECT
   id,
   tyyppi,
+  urakka,
   sopimus,
   toimenpideinstanssi,
   pvm,
@@ -321,26 +322,24 @@ SELECT
   lisatieto,
   luotu,
   luoja,
-  kuukauden_indeksikorotus(pvm, indeksin_nimi, rahasumma) AS indeksikorjattuna
+  kuukauden_indeksikorotus(pvm, indeksin_nimi, rahasumma, urakka) AS indeksikorjattuna
 FROM erilliskustannus
-WHERE sopimus IN (SELECT id
-                  FROM sopimus
-                  WHERE urakka = :urakka)
-      AND pvm >= :alkupvm AND pvm <= :loppupvm AND poistettu = FALSE;
+WHERE urakka = :urakka
+      AND pvm >= :alkupvm AND pvm <= :loppupvm AND poistettu IS NOT TRUE;
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
 INSERT
 INTO erilliskustannus
-(tyyppi, sopimus, toimenpideinstanssi, pvm,
+(tyyppi, urakka, sopimus, toimenpideinstanssi, pvm,
  rahasumma, indeksin_nimi, lisatieto, luotu, luoja)
-VALUES (:tyyppi :: erilliskustannustyyppi, :sopimus, :toimenpideinstanssi, :pvm,
+VALUES (:tyyppi :: erilliskustannustyyppi, :urakka, :sopimus, :toimenpideinstanssi, :pvm,
         :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja);
 
 -- name: paivita-erilliskustannus!
 -- Päivitä erilliskustannus
 UPDATE erilliskustannus
-SET tyyppi  = :tyyppi :: erilliskustannustyyppi, sopimus = :sopimus, toimenpideinstanssi = :toimenpideinstanssi,
+SET tyyppi  = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sopimus = :sopimus, toimenpideinstanssi = :toimenpideinstanssi,
   pvm       = :pvm,
   rahasumma = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(),
   muokkaaja = :muokkaaja,

@@ -1,7 +1,6 @@
 (ns harja.views.urakka.toteumat.erilliskustannukset
   "Urakan 'Toteumat' välilehden Erilliskustannuksien osio"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
@@ -23,8 +22,6 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<! >! chan]]
-            [clojure.string :as str]
-            [cljs-time.core :as t]
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
@@ -36,7 +33,8 @@
 (defonce valittu-kustannus (atom nil))
 
 (defn tallenna-erilliskustannus [muokattu]
-  (go (let [sopimus-id (first (:sopimus muokattu))
+  (go (let [urakka-id (:id @nav/valittu-urakka)
+            sopimus-id (first (:sopimus muokattu))
             tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
             tyyppi (name (:tyyppi muokattu))
             indeksi (if (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
@@ -50,6 +48,7 @@
                                                           :urakka-id (:id @nav/valittu-urakka)
                                                           :alkupvm (first @u/valittu-hoitokausi)
                                                           :loppupvm (second @u/valittu-hoitokausi)
+                                                          :urakka urakka-id
                                                           :sopimus sopimus-id
                                                           :toimenpideinstanssi tpi-id
                                                           :tyyppi tyyppi

@@ -250,7 +250,7 @@
 (defn tallenna-erilliskustannus [db user ek]
   (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka-id ek))
   (jdbc/with-db-transaction [c db]
-    (let [parametrit [c (:tyyppi ek) (:sopimus ek) (:toimenpideinstanssi ek)
+    (let [parametrit [c (:tyyppi ek) (:urakka ek) (:sopimus ek) (:toimenpideinstanssi ek)
                       (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
       (if (not (:id ek))
         (apply q/luo-erilliskustannus<! parametrit)
