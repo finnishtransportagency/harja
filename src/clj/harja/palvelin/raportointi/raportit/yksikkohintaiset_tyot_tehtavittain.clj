@@ -9,12 +9,12 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]))
 
-(defn muodosta-raportti-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
+(defn hae-summatut-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
   (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
                                                            urakka-id alkupvm loppupvm
                                                            (if toimenpide-id true false) toimenpide-id))
 
-(defn muodosta-raportti-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
+(defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
                                                                                        hallintayksikko-id alkupvm loppupvm
@@ -23,7 +23,7 @@
                                                                            hallintayksikko-id alkupvm loppupvm
                                                                            (if toimenpide-id true false) toimenpide-id)))
 
-(defn muodosta-raportti-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
+(defn hae-summatut-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain db
                                                                                  alkupvm loppupvm
@@ -39,21 +39,21 @@
                         :default :koko-maa)
         naytettavat-rivit (case konteksti
                             :urakka
-                            (muodosta-raportti-urakalle db
-                                                        {:urakka-id     urakka-id
+                            (hae-summatut-tehtavat-urakalle db
+                                                            {:urakka-id     urakka-id
                                                          :alkupvm       alkupvm
                                                          :loppupvm      loppupvm
                                                          :toimenpide-id toimenpide-id})
                             :hallintayksikko
-                            (muodosta-raportti-hallintayksikolle db
-                                                                 {:hallintayksikko-id hallintayksikko-id
+                            (hae-summatut-tehtavat-hallintayksikolle db
+                                                                     {:hallintayksikko-id hallintayksikko-id
                                                                   :alkupvm            alkupvm
                                                                   :loppupvm           loppupvm
                                                                   :toimenpide-id      toimenpide-id
                                                                   :urakoittain?       urakoittain?})
                             :koko-maa
-                            (muodosta-raportti-koko-maalle db
-                                                           {:alkupvm       alkupvm
+                            (hae-summatut-tehtavat-koko-maalle db
+                                                               {:alkupvm       alkupvm
                                                             :loppupvm      loppupvm
                                                             :toimenpide-id toimenpide-id
                                                             :urakoittain?  urakoittain?}))

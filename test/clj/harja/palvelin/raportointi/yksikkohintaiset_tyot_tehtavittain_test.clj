@@ -47,7 +47,7 @@
 
 (deftest tehtavakohtaisten-summien-haku-koko-maalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (harja.palvelin.main/with-db  db
-                                            (raportti/muodosta-raportti-koko-maalle
+                                            (raportti/hae-summatut-tehtavat-koko-maalle
                                               db
                                               {:alkupvm   (c/to-date (t/local-date 2000 10 10))
                                                :loppupvm  (c/to-date (t/local-date 2030 10 10))}))]
@@ -61,7 +61,7 @@
 
 (deftest tehtavakohtaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (harja.palvelin.main/with-db  db
-                                            (raportti/muodosta-raportti-urakalle
+                                            (raportti/hae-summatut-tehtavat-urakalle
                                               db
                                               {:konteksti :urakka
                                                :urakka-id (hae-oulun-alueurakan-2005-2010-id)
