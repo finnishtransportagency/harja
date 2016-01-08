@@ -81,3 +81,23 @@
       (is (= (get auraus "10 / 05") 1))
       (is (= (get auraus "11 / 05") 2))
       (is (= (get suolaus "11 / 05") 3)))))
+
+(deftest kuukausittaisten-summien-yhdistaminen-toimii-urakoittain-usealle-tehtavalle
+  (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1 :urakka_id 1 :urakka_nimi "Sepon urakka"}
+               {:kuukausi 11 :vuosi 2005 :nimi "Suolaus" :yksikko "kg" :suunniteltu_maara 1 :toteutunut_maara 2 :urakka_id 1 :urakka_nimi "Sepon urakka"}
+               {:kuukausi 12 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 3 :urakka_id 2 :urakka_nimi "Paavon urakka"}]
+        vastaus (harja.palvelin.main/with-db db
+                                             (raportti/muodosta-raportin-rivit rivit true))]
+    (is (= 3 (count vastaus)))
+    (let [sepon-auraus (first (filter #(and (= (:nimi %) "Auraus")
+                                            (= (:urakka_nimi %) "Sepon urakka"))
+                                      vastaus))
+          sepon-suolaus (first (filter #(and (= (:nimi %) "Suolaus")
+                                             (= (:urakka_nimi %) "Sepon urakka"))
+                                       vastaus))
+          paavon-auraus (first (filter #(and (= (:nimi %) "Auraus")
+                                             (= (:urakka_nimi %) "Paavon urakka"))
+                                       vastaus))]
+      (is (= (get sepon-auraus "10 / 05") 1))
+      (is (= (get sepon-suolaus "11 / 05") 2))
+      (is (= (get paavon-auraus "12 / 05") 3)))))
