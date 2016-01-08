@@ -44,7 +44,22 @@
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
-(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
+
+(deftest tehtavakohtaisten-summien-haku-koko-maalle-palauttaa-testidatan-arvot-oikein
+  (let [rivit (harja.palvelin.main/with-db  db
+                                            (raportti/muodosta-raportti-koko-maalle
+                                              db
+                                              {:alkupvm   (c/to-date (t/local-date 2000 10 10))
+                                               :loppupvm  (c/to-date (t/local-date 2030 10 10))}))]
+
+    (is (> (count rivit) 5))
+    (let [ajorat (first (filter
+                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
+                          rivit))]
+      (log/debug ajorat)
+      (is (= (:toteutunut_maara ajorat) 78M)))))
+
+(deftest tehtavakohtaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (harja.palvelin.main/with-db  db
                                             (raportti/muodosta-raportti-urakalle
                                               db
