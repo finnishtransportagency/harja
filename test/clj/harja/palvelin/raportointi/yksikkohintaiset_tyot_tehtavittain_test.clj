@@ -22,3 +22,17 @@
                                                  :loppupvm  (c/to-date (t/local-date 2010 10 10))}))]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
+
+(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
+  (let [rivit (harja.palvelin.main/with-db  db
+                                            (raportti/muodosta-raportti-urakalle
+                                              db
+                                              {:konteksti :urakka
+                                               :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                                               :alkupvm   (c/to-date (t/local-date 2000 10 10))
+                                               :loppupvm  (c/to-date (t/local-date 2030 10 10))}))]
+    (is (not (empty? rivit)))
+    (let [ajorat (first (filter
+                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
+                          rivit))]
+      (is (= (:toteutunut_maara ajorat) 30M)))))
