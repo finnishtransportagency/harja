@@ -445,12 +445,15 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
     ;; nythän geometriat ovat täysin eri tasoissa
     ;; ehkäpä geometrioihin pitäisi saada extent tieto, jonka kartalla-esitettavaan-muotoon voisi tuottaa
     ;; ja asettaa metatiedoksi
-    (let [extent (reduce geo/yhdista-extent
-                         (keep #(-> meta :extent) (vals @tasot/geometriat)))
+    (doseq [[taso geometriat] @tasot/geometriat
+            :let [ext (-> geometriat meta :extent)]]
+      (log "EXTENT TASOLLA: " (pr-str taso) " => " (pr-str ext)))
+    (let [extent  (reduce geo/yhdista-extent
+                          (keep #(-> % meta :extent) (vals @tasot/geometriat)))
           extentin-margin-metreina 750]
-      (log "geometrioita suomen sisällä " (count geometriat))
-      (if-not (empty? geometriat)
-        (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
+      (log "EXTENT TASOISTA: " (pr-str extent))
+      (if extent
+        (keskita-kartta-alueeseen! (geo/laajenna-extent extent extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]

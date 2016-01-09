@@ -33,9 +33,10 @@
 
 (defn yhdista-extent
   "Yhdistää kaksi annettua extentiä ja palauttaa uuden extentin, johon molemmat mahtuvat"
-  [[e1-minx e1-miny e1-maxx e1-maxy] [e2-minx e2-miny e2-maxx e2-maxy]]
-  [(Math/min e1-minx e2-minx) (Math/min e1-miny e2-miny)
-   (Math/max e1-maxx e2-maxx) (Math/max e1-maxy e2-maxy)])
+  ([] nil)
+  ([[e1-minx e1-miny e1-maxx e1-maxy] [e2-minx e2-miny e2-maxx e2-maxy]]
+   [(Math/min e1-minx e2-minx) (Math/min e1-miny e2-miny)
+    (Math/max e1-maxx e2-maxx) (Math/max e1-maxy e2-maxy)]))
 
 (defn- pisteet
   "Palauttaa annetun geometrian pisteet sekvenssinä"
@@ -67,14 +68,17 @@ lopuksi kirjoittaa sen annettuun volatileen."
       (fn
         ([] (xf))
         ([result]
-         (vreset! extent-volatile [@minx @miny @maxx @maxy])
+         (vreset! extent-volatile
+                  (when @minx
+                    [@minx @miny @maxx @maxy]))
          (xf result))
         ([result input]
+         (log "LASKE-EXTENT-XF: " (pr-str input)) ; FIXME: poista kun kaikki käyttävät kartalla esitettävään muotoon paradigmaa
          (loop [minx- @minx
                 miny- @miny
                 maxx- @maxx
                 maxy- @maxy
-                [[x y] & pisteet] (pisteet input)]
+                [[x y] & pisteet] (pisteet (:alue input))]
            (if-not x
              (do (vreset! minx minx-)
                  (vreset! miny miny-)

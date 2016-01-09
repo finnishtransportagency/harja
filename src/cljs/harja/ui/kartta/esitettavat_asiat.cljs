@@ -5,7 +5,8 @@
             [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.ui.yleiset :refer [karttakuva]]))
+            [harja.ui.yleiset :refer [karttakuva]]
+            [harja.geo :as geo]))
 
 
 (defn- oletusalue [asia valittu?]
@@ -375,7 +376,11 @@
   ([asiat valittu tunniste]
    (kartalla-esitettavaan-muotoon asiat valittu tunniste nil))
   ([asiat valittu tunniste asia-xf]
-   (into []
-         (comp (or asia-xf identity)
-               (mapcat #(kartalla-xf % valittu (or tunniste [:id]))))
-         asiat)))
+   (let [extent (volatile! nil)]
+     (with-meta 
+       (into []
+             (comp (or asia-xf identity)
+                   (mapcat #(kartalla-xf % valittu (or tunniste [:id])))
+                   (geo/laske-extent-xf extent))
+             asiat)
+       {:extent @extent}))))
