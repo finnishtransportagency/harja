@@ -9,7 +9,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
-
+            [harja.geo :as geo]
+            
             [ol]
             [ol.Map]
             [ol.Attribution]
@@ -71,8 +72,6 @@
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
 
-(defn fit-bounds! [geometry]
-  (go (>! komento-ch [::fit-bounds geometry])))
 
 (defn show-popup! [lat-lng content]
   (go (>! komento-ch [::popup lat-lng content])))
@@ -309,17 +308,21 @@
 (defn aseta-zoom [zoom]
   (-> (.getView @the-kartta) (.setZoom zoom)))
 
+(defn- create-geometry-layer
+  "Create a new ol3 Vector layer with a vector source."
+  []
+  (ol.layer.Vector. #js {:source (ol.source.Vector.)}))
+
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
         [mml-spec & _] (:layers mapspec)
         mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
-        geometry-layer (ol.layer.Vector. #js {:source (ol.source.Vector.)})
         interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom false
                                                                   :dragPan        false})]
                       (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
                       oletukset)
-        map-optiot (clj->js {:layers       [mml geometry-layer]
+        map-optiot (clj->js {:layers       [mml]
                              :target       (:id mapspec)
                              :controls     (ol-control/defaults #js {})
                              :interactions interaktiot})
@@ -329,8 +332,7 @@
             openlayers-kartan-leveys
             (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
         _ (reset! the-kartta ol3)
-        view (:view mapspec)
-        zoom (:zoom mapspec)
+        extent (:extent mapspec)
         selection (:selection mapspec)
         item-geometry (or (:geometry-fn mapspec) identity)
         unmount-ch (chan)]
@@ -345,13 +347,7 @@
              (when-not (= ch unmount-ch)
                (nappaa-virhe
                 (case komento
-                  ::fit-bounds
-                  (let [{:keys [ol3 geometries-map]} (reagent/state this)
-                        view (.getView ol3)
-                        avain (geometria-avain (first args))
-                        [g _] (geometries-map avain)]
-                    (when g
-                      (keskita! ol3 g)))
+                  
                   ::popup
                   (let [[coordinate content] args]
                     (nayta-popup! this coordinate content))
@@ -380,15 +376,14 @@
                                        {:hover {:x x :y y :tooltip teksti}}))))
                (recur (alts! [komento-ch unmount-ch]))))
 
-    (.setView ol3 (ol.View. #js {:center  (clj->js @view)
-                                 :zoom    @zoom
+    (.setView ol3 (ol.View. #js {:center  (clj->js (geo/extent-keskipiste extent))
+                                 :resolution 1200 ;; FIXME: tämä tai :zoom on annettava, voidaanko extentistä laskea itse?
                                  :maxZoom 20
                                  :minZoom 5}))
 
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3            ol3
-                             :geometries-map {}
-                             :geometry-layer geometry-layer
+                             :geometry-layers {} ;; key => vector layer
                              :hover          nil
                              :unmount-ch     unmount-ch})
 
@@ -399,42 +394,16 @@
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
 
-    ;; Add callback for ol3 pos/zoom changes
-    ;; watcher for pos/zoom atoms
-
-    ;; TÄMÄ WATCHERI aiheuttaa nykimistä pannatessa
-    ;;(add-watch view ::view-update
-    ;,           (fn [_ _ old-view new-view]
-    ;;             ;;(.log js/console "change view: " (clj->js old-view) " => " (clj->js new-view) @zoom)
-    ;;             (when (not= old-view new-view)
-    ;;              (.setView ol3 (clj->js new-view) @zoom))))
-    (add-watch zoom ::zoom-update
-               (fn [_ _ old-zoom new-zoom]
-                 (let [view (.getView ol3)]
-                   (when (not= (.getZoom view) new-zoom)
-                     (.setZoom view new-zoom)))))
-
     (update-ol3-geometries this (:geometries mapspec))
 
-    ;; If the mapspec has an atom containing geometries, add watcher
-    ;; so that we update all Ol3JS objects
-    ;;(when-let [g (:geometries mapspec)]
-    ;;  (add-watch g ::geometries-update
-    ;;             (fn [_ _ _ new-items]
-    ;;               (update-ol3-geometries this new-items))))
-
-    (let [mount (:on-mount mapspec)]
+    (when-let [mount (:on-mount mapspec)]
       (mount (laske-kartan-alue ol3)))
 
-    (tapahtumat/julkaise! {:aihe :kartta-nakyy})
-    ))
+    (tapahtumat/julkaise! {:aihe :kartta-nakyy})))
 
 (defn ol3-will-unmount [this]
   (let [{:keys [ol3 geometries-map unmount-ch]} (reagent/state this)]
     (async/close! unmount-ch)))
-
-(defn- ol3-will-update [this [_ conf]]
-  (update-ol3-geometries this (-> conf :geometries)))
 
 (defn- ol3-did-update [this _]
   (let [uusi-leveys (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0))]
@@ -653,56 +622,97 @@
   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
 
 
-(defn- update-ol3-geometries [component items]
-  "Update the Ol3JS layers based on the data, mutates the Ol3JS map object."
-  (let [{:keys [ol3 geometries-map geometry-layer mapspec hover fit-bounds]} (reagent/state component)
-        geometry-fn (or (:geometry-fn mapspec) identity)
+(defn update-ol3-layer-geometries
+  "Given a vector of ol3 layer and map of current geometries and a sequence of new geometries,
+updates (creates/removes) the geometries in the layer to match the new items. Returns a new
+vector with the updates ol3 layer and map of geometries.
+If incoming layer & map vector is nil, a new ol3 layer will be created."
+  [ol3 geometry-fn [geometry-layer geometries-map] items]
+  (let [create? (nil? geometry-layer)
+        geometry-layer (if create? (create-geometry-layer) geometry-layer)
+        geometries-map (if create? {} geometries-map)
         geometries-set (into #{} (map geometria-avain) items)
         features (.getSource geometry-layer)]
 
-    ;;(log "GEOMETRY layer: " geometry-layer)
-    ;; Remove all Ol3JS shape objects that are no longer in the new geometries
+    (when create?
+      (.addLayer ol3 geometry-layer))
+    
+    ;; Remove all ol3 feature objects that are no longer in the new geometries
     (doseq [[avain [shape _]] (seq geometries-map)
             :when (not (geometries-set avain))]
       (.removeFeature features shape))
 
-    ;; Create new shapes for new geometries and update the geometries map
+    ;; Create new features for new geometries and update the geometries map
     (loop [new-geometries-map {}
            [item & items] items]
       (if-not item
-        ;; Update component state with the new geometries map
-        (reagent/set-state component {:geometries-map new-geometries-map})
-
+        ;; When all items are processed, return layer and new geometries map
+        [geometry-layer new-geometries-map]
+        
         (let [geom (geometry-fn item)
               avain (geometria-avain item)]
           (if-not geom
             (recur new-geometries-map items)
-            (let [shape (or (first (geometries-map avain))
-                            (when-let [new-shape (try
-                                                   (luo-feature geom)
-                                                   (catch js/Error e
-                                                     (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
-                                                     nil))]
-                              (.setId new-shape avain)
-                              (try
-                                (.addFeature features new-shape)
-                                (catch js/Error e
-                                  (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
+            (recur (assoc new-geometries-map avain
+                          [(or (first (geometries-map avain))
+                               (when-let [new-shape (try
+                                                      (luo-feature geom)
+                                                      (catch js/Error e
+                                                        (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+                                                        nil))]
+                                 (.setId new-shape avain)
+                                 (try
+                                   (.addFeature features new-shape)
+                                   (catch js/Error e
+                                     (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
 
-                              ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                              (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
-                                                        :sticker-icon :sticker-icon-line :clickable-area})
-                                (aseta-tyylit new-shape geom))
+                                 ;; ikoneilla on jo oma tyyli, luo-feature tekee
+                                 (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
+                                                           :sticker-icon :sticker-icon-line :clickable-area})
+                                   (aseta-tyylit new-shape geom))
 
-                              ;; FIXME: markereille pitää miettiä joku tapa, otetaanko ne new-geometries-map mukaan?
-                              ;; vai pitääkö ne antaa suoraan geometrian tyyppinä?
-                              #_(when (:marker geom)
-                                  (.addOverlay ol3 (luo-overlay (keskipiste (.getGeometry new-shape))
-                                                                [:div {:style {:font-size "200%"}} (ikonit/map-marker)])))
-                              new-shape))]
+                                 new-shape))
+                           item])
+                   items)))))))
 
-              (recur (assoc new-geometries-map avain [shape item]) items))))))))
+(defn- update-ol3-geometries [component geometries]
+  "Update the ol3 layers based on the data, mutates the ol3 map object."
+  (let [{:keys [ol3 geometry-layers mapspec]} (reagent/state component)
+        geometry-fn (or (:geometry-fn mapspec) identity)]
 
+    ;; Remove any layers that are no longer present
+    (doseq [[key [layer _]] geometry-layers
+            :when (nil? (get geometries key))]
+      (log "POISTETAAN KARTTATASO " (name key) " => " layer)
+      (.removeLayer ol3 layer))
+
+    ;; For each current layer, update layer geometries
+    (loop [new-geometry-layers {}
+           [layer & layers] (keys geometries)]
+      (if-not layer
+        (do
+          (log "Map layer item counts: "
+               (str/join ", "
+                         (map #(str (count (second (second %))) " " (name (first %))) (seq new-geometry-layers))))
+          (reagent/set-state component {:geometry-layers new-geometry-layers}))
+        (let [layer-geometries (get geometries layer)]
+          (if (nil? layer-geometries)
+            (recur new-geometry-layers layers)
+            (recur (assoc new-geometry-layers
+                          layer (update-ol3-layer-geometries ol3 geometry-fn
+                                                             (get geometry-layers layer)
+                                                             layer-geometries))
+                   layers)))))))
+
+
+(defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries}]]
+  (let [aiempi-extent (-> this reagent/state :extent)]
+    (when-not (identical? aiempi-extent extent)
+      (log "NÄYTÄ ALUE " (pr-str extent))
+      (.setTimeout js/window #(keskita-kartta-alueeseen! extent) 200)
+      (reagent/set-state this {:extent extent})))
+  
+  (update-ol3-geometries this geometries))
 
 ;;;;;;;;;
 ;; The OpenLayers 3 Reagent component.
@@ -712,10 +722,10 @@
   (reagent/create-class
     {:get-initial-state      (fn [_] {:mapspec mapspec})
      :component-did-mount    ol3-did-mount
-     :component-will-update  ol3-will-update
      :reagent-render         ol3-render
      :component-will-unmount ol3-will-unmount
-     :component-did-update   ol3-did-update}))
+     :component-did-update   ol3-did-update
+     :component-will-receive-props ol3-will-receive-props}))
 
 
 

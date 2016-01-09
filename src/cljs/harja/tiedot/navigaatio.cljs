@@ -31,7 +31,13 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
 
-(defonce kartalla-nakyva-alue (atom nil))
+(defonce kartan-extent (atom nil))
+
+(defonce kartalla-nakyva-alue ; FIXME: tämä edelleen pitää queryttää ol3:sta
+  (reaction
+   (let [[minx miny maxx maxy] @kartan-extent]
+     {:xmin minx :ymin miny
+      :xmax maxx :ymax maxy})))
 
 ;; Kartan koko voi olla
 ;; :hidden (ei näy mitään)
