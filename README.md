@@ -116,3 +116,8 @@ Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
 kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 > for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
+
+## Aja cloveragelle testikattavuusraportti
+Hae työkalu: https://github.com/jarnovayrynen/cloverage
+Työkalun cloverage/cloverage kansiossa aja "lein install"
+Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"

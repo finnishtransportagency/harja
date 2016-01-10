@@ -240,7 +240,8 @@
                                       :width      "100%"
                                       :z-index    100}}
       (if (= :S koko)
-        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right {:on-click #(nav/vaihda-kartan-koko! :L)}
+        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right
+         {:on-click #(nav/vaihda-kartan-koko! :L)}
          "Näytä kartta"]
         [:span
          (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
@@ -276,7 +277,7 @@
          [:div
           [:table
            [:tbody
-            (for [{:keys [img nimi vari teksti]}  selitteet]
+            (for [{:keys [img nimi vari teksti]} selitteet]
               ^{:key (str (or vari img) "_" nimi)}
               [:tr
                (if vari
@@ -399,14 +400,14 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
             (kaappaa-hiiri eventit))
     (go-loop [e (<! eventit)
               pisteet []]
-      (log "LINESTRING("
-           (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
-           ")")
-      (when e
-        (recur (<! eventit)
-               (if (= :click (:tyyppi e))
-                 (conj pisteet (:sijainti e))
-                 pisteet))))))
+             (log "LINESTRING("
+                  (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
+                  ")")
+             (when e
+               (recur (<! eventit)
+                      (if (= :click (:tyyppi e))
+                        (conj pisteet (:sijainti e))
+                        pisteet))))))
 
 (defn ^:export viivan-piirto-lopeta []
   (@viivan-piirto)
@@ -441,20 +442,23 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   valittuun hallintayksikköön tai urakkaan"
   []
   (when @pida-geometriat-nakyvilla?
-    ;; Tässä käydään läpi kaikki geometriat jotka ovat suomen sisällä
-    ;; nythän geometriat ovat täysin eri tasoissa
-    ;; ehkäpä geometrioihin pitäisi saada extent tieto, jonka kartalla-esitettavaan-muotoon voisi tuottaa
-    ;; ja asettaa metatiedoksi
-    (doseq [[taso geometriat] @tasot/geometriat
-            :let [ext (-> geometriat meta :extent)]]
-      (log "EXTENT TASOLLA: " (pr-str taso) " => " (pr-str ext)))
+
+    ;; printtaa tasojen extentit debuggausta varten
+    #_(doseq [[taso geometriat] @tasot/geometriat
+              :let [ext (-> geometriat meta :extent)]]
+        (log "EXTENT TASOLLA: " (pr-str taso) " => " (pr-str ext)))
+    
+    ;; Haetaan kaikkien tasojen extentit ja yhdistetään ne laajentamalla
+    ;; extentiä siten, että kaikki mahtuvat.
+    ;; Jos extentiä tasoista ei ole, zoomataan urakkaan tai hallintayksikköön.
     (let [extent  (reduce geo/yhdista-extent
                           (keep #(-> % meta :extent) (vals @tasot/geometriat)))
-          extentin-margin-metreina 750]
+          extentin-margin-metreina geo/pisteen-extent-laajennus]
       (log "EXTENT TASOISTA: " (pr-str extent))
       (if extent
         (keskita-kartta-alueeseen! (geo/laajenna-extent extent extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
+
 
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
@@ -484,6 +488,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 (defn kartta-openlayers []
   (komp/luo
 
+    {:component-did-mount
+     #(zoomaa-geometrioihin)}
     (komp/sisaan
       (fn [_]
         (zoomaa-geometrioihin)

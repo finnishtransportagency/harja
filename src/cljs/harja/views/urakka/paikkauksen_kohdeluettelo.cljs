@@ -24,7 +24,10 @@
 (defonce kohdeluettelo-valilehti (atom :paikkauskohteet))
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paikkauskohde-id (:paikkauskohde-id kohde)]
+  ;; FIXME Paikkauksessä ja päällystyksessä on sekaisin _id ja -id muotoa.
+  ;; Saattaapi olla iso refaktorointi että saa varmasti korjattua, mutta on aika pelottava potentiaalinen
+  ;; bugien lähde.
+  (let [paikkauskohde-id (or (:paikkauskohde_id kohde) (:paikkauskohde-id kohde))]
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paikkaus-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
@@ -45,6 +48,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
+    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn [ur]

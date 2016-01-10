@@ -64,7 +64,7 @@
              (->> materiaalit first second
                   (keep :kk)
                   sort
-                  (map (comp (fn [o] {:otsikko o :leveys kk-lev}) pvm/kuukausi-ja-vuosi)))
+                  (map (comp (fn [o] {:otsikko o :leveys kk-lev :luokka "grid-kk-sarake"}) pvm/kuukausi-ja-vuosi)))
 
              [{:otsikko "Määrä yhteensä" :leveys "8%"}
               {:otsikko "Tot-%" :leveys "8%"}

@@ -28,10 +28,6 @@
     (zipmap (map first m)
             (map second m))))
 
-(defn tarkista-skandit []
-  (->> (migraatiotiedostot)
-       (keep #(when (some {\ä \Ä \ö \Ö} %) %))))
-
 (defn nykyinen-branch []
   (as-> (:out (sh/sh "git" "branch")) res
     (str/split res #"\n")

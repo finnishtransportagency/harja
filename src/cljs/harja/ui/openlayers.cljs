@@ -305,10 +305,10 @@
 
 ;; Käytetään the-karttaa joka oli aiemmin "puhtaasti REPL-tunkkausta varten"
 (defn nykyinen-zoom-taso []
-  (-> (.getView @the-kartta) (.getZoom)))
+  (some-> @the-kartta (.getView) (.getZoom)))
 
 (defn aseta-zoom [zoom]
-  (-> (.getView @the-kartta) (.setZoom zoom)))
+  (some-> @the-kartta (.getView) (.setZoom zoom)))
 
 (defn- create-geometry-layer
   "Create a new ol3 Vector layer with a vector source."
