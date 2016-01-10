@@ -33,7 +33,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (defonce kartan-extent (atom nil))
 
-(defonce kartalla-nakyva-alue ; FIXME: tämä edelleen pitää queryttää ol3:sta
+(defonce kartalla-nakyva-alue
+  ;; Näkyvä alue reaktoi siihen mihin zoomataan, mutta kun käyttäjä
+  ;; muuttaa zoom-tasoa tai raahaa karttaa, se asetetaan näkyvään alueeseen.
   (reaction
    (let [[minx miny maxx maxy] @kartan-extent]
      {:xmin minx :ymin miny

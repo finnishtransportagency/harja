@@ -519,7 +519,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           ;; set width/height as CSS units, must set height as pixels!
           :height             (fmt/pikseleina @kartan-korkeus)
           :style              (when (= koko :S)
-                                {:display "none"})          ;;display none estää kartan korkeuden animoinnin suljettaessa
+                                ;; display none estää kartan korkeuden
+                                ;; animoinnin suljettaessa
+                                {:display "none"})
           :class              (when (or
                                      (= :hidden koko)
                                      (= :S koko))
@@ -531,12 +533,12 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :on-drag            (fn [item event]
                                 (paivita-extent item event)
                                 (t/julkaise! {:aihe :karttaa-vedetty}))
-          :on-mount           (fn [initialextent] (paivita-extent nil initialextent))
+          :on-mount           (fn [initialextent]
+                                (paivita-extent nil initialextent))
           :on-click           (fn [at]
                                 (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
                                 (poista-popup!))
           :on-select          (fn [item event]
-                                (log "KLIKATTU ITEM: " (pr-str item))
                                 (kun-geometriaa-klikattu item event)
                                 (.stopPropagation event)
                                 (.preventDefault event))
