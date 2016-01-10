@@ -46,10 +46,6 @@
                    [harja.makrot :refer [nappaa-virhe]]
                    [harja.loki :refer [mittaa-aika]]))
 
-;; PENDING:
-;; Tämä namespace kaipaa rakkautta... cleanup olisi tarpeen.
-;; Alunperin englanniksi Leafletille tehty karttaimplementaatio on kopioitu
-;; ja pala palalta portattu toiminnallitta ol3 päälle.
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
@@ -134,6 +130,7 @@
 
 (def suomen-extent
   "Suomalaisissa kartoissa olevan projektion raja-arvot."
+  ;; FIXME: tarkista, tämä näyttää olevan aivan liian laaja alue
   [-548576.000000, 6291456.000000, 1548576.000000, 8388608.000000])
 
 (def projektio (ol-proj/Projection. #js {:code   "EPSG:3067"
@@ -179,17 +176,22 @@
                                        :style        "default"
                                        :wrapX        true})}))
 
+(defn feature-geometria [feature]
+  (.get feature "harja-geometria"))
+
+(defn aseta-feature-geometria! [feature geometria]
+  (.set feature "harja-geometria" geometria))
+
+
 (defn- tapahtuman-geometria
-  "Hakee annetulle ol3 tapahtumalle geometrian. Jos monta löytyy, palauttaa viimeisen löytyneen."
+  "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen geometrian."
   [this e]
-  (let [geom (cljs.core/atom nil)
-        {:keys [ol3 geometries-map]} (reagent/state this)]
+  (let [geom (volatile! nil)
+        {:keys [ol3 geometry-layers]} (reagent/state this)]
     (.forEachFeatureAtPixel ol3 (.-pixel e)
                             (fn [feature layer]
-                              (when-let [g (some-> geometries-map
-                                                   (get (.getId feature))
-                                                   second)]
-                                (reset! geom g))))
+                              (vreset! geom (feature-geometria feature))
+                              true))
     @geom))
 
 (defn- laske-kartan-alue [ol3]
@@ -638,9 +640,9 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
       (.addLayer ol3 geometry-layer))
     
     ;; Remove all ol3 feature objects that are no longer in the new geometries
-    (doseq [[avain [shape _]] (seq geometries-map)
+    (doseq [[avain feature] (seq geometries-map)
             :when (not (geometries-set avain))]
-      (.removeFeature features shape))
+      (.removeFeature features feature))
 
     ;; Create new features for new geometries and update the geometries map
     (loop [new-geometries-map {}
@@ -654,25 +656,24 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
           (if-not geom
             (recur new-geometries-map items)
             (recur (assoc new-geometries-map avain
-                          [(or (first (geometries-map avain))
-                               (when-let [new-shape (try
-                                                      (luo-feature geom)
-                                                      (catch js/Error e
-                                                        (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
-                                                        nil))]
-                                 (.setId new-shape avain)
-                                 (try
-                                   (.addFeature features new-shape)
-                                   (catch js/Error e
-                                     (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
+                          (or (geometries-map avain)
+                              (when-let [new-shape (try
+                                                     (luo-feature geom)
+                                                     (catch js/Error e
+                                                       (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+                                                       nil))]
+                                (aseta-feature-geometria! new-shape item)
+                                (try
+                                  (.addFeature features new-shape)
+                                  (catch js/Error e
+                                    (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
 
-                                 ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                                 (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
-                                                           :sticker-icon :sticker-icon-line :clickable-area})
-                                   (aseta-tyylit new-shape geom))
+                                ;; ikoneilla on jo oma tyyli, luo-feature tekee
+                                (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
+                                                          :sticker-icon :sticker-icon-line :clickable-area})
+                                  (aseta-tyylit new-shape geom))
 
-                                 new-shape))
-                           item])
+                                new-shape)))
                    items)))))))
 
 (defn- update-ol3-geometries [component geometries]

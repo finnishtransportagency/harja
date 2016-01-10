@@ -31,7 +31,8 @@
   ;; Kartalla näytettävät organisaatiot / urakat
   (reaction
    (let [hals @hal/hallintayksikot
-         v-hal @nav/valittu-hallintayksikko]
+         v-hal @nav/valittu-hallintayksikko
+         v-ur @nav/valittu-urakka]
      (cond
        ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin tarkoitettuja
        ;; geometrioita (kuten urakat), mutta jos esim HY on valittu, voidaan näyttää sen rajat.
@@ -42,22 +43,21 @@
        [(assoc v-hal :valittu true)]
 
        (and (#{:tilannekuva :ilmoitukset} @nav/sivu) @nav/valittu-urakka)
-       [(assoc @nav/valittu-urakka :valittu true)]
+       [(assoc v-ur :valittu true)]
 
        ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
        (nil? v-hal)
        hals
 
        ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-       (nil? @nav/valittu-urakka)
+       (nil? v-ur)
        (vec (concat [(assoc v-hal
                             :valittu true)]
                     @nav/urakat-kartalla))
 
        ;; Valittu urakka, mitä näytetään?
-       :default [(assoc @nav/valittu-urakka
-                        :valittu true
-                        :harja.ui.openlayers/fit-bounds true)]))))
+       :default [(assoc v-ur
+                        :valittu true)]))))
 
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä

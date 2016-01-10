@@ -488,37 +488,19 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (fn [_]
         (zoomaa-geometrioihin)
 
+        ;; Hallintayksiköt ja valittu urakka ovat nykyään :organisaatio
+        ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
         (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
                    (fn [_ _ vanha uusi]
                      ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
                      ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
                      ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
                      ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
-                     (log "GEOMETRIAT MUUTTUI")
+                     ;; Myös jos :organisaatio karttatason tiedot ovat muuttuneet, tehdään zoomaus (urakka/hallintayksikkö muutos)
                      (when @pida-geometriat-nakyvilla?
-                       (when (not= (geometria-maarat vanha) (geometria-maarat uusi))
-                         (zoomaa-geometrioihin)))))
-
-        ;; Hallintayksikön ja urakan valintaa seurattiin aiemmin run!-blokissa.
-        ;; Tämä ei kuitenkaan toiminut toivotulla tavalla. Bugi ilmeni esimerkiksi, kun avasi lomakkeen
-        ;; tarkastunäkymässä, kun valitussa hoitokaudessa ei ollut yhtään tarkastuksia - jostain syystä
-        ;; run!-blokki triggeröityi. Blokissa oli ehto, että (zoomaa-geometrioihin) kutsutaan vain jos
-        ;; yhtään asiaa ei ole piirretty kartalle.
-        ;;
-        ;; Näiden add-watchien avulla voidaan tarkastaa, onko valittu HY/urakka oikeasti muuttunut vai ei.
-        (add-watch nav/valittu-hallintayksikko :valitun-hallintayksikon-kuuntelija
-                   (fn [_ _ vanha uusi]
-                     (log "HALLINTAYKSIKKÖVALINTA MUUTTUI")
-                     (when (and @pida-geometriat-nakyvilla?
-                                (not= (:id vanha) (:id uusi)))
-                       (zoomaa-geometrioihin))))
-
-        (add-watch nav/valittu-urakka :valitun-urakan-kuuntelija
-                   (fn [_ _ vanha uusi]
-                     (log "URAKKAVALINTA MUUTTUI")
-                     (when (and @pida-geometriat-nakyvilla?
-                                (not= (:id vanha) (:id uusi)))
-                       (zoomaa-geometrioihin))))))
+                       (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
+                                 (not= (:organisaatio vanha) (:organisaatio uusi)))
+                         (zoomaa-geometrioihin)))))))
     (fn []
       (let [koko @nav/kartan-koko
             koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
@@ -548,6 +530,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
                                 (poista-popup!))
           :on-select          (fn [item event]
+                                (log "KLIKATTU ITEM: " (pr-str item))
                                 (kun-geometriaa-klikattu item event)
                                 (.stopPropagation event)
                                 (.preventDefault event))
