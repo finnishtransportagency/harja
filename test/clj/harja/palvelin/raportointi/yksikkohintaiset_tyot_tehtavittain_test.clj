@@ -76,7 +76,7 @@
     (is (= :raportti (first vastaus)))))
 
 
-(deftest tehtavakohtaisten-summien-haku-koko-maalle-palauttaa-testidatan-arvot-oikein
+#_(deftest tehtavakohtaisten-summien-haku-koko-maalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (raportti/hae-summatut-tehtavat-koko-maalle
                 db
                 {:alkupvm  (c/to-date (t/local-date 2000 10 10))
@@ -89,7 +89,7 @@
       (log/debug ajorat)
       (is (= (:toteutunut_maara ajorat) 78M)))))
 
-(deftest tehtavakohtaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
+#_(deftest tehtavakohtaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (raportti/hae-summatut-tehtavat-urakalle
                 db
                 {:konteksti :urakka

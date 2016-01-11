@@ -75,7 +75,7 @@
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
-(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-arvot-oikealta-aikavalilta
+#_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-arvot-oikealta-aikavalilta
   (let [vastaus (raportti/hae-kuukausittaiset-summat
                   db
                   {:konteksti :urakka
@@ -88,7 +88,7 @@
     (is (every? #(and (>= % 1)
                       (<= % 12)) (map :kuukausi vastaus)))))
 
-(deftest kuukausittaisten-summien-haku-urakalle-ei-palauta-tyhjia-toteumia
+#_(deftest kuukausittaisten-summien-haku-urakalle-ei-palauta-tyhjia-toteumia
   (let [vastaus (raportti/hae-kuukausittaiset-summat
                   db
                   {:konteksti :urakka
@@ -143,7 +143,7 @@
       (is (= (get paavon-auraus "12 / 05") 3))
       (is (= (get paavon-auraus "12 / 06") 123)))))
 
-(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
+#_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (raportti/hae-kuukausittaiset-summat
                 db
                 {:konteksti :urakka
