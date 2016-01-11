@@ -75,7 +75,7 @@
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
-
+; FIXME Miten kutsutaan DB:n kanssa?
 #_(deftest tehtavakohtaisten-summien-haku-koko-maalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (raportti/hae-summatut-tehtavat-koko-maalle
                 db
@@ -89,6 +89,7 @@
       (log/debug ajorat)
       (is (= (:toteutunut_maara ajorat) 78M)))))
 
+; FIXME Miten kutsutaan DB:n kanssa?
 #_(deftest tehtavakohtaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (raportti/hae-summatut-tehtavat-urakalle
                 db

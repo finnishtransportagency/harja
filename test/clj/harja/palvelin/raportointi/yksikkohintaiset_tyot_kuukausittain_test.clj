@@ -75,6 +75,7 @@
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
+; FIXME Miten kutsutaan DB:n kanssa?
 #_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-arvot-oikealta-aikavalilta
   (let [vastaus (raportti/hae-kuukausittaiset-summat
                   db
@@ -88,6 +89,7 @@
     (is (every? #(and (>= % 1)
                       (<= % 12)) (map :kuukausi vastaus)))))
 
+; FIXME Miten kutsutaan DB:n kanssa?
 #_(deftest kuukausittaisten-summien-haku-urakalle-ei-palauta-tyhjia-toteumia
   (let [vastaus (raportti/hae-kuukausittaiset-summat
                   db
@@ -143,6 +145,7 @@
       (is (= (get paavon-auraus "12 / 05") 3))
       (is (= (get paavon-auraus "12 / 06") 123)))))
 
+; FIXME Miten kutsutaan DB:n kanssa?
 #_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
   (let [rivit (raportti/hae-kuukausittaiset-summat
                 db
