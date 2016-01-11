@@ -139,24 +139,26 @@ BEGIN
 	  let := aet_;
 	END IF;
 	IF ajoratavalinta=2 THEN
-        RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aos THEN ST_Line_Substring(geom, LEAST(1, aet/ST_Length(geom)), 1)
+        RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN (osa=aos AND ajorata!=0) THEN ST_Line_Substring(geom, LEAST(1, aet/ST_Length(geom)), 1)
 				      WHEN osa=los THEN ST_Line_Substring(geom, 0, LEAST(1,let/ST_Length(geom)))
 				      ELSE geom END) ORDER BY osa)) AS geom
 		     FROM tieverkko_paloina
 		      	WHERE tie = tie_
 			AND osa >= aos
 			AND osa <= los
-			AND (ajorata=0 OR ajorata=ajoratavalinta))
+			AND (ajorata=0 OR ajorata=ajoratavalinta)
+			)
 	  SELECT ST_Reverse(geom) FROM q;
 	ELSE
-        RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aos THEN ST_Line_Substring(geom, LEAST(1, aet/ST_Length(geom)), 1)
+        RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN (osa=aos AND ajorata!=0) THEN ST_Line_Substring(geom, LEAST(1, aet/ST_Length(geom)), 1)
 				      WHEN osa=los THEN ST_Line_Substring(geom, 0, LEAST(1,let/ST_Length(geom)))
 				      ELSE geom END) ORDER BY osa)) AS geom
 		     FROM tieverkko_paloina
 		      	WHERE tie = tie_
 			AND osa >= aos
 			AND osa <= los
-			AND (ajorata=0 OR ajorata=ajoratavalinta))
+			AND (ajorata=0 OR ajorata=ajoratavalinta)
+			)
 	  SELECT geom FROM q;
 	END IF;
    END IF;
