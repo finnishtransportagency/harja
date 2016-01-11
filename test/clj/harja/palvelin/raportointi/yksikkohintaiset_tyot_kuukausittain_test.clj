@@ -5,53 +5,73 @@
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.kyselyt.urakat :as urk-q]
             [harja.testi :refer :all]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.raportointi :refer :all]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain :as raportti]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.palvelin.raportointi :as raportointi]))
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
+                        :pdf-vienti (component/using
+                                      (pdf-vienti/luo-pdf-vienti)
+                                      [:http-palvelin])
+                        :raportit (component/using
+                                    (raportointi/luo-raportointi)
+                                    [:db :pdf-vienti])))))
+
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+(use-fixtures :once (compose-fixtures
+                      jarjestelma-fixture
+                      urakkatieto-fixture))
 
 (deftest raportin-suoritus-urakalle-toimii
-  (let [vastaus (harja.palvelin.main/with-db  db
-                                              (raportti/suorita
-                                                db
-                                                +kayttaja-jvh+
-                                                {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                                 :alkupvm   (c/to-date (t/local-date 2005 10 10))
-                                                 :loppupvm  (c/to-date (t/local-date 2010 10 10))}))]
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :raportit
+                                +kayttaja-jvh+
+                                {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                                 :alkupvm   (c/to-date (t/local-date 2005 10 10))
+                                 :loppupvm  (c/to-date (t/local-date 2010 10 10))})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
-  (let [vastaus (harja.palvelin.main/with-db  db
-                                              (raportti/suorita
-                                                db
-                                                +kayttaja-jvh+
-                                                {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                                 :alkupvm   (c/to-date (t/local-date 2005 10 10))
-                                                 :loppupvm  (c/to-date (t/local-date 2010 10 10))}))]
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :raportit
+                                +kayttaja-jvh+
+                                {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :alkupvm            (c/to-date (t/local-date 2005 10 10))
+                                 :loppupvm           (c/to-date (t/local-date 2010 10 10))})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
-  (let [vastaus (harja.palvelin.main/with-db  db
-                                              (raportti/suorita
-                                                db
-                                                +kayttaja-jvh+
-                                                {:alkupvm   (c/to-date (t/local-date 2005 10 10))
-                                                 :loppupvm  (c/to-date (t/local-date 2010 10 10))}))]
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :raportit
+                                +kayttaja-jvh+
+                                {:alkupvm  (c/to-date (t/local-date 2005 10 10))
+                                 :loppupvm (c/to-date (t/local-date 2010 10 10))})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
 (deftest kuukausittaisten-summien-haku-urakalle-palauttaa-arvot-oikealta-aikavalilta
-  (let [vastaus (harja.palvelin.main/with-db  db
-                                              (raportti/hae-kuukausittaiset-summat
-                                                db
-                                                {:konteksti :urakka
-                                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                                                 :loppupvm  (c/to-date (t/local-date 2030 10 10))}))]
+  (let [vastaus (raportti/hae-kuukausittaiset-summat
+                  db
+                  {:konteksti :urakka
+                   :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                   :alkupvm   (c/to-date (t/local-date 2000 10 10))
+                   :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
     (is (not (empty? vastaus)))
     (is (every? #(and (>= % 2005)
                       (<= % 2010)) (map :vuosi vastaus)))
@@ -59,13 +79,12 @@
                       (<= % 12)) (map :kuukausi vastaus)))))
 
 (deftest kuukausittaisten-summien-haku-urakalle-ei-palauta-tyhjia-toteumia
-  (let [vastaus (harja.palvelin.main/with-db  db
-                                              (raportti/hae-kuukausittaiset-summat
-                                                db
-                                                {:konteksti :urakka
-                                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                                                 :loppupvm  (c/to-date (t/local-date 2030 10 10))}))]
+  (let [vastaus (raportti/hae-kuukausittaiset-summat
+                  db
+                  {:konteksti :urakka
+                   :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                   :alkupvm   (c/to-date (t/local-date 2000 10 10))
+                   :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
     (is (not (empty? vastaus)))
     (is (every? #(> % 0) (map :toteutunut_maara vastaus)))))
 
@@ -73,8 +92,7 @@
   (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1}
                {:kuukausi 11 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 2}
                {:kuukausi 12 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 3}]
-        vastaus (harja.palvelin.main/with-db  db
-                                              (raportti/muodosta-raportin-rivit rivit false))]
+        vastaus (raportti/muodosta-raportin-rivit rivit false)]
     (is (= 1 (count vastaus)))
     (is (= (get (first vastaus) "10 / 05") 1))
     (is (= (get (first vastaus) "11 / 05") 2))
@@ -84,8 +102,7 @@
   (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1}
                {:kuukausi 11 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 2}
                {:kuukausi 11 :vuosi 2005 :nimi "Suolaus" :yksikko "kg" :suunniteltu_maara 1 :toteutunut_maara 3}]
-        vastaus (harja.palvelin.main/with-db  db
-                                              (raportti/muodosta-raportin-rivit rivit false))]
+        vastaus (raportti/muodosta-raportin-rivit rivit false)]
     (is (= 2 (count vastaus)))
     (let [auraus (first (filter #(= (:nimi %) "Auraus") vastaus))
           suolaus (first (filter #(= (:nimi %) "Suolaus") vastaus))]
@@ -99,8 +116,7 @@
                {:kuukausi 12 :vuosi 2005 :nimi "Suolaus" :yksikko "kg" :suunniteltu_maara 1 :toteutunut_maara 666 :urakka_id 1 :urakka_nimi "Sepon urakka"}
                {:kuukausi 12 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 3 :urakka_id 2 :urakka_nimi "Paavon urakka"}
                {:kuukausi 12 :vuosi 2006 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 123 :urakka_id 2 :urakka_nimi "Paavon urakka"}]
-        vastaus (harja.palvelin.main/with-db db
-                                             (raportti/muodosta-raportin-rivit rivit true))]
+        vastaus (raportti/muodosta-raportin-rivit rivit true)]
     (is (= 3 (count vastaus)))
     (let [sepon-auraus (first (filter #(and (= (:nimi %) "Auraus")
                                             (= (:urakka_nimi %) "Sepon urakka"))
@@ -118,13 +134,12 @@
       (is (= (get paavon-auraus "12 / 06") 123)))))
 
 (deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
-  (let [rivit (harja.palvelin.main/with-db  db
-                                              (raportti/hae-kuukausittaiset-summat
-                                                db
-                                                {:konteksti :urakka
-                                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                                                 :loppupvm  (c/to-date (t/local-date 2030 10 10))}))
+  (let [rivit (raportti/hae-kuukausittaiset-summat
+                db
+                {:konteksti :urakka
+                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
+                 :loppupvm  (c/to-date (t/local-date 2030 10 10))})
         tulos (raportti/muodosta-raportin-rivit rivit false)]
     (is (not (empty? tulos)))
     (let [ajorat (first (filter
