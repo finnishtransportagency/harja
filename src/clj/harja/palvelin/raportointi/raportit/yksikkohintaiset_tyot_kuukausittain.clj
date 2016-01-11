@@ -40,7 +40,7 @@
                            ;; Ottaa vectorin tehtävä-mappeja ja tekee niistä yhden mapin, jossa kuukausittaiset summat
                            ;; esiintyvät avaimissa
                            (let [suunniteltu-maara (:suunniteltu_maara (first tehtavat))
-                                 maara-yhteensa (reduce + (mapv :toteutunut_maara tehtavat))
+                                 maara-yhteensa (reduce + (keep :toteutunut_maara tehtavat))
                                  toteumaprosentti (if suunniteltu-maara
                                                     (fmt/desimaaliluku (float (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100))) 1)
                                                     "-")
