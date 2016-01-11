@@ -30,7 +30,17 @@
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
          {:laatupoikkeamat                  "Laatupoikkeamat"
+          :tilaaja                          "Tilaaja"
+          :urakoitsija                      "Urakoitsija"
+          :konsultti                        "Konsultti"
+
           :tarkastukset                     "Tarkastukset"
+          :tiesto                           "Tiestö"
+          :talvihoito                       "Talvihoito"
+          :soratie                          "Soratie"
+          :laatu                            "Laatu"
+          :pistokoe                         "Pistokoe"
+
           :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
 
           :toimenpidepyynto                 "TPP"
