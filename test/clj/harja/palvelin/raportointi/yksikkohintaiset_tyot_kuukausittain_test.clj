@@ -13,7 +13,8 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.palvelin.raportointi :as raportointi]))
+            [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.palvelut.raportit :as raportit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -25,9 +26,12 @@
                         :pdf-vienti (component/using
                                       (pdf-vienti/luo-pdf-vienti)
                                       [:http-palvelin])
-                        :raportit (component/using
+                        :raportointi (component/using
                                     (raportointi/luo-raportointi)
-                                    [:db :pdf-vienti])))))
+                                    [:db :pdf-vienti])
+                        :raportit (component/using
+                                    (raportit/->Raportit)
+                                    [:http-palvelin :db :raportointi :pdf-vienti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -38,9 +42,11 @@
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :raportit
+                                :suorita-raportti
                                 +kayttaja-jvh+
-                                {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                                {:nimi :yks-hint-kuukausiraportti
+                                 :konteksti "urakka"
+                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
                                  :alkupvm   (c/to-date (t/local-date 2005 10 10))
                                  :loppupvm  (c/to-date (t/local-date 2010 10 10))})]
     (is (vector? vastaus))
