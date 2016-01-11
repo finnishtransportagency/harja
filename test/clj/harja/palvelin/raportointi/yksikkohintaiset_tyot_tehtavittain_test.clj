@@ -12,7 +12,8 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [harja.palvelin.raportointi :as raportointi]))
+            [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.palvelut.raportit :as raportit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -24,9 +25,12 @@
                         :pdf-vienti (component/using
                                       (pdf-vienti/luo-pdf-vienti)
                                       [:http-palvelin])
+                        :raportointi (component/using
+                                       (raportointi/luo-raportointi)
+                                       [:db :pdf-vienti])
                         :raportit (component/using
-                                    (raportointi/luo-raportointi)
-                                    [:db :pdf-vienti])))))
+                                    (raportit/->Raportit)
+                                    [:http-palvelin :db :raportointi :pdf-vienti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
