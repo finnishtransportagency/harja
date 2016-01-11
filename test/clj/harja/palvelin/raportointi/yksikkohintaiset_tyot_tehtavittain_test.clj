@@ -40,8 +40,6 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :raportit
                                 +kayttaja-jvh+
-                                db
-                                +kayttaja-jvh+
                                 {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
                                  :alkupvm   (c/to-date (t/local-date 2005 10 10))
                                  :loppupvm  (c/to-date (t/local-date 2010 10 10))})]
@@ -52,8 +50,6 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :raportit
                                 +kayttaja-jvh+
-                                db
-                                +kayttaja-jvh+
                                 {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :alkupvm            (c/to-date (t/local-date 2005 10 10))
                                  :loppupvm           (c/to-date (t/local-date 2010 10 10))})]
@@ -63,8 +59,6 @@
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :raportit
-                                +kayttaja-jvh+
-                                db
                                 +kayttaja-jvh+
                                 {:alkupvm  (c/to-date (t/local-date 2005 10 10))
                                  :loppupvm (c/to-date (t/local-date 2010 10 10))})]
