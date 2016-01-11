@@ -120,7 +120,6 @@ WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 
@@ -137,7 +136,6 @@ FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
 WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 
@@ -160,7 +158,6 @@ WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 
@@ -180,7 +177,6 @@ FROM toteuma tot
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
   JOIN urakka u ON tot.urakka = u.id
 WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 
