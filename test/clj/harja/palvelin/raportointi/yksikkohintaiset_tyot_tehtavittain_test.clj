@@ -42,9 +42,9 @@
                                 +kayttaja-jvh+
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                 :alkupvm   (c/to-date (t/local-date 2005 10 10))
-                                 :loppupvm  (c/to-date (t/local-date 2010 10 10))})]
+                                 :parametrit {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                                              :alkupvm   (c/to-date (t/local-date 2005 10 10))
+                                              :loppupvm  (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
@@ -54,9 +54,9 @@
                                 +kayttaja-jvh+
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :alkupvm            (c/to-date (t/local-date 2005 10 10))
-                                 :loppupvm           (c/to-date (t/local-date 2010 10 10))})]
+                                 :parametrit {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                              :alkupvm            (c/to-date (t/local-date 2005 10 10))
+                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
@@ -66,8 +66,8 @@
                                 +kayttaja-jvh+
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "koko maa"
-                                 :alkupvm  (c/to-date (t/local-date 2005 10 10))
-                                 :loppupvm (c/to-date (t/local-date 2010 10 10))})]
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
+                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
