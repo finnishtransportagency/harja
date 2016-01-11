@@ -140,12 +140,12 @@
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys "20%" :otsikko "Urakka"})
-                               {:leveys "20%" :otsikko "Tehtävä"}
+                               {:leveys "15%" :otsikko "Tehtävä"}
                                {:leveys "5%" :otsikko "Yk\u00ADsik\u00ADkö"}
                                (mapv (fn [rivi]
                                        {:otsikko (pvm/kuukausi-ja-vuosi (c/to-date rivi)) :luokka "grid-kk-sarake"})
                                      listattavat-pvmt)
-                               {:leveys "10%" :otsikko "Määrä yhteensä"}
+                               {:leveys "7%" :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
                                (when (= konteksti :urakka)
                                  [{:leveys "5%" :otsikko "Tot-%"}
                                  {:leveys "10%" :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
