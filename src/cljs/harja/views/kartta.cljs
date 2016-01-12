@@ -2,6 +2,7 @@
   "Harjan kartta."
   (:require [cljs.core.async :refer [timeout <! >! chan] :as async]
             [clojure.string :as str]
+            [clojure.set :as set]
             [goog.events.EventType :as EventType]
             [goog.events :as events]
             [harja.asiakas.kommunikaatio :as k]
@@ -268,7 +269,8 @@
 (def ikonien-selitykset-auki (atom false))
 
 (defn kartan-ikonien-selitykset []
-  (let [selitteet (into #{} (keep :selite @tasot/geometriat))]
+  (let [selitteet (reduce set/union
+                          (keep (comp :selitteet meta) (vals @tasot/geometriat)))]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
              @ikonien-selitykset-nakyvissa?)
@@ -429,7 +431,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (keskita-kartta-alueeseen! (geo/extent alue))
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))
-        (keskita-kartta-alueeseen! (geo/extent-monelle (map :alue @hal/hallintayksikot)))))))
+        (keskita-kartta-alueeseen! +koko-suomi-extent+)))))
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
@@ -526,6 +528,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                      (= :hidden koko)
                                      (= :S koko))
                                 "piilossa")
+
+          ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
+          :extent-key (str koko "_" (name @nav/sivu))
           :extent @nav/kartan-extent
 
           :selection          nav/valittu-hallintayksikko

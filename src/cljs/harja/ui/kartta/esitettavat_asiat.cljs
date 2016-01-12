@@ -357,6 +357,16 @@
       (not (nil? valittu))
       (= (get-in asia tunniste) (get-in valittu tunniste)))))
 
+(defn- tallenna-selitteet-xf [selitteet]
+  (fn [xf]
+    (fn
+      ([] (xf))
+      ([result] (xf result))
+      ([result input]
+       (when-let [selite (:selite input)]
+         (vswap! selitteet conj selite))
+       (xf result input)))))
+
 ;; Palauttaa joukon vektoreita joten kutsu (mapcat kartalla-xf @jutut)
 ;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
 ;; oma merkki. Tästä luovuttiin, mutta pidetään vielä kiinni siitä että täältä palautetaan joukko vektoreita,
@@ -372,11 +382,14 @@
   ([asiat valittu tunniste]
    (kartalla-esitettavaan-muotoon asiat valittu tunniste nil))
   ([asiat valittu tunniste asia-xf]
-   (let [extent (volatile! nil)]
+   (let [extent (volatile! nil)
+         selitteet (volatile! #{})]
      (with-meta 
        (into []
              (comp (or asia-xf identity)
                    (mapcat #(kartalla-xf % valittu (or tunniste [:id])))
-                   (geo/laske-extent-xf extent))
+                   (geo/laske-extent-xf extent)
+                   (tallenna-selitteet-xf selitteet))
              asiat)
-       {:extent @extent}))))
+       {:extent @extent
+        :selitteet @selitteet}))))
