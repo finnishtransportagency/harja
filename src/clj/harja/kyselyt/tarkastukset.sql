@@ -3,7 +3,6 @@
 SELECT
   t.id,
   sopimus,
-  t.aika,
   t.tr_numero,
   t.tr_alkuosa,
   t.tr_alkuetaisyys,
@@ -24,8 +23,7 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
-ORDER BY t.aika;
+      AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi);
 
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
@@ -150,3 +148,89 @@ WHERE ulkoinen_id = :id
 -- name: luo-liite<!
 -- Luo tarkastukselle liite
 INSERT INTO tarkastus_liite (tarkastus, liite) VALUES (:tarkastus, :liite)
+
+-- name: hae-urakan-tiestotarkastukset-liitteineen-raportille
+-- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
+SELECT
+  t.id,
+  sopimus,
+  t.aika,
+  t.tr_numero,
+  t.tr_alkuosa,
+  t.tr_alkuetaisyys,
+  t.tr_loppuosa,
+  t.tr_loppuetaisyys,
+  t.havainnot,
+  t.sijainti,
+  t.tarkastaja,
+  t.tyyppi,
+  k.jarjestelma,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija
+FROM tarkastus t
+  JOIN kayttaja k ON t.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
+WHERE t.urakka = :urakka
+      AND (t.aika >= :alku AND t.aika <= :loppu)
+      AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+ORDER BY t.aika;
+
+-- name: hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille
+-- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
+SELECT
+  t.id,
+  sopimus,
+  t.aika,
+  t.tr_numero,
+  t.tr_alkuosa,
+  t.tr_alkuetaisyys,
+  t.tr_loppuosa,
+  t.tr_loppuetaisyys,
+  t.havainnot,
+  t.sijainti,
+  t.tarkastaja,
+  t.tyyppi,
+  k.jarjestelma,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija
+FROM tarkastus t
+  JOIN kayttaja k ON t.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
+WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+      AND (t.aika >= :alku AND t.aika <= :loppu)
+      AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+ORDER BY t.aika;
+
+-- name: hae-koko-maan-tiestotarkastukset-liitteineen-raportille
+-- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
+SELECT
+  t.id,
+  sopimus,
+  t.aika,
+  t.tr_numero,
+  t.tr_alkuosa,
+  t.tr_alkuetaisyys,
+  t.tr_loppuosa,
+  t.tr_loppuetaisyys,
+  t.havainnot,
+  t.sijainti,
+  t.tarkastaja,
+  t.tyyppi,
+  k.jarjestelma,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija
+FROM tarkastus t
+  JOIN kayttaja k ON t.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
+WHERE (t.aika >= :alku AND t.aika <= :loppu)
+      AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+ORDER BY t.aika;

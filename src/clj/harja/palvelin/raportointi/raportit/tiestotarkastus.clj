@@ -10,21 +10,27 @@
             [harja.domain.roolit :as roolit]))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-urakan-tarkastukset db urakka-id alkupvm loppupvm (not (nil? tienumero)) tienumero true "tiesto"))
+  (tarkastukset-q/hae-urakan-tiestotarkastukset-liitteineen-raportille db
+                                                                       urakka-id
+                                                                       alkupvm
+                                                                       loppupvm
+                                                                       (not (nil? tienumero))
+                                                                       tienumero))
 
 (defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero]}]
-  ; TODO Puuttuu
-  []
-  #_(q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle db
-                                                                 hallintayksikko-id alkupvm loppupvm
-                                                                 (if toimenpide-id true false) toimenpide-id))
+  (tarkastukset-q/hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille db
+                                                                                hallintayksikko-id
+                                                                                alkupvm
+                                                                                loppupvm
+                                                                                (not (nil? tienumero))
+                                                                                tienumero))
 
 (defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero]}]
-  ; TODO Puuttuu
-  []
-  #_(q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle db
-                                                           alkupvm loppupvm
-                                                           (if toimenpide-id true false) toimenpide-id))
+  (tarkastukset-q/hae-koko-maan-tiestotarkastukset-liitteineen-raportille db
+                                                                          alkupvm
+                                                                          loppupvm
+                                                                          (not (nil? tienumero))
+                                                                          tienumero))
 
 (defn hae-tiestotarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
   (case konteksti
@@ -47,7 +53,7 @@
                                    :tienumero tienumero})))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
-  (roolit/vaadi-rooli user "tilaajan kayttaja") ; FIXME Selvitä oikeudet
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
