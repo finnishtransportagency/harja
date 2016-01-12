@@ -78,7 +78,7 @@ SELECT date_trunc('day', tot.alkanut) as pvm,
  WHERE tot.urakka = :urakka
        AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
        AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
-
+       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
  GROUP BY pvm, t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara
  ORDER BY pvm ASC;
        
@@ -102,6 +102,7 @@ FROM toteuma tot
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko, yht.yksikkohinta, yht.maara, vuosi, kuukausi
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle
@@ -121,6 +122,7 @@ WHERE tot.urakka IN (SELECT id
                      WHERE hallintayksikko = :hallintayksikko)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle
@@ -137,6 +139,7 @@ FROM toteuma tot
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
 WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain
@@ -159,6 +162,7 @@ WHERE tot.urakka IN (SELECT id
                      WHERE hallintayksikko = :hallintayksikko)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain
@@ -178,6 +182,7 @@ FROM toteuma tot
   JOIN urakka u ON tot.urakka = u.id
 WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle
@@ -200,6 +205,7 @@ WHERE tot.urakka = :urakka
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
 ORDER BY toteutuneet_kustannukset;
 
@@ -219,6 +225,7 @@ WHERE tot.urakka IN (SELECT id
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle
@@ -234,6 +241,7 @@ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain
@@ -255,6 +263,7 @@ WHERE tot.urakka IN (SELECT id
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko, u.id
 ORDER BY urakka_nimi;
 
@@ -274,5 +283,6 @@ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko, u.id
 ORDER BY urakka_nimi;
