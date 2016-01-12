@@ -9,6 +9,7 @@ SELECT
   t.tr_alkuetaisyys,
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
+  t.havainnot,
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
@@ -23,7 +24,8 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi);
+      AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+ORDER BY t.aika;
 
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
