@@ -77,8 +77,8 @@
                                {:leveys "20%" :otsikko "Havainnot"}
                                {:leveys "10%" :otsikko "Kuvanumerot"}]))
       (mapv (fn [rivi]
-              [(:aika rivi)
-               (:aika rivi)
+              [(pvm/pvm (:aika rivi))
+               (pvm/aika (:aika rivi))
                (:tr_numero rivi)
                (:tr_alkuosa rivi)
                (:tr_alkuetaisyys rivi)
