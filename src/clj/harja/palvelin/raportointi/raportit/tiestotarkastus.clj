@@ -7,7 +7,8 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-tiestotarkastukset-liitteineen-raportille db
@@ -57,12 +58,16 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        naytettavat-rivit (hae-tiestotarkastukset db {:konteksti konteksti
-                                                      :urakka-id urakka-id
-                                                      :hallintayksikko-id hallintayksikko-id
-                                                      :alkupvm   alkupvm
-                                                      :loppupvm  loppupvm
-                                                      :tienumero tienumero})
+        naytettavat-rivit (map konv/alaviiva->rakenne
+                               (hae-tiestotarkastukset db {:konteksti          konteksti
+                                                           :urakka-id          urakka-id
+                                                           :hallintayksikko-id hallintayksikko-id
+                                                           :alkupvm            alkupvm
+                                                           :loppupvm           loppupvm
+                                                           :tienumero          tienumero}))
+        naytettavat-rivit (konv/sarakkeet-vektoriin
+                            naytettavat-rivit
+                            {:liite :liitteet})
         raportin-nimi "Tiestötarkastusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -83,16 +88,16 @@
                                {:leveys "6%" :otsikko "Let"}
                                {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "10%" :otsikko "Ku\u00ADva\u00ADnu\u00ADme\u00ADrot"}]))
+                               {:leveys "10%" :otsikko "Liit\u00ADteet"}]))
       (mapv (fn [rivi]
               [(pvm/pvm (:aika rivi))
                (pvm/aika (:aika rivi))
-               (:tr_numero rivi)
-               (:tr_alkuosa rivi)
-               (:tr_alkuetaisyys rivi)
-               (:tr_loppuetaisyys rivi)
-               (:tr_loppuosa rivi)
+               (get-in rivi [:tr :numero])
+               (get-in rivi [:tr :alkuosa])
+               (get-in rivi [:tr :alkuetaisyys])
+               (get-in rivi [:tr :loppuosa])
+               (get-in rivi [:tr :loppyetaisyys])
                (:tarkastaja rivi)
                (:havainnot rivi)
-               (:kuvanumerot rivi)])
+               (clojure.string/join " " (map :nimi (:liitteet rivi)))])
             naytettavat-rivit)]]))

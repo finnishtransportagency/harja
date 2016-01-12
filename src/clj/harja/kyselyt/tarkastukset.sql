@@ -165,6 +165,8 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
@@ -172,6 +174,8 @@ SELECT
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
+  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
@@ -194,6 +198,8 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
@@ -201,6 +207,8 @@ SELECT
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
+  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
@@ -223,6 +231,8 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
@@ -230,6 +240,8 @@ SELECT
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
+  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'tiesto'::tarkastustyyppi
