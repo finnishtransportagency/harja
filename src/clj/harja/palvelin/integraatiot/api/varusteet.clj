@@ -11,46 +11,53 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
-            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
+            [harja.tyokalut.merkkijono :as merkkijono])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
 (defn tarkista-parametrit [saadut vaaditut]
-  (doseq [{:keys [parametri selite]} vaaditut]
-    (when (not (get saadut parametri))
-      (validointi/heita-virheelliset-parametrit-poikkeus selite))))
+  (doseq [{:keys [parametri tyyppi]} vaaditut]
+    (if-let [arvo (get saadut parametri)]
+      (when tyyppi
+        (case tyyppi
+          :int (when (not (merkkijono/onko-kokonaisluku? arvo))
+                 (validointi/heita-virheelliset-parametrit-poikkeus (format "Parametri: %s ei ole kokonaisluku. Annettu arvo: %s." parametri arvo)))
+          :date (when (not (merkkijono/onko-paivamaara? arvo))
+                  (validointi/heita-virheelliset-parametrit-poikkeus (format "Parametri: %s ei ole päivämäärä. Anna arvo muodossa: yyyy-MM-dd. Annettu arvo: %s." parametri arvo)))
+          "default"))
+      (validointi/heita-virheelliset-parametrit-poikkeus (format "Pakollista parametria: %s ei ole annettu" parametri)))))
 
 (defn tarkista-tietolajihaun-parametrit [parametrit]
   (tarkista-parametrit
     parametrit
     [{:parametri "tunniste"
-      :selite    "Tietolajia ei voi hakea ilman tunnistetta. (URL-parametri: tunniste)"}]))
+      :tyyppi    :string}]))
 
 (defn tarkista-tietueiden-haun-parametrit [parametrit]
   (tarkista-parametrit
     parametrit
     [{:parametri "tietolajitunniste"
-      :selite    "Tietueita ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)"}
+      :tyyppi    :string}
      {:parametri "numero"
-      :selite    "Tietueita ei voi hakea ilman tien numeroa (URL-parametri: numero)"}
+      :tyyppi    :int}
      {:parametri "aosa"
-      :selite    "Tietueita ei voi hakea ilman alkuosaa (URL-parametri: aosa)"}
+      :tyyppi    :int}
      {:parametri "aet"
-      :selite    "Tietueita ei voi hakea ilman alkuetäisyyttä (URL-parametri: aet)"}
+      :tyyppi    :int}
      {:parametri "aet"
-      :selite    "Tietueita ei voi hakea ilman loppuosaa (URL-parametri: losa)"}
-     {:parametri "aet"
-      :selite    "Tietueita ei voi hakea ilman loppuetäisyyttä (URL-parametri: let)"}
+      :tyyppi    :int}
+     {:parametri "let"
+      :tyyppi    :int}
      {:parametri "voimassaolopvm"
-      :selite    "Tietueita ei voi hakea ilman voimassaolopäivämäärää(URL-parametri: voimassaolopvm)"}]))
+      :tyyppi    :date}]))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
   (tarkista-parametrit
     parametrit
     [{:parametri "tunniste"
-      :selite    "Tietuetta ei voi hakea ilman livi-tunnistetta (URL-parametri: tunniste)"}
+      :tyyppi    :string}
      {:parametri "tietolajitunniste"
-      :selite    "Tietuetta ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)"}]))
+      :tyyppi    :string}]))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
@@ -66,7 +73,7 @@
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
-        voimassaolopvm (.format (SimpleDateFormat. "yyyy-MM-dd") (parametrit/string-pvm (get parametrit "voimassaolopvm")))]
+        voimassaolopvm (.format (SimpleDateFormat. "yyyy-MM-dd") (.parse (SimpleDateFormat. "yyyy-MM-dd") (get parametrit "voimassaolopvm")))]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
     (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm)
@@ -92,7 +99,7 @@
         data (assoc-in data [:varuste :tunniste] livitunniste)
         lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
-    {:id      livitunniste
+    {:id          livitunniste
      :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)}))
 
 (defn paivita-varuste [tierekisteri data kayttaja]
