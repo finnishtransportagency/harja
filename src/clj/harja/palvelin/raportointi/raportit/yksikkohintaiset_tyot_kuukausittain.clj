@@ -104,6 +104,7 @@
                                :urakoittain?  urakoittain?})))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
+  (log/debug "Parametrit on " (pr-str parametrit))
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
