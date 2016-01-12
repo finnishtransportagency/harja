@@ -97,6 +97,8 @@
     [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
      (r/wrap (first @valittu-aikavali-atom)
              (fn [uusi-arvo]
+               (if (nil? uusi-arvo)
+                 (reset! valittu-aikavali-atom [nil (second @valittu-aikavali-atom)])
                (let [uusi-arvo (pvm/paivan-alussa uusi-arvo)]
                  (if salli-pitka-aikavali?
                    (reset! valittu-aikavali-atom [uusi-arvo (second @valittu-aikavali-atom)])
@@ -105,17 +107,19 @@
                                                            (and (string? uusi-arvo) (empty? uusi-arvo))
                                                            (nil? uusi-arvo))
                                                     (second (pvm/kuukauden-aikavali uusi-arvo))
-                                                    (second @valittu-aikavali-atom))])))
+                                                    (second @valittu-aikavali-atom))]))))
                  (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
     [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]
-               (let [uusi-arvo (pvm/paivan-lopussa uusi-arvo)]
-                 ;; Estetään käänteinen aikaväli
-                 (if (and uusi-arvo (t/before? uusi-arvo (first @valittu-aikavali-atom)))
-                   (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali uusi-arvo))
-                   (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo]))))
+               (if (nil? uusi-arvo)
+                 (reset! valittu-aikavali-atom [(first @valittu-aikavali-atom) nil])
+                 (let [uusi-arvo (pvm/paivan-lopussa uusi-arvo)]
+                   ;; Estetään käänteinen aikaväli
+                   (if (and uusi-arvo (t/before? uusi-arvo (first @valittu-aikavali-atom)))
+                     (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali uusi-arvo))
+                     (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo])))))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
 (defn urakan-toimenpide
