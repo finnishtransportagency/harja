@@ -73,6 +73,7 @@
                                {:leveys "5%" :otsikko "Aosa"}
                                {:leveys "5%" :otsikko "Aet"}
                                {:leveys "5%" :otsikko "Losa"}
+                               {:leveys "5%" :otsikko "Let"}
                                {:leveys "10%" :otsikko "Tarkastaja"}
                                {:leveys "20%" :otsikko "Havainnot"}
                                {:leveys "10%" :otsikko "Kuvanumerot"}]))
