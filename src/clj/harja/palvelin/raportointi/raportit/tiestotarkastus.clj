@@ -10,7 +10,7 @@
             [harja.domain.roolit :as roolit]))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-urakan-tarkastukset db urakka-id alkupvm loppupvm (not (nil? tienumero)) tienumero true "tiestotarkastus"))
+  (tarkastukset-q/hae-urakan-tarkastukset db urakka-id alkupvm loppupvm (not (nil? tienumero)) tienumero true "tiesto"))
 
 (defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero]}]
   ; TODO Puuttuu
@@ -32,6 +32,7 @@
     (hae-tarkastukset-urakalle db
                                {:urakka-id urakka-id
                                 :alkupvm   alkupvm
+                                :loppupvm  loppupvm
                                 :tienumero tienumero})
     :hallintayksikko
     (hae-tarkastukset-hallintayksikolle db
@@ -54,7 +55,7 @@
                                                       :urakka-id urakka-id
                                                       :alkupvm   alkupvm
                                                       :loppupvm  loppupvm
-                                                      :tienumero nil})
+                                                      :tienumero tienumero})
         raportin-nimi "Tiestötarkastusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
