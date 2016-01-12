@@ -16,6 +16,7 @@
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
             [harja.palvelin.raportointi.raportit.suolasakko]
+            [harja.palvelin.raportointi.raportit.tiestotarkastus]
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]))
