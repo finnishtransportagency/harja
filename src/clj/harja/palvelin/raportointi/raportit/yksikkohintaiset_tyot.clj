@@ -47,8 +47,8 @@
                         :nimi
                         :yksikko
                         (comp fmt/euro-opt :yksikkohinta)
-                        :suunniteltu_maara
-                        :toteutunut_maara
+                        (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
+                        (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
                         (comp fmt/euro-opt :suunnitellut_kustannukset)
                         (comp fmt/euro-opt :toteutuneet_kustannukset))
                   naytettavat-rivit)
