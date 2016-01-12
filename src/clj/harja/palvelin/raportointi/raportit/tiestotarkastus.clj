@@ -59,6 +59,7 @@
                         :default :koko-maa)
         naytettavat-rivit (hae-tiestotarkastukset db {:konteksti konteksti
                                                       :urakka-id urakka-id
+                                                      :hallintayksikko-id hallintayksikko-id
                                                       :alkupvm   alkupvm
                                                       :loppupvm  loppupvm
                                                       :tienumero tienumero})
