@@ -42,7 +42,7 @@
                            (let [suunniteltu-maara (:suunniteltu_maara (first tehtavat))
                                  maara-yhteensa (reduce + (keep :toteutunut_maara tehtavat))
                                  toteumaprosentti (if suunniteltu-maara
-                                                    (fmt/desimaaliluku (float (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100))) 1)
+                                                    (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100))
                                                     "-")
                                  kuukausittaiset-summat (reduce
                                                           (fn [map tehtava]
@@ -160,9 +160,9 @@
                                                  (get rivi (pvm/kuukausi-ja-vuosi (c/to-date pvm)))
                                                  0))
                                              listattavat-pvmt)
-                                       (:toteutunut_maara rivi)
+                                       (fmt/desimaaliluku (:toteutunut_maara rivi) 1)
                                        (when (= konteksti :urakka)
-                                         [(:toteumaprosentti rivi)
-                                         (:suunniteltu_maara rivi)])])))
+                                         [(fmt/desimaaliluku (:toteumaprosentti rivi) 1)
+                                          (fmt/desimaaliluku (:suunniteltu_maara rivi) 1)])])))
             naytettavat-rivit)]]))
 
