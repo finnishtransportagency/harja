@@ -46,6 +46,17 @@
                    [harja.makrot :refer [nappaa-virhe]]
                    [harja.loki :refer [mittaa-aika]]))
 
+(def ^{:doc "Odotusaika millisekunteina, joka odotetaan että kartan animoinnit on valmistuneet." :const true}
+  animaation-odotusaika 200)
+
+(def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
+  initial-resolution 1200)
+
+(def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään" :const true}
+  min-zoom 5)
+(def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos" :const true}
+  max-zoom 20)
+
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
@@ -379,9 +390,9 @@
                (recur (alts! [komento-ch unmount-ch]))))
 
     (.setView ol3 (ol.View. #js {:center  (clj->js (geo/extent-keskipiste extent))
-                                 :resolution 1200 ;; FIXME: tämä tai :zoom on annettava, voidaanko extentistä laskea itse?
-                                 :maxZoom 20
-                                 :minZoom 5}))
+                                 :resolution initial-resolution
+                                 :maxZoom max-zoom
+                                 :minZoom min-zoom}))
 
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3            ol3
@@ -710,7 +721,7 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
   (let [aiempi-extent (-> this reagent/state :extent)]
     (when-not (identical? aiempi-extent extent)
       (log "NÄYTÄ ALUE " (pr-str extent))
-      (.setTimeout js/window #(keskita-kartta-alueeseen! extent) 200)
+      (.setTimeout js/window #(keskita-kartta-alueeseen! extent) animaation-odotusaika)
       (reagent/set-state this {:extent extent})))
   
   (update-ol3-geometries this geometries))
