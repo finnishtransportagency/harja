@@ -78,54 +78,54 @@
           "paannejaan poisto"               "Paannejään poisto"})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(defonce suodattimet (atom {:yllapito        {:paallystys true
-                                              :paikkaus   true}
-                            :ilmoitukset     {:tyypit {:toimenpidepyynto true
-                                                       :kysely           true
-                                                       :tiedoitus        true}
+(defonce suodattimet (atom {:yllapito        {:paallystys false
+                                              :paikkaus   false}
+                            :ilmoitukset     {:tyypit {:toimenpidepyynto false
+                                                       :kysely           false
+                                                       :tiedoitus        false}
                                               :tilat  #{:avoimet}}
-                            :turvallisuus    {:turvallisuuspoikkeamat true}
-                            :laatupoikkeamat {:tilaaja     true
-                                              :urakoitsija true
-                                              :konsultti   true}
-                            :tarkastukset    {:tiesto     true
-                                              :talvihoito true
-                                              :soratie    true
-                                              :laatu      true
-                                              :pistokoe   true}
+                            :turvallisuus    {:turvallisuuspoikkeamat false}
+                            :laatupoikkeamat {:tilaaja     false
+                                              :urakoitsija false
+                                              :konsultti   false}
+                            :tarkastukset    {:tiesto     false
+                                              :talvihoito false
+                                              :soratie    false
+                                              :laatu      false
+                                              :pistokoe   false}
                             ;; Näiden pitää osua työkoneen enumeihin
-                            :talvi           {"auraus ja sohjonpoisto"          true
-                                              "suolaus"                         true
-                                              "pistehiekoitus"                  true
-                                              "linjahiekoitus"                  true
-                                              "lumivallien madaltaminen"        true
-                                              "sulamisveden haittojen torjunta" true
-                                              "kelintarkastus"                  true
-                                              "liuossuolaus"                    true
-                                              "aurausviitoitus ja kinostimet"   true
-                                              "lumensiirto"                     true
-                                              "paannejaan poisto"               true
-                                              "muu"                             true}
-                            :kesa            {"tiestotarkastus"            true
-                                              "koneellinen niitto"         true
-                                              "koneellinen vesakonraivaus" true
+                            :talvi           {"auraus ja sohjonpoisto"          false
+                                              "suolaus"                         false
+                                              "pistehiekoitus"                  false
+                                              "linjahiekoitus"                  false
+                                              "lumivallien madaltaminen"        false
+                                              "sulamisveden haittojen torjunta" false
+                                              "kelintarkastus"                  false
+                                              "liuossuolaus"                    false
+                                              "aurausviitoitus ja kinostimet"   false
+                                              "lumensiirto"                     false
+                                              "paannejaan poisto"               false
+                                              "muu"                             false}
+                            :kesa            {"tiestotarkastus"            false
+                                              "koneellinen niitto"         false
+                                              "koneellinen vesakonraivaus" false
 
-                                              "liikennemerkkien puhdistus" true
+                                              "liikennemerkkien puhdistus" false
 
-                                              "sorateiden muokkaushoylays" true
-                                              "sorateiden polynsidonta"    true
-                                              "sorateiden tasaus"          true
-                                              "sorastus"                   true
+                                              "sorateiden muokkaushoylays" false
+                                              "sorateiden polynsidonta"    false
+                                              "sorateiden tasaus"          false
+                                              "sorastus"                   false
 
-                                              "harjaus"                    true
-                                              "pinnan tasaus"              true
-                                              "paallysteiden paikkaus"     true
-                                              "paallysteiden juotostyot"   true
+                                              "harjaus"                    false
+                                              "pinnan tasaus"              false
+                                              "paallysteiden paikkaus"     false
+                                              "paallysteiden juotostyot"   false
 
-                                              "siltojen puhdistus"         true
+                                              "siltojen puhdistus"         false
 
-                                              "l- ja p-alueiden puhdistus" true
-                                              "muu"                        true}}))
+                                              "l- ja p-alueiden puhdistus" false
+                                              "muu"                        false}}))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
