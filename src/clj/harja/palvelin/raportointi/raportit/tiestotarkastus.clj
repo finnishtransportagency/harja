@@ -76,14 +76,14 @@
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
       (flatten (keep identity [{:leveys "10%" :otsikko "Päivämäärä"}
                                {:leveys "5%" :otsikko "Klo"}
-                               {:leveys "5%" :otsikko "Tie"}
-                               {:leveys "5%" :otsikko "Aosa"}
-                               {:leveys "5%" :otsikko "Aet"}
-                               {:leveys "5%" :otsikko "Losa"}
-                               {:leveys "5%" :otsikko "Let"}
-                               {:leveys "10%" :otsikko "Tarkastaja"}
-                               {:leveys "20%" :otsikko "Havainnot"}
-                               {:leveys "10%" :otsikko "Kuvanumerot"}]))
+                               {:leveys "6%" :otsikko "Tie"}
+                               {:leveys "6%" :otsikko "Aosa"}
+                               {:leveys "6%" :otsikko "Aet"}
+                               {:leveys "6%" :otsikko "Losa"}
+                               {:leveys "6%" :otsikko "Let"}
+                               {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
+                               {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
+                               {:leveys "10%" :otsikko "Ku\u00ADva\u00ADnu\u00ADme\u00ADrot"}]))
       (mapv (fn [rivi]
               [(pvm/pvm (:aika rivi))
                (pvm/aika (:aika rivi))
