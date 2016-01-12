@@ -17,6 +17,7 @@
             [harja.ui.yleiset :as yleiset]
 
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
 
     ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
@@ -575,22 +576,22 @@
 
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
-                           (kartta/poista-geometria! :tr-valittu-osoite)
+                           (tasot/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo @alkuperainen-sijainti)
-                             (do (kartta/nayta-geometria! :tr-valittu-osoite
-                                                          (if (or (= :multiline (:type arvo)) (= :line (:type arvo)))
-                                                            {:alue (assoc arvo
-                                                                     :type :tack-icon-line
-                                                                     :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
-                                                                     :zindex 6
-                                                                     :color "gray")
-                                                             :type :tr-valittu-osoite}
+                             (do (tasot/nayta-geometria! :tr-valittu-osoite
+                                                         (if (or (= :multiline (:type arvo)) (= :line (:type arvo)))
+                                                           {:alue (assoc arvo
+                                                                         :type :tack-icon-line
+                                                                         :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
+                                                                         :zindex 6
+                                                                         :color "gray")
+                                                            :type :tr-valittu-osoite}
 
-                                                            {:alue (assoc arvo
-                                                                     :type :tack-icon
-                                                                     :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
-                                                                     :zindex 6)
-                                                             :type :tr-valittu-osoite}))))))]
+                                                           {:alue (assoc arvo
+                                                                         :type :tack-icon
+                                                                         :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
+                                                                         :zindex 6)
+                                                            :type :tr-valittu-osoite}))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go (loop []
@@ -606,7 +607,7 @@
                     (recur))
                 (do
                   (reset! sijainti nil)
-                  (kartta/poista-geometria! :tr-valittu-osoite)
+                  (tasot/poista-geometria! :tr-valittu-osoite)
                   (recur)))))))
 
     (komp/luo
@@ -620,7 +621,7 @@
                    (log "Lopetetaan TR sijaintipäivitys")
                    (async/close! tr-osoite-ch)
                    (reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
-                   (kartta/poista-geometria! :tr-valittu-osoite)
+                   (tasot/poista-geometria! :tr-valittu-osoite)
                    (kartta/zoomaa-geometrioihin)))
 
       (fn [{:keys [lomake? sijainti]} data]
@@ -662,7 +663,7 @@
 
                          :else
                          (do
-                           (kartta/poista-geometria! :tr-valittu-osoite)
+                           (tasot/poista-geometria! :tr-valittu-osoite)
                            (reset! virheet nil)))))
               kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})

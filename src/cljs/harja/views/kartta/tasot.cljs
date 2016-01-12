@@ -15,7 +15,9 @@
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
-            [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot])
+            [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.hallintayksikot :as hal])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 
@@ -24,32 +26,68 @@
                      :tilannekuva :paallystyskohteet :tr-alkupiste :yksikkohintainen-toteuma
                      :kokonaishintainen-toteuma :varusteet})
 
+
+(def organisaatio
+  ;; Kartalla näytettävät organisaatiot / urakat
+  (reaction
+   (let [hals @hal/hallintayksikot
+         v-hal @nav/valittu-hallintayksikko
+         v-ur @nav/valittu-urakka]
+     (cond
+       ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin tarkoitettuja
+       ;; geometrioita (kuten urakat), mutta jos esim HY on valittu, voidaan näyttää sen rajat.
+       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? v-hal))
+       nil
+
+       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? @nav/valittu-urakka))
+       [(assoc v-hal :valittu true)]
+
+       (and (#{:tilannekuva :ilmoitukset} @nav/sivu) @nav/valittu-urakka)
+       [(assoc v-ur :valittu true)]
+
+       ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+       (nil? v-hal)
+       hals
+
+       ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
+       (nil? v-ur)
+       (vec (concat [(assoc v-hal
+                            :valittu true)]
+                    @nav/urakat-kartalla))
+
+       ;; Valittu urakka, mitä näytetään?
+       :default [(assoc v-ur
+                        :valittu true)]))))
+
+
+;; Ad hoc geometrioiden näyttäminen näkymistä
+;; Avain on avainsana ja arvo on itse geometria
+(defonce nakyman-geometriat (atom {}))
+
+(defn nayta-geometria! [avain geometria]
+  (assert (and (map? geometria)
+               (contains? geometria :alue)) "Geometrian tulee olla mäpissä :alue avaimessa!")
+  (swap! nakyman-geometriat assoc avain geometria))
+
+(defn poista-geometria! [avain]
+  (swap! nakyman-geometriat dissoc avain))
+
 (def geometriat (reaction
-                  (loop [geometriat (transient [])
-                        [g & gs] (concat ;; Pohjavesi
-                                         @pohjavesialueet/pohjavesialueet
-                                         ;; Laadunseunranta
-                                         @tarkastukset/tarkastukset-kartalla
-                                         @sillat/sillat
-                                         ;; Turvallisuus
-                                         @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-                                         ;; Ilmoitukset
-                                         @ilmoitukset/ilmoitukset-kartalla
-                                         ;; TR-valitsin
-                                         @tierekisteri/tr-alkupiste-kartalla
-                                         ;; Toteumat
-                                         @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
-                                         @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
-                                         @varusteet/varusteet-kartalla
-                                         @muut-tyot/muut-tyot-kartalla
-                                         ;; Tilannekuva
-                                         @tilannekuva/tilannekuvan-asiat-kartalla
-                                         ;; Päällystys & paikkaus
-                                         @paallystys/paallystyskohteet-kartalla
-                                         @paikkaus/paikkauskohteet-kartalla)]
-                   (if-not g
-                     (persistent! geometriat)
-                     (recur (conj! geometriat g) gs)))))
+                 {:organisaatio @organisaatio
+                  :nakyman-geometriat (vals @nakyman-geometriat)                  
+                  :pohjavesi @pohjavesialueet/pohjavesialueet
+                  :tarkastukset @tarkastukset/tarkastukset-kartalla
+                  :sillat @sillat/sillat
+                  :turvallisuus @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+                  :ilmoitukset @ilmoitukset/ilmoitukset-kartalla
+                  :tr-valitsin @tierekisteri/tr-alkupiste-kartalla
+                  :yks-hint-toteumat @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
+                  :kok-hint-toteumat @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
+                  :varusteet @varusteet/varusteet-kartalla
+                  :muut-tyot @muut-tyot/muut-tyot-kartalla
+                  :tilannekuva @tilannekuva/tilannekuvan-asiat-kartalla
+                  :paallystyskohteet @paallystys/paallystyskohteet-kartalla
+                  :paikkauskohteet @paikkaus/paikkauskohteet-kartalla}))
 
 (defn- taso-atom [nimi]
   (case nimi
