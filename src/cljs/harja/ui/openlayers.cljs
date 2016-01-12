@@ -141,7 +141,6 @@
 
 (def suomen-extent
   "Suomalaisissa kartoissa olevan projektion raja-arvot."
-  ;; FIXME: tarkista, tämä näyttää olevan aivan liian laaja alue
   [-548576.000000, 6291456.000000, 1548576.000000, 8388608.000000])
 
 (def projektio (ol-proj/Projection. #js {:code   "EPSG:3067"
