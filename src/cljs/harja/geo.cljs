@@ -73,7 +73,6 @@ lopuksi kirjoittaa sen annettuun volatileen."
                     [@minx @miny @maxx @maxy]))
          (xf result))
         ([result input]
-         (log "LASKE-EXTENT-XF: " (pr-str input)) ; FIXME: poista kun kaikki käyttävät kartalla esitettävään muotoon paradigmaa
          (loop [minx- @minx
                 miny- @miny
                 maxx- @maxx

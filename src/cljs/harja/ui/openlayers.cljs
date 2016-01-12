@@ -717,10 +717,12 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
                    layers)))))))
 
 
-(defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries}]]
-  (let [aiempi-extent (-> this reagent/state :extent)]
-    (when-not (identical? aiempi-extent extent)
-      (log "NÄYTÄ ALUE " (pr-str extent))
+(defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries style :style}]]
+  (let [{aiempi-extent :extent aiempi-hidden :hidden} (-> this reagent/state :extent)
+        hidden (= "none" (:display style))]
+    (reagent/set-state this {:hidden hidden})
+    (when (or (not (identical? aiempi-extent extent))
+              (not= aiempi-hidden hidden))
       (.setTimeout js/window #(keskita-kartta-alueeseen! extent) animaation-odotusaika)
       (reagent/set-state this {:extent extent})))
   
