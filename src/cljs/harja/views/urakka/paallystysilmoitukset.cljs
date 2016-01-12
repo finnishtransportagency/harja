@@ -239,6 +239,7 @@
                                         (not (nil? valmispvm-kohde)))))]
 
     (komp/luo
+      (komp/ulos #(kartta/poista-popup!))
       (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" (:kohdenumero @paallystysilmoitus-lomakedata)))
       (fn []
         (let [lomakedata-nyt @paallystysilmoitus-lomakedata
@@ -518,6 +519,7 @@
 (defn ilmoitusluettelo
   []
   (komp/luo
+    (komp/ulos #(kartta/poista-popup!))
    (komp/kuuntelija :avaa-paallystysilmoitus
                     (fn [_ rivi]
                       (avaa-paallystysilmoitus (:paallystyskohde-id rivi))))
@@ -566,6 +568,7 @@
 
 (defn paallystysilmoitukset []
   (komp/luo
+    (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
     (fn []

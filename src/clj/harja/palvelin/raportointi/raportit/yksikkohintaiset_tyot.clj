@@ -5,7 +5,8 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.roolit :as roolit]))
 
 ;; oulu au 2014 - 2019:
 ;; 1.10.2014-30.9.2015 elokuu 2015 kaikki
@@ -17,18 +18,16 @@
 ;; Yhteensä					72 000,00 €	3 000,00 €
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
+  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-paiva db
                                                                urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
 
         raportin-nimi "Yksikköhintaiset työt päivittäin"
-        konteksti :urakka ;; myöhemmin tähänkin rapsaan voi tulla muitakin kontekseja, siksi alle yleistä koodia
+        konteksti :urakka
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    ;:hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                    ;:koko-maa "KOKO MAA"
-                    )
+                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id))))
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}

@@ -7,7 +7,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -36,7 +37,7 @@
                                       (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                         (hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
 
-(defonce paikkausilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
+(defonce paikkausilmoitus-lomakedata (atom nil))            ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
 (defonce paikkauskohteet-kartalla
          (reaction (let [taso @karttataso-paikkauskohteet
@@ -45,26 +46,24 @@
                          avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
                      (when (and taso
                                 (or kohderivit toteumarivit))
-                       (into []
-                             (mapcat #(keep (fn [{sij :sijainti nimi :nimi :as osa}]
-                                              (when sij
-                                                (let [paikkauskohde-id (:paikkauskohde_id %)]
-                                                  {:type             :paikkaus
-                                                   :kohde            %
-                                                   :paikkauskohde-id paikkauskohde-id
-                                                   :tila             (or (:paikkausilmoitus_tila %) (:tila %)) ; Eri keywordissa lähetetystä pyynnöstä riippuen
-                                                   :nimi             (str (:nimi %) ": " nimi)
-                                                   :osa              osa
-                                                   :alue             (assoc sij
-                                                                       :stroke {:color (case (or (:paikkausilmoitus_tila %) (:tila %))
-                                                                                         :aloitettu "blue"
-                                                                                         :valmis "green"
-                                                                                         "orange")
-                                                                                :width (if (= paikkauskohde-id avoin-paikkausilmoitus) 8 6)})})))
-                                            (:kohdeosat %)))
-                             (concat (map #(assoc % :paikkauskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                                          kohderivit)
-                                     toteumarivit))))))
+                       (kartalla-esitettavaan-muotoon
+                         (concat (map #(assoc % :paikkauskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                                      kohderivit)
+                                 toteumarivit)
+                         @paikkausilmoitus-lomakedata
+                         [:paikkauskohde_id]
+                         (comp
+                           (mapcat (fn [kohde]
+                                     (keep (fn [kohdeosa]
+                                             (assoc (merge kohdeosa
+                                                           (dissoc kohde :kohdeosat))
+                                               :tila (or (:paikkausilmoitus_tila kohde) (:tila kohde))
+                                               :avoin? (= (:paikkauskohde_id kohde) avoin-paikkausilmoitus)
+                                               :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
+                                               :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
+                                           (:kohdeosat kohde))))
+                           (keep #(and (:sijainti %) %))
+                           (map #(assoc % :tyyppi-kartalla :paikkaus))))))))
 
 (defn kuvaile-kohteen-tila [tila]
   (case tila

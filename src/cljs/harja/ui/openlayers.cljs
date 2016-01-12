@@ -304,10 +304,10 @@
 
 ;; Käytetään the-karttaa joka oli aiemmin "puhtaasti REPL-tunkkausta varten"
 (defn nykyinen-zoom-taso []
-  (-> (.getView @the-kartta) (.getZoom)))
+  (some-> @the-kartta (.getView) (.getZoom)))
 
 (defn aseta-zoom [zoom]
-  (-> (.getView @the-kartta) (.setZoom zoom)))
+  (some-> @the-kartta (.getView) (.setZoom zoom)))
 
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
