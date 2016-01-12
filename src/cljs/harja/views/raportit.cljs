@@ -399,7 +399,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                        (nav/vaihda-kartan-koko! :M))
                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
-      (if (roolit/roolissa? roolit/tilaajan-kayttaja)
+      (if (roolit/voi-nahda-raportit?)
         [:span
          [kartta/kartan-paikka]
          (raporttivalinnat-ja-raportti)]
