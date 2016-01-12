@@ -10,8 +10,10 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
-            [harja.kyselyt.livitunnisteet :as livitunnisteet])
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+            [harja.kyselyt.livitunnisteet :as livitunnisteet]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:import (java.text SimpleDateFormat)))
 
 (defn tarkista-parametrit [saadut vaaditut]
   (doseq [{:keys [parametri selite]} vaaditut]
@@ -64,7 +66,7 @@
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
-        voimassaolopvm (get parametrit "voimassaolopvm")]
+        voimassaolopvm (.format (SimpleDateFormat. "yyyy-MM-dd") (parametrit/string-pvm (get parametrit "voimassaolopvm")))]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
     (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm)
