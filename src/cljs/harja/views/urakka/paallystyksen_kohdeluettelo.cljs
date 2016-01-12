@@ -26,7 +26,7 @@
 (defonce kohdeluettelo-valilehti (atom :paallystyskohteet))
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paallystyskohde-id (:paallystyskohde-id kohde)]
+  (let [paallystyskohde-id (or (:paallystyskohde_id kohde) (:paallystyskohde-id kohde))]
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paallystys-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
@@ -47,6 +47,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
+    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paallystys-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (fn [ur]

@@ -35,7 +35,6 @@
 
 ;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
 (defonce raporttityypit (atom nil))
-(tarkkaile! "Raporttityypit: " raporttityypit)
 
 (defonce mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
@@ -51,11 +50,13 @@
                              (filter #(some mahdolliset-kontekstit (:konteksti %)))
                              urakkatyypin-raportit)))))
 
-(defonce poista-ei-mahdollinen-raporttityyppivalinta
-  (run! (let [mahdolliset (into #{} @mahdolliset-raporttityypit)
-              valittu @valittu-raporttityyppi]
-          (when-not (mahdolliset valittu)
-            (reset! valittu-raporttityyppi nil)))))
+(add-watch mahdolliset-raporttityypit :konteksti-muuttui
+           (fn [_ _ old new]
+             (let [mahdolliset (into #{} @mahdolliset-raporttityypit)
+                   valittu @valittu-raporttityyppi]
+               (when-not (mahdolliset valittu)
+                 (log "Resetoidaan valittu raportti, ei enää mahdollinen")
+                 (reset! valittu-raporttityyppi nil)))))
 
 ;; Raportin parametrit, parametrityypin lisäämiseksi luo
 ;; defmethodit parametrin tyypin mukaan
@@ -231,104 +232,110 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametri-arvot (atom {})
-        arvot (reaction (reduce merge {} (vals @parametri-arvot)))]
+        ]
     (reset! suoritettu-raportti nil)
-    (fn [raporttityyppi konteksti v-ur v-hal]
-      (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
-                                     100)
-                                (filter #(let [k (:konteksti %)]
-                                           (or (nil? k)
-                                               (= k konteksti)))
-                                        (:parametrit raporttityyppi)))
-            
-            arvot-nyt @arvot
-            voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
-                                (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
-            _ (log "Arvot: " (pr-str arvot-nyt))]
-        
-        ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
-        
-        [:span
-         (map-indexed
-          (fn [i cols]
-            ^{:key i}
-            [:div.row (seq cols)])
-          (loop [rows []
-                 row nil
-                 [p & parametrit] parametrit]
-            
-            (let [arvo (r/wrap (get @parametri-arvot (:nimi p))
-                               #(swap! parametri-arvot assoc (:nimi p) %))]
-              (if-not p
-                (conj rows row)
-                (let [par ^{:key (:nimi p)} [:div
-                                             {:class (if (omalle-riville? (:tyyppi p))
-                                                       "col-md-12"
-                                                       "col-md-4")}
-                                             [raportin-parametri p arvo]]]
-                  (cond
-                    ;; checkboxit ja aikaväli aina omalle riville
-                    (omalle-riville? (:tyyppi p))
-                    (recur (conj (if row
-                                   (conj rows row)
-                                   rows)
-                                 [par])
-                           nil
-                           parametrit)
+    (komp/luo
+      (fn [raporttityyppi konteksti v-ur v-hal]
+         (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
+                                        100)
+                                   (filter #(let [k (:konteksti %)]
+                                             (or (nil? k)
+                                                 (= k konteksti)))
+                                           (:parametrit raporttityyppi)))
 
-                    ;; Jos rivi on täynnä aloitetaan uusi
-                    (= 3 (count row))
-                    (recur (conj rows row)
-                           [par]
-                           parametrit)
+               nakyvat-parametrit (into #{} (map :nimi) parametrit)
+               arvot-nyt (reduce merge {}
+                                 (keep (fn [[nimi arvot]]
+                                         (when (nakyvat-parametrit nimi)
+                                           arvot))
+                                       @parametri-arvot))
+               voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
+                                   (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
+               _ (log "Arvot: " (pr-str arvot-nyt) ", parametrit: " (pr-str parametrit))]
 
-                    ;; Muutoin lisätään aiempaan riviin
-                    :default
-                    (recur rows
-                           (if row (conj row par)
-                               [par])
-                           parametrit)))))))
+           ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
 
-         [:div.row
-          [:div.col-md-12
-           [:div.raportin-toiminnot
-            
-            [:form {:target "_blank" :method "POST" :id "raporttipdf"
-                    :action (k/pdf-url :raportointi)}
-             [:input {:type "hidden" :name "parametrit"
-                      :value ""}]
-             [:button.nappi-ensisijainen.pull-right
-              {:type "submit"
-               :disabled (not voi-suorittaa?)
-               :on-click #(do
-                            (let [input (-> js/document
-                                            (.getElementById "raporttipdf")
-                                            (aget "parametrit"))
-                                  parametrit (case konteksti
-                                               "koko maa" (raportit/suorita-raportti-koko-maa-parametrit (:nimi raporttityyppi) arvot-nyt)
-                                               "hallintayksikko" (raportit/suorita-raportti-hallintayksikko-parametrit (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
-                                               "urakka" (raportit/suorita-raportti-urakka-parametrit (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
-                              (set! (.-value input)
-                                    (t/clj->transit parametrit)))
+           [:span
+            (map-indexed
+              (fn [i cols]
+                ^{:key i}
+                [:div.row (seq cols)])
+              (loop [rows []
+                     row nil
+                     [p & parametrit] parametrit]
+
+                (let [arvo (r/wrap (get @parametri-arvot (:nimi p))
+                                   #(swap! parametri-arvot assoc (:nimi p) %))]
+                  (if-not p
+                    (conj rows row)
+                    (let [par ^{:key (:nimi p)} [:div
+                                                 {:class (if (omalle-riville? (:tyyppi p))
+                                                           "col-md-12"
+                                                           "col-md-4")}
+                                                 [raportin-parametri p arvo]]]
+                      (cond
+                        ;; checkboxit ja aikaväli aina omalle riville
+                        (omalle-riville? (:tyyppi p))
+                        (recur (conj (if row
+                                       (conj rows row)
+                                       rows)
+                                     [par])
+                               nil
+                               parametrit)
+
+                        ;; Jos rivi on täynnä aloitetaan uusi
+                        (= 3 (count row))
+                        (recur (conj rows row)
+                               [par]
+                               parametrit)
+
+                        ;; Muutoin lisätään aiempaan riviin
+                        :default
+                        (recur rows
+                               (if row (conj row par)
+                                       [par])
+                               parametrit)))))))
+
+            [:div.row
+             [:div.col-md-12
+              [:div.raportin-toiminnot
+
+               [:form {:target "_blank" :method "POST" :id "raporttipdf"
+                       :action (k/pdf-url :raportointi)}
+                [:input {:type  "hidden" :name "parametrit"
+                         :value ""}]
+                [:button.nappi-ensisijainen.pull-right
+                 {:type     "submit"
+                  :disabled (not voi-suorittaa?)
+                  :on-click #(do
+                              (let [input (-> js/document
+                                              (.getElementById "raporttipdf")
+                                              (aget "parametrit"))
+                                    parametrit (case konteksti
+                                                 "koko maa" (raportit/suorita-raportti-koko-maa-parametrit (:nimi raporttityyppi) arvot-nyt)
+                                                 "hallintayksikko" (raportit/suorita-raportti-hallintayksikko-parametrit (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
+                                                 "urakka" (raportit/suorita-raportti-urakka-parametrit (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
+                                (set! (.-value input)
+                                      (t/clj->transit parametrit)))
                               true)}
-              (ikonit/print) " Tallenna PDF"]]
-            [napit/palvelinkutsu-nappi " Tee raportti"
-             #(go (reset! suoritettu-raportti :ladataan)
-                  (let [raportti (<! (case konteksti
-                                       "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                                                      arvot-nyt)
-                                       "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                                                    (:nimi raporttityyppi) arvot-nyt)
-                                       "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
-                                                                                  (:nimi raporttityyppi)
-                                                                                  arvot-nyt)))]
-                    (if-not (k/virhe? raportti)
-                      (reset! suoritettu-raportti raportti)
-                      (do
-                        (reset! suoritettu-raportti nil)
-                        raportti))))
-             {:ikoni [ikonit/list]
-              :disabled (not voi-suorittaa?)}]]]]]))))
+                 (ikonit/print) " Tallenna PDF"]]
+               [napit/palvelinkutsu-nappi " Tee raportti"
+                #(go (reset! suoritettu-raportti :ladataan)
+                     (let [raportti (<! (case konteksti
+                                          "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                                                         arvot-nyt)
+                                          "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                                                       (:nimi raporttityyppi) arvot-nyt)
+                                          "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
+                                                                                     (:nimi raporttityyppi)
+                                                                                     arvot-nyt)))]
+                       (if-not (k/virhe? raportti)
+                         (reset! suoritettu-raportti raportti)
+                         (do
+                           (reset! suoritettu-raportti nil)
+                           raportti))))
+                {:ikoni    [ikonit/list]
+                 :disabled (not voi-suorittaa?)}]]]]])))))
 
 (defn raporttivalinnat []
   (komp/luo

@@ -22,6 +22,7 @@
                         {:hae     #(get % i)
                          :leveys  (:leveys sarake)
                          :otsikko (:otsikko sarake)
+                         :luokka  (:luokka sarake)
                          :nimi    (str "sarake" i)})
                       sarakkeet))
    (if (empty? data)

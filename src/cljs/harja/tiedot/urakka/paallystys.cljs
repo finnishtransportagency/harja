@@ -7,7 +7,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -50,10 +51,10 @@
                                           :osat               osat}))
 
 (def paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                           [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                           nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
-                                          (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                            (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
+                                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                                       nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
+                                      (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                                        (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
 
 (defn paivita-kohde! [id funktio & argumentit]
   (swap! paallystyskohderivit
@@ -73,7 +74,7 @@
                                         (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                                           (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
-(defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce paallystysilmoitus-lomakedata (atom nil))          ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
@@ -82,26 +83,24 @@
                          avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
                      (when (and taso
                                 (or kohderivit toteumarivit))
-                       (into []
-                             (mapcat #(keep (fn [{sij :sijainti nimi :nimi :as osa}]
-                                              (when sij
-                                                (let [paallystyskohde-id (:paallystyskohde_id %)]
-                                                  {:type               :paallystys
-                                                   :kohde              %
-                                                   :paallystyskohde-id paallystyskohde-id
-                                                   :tila               (or (:paallystysilmoitus_tila %) (:tila %)) ; Eri keywordissa lähetetystä pyynnöstä riippuen
-                                                   :nimi               (str (:nimi %) ": " nimi)
-                                                   :osa                osa
-                                                   :alue               (assoc sij
-                                                                         :stroke {:color (case (or (:paallystysilmoitus_tila %) (:tila %))
-                                                                                           :aloitettu "blue"
-                                                                                           :valmis "green"
-                                                                                           "orange")
-                                                                                  :width (if (= paallystyskohde-id avoin-paallystysilmoitus) 8 6)})})))
-                                            (:kohdeosat %)))
-                             (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                                          kohderivit)
-                                     toteumarivit))))))
+                       (kartalla-esitettavaan-muotoon
+                         (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                                      kohderivit)
+                                 toteumarivit)
+                         @paallystysilmoitus-lomakedata
+                         [:paallystyskohde_id]
+                         (comp
+                           (mapcat (fn [kohde]
+                                     (keep (fn [kohdeosa]
+                                             (assoc (merge kohdeosa
+                                                           (dissoc kohde :kohdeosat))
+                                               :tila (or (:paallystysilmoitus_tila kohde) (:tila kohde))
+                                               :avoin? (= (:paallystyskohde_id kohde) avoin-paallystysilmoitus)
+                                               :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
+                                               :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
+                                           (:kohdeosat kohde))))
+                           (keep #(and (:sijainti %) %))
+                           (map #(assoc % :tyyppi-kartalla :paallystys))))))))
 
 (defn kuvaile-kohteen-tila [tila]
   (case tila

@@ -95,7 +95,7 @@
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
-    (log/debug "SUORITETAAN RAPORTTI " nimi)
+    (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit)
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
       (binding [*raportin-suoritus* this]
         ((:suorita suoritettava-raportti) db kayttaja
