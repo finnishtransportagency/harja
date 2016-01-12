@@ -679,9 +679,8 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
                                   (catch js/Error e
                                     (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
 
-                                ;; ikoneilla on jo oma tyyli, luo-feature tekee
-                                (when-not ((:type geom) #{:icon :arrow-line :tack-icon :tack-icon-line
-                                                          :sticker-icon :sticker-icon-line :clickable-area})
+                                ;; Aseta geneerinen tyyli tyypeille, joiden luo-feature ei sitä tee
+                                (when (#{:polygon :point :circle :multipolygon :multiline :line} (:type geom))
                                   (aseta-tyylit new-shape geom))
 
                                 new-shape)))
