@@ -2,6 +2,7 @@
   "Harjan kartta."
   (:require [cljs.core.async :refer [timeout <! >! chan] :as async]
             [clojure.string :as str]
+            [clojure.set :as set]
             [goog.events.EventType :as EventType]
             [goog.events :as events]
             [harja.asiakas.kommunikaatio :as k]
@@ -192,22 +193,11 @@
       [:span.ei-karttaa])))
 
 
-;; Ad hoc geometrioiden näyttäminen näkymistä
-;; Avain on avainsana ja arvo on itse geometria
-(defonce nakyman-geometriat (atom {}))
 
-(def kartta-ch "Karttakomponentin käskyttämisen komentokanava" (atom nil))
-(def +koko-suomi-sijainti+ [431704.1 7211111])
-(def +koko-suomi-zoom-taso+ 6)
-(def +koko-suomi-extent+ [-485283.9715435868 6550588.658174125 1538768.5374478805 7886096.416372725])
+;; Envelop [minx miny maxx maxy], jossa koko suomi näkyy
+(def +koko-suomi-extent+ [60000 6613000 736400 7780300])
 
-(defonce kartta-sijainti (atom +koko-suomi-sijainti+))
-(defonce zoom-taso (atom +koko-suomi-zoom-taso+))           ;;Miksi tämä on atomi - toimiiko todellisuudessa eri tavalla kuin kuvitellaan?
-
-(defonce kartta-kuuntelija
-         (t/kuuntele! :hallintayksikkovalinta-poistettu
-                      #(do (reset! kartta-sijainti +koko-suomi-sijainti+)
-                           (reset! zoom-taso +koko-suomi-zoom-taso+))))
+(reset! nav/kartan-extent +koko-suomi-extent+)
 
 (defonce urakka-kuuntelija
          (t/kuuntele! :urakka-valittu
@@ -269,7 +259,8 @@
           "Piilota kartta"]])]]))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
-(def keskita-kartta-alueeseen! openlayers/keskita-kartta-alueeseen!)
+(defn keskita-kartta-alueeseen! [alue]
+  (reset! nav/kartan-extent alue))
 
 (def ikonien-selitykset-nakyvissa-oletusarvo true)
 ;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
@@ -278,7 +269,8 @@
 (def ikonien-selitykset-auki (atom false))
 
 (defn kartan-ikonien-selitykset []
-  (let [selitteet (into #{} (keep :selite @tasot/geometriat))]
+  (let [selitteet (reduce set/union
+                          (keep (comp :selitteet meta) (vals @tasot/geometriat)))]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
              @ikonien-selitykset-nakyvissa?)
@@ -423,13 +415,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   (@viivan-piirto)
   (reset! viivan-piirto nil))
 
-(defn nayta-geometria! [avain geometria]
-  (assert (and (map? geometria)
-               (contains? geometria :alue)) "Geometrian tulee olla mäpissä :alue avaimessa!")
-  (swap! nakyman-geometriat assoc avain geometria))
 
-(defn poista-geometria! [avain]
-  (swap! nakyman-geometriat dissoc avain))
 
 (defn- paivita-extent [_ newextent]
   (reset! nav/kartalla-nakyva-alue {:xmin (aget newextent 0)
@@ -445,7 +431,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (keskita-kartta-alueeseen! (geo/extent alue))
       (if-let [alue (and v-hal (:alue v-hal))]
         (keskita-kartta-alueeseen! (geo/extent alue))
-        (keskita-kartta-alueeseen! (geo/extent-monelle (map :alue @hal/hallintayksikot)))))))
+        (keskita-kartta-alueeseen! +koko-suomi-extent+)))))
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
@@ -458,16 +444,23 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   valittuun hallintayksikköön tai urakkaan"
   []
   (when @pida-geometriat-nakyvilla?
-    (let [geometriat (filter suomen-sisalla? (keep :alue @tasot/geometriat))
-          ;; Käytetään pisteen-extent-laajennusta jotta vältetään tilanne,
-          ;; jossa karttaa "zoomaa taaksepäin" kun kasa pisteitä on todella
-          ;; lähellä toisiaan, ja tuplaklikataan jotain pistettä.
-          extentin-margin-metreina geo/pisteen-extent-laajennus]
-      (if-not (empty? geometriat)
-        (keskita-kartta-alueeseen! (geo/laajenna-extent (geo/extent-monelle geometriat) extentin-margin-metreina))
-        (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))
 
-      (reset! zoom-taso (or (openlayers/nykyinen-zoom-taso) +koko-suomi-zoom-taso+)))))
+    ;; printtaa tasojen extentit debuggausta varten
+    #_(doseq [[taso geometriat] @tasot/geometriat
+              :let [ext (-> geometriat meta :extent)]]
+        (log "EXTENT TASOLLA: " (pr-str taso) " => " (pr-str ext)))
+    
+    ;; Haetaan kaikkien tasojen extentit ja yhdistetään ne laajentamalla
+    ;; extentiä siten, että kaikki mahtuvat.
+    ;; Jos extentiä tasoista ei ole, zoomataan urakkaan tai hallintayksikköön.
+    (let [extent  (reduce geo/yhdista-extent
+                          (keep #(-> % meta :extent) (vals @tasot/geometriat)))
+          extentin-margin-metreina geo/pisteen-extent-laajennus]
+      (log "EXTENT TASOISTA: " (pr-str extent))
+      (if extent
+        (keskita-kartta-alueeseen! (geo/laajenna-extent extent extentin-margin-metreina))
+        (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
+
 
 (defn kuuntele-valittua! [atomi]
   (add-watch atomi :kartan-valittu-kuuntelija (fn [_ _ _ uusi]
@@ -486,6 +479,14 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
             (t/julkaise! (assoc item :aihe :urakka-klikattu)))
       (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
 
+(defn- geometria-maarat [geometriat]
+  (reduce-kv (fn [m k v]
+               (if (nil? v)
+                 m
+                 (assoc m k (count v))))
+             {}
+             geometriat))
+
 (defn kartta-openlayers []
   (komp/luo
 
@@ -493,47 +494,23 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
      #(zoomaa-geometrioihin)}
     (komp/sisaan
       (fn [_]
+        (zoomaa-geometrioihin)
+
+        ;; Hallintayksiköt ja valittu urakka ovat nykyään :organisaatio
+        ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
         (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
                    (fn [_ _ vanha uusi]
-                     ;; Jos vektoreissa olevissa mäpeissä ei ole samat avaimet,
+                     ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
                      ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
                      ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
                      ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
+                     ;; Myös jos :organisaatio karttatason tiedot ovat muuttuneet, tehdään zoomaus (urakka/hallintayksikkö muutos)
                      (when @pida-geometriat-nakyvilla?
-                       (when (or
-                               (not (= (count vanha) (count uusi)))
-
-                               ;; Tässä vertaillaan järjestyksessä, joten periaatteessa voi tulla false positive
-                               (some false?
-                                     (map
-                                       (fn [vanha uusi] (= (dissoc vanha :alue :selite :nimi) (dissoc uusi :alue :selite :nimi)))
-                                       vanha uusi)))
-                         (zoomaa-geometrioihin)))))
-
-        ;; Hallintayksikön ja urakan valintaa seurattiin aiemmin run!-blokissa.
-        ;; Tämä ei kuitenkaan toiminut toivotulla tavalla. Bugi ilmeni esimerkiksi, kun avasi lomakkeen
-        ;; tarkastunäkymässä, kun valitussa hoitokaudessa ei ollut yhtään tarkastuksia - jostain syystä
-        ;; run!-blokki triggeröityi. Blokissa oli ehto, että (zoomaa-geometrioihin) kutsutaan vain jos
-        ;; yhtään asiaa ei ole piirretty kartalle.
-        ;;
-        ;; Näiden add-watchien avulla voidaan tarkastaa, onko valittu HY/urakka oikeasti muuttunut vai ei.
-        (add-watch nav/valittu-hallintayksikko :valitun-hallintayksikon-kuuntelija
-                   (fn [_ _ vanha uusi]
-                     (when (and @pida-geometriat-nakyvilla?
-                                (empty? @tasot/geometriat)
-                                (not= (:id vanha) (:id uusi)))
-                       (zoomaa-geometrioihin))))
-
-        (add-watch nav/valittu-urakka :valitun-urakan-kuuntelija
-                   (fn [_ _ vanha uusi]
-                     (when (and @pida-geometriat-nakyvilla?
-                                (empty? @tasot/geometriat)
-                                (not= (:id vanha) (:id uusi)))
-                       (zoomaa-geometrioihin))))))
+                       (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
+                                 (not= (:organisaatio vanha) (:organisaatio uusi)))
+                         (zoomaa-geometrioihin)))))))
     (fn []
-      (let [hals @hal/hallintayksikot
-            v-hal @nav/valittu-hallintayksikko
-            koko @nav/kartan-koko
+      (let [koko @nav/kartan-koko
             koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
                    :L
                    koko)]
@@ -544,19 +521,25 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           ;; set width/height as CSS units, must set height as pixels!
           :height             (fmt/pikseleina @kartan-korkeus)
           :style              (when (= koko :S)
-                                {:display "none"})          ;;display none estää kartan korkeuden animoinnin suljettaessa
+                                ;; display none estää kartan korkeuden
+                                ;; animoinnin suljettaessa
+                                {:display "none"})
           :class              (when (or
-                                      (= :hidden koko)
-                                      (= :S koko))
+                                     (= :hidden koko)
+                                     (= :S koko))
                                 "piilossa")
-          :view               kartta-sijainti
-          :zoom               zoom-taso
+
+          ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
+          :extent-key (str koko "_" (name @nav/sivu))
+          :extent @nav/kartan-extent
+
           :selection          nav/valittu-hallintayksikko
           :on-zoom            paivita-extent
           :on-drag            (fn [item event]
                                 (paivita-extent item event)
                                 (t/julkaise! {:aihe :karttaa-vedetty}))
-          :on-mount           (fn [initialextent] (paivita-extent nil initialextent))
+          :on-mount           (fn [initialextent]
+                                (paivita-extent nil initialextent))
           :on-click           (fn [at]
                                 (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
                                 (poista-popup!))
@@ -579,36 +562,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :tooltip-fn         (fn [geom]
                                 (and geom
                                      [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
-          :geometries
-                              (doall (concat (cond
-                                               ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin tarkoitettuja
-                                               ;; geometrioita (kuten urakat), mutta jos esim HY on valittu, voidaan näyttää sen rajat.
-                                               (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? v-hal))
-                                               nil
-
-                                               (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? @nav/valittu-urakka))
-                                               [(assoc v-hal :valittu true)]
-
-                                               (and (#{:tilannekuva :ilmoitukset} @nav/sivu) @nav/valittu-urakka)
-                                               [(assoc @nav/valittu-urakka :valittu true)]
-
-                                               ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-                                               (nil? v-hal)
-                                               hals
-
-                                               ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-                                               (nil? @nav/valittu-urakka)
-                                               (vec (concat [(assoc v-hal
-                                                               :valittu true)]
-                                                            @nav/urakat-kartalla))
-
-                                               ;; Valittu urakka, mitä näytetään?
-                                               :default [(assoc @nav/valittu-urakka
-                                                           :valittu true
-                                                           :harja.ui.openlayers/fit-bounds true)])
-                                             @tasot/geometriat
-                                             (vals @nakyman-geometriat)))
-
+          
+          :geometries  @tasot/geometriat
+          
           :geometry-fn        (fn [piirrettava]
                                 (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
                                   (when (map? alue)

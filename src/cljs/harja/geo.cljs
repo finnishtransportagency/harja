@@ -21,8 +21,22 @@
              (max y maxy)
              pisteet)))))
 
+
 (defn laajenna-extent [[minx miny maxx maxy] d]
   [(- minx d) (- miny d) (+ maxx d) (+ maxy d)])
+
+(defn extent-keskipiste [[minx miny maxx maxy]]
+  (let [width (- maxx minx)
+        height (- maxy miny)]
+    [(+ minx (/ width 2))
+     (+ miny (/ height 2))]))
+
+(defn yhdista-extent
+  "Yhdistää kaksi annettua extentiä ja palauttaa uuden extentin, johon molemmat mahtuvat"
+  ([] nil)
+  ([[e1-minx e1-miny e1-maxx e1-maxy] [e2-minx e2-miny e2-maxx e2-maxy]]
+   [(Math/min e1-minx e2-minx) (Math/min e1-miny e2-miny)
+    (Math/max e1-maxx e2-maxx) (Math/max e1-maxy e2-maxy)]))
 
 (defn- pisteet
   "Palauttaa annetun geometrian pisteet sekvenssinä"
@@ -40,6 +54,41 @@
     :sticker-icon [(:coordinates g)]
     :sticker-icon-line (:points g)
     :circle [(:coordinates g)]))
+
+(defn laske-extent-xf
+  "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja 
+lopuksi kirjoittaa sen annettuun volatileen."
+  [extent-volatile]
+  (assert (volatile? extent-volatile) "Anna volatile!, johon extent palautetaan")
+  (fn [xf]
+    (let [minx (volatile! nil)
+          miny (volatile! nil)
+          maxx (volatile! nil)
+          maxy (volatile! nil)]
+      (fn
+        ([] (xf))
+        ([result]
+         (vreset! extent-volatile
+                  (when @minx
+                    [@minx @miny @maxx @maxy]))
+         (xf result))
+        ([result input]
+         (loop [minx- @minx
+                miny- @miny
+                maxx- @maxx
+                maxy- @maxy
+                [[x y] & pisteet] (pisteet (:alue input))]
+           (if-not x
+             (do (vreset! minx minx-)
+                 (vreset! miny miny-)
+                 (vreset! maxx maxx-)
+                 (vreset! maxy maxy-))
+             (if minx-
+               (recur (Math/min minx- x) (Math/min miny- y)
+                      (Math/max maxx- x) (Math/max maxy- y)
+                      pisteet)
+               (recur x y x y pisteet))))
+         (xf result input))))))
 
 (defn keskipiste
   "Laske annetun geometrian keskipiste ottamalla keskiarvon kaikista pisteistä.

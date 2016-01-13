@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.170"] ; .48
+                 [org.clojure/clojurescript "1.7.228"] 
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "1.0.4"]
@@ -133,7 +133,7 @@
                  ]
 
 
-  :plugins [[lein-cljsbuild "1.1.1"]
+  :plugins [[lein-cljsbuild "1.1.2"]
             [lein-less "1.7.2"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.5.0-2"]
@@ -176,6 +176,8 @@
                                        ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
                                        :source-map                "resources/public/js/harja.js.map"
                                        :output-dir                "resources/public/js/"
+
+                                       :parallel-build true
                                        }}
 
                        ]}
