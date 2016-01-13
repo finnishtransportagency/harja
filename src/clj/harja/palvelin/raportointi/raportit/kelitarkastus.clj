@@ -94,9 +94,9 @@
                                {:leveys "5%" :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
                                {:leveys "5%" :otsikko "Kit\u00ADka"}
                                {:leveys "5%" :otsikko "Läm\u00ADpö\u00ADti\u00ADla"}
-                               {:leveys "10%" :otsikko "Tar\u00ADkas\u00ADtaja"}
-                               {:leveys "15%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "10%" :otsikko "Liit\u00ADteet"}]))
+                               {:leveys "5%" :otsikko "Tar\u00ADkas\u00ADtaja"}
+                               {:leveys "10%" :otsikko "Ha\u00ADvain\u00ADnot"}
+                               {:leveys "5%" :otsikko "Liit\u00ADteet"}]))
       (mapv (fn [rivi]
               [(pvm/pvm (:aika rivi))
                (pvm/aika (:aika rivi))
