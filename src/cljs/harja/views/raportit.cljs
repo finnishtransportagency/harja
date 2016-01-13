@@ -83,7 +83,9 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 
   (let [ur (reaction @nav/valittu-urakka)
         hoitourakassa? (reaction (= :hoito (:tyyppi @ur)))
-        valittu-vuosi (reaction (when-not @hoitourakassa? (pvm/vuosi (pvm/nyt))))
+        valittu-vuosi (reaction
+                        @nav/valittu-urakka
+                        (when-not @hoitourakassa? (pvm/vuosi (pvm/nyt))))
         valittu-hoitokausi (reaction (when @hoitourakassa?
                                        @u/valittu-hoitokausi))
         kuukaudet (reaction
@@ -103,7 +105,9 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                          
                          :default
                          [])))))
-        valittu-kuukausi (atom nil)
+        valittu-kuukausi (reaction
+                           @nav/valittu-urakka
+                           nil)
         vapaa-aikavali? (atom false)
         vapaa-aikavali (atom [nil nil])]
     (run! (let [hk @valittu-hoitokausi
