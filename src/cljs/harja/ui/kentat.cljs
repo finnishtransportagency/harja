@@ -581,14 +581,14 @@
                                                           (if (or (= :multiline (:type arvo)) (= :line (:type arvo)))
                                                             {:alue (assoc arvo
                                                                      :type :tack-icon-line
-                                                                     :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
+                                                                     :img (yleiset/karttakuva "tr-piste-tack-harmaa")
                                                                      :zindex 6
                                                                      :color "gray")
                                                              :type :tr-valittu-osoite}
 
                                                             {:alue (assoc arvo
                                                                      :type :tack-icon
-                                                                     :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
+                                                                     :img (yleiset/karttakuva "tr-piste-tack-harmaa")
                                                                      :zindex 6)
                                                              :type :tr-valittu-osoite}))))))]
     (when hae-sijainti
