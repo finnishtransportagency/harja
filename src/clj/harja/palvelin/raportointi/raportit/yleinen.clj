@@ -20,7 +20,8 @@
   "rivit                   ryhmiteltävät rivit
    ryhmittely-avain        avain, jonka perusteella rivit ryhmitellään. Ryhmän otsikko otetaan suoraan tästä avaimesta.
    rivi-fn                 funktio, joka ottaa parametrina yhden rivin ja palauttaa sen taulukossa esitettävässä
-                           muodossa (eli vektori, jossa arvot sarakkeiden mukaisessa järjestyksessä, esim [Seppo, 42]"
+                           muodossa eli vektorina, jossa arvot sarakkeiden mukaisessa järjestyksessä.
+                           Esim. Jos taulukossa on otsikot Nimi ja Ikä, palautetaan riviksi: [Seppo, 42]"
   [rivit ryhmittely-avain rivi-fn]
   (let [ryhmat (group-by ryhmittely-avain rivit)]
     (into [] (mapcat
