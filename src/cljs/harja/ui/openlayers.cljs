@@ -719,8 +719,6 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
   (let [{aiempi-extent :extent aiempi-extent-key :extent-key} (reagent/state this)]
     (reagent/set-state this {:extent-key extent-key
                              :extent extent})
-    (log " aiempi-extent= " (pr-str aiempi-extent) "; extent= " (pr-str extent) "; identical? " (identical? aiempi-extent extent))
-    (log " aiempi-extent-key= " aiempi-extent-key "; extent-key= " extent-key "")
     (when (or (not (identical? aiempi-extent extent))
               (not= aiempi-extent-key extent-key))
       (.setTimeout js/window #(keskita-kartta-alueeseen! extent) animaation-odotusaika)))
