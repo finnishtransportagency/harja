@@ -47,7 +47,7 @@ päällekkäin muiden tasojen kanssa."}
              (fn [_ _ vanha uusi]
                (let [tasot (into #{} (concat (keys uusi) (keys vanha)))]
                  (loop [uudet-tasot {}
-                        [taso & tasot] tasot]
+                        [taso & tasot] (seq tasot)]
                    (if-not taso
                      (swap! tilannekuvan-asiat-kartalla merge uudet-tasot)
                      (let [vanhat-asiat (get vanha taso)
