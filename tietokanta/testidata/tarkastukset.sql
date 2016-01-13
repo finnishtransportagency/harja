@@ -15,7 +15,7 @@ INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'järjestelmän raportoima testitarkastus 2'), 'B', 11, 6, 3, -15, 1);
 
 INSERT INTO liite (nimi) VALUES ('kelitarkastus_2016.jpg');
-INSERT INTO tarkastus_liite (tarkastus, liite) VALUES ((SELECT id FROM tarkastus WHERE havainnot ='järjestelmän raportoima testitarkastus 2'), (SELECT id FROM liite WHERE nimi ='kelitarkastus_2016'));
+INSERT INTO tarkastus_liite (tarkastus, liite) VALUES ((SELECT id FROM tarkastus WHERE havainnot ='järjestelmän raportoima testitarkastus 2'), (SELECT id FROM liite WHERE nimi ='kelitarkastus_2016.jpg'));
 
 -- Tiestö
 
