@@ -8,7 +8,8 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-tiestotarkastukset-liitteineen-raportille db
@@ -53,6 +54,8 @@
                                    :loppupvm  loppupvm
                                    :tienumero tienumero})))
 
+
+
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
@@ -89,23 +92,17 @@
                                {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys "10%" :otsikko "Liit\u00ADteet" :pakota-rivitys? true}]))
-      (let [ryhmat (group-by :urakka naytettavat-rivit)]
-        (into [] (mapcat
-                   (fn [ryhma]
-                     (reduce
-                       conj
-                       [{:otsikko ryhma}]
-                       (map
-                         (fn [rivi]
-                           [(pvm/pvm (:aika rivi))
-                            (pvm/aika (:aika rivi))
-                            (get-in rivi [:tr :numero])
-                            (get-in rivi [:tr :alkuosa])
-                            (get-in rivi [:tr :alkuetaisyys])
-                            (get-in rivi [:tr :loppuosa])
-                            (get-in rivi [:tr :loppyetaisyys])
-                            (:tarkastaja rivi)
-                            (:havainnot rivi)
-                            (clojure.string/join " " (map :nimi (:liitteet rivi)))])
-                         (get ryhmat ryhma))))
-                   (keys ryhmat))))]]))
+      (yleinen/ryhmittele-tulokset-raportin-taulukolle
+        naytettavat-rivit
+        :urakka
+        (fn [rivi]
+          [(pvm/pvm (:aika rivi))
+           (pvm/aika (:aika rivi))
+           (get-in rivi [:tr :numero])
+           (get-in rivi [:tr :alkuosa])
+           (get-in rivi [:tr :alkuetaisyys])
+           (get-in rivi [:tr :loppuosa])
+           (get-in rivi [:tr :loppyetaisyys])
+           (:tarkastaja rivi)
+           (:havainnot rivi)
+           (clojure.string/join " " (map :nimi (:liitteet rivi)))]))]]))

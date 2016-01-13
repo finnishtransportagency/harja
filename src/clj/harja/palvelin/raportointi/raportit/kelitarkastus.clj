@@ -8,7 +8,8 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-kelitarkastukset-liitteineen-raportille db
@@ -97,23 +98,25 @@
                                {:leveys "5%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "10%" :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys "5%" :otsikko "Liit\u00ADteet" :pakota-rivitys? true}]))
-      (mapv (fn [rivi]
-              [(pvm/pvm (:aika rivi))
-               (pvm/aika (:aika rivi))
-               (get-in rivi [:tr :numero])
-               (get-in rivi [:tr :alkuosa])
-               (get-in rivi [:tr :alkuetaisyys])
-               (get-in rivi [:tr :loppuosa])
-               (get-in rivi [:tr :loppyetaisyys])
-               (:ajosuunta rivi)
-               (:talvihoitoluokka rivi)
-               (:mittaaja rivi)
-               (:laatuvirhe rivi)
-               (:lumimaara rivi)
-               (:tasaisuus rivi)
-               (:kitka rivi)
-               (:lampotila rivi)
-               (:tarkastaja rivi)
-               (:havainnot rivi)
-               (clojure.string/join " " (map :nimi (:liitteet rivi)))])
-            naytettavat-rivit)]]))
+      (yleinen/ryhmittele-tulokset-raportin-taulukolle
+        naytettavat-rivit
+        :urakka
+        (fn [rivi]
+          [(pvm/pvm (:aika rivi))
+           (pvm/aika (:aika rivi))
+           (get-in rivi [:tr :numero])
+           (get-in rivi [:tr :alkuosa])
+           (get-in rivi [:tr :alkuetaisyys])
+           (get-in rivi [:tr :loppuosa])
+           (get-in rivi [:tr :loppyetaisyys])
+           (:ajosuunta rivi)
+           (:talvihoitoluokka rivi)
+           (:mittaaja rivi)
+           (:laatuvirhe rivi)
+           (:lumimaara rivi)
+           (:tasaisuus rivi)
+           (:kitka rivi)
+           (:lampotila rivi)
+           (:tarkastaja rivi)
+           (:havainnot rivi)
+           (clojure.string/join " " (map :nimi (:liitteet rivi)))]))]]))
