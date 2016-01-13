@@ -31,7 +31,15 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
 
-(defonce kartalla-nakyva-alue (atom nil))
+(defonce kartan-extent (atom nil))
+
+(defonce kartalla-nakyva-alue
+  ;; Näkyvä alue reaktoi siihen mihin zoomataan, mutta kun käyttäjä
+  ;; muuttaa zoom-tasoa tai raahaa karttaa, se asetetaan näkyvään alueeseen.
+  (reaction
+   (let [[minx miny maxx maxy] @kartan-extent]
+     {:xmin minx :ymin miny
+      :xmax maxx :ymax maxy})))
 
 ;; Kartan koko voi olla
 ;; :hidden (ei näy mitään)

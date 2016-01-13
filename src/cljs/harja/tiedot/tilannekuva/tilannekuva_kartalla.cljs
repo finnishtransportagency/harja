@@ -17,3 +17,4 @@
            (when @karttataso-tilannekuva
              (kartalla-esitettavaan-muotoon
                (concat (vals (:tyokoneet @haetut-asiat)) (apply concat (vals (dissoc @haetut-asiat :tyokoneet))))))))
+

@@ -14,6 +14,7 @@ DECLARE
   bp NUMERIC;
   alkuet INTEGER;
   loppuet INTEGER;
+  itmp INTEGER;
   tmp geometry;
 BEGIN
    -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä lähimpänä
@@ -26,31 +27,38 @@ BEGIN
      AND ST_DWithin(b.geom, loppupiste, treshold) 
      AND a.tie=b.tie
 ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
-          ST_Length(ST_ShortestLine(loppupiste, b.geom))
+         ST_Length(ST_ShortestLine(loppupiste, b.geom))
    LIMIT 1
     INTO tienosavali;
 
     alkuet := tr_osan_etaisyys(alkupiste, tienosavali.tie, treshold);
     loppuet := tr_osan_etaisyys(loppupiste, tienosavali.tie, treshold);        
-  
-  -- sortataan alku- ja loppupiste ja tienosavälit siten että alkuosa on ensimmäisenä osoitteessa
-  IF (tienosavali.aosa=tienosavali.bosa AND alkuet>loppuet) OR tienosavali.aosa > tienosavali.bosa THEN
+
+  IF tienosavali.aosa > tienosavali.bosa THEN
     aosa := tienosavali.bosa;
     bosa := tienosavali.aosa;
     apiste := loppupiste;
     bpiste := alkupiste;
     ajoratavalinta := 2;
+  ELSEIF tienosavali.aosa = tienosavali.bosa THEN
+    aosa := tienosavali.aosa;
+    bosa := tienosavali.bosa;
+    IF alkuet>loppuet THEN
+      ajoratavalinta := 2;
+    ELSE
+      ajoratavalinta := 1;
+    END IF;
   ELSE
     aosa := tienosavali.aosa;
     bosa := tienosavali.bosa;
+    ajoratavalinta := 1;
     apiste := alkupiste;
     bpiste := loppupiste;
-    ajoratavalinta := 1;
   END IF;
 
   IF aosa=bosa THEN
-    SELECT ST_Line_Substring(geom, LEAST(ST_Line_Locate_Point(geom, apiste), ST_Line_Locate_Point(geom, bpiste)),
-				    GREATEST(ST_Line_Locate_Point(geom, apiste),ST_Line_Locate_Point(geom, bpiste)))
+    SELECT ST_Line_Substring(geom, LEAST(ST_Line_Locate_Point(geom, alkupiste), ST_Line_Locate_Point(geom, loppupiste)),
+				    GREATEST(ST_Line_Locate_Point(geom, alkupiste),ST_Line_Locate_Point(geom, loppupiste)))
       FROM tieverkko_paloina tv
      WHERE tv.tie = tienosavali.tie
        AND tv.osa = aosa
@@ -164,4 +172,3 @@ BEGIN
    END IF;
 END;
 $$ LANGUAGE plpgsql;
-
