@@ -45,30 +45,35 @@ päällekkäin muiden tasojen kanssa."}
   (add-watch haetut-asiat
              :paivita-tilannekuvatasot
              (fn [_ _ vanha uusi]
-               (let [tasot (into #{} (concat (keys uusi) (keys vanha)))]
-                 (loop [uudet-tasot {}
-                        [taso & tasot] (seq tasot)]
-                   (if-not taso
-                     (swap! tilannekuvan-asiat-kartalla merge uudet-tasot)
-                     (let [vanhat-asiat (get vanha taso)
-                           uudet-asiat (get uusi taso)
-                           tason-nimi (karttatason-nimi taso)]
-                       (recur (cond
-                                ;; Jos taso on nyt tyhjä, poistetaan se (nil taso poistuu kartalta)
-                                (empty? uudet-asiat)
-                                (assoc uudet-tasot tason-nimi nil)
+               (if (nil? uusi)
+                 ;; Jos tilannekuva poistuu näkyvistä, haetut-asiat on nil 
+                 (reset! tilannekuvan-asiat-kartalla {})
 
-                                ;; Jos tason asiat ovat muuttuneet, muodostetaan kartalla esitettävä muoto
-                                (not= vanhat-asiat uudet-asiat)
-                                (assoc uudet-tasot
-                                       tason-nimi (kartalla-esitettavaan-muotoon
-                                                   uudet-asiat
-                                                   nil nil
-                                                   (map (lisaa-karttatyyppi-fn taso))))
+                 ;; Päivitä kaikki eri tyyppiset asiat
+                 (let [tasot (into #{} (concat (keys uusi) (keys vanha)))]
+                   (loop [uudet-tasot {}
+                          [taso & tasot] (seq tasot)]
+                     (if-not taso
+                       (swap! tilannekuvan-asiat-kartalla merge uudet-tasot)
+                       (let [vanhat-asiat (get vanha taso)
+                             uudet-asiat (get uusi taso)
+                             tason-nimi (karttatason-nimi taso)]
+                         (recur (cond
+                                  ;; Jos taso on nyt tyhjä, poistetaan se (nil taso poistuu kartalta)
+                                  (empty? uudet-asiat)
+                                  (assoc uudet-tasot tason-nimi nil)
 
-                                :default
-                                uudet-tasot)
-                              tasot))))))))
+                                  ;; Jos tason asiat ovat muuttuneet, muodostetaan kartalla esitettävä muoto
+                                  (not= vanhat-asiat uudet-asiat)
+                                  (assoc uudet-tasot
+                                         tason-nimi (kartalla-esitettavaan-muotoon
+                                                     uudet-asiat
+                                                     nil nil
+                                                     (map (lisaa-karttatyyppi-fn taso))))
+
+                                  :default
+                                  uudet-tasot)
+                                tasot)))))))))
 
 
 

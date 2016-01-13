@@ -264,7 +264,12 @@
 (add-watch nakymassa? :pollaus-muuttui
            (fn [_ _ old new]
              (log "nakymassa? muuttui " old " => " new )
-             (pollaus-muuttui)))
+             (pollaus-muuttui)
+
+             ;; Jos tilannekuvasta on poistuttu, tyhjennetään haetut-asiat.
+             ;; Tämä poistaa kaikki tilannekuvan karttatasot.
+             (when (false? new)
+               (reset! tilannekuva-kartalla/haetut-asiat nil))))
 (add-watch valittu-tila :pollaus-muuttui
            (fn [_ _ old new]
              (log "valittu-tila muuttui " old " => " new )
