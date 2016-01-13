@@ -17,8 +17,8 @@
            (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))
 
 (defn ryhmittele-tulokset-raportin-taulukolle
-  "ryhmittely-avain        avain, jonka perusteella rivit ryhmitellään. Ryhmän otsikko otetaan suoraan tästä avaimesta.
-   rivit                   ryhmiteltävät rivit
+  "rivit                   ryhmiteltävät rivit
+   ryhmittely-avain        avain, jonka perusteella rivit ryhmitellään. Ryhmän otsikko otetaan suoraan tästä avaimesta.
    rivi-fn                 funktio, joka ottaa parametrina yhden rivin ja palauttaa sen taulukossa esitettävässä
                            muodossa (eli vektori, jossa arvot sarakkeiden mukaisessa järjestyksessä, esim [Seppo, 42]"
   [rivit ryhmittely-avain rivi-fn]
