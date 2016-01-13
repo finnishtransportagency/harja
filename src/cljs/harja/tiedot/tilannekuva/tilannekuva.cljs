@@ -18,14 +18,19 @@
 (defonce nakymassa? (atom false))
 (defonce valittu-tila (atom :nykytilanne))
 
-;; odota sekunti ennen hakemista kun muutoksia tehdään
-(defonce bufferi 1000)
+(def ^{:doc "Aika joka odotetaan ennen uusien tietojen hakemista, kun parametrit muuttuvat"
+       :const true}
+  bufferi 1000)
 
 ;; 10s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
 ;; karttaa siirretään tai zoomataan
-(defonce hakutiheys-nykytilanne 10000)
+(def ^{:doc "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
+       :const true}
+  hakutiheys-nykytilanne 10000)
 
-(defonce hakutiheys-historiakuva 1200000)
+(def ^{:doc "Päivitystiheys historiakuvassa on 20 minuuttia."
+       :const true}
+  hakutiheys-historiakuva 1200000)
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
@@ -212,42 +217,9 @@
                                   (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
                                                          :tyokoneet (vals (:tyokoneet tulos))})
                                   tulos)
-          lisaa-karttatyypit (fn [tulos]
-                               (as-> tulos t
-                                 (assoc t :ilmoitukset
-                                        (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
-                                             (:ilmoitukset t)))
-                                 (assoc t :turvallisuuspoikkeamat
-                                        (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
-                                             (:turvallisuuspoikkeamat t)))
-                                 (assoc t :tarkastukset
-                                        (map #(assoc % :tyyppi-kartalla :tarkastus)
-                                             (:tarkastukset t)))
-                                 (assoc t :laatupoikkeamat
-                                        (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
-                                             (:laatupoikkeamat t)))
-                                 (assoc t :paikkaus
-                                        (map #(assoc % :tyyppi-kartalla :paikkaus)
-                                             (:paikkaus t)))
-                                 (assoc t :paallystys
-                                        (map #(assoc % :tyyppi-kartalla :paallystys)
-                                             (:paallystys t)))
-
-                                 ;; Tyokoneet on mäp, id -> työkone
-                                 (assoc t :tyokoneet (into {}
-                                                           (map
-                                                            (fn [[id tyokone]]
-                                                              {id (assoc tyokone :tyyppi-kartalla :tyokone)})
-                                                            (:tyokoneet t))))
-
-                                 (assoc t :toteumat
-                                        (map #(assoc % :tyyppi-kartalla :toteuma)
-                                             (:toteumat t)))))
-
           tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
                     (yhdista-tyokonedata)
-                    (julkaise-tyokonedata!)
-                    (lisaa-karttatyypit))]
+                    (julkaise-tyokonedata!))]
       (reset! tilannekuva-kartalla/haetut-asiat tulos)
       (kartta/aseta-paivitetaan-karttaa-tila false))))
 

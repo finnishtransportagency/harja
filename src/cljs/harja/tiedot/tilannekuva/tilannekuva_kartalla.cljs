@@ -11,10 +11,53 @@
 (defonce karttataso-tilannekuva (atom false))
 (defonce haetut-asiat (atom nil))
 
-(defonce tilannekuvan-asiat-kartalla
-         (reaction
-           @haetut-asiat
-           (when @karttataso-tilannekuva
-             (kartalla-esitettavaan-muotoon
-               (concat (vals (:tyokoneet @haetut-asiat)) (apply concat (vals (dissoc @haetut-asiat :tyokoneet))))))))
+(defonce tilannekuvan-asiat-kartalla (atom {}))
+
+(def lisaa-karttatyyppi-fn
+  {:ilmoitukset #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+   :turvallisuuspoikkeamat #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
+   :tarkastukset #(assoc % :tyyppi-kartalla :tarkastus)
+   :laatupoikkeamat #(assoc % :tyyppi-kartalla :laatupoikkeama)
+   :paikkaus #(assoc % :tyyppi-kartalla :paikkaus)
+   :paallystys #(assoc % :tyyppi-kartalla :paallystys)
+   
+   ;; Tyokoneet on mäp, id -> työkone
+   :tyokoneet (fn [[_ tyokone]]
+                (assoc tyokone :tyyppi-kartalla :tyokone))
+
+   :toteumat #(assoc % :tyyppi-kartalla :toteuma)})
+
+(def ^{:doc "Mäpätään tilannekuvan tasojen nimet :tilannekuva- etuliitteelle, etteivät ne mene 
+päällekkäin muiden tasojen kanssa."}
+  karttatason-nimi
+  {:ilmoitukset :tilannekuva-ilmoitukset
+   :turvallisuuspoikkeamat :tilannekuva-turvallisuuspoikkeamat
+   :tarkastukset :tilannekuva-tarkastukset
+   :laatupoikkeamat :tilannekuva-laatupoikkeamat
+   :paikkaus :tilannekuva-paikkaus
+   :paallystys :tilannekuva-paallystys
+   :tyokoneet :tilannekuva-tyokoneet
+   :toteumat :tilannekuva-toteumat})
+
+;; Päivittää tilannekuvan karttatasot kun niiden tiedot ovat muuttuneet.
+;; Muuntaa kartalla esitettävään muotoon ne tasot, joiden tiedot on oikeasti muuttuneet.
+(defonce paivita-tilannekuvatasot
+  (add-watch haetut-asiat
+             :paivita-tilannekuvatasot
+             (fn [_ _ vanha uusi]
+               (loop [uudet-tasot {}
+                      [taso & tasot] (keys uusi)]
+                 (if-not taso
+                   (swap! tilannekuvan-asiat-kartalla merge uudet-tasot)
+                   (let [vanhat-asiat (get vanha taso)
+                         uudet-asiat (get uusi taso)]
+                     (recur (if (not= vanhat-asiat uudet-asiat)
+                              (assoc uudet-tasot (karttatason-nimi taso)
+                                     (kartalla-esitettavaan-muotoon uudet-asiat
+                                                                    nil nil
+                                                                    (map (lisaa-karttatyyppi-fn taso))))
+                              uudet-tasot)
+                            tasot)))))))
+
+
 
