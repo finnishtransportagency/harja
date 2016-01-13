@@ -20,7 +20,9 @@ BEGIN
    -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä lähimpänä
   SELECT a.tie, 
          a.osa AS aosa, 
-         b.osa AS bosa
+         b.osa AS bosa,
+         a.ajorata AS arata,
+         b.ajorata AS brata
     FROM tieverkko_paloina a, 
          tieverkko_paloina b 
    WHERE ST_DWithin(a.geom, alkupiste, treshold) 
@@ -43,10 +45,14 @@ ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
   ELSEIF tienosavali.aosa = tienosavali.bosa THEN
     aosa := tienosavali.aosa;
     bosa := tienosavali.bosa;
-    IF alkuet>loppuet THEN
+    IF tienosavali.arata=tienosavali.brata AND alkuet>loppuet THEN
       ajoratavalinta := 2;
-    ELSE
+    ELSEIF tienosavali.arata=tienosavali.brata AND alkuet<=loppuet THEN
       ajoratavalinta := 1;
+    ELSEIF tienosavali.arata!=tienosavali.brata AND alkuet>loppuet THEN
+      ajoratavalinta := 1;
+    ELSEIF tienosavali.arata!=tienosavali.brata AND alkuet<=loppuet THEN
+      ajoratavalinta := 2;
     END IF;
   ELSE
     aosa := tienosavali.aosa;
@@ -57,13 +63,23 @@ ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
   END IF;
 
   IF aosa=bosa THEN
-    SELECT ST_Line_Substring(geom, LEAST(ST_Line_Locate_Point(geom, alkupiste), ST_Line_Locate_Point(geom, loppupiste)),
-				    GREATEST(ST_Line_Locate_Point(geom, alkupiste),ST_Line_Locate_Point(geom, loppupiste)))
+    SELECT ST_LineMerge(ST_Union(geom))
       FROM tieverkko_paloina tv
      WHERE tv.tie = tienosavali.tie
        AND tv.osa = aosa
        AND (tv.ajorata = ajoratavalinta OR tv.ajorata=0)
-    INTO reitti;
+    INTO reitti; 
+
+    SELECT ST_Line_Substring(reitti, LEAST(ST_Line_Locate_Point(reitti, alkupiste), ST_Line_Locate_Point(reitti, loppupiste)),
+				      GREATEST(ST_Line_Locate_Point(reitti, alkupiste),ST_Line_Locate_Point(reitti, loppupiste))) INTO reitti;
+				    
+--    SELECT ST_Line_Substring(geom, LEAST(ST_Line_Locate_Point(geom, alkupiste), ST_Line_Locate_Point(geom, loppupiste)),
+--				    GREATEST(ST_Line_Locate_Point(geom, alkupiste),ST_Line_Locate_Point(geom, loppupiste)))
+--      FROM tieverkko_paloina tv
+--     WHERE tv.tie = tienosavali.tie
+--       AND tv.osa = aosa
+--       AND (tv.ajorata = ajoratavalinta OR tv.ajorata=0)
+--    INTO reitti;
   ELSE   
   -- kootaan osien geometriat yhdeksi viivaksi
   SELECT ST_LineMerge(ST_Union((CASE 
