@@ -361,7 +361,7 @@ FROM tarkastus t
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
-WHERE AND (t.aika >= :alku AND t.aika <= :loppu)
+WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito'::tarkastustyyppi
 ORDER BY t.aika;

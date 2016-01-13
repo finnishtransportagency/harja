@@ -11,7 +11,7 @@
             [harja.kyselyt.konversio :as konv]))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-urakan-tiestotarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-urakan-kelitarkastukset-liitteineen-raportille db
                                                                        urakka-id
                                                                        alkupvm
                                                                        loppupvm
@@ -19,7 +19,7 @@
                                                                        tienumero))
 
 (defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-hallintayksikon-kelitarkastukset-liitteineen-raportille db
                                                                                 hallintayksikko-id
                                                                                 alkupvm
                                                                                 loppupvm
@@ -27,13 +27,13 @@
                                                                                 tienumero))
 
 (defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-koko-maan-tiestotarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-koko-maan-kelitarkastukset-liitteineen-raportille db
                                                                           alkupvm
                                                                           loppupvm
                                                                           (not (nil? tienumero))
                                                                           tienumero))
 
-(defn hae-tiestotarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
+(defn hae-tarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
   (case konteksti
     :urakka
     (hae-tarkastukset-urakalle db
@@ -54,13 +54,12 @@
                                    :tienumero tienumero})))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
-  ; FIXME Toistaiseksi kopsittu tiestötarkastusrapsasta
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
-                               (hae-tiestotarkastukset db {:konteksti          konteksti
+                               (hae-tarkastukset db {:konteksti          konteksti
                                                            :urakka-id          urakka-id
                                                            :hallintayksikko-id hallintayksikko-id
                                                            :alkupvm            alkupvm

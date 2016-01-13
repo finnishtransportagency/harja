@@ -33,7 +33,7 @@
                                                                           (not (nil? tienumero))
                                                                           tienumero))
 
-(defn hae-tiestotarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
+(defn hae-tarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
   (case konteksti
     :urakka
     (hae-tarkastukset-urakalle db
@@ -59,7 +59,7 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
-                               (hae-tiestotarkastukset db {:konteksti          konteksti
+                               (hae-tarkastukset db {:konteksti                konteksti
                                                            :urakka-id          urakka-id
                                                            :hallintayksikko-id hallintayksikko-id
                                                            :alkupvm            alkupvm
