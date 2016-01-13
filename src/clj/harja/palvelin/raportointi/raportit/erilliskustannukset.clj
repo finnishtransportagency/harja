@@ -20,7 +20,7 @@
 (defn erilliskustannuksen-nimi
   [tyyppi]
   (case tyyppi
-    "asiakastyytyvaisyysbonus" "Asiakas\u00ADtyytyväisyys\u00ADbonus"
+    "asiakastyytyvaisyysbonus" "As.tyyt.\u00ADbonus"
     "muu" "Muu"))
 
 (defn hae-erilliskustannukset-aikavalille
@@ -35,7 +35,16 @@
                        toimenpide-id
                        alkupvm loppupvm)]
     (into []
-          (map konv/alaviiva->rakenne)
+          (comp
+            (map #(if (= (:tyyppi %) "asiakastyytyvaisyysbonus")
+                   (assoc % :indeksikorotus (:bonusindeksikorotus %))
+                   (assoc % :indeksikorotus (if-not :indeksin_nimi
+                                              0
+                                              (if (and (:indeksikorjattuna %)
+                                                      (:rahasumma %))
+                                               (- (:indeksikorjattuna %) (:rahasumma %))
+                                               0)))))
+            (map konv/alaviiva->rakenne))
           kustannukset)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id alkupvm loppupvm] :as parametrit}]
@@ -58,19 +67,20 @@
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        erilliskustannukset-hyn-mukaan (sort-by #(or (:id (first %)) 100000)
+        ;; odotellaan tarviiko asiakas ryhmittelyä hallintayksiköiden mukaan..
+        #_ erilliskustannukset-hyn-mukaan #_(sort-by #(or (:id (first %)) 100000)
                                                 (seq (group-by :hallintayksikko
                                                                erilliskustannukset)))]
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true}
-      (keep identity [(when-not (= konteksti :urakka) {:leveys "10" :otsikko "Urakka"})
+      (keep identity [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
                       {:leveys 7 :otsikko "Pvm"}
                       {:leveys 8 :otsikko "Sop. nro"}
                       {:leveys 10 :otsikko "Toimenpide"}
-                      {:leveys 10 :otsikko "Tyyppi"}
-                      {:leveys 7 :otsikko "Summa"}
-                      {:leveys 7 :otsikko "Ind.korotus"}])
+                      {:leveys 7 :otsikko "Tyyppi"}
+                      {:leveys 8 :otsikko "Summa"}
+                      {:leveys 8 :otsikko "Ind.korotus"}])
 
       (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))
                          (pvm/pvm (:pvm %))
@@ -78,10 +88,10 @@
                          (:tpinimi %)
                          (erilliskustannuksen-nimi (:tyyppi %))
                          (fmt/euro-opt (:rahasumma %))
-                         (or (fmt/euro-opt (:indeksikorjattuna %)) ""))
+                         (or (fmt/euro-opt (:indeksikorotus %)) ""))
                   erilliskustannukset)
             (keep identity [(when-not (= konteksti :urakka) "") "Yhteensä" "" "" ""
                             (fmt/euro-opt (reduce + (keep :rahasumma erilliskustannukset)))
-                            (fmt/euro-opt (reduce + (keep :indeksikorjattuna erilliskustannukset)))]))]]))
+                            (fmt/euro-opt (reduce + (keep :indeksikorotus erilliskustannukset)))]))]]))
 
 
