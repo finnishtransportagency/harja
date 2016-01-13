@@ -91,7 +91,7 @@
                                {:leveys "6%" :otsikko "Let"}
                                {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "10%" :otsikko "Liit\u00ADteet" :pakota-rivitys? true}]))
+                               {:leveys "5%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         naytettavat-rivit
         :urakka
@@ -105,4 +105,4 @@
            (get-in rivi [:tr :loppyetaisyys])
            (:tarkastaja rivi)
            (:havainnot rivi)
-           (clojure.string/join " " (map :nimi (:liitteet rivi)))]))]]))
+           (count (:liitteet rivi))]))]]))
