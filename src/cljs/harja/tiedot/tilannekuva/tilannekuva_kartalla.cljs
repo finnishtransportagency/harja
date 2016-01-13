@@ -45,7 +45,7 @@ päällekkäin muiden tasojen kanssa."}
   (add-watch haetut-asiat
              :paivita-tilannekuvatasot
              (fn [_ _ vanha uusi]
-               (let [tasot (into #{} (mapcat (keys uusi) (keys vanha)))]
+               (let [tasot (into #{} (concat (keys uusi) (keys vanha)))]
                  (loop [uudet-tasot {}
                         [taso & tasot] tasot]
                    (if-not taso
