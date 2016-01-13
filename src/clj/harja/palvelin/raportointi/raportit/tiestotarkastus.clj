@@ -89,15 +89,23 @@
                                {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys "10%" :otsikko "Liit\u00ADteet" :pakota-rivitys? true}]))
-      (mapv (fn [rivi]
-              [(pvm/pvm (:aika rivi))
-               (pvm/aika (:aika rivi))
-               (get-in rivi [:tr :numero])
-               (get-in rivi [:tr :alkuosa])
-               (get-in rivi [:tr :alkuetaisyys])
-               (get-in rivi [:tr :loppuosa])
-               (get-in rivi [:tr :loppyetaisyys])
-               (:tarkastaja rivi)
-               (:havainnot rivi)
-               (clojure.string/join " " (map :nimi (:liitteet rivi)))])
-            naytettavat-rivit)]]))
+      (let [ryhmat (group-by :urakka naytettavat-rivit)]
+        (into [] (mapcat
+                   (fn [ryhma]
+                     (reduce
+                       conj
+                       [{:otsikko ryhma}]
+                       (map
+                         (fn [rivi]
+                           [(pvm/pvm (:aika rivi))
+                            (pvm/aika (:aika rivi))
+                            (get-in rivi [:tr :numero])
+                            (get-in rivi [:tr :alkuosa])
+                            (get-in rivi [:tr :alkuetaisyys])
+                            (get-in rivi [:tr :loppuosa])
+                            (get-in rivi [:tr :loppyetaisyys])
+                            (:tarkastaja rivi)
+                            (:havainnot rivi)
+                            (clojure.string/join " " (map :nimi (:liitteet rivi)))])
+                         (get ryhmat ryhma))))
+                   (keys ryhmat))))]]))
