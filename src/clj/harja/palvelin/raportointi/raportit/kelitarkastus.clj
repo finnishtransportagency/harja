@@ -89,8 +89,6 @@
                                {:leveys "5%" :otsikko "Let"}
                                {:leveys "5%" :otsikko "Ajo\u00ADsuun\u00ADta"}
                                {:leveys "5%" :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
-                               {:leveys "5%" :otsikko "Mit\u00ADtaaja"}
-                               {:leveys "5%" :otsikko "Laa\u00ADtu\u00ADvir\u00ADhe"}
                                {:leveys "5%" :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
                                {:leveys "5%" :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
                                {:leveys "5%" :otsikko "Kit\u00ADka"}
@@ -111,8 +109,6 @@
            (get-in rivi [:tr :loppyetaisyys])
            (:ajosuunta rivi)
            (:talvihoitoluokka rivi)
-           (:mittaaja rivi)
-           (:laatuvirhe rivi)
            (:lumimaara rivi)
            (:tasaisuus rivi)
            (:kitka rivi)
