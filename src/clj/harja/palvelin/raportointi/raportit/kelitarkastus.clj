@@ -81,21 +81,21 @@
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
       (flatten (keep identity [{:leveys "10%" :otsikko "Päivämäärä"}
                                {:leveys "5%" :otsikko "Klo"}
-                               {:leveys "6%" :otsikko "Tie"}
-                               {:leveys "6%" :otsikko "Aosa"}
-                               {:leveys "6%" :otsikko "Aet"}
-                               {:leveys "6%" :otsikko "Losa"}
-                               {:leveys "6%" :otsikko "Let"}
-                               {:leveys "6%" :otsikko "Ajosuunta"}
-                               {:leveys "6%" :otsikko "Hoitoluokka"}
-                               {:leveys "6%" :otsikko "Mittaaja"}
-                               {:leveys "6%" :otsikko "Laatuvirhe"}
-                               {:leveys "6%" :otsikko "Lumimäärä (cm)"}
-                               {:leveys "6%" :otsikko "Epätasaisuus (cm)"}
-                               {:leveys "6%" :otsikko "Kitka"}
-                               {:leveys "6%" :otsikko "Lämpötila"}
-                               {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
-                               {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
+                               {:leveys "5%" :otsikko "Tie"}
+                               {:leveys "5%" :otsikko "Aosa"}
+                               {:leveys "5%" :otsikko "Aet"}
+                               {:leveys "5%" :otsikko "Losa"}
+                               {:leveys "5%" :otsikko "Let"}
+                               {:leveys "5%" :otsikko "Ajo\u00ADsuun\u00ADta"}
+                               {:leveys "5%" :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+                               {:leveys "5%" :otsikko "Mit\u00ADtaaja"}
+                               {:leveys "5%" :otsikko "Laa\u00ADtu\u00ADvir\u00ADhe"}
+                               {:leveys "5%" :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
+                               {:leveys "5%" :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
+                               {:leveys "5%" :otsikko "Kit\u00ADka"}
+                               {:leveys "5%" :otsikko "Läm\u00ADpö\u00ADti\u00ADla"}
+                               {:leveys "10%" :otsikko "Tar\u00ADkas\u00ADtaja"}
+                               {:leveys "15%" :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys "10%" :otsikko "Liit\u00ADteet"}]))
       (mapv (fn [rivi]
               [(pvm/pvm (:aika rivi))
