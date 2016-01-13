@@ -198,6 +198,7 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
+  u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -207,6 +208,7 @@ SELECT
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
+  JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
@@ -231,6 +233,7 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
+  u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -240,6 +243,7 @@ SELECT
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
+  JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
@@ -309,6 +313,7 @@ SELECT
   thm.kitka,
   thm.lampotila,
   thm.ajosuunta,
+  u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -319,6 +324,7 @@ FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
@@ -349,6 +355,7 @@ SELECT
   thm.kitka,
   thm.lampotila,
   thm.ajosuunta,
+  u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -359,6 +366,7 @@ FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
