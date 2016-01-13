@@ -160,10 +160,13 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            nil false (when @vapaa-aikavali?
                        [ui-valinnat/aikavali vapaa-aikavali])]]]))))
 
+(def tienumero (atom nil))
+
 (defmethod raportin-parametri "tienumero" [p arvo]
   (fn [_ _]
-    [valinnat/tienumero (r/wrap nil (fn [uusi]
-                                             (reset! arvo {:tienumero uusi})))]))
+    [valinnat/tienumero (r/wrap @tienumero (fn [uusi]
+                                             (reset! arvo {:tienumero uusi})
+                                             (reset! tienumero uusi)))]))
 
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
   (let [aseta-tpi (fn [tpi]
