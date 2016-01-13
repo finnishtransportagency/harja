@@ -6,7 +6,8 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
        'hallintayksikko'::raporttikonteksti,
        'hankinta-alue'::raporttikonteksti,
        'koko maa'::raporttikonteksti],
- ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri], -- FIXME Lisää tie kun muuten valmis
+ ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri,
+       ('Tienumero', 'tienumero', false, NULL)::raporttiparametri],
  '#''harja.palvelin.raportointi.raportit.tiestotarkastus/suorita',
   'hoito'::urakkatyyppi
 );
@@ -17,7 +18,8 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
        'hallintayksikko'::raporttikonteksti,
        'hankinta-alue'::raporttikonteksti,
        'koko maa'::raporttikonteksti],
- ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri], -- FIXME Lisää tie kun muuten valmis
+ ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri,
+       ('Tienumero', 'tienumero', false, NULL)::raporttiparametri],
  '#''harja.palvelin.raportointi.raportit.kelitarkastus/suorita',
   'hoito'::urakkatyyppi
 );

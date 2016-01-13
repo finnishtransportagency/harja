@@ -231,8 +231,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 (def omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [parametri-arvot (atom {})
-        ]
+  (let [parametri-arvot (atom {})]
     (reset! suoritettu-raportti nil)
     (komp/luo
       (fn [raporttityyppi konteksti v-ur v-hal]
