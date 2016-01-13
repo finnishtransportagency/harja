@@ -88,7 +88,7 @@
                                {:leveys "6%" :otsikko "Let"}
                                {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "10%" :otsikko "Liit\u00ADteet"}]))
+                               {:leveys "10%" :otsikko "Liit\u00ADteet" :pakota-rivitys? true}]))
       (mapv (fn [rivi]
               [(pvm/pvm (:aika rivi))
                (pvm/aika (:aika rivi))

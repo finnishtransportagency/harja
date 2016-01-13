@@ -96,7 +96,7 @@
                                {:leveys "5%" :otsikko "Läm\u00ADpö\u00ADti\u00ADla"}
                                {:leveys "5%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "10%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "5%" :otsikko "Liit\u00ADteet"}]))
+                               {:leveys "5%" :otsikko "Liit\u00ADteet" :pakota-rivitys? true}]))
       (mapv (fn [rivi]
               [(pvm/pvm (:aika rivi))
                (pvm/aika (:aika rivi))
