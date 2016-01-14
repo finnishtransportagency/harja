@@ -561,6 +561,33 @@
            (pvm/pvm-aika p)
            "")])
 
+(defn hae-tr-geometria [osoite hakufn]
+  (go
+    (log "Haetaan geometria osoitteelle: " (pr-str osoite))
+      (let [tulos (<! (hakufn osoite))]
+        (log "Saatiin tulos: " (pr-str tulos))
+        (if-not (or (nil? tulos) (k/virhe? tulos))
+          (do
+            (>! tr-osoite-ch (assoc osoite :geometria tulos))
+            nil)
+          (do
+            (>! tr-osoite-ch :virhe)
+            "Reitille ei löydy tietä.")))))
+
+(defn- onko-tr-osoite-kokonainen? [osoite]
+  (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
+
+(defn- onko-tr-osoite-pistemainen? [osoite]
+  (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys]))
+
+(defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key]
+  [:td [:input.tierekisteri {:class     (when lomake? "form-control")
+                             :size      5 :max-length 10
+                             :placeholder placeholder
+                             :value     value
+                             :on-change (muuta! key)
+                             :on-blur   blur}]])
+
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
@@ -635,32 +662,11 @@
               blur (when hae-sijainti
                      (fn []
                        (cond
-                         (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
-                         (go
-                           (log "Haetaan viiva osoitteelle: " (pr-str osoite))
-                           (let [tulos (<! (vkm/tieosoite->viiva osoite))]
-                             (log "Saatiin tulos: " (pr-str tulos))
-                             (if-not (or (nil? tulos) (k/virhe? tulos))
-                               (do
-                                 (reset! virheet nil)
-                                 (>! tr-osoite-ch (assoc osoite :geometria tulos)))
-                               (do
-                                 (>! tr-osoite-ch :virhe)
-                                 (reset! virheet "Reitille ei löydy tietä.")))))
-
-                         (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys])
-                         (go
-                           (log "Haetaan piste osoitteelle: " (pr-str osoite))
-                           (let [tulos (<! (vkm/tieosoite->piste osoite))]
-                             (log "Saatiin tulos: " (pr-str tulos))
-                             (if-not (or (nil? tulos) (k/virhe? tulos))
-                               (do
-                                 (reset! virheet nil)
-                                 (>! tr-osoite-ch (assoc osoite :geometria tulos)))
-                               (do
-                                 (reset! virheet "Pisteelle ei löydy tietä.")
-                                 (>! tr-osoite-ch :virhe)))))
-
+                         (onko-tr-osoite-kokonainen? osoite)
+                         (reset! virheet (hae-tr-geometria osoite vkm/tieosoite->viiva))
+                         
+                         (onko-tr-osoite-pistemainen? osoite)
+                         (reset! virheet (hae-tr-geometria osoite vkm/tieosoite->piste)) 
                          :else
                          (do
                            (tasot/poista-geometria! :tr-valittu-osoite)
@@ -674,41 +680,13 @@
            [:table
             [:tbody
              [:tr
-              [:td [:input.tierekisteri {:class       (when lomake? "form-control")
-                                         :size        5 :max-length 10
-                                         :placeholder "Tie#"
-                                         :value       numero
-                                         :disabled    kartta?
-                                         :on-change   (muuta! :numero)
-                                         :on-blur     blur}]]
-              [:td [:input.tierekisteri {:class       (when lomake? "form-control")
-                                         :size        5 :max-length 10
-                                         :placeholder "aosa"
-                                         :value       alkuosa
-                                         :disabled    kartta?
-                                         :on-change   (muuta! :alkuosa)
-                                         :on-blur     blur}]]
-              [:td [:input.tierekisteri {:class       (when lomake? "form-control")
-                                         :size        5 :max-length 10
-                                         :placeholder "aet"
-                                         :value       alkuetaisyys
-                                         :disabled    kartta?
-                                         :on-change   (muuta! :alkuetaisyys)
-                                         :on-blur     blur}]]
-              [:td [:input.tierekisteri {:class       (when lomake? "form-control")
-                                         :size        5 :max-length 10
-                                         :placeholder "losa"
-                                         :value       loppuosa
-                                         :disabled    kartta?
-                                         :on-change   (muuta! :loppuosa)
-                                         :on-blur     blur}]]
-              [:td [:input.tierekisteri {:class       (when lomake? "form-control")
-                                         :size        5 :max-length 10
-                                         :placeholder "let"
-                                         :value       loppuetaisyys
-                                         :disabled    kartta?
-                                         :on-change   (muuta! :loppuetaisyys)
-                                         :on-blur     blur}]]
+              (let [tr-elementti (partial tr-kentan-elementti lomake? kartta? muuta! blur)]
+                [tr-elementti "Tie#" numero :numero]
+                [tr-elementti "aosa" alkuosa :alkuosa]
+                [tr-elementti "aet" alkuetaisyys :alkuetaisyys]
+                [tr-elementti "losa" loppuosa :loppuosa]
+                [tr-elementti "let" loppuetaisyys :loppuetaisyys])
+              
               (if-not @karttavalinta-kaynnissa
                 [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
                                                                  (reset! osoite-ennen-karttavalintaa osoite)

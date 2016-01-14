@@ -312,7 +312,9 @@
     [(karttakuva (str ikoni "-sticker-" tila)) (karttakuva (str ikoni "-sticker-sininen")) selite]))
 
 (defn muunna-tyokoneen-suunta [kulma]
-  (+ (- Math/PI) (* (/ Math/PI 180) kulma)))
+  (+ (- Math/PI)
+     (* (/ Math/PI 180)
+        kulma)))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
   (let [[img selite-img selite-teksti] (paattele-tyokoneen-ikoni
