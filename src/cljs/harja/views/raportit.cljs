@@ -58,6 +58,10 @@
                  (log "Resetoidaan valittu raportti, ei enää mahdollinen")
                  (reset! valittu-raporttityyppi nil)))))
 
+(defonce tyhjenna-raportti-kun-valinta-muuttuu
+  (run! @valittu-raporttityyppi
+        (reset! suoritettu-raportti nil)))
+
 ;; Raportin parametrit, parametrityypin lisäämiseksi luo
 ;; defmethodit parametrin tyypin mukaan
 
