@@ -9,6 +9,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.organisaatiot :as organisaatiot-q]
             ;; vaaditaan built in raportit
+            [harja.palvelin.raportointi.raportit.erilliskustannukset]
             [harja.palvelin.raportointi.raportit.ilmoitus]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]

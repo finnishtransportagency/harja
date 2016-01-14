@@ -5,8 +5,8 @@
                                                                  pylvaat ei-osumia-aikavalilla-teksti]]
             [harja.domain.roolit :as roolit]
             [clj-time.coerce :as tc]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
             [clj-time.core :as t]
@@ -14,51 +14,33 @@
             [harja.pvm :as pvm]))
 
 
-(defn muodosta-ilmoitusraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (log/debug "Haetaan urakan ilmoitukset raporttia varten. Urakka-id: " urakka-id
-             " alkupvm: " alkupvm " loppupvm: " loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [;; [db user hallintayksikko urakka tilat tyypit aikavali hakuehto]
-        ;; haetaan urakan konttekstissa aina kuukauden tiedot. Sopii yhteen työmaakokouskäytännön kanssa.
-        ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
-                      db user nil urakka-id +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "")
-        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
-    ilmoitukset))
 
-(defn muodosta-ilmoitusraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
-  (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
-                      db user hallintayksikko-id nil +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "")
-        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
-    ilmoitukset))
-
-(defn muodosta-ilmoitusraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
-  (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
-  (let [ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
-                      db user nil nil +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "")
-        _ (log/debug "ilmoitukset ilmoitusrapsaa varten: " ilmoitukset)]
-    ilmoitukset))
-
-
+(defn hae-ilmoitukset-raportille
+  [db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
+   +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto]
+  (ilmoituspalvelu/hae-ilmoitukset
+    db user hallintayksikko-id urakka-id
+    urakoitsija urakkatyyppi
+    +ilmoitustilat+ +ilmoitustyypit+
+    [alkupvm loppupvm] hakuehto))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-        ilmoitukset (ilmoituspalvelu/hae-ilmoitukset
-                      db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
+        ilmoitukset (hae-ilmoitukset-raportille
+                      db user hallintayksikko-id urakka-id
+                      nil nil
+                      +ilmoitustilat+ +ilmoitustyypit+
                       [alkupvm loppupvm] "")
         ;; graafia varten haetaan joko ilmoitukset pitkältä aikaväliltä tai jos kk raportti, niin hoitokaudelta
         hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
         ilmoitukset-hoitokaudella (when kyseessa-kk-vali?
                                     (ilmoituspalvelu/hae-ilmoitukset
-                                      db user hallintayksikko-id urakka-id +ilmoitustilat+ +ilmoitustyypit+
+                                      db user hallintayksikko-id urakka-id
+                                      nil nil
+                                      +ilmoitustilat+ +ilmoitustyypit+
                                       [hoitokauden-alkupvm loppupvm] ""))
         ilmoitukset-kuukausittain (group-by ffirst
                                             (frequencies (map (juxt (comp vuosi-ja-kk :ilmoitettu)
