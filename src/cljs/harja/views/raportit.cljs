@@ -58,6 +58,10 @@
                  (log "Resetoidaan valittu raportti, ei enää mahdollinen")
                  (reset! valittu-raporttityyppi nil)))))
 
+(defonce tyhjenna-raportti-kun-valinta-muuttuu
+  (run! @valittu-raporttityyppi
+        (reset! suoritettu-raportti nil)))
+
 ;; Raportin parametrit, parametrityypin lisäämiseksi luo
 ;; defmethodit parametrin tyypin mukaan
 
@@ -235,9 +239,9 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 (def omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [parametri-arvot (atom {})
-        ]
-    (reset! suoritettu-raportti nil)
+  (let [parametri-arvot (atom {})]
+    (run! @parametri-arvot
+          (reset! suoritettu-raportti nil))
     (komp/luo
       (fn [raporttityyppi konteksti v-ur v-hal]
          (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
