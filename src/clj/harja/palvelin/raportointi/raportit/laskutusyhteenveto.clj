@@ -110,7 +110,7 @@
               [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu ajalta ennen valittua kuukautta. "
                                     vain-jvh-viesti)]
               (if indeksiarvo-puuttuu-valitulta-kklta?
-                [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittava valitun kuukauden indeksiarvo puuttuu. "
+                [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu. "
                                       vain-jvh-viesti)]))))]
 
     [:raportti {:nimi "Laskutusyhteenveto"}
