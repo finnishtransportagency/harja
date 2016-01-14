@@ -581,12 +581,13 @@
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys]))
 
 (defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key]
-  [:input.tierekisteri {:class     (when lomake? "form-control")
-                        :size      5 :max-length 10
-                        :placeholder placeholder
-                        :value     value
-                        :on-change (muuta! key)
-                        :on-blur   blur}])
+  [:td
+   [:input.tierekisteri {:class     (when lomake? "form-control")
+                         :size      5 :max-length 10
+                         :placeholder placeholder
+                         :value     value
+                         :on-change (muuta! key)
+                         :on-blur   blur}]])
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
@@ -680,11 +681,11 @@
           [:table
            [:tbody
             [:tr
-             [:td [tr-elementti "Tie#" numero :numero]]
-             [:td [tr-elementti "aosa" alkuosa :alkuosa]]
-             [:td [tr-elementti "aet" alkuetaisyys :alkuetaisyys]]
-             [:td [tr-elementti "losa" loppuosa :loppuosa]]
-             [:td [tr-elementti "let" loppuetaisyys :loppuetaisyys]]
+             [tr-elementti "Tie#" numero :numero]
+             [tr-elementti "aosa" alkuosa :alkuosa]
+             [tr-elementti "aet" alkuetaisyys :alkuetaisyys]
+             [tr-elementti "losa" loppuosa :loppuosa]
+             [tr-elementti "let" loppuetaisyys :loppuetaisyys]
              
              (if-not @karttavalinta-kaynnissa
                [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
