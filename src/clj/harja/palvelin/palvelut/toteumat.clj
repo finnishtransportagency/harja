@@ -251,17 +251,14 @@
   (log/debug "tallenna erilliskustannus:" ek)
   (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka-id ek))
   (jdbc/with-db-transaction
-    [c db]
-    (let [parametrit [c (:tyyppi ek) (:urakka-id ek) (:sopimus ek) (:toimenpideinstanssi ek)
+    [db db]
+    (let [parametrit [db (:tyyppi ek) (:urakka-id ek) (:sopimus ek) (:toimenpideinstanssi ek)
                       (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
       (if (not (:id ek))
         (apply q/luo-erilliskustannus<! parametrit)
         (apply q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false) (:id ek)])))
-      (q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! c (:toimenpideinstanssi ek))
-      (log/debug "seuraavkasi haetaan ek:t" {:urakka-id (:urakka-id ek)
-                                             :alkupvm   (:alkupvm ek)
-                                             :loppupvm  (:loppupvm ek)})
-      (hae-urakan-erilliskustannukset c user {:urakka-id (:urakka-id ek)
+      (q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! db (:toimenpideinstanssi ek))
+      (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
                                               :alkupvm   (:alkupvm ek)
                                               :loppupvm  (:loppupvm ek)}))))
 

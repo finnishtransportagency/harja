@@ -65,7 +65,7 @@
 (defn erilliskustannustyypin-teksti [avainsana]
   "Erilliskustannustyypin teksti avainsanaa vastaan"
   (case avainsana
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :asiakastyytyvaisyysbonus "As.tyyt.\u00ADbonus"
     :muu "Muu"
     +valitse-tyyppi+))
 
@@ -288,10 +288,10 @@
                               "Ei erilliskustannuksia saatavilla.")
              :rivi-klikattu #(reset! valittu-kustannus %)
              :rivin-luokka  #(aseta-rivin-luokka %)}
-            [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "20%"}
-             {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "10%"}
-             {:otsikko "Rahamäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
-             {:otsikko "Ind. korjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna
+            [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "17%"}
+             {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "13%"}
+             {:otsikko "Raha\u00ADmäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
+             {:otsikko "Indeksi\u00ADkorjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna
               :hae     #(if (nil? (:indeksin_nimi %))
                          "Ei sidottu indeksiin"
                          (if (and
@@ -304,9 +304,9 @@
                          (str %))
               :leveys  "13%"}
              {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
-             {:otsikko "Maksaja" :tyyppi :string :nimi :maksaja
+             {:otsikko "Mak\u00ADsaja" :tyyppi :string :nimi :maksaja
               :hae     #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
-             {:otsikko "Lisätieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
+             {:otsikko "Lisä\u00ADtieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
             @valitut-kustannukset]])))))
 
 (defn erilliskustannusten-toteumat []

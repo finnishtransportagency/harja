@@ -5,11 +5,8 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
                                                                  pylvaat ei-osumia-aikavalilla-teksti rivi]]
             [harja.domain.roolit :as roolit]
-            [clj-time.coerce :as tc]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [clj-time.core :as t]
-            [clj-time.local :as l]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [harja.fmt :as fmt]))
@@ -38,12 +35,12 @@
           (comp
             (map #(if (= (:tyyppi %) "asiakastyytyvaisyysbonus")
                    (assoc % :indeksikorotus (:bonusindeksikorotus %))
-                   (assoc % :indeksikorotus (if-not :indeksin_nimi
+                   (assoc % :indeksikorotus (if-not (:indeksin_nimi %)
                                               0
                                               (if (and (:indeksikorjattuna %)
-                                                      (:rahasumma %))
-                                               (- (:indeksikorjattuna %) (:rahasumma %))
-                                               0)))))
+                                                       (:rahasumma %))
+                                                (- (:indeksikorjattuna %) (:rahasumma %))
+                                                0)))))
             (map konv/alaviiva->rakenne))
           kustannukset)))
 
@@ -59,7 +56,6 @@
                                                                                    hallintayksikko-annettu? hallintayksikko-id
                                                                                    toimenpide-id
                                                                                    alkupvm loppupvm)))
-        _ (log/debug "erilliskustannukset: " erilliskustannukset)
         raportin-nimi "Erilliskustannusten raportti"
         otsikko (raportin-otsikko
                   (case konteksti
