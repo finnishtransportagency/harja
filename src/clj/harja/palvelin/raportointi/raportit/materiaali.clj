@@ -11,7 +11,7 @@
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (roolit/voi-nahda-raportit? user)
   (let [toteuma-parametrit [db
                             urakka-id
                             (konv/sql-timestamp alkupvm)
@@ -36,7 +36,7 @@
 
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (roolit/voi-nahda-raportit? user)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
                                                                                                             (konv/sql-timestamp alkupvm)
@@ -46,7 +46,7 @@
 
 (defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
   (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (roolit/voi-nahda-raportit? user)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                       (konv/sql-timestamp alkupvm)

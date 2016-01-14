@@ -103,10 +103,10 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                        (cond
                          hk
                          (pvm/hoitokauden-kuukausivalit hk)
-                         
+
                          vuosi
                          (pvm/vuoden-kuukausivalit vuosi)
-                         
+
                          :default
                          [])))))
         valittu-kuukausi (reaction
@@ -126,7 +126,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                                :default hk)]
             (log "ASETA ARVO: " (pr-str [alku loppu]))
             (reset! arvo {:alkupvm alku :loppupvm loppu})))
-    
+
     (fn [_ _]
       (let [ur @ur
             hoitourakassa? @hoitourakassa?
@@ -138,7 +138,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                          (pvm/vuosi (:loppupvm ur))
                          (pvm/vuosi (pvm/nyt)))]
         [:span
-         [:div 
+         [:div
           [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
            vuosi-eka vuosi-vika valittu-vuosi
            #(do
@@ -168,7 +168,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            nil false (when @vapaa-aikavali?
                        [ui-valinnat/aikavali vapaa-aikavali])]]]))))
 
-     
+
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
   (let [aseta-tpi (fn [tpi]
                     (reset! arvo (if tpi
@@ -179,7 +179,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                    (fn [_ _ tpi]
                      (aseta-tpi tpi)))
      (komp/piirretty #(reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"}))
-     
+
      (fn [_ _]
        @u/valittu-toimenpideinstanssi
        [valinnat/urakan-toimenpide+kaikki]))))

@@ -18,7 +18,7 @@
 ;; Yhteensä					72 000,00 €	3 000,00 €
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (roolit/voi-nahda-raportit? user)
   (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-paiva db
                                                                urakka-id alkupvm loppupvm
                                                                (if toimenpide-id true false) toimenpide-id)
