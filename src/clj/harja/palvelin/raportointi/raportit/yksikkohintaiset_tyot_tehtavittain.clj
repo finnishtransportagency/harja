@@ -41,22 +41,22 @@
                             :urakka
                             (hae-summatut-tehtavat-urakalle db
                                                             {:urakka-id     urakka-id
-                                                         :alkupvm       alkupvm
-                                                         :loppupvm      loppupvm
-                                                         :toimenpide-id toimenpide-id})
+                                                             :alkupvm       alkupvm
+                                                             :loppupvm      loppupvm
+                                                             :toimenpide-id toimenpide-id})
                             :hallintayksikko
                             (hae-summatut-tehtavat-hallintayksikolle db
                                                                      {:hallintayksikko-id hallintayksikko-id
-                                                                  :alkupvm            alkupvm
-                                                                  :loppupvm           loppupvm
-                                                                  :toimenpide-id      toimenpide-id
-                                                                  :urakoittain?       urakoittain?})
+                                                                      :alkupvm            alkupvm
+                                                                      :loppupvm           loppupvm
+                                                                      :toimenpide-id      toimenpide-id
+                                                                      :urakoittain?       urakoittain?})
                             :koko-maa
                             (hae-summatut-tehtavat-koko-maalle db
                                                                {:alkupvm       alkupvm
-                                                            :loppupvm      loppupvm
-                                                            :toimenpide-id toimenpide-id
-                                                            :urakoittain?  urakoittain?}))
+                                                                :loppupvm      loppupvm
+                                                                :toimenpide-id toimenpide-id
+                                                                :urakoittain?  urakoittain?}))
 
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
         otsikko (raportin-otsikko
