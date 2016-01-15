@@ -83,7 +83,7 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
-      (flatten (keep identity [{:leveys "10%" :otsikko "Päivämäärä"}
+      (flatten (keep identity [{:leveys "10%" :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
                                {:leveys "5%" :otsikko "Klo"}
                                {:leveys "6%" :otsikko "Tie"}
                                {:leveys "6%" :otsikko "Aosa"}

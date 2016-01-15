@@ -260,4 +260,71 @@ SET
 WHERE ulkoinen_id = :ulkoinen_id AND
       luoja = :luoja;
 
+-- name: hae-urakan-laatupoikkeamat-liitteineen-raportille
+-- Hakee urakan laatupoikkeamat (talvihoitomittaukset) aikavälin perusteella raportille
+SELECT
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.kuvaus,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN tarkastus_liite ON lp.id = tarkastus_liite.tarkastus
+  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+WHERE lp.urakka = :urakka
+      AND (lp.aika >= :alku AND lp.aika <= :loppu)
+ORDER BY lp.aika;
 
+-- name: hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille
+-- Hakee hallintayksikön laatupoikkeamat (talvihoitomittaukset) aikavälin perusteella raportille
+SELECT
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.kuvaus,
+  u.nimi as urakka,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
+  JOIN urakka u ON lp.urakka = u.id
+  LEFT JOIN tarkastus_liite ON lp.id = tarkastus_liite.tarkastus
+  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+      AND (lp.aika >= :alku AND lp.aika <= :loppu)
+ORDER BY lp.aika;
+
+-- name: hae-koko-maan-laatupoikkeamat-liitteineen-raportille
+-- Hakee koko maan laatupoikkeamat (talvihoitomittaukset) aikavälin perusteella raportille
+SELECT
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.kuvaus,
+  u.nimi as urakka,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
+  JOIN urakka u ON lp.urakka = u.id
+  LEFT JOIN tarkastus_liite ON lp.id = tarkastus_liite.tarkastus
+  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+WHERE (lp.aika >= :alku AND lp.aika <= :loppu)
+ORDER BY lp.aika;
