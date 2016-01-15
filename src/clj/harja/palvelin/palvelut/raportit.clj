@@ -25,7 +25,6 @@
 
                        :suorita-raportti
                        (fn [user raportti]
-                         (roolit/vaadi-raporttien-lukuoikeus user)
                          (suorita-raportti raportointi user raportti)))
 
     this)
