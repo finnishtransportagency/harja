@@ -559,7 +559,7 @@
            (pvm/pvm-aika p)
            "")])
 
-(defn hae-tr-geometria [osoite hakufn tr-osoite-ch]
+(defn hae-tr-geometria [osoite hakufn tr-osoite-ch virheet]
   (go
     (log "Haetaan geometria osoitteelle: " (pr-str osoite))
       (let [tulos (<! (hakufn osoite))]
@@ -567,10 +567,10 @@
         (if-not (or (nil? tulos) (k/virhe? tulos))
           (do
             (>! tr-osoite-ch (assoc osoite :geometria tulos))
-            nil)
+            (reset! virheet nil))
           (do
             (>! tr-osoite-ch :virhe)
-            "Reitille ei löydy tietä.")))))
+            (reset! virheet "Reitille ei löydy tietä."))))))
 
 (defn- onko-tr-osoite-kokonainen? [osoite]
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
@@ -665,10 +665,10 @@
                     (fn []
                       (cond
                         (onko-tr-osoite-kokonainen? osoite)
-                        (reset! virheet (hae-tr-geometria osoite vkm/tieosoite->viiva tr-osoite-ch))
+                        (hae-tr-geometria osoite vkm/tieosoite->viiva tr-osoite-ch virheet)
                         
                         (onko-tr-osoite-pistemainen? osoite)
-                        (reset! virheet (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch)) 
+                        (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch virheet) 
                         :else
                         (do
                           (tasot/poista-geometria! :tr-valittu-osoite)
