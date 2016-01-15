@@ -7,7 +7,7 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
        'hankinta-alue'::raporttikonteksti,
        'koko maa'::raporttikonteksti],
  ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri],
- '#''harja.palvelin.raportointi.raportit.laatupoikkeamaraportti/suorita',
+ '#''harja.palvelin.raportointi.raportit.laatupoikkeama/suorita',
   'hoito'::urakkatyyppi
 );
 
@@ -19,6 +19,6 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
        'koko maa'::raporttikonteksti],
  ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri,
        ('Tienumero', 'tienumero', false, NULL)::raporttiparametri],
- '#''harja.palvelin.raportointi.raportit.soratietarkastusraportti/suorita',
+ '#''harja.palvelin.raportointi.raportit.soratietarkastus/suorita',
   'hoito'::urakkatyyppi
 );
