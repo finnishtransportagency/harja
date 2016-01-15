@@ -21,16 +21,16 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
+
 (defn aseta-hallintapaneelin-max-korkeus [paneelin-sisalto]
   (let [r (.getBoundingClientRect paneelin-sisalto)
         etaisyys-alareunaan (- @yleiset/korkeus (.-top r))]
     (reset! hallintapaneeli-max-korkeus (max
                                           200
                                           (- etaisyys-alareunaan 30)))))
+
 (defn tilan-vaihtaja []
-  (let [on-off-tila (atom (if (= :nykytilanne @tiedot/valittu-tila)
-                            false
-                            true))]
+  (let [on-off-tila (atom (not= :nykytilanne @tiedot/valittu-tila))]
     (fn []
       [:div#tk-tilan-vaihto
        [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
@@ -38,16 +38,16 @@
        [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
                                            :on-change (fn []
                                                         ;; Päivitä valittu tila
-                                                        (if (false? @on-off-tila)
-                                                          (reset! tiedot/valittu-tila :nykytilanne)
-                                                          (reset! tiedot/valittu-tila :historiakuva))
+                                                        (reset! tiedot/valittu-tila
+                                                                (if (false? @on-off-tila)
+                                                                  :nykytilanne
+                                                                  :historiakuva))
                                                         ;; Nykytilanteessa haetaan vain avoimet ilmoitukset, historiakuvassa myös suljetut
-                                                        (if (= :nykytilanne @tiedot/valittu-tila)
-                                                          (reset! tiedot/suodattimet
+                                                        (reset! tiedot/suodattimet
+                                                                (if (= :nykytilanne @tiedot/valittu-tila)
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
-                                                                            #{:avoimet}))
-                                                          (reset! tiedot/suodattimet
+                                                                            #{:avoimet})
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
                                                                             #{:avoimet :suljetut}))))}]])))
@@ -55,8 +55,8 @@
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
    [kentat/tee-kentta {:tyyppi        :radio
-                       :valinta-nayta (fn [[nimi _]] nimi)
-                       :valinta-arvo  (fn [[_ arvo]] arvo)
+                       :valinta-nayta first
+                       :valinta-arvo  second
                        :valinnat      tiedot/nykytilanteen-aikasuodatin-tunteina}
     tiedot/nykytilanteen-aikasuodattimen-arvo]])
 

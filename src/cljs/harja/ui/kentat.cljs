@@ -462,6 +462,11 @@
            (pvm/pvm p)
            "")])
 
+(defn- resetoi-jos-tyhja-tai-matchaa [t re atomi]
+  (when (or (str/blank? t)
+            (re-matches re t))
+    (reset! atomi t)))
+
 (defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
@@ -498,16 +503,9 @@
                              (reset! data p)
                              (reset! data nil)))))
 
-              muuta-pvm! (fn [t]
-                           (when (or
-                                   (str/blank? t)
-                                   (re-matches +pvm-regex+ t))
-                             (reset! pvm-teksti t)))
-
-              muuta-aika! (fn [t]
-                            (when (or (str/blank? t)
-                                      (re-matches +aika-regex+ t))
-                              (reset! aika-teksti t)))
+              muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
+              
+              muuta-aika!  #(resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti)
 
               koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
               koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
@@ -589,6 +587,24 @@
                          :on-change (muuta! key)
                          :on-blur   blur}]])
 
+(defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
+  {:alue (assoc arvo
+                :type tyyppi
+                :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
+                :zindex 6
+                :color vari)
+   :type :tr-valittu-osoite})
+
+(defn viivatyyppinen? [arvo]
+  (let [t (:type arvo)]
+   (or (= :multiline t)
+       (= :line t))))
+
+(defn piste-tai-eka [arvo]
+  (if (vector? (:geometria arvo))
+    (first (:geometria arvo))
+    (:geometria arvo)))
+
 (defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
@@ -607,36 +623,22 @@
                            (tasot/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do (tasot/nayta-geometria! :tr-valittu-osoite
-                                                         (if (or (= :multiline (:type arvo)) (= :line (:type arvo)))
-                                                           {:alue (assoc arvo
-                                                                         :type :tack-icon-line
-                                                                         :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
-                                                                         :zindex 6
-                                                                         :color "gray")
-                                                            :type :tr-valittu-osoite}
-
-                                                           {:alue (assoc arvo
-                                                                         :type :tack-icon
-                                                                         :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
-                                                                         :zindex 6)
-                                                            :type :tr-valittu-osoite}))))))]
+                                                         (if (viivatyyppinen? arvo)
+                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon-line "gray")
+                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon nil)))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
-      (go (loop []
-            (when-let [arvo (<! tr-osoite-ch)]
-              (log "VKM/TR: " (pr-str arvo))
-              (if-not (= arvo :virhe)
-                (do (reset! sijainti (if (vector? (:geometria arvo))
-                                       (first (:geometria arvo))
-                                       (:geometria arvo)))
-                    (nappaa-virhe (nayta-kartalla (if (vector? (:geometria arvo))
-                                                    (first (:geometria arvo))
-                                                    (:geometria arvo))))
-                    (recur))
-                (do
-                  (reset! sijainti nil)
-                  (tasot/poista-geometria! :tr-valittu-osoite)
-                  (recur)))))))
+      (go-loop []
+        (when-let [arvo (<! tr-osoite-ch)]
+          (log "VKM/TR: " (pr-str arvo))
+          (reset! sijainti
+                  (if-not (= arvo :virhe)
+                    (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))
+                        (piste-tai-eka arvo))
+                    (do
+                      (tasot/poista-geometria! :tr-valittu-osoite)
+                      nil)))
+          (recur))))
 
     (komp/luo
      {:component-will-update
@@ -681,11 +683,11 @@
           [:table
            [:tbody
             [:tr
-             [tr-elementti "Tie#" numero :numero]
-             [tr-elementti "aosa" alkuosa :alkuosa]
-             [tr-elementti "aet" alkuetaisyys :alkuetaisyys]
-             [tr-elementti "losa" loppuosa :loppuosa]
-             [tr-elementti "let" loppuetaisyys :loppuetaisyys]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "Tie#" numero :numero]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys]
              
              (if-not @karttavalinta-kaynnissa
                [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)

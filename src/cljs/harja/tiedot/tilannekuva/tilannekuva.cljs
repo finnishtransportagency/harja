@@ -194,6 +194,9 @@
                                                 @suodattimet
                                                 (kartta/poista-popup!)))
 
+(defn kartan-tyypiksi [t avain tyyppi]
+  (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
+
 (defn hae-asiat []
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
   (go
@@ -207,6 +210,7 @@
                                                     :aikavali-historia    @historiakuvan-aikavali
                                                     :suodattimet          @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila true))
+    
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
                                   (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
@@ -217,21 +221,11 @@
                                  (assoc t :ilmoitukset
                                         (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
                                              (:ilmoitukset t)))
-                                 (assoc t :turvallisuuspoikkeamat
-                                        (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)
-                                             (:turvallisuuspoikkeamat t)))
-                                 (assoc t :tarkastukset
-                                        (map #(assoc % :tyyppi-kartalla :tarkastus)
-                                             (:tarkastukset t)))
-                                 (assoc t :laatupoikkeamat
-                                        (map #(assoc % :tyyppi-kartalla :laatupoikkeama)
-                                             (:laatupoikkeamat t)))
-                                 (assoc t :paikkaus
-                                        (map #(assoc % :tyyppi-kartalla :paikkaus)
-                                             (:paikkaus t)))
-                                 (assoc t :paallystys
-                                        (map #(assoc % :tyyppi-kartalla :paallystys)
-                                             (:paallystys t)))
+                                 (kartan-tyypiksi t :turvallisuuspoikkeamat :turvallisuuspoikkeama)
+                                 (kartan-tyypiksi t :tarkastukset :tarkastus)
+                                 (kartan-tyypiksi t :laatupoikkeamat :laatupoikkeama)
+                                 (kartan-tyypiksi t :paikkaus :paikkaus)
+                                 (kartan-tyypiksi t :paallystys :paallystys)
 
                                  ;; Tyokoneet on mäp, id -> työkone
                                  (assoc t :tyokoneet (into {}
@@ -287,7 +281,6 @@
         (lopeta-periodinen-haku-jos-kaynnissa)
         (aloita-periodinen-haku))
       (lopeta-periodinen-haku-jos-kaynnissa))))
-
 
 (add-watch nakymassa? :pollaus-muuttui
            (fn [_ _ old new]
