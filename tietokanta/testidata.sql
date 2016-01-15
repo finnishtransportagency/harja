@@ -117,64 +117,8 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Ilmoitukset ja kuittaukset
 \i testidata/ilmoitukset.sql
 
-
--- Turvallisuuspoikkeama
-INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
-sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi)
-VALUES
-((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), '2005-10-01 10:00.00', '2005-10-01 12:20.00', '2005-10-06 09:00.00',
-'Trukkikuski', 'Lastaus', 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
-'Murtunut peukalo', 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6,
-ARRAY['turvallisuuspoikkeama']::turvallisuuspoikkeamatyyppi[]);
-
-INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi)
-VALUES
-  ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-10-01 20:00.00', '2015-10-01 22:20.00', '2015-10-06 23:00.00',
-                                                                    'Trukkikuski', 'Lastaus', 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
-                                                                    'Murtunut niska', 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY['turvallisuuspoikkeama']::turvallisuuspoikkeamatyyppi[]);
-
-INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi)
-VALUES
-  ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-10-03 10:00.00', '2015-10-03 12:20.00', '2015-10-06 23:00.00',
-                                                                    'Trukkikuskina ajaminen', 'Lastauksen tekeminen', 'Matilla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
-                                                                    'Murtunut käsi', 1, 2, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435837, 7216227)::GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY['prosessipoikkeama']::turvallisuuspoikkeamatyyppi[]);
-
-INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi)
-VALUES
-  ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-10-05 10:00.00', '2015-10-05 12:20.00', '2015-10-07 23:00.00',
-                                                                    'Trukkikuskina toimiminen', 'Lastailu', 'Pentillä oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
-                                                                    'Murtunut peukalo', null, null, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435817, 7216257)::GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY['prosessipoikkeama', 'turvallisuuspoikkeama', 'tyoturvallisuuspoikkeama']::turvallisuuspoikkeamatyyppi[]);
-
-INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi)
-VALUES
-  ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-11-01 20:00.00', '2015-11-01 22:20.00', '2015-11-06 23:00.00',
-                                                                    'Trukkikuskeilu', 'Lastaaminen', 'Jormalla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
-                                                                    'Murtunut jalka', 4, 3, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435887, 7216237)::GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY['tyoturvallisuuspoikkeama']::turvallisuuspoikkeamatyyppi[]);
-
-
-INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi)
-VALUES
-  ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2012-10-01 10:00.00', '2012-10-01 12:20.00', '2012-10-06 09:00.00',
-                                                                    'Trukkikuski', 'Lastaus', 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
-                                                                    'Murtunut peukalo', 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(227110, 6820660) :: GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY['turvallisuuspoikkeama']::turvallisuuspoikkeamatyyppi[]);
-
-
+-- Turvallisuuspoikkeamat
+\i testidata/turvallisuuspoikkeamat.sql
 
 INSERT INTO korjaavatoimenpide
 (turvallisuuspoikkeama, kuvaus, vastaavahenkilo)
@@ -194,15 +138,7 @@ VALUES ('Testikohde', 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelyt
 INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja) VALUES ('A'::sanktiolaji, 1000, '2005-10-12 06:06.37', 'Testi-indeksi', 1, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP'), 1, true, 2);
 
 -- Tarkastukset
-
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(430768.8350704433, 7203153.238678749)::GEOMETRY, 'Ismo', 'pistokoe'::tarkastustyyppi, 'jotain havaintoja siellä oli', NOW(), 1, 3);
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja, tr_alkuetaisyys) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-03 10:00.00', 1 ,2, 3, 4, point(430080.9018158768, 7204538.659816418)::GEOMETRY, 'Matti', 'pistokoe'::tarkastustyyppi, 'havaittiin kaikenlaista', NOW(), 1, 3);
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2015-12-28 10:00.02', 4 ,364, 8012, null, null, point(429000, 7202314)::GEOMETRY, 'Matti', 'talvihoito'::tarkastustyyppi, 'järjestelmän raportoima testitarkastus', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'fastroi'));
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2016-01-4 06:02.20', 4 ,364, 5, null, null, point(430750.5220656799, 7198888.689460491)::GEOMETRY, 'Matti', 'talvihoito'::tarkastustyyppi, 'järjestelmän raportoima testitarkastus', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'fastroi'));
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2015-11-23 11:00.30', 4 ,364, 8012, null, null, point(430999.34049970115, 7202184.240103625)::GEOMETRY, 'Matti', 'talvihoito'::tarkastustyyppi, 'järjestelmän raportoima testitarkastus', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'fastroi'));
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2015-10-23 10:00.02', 4 ,364, 8012, null, null, point(430999.3404997012, 7201565.577905941)::GEOMETRY, 'Matti', 'talvihoito'::tarkastustyyppi, 'järjestelmän raportoima testitarkastus', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'fastroi'));
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2016-01-02 16:02.00', 4 ,364, 8012, null, null, point(430877.5189858716, 7200994.6888509365)::GEOMETRY, 'Matti', 'talvihoito'::tarkastustyyppi, 'Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'yit_uuvh'));
-
+\i testidata/tarkastukset.sql
 
 -- Tyokoneseurannan havainnot
 

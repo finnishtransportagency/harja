@@ -168,6 +168,13 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            nil false (when @vapaa-aikavali?
                        [ui-valinnat/aikavali vapaa-aikavali])]]]))))
 
+(def tienumero (atom nil))
+
+(defmethod raportin-parametri "tienumero" [p arvo]
+  (fn [_ _]
+    [valinnat/tienumero (r/wrap @tienumero (fn [uusi]
+                                             (reset! arvo {:tienumero uusi})
+                                             (reset! tienumero uusi)))]))
 
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
   (let [aseta-tpi (fn [tpi]
@@ -175,14 +182,14 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                                    {:toimenpide-id (:id tpi)}
                                    {:virhe "Ei tpi valintaa"})))]
     (komp/luo
-     (komp/watcher u/valittu-toimenpideinstanssi
-                   (fn [_ _ tpi]
-                     (aseta-tpi tpi)))
-     (komp/piirretty #(reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"}))
+      (komp/watcher u/valittu-toimenpideinstanssi
+                    (fn [_ _ tpi]
+                      (aseta-tpi tpi)))
+      (komp/piirretty #(reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"}))
 
-     (fn [_ _]
-       @u/valittu-toimenpideinstanssi
-       [valinnat/urakan-toimenpide+kaikki]))))
+      (fn [_ _]
+        @u/valittu-toimenpideinstanssi
+        [valinnat/urakan-toimenpide+kaikki]))))
 
 
 (defonce urakoittain? (atom false))
@@ -236,12 +243,16 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
   {"aikavali" 1
    "urakan-toimenpide" 3})
 
-(def omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
+(def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametri-arvot (atom {})]
+<<<<<<< HEAD
+    (reset! suoritettu-raportti nil)
+=======
     (run! @parametri-arvot
           (reset! suoritettu-raportti nil))
+>>>>>>> develop
     (komp/luo
       (fn [raporttityyppi konteksti v-ur v-hal]
          (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
@@ -277,13 +288,13 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                   (if-not p
                     (conj rows row)
                     (let [par ^{:key (:nimi p)} [:div
-                                                 {:class (if (omalle-riville? (:tyyppi p))
+                                                 {:class (if (parametri-omalle-riville? (:tyyppi p))
                                                            "col-md-12"
                                                            "col-md-4")}
                                                  [raportin-parametri p arvo]]]
                       (cond
                         ;; checkboxit ja aikaväli aina omalle riville
-                        (omalle-riville? (:tyyppi p))
+                        (parametri-omalle-riville? (:tyyppi p))
                         (recur (conj (if row
                                        (conj rows row)
                                        rows)

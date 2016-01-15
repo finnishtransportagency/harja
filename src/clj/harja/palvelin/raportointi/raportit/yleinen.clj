@@ -16,6 +16,28 @@
       (str konteksti ", " nimi " ajalta "
            (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))
 
+(defn ryhmittele-tulokset-raportin-taulukolle
+  "rivit                   ryhmiteltävät rivit
+   ryhmittely-avain        avain, jonka perusteella rivit ryhmitellään. Ryhmän otsikko otetaan suoraan tästä avaimesta.
+                           Jos avainta ei löydy yhdeltäkään riviltä, ei ryhmittelyä suoriteta.
+   rivi-fn                 funktio, joka ottaa parametrina yhden rivin ja palauttaa sen taulukossa esitettävässä
+                           muodossa eli vektorina, jossa arvot sarakkeiden mukaisessa järjestyksessä.
+                           Esim. Jos taulukossa on otsikot Nimi ja Ikä, palautetaan riviksi: [Seppo, 42]"
+  [rivit ryhmittely-avain rivi-fn]
+  (if (every? #(nil? (ryhmittely-avain %)) rivit)
+    (mapv
+      rivi-fn
+      rivit)
+    (let [ryhmat (group-by ryhmittely-avain rivit)]
+      (into [] (mapcat
+                 (fn [ryhma]
+                   (reduce
+                     conj
+                     [{:otsikko ryhma}]
+                     (map
+                       rivi-fn
+                       (get ryhmat ryhma))))
+                 (keys ryhmat))))))
 
 (def vuosi-ja-kk-fmt (tf/with-zone (tf/formatter "YYYY/MM") (t/time-zone-for-id "EET")))
 (def kk-ja-vuosi-fmt (tf/with-zone (tf/formatter "MM/YYYY") (t/time-zone-for-id "EET")))
