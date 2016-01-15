@@ -413,11 +413,11 @@ FROM tarkastus t
 WHERE urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND t.tyyppi = 'soratie'::tarkastustyyppi
 ORDER BY t.aika;
 
 -- name: hae-hallintayksikon-soratietarkastukset-liitteineen-raportille
--- Hakee urakan soratietarkastukset aikavälin perusteella raportille
+-- Hakee hallintayksikön soratietarkastukset aikavälin perusteella raportille
 SELECT
   t.id,
   sopimus,
@@ -455,11 +455,11 @@ FROM tarkastus t
 WHERE urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND t.tyyppi = 'soratie'::tarkastustyyppi
 ORDER BY t.aika;
 
 -- name: hae-koko-maan-soratietarkastukset-liitteineen-raportille
--- Hakee urakan soratietarkastukset aikavälin perusteella raportille
+-- Hakee koko maan soratietarkastukset aikavälin perusteella raportille
 SELECT
   t.id,
   sopimus,
@@ -494,5 +494,5 @@ FROM tarkastus t
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND t.tyyppi = 'soratie'::tarkastustyyppi
 ORDER BY t.aika;
