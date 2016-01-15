@@ -34,14 +34,14 @@
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      [{:leveys "10%" :otsikko "Päivämäärä"}
-       {:leveys "25%" :otsikko "Tehtävä"}
-       {:leveys "5%" :otsikko "Yks."}
-       {:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
-       {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}
-       {:leveys "10%" :otsikko "Toteutunut määrä"}
-       {:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-       {:leveys "15%" :otsikko "Toteutuneet kustannukset"}]
+      [{:leveys 10 :otsikko "Päivämäärä"}
+       {:leveys 25 :otsikko "Tehtävä"}
+       {:leveys 5 :otsikko "Yks."}
+       {:leveys 10 :otsikko "Yksikkö\u00adhinta"}
+       {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}
+       {:leveys 10 :otsikko "Toteutunut määrä"}
+       {:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella"}
+       {:leveys 15 :otsikko "Toteutuneet kustannukset"}]
 
       (conj (mapv (juxt (comp pvm/pvm :pvm)
                         :nimi

@@ -71,16 +71,16 @@
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
-                                 {:leveys "25%" :otsikko "Urakka"})
-                               {:leveys "25%" :otsikko "Tehtävä"}
-                               {:leveys "5%" :otsikko "Yks."}
+                                 {:leveys 25 :otsikko "Urakka"})
+                               {:leveys 25 :otsikko "Tehtävä"}
+                               {:leveys 5 :otsikko "Yks."}
                                (when (= konteksti :urakka)
-                                 [{:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
-                                  {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}])
-                               {:leveys "10%" :otsikko "Toteutunut määrä"}
+                                 [{:leveys 10 :otsikko "Yksikkö\u00adhinta"}
+                                  {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}])
+                               {:leveys 10 :otsikko "Toteutunut määrä"}
                                (when (= konteksti :urakka)
-                                 [{:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-                                  {:leveys "15%" :otsikko "Toteutuneet kustannukset"}])]))
+                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella"}
+                                  {:leveys 15 :otsikko "Toteutuneet kustannukset"}])]))
       (conj (mapv (fn [rivi]
                     (flatten (keep identity [(when urakoittain?
                                                (:urakka_nimi rivi))

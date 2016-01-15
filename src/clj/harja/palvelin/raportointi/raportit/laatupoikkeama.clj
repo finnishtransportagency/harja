@@ -48,7 +48,6 @@
 
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -72,10 +71,10 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia laatupoikkeamia.")}
-      (flatten (keep identity [{:leveys "15%" :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
-                               {:leveys "25%" :otsikko "Koh\u00ADde"}
-                               {:leveys "35%" :otsikko "Ku\u00ADvaus"}
-                               {:leveys "25%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
+      [{:leveys 15 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+       {:leveys 25 :otsikko "Koh\u00ADde"}
+       {:leveys 35 :otsikko "Ku\u00ADvaus"}
+       {:leveys 25 :otsikko "Liit\u00ADtei\u00ADtä"}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         naytettavat-rivit
         :urakka
