@@ -152,7 +152,8 @@
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789"})
+(def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789" :organisaatio 9
+                      :roolit #{"urakanvalvoja"}})
 
 ;; id:2 Järjestelmävastuuhenkilö
 (def +kayttaja-jvh+ {:sahkoposti   "jalmari@example.com" :kayttajanimi "jvh"
@@ -162,6 +163,8 @@
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
                      :urakkaroolit ()})
 
+;; id:1 Tero Toripolliisi, POP ELY aluevastaava
+(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh" :organisaatio 11})
 
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
