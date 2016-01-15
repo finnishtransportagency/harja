@@ -199,7 +199,6 @@
   "Palauttaa urakan tarkastukset annetulle aikavälille."
   [db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
-  (Thread/sleep 2000)
   (jdbc/with-db-transaction [db db]
     (into []
           tarkastus-xf
