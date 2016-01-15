@@ -24,7 +24,6 @@
   [db user urakka-annettu? urakka-id
    hallintayksikko-annettu? hallintayksikko-id
    toimenpide-id alkupvm loppupvm]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [kustannukset (hae-erilliskustannukset
                        db
                        urakka-annettu? urakka-id
