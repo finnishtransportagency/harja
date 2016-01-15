@@ -16,7 +16,7 @@
                             (fn [body headers]
                               (log/debug (format "Body: %s, headers: %s" body headers))))))
 
-(defrecord Labyrintti [integraatioloki kayttajatunnus salasana url]
+(defrecord Labyrintti [url kayttajatunnus salasana]
   component/Lifecycle
   (start [this]
     (-> this

@@ -15,6 +15,7 @@
    [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
    [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+   [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
 
    ;; Raportointi
    [harja.palvelin.raportointi :as raportointi]
@@ -70,7 +71,7 @@
    [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
    [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-   
+
    ;; Ajastetut tehtävät
    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
    [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
@@ -143,6 +144,12 @@
      ;; Tierekisteri
      :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
                                     [:db :integraatioloki])
+
+     ;; Labyrintti SMS Gateway
+     :labyrintti (component/using (labyrintti/->Labyrintti (:url (:labyrintti asetukset))
+                                                      (:kayttajatunnus (:labyrintti asetukset))
+                                                      (:salasana (:labyrintti asetukset)))
+                                    [:integraatioloki])
 
      :raportointi (component/using
                    (raportointi/luo-raportointi)
