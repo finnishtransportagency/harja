@@ -42,7 +42,7 @@
    (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki jarjestelma integraatio nil nil)
          sisaltotyyppi (get otsikot " Content-Type ")]
 
-     (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot nil)
+     (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
      (let [{:keys [status body error headers]} (tee-http-kutsu integraatioloki jarjestelma integraatio tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata)
            lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
        (log/debug (format " Palvelu palautti: tila: %s , otsikot: %s , data: %s" status headers body))
