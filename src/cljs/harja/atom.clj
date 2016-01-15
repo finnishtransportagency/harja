@@ -68,15 +68,12 @@
                        
                        ;; Timeout, tehdään kutsu
                        (if (= kanava# timeout-ch#)
-                         (do
-                           (when nil-kun-haku-kaynnissa?#
-                             (reset! arvo# nil))
-                           (let [[~@nimet] parametrit#
-                                 chan# (do ~@body)]
-                             (if (nil? chan#)
-                               (do (reset! arvo# nil)
-                                   [nil (cljs.core.async/<! parametrit-ch#)])
-                               [chan# nil])))
+                         (let [[~@nimet] parametrit#
+                               chan# (do ~@body)]
+                           (if (nil? chan#)
+                             (do (reset! arvo# nil)
+                                 [nil (cljs.core.async/<! parametrit-ch#)])
+                             [chan# nil]))
                          (harja.loki/log "tuntematon kanava!!!")))]
                  (recur haku# parametrit#))))))
        
