@@ -30,10 +30,11 @@
 (defonce suolasakot-nakyvissa? (atom false))
 
 (defonce suolasakot-ja-lampotilat
-         (reaction<! [ur @nav/valittu-urakka
-                      nakymassa? @suolasakot-nakyvissa?]
-                     (when (and ur nakymassa?)
-                       (suola/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
+  (reaction<! [ur @nav/valittu-urakka
+               nakymassa? @suolasakot-nakyvissa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and ur nakymassa?)
+                (suola/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
 
 (defonce suolasakko-kaytossa?
   (reaction (let [ss (:suolasakot @suolasakot-ja-lampotilat)]

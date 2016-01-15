@@ -31,11 +31,13 @@
 
 (defonce karttataso-paikkauskohteet (atom false))
 
-(defonce paikkaustoteumat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                       nakymassa? @paikkausilmoitukset-nakymassa?]
-                                      (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                        (hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
+(defonce paikkaustoteumat
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @paikkausilmoitukset-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paikkausilmoitus-lomakedata (atom nil))            ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 

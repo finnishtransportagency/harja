@@ -65,9 +65,11 @@
 
 (defonce valittu-silta (atom nil))
 
-(defonce valitun-sillan-tarkastukset (reaction<! [vs @valittu-silta]
-                                                 (when vs
-                                                   (hae-sillan-tarkastukset (:id vs)))))
+(defonce valitun-sillan-tarkastukset
+  (reaction<! [vs @valittu-silta]
+              {:nil-kun-haku-kaynnissa? true}
+              (when vs
+                (hae-sillan-tarkastukset (:id vs)))))
 
 (defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
 

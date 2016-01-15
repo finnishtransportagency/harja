@@ -42,28 +42,28 @@
 (def valittu-paivakohtainen-tehtava (atom nil))
 
 (def haetut-toteumat
-         (reaction<!
-           [urakka-id (:id @nav/valittu-urakka)
-            sopimus-id (first @urakka/valittu-sopimusnumero)
-            hoitokausi @urakka/valittu-hoitokausi
-            aikavali @urakka/valittu-aikavali
-            toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
-            tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
-            nakymassa? @nakymassa?]
-           (when nakymassa?
-             (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               sopimus-id (first @urakka/valittu-sopimusnumero)
+               hoitokausi @urakka/valittu-hoitokausi
+               aikavali @urakka/valittu-aikavali
+               toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
+               tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
+               nakymassa? @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when nakymassa?
+                (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
 (def haetut-reitit
-  (reaction<!
-   [urakka-id (:id @nav/valittu-urakka)
-    sopimus-id (first @urakka/valittu-sopimusnumero)
-    hoitokausi @urakka/valittu-hoitokausi
-    aikavali @urakka/valittu-aikavali
-    toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
-    tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
-    nakymassa? @nakymassa?]
-   (when nakymassa?
-     (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               sopimus-id (first @urakka/valittu-sopimusnumero)
+               hoitokausi @urakka/valittu-hoitokausi
+               aikavali @urakka/valittu-aikavali
+               toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
+               tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
+               nakymassa? @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when nakymassa?
+                (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
