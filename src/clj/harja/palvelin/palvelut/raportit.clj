@@ -2,8 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.palvelin.komponentit.pdf-vienti :refer [rekisteroi-pdf-kasittelija! poista-pdf-kasittelija!] :as pdf-vienti]
-            [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
-            [harja.domain.roolit :as roolit]))
+            [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]))
 
 
 (defrecord Raportit []
