@@ -1,5 +1,5 @@
-<b>Nykyinen versio: 0.0.5</b>
-<b>Julkaistu: 2.9.2015</b>
+<b>Nykyinen versio: 0.0.6</b>
+<b>Julkaistu: 11.12.2015</b>
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.0.6. Julkaistu: 11.12.2015 . Muutokset:

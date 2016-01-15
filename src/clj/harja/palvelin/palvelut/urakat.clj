@@ -23,16 +23,16 @@
          loppu (or loppu (pvm/nyt))]
      (cond
       (vector? urakka-id) urakka-id
-
       (not (nil? urakka-id)) [urakka-id]
 
-      (get (:roolit user) "jarjestelmavastuuhenkilo")
+      (roolit/lukuoikeus-kaikkiin-urakoihin? user)
       (mapv :id (q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)
-                                                 urakoitsija (when urakkatyyppi (name urakkatyyppi)) hallintayksikko))
+                                                 (when urakoitsija urakoitsija)
+                                                 (when urakkatyyppi (name urakkatyyppi)) hallintayksikko))
 
       :else (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakat-aikavalilta db (:id user)
                                                                            (konv/sql-date alku) (konv/sql-date loppu)
-                                                                           urakoitsija
+                                                                           (when urakoitsija urakoitsija)
                                                                            (when urakkatyyppi (name urakkatyyppi))
                                                                            hallintayksikko))))))
 

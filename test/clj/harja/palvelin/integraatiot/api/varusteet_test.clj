@@ -41,7 +41,7 @@
         validi-kutsu "/api/varusteet/tietolaji?tunniste=tl506"
         virheellinen-kutsu "/api/varusteet/tietolaji"
         tierekisteri-resurssi "/haetietolaji"
-        oletettu-vastaus "Tietolajia ei voi hakea ilman tunnistetta. (URL-parametri: tunniste)"]
+        oletettu-vastaus "Pakollista parametria: tunniste ei ole annettu"]
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
 
 (deftest tarkista-tietueiden-haku
@@ -49,7 +49,7 @@
         validi-kutsu "/api/varusteet/haku?numero=3002&aet=2295&aosa=5&ajr=0&let=1&puoli=1&voimassaolopvm=2014-11-08&tietolajitunniste=tl506&losa=1"
         virheellinen-kutsu "/api/varusteet/haku"
         tierekisteri-resurssi "/haetietueet"
-        oletettu-vastaus "Tietueita ei voi hakea ilman tietolajitunnistetta (URL-parametri: tietolajitunniste)"]
+        oletettu-vastaus "Pakollista parametria: tietolajitunniste ei ole annettu"]
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
 
 (deftest tarkista-tietueen-haku
@@ -57,7 +57,7 @@
         validi-kutsu "/api/varusteet/varuste?tunniste=Livi956991&tietolajitunniste=tl506"
         virheellinen-kutsu "/api/varusteet/varuste"
         tierekisteri-resurssi "/haetietue"
-        oletettu-vastaus "Tietuetta ei voi hakea ilman livi-tunnistetta (URL-parametri: tunniste)"]
+        oletettu-vastaus "Pakollista parametria: tunniste ei ole annettu"]
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
 
 (deftest tarkista-usean-tietuen-palautuminen

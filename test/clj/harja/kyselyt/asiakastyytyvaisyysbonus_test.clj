@@ -36,18 +36,21 @@
 (deftest laske-hoitourakan-indeksilaskennan-perusluku
   (let [ur @oulun-alueurakan-2014-2019-id
 
-        perusluku (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", 'MAKU 2010');")))]
-    (is (= 125.1000000000000000M perusluku))))
+        perusluku-maku2005 (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", 'MAKU 2005');")))
+        perusluku-maku2010 (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", 'MAKU 2010');")))]
+    (is (= 104.4333333333333333M perusluku-maku2005))
+    (is (= 125.1000000000000000M perusluku-maku2010))))
 
 (deftest laske-hoitokauden-asiakastyytyvaisyysbonus
   (let [ur @oulun-alueurakan-2014-2019-id
         sop @oulun-alueurakan-2014-2019-paasopimuksen-id
         maksupvm (ffirst (q (str "select pvm from erilliskustannus
-        where tyyppi  = 'asiakastyytyvaisyysbonus' AND sopimus = " sop)))
+        WHERE tyyppi = 'asiakastyytyvaisyysbonus' AND rahasumma = 1000 AND sopimus = " sop)))
+        _ (log/debug "maksupvm" maksupvm)
         ind_nimi (ffirst (q (str "select indeksin_nimi from erilliskustannus
-        where tyyppi  = 'asiakastyytyvaisyysbonus' AND sopimus = " sop)))
+        WHERE tyyppi = 'asiakastyytyvaisyysbonus' AND rahasumma = 1000 AND sopimus = " sop)))
         summa (ffirst (q (str "select rahasumma from erilliskustannus
-        where tyyppi  = 'asiakastyytyvaisyysbonus' AND sopimus = " sop)))
+        WHERE tyyppi = 'asiakastyytyvaisyysbonus' AND rahasumma = 1000 AND sopimus = " sop)))
         kyselyn-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
                          (:db jarjestelma)
                          {:urakka-id   ur
@@ -63,8 +66,8 @@
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
       (is {:summa 1000M, :korotettuna 1050.1666666666667000M, :korotus 50.1666666666667000M} kyselyn-kautta)
       (is (= 1000M (first bonarit)) "bonari ilman korotusta")
-      (is (= 839.46176392219557714000M (second bonarit)) "bonari korotuksen kera")
-      (is (= -160.53823607780442286000M (nth bonarit 2)) "bonarin korotus")
+      (is (= 1005.5857006064475000M (second bonarit)) "bonari korotuksen kera")
+      (is (= 5.5857006064475000M (nth bonarit 2)) "bonarin korotus")
       (is (= [1000M nil nil] bonarit-jos-indekseja-ei-ole-syotetty)))))
 
 

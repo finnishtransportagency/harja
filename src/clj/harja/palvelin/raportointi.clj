@@ -9,6 +9,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.organisaatiot :as organisaatiot-q]
             ;; vaaditaan built in raportit
+            [harja.palvelin.raportointi.raportit.erilliskustannukset]
             [harja.palvelin.raportointi.raportit.ilmoitus]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]
@@ -16,6 +17,8 @@
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
             [harja.palvelin.raportointi.raportit.suolasakko]
+            [harja.palvelin.raportointi.raportit.tiestotarkastus]
+            [harja.palvelin.raportointi.raportit.kelitarkastus]
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]))

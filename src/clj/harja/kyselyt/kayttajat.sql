@@ -152,7 +152,7 @@ WHERE kayttaja = :kayttaja AND poistettu = FALSE
 -- name: hae-kayttajan-urakat-aikavalilta
 SELECT urakka AS urakka_id
 FROM kayttaja_urakka_rooli
-  LEFT JOIN urakka ur ON urakka = ur.id
+  LEFT JOIN urakka u ON urakka = u.id
 WHERE kayttaja = :kayttaja AND
       poistettu IS NOT TRUE AND
       (u.loppupvm > :alku AND u.alkupvm < :loppu) OR

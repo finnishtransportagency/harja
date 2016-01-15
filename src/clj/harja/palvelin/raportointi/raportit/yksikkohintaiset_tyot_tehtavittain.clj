@@ -33,7 +33,7 @@
                                                                      (if toimenpide-id true false) toimenpide-id)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
+  (roolit/voi-nahda-raportit? user)
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -41,22 +41,22 @@
                             :urakka
                             (hae-summatut-tehtavat-urakalle db
                                                             {:urakka-id     urakka-id
-                                                         :alkupvm       alkupvm
-                                                         :loppupvm      loppupvm
-                                                         :toimenpide-id toimenpide-id})
+                                                             :alkupvm       alkupvm
+                                                             :loppupvm      loppupvm
+                                                             :toimenpide-id toimenpide-id})
                             :hallintayksikko
                             (hae-summatut-tehtavat-hallintayksikolle db
                                                                      {:hallintayksikko-id hallintayksikko-id
-                                                                  :alkupvm            alkupvm
-                                                                  :loppupvm           loppupvm
-                                                                  :toimenpide-id      toimenpide-id
-                                                                  :urakoittain?       urakoittain?})
+                                                                      :alkupvm            alkupvm
+                                                                      :loppupvm           loppupvm
+                                                                      :toimenpide-id      toimenpide-id
+                                                                      :urakoittain?       urakoittain?})
                             :koko-maa
                             (hae-summatut-tehtavat-koko-maalle db
                                                                {:alkupvm       alkupvm
-                                                            :loppupvm      loppupvm
-                                                            :toimenpide-id toimenpide-id
-                                                            :urakoittain?  urakoittain?}))
+                                                                :loppupvm      loppupvm
+                                                                :toimenpide-id toimenpide-id
+                                                                :urakoittain?  urakoittain?}))
 
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
         otsikko (raportin-otsikko
@@ -88,8 +88,8 @@
                                              (:yksikko rivi)
                                              (when (= konteksti :urakka)
                                                [(fmt/euro-opt (:yksikkohinta rivi))
-                                                (:suunniteltu_maara rivi)])
-                                             (:toteutunut_maara rivi)
+                                                (fmt/desimaaliluku (:suunniteltu_maara rivi) 1)])
+                                             (fmt/desimaaliluku (:toteutunut_maara rivi) 1)
                                              (when (= konteksti :urakka)
                                                [(fmt/euro-opt (:suunnitellut_kustannukset rivi))
                                                 (fmt/euro-opt (:toteutuneet_kustannukset rivi))])])))
