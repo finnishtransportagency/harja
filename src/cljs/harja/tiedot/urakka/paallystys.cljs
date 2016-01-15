@@ -50,11 +50,13 @@
                                           :paallystyskohde-id paallystyskohde-id
                                           :osat               osat}))
 
-(def paallystyskohderivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                       nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
-                                      (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                        (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
+(def paallystyskohderivit
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (hae-paallystyskohteet valittu-urakka-id valittu-sopimus-id))))
 
 (defn paivita-kohde! [id funktio & argumentit]
   (swap! paallystyskohderivit
@@ -68,11 +70,13 @@
 
 (defonce karttataso-paallystyskohteet (atom false))
 
-(defonce paallystystoteumat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                         [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                         nakymassa? @paallystysilmoitukset-nakymassa?]
-                                        (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                          (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+(defonce paallystystoteumat
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @paallystysilmoitukset-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil))          ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 

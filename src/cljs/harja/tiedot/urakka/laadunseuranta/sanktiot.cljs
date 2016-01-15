@@ -31,11 +31,13 @@
                                  :alku      alku
                                  :loppu     loppu}))
 
-(defonce haetut-sanktiot (reaction<! [urakka (:id @nav/valittu-urakka)
-                                      hoitokausi @urakka/valittu-hoitokausi
-                                      _ @nakymassa?]
-                                     (when @nakymassa?
-                                       (hae-urakan-sanktiot urakka hoitokausi))))
+(defonce haetut-sanktiot
+  (reaction<! [urakka (:id @nav/valittu-urakka)
+               hoitokausi @urakka/valittu-hoitokausi
+               _ @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when @nakymassa?
+                (hae-urakan-sanktiot urakka hoitokausi))))
 
 (defn kasaa-tallennuksen-parametrit
   [s]
@@ -65,9 +67,9 @@
 
 
 (defonce sanktiotyypit
-         (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
-                     (when laadunseurannassa?
-                       (k/get! :hae-sanktiotyypit))))
+  (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
+              (when laadunseurannassa?
+                (k/get! :hae-sanktiotyypit))))
 
 (defn lajin-sanktiotyypit
   [laji]

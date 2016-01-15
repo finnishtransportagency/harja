@@ -21,5 +21,6 @@
 (defonce maksuerat
   (reaction<! [urakan-id (:id @nav/valittu-urakka)
                nakymassa? @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
               (when (and urakan-id nakymassa?)
                 (hae-urakan-maksuerat urakan-id))))

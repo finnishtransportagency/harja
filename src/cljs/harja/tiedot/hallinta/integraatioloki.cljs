@@ -47,6 +47,7 @@
                valittu-integraatio @valittu-integraatio
                valittu-aikavali @valittu-aikavali
                nakymassa? @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
               (when nakymassa?
                 (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
 
@@ -55,6 +56,7 @@
                       valittu-integraatio @valittu-integraatio
                       valittu-aikavali @valittu-aikavali
                       nakymassa? @nakymassa?]
+                     {:nil-kun-haku-kaynnissa? true}
                      (when nakymassa?
                        (go (let [maarat (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio))]
                           (if valittu-aikavali

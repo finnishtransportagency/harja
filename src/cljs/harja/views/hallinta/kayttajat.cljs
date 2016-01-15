@@ -38,10 +38,11 @@
 
 (defonce kayttajahallinnassa? (atom false))
 
-(defonce kayttajalista (reaction<!
-                        [hae? @kayttajahallinnassa?]
-                        (when hae?
-                          (go (second (<! (k/hae-kayttajat "" 0 500)))))))
+(defonce kayttajalista
+  (reaction<! [hae? @kayttajahallinnassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when hae?
+                (go (second (<! (k/hae-kayttajat "" 0 500)))))))
 
 (defonce kayttajatyyppi-rajaus (atom nil))                  ;; voi olla "L" tai "LX" jos halutaa
 

@@ -24,16 +24,16 @@
 (def nakymassa? (atom false))
 
 (def haetut-toteumat
-         (reaction<!
-           [urakka-id (:id @nav/valittu-urakka)
-            sopimus-id (first @urakka/valittu-sopimusnumero)
-            hoitokausi @urakka/valittu-hoitokausi
-            kuukausi @urakka/valittu-hoitokauden-kuukausi
-            tienumero @tienumero
-            nakymassa? @nakymassa?]
-           {:odota 500}
-           (when nakymassa?
-             (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               sopimus-id (first @urakka/valittu-sopimusnumero)
+               hoitokausi @urakka/valittu-hoitokausi
+               kuukausi @urakka/valittu-hoitokauden-kuukausi
+               tienumero @tienumero
+               nakymassa? @nakymassa?]
+              {:odota 500
+               :nil-kun-haku-kaynnissa? true}
+              (when nakymassa?
+                (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
 (tarkkaile! "Haetut toteumat: " haetut-toteumat)
 
