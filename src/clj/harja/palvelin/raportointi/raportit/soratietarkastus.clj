@@ -12,7 +12,7 @@
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-urakan-tiestotarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-urakan-soratietarkastukset-liitteineen-raportille db
                                                                        urakka-id
                                                                        alkupvm
                                                                        loppupvm
@@ -20,7 +20,7 @@
                                                                        tienumero))
 
 (defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-hallintayksikon-soratietarkastukset-liitteineen-raportille db
                                                                                 hallintayksikko-id
                                                                                 alkupvm
                                                                                 loppupvm
@@ -28,7 +28,7 @@
                                                                                 tienumero))
 
 (defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-koko-maan-tiestotarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-koko-maan-soratietarkastukset-liitteineen-raportille db
                                                                           alkupvm
                                                                           loppupvm
                                                                           (not (nil? tienumero))
@@ -57,18 +57,17 @@
 
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
-  ; TODO Tämä on vielä täysin vaiheessa
   (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
-                               (hae-tarkastukset db {:konteksti                konteksti
-                                                           :urakka-id          urakka-id
-                                                           :hallintayksikko-id hallintayksikko-id
-                                                           :alkupvm            alkupvm
-                                                           :loppupvm           loppupvm
-                                                           :tienumero          tienumero}))
+                               (hae-tarkastukset db {:konteksti          konteksti
+                                                     :urakka-id          urakka-id
+                                                     :hallintayksikko-id hallintayksikko-id
+                                                     :alkupvm            alkupvm
+                                                     :loppupvm           loppupvm
+                                                     :tienumero          tienumero}))
         naytettavat-rivit (konv/sarakkeet-vektoriin
                             naytettavat-rivit
                             {:liite :liitteet})
@@ -83,27 +82,27 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
-      (flatten (keep identity [{:leveys "10%" :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
-                               {:leveys "5%" :otsikko "Klo"}
-                               {:leveys "6%" :otsikko "Tie"}
-                               {:leveys "6%" :otsikko "Aosa"}
-                               {:leveys "6%" :otsikko "Aet"}
-                               {:leveys "6%" :otsikko "Losa"}
-                               {:leveys "6%" :otsikko "Let"}
-                               {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
-                               {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "5%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
+      [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+       {:leveys 5 :otsikko "Tie"}
+       {:leveys 6 :otsikko "Aosa"}
+       {:leveys 6 :otsikko "Aet"}
+       {:leveys 6 :otsikko "Losa"}
+       {:leveys 6 :otsikko "Let"}
+       {:leveys 6 :otsikko "Tasaisuus"}
+       {:leveys 6 :otsikko "Kiinteys"}
+       {:leveys 6 :otsikko "Polyävyys"}
+       {:leveys 6 :otsikko "Sivukaltevuus"}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         naytettavat-rivit
         :urakka
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
-           (pvm/aika (:aika rivi))
            (get-in rivi [:tr :numero])
            (get-in rivi [:tr :alkuosa])
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
            (get-in rivi [:tr :loppyetaisyys])
-           (:tarkastaja rivi)
-           (:havainnot rivi)
-           (count (:liitteet rivi))]))]]))
+           (:tasaisuus rivi)
+           (:kiinteys rivi)
+           (:polyavyys rivi)
+           (:sivukaltevuus rivi)]))]]))
