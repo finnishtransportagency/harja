@@ -247,12 +247,8 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametri-arvot (atom {})]
-<<<<<<< HEAD
-    (reset! suoritettu-raportti nil)
-=======
     (run! @parametri-arvot
           (reset! suoritettu-raportti nil))
->>>>>>> develop
     (komp/luo
       (fn [raporttityyppi konteksti v-ur v-hal]
          (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
