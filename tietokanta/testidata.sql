@@ -15,7 +15,7 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 \i testidata/sopimukset.sql
 
 -- Luodaan sanktiotyypit
-\i testidata/sanktiot.sql
+\i testidata/sanktiotyypit.sql
 
 -- Testikäyttäjiä
 \i testidata/kayttajat.sql
@@ -93,8 +93,8 @@ VALUES
 
 \i testidata/laatupoikkeamat.sql
 
--- Sanktiotyypit
-\i testidata/sanktiotyypit.sql
+-- Sanktiot
+\i testidata/sanktiot.sql
 
 -- Tarkastukset
 \i testidata/tarkastukset.sql
