@@ -72,15 +72,15 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia laatupoikkeamia.")}
-      (flatten (keep identity [{:leveys "10%" :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
-                               {:leveys "5%" :otsikko "Koh\u00ADde"}
-                               {:leveys "6%" :otsikko "Ku\u00ADvaus"}
-                               {:leveys "6%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
+      (flatten (keep identity [{:leveys "15%" :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+                               {:leveys "25%" :otsikko "Koh\u00ADde"}
+                               {:leveys "35%" :otsikko "Ku\u00ADvaus"}
+                               {:leveys "25%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         naytettavat-rivit
         :urakka
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
            (:kohde rivi)
-           (:kuvaus)
+           (:kuvaus rivi)
            (count (:liitteet rivi))]))]]))
