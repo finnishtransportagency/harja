@@ -155,19 +155,34 @@
              (get-in rivi [:tr :loppuosa])
              (get-in rivi [:tr :loppyetaisyys])
              (:hoitoluokka rivi)
-             (:laatuarvo-1-summa rivi)
-             (:laatuarvo-2-summa rivi)
-             (:laatuarvo-3-summa rivi)
-             (:laatuarvo-4-summa rivi)
-             (:laatuarvo-5-summa rivi)
-             (:laatuarvot-yhteensa rivi)
-             (:laatuarvo-1+2-summa rivi)
+             (str (:laatuarvo-1-summa rivi) " (" (:laatuarvo-1-osuus rivi) "%)")
+             (str (:laatuarvo-2-summa rivi) " (" (:laatuarvo-2-osuus rivi) "%)")
+             (str (:laatuarvo-3-summa rivi) " (" (:laatuarvo-3-osuus rivi) "%)")
+             (str (:laatuarvo-4-summa rivi) " (" (:laatuarvo-4-osuus rivi) "%)")
+             (str (:laatuarvo-5-summa rivi) " (" (:laatuarvo-5-osuus rivi) "%)")
+             (str (:laatuarvot-yhteensa rivi) " (100%)")
+             (str (:laatuarvo-1+2-summa rivi) " (" (+ (:laatuarvo-1-osuus rivi)
+                                                      (:laatuarvo-2-osuus rivi)) "%)")
              (:laatu rivi)]))
-        ["Yhteensä" nil nil nil nil nil nil
-         (reduce + (mapv :laatuarvo-1-summa naytettavat-rivit))
-         (reduce + (mapv :laatuarvo-2-summa naytettavat-rivit))
-         (reduce + (mapv :laatuarvo-3-summa naytettavat-rivit))
-         (reduce + (mapv :laatuarvo-4-summa naytettavat-rivit))
-         (reduce + (mapv :laatuarvo-5-summa naytettavat-rivit))
-         (reduce + (mapv :laatuarvot-yhteensa naytettavat-rivit))
-         (reduce + (mapv :laatuarvo-1+2-summa naytettavat-rivit))])]]))
+        (let [laske-laatuarvojen-kokonaissumma (fn [arvo-avain rivit]
+                                                 (reduce + (mapv arvo-avain rivit)))
+              laatuarvo-summat [(laske-laatuarvojen-kokonaissumma :laatuarvo-1-summa naytettavat-rivit)
+                                (laske-laatuarvojen-kokonaissumma :laatuarvo-2-summa naytettavat-rivit)
+                                (laske-laatuarvojen-kokonaissumma :laatuarvo-3-summa naytettavat-rivit)
+                                (laske-laatuarvojen-kokonaissumma :laatuarvo-4-summa naytettavat-rivit)
+                                (laske-laatuarvojen-kokonaissumma :laatuarvo-5-summa naytettavat-rivit)]
+              laatuarvot-1+2-summa (reduce + [(first laatuarvo-summat)
+                                              (second laatuarvo-summat)])]
+
+          ["Yhteensä" nil nil nil nil nil nil
+           (str (nth laatuarvo-summat 0) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 0)) "%)")
+           (str (nth laatuarvo-summat 1) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 1)) "%)")
+           (str (nth laatuarvo-summat 2) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 2)) "%)")
+           (str (nth laatuarvo-summat 3) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 3)) "%)")
+           (str (nth laatuarvo-summat 4) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 4)) "%)")
+           (str (reduce + [(first laatuarvo-summat)
+                           (second laatuarvo-summat)]) " (100%)")
+           (str
+             laatuarvot-1+2-summa
+             " (" (Math/round (* (float (/ laatuarvot-1+2-summa
+                                           (reduce + laatuarvo-summat))) 100)) "%)")]))]]))
