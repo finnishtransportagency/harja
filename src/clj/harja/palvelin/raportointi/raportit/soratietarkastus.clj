@@ -116,7 +116,7 @@
                                                      :loppupvm           loppupvm
                                                      :tienumero          tienumero}))
         naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
-        raportin-nimi "Tiestötarkastusraportti"
+        raportin-nimi "Soratietarkastusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
