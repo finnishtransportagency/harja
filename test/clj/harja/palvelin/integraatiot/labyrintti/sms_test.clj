@@ -1,7 +1,6 @@
 (ns harja.palvelin.integraatiot.labyrintti.sms-test
   (:require [clojure.test :refer [deftest is use-fixtures compose-fixtures]]
             [com.stuartsierra.component :as component]
-            [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
