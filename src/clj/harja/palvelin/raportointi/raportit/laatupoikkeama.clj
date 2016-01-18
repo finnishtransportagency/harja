@@ -11,39 +11,48 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
-(defn hae-laatupoikkeamat-urakalle [db {:keys [urakka-id alkupvm loppupvm]}]
+(defn hae-laatupoikkeamat-urakalle [db {:keys [urakka-id alkupvm loppupvm laatupoikkeamatekija]}]
   (laatupoikkeamat-q/hae-urakan-laatupoikkeamat-liitteineen-raportille db
                                                                        urakka-id
                                                                        alkupvm
-                                                                       loppupvm))
+                                                                       loppupvm
+                                                                       (not (nil? laatupoikkeamatekija))
+                                                                       laatupoikkeamatekija))
 
-(defn hae-laatupoikkeamat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm]}]
+(defn hae-laatupoikkeamat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija]}]
   (laatupoikkeamat-q/hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille db
                                                                                 hallintayksikko-id
                                                                                 alkupvm
-                                                                                loppupvm))
+                                                                                loppupvm
+                                                                                (not (nil? laatupoikkeamatekija))
+                                                                                laatupoikkeamatekija))
 
-(defn hae-laatupoikkeamat-koko-maalle [db {:keys [alkupvm loppupvm]}]
+(defn hae-laatupoikkeamat-koko-maalle [db {:keys [alkupvm loppupvm laatupoikkeamatekija]}]
   (laatupoikkeamat-q/hae-koko-maan-laatupoikkeamat-liitteineen-raportille db
                                                                           alkupvm
-                                                                          loppupvm))
+                                                                          loppupvm
+                                                                          (not (nil? laatupoikkeamatekija))
+                                                                          laatupoikkeamatekija))
 
-(defn hae-laatupoikkeamat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm]}]
+(defn hae-laatupoikkeamat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija]}]
   (case konteksti
     :urakka
     (hae-laatupoikkeamat-urakalle db
                                   {:urakka-id urakka-id
                                    :alkupvm   alkupvm
-                                   :loppupvm  loppupvm})
+                                   :loppupvm  loppupvm
+                                   :laatupoikkeamatekija laatupoikkeamatekija})
     :hallintayksikko
     (hae-laatupoikkeamat-hallintayksikolle db
-                                           {:hallintayksikko-id hallintayksikko-id
-                                            :alkupvm            alkupvm
-                                            :loppupvm           loppupvm})
+                                           {:hallintayksikko-id   hallintayksikko-id
+                                            :alkupvm              alkupvm
+                                            :loppupvm             loppupvm
+                                            :laatupoikkeamatekija laatupoikkeamatekija})
     :koko-maa
     (hae-laatupoikkeamat-koko-maalle db
-                                     {:alkupvm   alkupvm
-                                      :loppupvm  loppupvm})))
+                                     {:alkupvm              alkupvm
+                                      :loppupvm             loppupvm
+                                      :laatupoikkeamatekija laatupoikkeamatekija})))
 
 
 
@@ -52,11 +61,13 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
-                               (hae-laatupoikkeamat db {:konteksti          konteksti
-                                                        :urakka-id          urakka-id
-                                                        :hallintayksikko-id hallintayksikko-id
-                                                        :alkupvm            alkupvm
-                                                        :loppupvm           loppupvm}))
+                               (hae-laatupoikkeamat db {:konteksti            konteksti
+                                                        :urakka-id            urakka-id
+                                                        :hallintayksikko-id   hallintayksikko-id
+                                                        :alkupvm              alkupvm
+                                                        :loppupvm             loppupvm
+                                                        :laatupoikkeamatekija (when (not= laatupoikkeamatekija :kaikki)
+                                                                                (name laatupoikkeamatekija))}))
         naytettavat-rivit (konv/sarakkeet-vektoriin
                             naytettavat-rivit
                             {:liite :liitteet})
@@ -72,7 +83,8 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia laatupoikkeamia.")}
       [{:leveys 15 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
-       {:leveys 25 :otsikko "Koh\u00ADde"}
+       {:leveys 20 :otsikko "Koh\u00ADde"}
+       {:leveys 10 :otsikko "Te\u00ADki\u00ADjä"}
        {:leveys 35 :otsikko "Ku\u00ADvaus"}
        {:leveys 25 :otsikko "Liit\u00ADtei\u00ADtä"}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
@@ -81,5 +93,6 @@
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
            (:kohde rivi)
+           (:tekija rivi)
            (:kuvaus rivi)
            (count (:liitteet rivi))]))]]))
