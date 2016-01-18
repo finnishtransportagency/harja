@@ -267,12 +267,9 @@ SELECT
   lp.aika,
   lp.kohde,
   lp.kuvaus,
+  lp.tekija,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  liite.nimi as liite_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -291,12 +288,9 @@ SELECT
   lp.kohde,
   lp.kuvaus,
   u.nimi as urakka,
+  lp.tekija,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  liite.nimi as liite_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -315,13 +309,10 @@ SELECT
   lp.aika,
   lp.kohde,
   lp.kuvaus,
+  lp.tekija,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  liite.nimi as liite_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
