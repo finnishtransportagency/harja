@@ -164,12 +164,9 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   liite.id   as liite_id,
   liite.nimi as liite_nimi
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka = :urakka
@@ -193,13 +190,10 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -223,13 +217,10 @@ SELECT
   t.havainnot,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -252,7 +243,6 @@ SELECT
   t.havainnot,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   thm.talvihoitoluokka,
   thm.lumimaara,
   thm.tasaisuus,
@@ -262,8 +252,6 @@ SELECT
   liite.id   as liite_id,
   liite.nimi as liite_nimi
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -287,7 +275,6 @@ SELECT
   t.havainnot,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   thm.talvihoitoluokka,
   thm.lumimaara,
   thm.tasaisuus,
@@ -298,8 +285,6 @@ SELECT
   liite.id   as liite_id,
   liite.nimi as liite_nimi
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
@@ -325,7 +310,6 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   thm.talvihoitoluokka,
   thm.lumimaara,
   thm.tasaisuus,
@@ -336,8 +320,6 @@ SELECT
   liite.id   as liite_id,
   liite.nimi as liite_nimi
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
@@ -361,16 +343,12 @@ SELECT
   t.havainnot,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   stm.hoitoluokka,
   stm.tasaisuus,
   stm.kiinteys,
   stm.polyavyys,
   stm.sivukaltevuus
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
-  JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
@@ -392,7 +370,6 @@ SELECT
   t.havainnot,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   stm.hoitoluokka,
   stm.tasaisuus,
   stm.kiinteys,
@@ -400,9 +377,6 @@ SELECT
   stm.sivukaltevuus,
   u.nimi as urakka
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
-  JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
   JOIN urakka u ON t.urakka = u.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
@@ -425,7 +399,6 @@ SELECT
   t.havainnot,
   t.tarkastaja,
   t.tyyppi,
-  k.jarjestelma,
   stm.hoitoluokka,
   stm.tasaisuus,
   stm.kiinteys,
@@ -433,8 +406,6 @@ SELECT
   stm.sivukaltevuus,
   u.nimi as urakka
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
   JOIN urakka u ON t.urakka = u.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
