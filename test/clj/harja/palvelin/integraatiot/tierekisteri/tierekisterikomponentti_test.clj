@@ -5,7 +5,6 @@
             [harja.testi :refer :all]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [org.httpkit.fake :refer [with-fake-http]]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
