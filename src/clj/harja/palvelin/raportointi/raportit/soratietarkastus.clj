@@ -135,14 +135,13 @@
        {:leveys 6 :otsikko "Losa"}
        {:leveys 6 :otsikko "Let"}
        {:leveys 6 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
-       {:leveys 6 :otsikko "1"}
-       {:leveys 6 :otsikko "2"}
-       {:leveys 6 :otsikko "3"}
-       {:leveys 6 :otsikko "4"}
-       {:leveys 6 :otsikko "5"}
-       {:leveys 6 :otsikko "Yht"}
-       {:leveys 6 :otsikko "1+2"}
-       {:leveys 6 :otsikko "Laa\u00ADtu"}]
+       {:leveys 8 :otsikko "1"}
+       {:leveys 8 :otsikko "2"}
+       {:leveys 8 :otsikko "3"}
+       {:leveys 8 :otsikko "4"}
+       {:leveys 8 :otsikko "5"}
+       {:leveys 8 :otsikko "Yht"}
+       {:leveys 8 :otsikko "1+2"}]
       (conj
         (yleinen/ryhmittele-tulokset-raportin-taulukolle
           naytettavat-rivit
@@ -162,8 +161,7 @@
              (str (:laatuarvo-5-summa rivi) " (" (:laatuarvo-5-osuus rivi) "%)")
              (str (:laatuarvot-yhteensa rivi) " (100%)")
              (str (:laatuarvo-1+2-summa rivi) " (" (+ (:laatuarvo-1-osuus rivi)
-                                                      (:laatuarvo-2-osuus rivi)) "%)")
-             (:laatu rivi)]))
+                                                      (:laatuarvo-2-osuus rivi)) "%)")]))
         (let [laske-laatuarvojen-kokonaissumma (fn [arvo-avain rivit]
                                                  (reduce + (mapv arvo-avain rivit)))
               laatuarvo-summat [(laske-laatuarvojen-kokonaissumma :laatuarvo-1-summa naytettavat-rivit)
