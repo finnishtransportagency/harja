@@ -2,8 +2,8 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
-  (:use [slingshot.slingshot]))
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
+            [slingshot.slingshot :refer [try+]]))
 
 (deftest tarkista-toimenpiteen-tallentuminen
   (tuo-toimenpide)

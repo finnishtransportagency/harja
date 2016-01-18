@@ -192,12 +192,13 @@
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]))))
 
-(defn kasittele-kutsu [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+(defn kasittele-kutsu
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
   on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
   validoidaan käyttäen annettuja JSON-skeemoja.
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
+  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (let [body (if (:body request)
                (slurp (:body request))

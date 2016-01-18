@@ -77,6 +77,6 @@
                                                        :loppupvm (c/to-date (time/local-date 2010 10 10))}}))]
     (is (thrown? Exception (kutsu-palvelua +kayttaja-yit_uuvh+)))
     ;; ei heitä virhettä järjestelmänvastuuhenkilölle
-    (is some? (kutsu-palvelua +kayttaja-jvh+))
+    (is (some? (kutsu-palvelua +kayttaja-jvh+)))
     ;; ei heitä virhettä tilaajan urakanvalvojalle
-    (is some? (kutsu-palvelua +kayttaja-tero+))))
+    (is (some? (kutsu-palvelua +kayttaja-tero+)))))
