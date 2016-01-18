@@ -82,7 +82,7 @@
                         :ely-alueiden-alk-osoite                   "http://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
                         :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
                         }
- :labyrintti           {:url            "http://localhost:28080/sendsms"
+ :labyrintti           {:url            "http://harja-test.solitaservices.fi/harja/integraatiotesti/labyrintti-sms/sendsms"
                         :kayttajatunnus "solita-2"
                         :salasana       "ne8aCrasesev"}
  }
