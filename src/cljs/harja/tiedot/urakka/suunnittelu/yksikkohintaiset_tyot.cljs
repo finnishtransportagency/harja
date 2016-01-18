@@ -39,10 +39,11 @@
 (defn summa [i]
   (reduce + 0 i))
 
-(defn valitse-kuukausimaarat [kannan-rivi-kkt-10-12 i]
+(defn valitse-maaran-oikea-kuukausivali [kannan-rivi-kkt-10-12 i]
   (if (= (.getYear (:alkupvm kannan-rivi-kkt-10-12))
          (.getYear (:alkupvm i)))
-    :maara-kkt-10-12 :maara-kkt-1-9))
+    :maara-kkt-10-12
+    :maara-kkt-1-9))
 
 (defn kannan-rivit->tyorivi 
   "Kahdesta tietokannan työrivistä tehdään yksi käyttöliittymän rivi
@@ -59,7 +60,7 @@
     
     (-> kannan-rivi-kkt-10-12
         (merge 
-         (zipmap (map #(valitse-kuukausimaarat kannan-rivi-kkt-10-12 %) kannan-rivit)
+         (zipmap (map #(valitse-maaran-oikea-kuukausivali kannan-rivi-kkt-10-12 %) kannan-rivit)
                  (map :maara kannan-rivit))               
          {:yhteensa (summa (map kokonaishinta kannan-rivit))})
         (assoc 
