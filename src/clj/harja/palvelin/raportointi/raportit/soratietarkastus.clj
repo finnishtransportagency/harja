@@ -11,17 +11,25 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
+(defn laske-luvun-osuus [numerot index]
+  "Ottaa luvun numeroista annetulla indeksillä ja jakaa sen lukujen summalla."
+  (* (float (/ (nth numerot index)
+                 (reduce + numerot)))
+       100))
+
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
   että sama tienumero ja sama päiväämärä esiintyy aina yhdellä rivillä.
-  Jokaisella yhdistetyllä rivillä lasketaan yhteen saman päivän ja tien tarkastuksista saadut laatuarvot (1-5)."
+  Jokaisella yhdistetyllä rivillä lasketaan yhteen saman päivän ja tien tarkastuksista saadut kuntoarvot (1-5),
+  toisin sanoen kuinka monessa mittauksessa mikäkin kuntoarvo esiintyi."
   (let [ryhmat (group-by
                  (fn [rivi]
                    [(:aika rivi) (get-in rivi [:tr :numero])])
                  tarkastukset)]
     (mapv (fn [ryhma]
             (let [jasenet (get ryhmat ryhma)
-                  laske-laatuarvon-summa (fn [rivit arvo]
+                  laske-kuntoarvon-summa (fn [rivit arvo]
+                                           "Laskee annetun kuntoarvon summan kaikkien rivien kaikista mittausluokista"
                                            (reduce
                                              (fn [nykysumma seuraava-rivi]
                                                (let [laatuarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
@@ -29,10 +37,11 @@
                                              0
                                              rivit))
                   laatuarvot (mapv (fn [arvo]
-                                     (laske-laatuarvon-summa jasenet arvo))
+                                     (laske-kuntoarvon-summa jasenet arvo))
                                    (range 1 6))
                   ]
               (-> (first jasenet)
+                  ; Laatuarvojen summat
                   (assoc :laatuarvo-1-summa (nth laatuarvot 0))
                   (assoc :laatuarvo-2-summa (nth laatuarvot 1))
                   (assoc :laatuarvo-3-summa (nth laatuarvot 2))
@@ -40,7 +49,13 @@
                   (assoc :laatuarvo-5-summa (nth laatuarvot 4))
                   (assoc :laatuarvot-yhteensa (reduce + laatuarvot))
                   (assoc :laatuarvo-1+2-summa (reduce + [(first laatuarvot)
-                                                         (second laatuarvot)])))))
+                                                         (second laatuarvot)]))
+                  ; Laatuarvojen prosenttiosuudet
+                  (assoc :laatuarvo-1-osuus (Math/round (laske-luvun-osuus laatuarvot 0)))
+                  (assoc :laatuarvo-2-osuus (Math/round (laske-luvun-osuus laatuarvot 1)))
+                  (assoc :laatuarvo-3-osuus (Math/round (laske-luvun-osuus laatuarvot 2)))
+                  (assoc :laatuarvo-4-osuus (Math/round (laske-luvun-osuus laatuarvot 3)))
+                  (assoc :laatuarvo-5-osuus (Math/round (laske-luvun-osuus laatuarvot 4))))))
           (keys ryhmat))))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
