@@ -5,7 +5,8 @@
             [clj-time.local :as l]
             [clj-time.format :as tf]
             [clj-time.coerce :as tc]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
@@ -68,6 +69,32 @@
                                     []
                                     0))))
          (kuukaudet alkupvm loppupvm))])
+
+(defn summatut-rivit-pylvaille [rivit pvm-avain & arvo-avaimet]
+  "Yleinen apufunktio, joka muuttaa rivit pylväsdiagrammille sopivaan muotoon.
+
+  rivit               Käsiteltävät rivit
+  pvm-aika            Avain, josta rivin aika löytyy. Saman kuukauden rivit ryhmitellään tällä avaimella.
+  arvo-avaimet        avaimet, joiden takaa löytyvät arvot summataan yhteen
+
+  Lopputuloksena on map, jossa kuukaudet ovat avaimia ja arvona on vectori, jossa esiintyy summatut arvo-avaimet
+  {2015/02 [1 2]
+   2015/03 [3 4]}"
+  (let [ryhmat (group-by
+                 (fn [rivi]
+                   (pvm/kuukausi-ja-vuosi (c/to-date (pvm-avain rivi))))
+                 rivit)]
+    (reduce
+      merge
+      (map
+        (fn [ryhma]
+          (let [jasenet (get ryhmat ryhma)
+                summat (mapv
+                         (fn [arvo-avain]
+                           (reduce + (keep arvo-avain jasenet)))
+                         arvo-avaimet)]
+            {ryhma summat}))
+        (keys ryhmat)))))
 
 (defn ei-osumia-aikavalilla-teksti
   [nimi alkupvm loppupvm]

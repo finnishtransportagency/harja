@@ -47,7 +47,7 @@
                                  kuukausittaiset-summat (reduce
                                                           (fn [map tehtava]
                                                             (assoc map
-                                                              (pvm/kuukausi-ja-vuosi (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
+                                                              (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
                                                               (or (:toteutunut_maara tehtava) 0)))
                                                           {}
                                                           tehtavat)]
@@ -143,7 +143,7 @@
                                {:leveys 15 :otsikko "Tehtävä"}
                                {:leveys 5 :otsikko "Yk\u00ADsik\u00ADkö"}
                                (mapv (fn [rivi]
-                                       {:otsikko (pvm/kuukausi-ja-vuosi (c/to-date rivi)) :otsikkorivi-luokka "grid-kk-sarake"})
+                                       {:otsikko (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date rivi)) :otsikkorivi-luokka "grid-kk-sarake"})
                                      listattavat-pvmt)
                                {:leveys 7 :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
                                (when (= konteksti :urakka)
@@ -156,7 +156,7 @@
                                        (:yksikko rivi)
                                        (mapv (fn [pvm]
                                                (or
-                                                 (get rivi (pvm/kuukausi-ja-vuosi (c/to-date pvm)))
+                                                 (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
                                                  0))
                                              listattavat-pvmt)
                                        (fmt/desimaaliluku (:toteutunut_maara rivi) 1)

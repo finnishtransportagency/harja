@@ -74,8 +74,9 @@
                             laatupoikkeamarivit
                             {:liite :liitteet})
         nayta-pylvaat? (= laatupoikkeamatekija :kaikki)
-        laatupoikkeamat-kuukausittain {"2015/02" [1 2]
-                                       "2015/03" [3 4]} ; TODO HARDOOKATTU TESTIDATA
+        laatupoikkeamat-kuukausittain {"01/15" [1 2]
+                                       "02/15" [3 4]} ; TODO HARDOOKATTU TESTIDATA
+        ;laatupoikkeamat-kuukausittain (yleinen/rivit-pylvaille laatupoikkeamarivit)
         raportin-nimi "Laatupoikkeamaraportti"
         otsikko (raportin-otsikko
                   (case konteksti
