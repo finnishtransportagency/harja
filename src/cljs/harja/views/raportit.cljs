@@ -68,9 +68,9 @@
 (defmulti raportin-parametri
   "Muodosta UI-komponentti raportin parametristä. Komponentin tulee olla täysin
   itsenäinen ja sisällettävä otsikon ja muun tarpeellisen.
-Toinen parametri on atom, jonne parametrin arvo tulee päivittää.
-Jos parametri on virheellisessä tilassa, asetetaan arvoksi :virhe.
-Raporttia ei voi suorittaa, jos parametreissä on virheitä"
+  Toinen parametri on atom, jonne parametrin arvo tulee päivittää.
+  Jos parametri on virheellisessä tilassa, asetetaan arvoksi :virhe.
+  Raporttia ei voi suorittaa, jos parametreissä on virheitä"
   (fn [parametri arvo]
     (:tyyppi parametri)))
 
@@ -191,7 +191,6 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
         @u/valittu-toimenpideinstanssi
         [valinnat/urakan-toimenpide+kaikki]))))
 
-
 (defonce urakoittain? (atom false))
 
 (defmethod raportin-parametri "urakoittain" [p arvo]
@@ -204,6 +203,18 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            (reset! arvo
                    {:urakoittain? @urakoittain?}))
       nil false]]))
+
+(defmethod raportin-parametri "laatupoikkeamatekija" [p arvo]
+  [yleiset/pudotusvalikko
+   "Tekijä"
+   {:valinta    :kaikki
+    :valitse-fn #(reset! arvo {:laatupoikkeamatekija %})
+    :format-fn  #(case %
+                  :kaikki "Kaikki"
+                  :urakoitsija "Urakoitsija"
+                  :tilaaja "Tilaaja")}
+
+   [:kaikki :urakoitsija :tilaaja]])
 
 (def tyomaakokousraportit
   {"Laskutusyhteenveto" :laskutusyhteenveto
