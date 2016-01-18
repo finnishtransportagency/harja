@@ -34,4 +34,5 @@ INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetai
 
 INSERT INTO soratiemittaus (tarkastus, hoitoluokka, tasaisuus, kiinteys, polyavyys, sivukaltevuus) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Soratietarkastus 1'), 1, 3, 4, 5, 1);
 INSERT INTO soratiemittaus (tarkastus, hoitoluokka, tasaisuus, kiinteys, polyavyys, sivukaltevuus) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Soratietarkastus 1'), 1, 2, 4, 2, 1);
-INSERT INTO soratiemittaus (tarkastus, hoitoluokka, tasaisuus, kiinteys, polyavyys, sivukaltevuus) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Soratietarkastus 2'), 2, 5, 4, 3, 1);
+INSERT INTO soratiemittaus (tarkastus, hoitoluokka, tasaisuus, kiinteys, polyavyys, sivukaltevuus) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Soratietarkastus 2'), 2, 5, 1, 3, 1);
+INSERT INTO soratiemittaus (tarkastus, hoitoluokka, tasaisuus, kiinteys, polyavyys, sivukaltevuus) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Soratietarkastus 2'), 2, 5, 4, null, 1);
