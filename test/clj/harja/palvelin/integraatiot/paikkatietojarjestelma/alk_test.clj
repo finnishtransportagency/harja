@@ -6,8 +6,9 @@
     [harja.testi :as testi]
     [harja.palvelin.integraatiot.paikkatietojarjestelma.alk :as alk]))
 
-(defn aja-tiedoston-muutospaivamaara-kysely []
+(defn aja-tiedoston-muutospaivamaara-kysely
   "REPL-testiajofunktio"
+  []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
@@ -16,8 +17,9 @@
       "tieverkon-muutospaivamaaran-haku"
       "http://185.26.50.104/Tieosoiteverkko.zip")))
 
-(defn aja-tiedoston-haku []
+(defn aja-tiedoston-haku
   "REPL-testiajofunktio"
+  []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)

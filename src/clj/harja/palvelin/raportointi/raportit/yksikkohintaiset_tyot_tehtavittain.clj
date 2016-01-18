@@ -33,7 +33,6 @@
                                                                      (if toimenpide-id true false) toimenpide-id)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
-  (roolit/voi-nahda-raportit? user)
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)

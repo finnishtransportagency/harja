@@ -56,6 +56,7 @@
 (defonce hoitourakoiden-lampotilat
   (reaction<! [lampotilojen-hallinnassa? @lampotilojen-hallinnassa?
                valittu-hoitokausi @valittu-hoitokausi]
+              {:nil-kun-haku-kaynnissa? true}
               (when (and lampotilojen-hallinnassa?
                          valittu-hoitokausi)
                 (hae-teiden-hoitourakoiden-lampotilat valittu-hoitokausi))))

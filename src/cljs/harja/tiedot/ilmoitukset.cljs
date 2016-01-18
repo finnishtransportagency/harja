@@ -45,24 +45,24 @@
       tulos)))
 
 (defonce haetut-ilmoitukset
-         (reaction<! [valinnat @valinnat
-                      haku @ilmoitushaku]
-                     {:odota 100}
-                     (go
-                       (if (zero? haku)
-                         []
-                         (let [tulos (<! (k/post! :hae-ilmoitukset
-                                                  (-> valinnat
-                                                      ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                                                      (update-in [:tyypit]
-                                                                 #(if (empty? %) +ilmoitustyypit+ %))
-                                                      (update-in [:tilat]
-                                                                 #(if (empty? %) +ilmoitustilat+ %)))))]
-                           (when-not (k/virhe? tulos)
-                             (when @valittu-ilmoitus ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
-                               (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
-                                 (reset! valittu-ilmoitus nil)))
-                             (jarjesta-ilmoitukset tulos)))))))
+  (reaction<! [valinnat @valinnat
+               haku @ilmoitushaku]
+              {:odota 100}
+              (go
+                (if (zero? haku)
+                  []
+                  (let [tulos (<! (k/post! :hae-ilmoitukset
+                                           (-> valinnat
+                                               ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                                               (update-in [:tyypit]
+                                                          #(if (empty? %) +ilmoitustyypit+ %))
+                                               (update-in [:tilat]
+                                                          #(if (empty? %) +ilmoitustilat+ %)))))]
+                    (when-not (k/virhe? tulos)
+                      (when @valittu-ilmoitus ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
+                        (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
+                          (reset! valittu-ilmoitus nil)))
+                      (jarjesta-ilmoitukset tulos)))))))
 
 
 

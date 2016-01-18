@@ -19,11 +19,13 @@
   (k/post! :hae-aikataulut {:urakka-id  urakka-id
                             :sopimus-id sopimus-id}))
 
-(def aikataulurivit (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                 [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                 nakymassa? @aikataulu-nakymassa?]
-                                (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                                  (hae-aikataulut valittu-urakka-id valittu-sopimus-id))))
+(def aikataulurivit
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @aikataulu-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (hae-aikataulut valittu-urakka-id valittu-sopimus-id))))
 
 (defn tallenna-paallystyskohteiden-aikataulu [urakka-id sopimus-id kohteet]
   (go

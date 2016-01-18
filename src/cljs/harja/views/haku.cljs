@@ -19,7 +19,8 @@
 
 (def hakutulokset
   (reaction<! [termi @hakutermi]
-              {:odota 500}
+              {:odota 500
+               :nil-kun-haku-kaynnissa? true}
               (when (> (count termi) 1)
                 (k/post! :hae termi))))
 

@@ -330,7 +330,7 @@
   (let [mapspec (:mapspec (reagent/state this))
         [mml-spec & _] (:layers mapspec)
         mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
-        interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom false
+        interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom true
                                                                   :dragPan        false})]
                       (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
                       oletukset)
