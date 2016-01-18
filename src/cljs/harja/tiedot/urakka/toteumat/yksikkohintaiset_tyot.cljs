@@ -79,7 +79,7 @@
                                                     rivit))
                  lisaa-erotus (fn [rivit] (map
                                             (fn [rivi]
-                                              (assoc rivi :kustannuserotus (- (:hoit3okauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
+                                              (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
                                             rivit))
                  tehtavarivit (reaction
                                 (let [urakan-4-tason-tehtavat (map
