@@ -166,11 +166,7 @@ SELECT
   t.tyyppi,
   k.jarjestelma,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  liite.nimi as liite_nimi
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -200,11 +196,7 @@ SELECT
   k.jarjestelma,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  liite.nimi as liite_nimi
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -234,7 +226,7 @@ SELECT
   k.jarjestelma,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
+  liite.nimi as liite_nimi
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -268,7 +260,7 @@ SELECT
   thm.lampotila,
   thm.ajosuunta,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
+  liite.nimi as liite_nimi
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -304,7 +296,7 @@ SELECT
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
+  liite.nimi as liite_nimi
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -342,11 +334,7 @@ SELECT
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  liite.nimi as liite_nimi
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -378,7 +366,7 @@ SELECT
   stm.tasaisuus,
   stm.kiinteys,
   stm.polyavyys,
-  stm.sivukaltevuus,
+  stm.sivukaltevuus
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -410,7 +398,7 @@ SELECT
   stm.kiinteys,
   stm.polyavyys,
   stm.sivukaltevuus,
-  u.nimi as urakka,
+  u.nimi as urakka
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -443,7 +431,7 @@ SELECT
   stm.kiinteys,
   stm.polyavyys,
   stm.sivukaltevuus,
-  u.nimi as urakka,
+  u.nimi as urakka
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
