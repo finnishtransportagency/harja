@@ -204,11 +204,14 @@
                    {:urakoittain? @urakoittain?}))
       nil false]]))
 
+(def laatupoikkeama-tekija (atom :kaikki))
+
 (defmethod raportin-parametri "laatupoikkeamatekija" [p arvo]
   [yleiset/pudotusvalikko
    "Tekijä"
-   {:valinta    :kaikki
-    :valitse-fn #(reset! arvo {:laatupoikkeamatekija %})
+   {:valinta    @laatupoikkeama-tekija
+    :valitse-fn #(do (reset! laatupoikkeama-tekija %)
+                     (reset! arvo {:laatupoikkeamatekija %}))
     :format-fn  #(case %
                   :kaikki "Kaikki"
                   :urakoitsija "Urakoitsija"
