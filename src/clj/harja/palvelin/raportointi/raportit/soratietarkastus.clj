@@ -11,8 +11,40 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
+(defn muodosta-raportin-rivit [tarkastukset]
+  "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
+  että sama tienumero ja sama päiväämärä esiintyy aina yhdellä rivillä.
+  Yhdistetyissä rivissä lasketaan yhteen eri tarkastuksista saadut laatuarvot (1-5)."
+  (let [ryhmat (group-by
+                 (fn [rivi]
+                   [(:aika rivi) (get-in rivi [:tr :numero])])
+                 tarkastukset)]
+    (mapv (fn [ryhma]
+            (let [jasenet (get ryhmat ryhma)
+                  laske-laatuarvon-summa (fn [rivit arvo]
+                                           (reduce
+                                             (fn [nykysumma seuraava-rivi]
+                                               (let [laatuarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
+                                                 (+ nykysumma (count (filter #(= % arvo) laatuarvot)))))
+                                             0
+                                             rivit))
+                  laatuarvot (mapv (fn [arvo]
+                                     (laske-laatuarvon-summa jasenet arvo))
+                                   (range 1 6))
+                  ]
+              (-> (first jasenet)
+                  (assoc :laatuarvo-1-summa (nth laatuarvot 0))
+                  (assoc :laatuarvo-2-summa (nth laatuarvot 1))
+                  (assoc :laatuarvo-3-summa (nth laatuarvot 2))
+                  (assoc :laatuarvo-4-summa (nth laatuarvot 3))
+                  (assoc :laatuarvo-5-summa (nth laatuarvot 4))
+                  (assoc :laatuarvot-yhteensa (reduce + laatuarvot))
+                  (assoc :laatuarvo-1+2-summa (reduce + [(first laatuarvot)
+                                                         (second laatuarvot)])))))
+          (keys ryhmat))))
+
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-urakan-soratietarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-urakan-soratietarkastukset-raportille db
                                                                        urakka-id
                                                                        alkupvm
                                                                        loppupvm
@@ -20,7 +52,7 @@
                                                                        tienumero))
 
 (defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-hallintayksikon-soratietarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-hallintayksikon-soratietarkastukset-raportille db
                                                                                 hallintayksikko-id
                                                                                 alkupvm
                                                                                 loppupvm
@@ -28,7 +60,7 @@
                                                                                 tienumero))
 
 (defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero]}]
-  (tarkastukset-q/hae-koko-maan-soratietarkastukset-liitteineen-raportille db
+  (tarkastukset-q/hae-koko-maan-soratietarkastukset-raportille db
                                                                           alkupvm
                                                                           loppupvm
                                                                           (not (nil? tienumero))
@@ -61,16 +93,14 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        naytettavat-rivit (map konv/alaviiva->rakenne
+        tarkastukset (map konv/alaviiva->rakenne
                                (hae-tarkastukset db {:konteksti          konteksti
                                                      :urakka-id          urakka-id
                                                      :hallintayksikko-id hallintayksikko-id
                                                      :alkupvm            alkupvm
                                                      :loppupvm           loppupvm
                                                      :tienumero          tienumero}))
-        naytettavat-rivit (konv/sarakkeet-vektoriin
-                            naytettavat-rivit
-                            {:liite :liitteet})
+        naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
         raportin-nimi "Tiestötarkastusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -88,10 +118,15 @@
        {:leveys 6 :otsikko "Aet"}
        {:leveys 6 :otsikko "Losa"}
        {:leveys 6 :otsikko "Let"}
-       {:leveys 6 :otsikko "Tasaisuus"}
-       {:leveys 6 :otsikko "Kiinteys"}
-       {:leveys 6 :otsikko "Polyävyys"}
-       {:leveys 6 :otsikko "Sivukaltevuus"}]
+       {:leveys 6 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+       {:leveys 6 :otsikko "1"}
+       {:leveys 6 :otsikko "2"}
+       {:leveys 6 :otsikko "3"}
+       {:leveys 6 :otsikko "4"}
+       {:leveys 6 :otsikko "5"}
+       {:leveys 6 :otsikko "Yht"}
+       {:leveys 6 :otsikko "1+2"}
+       {:leveys 6 :otsikko "Laa\u00ADtu"}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         naytettavat-rivit
         :urakka
@@ -102,7 +137,12 @@
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
            (get-in rivi [:tr :loppyetaisyys])
-           (:tasaisuus rivi)
-           (:kiinteys rivi)
-           (:polyavyys rivi)
-           (:sivukaltevuus rivi)]))]]))
+           (:hoitoluokka rivi)
+           (:laatuarvo-1-summa rivi)
+           (:laatuarvo-2-summa rivi)
+           (:laatuarvo-3-summa rivi)
+           (:laatuarvo-4-summa rivi)
+           (:laatuarvo-5-summa rivi)
+           (:laatuarvot-yhteensa rivi)
+           (:laatuarvo-1+2-summa rivi)
+           (:laatu rivi)]))]]))
