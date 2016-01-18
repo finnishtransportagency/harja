@@ -14,7 +14,7 @@
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
   että sama tienumero ja sama päiväämärä esiintyy aina yhdellä rivillä.
-  Yhdistetyissä rivissä lasketaan yhteen eri tarkastuksista saadut laatuarvot (1-5)."
+  Jokaisella yhdistetyllä rivillä lasketaan yhteen saman päivän ja tien tarkastuksista saadut laatuarvot (1-5)."
   (let [ryhmat (group-by
                  (fn [rivi]
                    [(:aika rivi) (get-in rivi [:tr :numero])])
@@ -111,7 +111,8 @@
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
+                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+                 :viimeinen-rivi-yhteenveto? true}
       [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
        {:leveys 5 :otsikko "Tie"}
        {:leveys 6 :otsikko "Aosa"}
@@ -127,22 +128,31 @@
        {:leveys 6 :otsikko "Yht"}
        {:leveys 6 :otsikko "1+2"}
        {:leveys 6 :otsikko "Laa\u00ADtu"}]
-      (yleinen/ryhmittele-tulokset-raportin-taulukolle
-        naytettavat-rivit
-        :urakka
-        (fn [rivi]
-          [(pvm/pvm (:aika rivi))
-           (get-in rivi [:tr :numero])
-           (get-in rivi [:tr :alkuosa])
-           (get-in rivi [:tr :alkuetaisyys])
-           (get-in rivi [:tr :loppuosa])
-           (get-in rivi [:tr :loppyetaisyys])
-           (:hoitoluokka rivi)
-           (:laatuarvo-1-summa rivi)
-           (:laatuarvo-2-summa rivi)
-           (:laatuarvo-3-summa rivi)
-           (:laatuarvo-4-summa rivi)
-           (:laatuarvo-5-summa rivi)
-           (:laatuarvot-yhteensa rivi)
-           (:laatuarvo-1+2-summa rivi)
-           (:laatu rivi)]))]]))
+      (conj
+        (yleinen/ryhmittele-tulokset-raportin-taulukolle
+          naytettavat-rivit
+          :urakka
+          (fn [rivi]
+            [(pvm/pvm (:aika rivi))
+             (get-in rivi [:tr :numero])
+             (get-in rivi [:tr :alkuosa])
+             (get-in rivi [:tr :alkuetaisyys])
+             (get-in rivi [:tr :loppuosa])
+             (get-in rivi [:tr :loppyetaisyys])
+             (:hoitoluokka rivi)
+             (:laatuarvo-1-summa rivi)
+             (:laatuarvo-2-summa rivi)
+             (:laatuarvo-3-summa rivi)
+             (:laatuarvo-4-summa rivi)
+             (:laatuarvo-5-summa rivi)
+             (:laatuarvot-yhteensa rivi)
+             (:laatuarvo-1+2-summa rivi)
+             (:laatu rivi)]))
+        ["Yhteensä" nil nil nil nil nil nil
+         (reduce + (mapv :laatuarvo-1-summa naytettavat-rivit))
+         (reduce + (mapv :laatuarvo-2-summa naytettavat-rivit))
+         (reduce + (mapv :laatuarvo-3-summa naytettavat-rivit))
+         (reduce + (mapv :laatuarvo-4-summa naytettavat-rivit))
+         (reduce + (mapv :laatuarvo-5-summa naytettavat-rivit))
+         (reduce + (mapv :laatuarvot-yhteensa naytettavat-rivit))
+         (reduce + (mapv :laatuarvo-1+2-summa naytettavat-rivit))])]]))
