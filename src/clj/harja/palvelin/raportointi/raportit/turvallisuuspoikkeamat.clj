@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat-kuukausittain]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -81,11 +81,11 @@
      
      (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
-       (pylvaat {:otsikko "Turvallisuuspoikkeamat kuukausittain"
-                 :alkupvm alkupvm :loppupvm loppupvm
-                 :kuukausittainen-data turpomaarat-tyypeittain
-                 :piilota-arvo? #{0}
-                 :legend               ["Turvallisuuspoikkeamat" "Prosessipoikkeamat" "Työturvallisuuspoikkeamat"]}))
+       (pylvaat-kuukausittain {:otsikko "Turvallisuuspoikkeamat kuukausittain"
+                 :alkupvm               alkupvm :loppupvm loppupvm
+                 :kuukausittainen-data  turpomaarat-tyypeittain
+                 :piilota-arvo?         #{0}
+                 :legend                ["Turvallisuuspoikkeamat" "Prosessipoikkeamat" "Työturvallisuuspoikkeamat"]}))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []

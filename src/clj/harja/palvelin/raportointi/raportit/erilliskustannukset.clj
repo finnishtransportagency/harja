@@ -3,7 +3,7 @@
   (:require [taoensso.timbre :as log]
             [yesql.core :refer [defqueries]]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
-                                                                 pylvaat ei-osumia-aikavalilla-teksti rivi]]
+                                                                 pylvaat-kuukausittain ei-osumia-aikavalilla-teksti rivi]]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]

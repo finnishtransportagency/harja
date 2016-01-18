@@ -58,7 +58,7 @@
                         (kuukaudet (t/plus kk (t/months 1)))))))]
       (kuukaudet alku))))
 
-(defn pylvaat
+(defn pylvaat-kuukausittain
   [{:keys [otsikko alkupvm loppupvm kuukausittainen-data piilota-arvo? legend]}]
   [:pylvaat {:otsikko (str otsikko " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
              :piilota-arvo? piilota-arvo? :legend legend}

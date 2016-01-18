@@ -9,7 +9,8 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [clj-time.coerce :as c]))
 
 (defn hae-laatupoikkeamat-urakalle [db {:keys [urakka-id alkupvm loppupvm laatupoikkeamatekija]}]
   (laatupoikkeamat-q/hae-urakan-laatupoikkeamat-liitteineen-raportille db
@@ -57,10 +58,11 @@
 
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija] :as parametrit}]
+  (log/debug (type alkupvm))
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        naytettavat-rivit (map konv/alaviiva->rakenne
+        laatupoikkeamarivit (map konv/alaviiva->rakenne
                                (hae-laatupoikkeamat db {:konteksti            konteksti
                                                         :urakka-id            urakka-id
                                                         :hallintayksikko-id   hallintayksikko-id
@@ -68,9 +70,12 @@
                                                         :loppupvm             loppupvm
                                                         :laatupoikkeamatekija (when (not= laatupoikkeamatekija :kaikki)
                                                                                 (name laatupoikkeamatekija))}))
-        naytettavat-rivit (konv/sarakkeet-vektoriin
-                            naytettavat-rivit
+        laatupoikkeamarivit (konv/sarakkeet-vektoriin
+                            laatupoikkeamarivit
                             {:liite :liitteet})
+        nayta-pylvaat? (= laatupoikkeamatekija :kaikki)
+        laatupoikkeamat-kuukausittain {"2015/02" [1 2]
+                                       "2015/03" [3 4]} ; TODO HARDOOKATTU TESTIDATA
         raportin-nimi "Laatupoikkeamaraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -81,18 +86,30 @@
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia laatupoikkeamia.")}
+                 :tyhja   (if (empty? laatupoikkeamarivit) "Ei raportoitavia laatupoikkeamia.")}
       [{:leveys 15 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
        {:leveys 20 :otsikko "Koh\u00ADde"}
        {:leveys 10 :otsikko "Te\u00ADki\u00ADjä"}
        {:leveys 35 :otsikko "Ku\u00ADvaus"}
        {:leveys 25 :otsikko "Liit\u00ADtei\u00ADtä"}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
-        naytettavat-rivit
+        laatupoikkeamarivit
         :urakka
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
            (:kohde rivi)
            (:tekija rivi)
            (:kuvaus rivi)
-           (count (:liitteet rivi))]))]]))
+           (count (:liitteet rivi))]))]
+
+     (when nayta-pylvaat?
+       (if-not (empty? laatupoikkeamat-kuukausittain)
+         (yleinen/pylvaat-kuukausittain {:otsikko              "Laatupoikkeamat kuukausittain"
+                                         :alkupvm              alkupvm
+                                         :loppupvm             loppupvm
+                                         :kuukausittainen-data laatupoikkeamat-kuukausittain
+                                         :piilota-arvo?        #{0}
+                                         :legend               ["Urakoitsija" "Tilaaja"]})
+         (yleinen/ei-osumia-aikavalilla-teksti "laatupoikkeamia"
+                                               alkupvm
+                                               loppupvm)))]))
