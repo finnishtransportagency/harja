@@ -8,10 +8,10 @@
 (defn rakenna-http-kutsu [metodi otsikot parametrit kayttajatunnus salasana kutsudata]
   (let [kutsu {}]
     (-> kutsu
-        (cond-> (not-empty otsikot) (assoc :headers otsikot))
-        (cond-> (not-empty parametrit) (assoc :query-params parametrit))
-        (cond-> (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana]))
-        (cond-> (or (= metodi "post") (= metodi "put")) (assoc :body kutsudata)))))
+        (cond-> (not-empty otsikot) (assoc :headers otsikot)
+                (not-empty parametrit) (assoc :query-params parametrit)
+                (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
+                (or (= metodi "post") (= metodi "put")) (assoc :body kutsudata)))))
 
 (defn tee-http-kutsu [integraatioloki jarjestelma integraatio tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
   (try
