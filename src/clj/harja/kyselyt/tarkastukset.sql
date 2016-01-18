@@ -395,7 +395,6 @@ SELECT
   stm.kiinteys,
   stm.polyavyys,
   stm.sivukaltevuus,
-  u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -407,10 +406,9 @@ FROM tarkastus t
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
-  JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
-WHERE urakka = :urakka
+WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi
@@ -452,7 +450,7 @@ FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
-WHERE urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi
