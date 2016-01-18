@@ -229,17 +229,12 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
-  t.sijainti,
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
   u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -263,7 +258,6 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
-  t.sijainti,
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
@@ -275,10 +269,6 @@ SELECT
   thm.ajosuunta,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -303,7 +293,6 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
-  t.sijainti,
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
@@ -316,10 +305,6 @@ SELECT
   u.nimi as urakka,
   liite.id   as liite_id,
   liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -374,7 +359,7 @@ WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND t.tyyppi = 'talvihoito'::tarkastustyyppi
 ORDER BY t.aika;
 
--- name: hae-urakan-soratietarkastukset-liitteineen-raportille
+-- name: hae-urakan-soratietarkastukset-raportille
 -- Hakee urakan soratietarkastukset aikavälin perusteella raportille
 SELECT
   t.id,
@@ -386,7 +371,6 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
-  t.sijainti,
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
@@ -395,26 +379,18 @@ SELECT
   stm.kiinteys,
   stm.polyavyys,
   stm.sivukaltevuus,
-  liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
-  LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
-  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi
 ORDER BY t.aika;
 
--- name: hae-hallintayksikon-soratietarkastukset-liitteineen-raportille
+-- name: hae-hallintayksikon-soratietarkastukset-raportille
 -- Hakee hallintayksikön soratietarkastukset aikavälin perusteella raportille
 SELECT
   t.id,
@@ -426,7 +402,6 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
-  t.sijainti,
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
@@ -436,27 +411,19 @@ SELECT
   stm.polyavyys,
   stm.sivukaltevuus,
   u.nimi as urakka,
-  liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
   JOIN urakka u ON t.urakka = u.id
-  LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
-  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi
 ORDER BY t.aika;
 
--- name: hae-koko-maan-soratietarkastukset-liitteineen-raportille
+-- name: hae-koko-maan-soratietarkastukset-raportille
 -- Hakee koko maan soratietarkastukset aikavälin perusteella raportille
 SELECT
   t.id,
@@ -468,7 +435,6 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
-  t.sijainti,
   t.tarkastaja,
   t.tyyppi,
   k.jarjestelma,
@@ -477,18 +443,12 @@ SELECT
   stm.kiinteys,
   stm.polyavyys,
   stm.sivukaltevuus,
-  liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  u.nimi as urakka,
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
-  LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
-  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+  JOIN urakka u ON t.urakka = u.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi
