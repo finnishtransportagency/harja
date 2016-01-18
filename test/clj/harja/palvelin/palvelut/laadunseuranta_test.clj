@@ -136,7 +136,10 @@
                                                                          :tienumero nil
                                                                          :tyyppi    nil})]
     (is (not (empty? vastaus)))
-    (is (>= (count vastaus) 1))))
+    (is (>= (count vastaus) 1))
+    (let [tarkastus (first vastaus)]
+      (is (= #{:jarjestelma :havainnot :sijainti :aika :tr :tekija :id :tyyppi :tarkastaja}
+             (into #{} (keys tarkastus)))))))
 
 (deftest hae-tarkastus 
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
