@@ -37,19 +37,26 @@
            {:type        :tack-icon
             :coordinates (:coordinates geometria)})))
 
-(defn- oletusalue [asia valittu?]
-  (merge
-    (or (:sijainti asia)
-        (:sijainti (first (:reittipisteet asia))))
-    {:color  (if (valittu? asia) "blue" "green")
-     :radius 300
-     :stroke {:color "black" :width 10}}))
-
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 
 (defn- laske-skaala [asia valittu?]
   (if (valittu? asia) +valitun-skaala+ +normaali-skaala+))
+
+(defn- tack-ikoni [ilmoitus ikoni valittu?]
+  (tack-icon
+    {:scale (laske-skaala ilmoitus valittu?)
+     :img ikoni}
+    (:sijainti ilmoitus)))
+
+(defn- musta-tack-ikoni [ilmoitus ikoni valittu?]
+  (assoc (tack-ikoni ilmoitus ikoni valittu?)
+    :color "black"))
+
+(defn- levea-tack-ikoni-varilla [pt ikoni valittu? vari]
+  (assoc (tack-ikoni pt ikoni valittu?)
+    :color vari
+    :width (when (:avoin? pt) 8)))
 
 (defmulti
   ^{:private true}
@@ -69,21 +76,6 @@
       :lopetus "Lopetuskuittaus annettu"
       :muutos "Muutoskuittaus annettu"
       oletusteksti)))
-
-(defn- tack-ikoni [ilmoitus ikoni valittu?]
-  (tack-icon
-   {:scale (laske-skaala ilmoitus valittu?)
-    :img ikoni}
-   (:sijainti ilmoitus)))
-
-(defn- musta-tack-ikoni [ilmoitus ikoni valittu?]
-  (assoc (tack-ikoni ilmoitus ikoni valittu?)
-         :color "black"))
-
-(defn- levea-tack-ikoni-varilla [pt ikoni valittu? vari]
-  (assoc (tack-ikoni pt ikoni valittu?)
-         :color vari
-         :width (when (:avoin? pt) 8)))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu?]
   (assoc ilmoitus
@@ -244,12 +236,6 @@
     [(karttakuva
       (str teksti "-tack-" ikonin-vari)) viivan-vari]))
 
-;; TODO: Päällystyksissä ja paikkauksissa on kommentoitua koodia, koska näille dedikoituijen näkymien käyttämät
-;; kyselyt palauttavat datan sellaisessa muodossa, että sijainti pitää kaivaa erikseen "kohdeosista".
-;; Tilannekuvassa tämä sijaintitieto palautetaan suoraan samassa kyselyssä. Tilannekuva on tällä hetkellä
-;; ainoa paikka jossa piirretään päällystyksiä/paikkauksia tämän namespacen avulla, joten päätettiin toteuttaa
-;; metodit uudelleen. Kun päällystys/paikkaus-näkymät laitetaan käyttämään tätä uutta paradigmaa, voidaan joko
-;; toteuttaa näille omat metodit TAI miettiä, tarviiko tosiaan näiden käyttämä data palauttaa sellaisessa muodossa?
 (defn- paikkaus-paallystys [pt valittu? tyo teksti]
   (let [[ikoni viiva] (paattele-yllapidon-ikoni-ja-viivan-vari tyo pt)]
     (assoc pt
@@ -298,8 +284,7 @@
 (defn- paattele-tyokoneen-ikoni
   [tehtavat lahetetty valittu?]
   ;; TODO Miten päätellään järkevästi mikä ikoni työkoneelle näytetään?
-  ;; Ensinnäkin, en ole yhtään varma osuuko nämä suoritettavat tehtävät edes oikeanlaisiin ikoneihin
-  ;; Mutta tärkempää on, että työkoneella voi olla useampi tehtävä. Miten se hoidetaan?
+  ;; Työkoneella voi olla useampi tehtävä. Miten se hoidetaan?
   ;; Voisi kuvitella että jotkut tehtävät ovat luonnostaan kiinnostavampia,
   ;; Esim jos talvella aurataan paljon mutta suolataan vain vähän (ja yleensä aurataan kun suolataan),
   ;; niin silloin pitäisi näyttää suolauksen ikoni silloin harvoin kun sitä tehdään.
