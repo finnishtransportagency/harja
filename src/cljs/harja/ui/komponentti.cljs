@@ -122,6 +122,13 @@ aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation a
   [piirretty]
   {:component-did-mount (fn [& _]
                           (piirretty))})
+
+(defn lippu-arvo
+  "Mixin joka asettaa ensimmäisen arvon kun komponentti näytetään ja toisen arvon kun komponentti poistuu."
+  [arvo-sisaan arvo-ulos & lippu-atomit]
+  (sisaan-ulos #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom arvo-sisaan))
+               #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom arvo-ulos))))
+
 (defn lippu
   "Mixin, joka asettaa annetun atomin tilan joko true tai false sen mukaan onko komponentti näkyvissä."
   [& lippu-atomit]
