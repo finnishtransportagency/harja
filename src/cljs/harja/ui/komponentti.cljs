@@ -128,6 +128,13 @@ aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation a
   (sisaan-ulos #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom true))
                #(doseq [lippu-atom lippu-atomit] (reset! lippu-atom false))))
 
+(defn avain-lippu
+  "Mixin, joka lisää annettuun atomiin avaimen (conj) ja poistaa sen (disj) kun komponentti poistuu.
+Atomin arvon tulee olla setti."
+  [atomi avain]
+  (sisaan-ulos #(swap! atomi conj avain)
+               #(swap! atomi disj avain)))
+
 (defn lukko
   "Mixin, joka hoitaa muokkauslukkoon liittyvät toimenpiteet."
   [lukko-id]

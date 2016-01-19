@@ -227,11 +227,7 @@
                              :XL "Pienennä karttaa"
                              "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
-    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or
-                                                                   (not (empty? @nav/tarvitsen-isoa-karttaa))
-                                                                   (= sivu :tilannekuva)
-                                                                   (and (= sivu :urakat)
-                                                                        (not v-ur))) "hide")}
+    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
 
      ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin

@@ -136,6 +136,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
   (atom #{}))
 
+(def piilota-kartta "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan piiloon."
+  (atom #{}))
+
 ;; jos haluat palauttaa kartan edelliseen kokoon, säilö edellinen koko tähän (esim. Valitse kartalta -toiminto)
 (def kartan-edellinen-koko (atom nil))
 
@@ -145,17 +148,28 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   (reaction (let [valittu-koko @kartan-kokovalinta
                   sivu @sivu
                   v-ur @valittu-urakka
-                  tarvitsen-isoa-karttaa @tarvitsen-isoa-karttaa]
-              (if-not (empty? tarvitsen-isoa-karttaa)
-                :L
-                ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
-                ;; tai palautetaan käyttäjän valitsema koko
-                (cond (= sivu :hallinta) :hidden
-                      (= sivu :about) :hidden
-                      (= sivu :tilannekuva) :XL
-                      (and (= sivu :urakat)
-                           (not v-ur)) :XL
-                      :default valittu-koko)))))
+                  tarvitsen-isoa-karttaa @tarvitsen-isoa-karttaa
+                  piilota-kartta @piilota-kartta]
+              (if-not (empty? piilota-kartta)
+                :S
+                (if-not (empty? tarvitsen-isoa-karttaa)
+                  :L
+                  ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
+                  ;; tai palautetaan käyttäjän valitsema koko
+                  (cond (= sivu :hallinta) :hidden
+                        (= sivu :about) :hidden
+                        (= sivu :tilannekuva) :XL
+                        (and (= sivu :urakat)
+                             (not v-ur)) :XL
+                        :default valittu-koko))))))
+
+(def kartan-kontrollit-nakyvissa?
+  (reaction (if-not (empty? @piilota-kartta)
+              false
+              (or (empty? @tarvitsen-isoa-karttaa)
+                  (not= sivu :tilannekuva)
+                  (and (not= sivu :urakat)
+                       (nil? @valittu-urakka))))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   (reset! valittu-hallintayksikko-id hy-id)
