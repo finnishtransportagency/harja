@@ -673,8 +673,7 @@
                         (do
                           (tasot/poista-geometria! :tr-valittu-osoite)
                           (reset! virheet nil)))))
-             kartta? @karttavalinta-kaynnissa
-             tr-elementti (partial tr-kentan-elementti lomake? kartta? muuta! blur)]
+             kartta? @karttavalinta-kaynnissa]
          [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
           (when @virheet
             [:div {:class "virheet"}
