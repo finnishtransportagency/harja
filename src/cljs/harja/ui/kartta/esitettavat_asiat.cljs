@@ -39,8 +39,8 @@
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 
-(defn- laske-skaala [asia valittu?]
-  (if (valittu? asia) +valitun-skaala+ +normaali-skaala+))
+(defn- laske-skaala [valittu?]
+  (if valittu? +valitun-skaala+ +normaali-skaala+))
 
 (defn viivan-vari
   ([valittu?] (viivan-vari valittu? "blue" "black"))
@@ -48,13 +48,20 @@
   ([valittu? valittu-vari ei-valittu-vari]
    (if valittu? valittu-vari ei-valittu-vari)))
 
+(defn viivan-leveys
+  ([valittu?] (viivan-leveys valittu? 8 nil)) ;; Nil tarkoittaa että käytetään openlayersissä määriteltyä defaulttia
+  ([valittu? valittu-leveys] (viivan-leveys valittu? valittu-leveys nil))
+  ([valittu? valittu-leveys ei-valittu-leveys]
+   (when valittu? valittu-leveys ei-valittu-leveys)))
+
 (defn- tack-ikoni
   ([asia ikoni valittu?] (tack-ikoni asia ikoni valittu? {}))
   ([asia ikoni valittu? optiot]
   (tack-icon
     (merge
-      {:scale (laske-skaala asia valittu?)
-      :color (viivan-vari asia valittu?)
+      {:scale (laske-skaala (valittu? asia))
+      :color (viivan-vari (valittu? asia))
+       :width (viivan-leveys (valittu? asia))
       :img   ikoni}
       optiot)
     (:sijainti asia))))
