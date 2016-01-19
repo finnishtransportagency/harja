@@ -15,9 +15,14 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest tarkista-tietolajin-haku
+(deftest tekstiviestin-lahetys
   (with-fake-http
     [+testi-sms-url+ "ok"]
     (let [vastaus (labyrintti/laheta (:labyrintti jarjestelma) "0987654321" "Testi")]
       (is (= "ok" (:sisalto vastaus))))))
 
+(deftest tekstiviestin-epaonnistunut-lahetys
+  (with-fake-http
+    [+testi-sms-url+ "TESTI ERROR 2 1 message failed: Invalid phone number"]
+    (is (thrown? Exception (labyrintti/laheta (:labyrintti jarjestelma) "0987654321" "Testi"))
+        "Poikkeusta ei heitetty virhe responsesta.")))

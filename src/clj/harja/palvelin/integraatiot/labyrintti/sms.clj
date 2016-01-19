@@ -1,8 +1,10 @@
 (ns harja.palvelin.integraatiot.labyrintti.sms
   "Labyrintti SMS Gateway"
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.string :as string]
+            [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]))
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol Sms
   (laheta [this numero viesti]))
@@ -17,15 +19,18 @@
       (http/laheta-post-kutsu integraatioloki "laheta" "labyrintti" url otsikot parametrit kayttajatunnus salasana nil
                               (fn [body headers]
                                 (log/debug (format "Labyrintin SMS Gateway vastasi: sisältö: %s, otsikot: %s" body headers))
+                                (when (.contains (string/lower-case body) "error")
+                                  (throw+ {:type  :sms-lahetys-epaonnistui
+                                           :error body}))
                                 {:sisalto body :otsikot headers})))))
 
 (defrecord Labyrintti [url kayttajatunnus salasana]
   component/Lifecycle
   (start [this]
     (assoc this
-           :url url
-           :kayttajatunnus kayttajatunnus
-           :salasana salasana))
+      :url url
+      :kayttajatunnus kayttajatunnus
+      :salasana salasana))
   (stop [this]
     this)
 
