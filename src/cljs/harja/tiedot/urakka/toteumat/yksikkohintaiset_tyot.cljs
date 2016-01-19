@@ -50,24 +50,19 @@
                  lisaa-yksikkohinta (assosioi :yksikkohinta :yksikkohinta)
                  lisa-suunniteltu-maara (assosioi :hoitokauden-suunniteltu-maara :maara)
                  lisaa-suunnitellut-kustannukset (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
-                 lisaa-toteutunut-maara (assosioi :hoitokauden-toteutunut-maara :maara)
+                 lisaa-toteutunut-maara (fn [rivit]
+                                          (map
+                                            (fn [rivi]
+                                              (assoc rivi :hoitokauden-toteutunut-maara (or (:maara
+                                                                                              (first (filter
+                                                                                                       (fn [tehtava] (= (:tpk_id tehtava) (:id rivi)))
+                                                                                                       @yks-hint-tehtavien-summat)))
+                                                                                            nil)))
+                                            rivit))
                  lisaa-toteutuneet-kustannukset (fn [rivit]
                                                   (map
                                                     (fn [rivi]
-                                                      (assoc rivi :hoitokauden-toteutunut-maara
-                                                                  (or (:maara
-                                                                        (first (filter
-                                                                                 (fn [tehtava] (= (:tpk_id tehtava)
-                                                                                                  (:id rivi)))
-                                                                                 @yks-hint-tehtavien-summat)))
-                                                                      nil)))
-                                                    rivit))
-                 lisaa-toteutuneet-kustannukset (fn [rivit]
-                                                  (map
-                                                    (fn [rivi]
-                                                      (assoc rivi :hoitokauden-toteutuneet-kustannukset
-                                                                  (* (:yksikkohinta rivi)
-                                                                     (:hoitokauden-toteutunut-maara rivi))))
+                                                      (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
                                                     rivit))
                  lisaa-erotus (fn [rivit] (map
                                             (fn [rivi]
