@@ -85,41 +85,46 @@
 @valintakontrollin-korkeus: 32px;
 
 /** TEKSTIT */
+// muuttamalla skaalauskerrointa voidaan yhtä lukua muuttamalla säätää fonttien kokoja
+@fontin-skaalauskerroin: 0.85;
 
 @fontin-pohjakoko: 16px;
 @fontin-yksikko: 0rem;
 
 @fontin-kirjasin-h1: 'Open Sans', Arial, sans-serif;
 @fontin-paino-h1:     700;
-@fontin-koko-h1:      1.375 + @fontin-yksikko;
+@fontin-koko-h1:      (@fontin-skaalauskerroin * 1.375) + @fontin-yksikko;
 @fontin-vari-h1:      @harmaa2;
 
 @fontin-kirjasin-h2: 'Open Sans', Arial, sans-serif;
 @fontin-paino-h2:    400;
-@fontin-koko-h2:     1.125 + @fontin-yksikko;
+@fontin-koko-h2:     (@fontin-skaalauskerroin * 1.125) + @fontin-yksikko;
 @fontin-vari-h2:     @harmaa2;
 @fontin-tyyli-h2:    uppercase;
 
 @fontin-kirjasin-h3: 'Open Sans', Arial, sans-serif;
 @fontin-paino-h3:    700;
-@fontin-koko-h3:     1 + @fontin-yksikko;
+@fontin-koko-h3:     (@fontin-skaalauskerroin * 1) + @fontin-yksikko;
 @fontin-vari-h3:     @harmaa2;
 
 @fontin-kirjasin-leipateksti: 'Open Sans', Arial, sans-serif;
 @fontin-paino-leipateksti:     400;
-@fontin-koko-leipateksti:      0.875 + @fontin-yksikko;
+@fontin-koko-leipateksti:      (@fontin-skaalauskerroin * 0.875) + @fontin-yksikko;
 @fontin-vari-leipateksti:      @harmaa2;
 
 @fontin-kirjasin-linkki: 'Open Sans', Arial, sans-serif;
 @fontin-paino-linkki:     400;
-@fontin-koko-linkki:      0.875 + @fontin-yksikko;
+@fontin-koko-linkki:      @fontin-koko-leipateksti;
 @fontin-vari-linkki:      @sininen4;
 
 @fontin-kirjasin-osoitettu-linkki: 'Open Sans', Arial, sans-serif;
 @fontin-paino-osoitettu-linkki:     400;
-@fontin-koko-osoitettu-linkki:      0.875 + @fontin-yksikko;
+@fontin-koko-osoitettu-linkki:      @fontin-koko-leipateksti;
 @fontin-vari-osoitettu-linkki:      @sininen4;
 @fontin-korostus-osoitettu-linkki:  underline;
+
+
+@fontin-koko-taulukko: @fontin-koko-leipateksti;
 
 /** PALKIT */
 
@@ -283,7 +288,7 @@ table.table-striped {
             }
             color: @sininen4;
             position: absolute;
-            top: 9px;
+            top: 10px;
             right: 5px;
 	    width: 25px;
 	    padding-left: 10px;
