@@ -104,7 +104,7 @@
                                                   (if-not (or
                                                             (and (string? uusi-arvo) (empty? uusi-arvo))
                                                             (nil? uusi-arvo))
-                                                    (second (pvm/kuukauden-aikavali uusi-arvo))
+                                                    (second (pvm/kuukauden-aikavali-opt uusi-arvo))
                                                     (second @valittu-aikavali-atom))])))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
@@ -113,8 +113,10 @@
              (fn [uusi-arvo]
                (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)]
                  ;; Estetään käänteinen aikaväli
-                 (if (and uusi-arvo (t/before? uusi-arvo (first @valittu-aikavali-atom)))
-                   (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali uusi-arvo))
+                 (if (and uusi-arvo
+                          (first @valittu-aikavali-atom)
+                          (t/before? uusi-arvo (first @valittu-aikavali-atom)))
+                   (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali-opt uusi-arvo))
                    (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo]))))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 

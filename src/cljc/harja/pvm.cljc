@@ -353,6 +353,14 @@
        ;; aseta aika
        [alku loppu])))
 
+
+#?(:cljs
+   (defn
+     kuukauden-aikavali-opt
+     [dt]
+     (when dt
+       (kuukauden-aikavali dt))))
+
 #?(:cljs
    (defn hoitokauden-kuukausivalit
      "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun hoitokauden
