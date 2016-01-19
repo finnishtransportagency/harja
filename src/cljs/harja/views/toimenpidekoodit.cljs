@@ -70,6 +70,29 @@
                               :poistettavat poistettavat}))]
         (resetoi-koodit res))))
 
+(defn hinnoittelun-nimi
+  [hinnoittelu-str]
+  (case hinnoittelu-str
+    "kokonaishintainen"
+    "kokonais"
+    "yksikkohintainen"
+    "yksikkö"
+    "muutoshintainen"
+    "muutos"))
+
+(defn hinnoittelun-nimet
+  [hinnoittelu-vec]
+  (clojure.string/join ", " (map #(hinnoittelun-nimi %) hinnoittelu-vec)))
+
+(def +hinnoittelu-valinnat+
+  [["yksikkohintainen"]
+   ["kokonaishintainen"]
+   ["muutoshintainen"]
+   ["yksikkohintainen" "muutoshintainen"]
+   ["yksikkohintainen" "kokonaishintainen"]
+   ["kokonaishintainen" "muutoshintainen"]
+   ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
+
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
   (with-meta
@@ -111,7 +134,8 @@
 
          [:br]
          (when-let [emo3 (:id taso3)]
-           (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))]
+           (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))
+                 _ (log "tehtävät " (pr-str tehtavat))]
              [grid/grid
               {:otsikko  "Tehtävät"
                :tyhja    (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
@@ -122,9 +146,11 @@
 
               [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :validoi [[:ei-tyhja "Anna tehtävän nimi"]] :leveys "70%"}
                {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]] :leveys "15%"}
-               {:otsikko "Hinnoittelu" :boolean-otsikko "Kokonaishintainen" :nimi :kokonaishintainen :tyyppi :boolean :leveys "15%"
-                :fmt     #(if % "Kokonaishintainen" "Yksikköperusteinen")}]
-              (sort-by (juxt :kokonaishintainen :nimi) tehtavat)]))
+               {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys "15%"
+                :valinnat +hinnoittelu-valinnat+
+                :valinta-nayta hinnoittelun-nimet
+                :fmt     #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}]
+              (sort-by (juxt :hinnoittelu :nimi) tehtavat)]))
          ]))
 
     {:displayName         "toimenpidekoodit"

@@ -5,7 +5,8 @@ SELECT
   t4.koodi             AS t4_koodi,
   t4.nimi              AS t4_nimi,
   t4.yksikko           AS t4_yksikko,
-  t4.kokonaishintainen AS t4_kokonaishintainen,
+  t4.hinnoittelu       AS t4_hinnoittelu,
+  t4.jarjestys         AS t4_jarjestys,
   t3.id                AS t3_id,
   t3.koodi             AS t3_koodi,
   t3.nimi              AS t3_nimi,
@@ -55,7 +56,8 @@ SELECT
   t4.koodi             AS t4_koodi,
   t4.nimi              AS t4_nimi,
   t4.yksikko           AS t4_yksikko,
-  t4.kokonaishintainen AS t4_kokonaishintainen,
+  t4.hinnoittelu       AS t4_hinnoittelu,
+  t4.jarjestys         AS t4_jarjestys,
   t3.id                AS t3_id,
   t3.koodi             AS t3_koodi,
   t3.nimi              AS t3_nimi,
@@ -71,7 +73,7 @@ FROM toimenpidekoodi t4
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
   LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide
 WHERE t4.taso = 4 AND
-      t4.kokonaishintainen IS TRUE AND
+      t4.hinnoittelu @> ARRAY['kokonaishintainen'::hinnoittelutyyppi] AND
       t4.poistettu = FALSE AND
       tpi.urakka = :urakka;
 
@@ -82,7 +84,8 @@ SELECT
   t4.koodi             AS t4_koodi,
   t4.nimi              AS t4_nimi,
   t4.yksikko           AS t4_yksikko,
-  t4.kokonaishintainen AS t4_kokonaishintainen,
+  t4.hinnoittelu       AS t4_hinnoittelu,
+  t4.jarjestys         AS t4_jarjestys,
   t3.id                AS t3_id,
   t3.koodi             AS t3_koodi,
   t3.nimi              AS t3_nimi,
@@ -97,7 +100,7 @@ FROM toimenpidekoodi t4
   LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
 WHERE t4.taso = 4 AND
-      t4.kokonaishintainen IS NOT TRUE AND
+      t4.hinnoittelu @> ARRAY['yksikkohintainen'::hinnoittelutyyppi] AND
       t4.id NOT IN (SELECT DISTINCT tehtava
                     FROM muutoshintainen_tyo
                     WHERE urakka = :urakka AND yksikkohinta IS NOT NULL AND poistettu IS FALSE) AND
@@ -114,7 +117,8 @@ SELECT
   t4.koodi             AS t4_koodi,
   t4.nimi              AS t4_nimi,
   t4.yksikko           AS t4_yksikko,
-  t4.kokonaishintainen AS t4_kokonaishintainen,
+  t4.hinnoittelu       AS t4_hinnoittelu,
+  t4.jarjestys         AS t4_jarjestys,
   t3.id                AS t3_id,
   t3.koodi             AS t3_koodi,
   t3.nimi              AS t3_nimi,
@@ -129,11 +133,12 @@ FROM toimenpidekoodi t4
   LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
 WHERE t4.taso = 4 AND
-      t4.kokonaishintainen IS NOT TRUE AND
+      t4.hinnoittelu @> ARRAY['muutoshintainen'::hinnoittelutyyppi] AND
       t4.id NOT IN (SELECT DISTINCT tehtava
                     FROM yksikkohintainen_tyo
                     WHERE urakka = :urakka AND yksikkohinta IS NOT NULL) AND
       t3.id IN (SELECT toimenpide
                 FROM toimenpideinstanssi
                 WHERE urakka = :urakka) AND
-      t4.poistettu = FALSE;
+      t4.poistettu = FALSE
+ORDER BY t4.jarjestys;

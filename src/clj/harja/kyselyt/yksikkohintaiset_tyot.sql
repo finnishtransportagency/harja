@@ -19,17 +19,17 @@ WHERE urakka = :urakka;
 -- name: hae-urakan-sopimuksen-yksikkohintaiset-tehtavat
 -- Urakan sopimuksen yksikköhintaiset tehtävät
 SELECT
-  id,
-  nimi,
-  yksikko
-FROM toimenpidekoodi
+  tpk.id,
+  tpk.nimi,
+  tpk.yksikko
+FROM toimenpidekoodi tpk
 WHERE
   NOT poistettu AND
   id IN (
     SELECT DISTINCT (tehtava)
     FROM yksikkohintainen_tyo
     WHERE urakka = :urakkaid AND sopimus = :sopimusid) AND
-  (kokonaishintainen IS NULL OR NOT kokonaishintainen);
+  hinnoittelu @> ARRAY['yksikkohintainen'::hinnoittelutyyppi];
 
 -- name: paivita-urakan-yksikkohintainen-tyo!
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot

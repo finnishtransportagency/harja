@@ -7,7 +7,8 @@ SELECT
   emo,
   taso,
   yksikko,
-  kokonaishintainen
+  jarjestys,
+  hinnoittelu
 FROM toimenpidekoodi
 WHERE poistettu = FALSE;
 
