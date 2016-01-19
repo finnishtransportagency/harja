@@ -12,9 +12,8 @@
 (def valittu-alkupiste (atom nil))
 (def tr-alkupiste-kartalla (reaction
                              (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
-                               [{:alue {:type        :icon
-                                        :direction   0
+                               [{:alue {:type :tack-icon
                                         :coordinates (:coordinates @valittu-alkupiste)
-                                        :img         (yleiset/karttakuva "images/karttaikonit/kartta-tr-piste-harmaa")}}])))
+                                        :img (yleiset/karttakuva "tr-piste-tack-harmaa")}}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)

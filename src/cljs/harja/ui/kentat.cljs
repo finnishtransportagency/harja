@@ -590,7 +590,7 @@
 (defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
   {:alue (assoc arvo
                 :type tyyppi
-                :img (yleiset/karttakuva "kartta-tr-piste-harmaa")
+                :img (yleiset/karttakuva "tr-piste-tack-harmaa")
                 :zindex 6
                 :color vari)
    :type :tr-valittu-osoite})
