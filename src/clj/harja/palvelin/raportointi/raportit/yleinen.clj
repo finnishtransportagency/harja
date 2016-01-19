@@ -70,13 +70,13 @@
                                     0))))
          (kuukaudet alkupvm loppupvm))])
 
-(defn summatut-rivit-kuukausipylvaille [rivit pvm-avain & arvo-avaimet]
-  "Yleinen apufunktio, joka muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon
-  ryhmittelemällä rivit kuukausille ja summaamalla riveiltä löytyvät arvo-avaimet.
+(defn rivit-kuukausipylvaille-summattuna [rivit pvm-avain & arvo-avaimet]
+  "Muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon.
+  Tekee tämän ryhmittelemällä rivit kuukausille ja summaamalla riveiltä löytyvät arvo-avaimet.
 
-  rivit               Käsiteltävät rivit
+  rivit               Käsiteltävät rivit.
   pvm-avain           Avain, josta rivin aika löytyy. Saman kuukauden rivit ryhmitellään tällä avaimella.
-  arvo-avaimet        avaimet, joiden takaa löytyvät arvot summataan yhteen
+  arvo-avaimet        Avaimet, joiden takaa löytyvät arvot summataan yhteen.
 
   Lopputuloksena on map, jossa kuukaudet ovat avaimia ja arvona on vectori, jossa esiintyy summatut arvo-avaimet
   järjestyksessä:
@@ -98,13 +98,14 @@
             {kuukausi summat}))
         (keys kuukaudet)))))
 
-(defn eriarvoiset-rivit-kuukausipylvaille [rivit pvm-avain arvo-avain mahdolliset-arvot]
-  "Yleinen apufunktio, joka muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon
-  ryhmittelemällä rivit kuukausille ja laskemalla, kuinka monta kertaa arvo-avaimen mahdolliset arvot esiintyvät.
+(defn rivit-kuukausipylvaille-arvoa-laskien [rivit pvm-avain arvo-avain mahdolliset-arvot]
+  "Muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon.
+  Tekee tämän ryhmittelemällä rivit kuukausille ja laskemalla, kuinka monta kertaa arvo-avaimen
+  jokainen mahdollinen arvo esiintyy kuukauden aikana.
 
   rivit               Käsiteltävät rivit
   pvm-avain           Avain, josta rivin aika löytyy. Saman kuukauden rivit ryhmitellään tällä avaimella.
-  arvo-avain          Avain, jossa esiintyviä arvoja tutkitaan
+  arvo-avain          Avain, jonka takaa löytyviä arvoja tutkitaan
   mahdolliset-arvot   Mahdolliset arvot, jotka arvo-avaimen takaa löytyvät. Annetaan siinä järjestyksessä jossa
                       ne esiintyvät pylvään legendissä.
 

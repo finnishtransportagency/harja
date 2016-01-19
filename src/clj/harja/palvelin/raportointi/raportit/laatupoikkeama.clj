@@ -73,7 +73,12 @@
                             laatupoikkeamarivit
                             {:liite :liitteet})
         nayta-pylvaat? (= laatupoikkeamatekija :kaikki)
-        laatupoikkeamat-kuukausittain (yleinen/eriarvoiset-rivit-kuukausipylvaille laatupoikkeamarivit :aika :tekija ["urakoitsija" "tilaaja"])
+        laatupoikkeamat-kuukausittain (when nayta-pylvaat?
+                                        (yleinen/rivit-kuukausipylvaille-arvoa-laskien
+                                        laatupoikkeamarivit
+                                        :aika
+                                        :tekija
+                                        ["urakoitsija" "tilaaja"]))
         raportin-nimi "Laatupoikkeamaraportti"
         otsikko (raportin-otsikko
                   (case konteksti
