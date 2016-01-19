@@ -70,31 +70,64 @@
                                     0))))
          (kuukaudet alkupvm loppupvm))])
 
-(defn summatut-rivit-pylvaille [rivit pvm-avain & arvo-avaimet]
-  "Yleinen apufunktio, joka muuttaa rivit pylväsdiagrammille sopivaan muotoon.
+(defn summatut-rivit-kuukausipylvaille [rivit pvm-avain & arvo-avaimet]
+  "Yleinen apufunktio, joka muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon
+  ryhmittelemällä rivit kuukausille ja summaamalla riveiltä löytyvät arvo-avaimet.
 
   rivit               Käsiteltävät rivit
-  pvm-aika            Avain, josta rivin aika löytyy. Saman kuukauden rivit ryhmitellään tällä avaimella.
+  pvm-avain           Avain, josta rivin aika löytyy. Saman kuukauden rivit ryhmitellään tällä avaimella.
   arvo-avaimet        avaimet, joiden takaa löytyvät arvot summataan yhteen
 
   Lopputuloksena on map, jossa kuukaudet ovat avaimia ja arvona on vectori, jossa esiintyy summatut arvo-avaimet
+  järjestyksessä:
   {2015/02 [1 2]
    2015/03 [3 4]}"
-  (let [ryhmat (group-by
+  (let [kuukaudet (group-by
                  (fn [rivi]
                    (pvm/kuukausi-ja-vuosi (c/to-date (pvm-avain rivi))))
                  rivit)]
     (reduce
       merge
       (map
-        (fn [ryhma]
-          (let [jasenet (get ryhmat ryhma)
+        (fn [kuukausi]
+          (let [kuukauden-rivit (get kuukaudet kuukausi)
                 summat (mapv
                          (fn [arvo-avain]
-                           (reduce + (keep arvo-avain jasenet)))
+                           (reduce + (keep arvo-avain kuukauden-rivit)))
                          arvo-avaimet)]
-            {ryhma summat}))
-        (keys ryhmat)))))
+            {kuukausi summat}))
+        (keys kuukaudet)))))
+
+(defn eriarvoiset-rivit-kuukausipylvaille [rivit pvm-avain arvo-avain mahdolliset-arvot]
+  "Yleinen apufunktio, joka muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon
+  ryhmittelemällä rivit kuukausille ja laskemalla, kuinka monta kertaa arvo-avaimen mahdolliset arvot esiintyvät.
+
+  rivit               Käsiteltävät rivit
+  pvm-avain           Avain, josta rivin aika löytyy. Saman kuukauden rivit ryhmitellään tällä avaimella.
+  arvo-avain          Avain, jossa esiintyviä arvoja tutkitaan
+  mahdolliset-arvot   Mahdolliset arvot, jotka arvo-avaimen takaa löytyvät. Annetaan siinä järjestyksessä jossa
+                      ne esiintyvät pylvään legendissä.
+
+  Lopputuloksena on map, jossa kuukaudet ovat avaimia ja arvona on vectori, jossa mahdolliset-arvot laskettuna:
+  {2015/02 [1 2]
+   2015/03 [3 4]}"
+  (let [kuukaudet (group-by
+                    (fn [rivi]
+                      (pvm/kuukausi-ja-vuosi (c/to-date (pvm-avain rivi))))
+                    rivit)]
+    (reduce
+      merge
+      (map
+        (fn [kuukausi]
+          (let [kuukauden-rivit (get kuukaudet kuukausi)
+                summat (mapv
+                         (fn [arvo]
+                           (count (filter
+                                    #(= (arvo-avain %) arvo)
+                                    kuukauden-rivit)))
+                         mahdolliset-arvot)]
+            {kuukausi summat}))
+        (keys kuukaudet)))))
 
 (defn ei-osumia-aikavalilla-teksti
   [nimi alkupvm loppupvm]

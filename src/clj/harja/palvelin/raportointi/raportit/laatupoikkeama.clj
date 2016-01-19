@@ -58,7 +58,6 @@
 
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija] :as parametrit}]
-  (log/debug (type alkupvm))
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -76,7 +75,7 @@
         nayta-pylvaat? (= laatupoikkeamatekija :kaikki)
         laatupoikkeamat-kuukausittain {"01/15" [1 2]
                                        "02/15" [3 4]} ; TODO HARDOOKATTU TESTIDATA
-        ;laatupoikkeamat-kuukausittain (yleinen/rivit-pylvaille laatupoikkeamarivit)
+        ;laatupoikkeamat-kuukausittain (yleinen/eriarvoiset-rivit-kuukausipylvaille laatupoikkeamarivit :aika :tekija ["urakoitsija" "tilaaja"])
         raportin-nimi "Laatupoikkeamaraportti"
         otsikko (raportin-otsikko
                   (case konteksti
