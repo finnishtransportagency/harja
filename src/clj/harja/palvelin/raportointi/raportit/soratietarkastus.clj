@@ -180,6 +180,7 @@
        {:leveys 8 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}]
       (keep identity
             (conj
+              ;; Raportin varsinainen data
               (yleinen/ryhmittele-tulokset-raportin-taulukolle
                 naytettavat-rivit
                 :urakka
@@ -201,6 +202,7 @@
                                                             (:laatuarvo-2-osuus rivi)) "%)")
                    (when (:laatupoikkeama rivi)
                      (str "Kyllä" " (" (:laatupoikkeama rivi) ")"))]))
+              ;; Yhteensä-rivi, jos tarvitaan
               (when (not (empty? naytettavat-rivit))
                 (let [laske-laatuarvojen-kokonaissumma (fn [arvo-avain rivit]
                                                          (reduce + (mapv arvo-avain rivit)))
@@ -226,6 +228,7 @@
                    (str (reduce + [(first laatuarvo-summat) (second laatuarvo-summat)]) " (100%)")
                    (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
                    nil]))))]
+     ;; Poikkeamien selitykset
      (when ainakin-yksi-poikkeama?
        [:yhteenveto
         (mapv
