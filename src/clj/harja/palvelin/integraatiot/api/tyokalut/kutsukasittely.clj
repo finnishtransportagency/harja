@@ -176,21 +176,21 @@
             (recur (.getNextException ex))))
         (log/error "Sisemmät virheet: " (.toString w)))
       (kasittele-sisainen-kasittelyvirhe
-        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]))
+          :viesti "Sisäinen käsittelyvirhe"}]
+        resurssi))
     (catch Exception e
       (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " resurssi))
       (kasittele-sisainen-kasittelyvirhe
-        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]))
+          :viesti "Sisäinen käsittelyvirhe"}]
+        resurssi))
     (catch Object e
       (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " e))
       (kasittele-sisainen-kasittelyvirhe
-        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]))))
+          :viesti "Sisäinen käsittelyvirhe"}]
+        resurssi))))
 
 (defn kasittele-kutsu
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
