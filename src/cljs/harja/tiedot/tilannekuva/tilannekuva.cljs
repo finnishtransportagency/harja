@@ -221,28 +221,6 @@
                                   (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
                                                          :tyokoneet (vals (:tyokoneet tulos))})
                                   tulos)
-          lisaa-karttatyypit (fn [tulos]
-                               (as-> tulos t
-                                 (assoc t :ilmoitukset
-                                        (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
-                                             (:ilmoitukset t)))
-                                 (kartan-tyypiksi t :turvallisuuspoikkeamat :turvallisuuspoikkeama)
-                                 (kartan-tyypiksi t :tarkastukset :tarkastus)
-                                 (kartan-tyypiksi t :laatupoikkeamat :laatupoikkeama)
-                                 (kartan-tyypiksi t :paikkaus :paikkaus)
-                                 (kartan-tyypiksi t :paallystys :paallystys)
-
-                                 ;; Tyokoneet on mäp, id -> työkone
-                                 (assoc t :tyokoneet (into {}
-                                                           (map
-                                                            (fn [[id tyokone]]
-                                                              {id (assoc tyokone :tyyppi-kartalla :tyokone)})
-                                                            (:tyokoneet t))))
-
-                                 (assoc t :toteumat
-                                        (map #(assoc % :tyyppi-kartalla :toteuma)
-                                             (:toteumat t)))))
-
           tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!))]
