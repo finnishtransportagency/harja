@@ -214,4 +214,5 @@
            (str
              laatuarvot-1+2-summa
              " (" (Math/round (* (float (/ laatuarvot-1+2-summa
-                                           (reduce + laatuarvo-summat))) 100)) "%)")]))]]))
+                                           (reduce + laatuarvo-summat))) 100)) "%)")
+           nil]))]]))
