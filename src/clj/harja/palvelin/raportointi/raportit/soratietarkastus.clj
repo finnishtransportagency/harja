@@ -223,7 +223,7 @@
                    (str (nth laatuarvo-summat 2) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 2)) "%)")
                    (str (nth laatuarvo-summat 3) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 3)) "%)")
                    (str (nth laatuarvo-summat 4) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 4)) "%)")
-                   (str (reduce + [(first laatuarvo-summat) (second laatuarvo-summat)]) " (100%)")
+                   (str (reduce + laatuarvo-summat) " (100%)")
                    (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
                    nil]))))]
      ;; Poikkeamien selitykset
