@@ -28,18 +28,18 @@
     (cond
       (some #(= % 1) kuntoarvot)
       {:tapahtunut? true
-       :syy "Mittaus\u00ADtulos 1."}
+       :syy         "Mittaus\u00ADtulos 1."}
 
       (and (> tien-pituus 20)
            (or (= (:hoitoluokka tarkastus) 2)
                (= (:hoitoluokka tarkastus) 3))
            (some #(= % 2) kuntoarvot))
       {:tapahtunut? true
-       :syy "Mittaus\u00ADtulos 2 20m tie\u00ADosuudella hoito\u00ADluokassa II tai III."}
+       :syy         "Mittaus\u00ADtulos 2 20m tie\u00ADosuudella hoito\u00ADluokassa II tai III."}
 
       :default
       {:tapahtunut? false
-       :syy ""})))
+       :syy         ""})))
 
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
@@ -93,25 +93,25 @@
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-soratietarkastukset-raportille db
                                                             urakka-id
-                                                                       alkupvm
-                                                                       loppupvm
-                                                                       (not (nil? tienumero))
-                                                                       tienumero))
+                                                            alkupvm
+                                                            loppupvm
+                                                            (not (nil? tienumero))
+                                                            tienumero))
 
 (defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-hallintayksikon-soratietarkastukset-raportille db
-                                                                                hallintayksikko-id
-                                                                                alkupvm
-                                                                                loppupvm
-                                                                                (not (nil? tienumero))
-                                                                                tienumero))
+                                                                     hallintayksikko-id
+                                                                     alkupvm
+                                                                     loppupvm
+                                                                     (not (nil? tienumero))
+                                                                     tienumero))
 
 (defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-koko-maan-soratietarkastukset-raportille db
-                                                                          alkupvm
-                                                                          loppupvm
-                                                                          (not (nil? tienumero))
-                                                                          tienumero))
+                                                               alkupvm
+                                                               loppupvm
+                                                               (not (nil? tienumero))
+                                                               tienumero))
 
 (defn hae-tarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
   (case konteksti
@@ -141,13 +141,14 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         tarkastukset (map konv/alaviiva->rakenne
-                               (hae-tarkastukset db {:konteksti          konteksti
-                                                     :urakka-id          urakka-id
-                                                     :hallintayksikko-id hallintayksikko-id
-                                                     :alkupvm            alkupvm
-                                                     :loppupvm           loppupvm
-                                                     :tienumero          tienumero}))
+                          (hae-tarkastukset db {:konteksti          konteksti
+                                                :urakka-id          urakka-id
+                                                :hallintayksikko-id hallintayksikko-id
+                                                :alkupvm            alkupvm
+                                                :loppupvm           loppupvm
+                                                :tienumero          tienumero}))
         naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
+        _ (log/debug "Rivit: " naytettavat-rivit)
         raportin-nimi "Soratietarkastusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -157,8 +158,8 @@
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
-     [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+     [:taulukko {:otsikko                    otsikko
+                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :viimeinen-rivi-yhteenveto? true}
       [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
        {:leveys 5 :otsikko "Tie"}
@@ -175,50 +176,51 @@
        {:leveys 8 :otsikko "Yht"}
        {:leveys 8 :otsikko "1+2"}
        {:leveys 8 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}]
-      (conj
-        (yleinen/ryhmittele-tulokset-raportin-taulukolle
-          naytettavat-rivit
-          :urakka
-          (fn [rivi]
-            [(pvm/pvm (:aika rivi))
-             (get-in rivi [:tr :numero])
-             (get-in rivi [:tr :alkuosa])
-             (get-in rivi [:tr :alkuetaisyys])
-             (get-in rivi [:tr :loppuosa])
-             (get-in rivi [:tr :loppyetaisyys])
-             (:hoitoluokka rivi)
-             (str (:laatuarvo-1-summa rivi) " (" (:laatuarvo-1-osuus rivi) "%)")
-             (str (:laatuarvo-2-summa rivi) " (" (:laatuarvo-2-osuus rivi) "%)")
-             (str (:laatuarvo-3-summa rivi) " (" (:laatuarvo-3-osuus rivi) "%)")
-             (str (:laatuarvo-4-summa rivi) " (" (:laatuarvo-4-osuus rivi) "%)")
-             (str (:laatuarvo-5-summa rivi) " (" (:laatuarvo-5-osuus rivi) "%)")
-             (str (:laatuarvot-yhteensa rivi) " (100%)")
-             (str (:laatuarvo-1+2-summa rivi) " (" (+ (:laatuarvo-1-osuus rivi)
-                                                      (:laatuarvo-2-osuus rivi)) "%)")
-             (when (get-in rivi [:laatupoikkeama :tapahtunut?])
-               (str "Kyllä" ", " (get-in rivi [:laatupoikkeama :syy])))]))
-        (let [laske-laatuarvojen-kokonaissumma (fn [arvo-avain rivit]
-                                                 (reduce + (mapv arvo-avain rivit)))
-              laatuarvo-summat [(laske-laatuarvojen-kokonaissumma :laatuarvo-1-summa naytettavat-rivit)
-                                (laske-laatuarvojen-kokonaissumma :laatuarvo-2-summa naytettavat-rivit)
-                                (laske-laatuarvojen-kokonaissumma :laatuarvo-3-summa naytettavat-rivit)
-                                (laske-laatuarvojen-kokonaissumma :laatuarvo-4-summa naytettavat-rivit)
-                                (laske-laatuarvojen-kokonaissumma :laatuarvo-5-summa naytettavat-rivit)]
-              laatuarvot-1+2-summa (reduce + [(first laatuarvo-summat)
-                                              (second laatuarvo-summat)])
-              laatuarvo-summat-yhteensa (reduce + laatuarvo-summat)
-              laatuarvot-1+2-osuus (if (not= laatuarvo-summat-yhteensa 0)
-                                     (Math/round (* (float (/ laatuarvot-1+2-summa
-                                                            laatuarvo-summat-yhteensa)) 100))
-                                     0)]
+      (keep identity
+            (conj
+              (yleinen/ryhmittele-tulokset-raportin-taulukolle
+                naytettavat-rivit
+                :urakka
+                (fn [rivi]
+                  [(pvm/pvm (:aika rivi))
+                   (get-in rivi [:tr :numero])
+                   (get-in rivi [:tr :alkuosa])
+                   (get-in rivi [:tr :alkuetaisyys])
+                   (get-in rivi [:tr :loppuosa])
+                   (get-in rivi [:tr :loppyetaisyys])
+                   (:hoitoluokka rivi)
+                   (str (:laatuarvo-1-summa rivi) " (" (:laatuarvo-1-osuus rivi) "%)")
+                   (str (:laatuarvo-2-summa rivi) " (" (:laatuarvo-2-osuus rivi) "%)")
+                   (str (:laatuarvo-3-summa rivi) " (" (:laatuarvo-3-osuus rivi) "%)")
+                   (str (:laatuarvo-4-summa rivi) " (" (:laatuarvo-4-osuus rivi) "%)")
+                   (str (:laatuarvo-5-summa rivi) " (" (:laatuarvo-5-osuus rivi) "%)")
+                   (str (:laatuarvot-yhteensa rivi) " (100%)")
+                   (str (:laatuarvo-1+2-summa rivi) " (" (+ (:laatuarvo-1-osuus rivi)
+                                                            (:laatuarvo-2-osuus rivi)) "%)")
+                   (when (get-in rivi [:laatupoikkeama :tapahtunut?])
+                     (str "Kyllä" ", " (get-in rivi [:laatupoikkeama :syy])))]))
+              (when (not (empty? naytettavat-rivit))
+                (let [laske-laatuarvojen-kokonaissumma (fn [arvo-avain rivit]
+                                                         (reduce + (mapv arvo-avain rivit)))
+                      laatuarvo-summat [(laske-laatuarvojen-kokonaissumma :laatuarvo-1-summa naytettavat-rivit)
+                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-2-summa naytettavat-rivit)
+                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-3-summa naytettavat-rivit)
+                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-4-summa naytettavat-rivit)
+                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-5-summa naytettavat-rivit)]
+                      laatuarvot-1+2-summa (reduce + [(first laatuarvo-summat)
+                                                      (second laatuarvo-summat)])
+                      laatuarvo-summat-yhteensa (reduce + laatuarvo-summat)
+                      laatuarvot-1+2-osuus (if (not= laatuarvo-summat-yhteensa 0)
+                                             (Math/round (* (float (/ laatuarvot-1+2-summa
+                                                                      laatuarvo-summat-yhteensa)) 100))
+                                             0)]
 
-          ["Yhteensä" nil nil nil nil nil nil
-           (str (nth laatuarvo-summat 0) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 0)) "%)")
-           (str (nth laatuarvo-summat 1) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 1)) "%)")
-           (str (nth laatuarvo-summat 2) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 2)) "%)")
-           (str (nth laatuarvo-summat 3) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 3)) "%)")
-           (str (nth laatuarvo-summat 4) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 4)) "%)")
-           (str (reduce + [(first laatuarvo-summat)
-                           (second laatuarvo-summat)]) " (100%)")
-           (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
-           nil]))]]))
+                  ["Yhteensä" nil nil nil nil nil nil
+                   (str (nth laatuarvo-summat 0) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 0)) "%)")
+                   (str (nth laatuarvo-summat 1) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 1)) "%)")
+                   (str (nth laatuarvo-summat 2) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 2)) "%)")
+                   (str (nth laatuarvo-summat 3) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 3)) "%)")
+                   (str (nth laatuarvo-summat 4) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 4)) "%)")
+                   (str (reduce + [(first laatuarvo-summat) (second laatuarvo-summat)]) " (100%)")
+                   (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
+                   nil]))))]]))
