@@ -84,7 +84,7 @@
    2015/03 [3 4]}"
   (let [kuukaudet (group-by
                  (fn [rivi]
-                   (pvm/kuukausi-ja-vuosi (c/to-date (pvm-avain rivi))))
+                   (pvm/kokovuosi-ja-kuukausi (c/to-date (pvm-avain rivi))))
                  rivit)]
     (reduce
       merge
@@ -113,7 +113,7 @@
    2015/03 [3 4]}"
   (let [kuukaudet (group-by
                     (fn [rivi]
-                      (pvm/kuukausi-ja-vuosi (c/to-date (pvm-avain rivi))))
+                      (pvm/kokovuosi-ja-kuukausi (c/to-date (pvm-avain rivi))))
                     rivit)]
     (reduce
       merge

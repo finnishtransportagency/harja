@@ -148,6 +148,9 @@
 (def kuukausi-ja-vuosi-fmt
   (luo-format "MM/yy"))
 
+(def kokovuosi-ja-kuukausi-fmt
+  (luo-format "yyyy/MM"))
+
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
@@ -199,6 +202,11 @@
   "Formatoi pvm:n muotoon: MM/yy"
   [pvm]
   (formatoi kuukausi-ja-vuosi-fmt pvm))
+
+(defn kokovuosi-ja-kuukausi
+  "Formatoi pvm:n muotoon: yyyy/mm"
+  [pvm]
+  (formatoi kokovuosi-ja-kuukausi-fmt pvm))
 
 (defn ->pvm-aika [teksti]
   "Jäsentää tekstistä d.M.yyyy H:mm tai d.M.yyyy H muodossa olevan päivämäärän ja ajan.
