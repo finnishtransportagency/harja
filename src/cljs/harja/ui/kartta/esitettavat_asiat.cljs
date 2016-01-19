@@ -52,7 +52,7 @@
   ([valittu?] (viivan-leveys valittu? 8 nil)) ;; Nil tarkoittaa että käytetään openlayersissä määriteltyä defaulttia
   ([valittu? valittu-leveys] (viivan-leveys valittu? valittu-leveys nil))
   ([valittu? valittu-leveys ei-valittu-leveys]
-   (when valittu? valittu-leveys ei-valittu-leveys)))
+   (if valittu? valittu-leveys ei-valittu-leveys)))
 
 (defn- tack-ikoni
   ([asia ikoni valittu?] (tack-ikoni asia ikoni valittu? {}))
