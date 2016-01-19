@@ -207,17 +207,19 @@
 (def laatupoikkeama-tekija (atom :kaikki))
 
 (defmethod raportin-parametri "laatupoikkeamatekija" [p arvo]
-  [yleiset/pudotusvalikko
-   "Tekijä"
-   {:valinta    @laatupoikkeama-tekija
-    :valitse-fn #(do (reset! laatupoikkeama-tekija %)
-                     (reset! arvo {:laatupoikkeamatekija %}))
-    :format-fn  #(case %
-                  :kaikki "Kaikki"
-                  :urakoitsija "Urakoitsija"
-                  :tilaaja "Tilaaja")}
+  (reset! arvo {:laatupoikkeamatekija @laatupoikkeama-tekija})
+  (fn []
+    [yleiset/pudotusvalikko
+     "Tekijä"
+     {:valinta    @laatupoikkeama-tekija
+      :valitse-fn #(do (reset! laatupoikkeama-tekija %)
+                       (reset! arvo {:laatupoikkeamatekija %}))
+      :format-fn  #(case %
+                    :kaikki "Kaikki"
+                    :urakoitsija "Urakoitsija"
+                    :tilaaja "Tilaaja")}
 
-   [:kaikki :urakoitsija :tilaaja]])
+     [:kaikki :urakoitsija :tilaaja]]))
 
 (def tyomaakokousraportit
   {"Laskutusyhteenveto" :laskutusyhteenveto
