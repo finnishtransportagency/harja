@@ -3,9 +3,6 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-            [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
             [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]))
 
 (def kayttaja "fastroi")
