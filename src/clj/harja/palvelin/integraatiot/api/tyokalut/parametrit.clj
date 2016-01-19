@@ -13,7 +13,7 @@
 Sallii puuttuvan parametrin, jolloin palautetaan nil."
   ([string] (pvm-aika-opt string "Anna päivämäärä ja aika muodossa: \"yyyy-MM-dd'T'HH:mm:ssX\" (esim. " esimerkki-aika "), sain: " string))
   ([string & viestit]
-   (when string 
+   (when string
      (try
        (.parse (SimpleDateFormat. pvm-aika-muoto) string)
        (catch ParseException e
@@ -21,7 +21,7 @@ Sallii puuttuvan parametrin, jolloin palautetaan nil."
           {:koodi "virheellinen-pvm-aika-muoto"
            :viesti (apply str viestit)}))))))
 
-(defn pvm-aika 
+(defn pvm-aika
   "Sama kuin pvm-aika-opt mutta ei salli puuttuvaa arvoa"
   ([string] (pvm-aika string "Anna pvm ja aika parametri"))
   ([string & virheet]

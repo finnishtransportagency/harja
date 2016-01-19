@@ -25,15 +25,16 @@
 (defonce valittu-materiaalin-kaytto (atom nil))
 
 (defonce urakan-materiaalin-kaytot
-         (reaction<! [nakymassa? @materiaali-tiedot/materiaalinakymassa?
+  (reaction<! [nakymassa? @materiaali-tiedot/materiaalinakymassa?
                       sopimusnumero (first @u/valittu-sopimusnumero)
                       [alku loppu] @u/valittu-hoitokausi
-                      ur @nav/valittu-urakka]
-                     (when (and nakymassa? sopimusnumero alku loppu ur)
-                       (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
-                                                                            alku
-                                                                            loppu
-                                                                            sopimusnumero))))
+               ur @nav/valittu-urakka]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and nakymassa? sopimusnumero alku loppu ur)
+                (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
+                                                                     alku
+                                                                     loppu
+                                                                     sopimusnumero))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]

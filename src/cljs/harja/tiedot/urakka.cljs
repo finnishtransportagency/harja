@@ -220,14 +220,16 @@
 (defonce hallinnan-valittu-valilehti (atom :kayttajat))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
-         (reaction<! [ur (:id @nav/valittu-urakka)]
-                     (when ur
-                       (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)]
+              {:nil-kun-haku-kaynnissa? true}
+              (when ur
+                (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-         (reaction<! [ur (:id @nav/valittu-urakka)]
-                     (when ur
-                       (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)]
+              {:nil-kun-haku-kaynnissa? true}
+              (when ur
+                (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
 
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
@@ -247,9 +249,10 @@
                        tehtavat))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-         (reaction<! [ur (:id @nav/valittu-urakka)]
-                     (when ur
-                       (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)]
+              {:nil-kun-haku-kaynnissa? true}
+              (when ur
+                (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat ur))))
 
 (defonce valittu-yksikkohintainen-tehtava (atom nil))
 
@@ -266,42 +269,47 @@
                                     tehtavat)))))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
-         (reaction<! [ur (:id @nav/valittu-urakka)
-                      nakymassa? (or
-                                   (= :muut @suunnittelun-valittu-valilehti)
-                                   (= :muut-tyot @toteumat-valilehti))]
-                     (when (and ur nakymassa?)
-                       (urakan-toimenpiteet/hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               nakymassa? (or
+                           (= :muut @suunnittelun-valittu-valilehti)
+                           (= :muut-tyot @toteumat-valilehti))]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and ur nakymassa?)
+                (urakan-toimenpiteet/hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-organisaatio
-         (reaction<! [ur (:id @nav/valittu-urakka)]
-                     (when ur
-                       (organisaatio/hae-urakan-organisaatio ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)]
+              {:nil-kun-haku-kaynnissa? true}
+              (when ur
+                (organisaatio/hae-urakan-organisaatio ur))))
 
 (defonce muutoshintaiset-tyot
-         (reaction<! [ur (:id @nav/valittu-urakka)
-                      suunnittelun-sivu @suunnittelun-valittu-valilehti
-                      toteuman-sivu @toteumat-valilehti]
-                     (when (and ur (or
-                                     (= :muut suunnittelun-sivu)
-                                     (= :muut-tyot toteuman-sivu)))
-                       (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               suunnittelun-sivu @suunnittelun-valittu-valilehti
+               toteuman-sivu @toteumat-valilehti]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and ur (or
+                             (= :muut suunnittelun-sivu)
+                             (= :muut-tyot toteuman-sivu)))
+                (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
 
 (defonce muut-tyot-hoitokaudella
-         (reaction<! [ur (:id @nav/valittu-urakka)
-                      sopimus-id (first @valittu-sopimusnumero)
-                      aikavali @valittu-hoitokausi
-                      sivu @toteumat-valilehti]
-                     (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
-                       (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               sopimus-id (first @valittu-sopimusnumero)
+               aikavali @valittu-hoitokausi
+               sivu @toteumat-valilehti]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+                (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
 
 (defonce erilliskustannukset-hoitokaudella
-         (reaction<! [ur (:id @nav/valittu-urakka)
-                      aikavali @valittu-hoitokausi
-                      sivu @toteumat-valilehti
-                      _ @toteumat/erilliskustannukset-nakymassa?]
-                     (when (and ur aikavali (= :erilliskustannukset sivu))
-                       (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               aikavali @valittu-hoitokausi
+               sivu @toteumat-valilehti
+               _ @toteumat/erilliskustannukset-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and ur aikavali (= :erilliskustannukset sivu))
+                (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 
 (defn vaihda-urakkatyyppi
   [urakka-id uusi-urakkatyyppi]

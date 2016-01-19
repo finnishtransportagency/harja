@@ -14,7 +14,6 @@
 
 (defn muodosta-suolasakkoraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan tiedot suolasakon raportille urakka-kontekstissa: " urakka-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [parametrit [db
                     urakka-id
                     (konv/sql-timestamp alkupvm)
@@ -27,7 +26,6 @@
 
 (defn muodosta-suolasakkoraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
   (log/debug "Haetaan tiedot suolasakon raportille hallintayksikkö-kontekstissa: " hallintayksikko-id alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [parametrit [db
                     hallintayksikko-id
                     (konv/sql-timestamp alkupvm)
@@ -39,7 +37,6 @@
 
 (defn muodosta-suolasakkoraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
   (log/debug "Haetaan tiedot suolasakon raportille koko maa -kontekstissa: " alkupvm loppupvm)
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [parametrit [db
                     (konv/sql-timestamp alkupvm)
                     (konv/sql-timestamp loppupvm)

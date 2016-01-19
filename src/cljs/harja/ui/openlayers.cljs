@@ -330,7 +330,7 @@
   (let [mapspec (:mapspec (reagent/state this))
         [mml-spec & _] (:layers mapspec)
         mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
-        interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom false
+        interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom true
                                                                   :dragPan        false})]
                       (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
                       oletukset)
@@ -719,8 +719,6 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
   (let [{aiempi-extent :extent aiempi-extent-key :extent-key} (reagent/state this)]
     (reagent/set-state this {:extent-key extent-key
                              :extent extent})
-    (log " aiempi-extent= " (pr-str aiempi-extent) "; extent= " (pr-str extent) "; identical? " (identical? aiempi-extent extent))
-    (log " aiempi-extent-key= " aiempi-extent-key "; extent-key= " extent-key "")
     (when (or (not (identical? aiempi-extent extent))
               (not= aiempi-extent-key extent-key))
       (.setTimeout js/window #(keskita-kartta-alueeseen! extent) animaation-odotusaika)))

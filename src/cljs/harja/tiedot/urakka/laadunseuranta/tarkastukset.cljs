@@ -41,16 +41,17 @@
                                      :tyyppi    tyyppi}))
 
 (defonce urakan-tarkastukset
-         (reaction<! [urakka-id (:id @nav/valittu-urakka)
-                      [alku loppu] @tiedot-urakka/valittu-aikavali
-                      laadunseurannassa? @laadunseuranta/laadunseurannassa?
-                      valilehti @laadunseuranta/valittu-valilehti
-                      tienumero @tienumero
-                      tyyppi @tarkastustyyppi]
-                     {:odota 500}
-                     (when (and laadunseurannassa? (= :tarkastukset valilehti)
-                                urakka-id alku loppu)
-                       (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               [alku loppu] @tiedot-urakka/valittu-aikavali
+               laadunseurannassa? @laadunseuranta/laadunseurannassa?
+               valilehti @laadunseuranta/valittu-valilehti
+               tienumero @tienumero
+               tyyppi @tarkastustyyppi]
+              {:odota 500
+               :nil-kun-haku-kaynnissa? true}
+              (when (and laadunseurannassa? (= :tarkastukset valilehti)
+                         urakka-id alku loppu)
+                (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
 
 (defonce valittu-tarkastus (atom nil))
 

@@ -6,18 +6,21 @@
   (:import [com.mchange.v2.c3p0 C3P0ProxyConnection]
            [org.postgresql PGNotification]))
 
+(defn- aseta-ps-parametrit [ps parametrit]
+  (loop [i 1
+         [p & parametrit] parametrit]
+    (when p
+      (.setString ps i p)
+      (recur (inc i) parametrit))))
+
 (defn- u [c sql & parametrit]
   (with-open [ps (.prepareStatement c sql)]
-    (doall (map-indexed (fn [i parametri]
-                          (.setString ps (inc i) parametri))
-                        parametrit))
+    (aseta-ps-parametrit ps parametrit)
     (.executeUpdate ps)))
 
 (defn- q [c sql & parametrit]
   (with-open [ps (.prepareStatement c sql)]
-    (doall (map-indexed (fn [i parametri]
-                          (.setString ps (inc i) parametri))
-                        parametrit))
+    (aseta-ps-parametrit ps parametrit)
     (.next (.executeQuery ps))))
 
 
@@ -70,8 +73,8 @@
 
   (stop [this]
     (reset! ajossa false)
-    (doseq [kanava (map first @kuuntelijat)]
-      (u @connection (str "UNLISTEN " kanava ";")))
+    (run! #(u @connection (str "UNLISTEN " % ";"))
+          (map first @kuuntelijat))
     (.close @connection)
     this)
 
