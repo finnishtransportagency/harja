@@ -37,14 +37,11 @@
            {:type        :tack-icon
             :coordinates (:coordinates geometria)})))
 
-
-(defn- oletusalue [asia valittu?]
-  (merge
-    (or (:sijainti asia)
-        (:sijainti (first (:reittipisteet asia))))
-    {:color  (if (valittu? asia) "blue" "green")
-     :radius 300
-     :stroke {:color "black" :width 10}}))
+(defn viivan-vari
+  ([valittu?] (viivan-vari valittu? "blue" "black"))
+  ([valittu? valittu-vari] (viivan-vari valittu? valittu-vari "black"))
+  ([valittu? valittu-vari ei-valittu-vari]
+   (if valittu? valittu-vari ei-valittu-vari)))
 
 (defmulti
   ^{:private true}
@@ -73,6 +70,7 @@
        :selite {:teksti "Tiedotus"
                 :img    (karttakuva "tiedotus-tack-violetti")}
        :alue (tack-icon {:scale (if (valittu? ilmoitus) 1.5 1)
+                         :color (viivan-vari (valittu? ilmoitus))
                          :img   (karttakuva "tiedotus-tack-violetti")}
                         (:sijainti ilmoitus)))]))
 
@@ -93,6 +91,7 @@
                           :else "Kysely, ei aloituskuittausta.")
                 :img    ikoni}
        :alue (tack-icon {:scale (if (valittu? ilmoitus) 1.5 1)
+                         :color (viivan-vari (valittu? ilmoitus))
                          :img   ikoni}
                         (:sijainti ilmoitus)))]))
 
@@ -113,6 +112,7 @@
                           :else "Toimenpidepyyntö, kuittaamaton")
                 :img    ikoni}
        :alue (tack-icon {:scale (if (valittu? ilmoitus) 1.5 1)
+                         :color (viivan-vari (valittu? ilmoitus))
                          :img   ikoni}
                         (:sijainti ilmoitus)))]))
 
@@ -138,6 +138,7 @@
        :selite {:teksti (str "Laatupoikkeama (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")
                 :img    (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))}
        :alue (tack-icon {:scale (if (valittu? laatupoikkeama) 1.5 1)
+                         :color (viivan-vari (valittu? laatupoikkeama))
                          :img   (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))}
                         sijainti))]))
 
@@ -154,6 +155,7 @@
                 :img    (selvita-tarkastuksen-ikoni (:tekija tarkastus))}
        :alue (tack-icon
                {:scale skaala
+                :color (viivan-vari (valittu? tarkastus))
                 :img   ikoni}
                sijainti))]))
 
@@ -233,8 +235,8 @@
                   :img    ikoni}
          :alue (tack-icon
                  {:scale skaala
-                  :img   ikoni
-                  :color "black"}
+                  :color (viivan-vari (valittu? tp))
+                  :img   ikoni}
                  sijainti))])))
 
 (defn- paattele-yllapidon-ikoni-ja-viivan-vari
@@ -384,7 +386,7 @@
   ([asiat valittu tunniste asia-xf]
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
-     (with-meta 
+     (with-meta
        (into []
              (comp (or asia-xf identity)
                    (mapcat #(kartalla-xf % valittu (or tunniste [:id])))
