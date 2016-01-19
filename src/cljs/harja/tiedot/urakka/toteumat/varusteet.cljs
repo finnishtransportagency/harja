@@ -41,6 +41,32 @@
                                  :paivitetty "Päivitetty"
                                  :poistettu  "Poistettu"})
 
+(def tietolaji->selitys
+  {"tl523" "Tekninen piste"
+   "tl501" "Kaiteet"
+   "tl517" "Portaat"
+   "tl507" "Bussipysäkin varusteet"
+   "tl508" "Bussipysäkin katos"
+   "tl506" "Liikennemerkki"
+   "tl522" "Reunakivet"
+   "tl513" "Reunapaalut"
+   "tl196" "Bussipysäkit"
+   "tl519" "Puomit ja kulkuaukot"
+   "tl505" "Jätehuolto"
+   "tl195" "Tienkäyttäjien palvelualueet"
+   "tl504" "WC"
+   "tl198" "Kohtaamispaikat ja levikkeet"
+   "tl518" "Kivetyt alueet"
+   "tl514" "Melurakenteet"
+   "tl509" "Rummut"
+   "tl515" "Aidat"
+   "tl503" "Levähdysalueiden varusteet"
+   "tl510" "Viheralueet"
+   "tl512" "Viemärit"
+   "tl165" "Välikaistat"
+   "tl516" "Hiekkalaatikot"
+   "tl511" "Viherkuviot"})
+
 (def karttataso-varustetoteuma (atom false))
 
 (def varusteet-kartalla
