@@ -56,9 +56,9 @@
                           (when kyseessa-kk-vali? (fmt/euro laskutettu-yht))
                           (when kyseessa-kk-vali? (fmt/euro laskutetaan-yht))
                           (or (fmt/euro (+ laskutettu-yht laskutetaan-yht)) 0))]
-    [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
+    [:taulukko {:viimeinen-rivi-yhteenveto? true}
      (rivi
-        {:otsikko "Toimenpide" :leveys 40}
+        {:otsikko otsikko :leveys 40}
         (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 20})
         (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 20})
         {:otsikko yhteenveto-teksti :leveys 20})
