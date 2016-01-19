@@ -250,7 +250,10 @@
            :nimi (or (:nimi pt) teksti)
            :selite {:teksti teksti
                     :img    ikoni}
-           :alue (tack-ikoni pt ikoni valittu? {:color viiva}))))
+           :alue (tack-ikoni pt ikoni valittu? {:color viiva
+                                                :width (if (:avoin? pt)
+                                                         (if (valittu? pt) 8 5)
+                                                         (if (valittu? pt) 8 nil))})))) ;; nil on default, joka on kommentin kirjoittamisen hetkellä 2.
 
 (defmethod asia-kartalle :paallystys [pt valittu?]
   (assoc (paikkaus-paallystys pt valittu? "paallystystyo" "Päällystys")
