@@ -13,9 +13,13 @@
 
 (defn laske-luvun-osuus [numerot index]
   "Ottaa luvun numerot-vectorista annetulla indeksillä ja jakaa sen vectorin kaikkien lukujen summalla."
-  (* (float (/ (nth numerot index)
-                 (reduce + numerot)))
-       100))
+  (let [osoittaja (nth numerot index)
+        nimittaja (reduce + numerot)]
+    (if (not= nimittaja 0)
+      (* (float (/ osoittaja
+                   nimittaja))
+         100)
+      0.0)))
 
 (defn laatupoikkeama-tapahtunut? [tarkastus]
   (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) tarkastus)
@@ -201,7 +205,12 @@
                                 (laske-laatuarvojen-kokonaissumma :laatuarvo-4-summa naytettavat-rivit)
                                 (laske-laatuarvojen-kokonaissumma :laatuarvo-5-summa naytettavat-rivit)]
               laatuarvot-1+2-summa (reduce + [(first laatuarvo-summat)
-                                              (second laatuarvo-summat)])]
+                                              (second laatuarvo-summat)])
+              laatuarvo-summat-yhteensa (reduce + laatuarvo-summat)
+              laatuarvot-1+2-osuus (if (not= laatuarvo-summat-yhteensa 0)
+                                     (Math/round (* (float (/ laatuarvot-1+2-summa
+                                                            laatuarvo-summat-yhteensa)) 100))
+                                     0)]
 
           ["Yhteensä" nil nil nil nil nil nil
            (str (nth laatuarvo-summat 0) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 0)) "%)")
@@ -211,8 +220,5 @@
            (str (nth laatuarvo-summat 4) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 4)) "%)")
            (str (reduce + [(first laatuarvo-summat)
                            (second laatuarvo-summat)]) " (100%)")
-           (str
-             laatuarvot-1+2-summa
-             " (" (Math/round (* (float (/ laatuarvot-1+2-summa
-                                           (reduce + laatuarvo-summat))) 100)) "%)")
+           (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
            nil]))]]))
