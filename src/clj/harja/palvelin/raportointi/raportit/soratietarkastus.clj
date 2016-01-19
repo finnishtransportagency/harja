@@ -21,25 +21,25 @@
          100)
       0.0)))
 
+(def laatupoikkeama-syyt {1 "Vähintään yksi mittaustulos arvoltaan 1"
+                          2 "Vähintään yksi mittaustulos arvoltaan 2 yhtenäisellä 20m tie­osuudella hoito­luokassa II tai III."})
+
 (defn laatupoikkeama-tapahtunut? [tarkastus]
   (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) tarkastus)
         tien-pituus (get-in tarkastus [:tr :metrit])]
     ; Vähintään yksi kuntoarvo sisältää arvon 1?
     (cond
       (some #(= % 1) kuntoarvot)
-      {:tapahtunut? true
-       :syy         "Mittaus\u00ADtulos 1."}
+      1
 
       (and (> tien-pituus 20)
            (or (= (:hoitoluokka tarkastus) 2)
                (= (:hoitoluokka tarkastus) 3))
            (some #(= % 2) kuntoarvot))
-      {:tapahtunut? true
-       :syy         "Mittaus\u00ADtulos 2 20m tie\u00ADosuudella hoito\u00ADluokassa II tai III."}
+      2
 
       :default
-      {:tapahtunut? false
-       :syy         ""})))
+      nil)))
 
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
@@ -148,7 +148,9 @@
                                                 :loppupvm           loppupvm
                                                 :tienumero          tienumero}))
         naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
-        _ (log/debug "Rivit: " naytettavat-rivit)
+        ainakin-yksi-poikkeama? (true? (some
+                                        #(not (nil? (:laatupoikkeama %)))
+                                            naytettavat-rivit))
         raportin-nimi "Soratietarkastusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -197,8 +199,8 @@
                    (str (:laatuarvot-yhteensa rivi) " (100%)")
                    (str (:laatuarvo-1+2-summa rivi) " (" (+ (:laatuarvo-1-osuus rivi)
                                                             (:laatuarvo-2-osuus rivi)) "%)")
-                   (when (get-in rivi [:laatupoikkeama :tapahtunut?])
-                     (str "Kyllä" ", " (get-in rivi [:laatupoikkeama :syy])))]))
+                   (when (:laatupoikkeama rivi)
+                     (str "Kyllä" " (" (:laatupoikkeama rivi) ")"))]))
               (when (not (empty? naytettavat-rivit))
                 (let [laske-laatuarvojen-kokonaissumma (fn [arvo-avain rivit]
                                                          (reduce + (mapv arvo-avain rivit)))
@@ -223,4 +225,10 @@
                    (str (nth laatuarvo-summat 4) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 4)) "%)")
                    (str (reduce + [(first laatuarvo-summat) (second laatuarvo-summat)]) " (100%)")
                    (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
-                   nil]))))]]))
+                   nil]))))]
+     (when ainakin-yksi-poikkeama?
+       [:yhteenveto
+        (mapv
+          (fn [avain]
+            [avain (get laatupoikkeama-syyt avain)])
+          (keys laatupoikkeama-syyt))])]))
