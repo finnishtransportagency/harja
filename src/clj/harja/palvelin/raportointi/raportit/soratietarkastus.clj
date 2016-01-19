@@ -19,12 +19,18 @@
 
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
-  että sama tienumero ja sama päiväämärä esiintyy aina yhdellä rivillä.
+  että sama tieosuus ja sama päivä esiintyy aina yhdellä rivillä.
   Jokaisella yhdistetyllä rivillä lasketaan yhteen saman päivän ja tien tarkastuksista saadut kuntoarvot (1-5),
   toisin sanoen kuinka monessa mittauksessa mikäkin kuntoarvo esiintyi."
   (let [ryhmat (group-by
                  (fn [rivi]
-                   [(:aika rivi) (get-in rivi [:tr :numero])])
+                   [(pvm/paivan-alussa (:aika rivi))
+                    (get-in rivi [:tr :numero])
+                    (get-in rivi [:tr :aosa])
+                    (get-in rivi [:tr :aet])
+                    (get-in rivi [:tr :losa])
+                    (get-in rivi [:tr :let])
+                    (:hoitoluokka rivi)])
                  tarkastukset)]
     (mapv (fn [ryhma]
             (let [jasenet (get ryhmat ryhma)
