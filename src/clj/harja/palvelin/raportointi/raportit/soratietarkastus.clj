@@ -27,7 +27,6 @@
 (defn laatupoikkeama-tapahtunut? [tarkastus]
   (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) tarkastus)
         tien-pituus (get-in tarkastus [:tr :metrit])]
-    ; Vähintään yksi kuntoarvo sisältää arvon 1?
     (cond
       (some #(= % 1) kuntoarvot)
       1
@@ -37,7 +36,6 @@
                (= (:hoitoluokka tarkastus) 3))
            (some #(= % 2) kuntoarvot))
       2
-
       :default
       nil)))
 
