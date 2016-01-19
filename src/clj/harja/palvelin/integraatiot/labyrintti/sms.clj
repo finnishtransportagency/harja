@@ -22,11 +22,10 @@
 (defrecord Labyrintti [url kayttajatunnus salasana]
   component/Lifecycle
   (start [this]
-    (-> this
-        (assoc :url url)
-        (assoc :kayttajatunnus kayttajatunnus)
-        (assoc :salasana salasana))
-    this)
+    (assoc this
+           :url url
+           :kayttajatunnus kayttajatunnus
+           :salasana salasana))
   (stop [this]
     this)
 

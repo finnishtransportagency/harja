@@ -127,18 +127,20 @@
      :fim (fim/->FIM (:url (:fim asetukset)))
 
      ;; Sampo
-     :sampo (component/using (sampo/->Sampo (:lahetysjono-sisaan (:sampo asetukset))
-                                            (:kuittausjono-sisaan (:sampo asetukset))
-                                            (:lahetysjono-ulos (:sampo asetukset))
-                                            (:kuittausjono-ulos (:sampo asetukset))
-                                            (:paivittainen-lahetysaika (:sampo asetukset)))
+     :sampo (component/using (let [sampo (:sampo asetukset)]
+                               (sampo/->Sampo (:lahetysjono-sisaan sampo)
+                                              (:kuittausjono-sisaan sampo)
+                                              (:lahetysjono-ulos sampo)
+                                              (:kuittausjono-ulos sampo)
+                                              (:paivittainen-lahetysaika sampo)))
                              [:sonja :db :integraatioloki])
 
      ;; T-LOIK
-     :tloik (component/using (tloik/->Tloik (:ilmoitusviestijono (:tloik asetukset))
-                                            (:ilmoituskuittausjono (:tloik asetukset))
-                                            (:toimenpideviestijono (:tloik asetukset))
-                                            (:toimenpidekuittausjono (:tloik asetukset)))
+     :tloik (component/using (let [tloik (:tloik asetukset)]
+                               (tloik/->Tloik (:ilmoitusviestijono tloik)
+                                              (:ilmoituskuittausjono tloik)
+                                              (:toimenpideviestijono tloik)
+                                              (:toimenpidekuittausjono tloik)))
                              [:sonja :db :integraatioloki :klusterin-tapahtumat])
 
      ;; Tierekisteri
@@ -146,9 +148,10 @@
                                     [:db :integraatioloki])
 
      ;; Labyrintti SMS Gateway
-     :labyrintti (component/using (labyrintti/->Labyrintti (:url (:labyrintti asetukset))
-                                                      (:kayttajatunnus (:labyrintti asetukset))
-                                                      (:salasana (:labyrintti asetukset)))
+     :labyrintti (component/using (let [l (:labyrintti asetukset)]
+                                    (labyrintti/->Labyrintti (:url l)
+                                                             (:kayttajatunnus l)
+                                                             (:salasana l)))
                                     [:integraatioloki])
 
      :raportointi (component/using
