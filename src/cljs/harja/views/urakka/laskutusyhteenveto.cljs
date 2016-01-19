@@ -44,6 +44,7 @@
 
 (defonce laskutusyhteenvedon-tiedot
   (reaction<! [p @laskutusyhteenvedon-parametrit]
+              {:nil-kun-haku-kaynnissa? true}
               (when p
                 (raportit/suorita-raportti p))))
 

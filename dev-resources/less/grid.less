@@ -188,10 +188,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
 }
 
-.grid-kk-sarake {
-  word-spacing: -3px; // Välilyönnit hoitavat rivinvaihdot luomatta tavutusmerkkiä, mutta niitä ei haluta nähdä
-}
-
 .gridin-napit-alhaalla {
   .panel-heading {
     padding: 2px 0px;
@@ -236,4 +232,15 @@ tr.otsikko {
 .kelluta-tayta-nappi {
   height: 31px; //sama korkeus kuin alasvedolla ympärillä
   z-index: 1000;
+}
+
+// Apuluokkia gridin hallintaan
+
+
+.grid-kk-sarake {
+  word-spacing: -3px; // Välilyönnit hoitavat rivinvaihdot luomatta tavutusmerkkiä, mutta niitä ei haluta nähdä
+}
+
+.grid-pakota-rivitys {
+  word-break: break-word;
 }

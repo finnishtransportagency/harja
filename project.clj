@@ -108,7 +108,9 @@
 
                  ;; Apache ANT core
                  [org.apache.ant/ant "1.9.6"]
-                 ;[org.clojure/tools.namespace "0.3.0-alpha2"]
+                                      
+                 ;; Clojure(Script) assertointi
+                 [com.taoensso/truss "1.0.0"]
                  ]
 
   :dev-dependencies [

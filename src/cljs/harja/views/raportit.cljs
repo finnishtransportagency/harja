@@ -58,6 +58,10 @@
                  (log "Resetoidaan valittu raportti, ei enää mahdollinen")
                  (reset! valittu-raporttityyppi nil)))))
 
+(defonce tyhjenna-raportti-kun-valinta-muuttuu
+  (run! @valittu-raporttityyppi
+        (reset! suoritettu-raportti nil)))
+
 ;; Raportin parametrit, parametrityypin lisäämiseksi luo
 ;; defmethodit parametrin tyypin mukaan
 
@@ -83,7 +87,9 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 
   (let [ur (reaction @nav/valittu-urakka)
         hoitourakassa? (reaction (= :hoito (:tyyppi @ur)))
-        valittu-vuosi (reaction (when-not @hoitourakassa? (pvm/vuosi (pvm/nyt))))
+        valittu-vuosi (reaction
+                        @nav/valittu-urakka
+                        (when-not @hoitourakassa? (pvm/vuosi (pvm/nyt))))
         valittu-hoitokausi (reaction (when @hoitourakassa?
                                        @u/valittu-hoitokausi))
         kuukaudet (reaction
@@ -97,13 +103,15 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                        (cond
                          hk
                          (pvm/hoitokauden-kuukausivalit hk)
-                         
+
                          vuosi
                          (pvm/vuoden-kuukausivalit vuosi)
-                         
+
                          :default
                          [])))))
-        valittu-kuukausi (atom nil)
+        valittu-kuukausi (reaction
+                           @nav/valittu-urakka
+                           nil)
         vapaa-aikavali? (atom false)
         vapaa-aikavali (atom [nil nil])]
     (run! (let [hk @valittu-hoitokausi
@@ -118,7 +126,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                                :default hk)]
             (log "ASETA ARVO: " (pr-str [alku loppu]))
             (reset! arvo {:alkupvm alku :loppupvm loppu})))
-    
+
     (fn [_ _]
       (let [ur @ur
             hoitourakassa? @hoitourakassa?
@@ -130,7 +138,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                          (pvm/vuosi (:loppupvm ur))
                          (pvm/vuosi (pvm/nyt)))]
         [:span
-         [:div 
+         [:div
           [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
            vuosi-eka vuosi-vika valittu-vuosi
            #(do
@@ -160,21 +168,28 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            nil false (when @vapaa-aikavali?
                        [ui-valinnat/aikavali vapaa-aikavali])]]]))))
 
-     
+(def tienumero (atom nil))
+
+(defmethod raportin-parametri "tienumero" [p arvo]
+  (fn [_ _]
+    [valinnat/tienumero (r/wrap @tienumero (fn [uusi]
+                                             (reset! arvo {:tienumero uusi})
+                                             (reset! tienumero uusi)))]))
+
 (defmethod raportin-parametri "urakan-toimenpide" [p arvo]
   (let [aseta-tpi (fn [tpi]
                     (reset! arvo (if tpi
                                    {:toimenpide-id (:id tpi)}
                                    {:virhe "Ei tpi valintaa"})))]
     (komp/luo
-     (komp/watcher u/valittu-toimenpideinstanssi
-                   (fn [_ _ tpi]
-                     (aseta-tpi tpi)))
-     (komp/piirretty #(reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"}))
-     
-     (fn [_ _]
-       @u/valittu-toimenpideinstanssi
-       [valinnat/urakan-toimenpide+kaikki]))))
+      (komp/watcher u/valittu-toimenpideinstanssi
+                    (fn [_ _ tpi]
+                      (aseta-tpi tpi)))
+      (komp/piirretty #(reset! u/valittu-toimenpideinstanssi {:tpi_nimi "Kaikki"}))
+
+      (fn [_ _]
+        @u/valittu-toimenpideinstanssi
+        [valinnat/urakan-toimenpide+kaikki]))))
 
 
 (defonce urakoittain? (atom false))
@@ -228,12 +243,12 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
   {"aikavali" 1
    "urakan-toimenpide" 3})
 
-(def omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
+(def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [parametri-arvot (atom {})
-        ]
-    (reset! suoritettu-raportti nil)
+  (let [parametri-arvot (atom {})]
+    (run! @parametri-arvot
+          (reset! suoritettu-raportti nil))
     (komp/luo
       (fn [raporttityyppi konteksti v-ur v-hal]
          (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
@@ -269,13 +284,13 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                   (if-not p
                     (conj rows row)
                     (let [par ^{:key (:nimi p)} [:div
-                                                 {:class (if (omalle-riville? (:tyyppi p))
+                                                 {:class (if (parametri-omalle-riville? (:tyyppi p))
                                                            "col-md-12"
                                                            "col-md-4")}
                                                  [raportin-parametri p arvo]]]
                       (cond
                         ;; checkboxit ja aikaväli aina omalle riville
-                        (omalle-riville? (:tyyppi p))
+                        (parametri-omalle-riville? (:tyyppi p))
                         (recur (conj (if row
                                        (conj rows row)
                                        rows)
@@ -399,7 +414,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                        (nav/vaihda-kartan-koko! :M))
                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
-      (if (roolit/roolissa? roolit/tilaajan-kayttaja)
+      (if (roolit/voi-nahda-raportit?)
         [:span
          [kartta/kartan-paikka]
          (raporttivalinnat-ja-raportti)]

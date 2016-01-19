@@ -24,6 +24,7 @@
                sopimus @tiedot-urakka/valittu-sopimusnumero
                hk @tiedot-urakka/valittu-hoitokausi
                kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
+              {:nil-kun-haku-kaynnissa? true}
               (when (and hae? ur)
                 (go
                   (into []

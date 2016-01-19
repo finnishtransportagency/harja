@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema
+        targetNamespace="http://www.liikennevirasto.fi/xsd/harja/sahkoposti"
+        version="1.0"
+        xmlns="http://www.liikennevirasto.fi/xsd/harja/sahkoposti"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="sahkoposti">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="viestiId" type="xs:string" minOccurs="1" nillable="false"/>
+                <xs:element name="vastaanottajat" minOccurs="1">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="vastaanottaja" type="xs:string" maxOccurs="unbounded" minOccurs="1"
+                                        nillable="false"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element type="xs:string" name="lahettaja" minOccurs="1" nillable="false"/>
+                <xs:element type="xs:string" name="otsikko" minOccurs="1" nillable="false"/>
+                <xs:element type="xs:string" name="sisalto" minOccurs="1" nillable="false" />
+                <xs:element type="xs:dateTime" name="vastaanotettu" minOccurs="0" nillable="true"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="kuittaus">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="viestiId" type="xs:string" minOccurs="1" nillable="false"/>
+                <xs:element name="aika" type="xs:dateTime" minOccurs="1" nillable="false"/>
+                <xs:element name="onnistunut" type="xs:boolean" minOccurs="1" nillable="false"/>
+                <xs:element name="virheet" type="xs:string" minOccurs="0" nillable="true"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

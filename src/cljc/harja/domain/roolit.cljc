@@ -183,6 +183,27 @@ urakoitsija."
        (and (organisaation-urakka? kayttaja urakka-id)
             (roolissa? kayttaja urakoitsijan-paakayttaja)))))
 
+(defn voi-nahda-raportit?
+  "Käyttäjä voi nähdä raportit, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
+  #?(:cljs ([] (voi-nahda-raportit? @istunto/kayttaja)))
+  ([kayttaja]
+   (tilaajan-kayttaja? kayttaja)))
+
+#?(:clj
+   (defn vaadi-raporttien-lukuoikeus
+     ([kayttaja]
+      (when-not (voi-nahda-raportit? kayttaja)
+        (let [viesti (format "Käyttäjällä '%1$s' ei ole oikeutta nähdä raportteja.", (:kayttajanimi kayttaja))]
+          (backlog/warn viesti)
+          (throw+ (->EiOikeutta viesti)))))))
+
+(defn lukuoikeus-kaikkiin-urakoihin?
+  "Käyttäjä voi nähdä kaikki urakat, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
+  #?(:cljs ([] (lukuoikeus-kaikkiin-urakoihin? @istunto/kayttaja)))
+  ([kayttaja]
+   (tilaajan-kayttaja? kayttaja)))
+
+
 #?(:clj
    (defn vaadi-toteumien-kirjaus-urakkaan [kayttaja urakka-id]
      (when-not (voi-kirjata-toteumia? kayttaja urakka-id)

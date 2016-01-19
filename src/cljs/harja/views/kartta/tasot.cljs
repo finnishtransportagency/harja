@@ -73,21 +73,22 @@
   (swap! nakyman-geometriat dissoc avain))
 
 (def geometriat (reaction
-                 {:organisaatio @organisaatio
-                  :nakyman-geometriat (vals @nakyman-geometriat)                  
-                  :pohjavesi @pohjavesialueet/pohjavesialueet
-                  :tarkastukset @tarkastukset/tarkastukset-kartalla
-                  :sillat @sillat/sillat
-                  :turvallisuus @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-                  :ilmoitukset @ilmoitukset/ilmoitukset-kartalla
-                  :tr-valitsin @tierekisteri/tr-alkupiste-kartalla
-                  :yks-hint-toteumat @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
-                  :kok-hint-toteumat @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
-                  :varusteet @varusteet/varusteet-kartalla
-                  :muut-tyot @muut-tyot/muut-tyot-kartalla
-                  :tilannekuva @tilannekuva/tilannekuvan-asiat-kartalla
-                  :paallystyskohteet @paallystys/paallystyskohteet-kartalla
-                  :paikkauskohteet @paikkaus/paikkauskohteet-kartalla}))
+                 (merge 
+                  {:organisaatio @organisaatio
+                   :nakyman-geometriat (vals @nakyman-geometriat)                  
+                   :pohjavesi @pohjavesialueet/pohjavesialueet
+                   :tarkastukset @tarkastukset/tarkastukset-kartalla
+                   :sillat @sillat/sillat
+                   :turvallisuus @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+                   :ilmoitukset @ilmoitukset/ilmoitukset-kartalla
+                   :tr-valitsin @tierekisteri/tr-alkupiste-kartalla
+                   :yks-hint-toteumat @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
+                   :kok-hint-toteumat @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
+                   :varusteet @varusteet/varusteet-kartalla
+                   :muut-tyot @muut-tyot/muut-tyot-kartalla
+                   :paallystyskohteet @paallystys/paallystyskohteet-kartalla
+                   :paikkauskohteet @paikkaus/paikkauskohteet-kartalla}
+                  @tilannekuva/tilannekuvan-asiat-kartalla)))
 
 (defn- taso-atom [nimi]
   (case nimi

@@ -22,8 +22,7 @@
            {:points [(:coordinates geometria)]})))
 
 (defn tack-icon [optiot geometria]
-  (merge {:color "black"}                                   ;; Käytetään oletuksena mustaa viivaa
-         optiot
+  (merge optiot
          (case (:type geometria)
            :line
            {:type   :tack-icon-line
@@ -43,20 +42,22 @@
 (defn- laske-skaala [asia valittu?]
   (if (valittu? asia) +valitun-skaala+ +normaali-skaala+))
 
-(defn- tack-ikoni [ilmoitus ikoni valittu?]
+(defn viivan-vari
+  ([valittu?] (viivan-vari valittu? "blue" "black"))
+  ([valittu? valittu-vari] (viivan-vari valittu? valittu-vari "black"))
+  ([valittu? valittu-vari ei-valittu-vari]
+   (if valittu? valittu-vari ei-valittu-vari)))
+
+(defn- tack-ikoni
+  ([asia ikoni valittu?] (tack-ikoni asia ikoni valittu? {}))
+  ([asia ikoni valittu? optiot]
   (tack-icon
-    {:scale (laske-skaala ilmoitus valittu?)
-     :img ikoni}
-    (:sijainti ilmoitus)))
-
-(defn- musta-tack-ikoni [ilmoitus ikoni valittu?]
-  (assoc (tack-ikoni ilmoitus ikoni valittu?)
-    :color "black"))
-
-(defn- levea-tack-ikoni-varilla [pt ikoni valittu? vari]
-  (assoc (tack-ikoni pt ikoni valittu?)
-    :color vari
-    :width (when (:avoin? pt) 8)))
+    (merge
+      {:scale (laske-skaala asia valittu?)
+      :color (viivan-vari asia valittu?)
+      :img   ikoni}
+      optiot)
+    (:sijainti asia))))
 
 (defmulti
   ^{:private true}
@@ -84,6 +85,7 @@
          :selite {:teksti "Tiedotus"
                   :img    (karttakuva "tiedotus-tack-violetti")}
          :alue (tack-ikoni ilmoitus (karttakuva "tiedotus-tack-violetti") valittu?)))
+
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu?]
   (let [aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
@@ -137,15 +139,14 @@
   (str etuliite " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu?]
-  (when (:sijainti laatupoikkeama)
-    (let [ikoni (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
-          otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
-      (assoc laatupoikkeama
-             :type :laatupoikkeama
-             :nimi (or (:nimi laatupoikkeama) otsikko)
-             :selite {:teksti otsikko
-                      :img    ikoni}
-             :alue (tack-ikoni laatupoikkeama ikoni valittu?)))))
+  (let [ikoni (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+        otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
+    (assoc laatupoikkeama
+      :type :laatupoikkeama
+      :nimi (or (:nimi laatupoikkeama) otsikko)
+      :selite {:teksti otsikko
+               :img    ikoni}
+      :alue (tack-ikoni laatupoikkeama ikoni valittu?))))
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   (let [ikoni (selvita-tarkastuksen-ikoni (:tekija tarkastus))]
@@ -222,7 +223,7 @@
              :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
              :selite {:teksti selite
                       :img    ikoni}
-             :alue (musta-tack-ikoni tp ikoni valittu?)))))
+             :alue (tack-ikoni tp ikoni valittu?)))))
 
 (defn- paattele-yllapidon-ikoni-ja-viivan-vari
   [teksti asia]
@@ -242,7 +243,7 @@
            :nimi (or (:nimi pt) teksti)
            :selite {:teksti teksti
                     :img    ikoni}
-           :alue (levea-tack-ikoni-varilla pt ikoni valittu? viiva))))
+           :alue (tack-ikoni pt ikoni valittu? {:color viiva}))))
 
 (defmethod asia-kartalle :paallystys [pt valittu?]
   (assoc (paikkaus-paallystys pt valittu? "paallystystyo" "Päällystys")
@@ -358,7 +359,7 @@
   ([asiat valittu tunniste asia-xf]
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
-     (with-meta 
+     (with-meta
        (into []
              (comp (or asia-xf identity)
                    (map #(kartalla-xf % valittu (or tunniste [:id])))

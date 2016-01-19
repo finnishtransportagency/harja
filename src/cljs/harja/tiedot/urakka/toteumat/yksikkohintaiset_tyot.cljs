@@ -15,63 +15,86 @@
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
-(defonce yks-hint-tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                                [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                                nakymassa? @yksikkohintaiset-tyot-nakymassa?
-                                                valittu-hoitokausi @u/valittu-hoitokausi
-                                                valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
-                                                valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
-                                               (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
-                                                 (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
-                                                 (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen valittu-toimenpide-id valittu-tehtava-id))))
+(defonce yks-hint-tehtavien-summat
+         (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                      nakymassa? @yksikkohintaiset-tyot-nakymassa?
+                      valittu-hoitokausi @u/valittu-hoitokausi
+                      valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
+                      valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
+                       (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id)
+                            (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
+                       (toteumat/hae-urakan-toteumien-tehtavien-summat
+                         valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen
+                         valittu-toimenpide-id valittu-tehtava-id))))
 
 (defonce yks-hint-tyot-tehtavittain
-  (reaction
-   (let [assosioi (fn [avain avain2]
-                    (fn [rivit] (map
-                                 (fn [rivi]
-                                   (assoc rivi avain
-                                          (or (avain2 (first (filter
-                                                              (fn [tyo]
-                                                                (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
-                                                                     (= (:tehtava tyo) (:id rivi))
-                                                                     (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                              @u/urakan-yks-hint-tyot)))
-                                              nil)))
-                                 rivit)))
-         lisaa-yksikkohinta (assosioi :yksikkohinta :yksikkohinta)
-         lisa-suunniteltu-maara (assosioi :hoitokauden-suunniteltu-maara :maara)
-         lisaa-suunnitellut-kustannukset (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa) 
-         lisaa-toteutunut-maara (assosioi :hoitokauden-toteutunut-maara :maara) 
-         lisaa-toteutuneet-kustannukset (fn [rivit]
-                                          (map
-                                           (fn [rivi]
-                                             (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
-                                           rivit))
-         lisaa-erotus (fn [rivit] (map
-                                   (fn [rivi]
-                                     (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
-                                   rivit))
-         tehtavarivit (reaction
-                       (let [urakan-4-tason-tehtavat (map
-                                                      (fn [tasot]
-                                                        (let [kolmostaso (nth tasot 2)
-                                                              nelostaso (nth tasot 3)]
-                                                          (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
-                                                      @u/urakan-toimenpiteet-ja-tehtavat)
-                             tehtavien-summat @yks-hint-tehtavien-summat]
+         (reaction
+           (let [assosioi (fn [avain avain2]
+                            (fn [rivit] (map
+                                          (fn [rivi]
+                                            (assoc rivi avain
+                                                        (or (avain2 (first (filter
+                                                                             (fn [tyo]
+                                                                               (and (= (:sopimus tyo)
+                                                                                       (first @u/valittu-sopimusnumero))
+                                                                                    (= (:tehtava tyo) (:id rivi))
+                                                                                    (pvm/sama-pvm?
+                                                                                      (:alkupvm tyo)
+                                                                                      (first @u/valittu-hoitokausi))))
+                                                                             @u/urakan-yks-hint-tyot)))
+                                                            nil)))
+                                          rivit)))
+                 lisaa-yksikkohinta (assosioi :yksikkohinta :yksikkohinta)
+                 lisa-suunniteltu-maara (assosioi :hoitokauden-suunniteltu-maara :maara)
+                 lisaa-suunnitellut-kustannukset (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
+                 lisaa-toteutunut-maara (assosioi :hoitokauden-toteutunut-maara :maara)
+                 lisaa-toteutuneet-kustannukset (fn [rivit]
+                                                  (map
+                                                    (fn [rivi]
+                                                      (assoc rivi :hoitokauden-toteutunut-maara
+                                                                  (or (:maara
+                                                                        (first (filter
+                                                                                 (fn [tehtava] (= (:tpk_id tehtava)
+                                                                                                  (:id rivi)))
+                                                                                 @yks-hint-tehtavien-summat)))
+                                                                      nil)))
+                                                    rivit))
+                 lisaa-toteutuneet-kustannukset (fn [rivit]
+                                                  (map
+                                                    (fn [rivi]
+                                                      (assoc rivi :hoitokauden-toteutuneet-kustannukset
+                                                                  (* (:yksikkohinta rivi)
+                                                                     (:hoitokauden-toteutunut-maara rivi))))
+                                                    rivit))
+                 lisaa-erotus (fn [rivit] (map
+                                            (fn [rivi]
+                                              (assoc rivi :kustannuserotus
+                                                          (- (:hoitokauden-suunnitellut-kustannukset rivi)
+                                                             (:hoitokauden-toteutuneet-kustannukset rivi))))
+                                            rivit))
+                 tehtavarivit (reaction
+                                (let [urakan-4-tason-tehtavat (map
+                                                                (fn [tasot]
+                                                                  (let [kolmostaso (nth tasot 2)
+                                                                        nelostaso (nth tasot 3)]
+                                                                    (assoc nelostaso :t3_koodi (:koodi kolmostaso))))
+                                                                @u/urakan-toimenpiteet-ja-tehtavat)
+                                      tehtavien-summat @yks-hint-tehtavien-summat]
 
-                         (when tehtavien-summat
-                           (-> (lisaa-yksikkohinta urakan-4-tason-tehtavat)
-                               (lisa-suunniteltu-maara)
-                               (lisaa-suunnitellut-kustannukset)
-                               (lisaa-toteutunut-maara)
-                               (lisaa-toteutuneet-kustannukset)
-                               (lisaa-erotus)))))]
-     (filter
-      (fn [rivi]
-        (> (:hoitokauden-toteutunut-maara rivi) 0))
-      @tehtavarivit))))
+                                  (when tehtavien-summat
+                                    (-> (lisaa-yksikkohinta urakan-4-tason-tehtavat)
+                                        (lisa-suunniteltu-maara)
+                                        (lisaa-suunnitellut-kustannukset)
+                                        (lisaa-toteutunut-maara)
+                                        (lisaa-toteutuneet-kustannukset)
+                                        (lisaa-erotus)))))]
+             (filter
+               (fn [rivi]
+                 (> (:hoitokauden-toteutunut-maara rivi) 0))
+               @tehtavarivit))))
 
 (def yksikkohintainen-toteuma-kartalla-xf
   (map #(do
@@ -94,18 +117,18 @@
             :alkupvm    alkupvm
             :loppupvm   loppupvm
             :toimenpide toimenpide
-            :tehtava tehtava}))
+            :tehtava    tehtava}))
 
 (def haetut-reitit
-  (reaction<!
-    [urakka-id (:id @nav/valittu-urakka)
-     sopimus-id (first @urakka/valittu-sopimusnumero)
-     hoitokausi @urakka/valittu-hoitokausi
-     toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
-     tehtava (:id @u/valittu-yksikkohintainen-tehtava)
-     nakymassa? @yksikkohintaiset-tyot-nakymassa?]
-    (when nakymassa?
-      (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               sopimus-id (first @urakka/valittu-sopimusnumero)
+               hoitokausi @urakka/valittu-hoitokausi
+               toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
+               tehtava (:id @u/valittu-yksikkohintainen-tehtava)
+               nakymassa? @yksikkohintaiset-tyot-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when nakymassa?
+                (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
 
 (tarkkaile! "TPI: " u/valittu-toimenpideinstanssi)
 

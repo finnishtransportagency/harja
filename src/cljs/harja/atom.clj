@@ -1,8 +1,13 @@
 (ns harja.atom
   "Apureita atomeille."
   (:refer-clojure :exclude [run!])
-  (:require [reagent.ratom :refer [run!]]))
+  (:require [reagent.ratom :refer [run!]]
+            [taoensso.truss :refer [have have?]]))
 
+(defn- validit-optiot? [optiot]
+  (or (nil? optiot)
+      (and (have? map? optiot)
+           (every? #{:odota :nil-kun-haku-kaynnissa?} (keys optiot)))))
 
 (defmacro reaction<!
   "Asynkroninen reaktio (esim. serveriltä haku). Haun tulee palauttaa kanava (tai nil).
@@ -20,8 +25,9 @@
 
   Reaktion tulee palauttaa kanava, josta tuloksen voi lukea."
   [let-bindings & body]
-  (let [asetukset (when (map? (first body))
-                    (first body))
+  (let [asetukset (have validit-optiot?
+                        (when (map? (first body))
+                          (first body)))
         body (if asetukset
                (rest body)
                body)
@@ -31,7 +37,8 @@
     `(let [odota# ~(or (get asetukset :odota) 20)
            arvo# (reagent.core/atom nil)
            parametrit-ch# (cljs.core.async/chan)
-           paivita# (reagent.core/atom 0)]
+           paivita# (reagent.core/atom 0)
+           nil-kun-haku-kaynnissa?# ~(or (get asetukset :nil-kun-haku-kaynnissa?) false)]
        (cljs.core.async.macros/go
          (loop [haku-ch# nil ;; käynnissä olevan haun kanava
                 parametrit# (cljs.core.async/<! parametrit-ch#)]
@@ -48,7 +55,10 @@
 
              (if (= kanava# parametrit-ch#)
                ;; Saatiin parametrit, loopataan uudelleen
-               (recur haku-ch# vastaus#)
+               (do
+                 (when nil-kun-haku-kaynnissa?#
+                   (reset! arvo# nil))
+                 (recur haku-ch# vastaus#))
 
                (let [[haku# parametrit#]
                      (if (= kanava# haku-ch#)

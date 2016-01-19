@@ -15,7 +15,7 @@
   (reaction<! [paalla? @karttataso-sillat
                urakka @nav/valittu-urakka
                listaus @listaus]
-              
+              {:nil-kun-haku-kaynnissa? true}
               (if (and paalla? urakka)
                 (do (log "Siltataso päällä, haetaan sillat urakalle: " (:nimi urakka) " (id: " (:id urakka) ")")
                     (go (let [sillat (<! (k/post! :hae-urakan-sillat {:urakka-id (:id urakka)

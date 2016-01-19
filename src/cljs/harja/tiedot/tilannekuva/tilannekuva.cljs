@@ -18,14 +18,19 @@
 (defonce nakymassa? (atom false))
 (defonce valittu-tila (atom :nykytilanne))
 
-;; odota sekunti ennen hakemista kun muutoksia tehdään
-(defonce bufferi 1000)
+(def ^{:doc "Aika joka odotetaan ennen uusien tietojen hakemista, kun parametrit muuttuvat"
+       :const true}
+  bufferi 1000)
 
 ;; 10s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
 ;; karttaa siirretään tai zoomataan
-(defonce hakutiheys-nykytilanne 10000)
+(def ^{:doc "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
+       :const true}
+  hakutiheys-nykytilanne 10000)
 
-(defonce hakutiheys-historiakuva 1200000)
+(def ^{:doc "Päivitystiheys historiakuvassa on 20 minuuttia."
+       :const true}
+  hakutiheys-historiakuva 1200000)
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
 (defonce suodattimien-nimet
@@ -240,8 +245,7 @@
 
           tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
                     (yhdista-tyokonedata)
-                    (julkaise-tyokonedata!)
-                    (lisaa-karttatyypit))]
+                    (julkaise-tyokonedata!))]
       (reset! tilannekuva-kartalla/haetut-asiat tulos)
       (kartta/aseta-paivitetaan-karttaa-tila false))))
 
@@ -285,7 +289,12 @@
 (add-watch nakymassa? :pollaus-muuttui
            (fn [_ _ old new]
              (log "nakymassa? muuttui " old " => " new )
-             (pollaus-muuttui)))
+             (pollaus-muuttui)
+
+             ;; Jos tilannekuvasta on poistuttu, tyhjennetään haetut-asiat.
+             ;; Tämä poistaa kaikki tilannekuvan karttatasot.
+             (when (false? new)
+               (reset! tilannekuva-kartalla/haetut-asiat nil))))
 (add-watch valittu-tila :pollaus-muuttui
            (fn [_ _ old new]
              (log "valittu-tila muuttui " old " => " new )

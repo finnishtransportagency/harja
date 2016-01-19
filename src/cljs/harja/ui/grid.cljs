@@ -259,7 +259,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:span.rivilla-virheita
          (ikonit/warning-sign)])])])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id vetolaatikot tallenna piilota-toiminnot? valittu-rivi mahdollista-rivin-valinta]} skeema rivi]
+(defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
+                            vetolaatikot tallenna piilota-toiminnot? valittu-rivi
+                            mahdollista-rivin-valinta]} skeema rivi]
   [:tr {:class    (str luokka (when (= rivi @valittu-rivi)
                                 " rivi-valittu"))
         :on-click #(do
@@ -272,13 +274,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                             (when rivi-valinta-peruttu
                               (rivi-valinta-peruttu rivi)))
                         (reset! valittu-rivi rivi))))}
-   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia]} skeema]
+   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia pakota-rivitys?]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
        [vetolaatikon-tila ohjaus vetolaatikot id]
        ^{:key (str nimi)}
-       [:td {:class
-             (if (= tasaa :oikea) "tasaa-oikealle" "")}
+       [:td {:class (str (when (= tasaa :oikea) "tasaa-oikealle ")
+                         (when pakota-rivitys? "grid-pakota-rivitys"))}
         (if (= tyyppi :komponentti)
           (komponentti rivi)
           (let [haettu-arvo (if hae
@@ -309,7 +311,7 @@ Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   :ohjaus                               gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
-  
+
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
 Optiot on mappi optioita:
@@ -336,7 +338,7 @@ Optiot on mappi optioita:
                                         rivin alla
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
 
-  
+
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
@@ -606,9 +608,9 @@ Optiot on mappi optioita:
                [:table.grid
                 [:thead
                  [:tr
-                  (for [{:keys [otsikko leveys nimi luokka]} skeema]
+                  (for [{:keys [otsikko leveys nimi otsikkorivi-luokka]} skeema]
                     ^{:key (str nimi)}
-                    [:th {:class luokka :width (or leveys "5%")} otsikko])
+                    [:th {:class otsikkorivi-luokka :width (or leveys "5%")} otsikko])
                   (when (and (not piilota-toiminnot?)
                              tallenna)
                     [:th.toiminnot {:width "40px"} " "])]]
