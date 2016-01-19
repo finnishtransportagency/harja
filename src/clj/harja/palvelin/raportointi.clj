@@ -21,7 +21,8 @@
             [harja.palvelin.raportointi.raportit.kelitarkastus]
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
-            [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]))
+            [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
+            [harja.domain.roolit :as roolit]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -98,6 +99,10 @@
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
+    (if (= "urakka" konteksti)
+      (roolit/vaadi-lukuoikeus-urakkaan kayttaja (:urakka-id suorituksen-tiedot))
+      (roolit/vaadi-raporttien-lukuoikeus kayttaja))
+
     (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit)
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
       (binding [*raportin-suoritus* this]

@@ -176,28 +176,29 @@
             (recur (.getNextException ex))))
         (log/error "Sisemmät virheet: " (.toString w)))
       (kasittele-sisainen-kasittelyvirhe
-        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]))
+          :viesti "Sisäinen käsittelyvirhe"}]
+        resurssi))
     (catch Exception e
       (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " resurssi))
       (kasittele-sisainen-kasittelyvirhe
-        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]))
+          :viesti "Sisäinen käsittelyvirhe"}]
+        resurssi))
     (catch Object e
       (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " e))
       (kasittele-sisainen-kasittelyvirhe
-        resurssi
         [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]))))
+          :viesti "Sisäinen käsittelyvirhe"}]
+        resurssi))))
 
-(defn kasittele-kutsu [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+(defn kasittele-kutsu
   "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
   on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
   validoidaan käyttäen annettuja JSON-skeemoja.
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
+  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (let [body (if (:body request)
                (slurp (:body request))

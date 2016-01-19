@@ -15,15 +15,17 @@
 
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
-(defonce yks-hint-tehtavien-summat (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                                                [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                                                nakymassa? @yksikkohintaiset-tyot-nakymassa?
-                                                valittu-hoitokausi @u/valittu-hoitokausi
-                                                valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
-                                                valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
-                                               (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
-                                                 (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
-                                                 (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen valittu-toimenpide-id valittu-tehtava-id))))
+(defonce yks-hint-tehtavien-summat
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @yksikkohintaiset-tyot-nakymassa?
+               valittu-hoitokausi @u/valittu-hoitokausi
+               valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
+               valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
+                (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
+                (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen valittu-toimenpide-id valittu-tehtava-id))))
 
 (defonce yks-hint-tyot-tehtavittain
          (reaction
@@ -77,7 +79,7 @@
                                                     rivit))
                  lisaa-erotus (fn [rivit] (map
                                             (fn [rivi]
-                                              (assoc rivi :kustannuserotus (- (:hoit3okauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
+                                              (assoc rivi :kustannuserotus (- (:hoitokauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
                                             rivit))
                  tehtavarivit (reaction
                                 (let [urakan-4-tason-tehtavat (map
@@ -124,15 +126,15 @@
             :tehtava tehtava}))
 
 (def haetut-reitit
-  (reaction<!
-    [urakka-id (:id @nav/valittu-urakka)
-     sopimus-id (first @urakka/valittu-sopimusnumero)
-     hoitokausi @urakka/valittu-hoitokausi
-     toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
-     tehtava (:id @u/valittu-yksikkohintainen-tehtava)
-     nakymassa? @yksikkohintaiset-tyot-nakymassa?]
-    (when nakymassa?
-      (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               sopimus-id (first @urakka/valittu-sopimusnumero)
+               hoitokausi @urakka/valittu-hoitokausi
+               toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
+               tehtava (:id @u/valittu-yksikkohintainen-tehtava)
+               nakymassa? @yksikkohintaiset-tyot-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when nakymassa?
+                (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
 
 (tarkkaile! "TPI: " u/valittu-toimenpideinstanssi)
 

@@ -3,6 +3,7 @@
 SELECT
   t.id,
   sopimus,
+  t.aika,
   t.tr_numero,
   t.tr_alkuosa,
   t.tr_alkuetaisyys,
