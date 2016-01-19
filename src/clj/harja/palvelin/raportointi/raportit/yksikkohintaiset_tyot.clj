@@ -20,7 +20,7 @@
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-paiva db
                                                                urakka-id alkupvm loppupvm
-                                                               (if toimenpide-id true false) toimenpide-id)
+                                                               (not (nil? toimenpide-id)) toimenpide-id)
 
         raportin-nimi "Yksikköhintaiset työt päivittäin"
         konteksti :urakka

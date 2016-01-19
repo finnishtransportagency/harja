@@ -11,26 +11,26 @@
 
 (defn hae-summatut-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
   (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
-                                                           urakka-id alkupvm loppupvm
-                                                           (if toimenpide-id true false) toimenpide-id))
+                                                                urakka-id alkupvm loppupvm
+                                                                (not (nil? toimenpide-id)) toimenpide-id))
 
 (defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
                                                                                        hallintayksikko-id alkupvm loppupvm
-                                                                                       (if toimenpide-id true false) toimenpide-id)
+                                                                                       (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
                                                                            hallintayksikko-id alkupvm loppupvm
-                                                                           (if toimenpide-id true false) toimenpide-id)))
+                                                                           (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn hae-summatut-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain db
                                                                                  alkupvm loppupvm
-                                                                                 (if toimenpide-id true false) toimenpide-id)
+                                                                                 (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
                                                                      alkupvm loppupvm
-                                                                     (if toimenpide-id true false) toimenpide-id)))
+                                                                     (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
