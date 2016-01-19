@@ -33,6 +33,18 @@
     (k/post! :tallenna-urakan-yksikkohintaiset-tyot
              hyotykuorma)))
 
+(defn kokonaishinta [t]
+  (* (:yksikkohinta t) (:maara t)))
+
+(defn summa [i]
+  (reduce + 0 i))
+
+(defn valitse-maaran-oikea-kuukausivali [kannan-rivi-kkt-10-12 i]
+  (if (= (.getYear (:alkupvm kannan-rivi-kkt-10-12))
+         (.getYear (:alkupvm i)))
+    :maara-kkt-10-12
+    :maara-kkt-1-9))
+
 (defn kannan-rivit->tyorivi 
   "Kahdesta tietokannan työrivistä tehdään yksi käyttöliittymän rivi
    :maara   --> :maara-kkt-10-12
@@ -42,14 +54,17 @@
    sen jälkeen poistetaan ylimääräiseksi jäänyt kenttä :maara"
   [kannan-rivit]
   ;; pohjaan jää alkupvm ja loppupvm jommasta kummasta hoitokauden "osasta"
-  (let [kannan-rivi-kkt-10-12 (first (sort-by :alkupvm kannan-rivit))
-        kannan-rivi-kkt-1-9 (second (sort-by :alkupvm kannan-rivit))]
-    (dissoc (assoc (merge kannan-rivi-kkt-10-12
-                       (zipmap (map #(if (= (.getYear (:alkupvm kannan-rivi-kkt-10-12))
-                                            (.getYear (:alkupvm %)))
-                                       :maara-kkt-10-12 :maara-kkt-1-9) kannan-rivit)
-                               (map :maara kannan-rivit))               
-                       {:yhteensa (reduce + 0 (map #(* (:yksikkohinta %) (:maara %)) kannan-rivit))})
-                   :alkupvm (:alkupvm kannan-rivi-kkt-10-12)
-                   :loppupvm (:loppupvm kannan-rivi-kkt-1-9))
-            :maara)))
+  (let [rivit-jarjestyksessa (sort-by :alkupvm kannan-rivit)
+        kannan-rivi-kkt-10-12 (first rivit-jarjestyksessa)
+        kannan-rivi-kkt-1-9 (second rivit-jarjestyksessa)]
+    
+    (-> kannan-rivi-kkt-10-12
+        (merge 
+         (zipmap (map #(valitse-maaran-oikea-kuukausivali kannan-rivi-kkt-10-12 %) kannan-rivit)
+                 (map :maara kannan-rivit))               
+         {:yhteensa (summa (map kokonaishinta kannan-rivit))})
+        (assoc 
+         :alkupvm (:alkupvm kannan-rivi-kkt-10-12)
+         :loppupvm (:loppupvm kannan-rivi-kkt-1-9))
+        (dissoc 
+         :maara))))

@@ -65,7 +65,7 @@
         optiot (cljs.core/atom optiot)
         poistu-tr-valinnasta (fn []
                                (karttatasot/taso-pois! :tr-alkupiste)
-                               #_(reset! kartta/pida-geometriat-nakyvilla? kartta/pida-geometria-nakyvilla-oletusarvo)
+                               
                                (kartta/tyhjenna-ohjelaatikko))
         luo-tooltip (fn [tila-teksti]
                       [:div.tr-valitsin-hover
