@@ -74,7 +74,7 @@
   
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
-  [:div.raportti
+  [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
    (when (:nimi raportin-tunnistetiedot)
      [:h3 (:nimi raportin-tunnistetiedot)])
    (keep-indexed (fn [i elementti]
