@@ -14,7 +14,7 @@
 
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
-    [harja.makrot :refer [nappaa-virhe]]
+    [harja.makrot :refer [nappaa-virhe with-loop-from-channel]]
     [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn laske-tien-pituus [{alkuet :aet loppuet :let}]
@@ -99,8 +99,9 @@
         tr-osoite (atom {})
         optiot (cljs.core/atom optiot)]
 
-    (go-loop [arvo (<! tapahtumat)]
-      (when-let [{:keys [tyyppi sijainti x y]} arvo]
+    ;; voisi olla vieläkin selkeämpi lukea (with-items-from-channel tapahtumat arvo ...) joka generoi (go-loop [] .. (recur)):n
+    (with-loop-from-channel tapahtumat arvo
+      (let [{:keys [tyyppi sijainti x y]} arvo]
         (case tyyppi
           ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
           :hover
@@ -120,31 +121,26 @@
             (>! vkm-haku (<! (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)))
             (do
               (reset! alkupiste sijainti)
-              (>! vkm-haku (<! (vkm/koordinaatti->trosoite sijainti))))))
-        
-        (recur (<! tapahtumat))))
+              (>! vkm-haku (<! (vkm/koordinaatti->trosoite sijainti))))))))
 
-    (go-loop [osoite (<! vkm-haku)]
-      (when osoite
-        (if (vkm/virhe? osoite)
-          (pisteelle-ei-loydy-tieta-ilmoitus)          
-          (let [{:keys [kun-valmis paivita]} @optiot]
-            (kartta/tyhjenna-ohjelaatikko)
-            (case @tila
-              :ei-valittu
-              (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
-                (paivita osoite)
-                (karttatasot/taso-paalle! :tr-alkupiste)
-                (reset! tila :alku-valittu) 
-                (reset! tierekisteri/valittu-alkupiste (:geometria osoite))
-                (nayta-alkupiste-ohjelaatikossa osoite))
+    (with-loop-from-channel vkm-haku osoite
+      (if (vkm/virhe? osoite)
+        (pisteelle-ei-loydy-tieta-ilmoitus)          
+        (let [{:keys [kun-valmis paivita]} @optiot]
+          (kartta/tyhjenna-ohjelaatikko)
+          (case @tila
+            :ei-valittu
+            (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
+              (paivita osoite)
+              (karttatasot/taso-paalle! :tr-alkupiste)
+              (reset! tila :alku-valittu) 
+              (reset! tierekisteri/valittu-alkupiste (:geometria osoite))
+              (nayta-alkupiste-ohjelaatikossa osoite))
 
-              :alku-valittu
-              (let [osoite (reset! tr-osoite (konvertoi-tr-osoitteeksi osoite))]
-                (poistu-tr-valinnasta)
-                (kun-valmis osoite)))))
-        
-        (recur (<! vkm-haku))))
+            :alku-valittu
+            (let [osoite (reset! tr-osoite (konvertoi-tr-osoitteeksi osoite))]
+              (poistu-tr-valinnasta)
+              (kun-valmis osoite))))))
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo
