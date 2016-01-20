@@ -21,7 +21,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
 .livi-grid {
   color: @harmaa1;
-  min-height: 100px;
   // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
   // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
   .panel-heading {
@@ -45,6 +44,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     padding: 0;
   }
   table {
+    font-size: @fontin-koko-taulukko;
     td {
       overflow: hidden;
 
@@ -172,8 +172,10 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     background-color: @harmaa7;
   }
   tr.yhteenveto {
+    background-color: @harmaa10;
+    border-bottom: 2px solid @harmaa7;
+    border-top: 2px solid @harmaa7;
     font-weight: bold;
-    background-color: @harmaa9;
   }
   tr.klikattava:hover {
     cursor: pointer;
@@ -192,16 +194,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   .panel-heading {
     padding: 2px 0px;
     height: 35px
-  }
-}
-.muokkaustoiminnot .taulukossa-virheita {
-  font-size: 12px;
-  .glyphicon-warning-sign {
-    color: orange;
-  }
-  span {
-    font-size: 12px;
-    font-weight: bold;
   }
 }
 
