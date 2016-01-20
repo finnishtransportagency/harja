@@ -42,16 +42,18 @@
        {:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
        {:leveys "15%" :otsikko "Toteutuneet kustannukset"}]
 
-      (conj (mapv (juxt (comp pvm/pvm :pvm)
-                        :nimi
-                        :yksikko
-                        (comp fmt/euro-opt :yksikkohinta)
-                        (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
-                        (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
-                        (comp fmt/euro-opt :suunnitellut_kustannukset)
-                        (comp fmt/euro-opt :toteutuneet_kustannukset))
-                  naytettavat-rivit)
-            [nil "Yhteensä" nil nil nil nil
-             (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
-             (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])]]))
+      (keep identity
+            (conj (mapv (juxt (comp pvm/pvm :pvm)
+                              :nimi
+                              :yksikko
+                              (comp fmt/euro-opt :yksikkohinta)
+                              (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
+                              (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
+                              (comp fmt/euro-opt :suunnitellut_kustannukset)
+                              (comp fmt/euro-opt :toteutuneet_kustannukset))
+                        naytettavat-rivit)
+                  (when (not (empty? naytettavat-rivit))
+                    ["Yhteensä" nil nil nil nil nil
+                     (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
+                     (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])))]]))
 
