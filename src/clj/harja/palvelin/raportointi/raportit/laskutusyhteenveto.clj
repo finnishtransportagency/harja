@@ -57,7 +57,7 @@
                          (when kyseessa-kk-vali? (fmt/euro laskutetaan-yht))
                          (or (fmt/euro (+ laskutettu-yht laskutetaan-yht)) 0))
         taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
-                                  (not (and (zero? laskutettu)
+                                  (not (and ((fnil zero? 0) laskutettu)
                                             ((fnil zero? 0) laskutetaan))))
                                 (map (juxt :nimi laskutettu-kentta laskutetaan-kentta)
                                      tiedot))]
