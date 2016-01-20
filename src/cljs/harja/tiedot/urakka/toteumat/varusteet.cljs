@@ -6,7 +6,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.geo :as geo])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -69,16 +70,23 @@
 
 (def karttataso-varustetoteuma (atom false))
 
+(defn- selite [toteuma]
+  (str
+   (varuste-toimenpide->string (:toimenpide toteuma))
+   ": "
+   (:tietolaji toteuma)
+   " (" (pvm/pvm (:alkupvm toteuma)) " )"))
+
 (def varusteet-kartalla
   (reaction
     (when karttataso-varustetoteuma
       (kartalla-esitettavaan-muotoon
-        (map (fn [toteuma]
-               (-> toteuma
-                   (assoc :tyyppi-kartalla :varustetoteuma)
-                   (assoc :selitys-kartalla (str
-                                              (varuste-toimenpide->string (:toimenpide toteuma))
-                                              ": "
-                                              (:tietolaji toteuma)
-                                              " (" (pvm/pvm (:alkupvm toteuma)) " )"))))
-          @haetut-toteumat)))))
+       @haetut-toteumat
+       nil nil
+       (keep (fn [toteuma]
+               (when-let [sijainti (some-> toteuma :reitti geo/pisteet first)]
+                 (assoc toteuma
+                        :tyyppi-kartalla :varustetoteuma
+                        :selitys-kartalla (selite toteuma)
+                        :sijainti {:type :point
+                                   :coordinates sijainti}))))))))

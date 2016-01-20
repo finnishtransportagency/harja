@@ -165,14 +165,14 @@
                     :img    ikoni}
            :alue (tack-ikoni tarkastus ikoni valittu?))))
 
-(defmethod asia-kartalle :varustetoteuma [varustetoteuma]
+(defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu?]
   (let [ikoni (karttakuva "varusteet-ja-laitteet-tack-violetti")]
     (assoc varustetoteuma
            :type :varustetoteuma
            :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
            :selite {:teksti "Varustetoteuma"
                     :img    ikoni}
-           :alue (tack-ikoni varustetoteuma ikoni false))))
+           :alue (tack-ikoni varustetoteuma ikoni valittu?))))
 
 (def toteuma-varit-ja-nuolet
   [["rgb(255,0,0)" "punainen"]
@@ -359,7 +359,10 @@
 (defn kartalla-xf
   ([asia] (kartalla-xf asia nil nil))
   ([asia valittu] (kartalla-xf asia valittu [:id]))
-  ([asia valittu tunniste] (asia-kartalle asia (partial valittu? valittu tunniste))))
+  ([asia valittu tunniste] (asia-kartalle asia
+                                          (if valittu
+                                            (partial valittu? valittu tunniste)
+                                            (constantly false)))))
 
 (defn kartalla-esitettavaan-muotoon
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
