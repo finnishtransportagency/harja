@@ -108,6 +108,10 @@
 
                         (sort-by :tapahtunut turpot))
                   (when (not (empty? turpot))
-                    (rivi (if urakoittain? "" nil) "Yhteensä" "" "" ""
-                          (reduce + 0 (keep :sairaalavuorokaudet turpot))
-                          (reduce + 0 (keep :sairauspoissaolopaivat turpot))))))]]))
+                    (if urakoittain?
+                      (rivi "Yhteensä" "" "" "" ""
+                            (reduce + 0 (keep :sairaalavuorokaudet turpot))
+                            (reduce + 0 (keep :sairauspoissaolopaivat turpot)))
+                      (rivi "Yhteensä" "" "" ""
+                            (reduce + 0 (keep :sairaalavuorokaudet turpot))
+                            (reduce + 0 (keep :sairauspoissaolopaivat turpot)))))))]]))
