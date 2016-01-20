@@ -138,16 +138,27 @@
     transform: rotate(225deg);
 }
 
-.kartan-ikonien-selitykset-avaa {
+
+.kartan-ikonien-selitykset-avaasulje() {
     color: @sininen3;
-    font-size: 0.8rem;
+    margin: 2px 5px;
+    font-size: @fontin-koko-h2;
+    &:hover {
+        color: @sininen1;
+    }
+    &:active,
+    &:focus {
+        color: @primaari-sininen-valittuna;
+    }
+}
+
+.kartan-ikonien-selitykset-avaa {
+    .kartan-ikonien-selitykset-avaasulje();
 }
 
 .kartan-ikonien-selitykset-sulje {
+    .kartan-ikonien-selitykset-avaasulje();
     text-align: right;
-    padding-right: 5px;
-    color: @sininen3;
-    font-size: 0.8rem;
 }
 
 .kartan-ikoni-vari {
