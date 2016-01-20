@@ -34,6 +34,9 @@
                        org.postgresql.geometric.PGpoint
                        (t/write-handler (constantly "pp") geo/pg->clj)
 
+                       org.postgis.PGgeometry
+                       (t/write-handler "pg" geo/pg->clj)
+                       
                        harja.domain.roolit.EiOikeutta
                        (t/write-handler (constantly "eo") #(:syy %))}})
                       
@@ -54,10 +57,11 @@
                       ;; muunnettuna, joten tässä kelpaa identity
                       "bd" identity
 
-                      ;; Serveri lähettää PGpoint tyypit muunnettuna [x y] vektoreiksi, jotka
+                      ;; Serveri lähettää PGpoint ja PGgeometry muunnettuina 
                       ;; kelpaa meille sellaisenaan
                       "pp" js->clj
-
+                      "pg" js->clj
+                      
                       ;; EiOikeutta tulee serveriltä "eo" tägillä ja pelkkänä syy stringiä
                       "eo" #(roolit/->EiOikeutta %)}}))
 

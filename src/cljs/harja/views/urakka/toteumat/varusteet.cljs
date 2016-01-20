@@ -18,8 +18,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-
-
 (defn toteumataulukko []
   (let [toteumat @varustetiedot/haetut-toteumat]
     [:span
@@ -29,7 +27,9 @@
        :tunniste :id}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys "10%"}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys "15%"}
-       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys "15%"}
+       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :hae (fn [rivi]
+                                                                     (or (varustetiedot/tietolaji->selitys (:tietolaji rivi))
+                                                                         (:tietolaji rivi))) :leveys "15%"}
        {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :hae (fn [rivi]
                                                                        (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))
         :leveys "10%"}
