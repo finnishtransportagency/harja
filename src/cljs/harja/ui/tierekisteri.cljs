@@ -107,8 +107,7 @@
     (go-loop [osoite (<! vkm-haku)]
       (when osoite
         (if (vkm/virhe? osoite)
-          (pisteelle-ei-loydy-tieta-ilmoitus)
-          
+          (pisteelle-ei-loydy-tieta-ilmoitus)          
           (let [{:keys [kun-valmis paivita]} @optiot]
             (do
               (kartta/tyhjenna-ohjelaatikko)
@@ -119,15 +118,14 @@
                                       (dissoc (merge tr
                                                      {:numero (:tie osoite)
                                                       :alkuosa (:aosa osoite)
-                                                      :alkuetaisyys (:aet osoite)})
+                                                      :alkuetaisyys (:aet osoite)
+                                                      :geometria (:geometria osoite)})
                                               :loppuosa
                                               :loppuetaisyys)))]
                   (paivita osoite)
                   (karttatasot/taso-paalle! :tr-alkupiste)
-                  (reset! tila :alku-valittu)
-                  (log "Haetaan alkupisteen sijainti")
-                  (let [piste (:geometria osoite)]
-                    (log "Alkupisteen sijainti saatu: " (pr-str piste))
+                  (reset! tila :alku-valittu) 
+                  (let [piste (:geometria osoite)] 
                     (swap! tr-osoite assoc :geometria piste)
                     (reset! tierekisteri/valittu-alkupiste piste))
                   (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
