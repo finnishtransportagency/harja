@@ -29,7 +29,7 @@
                               (callback tapa)
                               (finally
                                 (tapahtumat/kuuroudu! tapahtumat kanava)))))))
-  
+
 
 (defn lopeta-ilmoituksen-lahetyksen-kuuntelu [tapahtumat ilmoitus-id]
   (tapahtumat/kuuroudu! tapahtumat (valityskanavan-nimi ilmoitus-id)))
@@ -38,4 +38,4 @@
   "Ilmoita tietyn ilmoituksen onnistuneesta välittämisestä. Kanava on keyword, joka kertoo millä mekanismilla
 välitys tehtiin: :api, :sms tai :email."
   [tapahtumat ilmoitus-id valitystapa]
-  (tapahtumat/julkaise! tapahtumat (str "ilmoitus_" ilmoitus-id "_valitetty") (name valitystapa)))
+  (tapahtumat/julkaise! tapahtumat (valityskanavan-nimi ilmoitus-id) (name valitystapa)))
