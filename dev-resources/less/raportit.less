@@ -1,7 +1,16 @@
 @import "livi_tyylit";
 
 .raportti {
-    .livi-grid.panel {
-        margin-bottom: 0;
+    &.laskutusyhteenveto {
+        > .panel {
+            margin-bottom: 0;
+        }
+        > .panel:last-child {
+            margin-bottom: 20px;
+        }
+        .panel-heading {
+            padding-bottom: 2px;
+            padding-top: 2px;
+        }
     }
 }
