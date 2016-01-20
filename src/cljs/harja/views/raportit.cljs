@@ -76,7 +76,6 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 
 
 (defonce parametri-arvot (atom {}))
-(tarkkaile! "Parametri arvot: " parametri-arvot)
 (defonce tyhjenna-raportti-kun-parametri-muuttuvat
   (run! @parametri-arvot
         (reset! suoritettu-raportti nil)))
@@ -121,7 +120,6 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
                              kk kk
                              vuosi (pvm/vuoden-aikavali vuosi)
                              :default hk)]
-            (log "RESET aikaväli")
             (swap! parametri-arvot
                    assoc "Aikaväli" {:alkupvm alku :loppupvm loppu}))))
 
