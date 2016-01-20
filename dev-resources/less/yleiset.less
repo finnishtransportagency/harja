@@ -42,34 +42,6 @@ span.tietoarvo {
   text-align: right;
 }
 
-.murupolku {
-  background-color: @harmaa9;
-  padding: 8px 15px;
-  margin-bottom: 1.25rem;
-  list-style: none;
-  .disabled {
-    .livicon-chevron-down {
-      color: @harmaa7;
-    }
-  }
-  .livicon-chevron-down {
-    color: @sininen4;
-  }
-  > li {
-    vertical-align: top;
-    display: inline-block;
-    margin-top: 10px;
-    margin-right: 0.5rem;
-  }
-}
-
-.murupolkuteksti {
-  background-color: @harjan-taustavari;
-  border: 1px solid @harmaa7;
-  display: inline-block;
-  padding: 5px 8px;
-}
-
 button > .ajax-loader {
   display: inline-block;
   > img {
@@ -189,7 +161,7 @@ button > .ajax-loader {
 
   .haitari-otsikko {
     margin-left: 8px;
-    font-size: 16px;
+    font-size: @fontin-koko-h2;
   }
 
   .haitari {
@@ -221,7 +193,7 @@ button > .ajax-loader {
     margin-right: 5px;
     vertical-align: middle;
     display: inline-block;
-    font-size: 16px;
+    font-size: @fontin-koko-h2;
     line-height: 29px;
   }
 
@@ -250,7 +222,6 @@ button > .ajax-loader {
       right: 0;
       margin: 0;
       padding: 0;
-      font-size: 20px;
       cursor: pointer;
       opacity: 0;
       filter: alpha(opacity=0);
