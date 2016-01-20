@@ -294,10 +294,11 @@
                         (reset! ikonien-selitykset-auki false)
                         (.stopPropagation event)
                         (.preventDefault event))} "Sulje"]]
-         [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [event]
-                                                                                               (reset! ikonien-selitykset-auki true)
-                                                                                               (.stopPropagation event)
-                                                                                               (.preventDefault event))}])])))
+         [:span.kartan-ikonien-selitykset-avaa.klikattava {:on-click (fn [event]
+                                                                       (reset! ikonien-selitykset-auki true)
+                                                                       (.stopPropagation event)
+                                                                       (.preventDefault event))}
+          "Karttaselitteet"])])))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
