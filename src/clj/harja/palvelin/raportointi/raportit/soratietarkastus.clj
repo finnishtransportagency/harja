@@ -11,15 +11,13 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
-(defn laske-luvun-osuus [numerot index]
+(defn osuus-prosentteina [osoittaja nimittaja]
   "Ottaa luvun numerot-vectorista annetulla indeksillä ja jakaa sen vectorin kaikkien lukujen summalla."
-  (let [osoittaja (nth numerot index)
-        nimittaja (reduce + numerot)]
-    (if (not= nimittaja 0)
-      (* (float (/ osoittaja
-                   nimittaja))
-         100)
-      0.0)))
+  (if (not= nimittaja 0)
+    (* (/ osoittaja
+          nimittaja)
+       100.0)
+    0.0))
 
 (def laatupoikkeama-syyt {1 "Vähintään yksi mittaustulos arvoltaan 1"
                           2 "Vähintään yksi mittaustulos arvoltaan 2 yhtenäisellä 20m tie­osuudella hoito­luokassa II tai III."})
@@ -67,25 +65,19 @@
                                              rivit))
                   laatuarvot (mapv (fn [arvo]
                                      (laske-kuntoarvon-summa tarkastukset arvo))
-                                   (range 1 6))]
-              (-> yhdistettava-rivi
-                  ; Laatuarvojen summat
-                  (assoc :laatuarvo-1-summa (nth laatuarvot 0))
-                  (assoc :laatuarvo-2-summa (nth laatuarvot 1))
-                  (assoc :laatuarvo-3-summa (nth laatuarvot 2))
-                  (assoc :laatuarvo-4-summa (nth laatuarvot 3))
-                  (assoc :laatuarvo-5-summa (nth laatuarvot 4))
-                  (assoc :laatuarvot-yhteensa (reduce + laatuarvot))
-                  (assoc :laatuarvo-1+2-summa (reduce + [(first laatuarvot)
-                                                         (second laatuarvot)]))
-                  ; Laatupoikkeama
-                  (assoc :laatupoikkeama (laatupoikkeama-tapahtunut? yhdistettava-rivi))
-                  ; Laatuarvojen prosenttiosuudet
-                  (assoc :laatuarvo-1-osuus (Math/round (laske-luvun-osuus laatuarvot 0)))
-                  (assoc :laatuarvo-2-osuus (Math/round (laske-luvun-osuus laatuarvot 1)))
-                  (assoc :laatuarvo-3-osuus (Math/round (laske-luvun-osuus laatuarvot 2)))
-                  (assoc :laatuarvo-4-osuus (Math/round (laske-luvun-osuus laatuarvot 3)))
-                  (assoc :laatuarvo-5-osuus (Math/round (laske-luvun-osuus laatuarvot 4))))))
+                                   (range 1 6))
+                  laatuarvot-yhteensa (reduce + laatuarvot)]
+              (merge yhdistettava-rivi
+                     (zipmap (range 1 6)
+                             (map (juxt
+                                   ;; laatuarvon summa
+                                   #(nth laatuarvot %)
+                                   ;; laatuarvon summan osuus
+                                   #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
+                                  (range 5)))
+                     {:laatuarvot-yhteensa laatuarvot-yhteensa
+                      :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))                     
+                      :laatupoikkeama (laatupoikkeama-tapahtunut? yhdistettava-rivi)})))
           (keys tarkastusryhmat))))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
@@ -131,7 +123,67 @@
                                    :loppupvm  loppupvm
                                    :tienumero tienumero})))
 
+(def taulukon-otsikot
+  [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+   {:leveys 5 :otsikko "Tie"}
+   {:leveys 6 :otsikko "Aosa"}
+   {:leveys 6 :otsikko "Aet"}
+   {:leveys 6 :otsikko "Losa"}
+   {:leveys 6 :otsikko "Let"}
+   {:leveys 6 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+   {:leveys 8 :otsikko "1"}
+   {:leveys 8 :otsikko "2"}
+   {:leveys 8 :otsikko "3"}
+   {:leveys 8 :otsikko "4"}
+   {:leveys 8 :otsikko "5"}
+   {:leveys 8 :otsikko "Yht"}
+   {:leveys 8 :otsikko "1+2"}
+   {:leveys 8 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}])
 
+(def tr-kentat [[:tr :numero]
+                [:tr :alkuosa]
+                [:tr :alkuetaisyys]
+                [:tr :loppuosa]
+                [:tr :loppuetaisyys]])
+
+(defn raportti-rivi [rivi]
+  (vec (concat
+        ;; päivämäärä
+        [(pvm/pvm (:aika rivi))]
+        
+        ;; tie,aosa,aet,losa,let
+        (map #(get-in rivi %) tr-kentat)
+
+        ;; hoitoluokka
+        [(:hoitoluokka rivi)] 
+        
+        ;; arvot ja prosentit 1-5
+        (map #(str (get-in rivi [% 0]) " (" (get-in rivi [% 1]) "%)") (range 1 6))
+        
+        ;; yhteensä, 1+2 yhteensä ja laatupoikkeama
+        [(str (:laatuarvot-yhteensa rivi) " (100%)")
+         (str (:laatuarvo-1+2-summa rivi) " (" (+ (get-in rivi [1 1])
+                                                  (get-in rivi [2 1])) "%)")
+         (when (:laatupoikkeama rivi)
+           (str "Kyllä" " (" (:laatupoikkeama rivi) ")"))])))
+
+(defn yhteensa-rivi [naytettavat-rivit]
+  (let [laatuarvo-summat (map (fn [arvo]
+                                (reduce + (keep #(get-in % [arvo 0])  naytettavat-rivit)))
+                              (range 1 6))
+        laatuarvot-1+2-summa (+ (first laatuarvo-summat)
+                                (second laatuarvo-summat))
+        laatuarvo-summat-yhteensa (reduce + laatuarvo-summat)
+        laatuarvot-1+2-osuus (if (not= laatuarvo-summat-yhteensa 0)
+                               (Math/round (* (float (/ laatuarvot-1+2-summa
+                                                        laatuarvo-summat-yhteensa)) 100))
+                               0)]
+    (vec (concat ["Yhteensä" nil nil nil nil nil nil]
+                 (map #(str (nth laatuarvo-summat %) " (" (Math/round (osuus-prosentteina (nth laatuarvo-summat %) laatuarvo-summat-yhteensa)) "%)")
+                      (range 5))
+                 [(str laatuarvo-summat-yhteensa " (100%)")
+                  (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
+                  nil]))))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
   (roolit/vaadi-rooli user "tilaajan kayttaja")
@@ -161,71 +213,15 @@
      [:taulukko {:otsikko                    otsikko
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :viimeinen-rivi-yhteenveto? true}
-      [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
-       {:leveys 5 :otsikko "Tie"}
-       {:leveys 6 :otsikko "Aosa"}
-       {:leveys 6 :otsikko "Aet"}
-       {:leveys 6 :otsikko "Losa"}
-       {:leveys 6 :otsikko "Let"}
-       {:leveys 6 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
-       {:leveys 8 :otsikko "1"}
-       {:leveys 8 :otsikko "2"}
-       {:leveys 8 :otsikko "3"}
-       {:leveys 8 :otsikko "4"}
-       {:leveys 8 :otsikko "5"}
-       {:leveys 8 :otsikko "Yht"}
-       {:leveys 8 :otsikko "1+2"}
-       {:leveys 8 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}]
-      (keep identity
-            (conj
+      taulukon-otsikot
+      (remove nil?
+              (conj
               ;; Raportin varsinainen data
               (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                naytettavat-rivit
-                :urakka
-                (fn [rivi]
-                  [(pvm/pvm (:aika rivi))
-                   (get-in rivi [:tr :numero])
-                   (get-in rivi [:tr :alkuosa])
-                   (get-in rivi [:tr :alkuetaisyys])
-                   (get-in rivi [:tr :loppuosa])
-                   (get-in rivi [:tr :loppyetaisyys])
-                   (:hoitoluokka rivi)
-                   (str (:laatuarvo-1-summa rivi) " (" (:laatuarvo-1-osuus rivi) "%)")
-                   (str (:laatuarvo-2-summa rivi) " (" (:laatuarvo-2-osuus rivi) "%)")
-                   (str (:laatuarvo-3-summa rivi) " (" (:laatuarvo-3-osuus rivi) "%)")
-                   (str (:laatuarvo-4-summa rivi) " (" (:laatuarvo-4-osuus rivi) "%)")
-                   (str (:laatuarvo-5-summa rivi) " (" (:laatuarvo-5-osuus rivi) "%)")
-                   (str (:laatuarvot-yhteensa rivi) " (100%)")
-                   (str (:laatuarvo-1+2-summa rivi) " (" (+ (:laatuarvo-1-osuus rivi)
-                                                            (:laatuarvo-2-osuus rivi)) "%)")
-                   (when (:laatupoikkeama rivi)
-                     (str "Kyllä" " (" (:laatupoikkeama rivi) ")"))]))
+                naytettavat-rivit :urakka raportti-rivi)
               ;; Yhteensä-rivi, jos tarvitaan
               (when (not (empty? naytettavat-rivit))
-                (let [laske-laatuarvojen-kokonaissumma (fn [arvo-avain rivit]
-                                                         (reduce + (mapv arvo-avain rivit)))
-                      laatuarvo-summat [(laske-laatuarvojen-kokonaissumma :laatuarvo-1-summa naytettavat-rivit)
-                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-2-summa naytettavat-rivit)
-                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-3-summa naytettavat-rivit)
-                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-4-summa naytettavat-rivit)
-                                        (laske-laatuarvojen-kokonaissumma :laatuarvo-5-summa naytettavat-rivit)]
-                      laatuarvot-1+2-summa (reduce + [(first laatuarvo-summat)
-                                                      (second laatuarvo-summat)])
-                      laatuarvo-summat-yhteensa (reduce + laatuarvo-summat)
-                      laatuarvot-1+2-osuus (if (not= laatuarvo-summat-yhteensa 0)
-                                             (Math/round (* (float (/ laatuarvot-1+2-summa
-                                                                      laatuarvo-summat-yhteensa)) 100))
-                                             0)]
-
-                  ["Yhteensä" nil nil nil nil nil nil
-                   (str (nth laatuarvo-summat 0) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 0)) "%)")
-                   (str (nth laatuarvo-summat 1) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 1)) "%)")
-                   (str (nth laatuarvo-summat 2) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 2)) "%)")
-                   (str (nth laatuarvo-summat 3) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 3)) "%)")
-                   (str (nth laatuarvo-summat 4) " (" (Math/round (laske-luvun-osuus laatuarvo-summat 4)) "%)")
-                   (str laatuarvo-summat-yhteensa " (100%)")
-                   (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
-                   nil]))))]
+                (yhteensa-rivi naytettavat-rivit))))]
      ;; Poikkeamien selitykset
      (when ainakin-yksi-poikkeama?
        [:yhteenveto
