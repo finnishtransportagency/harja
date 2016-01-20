@@ -75,6 +75,56 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
     (:tyyppi parametri)))
 
 
+(defonce parametri-arvot (atom {}))
+(tarkkaile! "Parametri arvot: " parametri-arvot)
+(defonce tyhjenna-raportti-kun-parametri-muuttuvat
+  (run! @parametri-arvot
+        (reset! suoritettu-raportti nil)))
+
+
+(defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
+(defonce valittu-vuosi (reaction
+                        (when-not @hoitourakassa?
+                          (pvm/vuosi (pvm/nyt)))))
+(defonce valittu-hoitokausi (reaction (when @hoitourakassa?
+                                        @u/valittu-hoitokausi)))
+(defonce kuukaudet (reaction
+                    (let [hk @valittu-hoitokausi
+                          vuosi @valittu-vuosi]
+                      (into
+                       []
+                       ;; koko hoitokausi tai vuosi
+                       (concat
+                        [nil]
+                        (cond
+                          hk
+                          (pvm/hoitokauden-kuukausivalit hk)
+
+                          vuosi
+                          (pvm/vuoden-kuukausivalit vuosi)
+
+                          :default
+                          []))))))
+
+(defonce valittu-kuukausi (reaction @nav/valittu-urakka nil))
+(defonce vapaa-aikavali? (atom false))
+(defonce vapaa-aikavali (atom [nil nil]))
+
+(defonce paivita-aikavalinta
+    (run! (let [hk @valittu-hoitokausi
+              vuosi @valittu-vuosi
+              kk @valittu-kuukausi
+              vapaa-aikavali? @vapaa-aikavali?
+              aikavali @vapaa-aikavali
+              [alku loppu] (cond
+                             vapaa-aikavali? aikavali
+                             kk kk
+                             vuosi (pvm/vuoden-aikavali vuosi)
+                             :default hk)]
+            (log "RESET aikaväli")
+            (swap! parametri-arvot
+                   assoc "Aikaväli" {:alkupvm alku :loppupvm loppu}))))
+
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
   ;; vuosi (joko urakkavuodet tai generoitu lista)
@@ -84,88 +134,45 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
   ;;
   ;; Jos valittuna on urakka, joka ei ole tyyppiä hoito,
   ;; ei näytetä hoitokausivalintaa.
+  (let [ur @nav/valittu-urakka
+        hoitourakassa? @hoitourakassa?
+        hal @nav/valittu-hallintayksikko
+        vuosi-eka (if ur
+                    (pvm/vuosi (:alkupvm ur))
+                    2010)
+        vuosi-vika (if ur
+                     (pvm/vuosi (:loppupvm ur))
+                     (pvm/vuosi (pvm/nyt)))]
+    [:span
+     [:div
+      [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
+       vuosi-eka vuosi-vika valittu-vuosi
+       #(do
+          (reset! valittu-vuosi %)
+          (reset! valittu-hoitokausi nil)
+          (reset! valittu-kuukausi nil))]
+      (when (or hoitourakassa? (nil? ur))
+        [ui-valinnat/hoitokausi
+         {:disabled @vapaa-aikavali?}
+         (if hoitourakassa?
+           (u/hoitokaudet ur)
+           (u/edelliset-hoitokaudet 5 true))
+         valittu-hoitokausi
+         #(do
+            (reset! valittu-hoitokausi %)
+            (reset! valittu-vuosi nil)
+            (reset! valittu-kuukausi nil))])
+      [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
+                             :nil-valinta (if @valittu-vuosi
+                                            "Koko vuosi"
+                                            "Koko hoitokausi")}
+       @kuukaudet valittu-kuukausi]]
 
-  (let [ur (reaction @nav/valittu-urakka)
-        hoitourakassa? (reaction (= :hoito (:tyyppi @ur)))
-        valittu-vuosi (reaction
-                        @nav/valittu-urakka
-                        (when-not @hoitourakassa? (pvm/vuosi (pvm/nyt))))
-        valittu-hoitokausi (reaction (when @hoitourakassa?
-                                       @u/valittu-hoitokausi))
-        kuukaudet (reaction
-                   (let [hk @valittu-hoitokausi
-                         vuosi @valittu-vuosi]
-                     (into
-                      []
-                      ;; koko hoitokausi tai vuosi
-                      (concat
-                       [nil]
-                       (cond
-                         hk
-                         (pvm/hoitokauden-kuukausivalit hk)
-
-                         vuosi
-                         (pvm/vuoden-kuukausivalit vuosi)
-
-                         :default
-                         [])))))
-        valittu-kuukausi (reaction
-                           @nav/valittu-urakka
-                           nil)
-        vapaa-aikavali? (atom false)
-        vapaa-aikavali (atom [nil nil])]
-    (run! (let [hk @valittu-hoitokausi
-                vuosi @valittu-vuosi
-                kk @valittu-kuukausi
-                vapaa-aikavali? @vapaa-aikavali?
-                aikavali @vapaa-aikavali
-                [alku loppu] (cond
-                               vapaa-aikavali? aikavali
-                               kk kk
-                               vuosi (pvm/vuoden-aikavali vuosi)
-                               :default hk)]
-            (reset! arvo {:alkupvm alku :loppupvm loppu})))
-
-    (fn [_ _]
-      (let [ur @ur
-            hoitourakassa? @hoitourakassa?
-            hal @nav/valittu-hallintayksikko
-            vuosi-eka (if ur
-                        (pvm/vuosi (:alkupvm ur))
-                        2010)
-            vuosi-vika (if ur
-                         (pvm/vuosi (:loppupvm ur))
-                         (pvm/vuosi (pvm/nyt)))]
-        [:span
-         [:div
-          [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
-           vuosi-eka vuosi-vika valittu-vuosi
-           #(do
-              (reset! valittu-vuosi %)
-              (reset! valittu-hoitokausi nil)
-              (reset! valittu-kuukausi nil))]
-          (when (or hoitourakassa? (nil? ur))
-            [ui-valinnat/hoitokausi
-             {:disabled @vapaa-aikavali?}
-             (if hoitourakassa?
-               (u/hoitokaudet ur)
-               (u/edelliset-hoitokaudet 5 true))
-             valittu-hoitokausi
-             #(do
-                (reset! valittu-hoitokausi %)
-                (reset! valittu-vuosi nil)
-                (reset! valittu-kuukausi nil))])
-          [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
-                                 :nil-valinta (if @valittu-vuosi
-                                                "Koko vuosi"
-                                                "Koko hoitokausi")}
-           @kuukaudet valittu-kuukausi]]
-
-         [:div.raportin-valittu-aikavali
-          [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
-           #(swap! vapaa-aikavali? not)
-           nil false (when @vapaa-aikavali?
-                       [ui-valinnat/aikavali vapaa-aikavali])]]]))))
+     [:div.raportin-valittu-aikavali
+      [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
+       #(swap! vapaa-aikavali? not)
+       nil false (when @vapaa-aikavali?
+                   [ui-valinnat/aikavali vapaa-aikavali])]]]))
 
 (def tienumero (atom nil))
 
@@ -244,10 +251,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
 
 (def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
-(defonce parametri-arvot (atom {}))
-(defonce tyhjenna-raportti-kun-parametri-muuttuvat
-  (run! @parametri-arvot
-        (reset! suoritettu-raportti nil)))
+
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
@@ -390,12 +394,12 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
            [:div.raportin-asetukset
             [raportin-parametrit @valittu-raporttityyppi konteksti v-ur v-hal]])]))))
 
-(defn nayta-raportti [r]
+(defn nayta-raportti [tyyppi r]
   (komp/luo
    (komp/lippu-arvo false true nav/murupolku-nakyvissa?)
-   (fn [r]
+   (fn [tyyppi r]
      [:span
-      [raportti/muodosta-html r]])))
+      [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
 
 (defn raporttivalinnat-ja-raportti []
   (let [v-ur @nav/valittu-urakka
@@ -417,7 +421,7 @@ Raporttia ei voi suorittaa, jos parametreissä on virheitä"
              [yleiset/ajax-loader "Raporttia suoritetaan..."]
              
              (not (nil? r))
-             [nayta-raportti r])])))
+             [nayta-raportti @valittu-raporttityyppi r])])))
 
 (defn raportit []
   (komp/luo

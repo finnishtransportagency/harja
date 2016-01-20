@@ -73,4 +73,4 @@
              " Lataa PDF"]])
          
          (when-let [tiedot @laskutusyhteenvedon-tiedot]
-           [muodosta-html tiedot])]))))
+           [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)])]))))
