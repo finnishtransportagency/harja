@@ -95,6 +95,11 @@
                                                       (fmt/euro-opt (:toteutuneet_kustannukset rivi))])])))
                         naytettavat-rivit)
                   (when (not (empty? naytettavat-rivit))
-                    ["Yhteensä" nil nil nil nil
-                     (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
-                     (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])))]]))
+                    (if (= konteksti :urakka)
+                      ["Yhteensä" nil nil nil nil
+                       (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
+                       (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))]
+                      (flatten [(if urakoittain? ["Yhteensä" ""]
+                                                 ["Yhteensä"])
+                                                 nil
+                                                 (fmt/euro-opt (reduce + (keep :toteutunut_maara naytettavat-rivit)))])))))]]))
