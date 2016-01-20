@@ -5,7 +5,7 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -31,6 +31,8 @@
 
 (defonce ilmoitushaku (atom 0))
 
+(defonce uusi-kuittaus (atom nil))
+
 (defn hae-ilmoitukset []
   (go (swap! ilmoitushaku inc)))
 
@@ -43,6 +45,9 @@
         (assoc ilmo :kuittaukset
                     (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
       tulos)))
+
+(defn tallenna-uusi-kuittaus [kuittaus]
+  (k/post! :tallenna-ilmoitustoimenpide kuittaus))
 
 (defonce haetut-ilmoitukset
   (reaction<! [valinnat @valinnat

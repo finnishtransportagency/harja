@@ -3,12 +3,13 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
+                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
@@ -19,7 +20,9 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [clojure.string :refer [capitalize]]
-            [harja.views.kartta :as kartta]))
+            [harja.views.kartta :as kartta]
+            [harja.views.ilmoituskuittaukset :as kuittaukset]
+            [harja.ui.ikonit :as ikonit]))
 
 (defn pollauksen-merkki
   []
@@ -41,117 +44,55 @@
 
     (str "Ei tierekisteriosoitetta")))
 
-(defn nayta-henkilo
-  "Palauttaa merkkijonon mallia 'Etunimi Sukunimi, Organisaatio Y1234'"
-  [henkilo]
-  (when henkilo
-    (str
-      (:etunimi henkilo)
-      (when (and (:etunimi henkilo) (:sukunimi henkilo)) " ")
-      (:sukunimi henkilo)
-      (when
-        (and
-          (or (:etunimi henkilo) (:sukunimi henkilo))
-          (or (:organisaatio henkilo) (:ytunnus henkilo)))
-
-        ", ")
-      (:organisaatio henkilo)
-      (when (and (:ytunnus henkilo) (:organisaatio henkilo)) " ")
-      (:ytunnus henkilo))))
-
-(defn parsi-puhelinnumero
-  [henkilo]
-  (let [tp (:tyopuhelin henkilo)
-        mp (:matkapuhelin henkilo)
-        puh (:puhelinnumero henkilo)
-        tulos (when henkilo
-                (str
-                  (if puh                                   ;; Jos puhelinnumero löytyy, käytetään vaan sitä
-                    (str puh)
-                    (when (or tp mp)
-                      (if (and tp mp (not (= tp mp)))       ;; Jos on matkapuhelin JA työpuhelin, ja ne ovat erit..
-                        (str tp " / " mp)
-
-                        (str (or mp tp)))                   ;; Muuten käytetään vaan jompaa kumpaa
-
-                      ))))]
-    (if (empty? tulos) nil tulos)))
-
-(defn parsi-yhteystiedot
-  "Palauttaa merkkijonon, jossa on henkilön puhelinnumero(t) ja sähköposti.
-  Ilmoituksen lähettäjällä on vain 'puhelinnumero', muilla voi olla matkapuhelin ja/tai työpuhelin."
-  [henkilo]
-  (let [puhelin (parsi-puhelinnumero henkilo)
-        sp (:sahkoposti henkilo)
-        tulos (when henkilo
-                (str
-                  (or puhelin)
-                  (when (and puhelin sp) ", ")
-                  (when sp (str sp))))]
-    (if (empty? tulos) nil tulos)))
-
-(defn kuittauksen-tiedot
-  [kuittaus]
-  (with-meta
-    [bs/panel
-     {:class "kuittaus-viesti"}
-     (capitalize (name (:kuittaustyyppi kuittaus)))
-     [:span
-      [yleiset/tietoja {}
-       "Kuitattu: " (pvm/pvm-aika-sek (:kuitattu kuittaus))
-       "Lisätiedot: " (:vapaateksti kuittaus)]
-      [:br]
-      [yleiset/tietoja {}
-       "Kuittaaja: " (nayta-henkilo (:kuittaaja kuittaus))
-       "Puhelinnumero: " (parsi-puhelinnumero (:kuittaaja kuittaus))
-       "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]]]
-    {:key (:id kuittaus)}))
-
-(defn luo-ilmoituksen-otsikko [ilm]
-  (case (:ilmoitustyyppi ilm)
-    :kysely "Tieliikennekeskukseen saapunut kysely"
-    (capitalize (name (:ilmoitustyyppi ilm)))))
-
-(defn ilmoituksen-tiedot
-  []
+(defn ilmoituksen-tiedot []
   (let [ilmoitus @tiedot/valittu-ilmoitus]
     [:div
-     [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
-     (urakan-sivulle-nappi ilmoitus)
-     (pollauksen-merkki)
-     [bs/panel {}
-      (luo-ilmoituksen-otsikko ilmoitus)
-      [:span
-       [yleiset/tietoja {}
-        "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-        "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
-        "Otsikko: " (:otsikko ilmoitus)
-        "Lyhyt selite: " (:lyhytselite ilmoitus)
-        "Pitkä selite: " (when (:pitkaselite ilmoitus)
-                           [yleiset/pitka-teksti (:pitkaselite ilmoitus)])]
+     (if-not @tiedot/uusi-kuittaus
+       [:span
+        [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
+        (urakan-sivulle-nappi ilmoitus)
+        (pollauksen-merkki)
+        [bs/panel {}
+         (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
+         [:span
+          [yleiset/tietoja {}
+           "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+           "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
+           "Otsikko: " (:otsikko ilmoitus)
+           "Lyhyt selite: " (:lyhytselite ilmoitus)
+           "Pitkä selite: " (when (:pitkaselite ilmoitus)
+                              [yleiset/pitka-teksti (:pitkaselite ilmoitus)])]
 
-       [:br]
-       [yleiset/tietoja {}
-        "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
-                            tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
-                        (if (and henkilo tyyppi)
-                          (str henkilo ", " tyyppi)
-                          (str (or henkilo tyyppi))))
-        "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
-        "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+          [:br]
+          [yleiset/tietoja {}
+           "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
+                               tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
+                           (if (and henkilo tyyppi)
+                             (str henkilo ", " tyyppi)
+                             (str (or henkilo tyyppi))))
+           "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
+           "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
 
-       [:br]
-       [yleiset/tietoja {}
-        "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
-        "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
-        "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
+          [:br]
+          [yleiset/tietoja {}
+           "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
+           "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
+           "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
+        [bs/panel {}
+         "Kuittaukset"
+         [:div
+          (napit/uusi "Uusi kuittaus" #(reset! tiedot/uusi-kuittaus
+                                                          {:ilmoitusid (:ilmoitusid @tiedot/valittu-ilmoitus)
+                                                            :tyyppi     :vastaanotettu}) {:luokka "uusi-kuittaus-nappi"})
+          (when-not (empty? (:kuittaukset ilmoitus))
+            [:div
+             (for [kuittaus (:kuittaukset ilmoitus)]
+               (kuittaukset/kuittauksen-tiedot kuittaus))])]]]
 
-     (when-not (empty? (:kuittaukset ilmoitus))
        [bs/panel {}
-        "Kuittaukset"
+        "Uusi kuittaus"
         [:div
-         (for [kuittaus (:kuittaukset ilmoitus)]
-           (kuittauksen-tiedot kuittaus))]])]))
+         [kuittaukset/uusi-kuittaus-lomake]]])]))
 
 (defn ilmoitusten-paanakyma
   []
@@ -216,8 +157,10 @@
        [:div
         (pollauksen-merkki)
         [grid
-         {:tyhja         (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu #(do (reset! tiedot/valittu-ilmoitus %))
+         {:tyhja             (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
+          :rivi-klikattu     #(do
+                               (log "Avataan ilmoitus")
+                               (reset! tiedot/valittu-ilmoitus %))
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}

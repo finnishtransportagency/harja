@@ -89,6 +89,10 @@
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
     tulos))
 
+(defn tallenna-ilmoitustoimenpide [db kayttaja ilmoitustoimenpide]
+  (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
+  ())
+
 (defrecord Ilmoitukset []
   component/Lifecycle
   (start [this]
@@ -99,10 +103,14 @@
                                          (:urakka tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                          (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
                                          (:hakuehto tiedot))))
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-ilmoitustoimenpide
+                      (fn [user tiedot]
+                        (tallenna-ilmoitustoimenpide (:db this) user tiedot)))
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this)
-                     :hae-ilmoitukset)
+    (poista-palvelut (:http-palvelin this) :hae-ilmoitukset)
+    (poista-palvelut (:http-palvelin this) :tallenna-ilmoitustoimenpide)
 
     this))
