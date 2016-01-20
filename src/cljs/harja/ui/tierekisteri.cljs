@@ -51,6 +51,27 @@
                                       " "
                                       [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]]))
 
+(defn konvertoi-tr-osoitteeksi [osoite]
+  {:numero (:tie osoite)
+   :alkuosa (:aosa osoite)
+   :alkuetaisyys (:aet osoite)
+   :geometria (:geometria osoite)
+   :loppuosa (:losa osoite)
+   :loppuetaisyys (:let osoite)})
+
+(defn konvertoi-pistemaiseksi-tr-osoitteeksi [osoite]
+  {:numero (:tie osoite)
+   :alkuosa (:aosa osoite)
+   :alkuetaisyys (:aet osoite)
+   :geometria (:geometria osoite)})
+
+(defn nayta-alkupiste-ohjelaatikossa [osoite]
+  (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
+                                      (str "Valittu alkupiste: "
+                                           (:numero osoite) " / "
+                                           (:alkuosa osoite) " / "
+                                           (:alkuetaisyys osoite))]))
+
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
   Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
@@ -94,14 +115,13 @@
             ((:kun-valmis @optiot) @tr-osoite)
             (poistu-tr-valinnasta))
 
-          ;; karttaa klikattu, jos alkupiste oli jo valittu, hae tr-osoite kahdella positeellä
           :click
           (if (= :alku-valittu @tila)
             (>! vkm-haku (<! (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)))
             (do
-              ;; muuten pistä alkupiste muistiin ja hae yhdelle pisteelle
               (reset! alkupiste sijainti)
-              (>! vkm-haku (<! (vkm/koordinaatti->trosoite sijainti))))))          
+              (>! vkm-haku (<! (vkm/koordinaatti->trosoite sijainti))))))
+        
         (recur (<! tapahtumat))))
 
     (go-loop [osoite (<! vkm-haku)]
@@ -109,43 +129,21 @@
         (if (vkm/virhe? osoite)
           (pisteelle-ei-loydy-tieta-ilmoitus)          
           (let [{:keys [kun-valmis paivita]} @optiot]
-            (do
-              (kartta/tyhjenna-ohjelaatikko)
-              (case @tila
-                :ei-valittu
-                (let [osoite (swap! tr-osoite
-                                    (fn [tr]
-                                      (dissoc (merge tr
-                                                     {:numero (:tie osoite)
-                                                      :alkuosa (:aosa osoite)
-                                                      :alkuetaisyys (:aet osoite)
-                                                      :geometria (:geometria osoite)})
-                                              :loppuosa
-                                              :loppuetaisyys)))]
-                  (paivita osoite)
-                  (karttatasot/taso-paalle! :tr-alkupiste)
-                  (reset! tila :alku-valittu) 
-                  (let [piste (:geometria osoite)] 
-                    (swap! tr-osoite assoc :geometria piste)
-                    (reset! tierekisteri/valittu-alkupiste piste))
-                  (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
-                                                      (str "Valittu alkupiste: "
-                                                           (:numero osoite) " / "
-                                                           (:alkuosa osoite) " / "
-                                                           (:alkuetaisyys osoite))]))
+            (kartta/tyhjenna-ohjelaatikko)
+            (case @tila
+              :ei-valittu
+              (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
+                (paivita osoite)
+                (karttatasot/taso-paalle! :tr-alkupiste)
+                (reset! tila :alku-valittu) 
+                (reset! tierekisteri/valittu-alkupiste (:geometria osoite))
+                (nayta-alkupiste-ohjelaatikossa osoite))
 
-                
-                :alku-valittu
-                (let [osoite (swap! tr-osoite
-                                    merge
-                                    {:numero (:tie osoite)
-                                     :alkuosa (:aosa osoite)
-                                     :alkuetaisyys (:aet osoite)
-                                     :loppuosa (:losa osoite)
-                                     :loppuetaisyys (:let osoite)
-                                     :geometria (:geometria osoite)})]
-                  (poistu-tr-valinnasta)
-                  (kun-valmis osoite))))))
+              :alku-valittu
+              (let [osoite (reset! tr-osoite (konvertoi-tr-osoitteeksi osoite))]
+                (poistu-tr-valinnasta)
+                (kun-valmis osoite)))))
+        
         (recur (<! vkm-haku))))
 
     (let [kartan-koko @nav/kartan-koko]
