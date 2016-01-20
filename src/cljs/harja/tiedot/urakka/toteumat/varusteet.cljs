@@ -70,12 +70,12 @@
 
 (def karttataso-varustetoteuma (atom false))
 
-(defn- selite [toteuma]
+(defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
   (str
-   (varuste-toimenpide->string (:toimenpide toteuma))
-   ": "
-   (:tietolaji toteuma)
-   " (" (pvm/pvm (:alkupvm toteuma)) " )"))
+   (pvm/pvm alkupvm) " "
+   (varuste-toimenpide->string toimenpide)
+   " "
+   (tietolaji->selitys tietolaji)))
 
 (def varusteet-kartalla
   (reaction
