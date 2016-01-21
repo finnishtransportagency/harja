@@ -36,7 +36,7 @@
               (when nakymassa?
                 (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
-(tarkkaile! "Haetut toteumat: " haetut-toteumat)
+(tarkkaile! "Varustetoteumat: " haetut-toteumat)
 
 (def varuste-toimenpide->string {:lisatty    "Lisätty"
                                  :paivitetty "Päivitetty"

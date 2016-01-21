@@ -655,29 +655,35 @@ SELECT
   tunniste,
   toimenpide,
   tietolaji,
-  tr_numero        AS tie,
-  tr_alkuosa       AS aosa,
-  tr_alkuetaisyys  AS aet,
-  tr_loppuosa      AS losa,
-  tr_loppuetaisyys AS let,
+  tr_numero               AS tie,
+  tr_alkuosa              AS aosa,
+  tr_alkuetaisyys         AS aet,
+  tr_loppuosa             AS losa,
+  tr_loppuetaisyys        AS let,
   piiri,
   kuntoluokka,
   karttapvm,
   tr_puoli,
   tr_ajorata,
-  t.alkanut        AS alkupvm,
-  t.paattynyt      AS loppupvm,
+  t.alkanut               AS alkupvm,
+  t.paattynyt             AS loppupvm,
   arvot,
   tierekisteriurakkakoodi,
-  t.id             AS toteuma_id,
-  t.reitti         AS reitti
+  t.id                    AS toteuma_id,
+  t.reitti                AS reitti,
+  tt.id                   AS toteumatehtava_id,
+  tt.toimenpidekoodi      AS toteumatehtava_toimenpidekoodi,
+  tt.maara                AS toteumatehtava_maara
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
+  LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND alkanut >= :alkupvm
       AND alkanut <= :loppupvm
       AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
+      AND t.poistettu IS NOT TRUE
+      AND tt.poistettu IS NOT TRUE
 ORDER BY t.alkanut
 LIMIT 501;
 

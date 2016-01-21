@@ -515,7 +515,8 @@
                                                      tienumero))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
-                                  {:reittipiste :reittipisteet}
+                                  {:reittipiste :reittipisteet
+                                   :toteumatehtava :toteumatehtavat}
                                   :id)]
     (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
     kasitellyt-toteumarivit))
