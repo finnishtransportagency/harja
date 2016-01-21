@@ -171,21 +171,24 @@
                         :leveys-col    6
                         :pakollinen?   true
                         :nimi          :tyyppi
-                        :aseta         (fn [sanktio tyyppi]
+                        :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
                                          (assoc sanktio
                                            :tyyppi tyyppi
-                                           :toimenpideinstanssi (:tpi_id (first
-                                                                           (filter
-                                                                             #(= (:toimenpidekoodi tyyppi) (:id %))
-                                                                             @tiedot-urakka/urakan-toimenpideinstanssit)))))
+                                           :toimenpideinstanssi
+                                           (when tpk
+                                             (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
                         ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
                         :valinnat-fn   (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
                         :valinta-nayta :nimi
                         :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
-         #_{:otsikko "Toimenpidekoodi" :nimi :toimenpidekoodi
-          :hae     (comp :toimenpidekoodi :tyyppi)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:tyyppi :toimenpidekoodi] arvo))
-          :leveys  1 :tyyppi :string}]
+         {:otsikko       "Toimenpide"
+          :nimi          :toimenpideinstanssi
+          :tyyppi        :valinta
+          :valinta-arvo  :tpi_id
+          :valinta-nayta :tpi_nimi
+          :valinnat   @tiedot-urakka/urakan-toimenpideinstanssit
+          :leveys-col    3
+          :validoi       [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}]
         @muokattu]])))
 
 (defn sanktiolistaus
