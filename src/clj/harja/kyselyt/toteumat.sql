@@ -673,10 +673,12 @@ SELECT
   t.reitti                AS reitti,
   tt.id                   AS toteumatehtava_id,
   tt.toimenpidekoodi      AS toteumatehtava_toimenpidekoodi,
-  tt.maara                AS toteumatehtava_maara
+  tt.maara                AS toteumatehtava_maara,
+  tpk.nimi                AS toteumatehtava_nimi
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+  LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND alkanut >= :alkupvm
