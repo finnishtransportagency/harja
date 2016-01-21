@@ -23,8 +23,8 @@
    {:otsikko      "Tehtävät"
     :tyhja        (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan tehtäviä..."] "Tehtäviä  ei löytynyt")
     :tunniste     :id}
-   [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 2}
-    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 3}]
+   [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 3}
+    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 2}]
    toteumatehtavat])
 
 (defn toteumataulukko []
@@ -38,7 +38,8 @@
                        (range)
                        (map
                          (fn [toteuma]
-                           [varustetoteuman-tehtavat (:toteumatehtavat toteuma)])
+                           (when (:toteumatehtavat toteuma)
+                           [varustetoteuman-tehtavat (:toteumatehtavat toteuma)]))
                          toteumat))}
       [{:tyyppi :vetolaatikon-tila :leveys 5}
        {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
