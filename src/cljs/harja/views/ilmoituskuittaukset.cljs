@@ -40,12 +40,13 @@
       :otsikko       "Tyyppi"
       :pakollinen?   true
       :tyyppi        :valinta
-      :valinnat      [:vastaanotettu :aloitettu :lopetettu :muutos]
+      :valinnat      [:vastaanotto :aloitus :lopetus :muutos :vastaus]
       :valinta-nayta #(case %
-                       :vastaanotettu "Vastaanotettu"
-                       :aloitettu "Aloitettu"
-                       :lopetettu "Lopetettu"
+                       :vastaanotto "Vastaanotettu"
+                       :aloitus "Aloitettu"
+                       :lopetus "Lopetettu"
                        :muutos "Muutos"
+                       :vstaus "Vastaus"
                        "- valitse -")
       :leveys-col    4}
      {:nimi        :vapaateksti

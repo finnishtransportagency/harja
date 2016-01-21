@@ -2,12 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konv]
-            [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
-            [clj-time.core :as t]
             [clj-time.coerce :refer [from-sql-time]]
-
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]))
 
@@ -91,7 +87,27 @@
 
 (defn tallenna-ilmoitustoimenpide [db kayttaja ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
-  ())
+  ;; todo: tallenna kantaan ja lähetä t-loik:n
+  (q/luo-ilmoitustoimenpide<! db
+                              (:ilmoituksen-id ilmoitustoimenpide)
+                              (:ulkoinen-ilmoitusid ilmoitustoimenpide)
+                              (harja.pvm/nyt)
+                              (:vapaateksti ilmoitustoimenpide)
+                              (name (:tyyppi ilmoitustoimenpide))
+                              (:kasittelija-etunimi ilmoitustoimenpide)
+                              (:kasittelija-sukunimi ilmoitustoimenpide)
+                              (:kasittelija-tyopuhelin ilmoitustoimenpide)
+                              (:kasittelija-matkapuhelin ilmoitustoimenpide)
+                              (:kasittelija-sahkoposti ilmoitustoimenpide)
+                              (:kasittelija-organisaatio ilmoitustoimenpide)
+                              (:kasittelija-ytunnus ilmoitustoimenpide)
+                              (:ilmoittaja-etunimi ilmoitustoimenpide)
+                              (:ilmoittaja-sukunimi ilmoitustoimenpide)
+                              (:ilmoittaja-tyopuhelin ilmoitustoimenpide)
+                              (:ilmoittaja-matkapuhelin ilmoitustoimenpide)
+                              (:ilmoittaja-sahkoposti ilmoitustoimenpide)
+                              (:ilmoittaja-organisaatio ilmoitustoimenpide)
+                              (:ilmoittaja-ytunnus ilmoitustoimenpide)))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
