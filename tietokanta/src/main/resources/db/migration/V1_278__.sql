@@ -48,7 +48,9 @@ BEGIN
          a.osa AS aosa, 
          b.osa AS bosa,
          a.ajorata AS arata,
-         b.ajorata AS brata
+         b.ajorata AS brata,
+         a.tr_pituus AS apituus,
+         b.tr_pituus AS bpituus
     FROM tieverkko_paloina a, 
          tieverkko_paloina b 
    WHERE ST_DWithin(a.geom, alkupiste, treshold) 
@@ -98,7 +100,8 @@ ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
 
     -- jos multilinestring, interpoloidaan eri tavalla
     IF ST_NumGeometries(reitti)>1 THEN
-      -- do nothing, return all of the geometry
+      SELECT ST_Line_Substring(reitti, LEAST(alkuet/ST_Length(reitti), loppuet/ST_Length(reitti)),
+	                               GREATEST(alkuet/ST_Length(reitti), loppuet/ST_Length(reitti))) INTO reitti;
     ELSE       
       SELECT ST_Line_Substring(reitti, LEAST(ST_Line_Locate_Point(reitti, alkupiste), ST_Line_Locate_Point(reitti, loppupiste)),
 				        GREATEST(ST_Line_Locate_Point(reitti, alkupiste),ST_Line_Locate_Point(reitti, loppupiste))) INTO reitti;
