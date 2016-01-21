@@ -12,10 +12,12 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<!]]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [taoensso.truss :as truss :refer-macros [have]])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
+                   
                    ))
 
 (defonce valittu-sopimusnumero (let [val (atom nil)]
@@ -34,6 +36,10 @@
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
 (defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
+
+(defn urakan-toimenpideinstanssi-toimenpidekoodille [tpk]
+  (have integer? tpk)
+  (first (filter #(= tpk (:id %)) @urakan-toimenpideinstanssit)))
 
 (defn valitse-toimenpideinstanssi! [tpi]
   (reset! valittu-toimenpideinstanssi tpi))

@@ -12,8 +12,8 @@
 (defonce muut-tyot-kartalla (reaction
                               (when karttataso-muut-tyot
                                 (kartalla-esitettavaan-muotoon
-                                  (map
-                                    #(assoc % :tyyppi-kartalla :toteuma)
-                                    @muut-tyot/haetut-muut-tyot)
-                                  @muut-tyot/valittu-toteuma
-                                  [:toteuma :id]))))
+                                 @muut-tyot/haetut-muut-tyot
+                                 @muut-tyot/valittu-toteuma
+                                 [:toteuma :id]
+                                 (map
+                                  #(assoc % :tyyppi-kartalla :toteuma))))))

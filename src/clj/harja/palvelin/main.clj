@@ -15,6 +15,7 @@
    [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
    [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+   [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
 
    ;; Raportointi
    [harja.palvelin.raportointi :as raportointi]
@@ -70,7 +71,7 @@
    [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
    [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-   
+
    ;; Ajastetut tehtävät
    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
    [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
@@ -126,23 +127,32 @@
      :fim (fim/->FIM (:url (:fim asetukset)))
 
      ;; Sampo
-     :sampo (component/using (sampo/->Sampo (:lahetysjono-sisaan (:sampo asetukset))
-                                            (:kuittausjono-sisaan (:sampo asetukset))
-                                            (:lahetysjono-ulos (:sampo asetukset))
-                                            (:kuittausjono-ulos (:sampo asetukset))
-                                            (:paivittainen-lahetysaika (:sampo asetukset)))
+     :sampo (component/using (let [sampo (:sampo asetukset)]
+                               (sampo/->Sampo (:lahetysjono-sisaan sampo)
+                                              (:kuittausjono-sisaan sampo)
+                                              (:lahetysjono-ulos sampo)
+                                              (:kuittausjono-ulos sampo)
+                                              (:paivittainen-lahetysaika sampo)))
                              [:sonja :db :integraatioloki])
 
      ;; T-LOIK
-     :tloik (component/using (tloik/->Tloik (:ilmoitusviestijono (:tloik asetukset))
-                                            (:ilmoituskuittausjono (:tloik asetukset))
-                                            (:toimenpideviestijono (:tloik asetukset))
-                                            (:toimenpidekuittausjono (:tloik asetukset)))
+     :tloik (component/using (let [tloik (:tloik asetukset)]
+                               (tloik/->Tloik (:ilmoitusviestijono tloik)
+                                              (:ilmoituskuittausjono tloik)
+                                              (:toimenpideviestijono tloik)
+                                              (:toimenpidekuittausjono tloik)))
                              [:sonja :db :integraatioloki :klusterin-tapahtumat])
 
      ;; Tierekisteri
      :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
                                     [:db :integraatioloki])
+
+     ;; Labyrintti SMS Gateway
+     :labyrintti (component/using (let [l (:labyrintti asetukset)]
+                                    (labyrintti/->Labyrintti (:url l)
+                                                             (:kayttajatunnus l)
+                                                             (:salasana l)))
+                                    [:integraatioloki])
 
      :raportointi (component/using
                    (raportointi/luo-raportointi)

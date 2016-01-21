@@ -24,9 +24,45 @@
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.kartta :as kartta]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.urakka :as u]
             [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
+
+(defn nayta-toteuma-lomakkeessa [urakka-id toteuma-id]
+  (go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id toteuma-id))]
+         (log "toteuma: " (pr-str toteuma))
+         (if-not (k/virhe? toteuma)
+           (let [lomake-tiedot {:toteuma-id           (:id toteuma)
+                                :tehtavat             (zipmap (iterate inc 1)
+                                                              (mapv (fn [tehtava]
+                                                                      (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
+                                                                                                                   (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
+                                                                                                                 @u/urakan-toimenpiteet-ja-tehtavat)) 3)
+                                                                            emo (get (first (filter (fn [tehtavat]
+                                                                                                      (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
+                                                                                                    @u/urakan-toimenpiteet-ja-tehtavat)) 2)
+                                                                            tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
+                                                                        (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
+                                                                        (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
+                                                                        {:tehtava             {:id (:tpk-id tehtava)}
+                                                                         :maara               (:maara tehtava)
+                                                                         :tehtava-id          (:tehtava-id tehtava)
+                                                                         :toimenpideinstanssi (:tpi_id tpi)
+                                                                         :yksikko             (:yksikko tehtava-urakassa)}))
+                                                                    (:tehtavat toteuma)))
+                                :alkanut              (:alkanut toteuma)
+                                :paattynyt            (:paattynyt toteuma)
+                                :lisatieto            (:lisatieto toteuma)
+                                :suorittajan-nimi     (:nimi (:suorittaja toteuma))
+                                :suorittajan-ytunnus  (:ytunnus (:suorittaja toteuma))
+                                :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
+                                :luoja                (:kayttajanimi toteuma)
+                                :reittipisteet        (:reittipisteet toteuma)
+                                :organisaatio         (:organisaatio toteuma)}]
+             (reset! u/urakan-valittu-valilehti :toteumat)
+             (reset! u/toteumat-valilehti :yksikkohintaiset-tyot)
+             (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma lomake-tiedot))))))
 
 (defn tallenna-toteuma
   "Ottaa lomakkeen ja tehtävät siinä muodossa kuin ne ovat lomake-komponentissa ja muodostaa palvelimelle lähetettävän payloadin."
@@ -213,38 +249,7 @@
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi]
                          [:button.nappi-toissijainen.nappi-grid
-                          {:on-click
-                           #(go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id (:toteuma_id rivi)))]
-                                  (log "toteuma: " (pr-str toteuma))
-                                  (if-not (k/virhe? toteuma)
-                                    (let [lomake-tiedot {:toteuma-id           (:id toteuma)
-                                                         :tehtavat             (zipmap (iterate inc 1)
-                                                                                       (mapv (fn [tehtava]
-                                                                                               (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
-                                                                                                                                            (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                                                          @u/urakan-toimenpiteet-ja-tehtavat)) 3)
-                                                                                                     emo (get (first (filter (fn [tehtavat]
-                                                                                                                               (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                                             @u/urakan-toimenpiteet-ja-tehtavat)) 2)
-                                                                                                     tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
-                                                                                                 (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
-                                                                                                 (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
-                                                                                                 {:tehtava             {:id (:tpk-id tehtava)}
-                                                                                                  :maara               (:maara tehtava)
-                                                                                                  :tehtava-id          (:tehtava-id tehtava)
-                                                                                                  :toimenpideinstanssi (:tpi_id tpi)
-                                                                                                  :yksikko             (:yksikko tehtava-urakassa)}))
-                                                                                             (:tehtavat toteuma)))
-                                                         :alkanut              (:alkanut toteuma)
-                                                         :paattynyt            (:paattynyt toteuma)
-                                                         :lisatieto            (:lisatieto toteuma)
-                                                         :suorittajan-nimi     (:nimi (:suorittaja toteuma))
-                                                         :suorittajan-ytunnus  (:ytunnus (:suorittaja toteuma))
-                                                         :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
-                                                         :luoja                (:kayttajanimi toteuma)
-                                                         :reittipisteet        (:reittipisteet toteuma)
-                                                         :organisaatio         (:organisaatio toteuma)}]
-                                      (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma lomake-tiedot)))))}
+                          {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
         (sort
           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))

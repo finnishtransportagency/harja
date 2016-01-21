@@ -23,7 +23,7 @@
    :tyyppi                               Sanktiotyyppi
    (s/optional-key :toimenpideinstanssi) s/Any              ;; FIXME: tpi instanssin skeema
    (s/optional-key :summa)               s/Num
-   (s/optional-key :indeksi)             s/Str})
+   (s/optional-key :indeksi)             (s/maybe s/Str)})
 
 (def Paatos
   {:kasittelyaika                     pvm-tyyppi

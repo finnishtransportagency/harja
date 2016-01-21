@@ -45,6 +45,7 @@
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
                                                     (.replace "__SILTANUMERO__" (str siltanumero))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
+    (println "Vastaus: " vastaus-lisays)
     (is (= 200 (:status vastaus-lisays)))
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE ulkoinen_id = '" ulkoinen-id "';")))
           siltatarkastus-kannassa-id (first siltatarkastus-kannassa)]

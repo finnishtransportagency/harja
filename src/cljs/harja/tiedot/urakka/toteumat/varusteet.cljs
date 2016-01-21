@@ -6,7 +6,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.geo :as geo])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -35,24 +36,57 @@
               (when nakymassa?
                 (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
-(tarkkaile! "Haetut toteumat: " haetut-toteumat)
+(tarkkaile! "Varustetoteumat: " haetut-toteumat)
 
 (def varuste-toimenpide->string {:lisatty    "Lisätty"
                                  :paivitetty "Päivitetty"
                                  :poistettu  "Poistettu"})
 
+(def tietolaji->selitys
+  {"tl523" "Tekninen piste"
+   "tl501" "Kaiteet"
+   "tl517" "Portaat"
+   "tl507" "Bussipysäkin varusteet"
+   "tl508" "Bussipysäkin katos"
+   "tl506" "Liikennemerkki"
+   "tl522" "Reunakivet"
+   "tl513" "Reunapaalut"
+   "tl196" "Bussipysäkit"
+   "tl519" "Puomit ja kulkuaukot"
+   "tl505" "Jätehuolto"
+   "tl195" "Tienkäyttäjien palvelualueet"
+   "tl504" "WC"
+   "tl198" "Kohtaamispaikat ja levikkeet"
+   "tl518" "Kivetyt alueet"
+   "tl514" "Melurakenteet"
+   "tl509" "Rummut"
+   "tl515" "Aidat"
+   "tl503" "Levähdysalueiden varusteet"
+   "tl510" "Viheralueet"
+   "tl512" "Viemärit"
+   "tl165" "Välikaistat"
+   "tl516" "Hiekkalaatikot"
+   "tl511" "Viherkuviot"})
+
 (def karttataso-varustetoteuma (atom false))
+
+(defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
+  (str
+   (pvm/pvm alkupvm) " "
+   (varuste-toimenpide->string toimenpide)
+   " "
+   (tietolaji->selitys tietolaji)))
 
 (def varusteet-kartalla
   (reaction
     (when karttataso-varustetoteuma
       (kartalla-esitettavaan-muotoon
-        (map (fn [toteuma]
-               (-> toteuma
-                   (assoc :tyyppi-kartalla :varustetoteuma)
-                   (assoc :selitys-kartalla (str
-                                              (varuste-toimenpide->string (:toimenpide toteuma))
-                                              ": "
-                                              (:tietolaji toteuma)
-                                              " (" (pvm/pvm (:alkupvm toteuma)) " )"))))
-          @haetut-toteumat)))))
+       @haetut-toteumat
+       nil nil
+       (keep (fn [toteuma]
+               (when-let [sijainti (some-> toteuma :reitti geo/pisteet first)]
+                 (assoc toteuma
+                        :tyyppi-kartalla :varustetoteuma
+                        :selitys-kartalla (selite toteuma)
+                        :sijainti {:type :point
+                                   :coordinates sijainti}))))))))

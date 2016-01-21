@@ -226,11 +226,7 @@
                              :XL "Pienennä karttaa"
                              "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
-    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or
-                                                                   (not (empty? @nav/tarvitsen-isoa-karttaa))
-                                                                   (= sivu :tilannekuva)
-                                                                   (and (= sivu :urakat)
-                                                                        (not v-ur))) "hide")}
+    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
 
      ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
@@ -298,10 +294,11 @@
                         (reset! ikonien-selitykset-auki false)
                         (.stopPropagation event)
                         (.preventDefault event))} "Sulje"]]
-         [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [event]
-                                                                                               (reset! ikonien-selitykset-auki true)
-                                                                                               (.stopPropagation event)
-                                                                                               (.preventDefault event))}])])))
+         [:span.kartan-ikonien-selitykset-avaa.klikattava {:on-click (fn [event]
+                                                                       (reset! ikonien-selitykset-auki true)
+                                                                       (.stopPropagation event)
+                                                                       (.preventDefault event))}
+          "Karttaselitteet"])])))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 

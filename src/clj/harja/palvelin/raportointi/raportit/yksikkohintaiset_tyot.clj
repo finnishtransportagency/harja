@@ -20,7 +20,7 @@
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-paiva db
                                                                urakka-id alkupvm loppupvm
-                                                               (if toimenpide-id true false) toimenpide-id)
+                                                               (not (nil? toimenpide-id)) toimenpide-id)
 
         raportin-nimi "Yksikköhintaiset työt päivittäin"
         konteksti :urakka
@@ -33,14 +33,14 @@
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      [{:leveys "10%" :otsikko "Päivämäärä"}
-       {:leveys "25%" :otsikko "Tehtävä"}
-       {:leveys "5%" :otsikko "Yks."}
-       {:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
-       {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}
-       {:leveys "10%" :otsikko "Toteutunut määrä"}
-       {:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-       {:leveys "15%" :otsikko "Toteutuneet kustannukset"}]
+      [{:leveys 10 :otsikko "Päivämäärä"}
+       {:leveys 25 :otsikko "Tehtävä"}
+       {:leveys 5 :otsikko "Yks."}
+       {:leveys 10 :otsikko "Yksikkö\u00adhinta"}
+       {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}
+       {:leveys 10 :otsikko "Toteutunut määrä"}
+       {:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella"}
+       {:leveys 15 :otsikko "Toteutuneet kustannukset"}]
 
       (keep identity
             (conj (mapv (juxt (comp pvm/pvm :pvm)
