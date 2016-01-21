@@ -144,12 +144,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn pingaa-palvelinta []
   (post! :ping {}))
 
-(defn pingausvali-sekunteina (* 1000 30))
+(def pingausvali-millisekunteina (* 1000 30))
 
 (defn kaynnista-palvelimen-pingaus []
   (go
     (loop []
-      (<! (timeout pingausvali-sekunteina))
+      (<! (timeout pingausvali-millisekunteina))
       (log/debug "Pingataan palvelinta.")
       (let [vastaus (<! (pingaa-palvelinta))]
         (if (= vastaus :pong)
