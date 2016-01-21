@@ -17,8 +17,6 @@
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
 
-(tarkkaile! "valittu ilmoitus" valittu-ilmoitus)
-
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
                              :urakoitsija     (:id @nav/valittu-urakoitsija)

@@ -17,12 +17,37 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]))
 
-(defn tallenna-kuittaus [kuittaus]
-  (log "Koitetaan tallentaa uusi kuittaus!")
-  (log (pr-str kuittaus))
-  (tiedot/tallenna-uusi-kuittaus kuittaus)
-  ;; todo: tallentamisen jälkeen pitäisi jotenkin päivittää kuittaukset
-  )
+(defn luo-henkilo-lomakeryhma [avain nimi]
+  (lomake/ryhma {:otsikko    nimi
+                 :leveys-col 5}
+                {:nimi       (keyword (str avain "-etunimi"))
+                 :otsikko    "Etunimi"
+                 :leveys-col 3
+                 :tyyppi     :string}
+                {:nimi       (keyword (str avain "-sukunimi"))
+                 :otsikko    "Sukunimi"
+                 :leveys-col 3
+                 :tyyppi     :string}
+                {:nimi       (keyword (str avain "-matkapuhelin"))
+                 :otsikko    "Matkapuhelin"
+                 :leveys-col 3
+                 :tyyppi     :string}
+                {:nimi       (keyword (str avain "-tyopuhelin"))
+                 :otsikko    "Työpuhelin"
+                 :leveys-col 3
+                 :tyyppi     :string}
+                {:nimi       (keyword (str avain "-sahkoposti"))
+                 :otsikko    "Sähköposti"
+                 :leveys-col 3
+                 :tyyppi     :string}
+                {:nimi       (keyword (str avain "-organisaatio"))
+                 :otsikko    "Organisaation nimi"
+                 :leveys-col 3
+                 :tyyppi     :string}
+                {:nimi       (keyword (str avain "-ytunnus"))
+                 :otsikko    "Organisaation y-tunnus"
+                 :leveys-col 3
+                 :tyyppi     :string}))
 
 (defn luo-lomake []
   [:span
@@ -32,7 +57,7 @@
      :luokka   :horizontal
      :footer   [napit/palvelinkutsu-nappi
                 "Tallenna"
-                #(tallenna-kuittaus @tiedot/uusi-kuittaus)
+                #(tiedot/tallenna-uusi-kuittaus @tiedot/uusi-kuittaus)
                 {:ikoni        (ikonit/tallenna)
                  :disabled     false
                  :kun-onnistuu (fn [_] (reset! tiedot/uusi-kuittaus nil))}]}
@@ -46,8 +71,8 @@
                        :aloitus "Aloitettu"
                        :lopetus "Lopetettu"
                        :muutos "Muutos"
-                       :vstaus "Vastaus"
-                       "- valitse -")
+                       :vastaus "Vastaus"
+                       nil)
       :leveys-col    4}
      {:nimi        :vapaateksti
       :otsikko     "Vapaateksti"
@@ -55,67 +80,8 @@
       :tyyppi      :string
       :pituus-max  256
       :leveys-col  4}
-     (lomake/ryhma {:otsikko    "Käsittelijä"
-                    :leveys-col 5}
-                   {:nimi       :kasittelija-etunimi
-                    :otsikko    "Etunimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-sukunimi
-                    :otsikko    "Sukunimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-matkapuhelin
-                    :otsikko    "Matkapuhelin"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-tyopuhelin
-                    :otsikko    "Työpuhelin"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-sahkoposti
-                    :otsikko    "Sähköposti"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-organisaatio
-                    :otsikko    "Organisaation nimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-ytunnus
-                    :otsikko    "Organisaation y-tunnus"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   )
-     (lomake/ryhma {:otsikko    "Ilmoittaja"
-                    :leveys-col 5}
-                   {:nimi       :ilmoittaja-etunimi
-                    :otsikko    "Etunimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :ilmoittaja-sukunimi
-                    :otsikko    "Sukunimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :ilmoittaja-matkapuhelin
-                    :otsikko    "Matkapuhelin"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :ilmoittaja-tyopuhelin
-                    :otsikko    "Työpuhelin"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :ilmoittaja-sahkoposti
-                    :otsikko    "Sähköposti"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :ilmoittaja-organisaatio
-                    :otsikko    "Organisaation nimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :ilmoittaja-ytunnus
-                    :otsikko    "Organisaation y-tunnus"
-                    :leveys-col 3
-                    :tyyppi     :string})]
+     (luo-henkilo-lomakeryhma "kasittelija" "Käsittelijä")
+     (luo-henkilo-lomakeryhma "ilmoittaja" "Ilmoittaja")]
     @tiedot/uusi-kuittaus]])
 
 (defn uusi-kuittaus-lomake []
