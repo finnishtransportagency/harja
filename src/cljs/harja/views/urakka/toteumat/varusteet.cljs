@@ -18,14 +18,16 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn varustetoteuman-tehtavat [toteumatehtavat]
-  [grid/grid
-   {:otsikko      "Tehtävät"
-    :tyhja        (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan tehtäviä..."] "Tehtäviä  ei löytynyt")
-    :tunniste     :id}
-   [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 3}
-    {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 2}]
-   toteumatehtavat])
+(defn varustetoteuman-tehtavat [toteuma]
+  (let [toteumatehtavat (:toteumatehtavat toteuma)]
+    [grid/grid
+     {:otsikko  "Tehtävät"
+      :tyhja    (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan tehtäviä..."] "Tehtäviä  ei löytynyt")
+      :tunniste :id}
+     [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 1}
+      {:otsikko "Tyyppi" :nimi :toteumatyyppi :tyyppi :string :leveys 1 :hae (fn [_] (:toteumatyyppi toteuma))}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 1}]
+     toteumatehtavat]))
 
 (defn toteumataulukko []
   (let [toteumat @varustetiedot/haetut-toteumat]
@@ -39,7 +41,7 @@
                        (map
                          (fn [toteuma]
                            (when (:toteumatehtavat toteuma)
-                           [varustetoteuman-tehtavat (:toteumatehtavat toteuma)]))
+                             [varustetoteuman-tehtavat toteuma]))
                          toteumat))}
       [{:tyyppi :vetolaatikon-tila :leveys 5}
        {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}

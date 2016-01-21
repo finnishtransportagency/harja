@@ -667,6 +667,7 @@ SELECT
   tr_ajorata,
   t.alkanut               AS alkupvm,
   t.paattynyt             AS loppupvm,
+  t.tyyppi                AS toteumatyyppi,
   arvot,
   tierekisteriurakkakoodi,
   t.id                    AS toteuma_id,
