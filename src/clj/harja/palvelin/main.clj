@@ -36,6 +36,7 @@
    [harja.palvelin.palvelut.yhteyshenkilot]
    [harja.palvelin.palvelut.paallystys :as paallystys]
    [harja.palvelin.palvelut.paikkaus :as paikkaus]
+   [harja.palvelin.palvelut.ping :as ping]
    [harja.palvelin.palvelut.kayttajat :as kayttajat]
    [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
    [harja.palvelin.palvelut.materiaalit :as materiaalit]

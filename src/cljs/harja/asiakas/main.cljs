@@ -57,6 +57,7 @@
   (go
     (istunto/lisaa-ajastin-tapahtumakuuntelijat)
     (istunto/kaynnista-ajastin)
+    (k/kaynnista-palvelimen-pingaus)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))
 

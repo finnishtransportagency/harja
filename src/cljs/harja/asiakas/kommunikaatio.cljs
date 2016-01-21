@@ -139,7 +139,19 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
        "&" (str/join "&"
                      (map (fn [[nimi arvo]]
                             (str (name nimi) "=" arvo))
-                          (partition 2 parametrit))))) 
+                          (partition 2 parametrit)))))
+
+(defn pingaa-palvelinta []
+  (post! :ping {}))
+
+
+(defn kaynnista-palvelimen-pingaus []
+  (go
+    (loop []
+      (let [vastaus (<! (pingaa-palvelinta))]
+        (log "ping! vastaus: " (pr-str vastaus))
+        (recur)))))
+
 
 (defn wmts-polku []
   (str +polku+ "wmts/"))
