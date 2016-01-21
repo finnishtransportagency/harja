@@ -149,7 +149,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (def pingausvali-millisekunteina (* 1000 30))
 
 (defn kaynnista-palvelimen-pingaus []
-  (when-not pingaus-kaynnissa
+  (when-not @pingaus-kaynnissa
+    (log "Käynnistetään palvelimen pingaus " (/ pingausvali-millisekunteina 1000) " sekunnin valein")
     (reset! pingaus-kaynnissa true)
     (go
       (loop []
