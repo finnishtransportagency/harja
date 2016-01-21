@@ -57,7 +57,6 @@
 
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
