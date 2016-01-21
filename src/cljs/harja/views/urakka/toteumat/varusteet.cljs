@@ -15,12 +15,10 @@
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
-(defn siirry-yksikkohintaisen-tyon-lomakkeelle []
-  (log "TODO"))
 
 (defn varustetoteuman-tehtavat [toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
@@ -34,8 +32,7 @@
       (when (= (:toteumatyyppi toteuma) :yksikkohintainen)
         {:otsikko     "Toteuma" :nimi :linkki-toteumaan :tyyppi :komponentti :leveys 1
         :komponentti (fn [] [:button.nappi-toissijainen.nappi-grid
-                             {:on-click
-                              #(siirry-yksikkohintaisen-tyon-lomakkeelle)}
+                             {:on-click #(yksikkohintaiset-tyot/nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid toteuma))}
                              (ikonit/eye-open) " Toteuma"])})]
      toteumatehtavat]))
 

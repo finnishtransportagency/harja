@@ -665,6 +665,7 @@ SELECT
   karttapvm,
   tr_puoli,
   tr_ajorata,
+  t.id                    AS toteumaid,
   t.alkanut               AS alkupvm,
   t.paattynyt             AS loppupvm,
   t.tyyppi                AS toteumatyyppi,
