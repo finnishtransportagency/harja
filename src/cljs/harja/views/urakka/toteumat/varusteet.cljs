@@ -14,9 +14,13 @@
             [harja.ui.komponentti :as komp]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
+
+(defn siirry-yksikkohintaisen-tyon-lomakkeelle []
+  (log "TODO"))
 
 (defn varustetoteuman-tehtavat [toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
@@ -25,8 +29,14 @@
       :tyhja    (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan tehtäviä..."] "Tehtäviä  ei löytynyt")
       :tunniste :id}
      [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 1}
-      {:otsikko "Tyyppi" :nimi :toteumatyyppi :tyyppi :string :leveys 1 :hae (fn [_] (:toteumatyyppi toteuma))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 1}]
+      {:otsikko "Tyyppi" :nimi :toteumatyyppi :tyyppi :string :leveys 1 :hae (fn [_] (name (:toteumatyyppi toteuma)))}
+      {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 1}
+      (when (= (:toteumatyyppi toteuma) :yksikkohintainen)
+        {:otsikko     "Toteuma" :nimi :linkki-toteumaan :tyyppi :komponentti :leveys 1
+        :komponentti (fn [] [:button.nappi-toissijainen.nappi-grid
+                             {:on-click
+                              #(siirry-yksikkohintaisen-tyon-lomakkeelle)}
+                             (ikonit/eye-open) " Toteuma"])})]
      toteumatehtavat]))
 
 (defn toteumataulukko []

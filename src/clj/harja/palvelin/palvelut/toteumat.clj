@@ -504,6 +504,7 @@
   (let [toteumat (into []
                        (comp
                          (map #(konv/string->keyword % :toimenpide))
+                         (map #(konv/string->keyword % :toteumatyyppi))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                          (map konv/alaviiva->rakenne))
                        (q/hae-urakan-varustetoteumat db
