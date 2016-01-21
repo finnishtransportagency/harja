@@ -150,11 +150,11 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (go
     (loop []
       (<! (timeout pingausvali-millisekunteina))
-      (log/debug "Pingataan palvelinta.")
+      (log "Pingataan palvelinta.")
       (let [vastaus (<! (pingaa-palvelinta))]
         (if (= vastaus :pong)
-          (log/debug "Pingaus onnistui. Vastaus: " (pr-str vastaus))
-          (log/debug "Pingaus epäonnistui! Vastaus: " (pr-str vastaus)))
+          (log "Pingaus onnistui. Vastaus: " (pr-str vastaus))
+          (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus)))
         (recur)))))
 
 
