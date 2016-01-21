@@ -2,7 +2,7 @@
   "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
-                                                                 pylvaat ei-osumia-aikavalilla-teksti]]
+                                                                 pylvaat-kuukausittain ei-osumia-aikavalilla-teksti]]
             [harja.domain.roolit :as roolit]
             [clj-time.coerce :as tc]
             [harja.kyselyt.urakat :as urakat-q]
@@ -117,10 +117,10 @@
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
-         (pylvaat {:otsikko              (str "Ilmoitukset kuukausittain" hoitokaudella-tahan-asti-opt)
-                   :alkupvm              graafin-alkupvm :loppupvm loppupvm
-                   :kuukausittainen-data ilmoitukset-kuukausittain-tyyppiryhmiteltyna :piilota-arvo? #{0}
-                   :legend               ["TPP" "TUR" "URK"]})
+         (pylvaat-kuukausittain {:otsikko              (str "Ilmoitukset kuukausittain" hoitokaudella-tahan-asti-opt)
+                                 :alkupvm              graafin-alkupvm :loppupvm loppupvm
+                                 :kuukausittainen-data ilmoitukset-kuukausittain-tyyppiryhmiteltyna :piilota-arvo? #{0}
+                                 :legend               ["TPP" "TUR" "URK"]})
          (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm loppupvm)))]))
 
     
