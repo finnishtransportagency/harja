@@ -18,96 +18,96 @@
 (defonce nakymassa? (atom false))
 (defonce valittu-tila (atom :nykytilanne))
 
-(def ^{:doc "Aika joka odotetaan ennen uusien tietojen hakemista, kun parametrit muuttuvat"
+(def ^{:doc   "Aika joka odotetaan ennen uusien tietojen hakemista, kun parametrit muuttuvat"
        :const true}
-  bufferi 1000)
+bufferi 1000)
 
 ;; 10s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
 ;; karttaa siirretään tai zoomataan
-(def ^{:doc "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
+(def ^{:doc   "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
        :const true}
-  hakutiheys-nykytilanne 10000)
+hakutiheys-nykytilanne 10000)
 
-(def ^{:doc "Päivitystiheys historiakuvassa on 20 minuuttia."
+(def ^{:doc   "Päivitystiheys historiakuvassa on 20 minuuttia."
        :const true}
-  hakutiheys-historiakuva 1200000)
+hakutiheys-historiakuva 1200000)
 
 ;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
-(defonce suodattimien-nimet
-         {:laatupoikkeamat                  "Laatupoikkeamat"
-          :tilaaja                          "Tilaaja"
-          :urakoitsija                      "Urakoitsija"
-          :konsultti                        "Konsultti"
+(def suodattimien-nimet
+  {:laatupoikkeamat                  "Laatupoikkeamat"
+   :tilaaja                          "Tilaaja"
+   :urakoitsija                      "Urakoitsija"
+   :konsultti                        "Konsultti"
 
-          :tarkastukset                     "Tarkastukset"
-          :tiesto                           "Tiestö"
-          :talvihoito                       "Talvihoito"
-          :soratie                          "Soratie"
-          :laatu                            "Laatu"
-          :pistokoe                         "Pistokoe"
+   :tarkastukset                     "Tarkastukset"
+   :tiesto                           "Tiestö"
+   :talvihoito                       "Talvihoito"
+   :soratie                          "Soratie"
+   :laatu                            "Laatu"
+   :pistokoe                         "Pistokoe"
 
-          :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
+   :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
 
-          :toimenpidepyynto                 "TPP"
-          :tiedoitus                        "TUR"
-          :kysely                           "URK"
+   :toimenpidepyynto                 "TPP"
+   :tiedoitus                        "TUR"
+   :kysely                           "URK"
 
-          :paallystys                       "Päällystystyöt"
-          :paikkaus                         "Paikkaustyöt"
+   :paallystys                       "Päällystystyöt"
+   :paikkaus                         "Paikkaustyöt"
 
-          "auraus ja sohjonpoisto"          "Auraus ja sohjonpoisto"
-          "suolaus"                         "Suolaus"
-          "pistehiekoitus"                  "Pistehiekoitus"
-          "linjahiekoitus"                  "Linjahiekoitus"
-          "pinnan tasaus"                   "Pinnan tasaus"
-          "liikennemerkkien puhdistus"      "Liikennemerkkien puhdistus"
-          "lumivallien madaltaminen"        "Lumivallien madaltaminen"
-          "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"
-          "tiestotarkastus"                 "Tiestötarkastus"
-          "kelintarkastus"                  "Kelintarkastus"
-          "harjaus"                         "Harjaus"
-          "koneellinen niitto"              "Koneellinen niitto"
-          "koneellinen vesakonraivaus"      "Koneellinen vesakonraivaus"
-          "sorateiden muokkaushoylays"      "Sorateiden muokkaushöyläys"
-          "sorateiden polynsidonta"         "Sorateiden pölynsidonta"
-          "sorateiden tasaus"               "Sorateiden tasaus"
-          "sorastus"                        "Sorastus"
-          "paallysteiden paikkaus"          "Päällysteiden paikkaus"
-          "paallysteiden juotostyot"        "Päällysteiden juotostyöt"
-          "siltojen puhdistus"              "Siltojen puhdistus"
-          "l- ja p-alueiden puhdistus"      "L- ja P-alueiden puhdistus"
-          "muu"                             "Muu"
-          "liuossuolaus"                    "Liuossuolaus"
-          "aurausviitoitus ja kinostimet"   "Aurausviitoitus ja kinostimet"
-          "lumensiirto"                     "Lumensiirto"
-          "paannejaan poisto"               "Paannejään poisto"})
+   "auraus ja sohjonpoisto"          "Auraus ja sohjonpoisto"
+   "suolaus"                         "Suolaus"
+   "pistehiekoitus"                  "Pistehiekoitus"
+   "linjahiekoitus"                  "Linjahiekoitus"
+   "pinnan tasaus"                   "Pinnan tasaus"
+   "liikennemerkkien puhdistus"      "Liikennemerkkien puhdistus"
+   "lumivallien madaltaminen"        "Lumivallien madaltaminen"
+   "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"
+   "tiestotarkastus"                 "Tiestötarkastus"
+   "kelintarkastus"                  "Kelintarkastus"
+   "harjaus"                         "Harjaus"
+   "koneellinen niitto"              "Koneellinen niitto"
+   "koneellinen vesakonraivaus"      "Koneellinen vesakonraivaus"
+   "sorateiden muokkaushoylays"      "Sorateiden muokkaushöyläys"
+   "sorateiden polynsidonta"         "Sorateiden pölynsidonta"
+   "sorateiden tasaus"               "Sorateiden tasaus"
+   "sorastus"                        "Sorastus"
+   "paallysteiden paikkaus"          "Päällysteiden paikkaus"
+   "paallysteiden juotostyot"        "Päällysteiden juotostyöt"
+   "siltojen puhdistus"              "Siltojen puhdistus"
+   "l- ja p-alueiden puhdistus"      "L- ja P-alueiden puhdistus"
+   "muu"                             "Muu"
+   "liuossuolaus"                    "Liuossuolaus"
+   "aurausviitoitus ja kinostimet"   "Aurausviitoitus ja kinostimet"
+   "lumensiirto"                     "Lumensiirto"
+   "paannejaan poisto"               "Paannejään poisto"})
 
-(defonce jarjestys
-         {:talvi ["auraus ja sohjonpoisto"
-                  "suolaus"
-                  "pistehiekoitus"
-                  "linjahiekoitus"
-                  "lumivallien madaltaminen"
-                  "sulamisveden haittojen torjunta"
-                  "liuossuolaus"
-                  "aurausviitoitus ja kinostimet"
-                  "lumensiirto"
-                  "paannejaan poisto"
-                  "muu"]
-          :kesa  ["koneellinen niitto"
-                  "koneellinen vesakonraivaus"
-                  "liikennemerkkien puhdistus"
-                  "sorateiden muokkaushoylays"
-                  "sorateiden polynsidonta"
-                  "sorateiden tasaus"
-                  "sorastus"
-                  "harjaus"
-                  "pinnan tasaus"
-                  "paallysteiden paikkaus"
-                  "paallysteiden juotostyot"
-                  "siltojen puhdistus"
-                  "l- ja p-alueiden puhdistus"
-                  "muu"]})
+(def jarjestys
+  {:talvi ["auraus ja sohjonpoisto"
+           "suolaus"
+           "pistehiekoitus"
+           "linjahiekoitus"
+           "lumivallien madaltaminen"
+           "sulamisveden haittojen torjunta"
+           "liuossuolaus"
+           "aurausviitoitus ja kinostimet"
+           "lumensiirto"
+           "paannejaan poisto"
+           "muu"]
+   :kesa  ["koneellinen niitto"
+           "koneellinen vesakonraivaus"
+           "liikennemerkkien puhdistus"
+           "sorateiden muokkaushoylays"
+           "sorateiden polynsidonta"
+           "sorateiden tasaus"
+           "sorastus"
+           "harjaus"
+           "pinnan tasaus"
+           "paallysteiden paikkaus"
+           "paallysteiden juotostyot"
+           "siltojen puhdistus"
+           "l- ja p-alueiden puhdistus"
+           "muu"]})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet (atom {:yllapito        {:paallystys false
@@ -217,17 +217,17 @@
                                                             (:sijainti uusi))))))
                                 vanhat uudet))))))
 
-  (def edellisen-haun-kayttajan-suodattimet (atom {:tila                 @valittu-tila
-                                                   :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
-                                                   :aikavali-historia    @historiakuvan-aikavali
-                                                   :suodattimet          @suodattimet}))
+(def edellisen-haun-kayttajan-suodattimet (atom {:tila                 @valittu-tila
+                                                 :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
+                                                 :aikavali-historia    @historiakuvan-aikavali
+                                                 :suodattimet          @suodattimet}))
 
-  (def tyhjenna-popupit-kun-filtterit-muuttuu (run!
-                                                @valittu-tila
-                                                @nykytilanteen-aikasuodattimen-arvo
-                                                @historiakuvan-aikavali
-                                                @suodattimet
-                                                (kartta/poista-popup!)))
+(def tyhjenna-popupit-kun-filtterit-muuttuu (run!
+                                              @valittu-tila
+                                              @nykytilanteen-aikasuodattimen-arvo
+                                              @historiakuvan-aikavali
+                                              @suodattimet
+                                              (kartta/poista-popup!)))
 
 (defn kartan-tyypiksi [t avain tyyppi]
   (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
@@ -258,19 +258,19 @@
       (kartta/aseta-paivitetaan-karttaa-tila false))))
 
 (def asioiden-haku (reaction<!
-                    [_ @valittu-tila
-                     _ @suodattimet
-                     _ @nykytilanteen-aikasuodattimen-arvo
-                     _ @historiakuvan-aikavali
-                     _ @nav/kartalla-nakyva-alue
-                     _ @nav/valittu-urakka
-                     nakymassa? @nakymassa?
-                     _ @nav/valittu-hallintayksikko]
-                    {:odota bufferi}
-                    (when nakymassa?
-                      (hae-asiat))))
+                     [_ @valittu-tila
+                      _ @suodattimet
+                      _ @nykytilanteen-aikasuodattimen-arvo
+                      _ @historiakuvan-aikavali
+                      _ @nav/kartalla-nakyva-alue
+                      _ @nav/valittu-urakka
+                      nakymassa? @nakymassa?
+                      _ @nav/valittu-hallintayksikko]
+                     {:odota bufferi}
+                     (when nakymassa?
+                       (hae-asiat))))
 
-(defonce lopeta-haku (atom nil))                          ;; Säilöö funktion jolla pollaus lopetetaan
+(defonce lopeta-haku (atom nil))                            ;; Säilöö funktion jolla pollaus lopetetaan
 
 (defn aloita-periodinen-haku []
   (log "Tilannekuva: Aloitetaan haku")
@@ -296,7 +296,7 @@
 
 (add-watch nakymassa? :pollaus-muuttui
            (fn [_ _ old new]
-             (log "nakymassa? muuttui " old " => " new )
+             (log "nakymassa? muuttui " old " => " new)
              (pollaus-muuttui)
 
              ;; Jos tilannekuvasta on poistuttu, tyhjennetään haetut-asiat.
@@ -305,7 +305,7 @@
                (reset! tilannekuva-kartalla/haetut-asiat nil))))
 (add-watch valittu-tila :pollaus-muuttui
            (fn [_ _ old new]
-             (log "valittu-tila muuttui " old " => " new )
+             (log "valittu-tila muuttui " old " => " new)
              (pollaus-muuttui)))
 
 
