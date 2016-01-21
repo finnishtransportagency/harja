@@ -5,7 +5,6 @@
             [harja.domain.skeema :refer [Toteuma validoi]]))
 
 (defn kasittele-ping [db user tiedot]
-  (log/debug "sd")
   :pong)
 
 (defrecord Ping []
