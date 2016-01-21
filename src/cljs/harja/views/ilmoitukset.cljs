@@ -1,6 +1,7 @@
 (ns harja.views.ilmoitukset
   "Harjan ilmoituksien pääsivu."
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
@@ -15,14 +16,11 @@
             [harja.ui.lomake :as lomake]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
-
             [harja.ui.bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
-            [clojure.string :refer [capitalize]]
             [harja.views.kartta :as kartta]
-            [harja.views.ilmoituskuittaukset :as kuittaukset]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.views.ilmoituskuittaukset :as kuittaukset]))
 
 (defn pollauksen-merkki
   []
@@ -82,8 +80,8 @@
          "Kuittaukset"
          [:div
           (napit/uusi "Uusi kuittaus" #(reset! tiedot/uusi-kuittaus
-                                                          {:ilmoitusid (:ilmoitusid @tiedot/valittu-ilmoitus)
-                                                            :tyyppi     :vastaanotettu}) {:luokka "uusi-kuittaus-nappi"})
+                                               {:ilmoitusid (:ilmoitusid @tiedot/valittu-ilmoitus)
+                                                :tyyppi     :vastaanotettu}) {:luokka "uusi-kuittaus-nappi"})
           (when-not (empty? (:kuittaukset ilmoitus))
             [:div
              (for [kuittaus (:kuittaukset ilmoitus)]
