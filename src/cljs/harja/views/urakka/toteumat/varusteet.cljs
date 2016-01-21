@@ -40,20 +40,19 @@
                          (fn [toteuma]
                            [varustetoteuman-tehtavat (:toteumatehtavat toteuma)])
                          toteumat))}
-      [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys "10%"}
-       {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys "15%"}
-       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :hae (fn [rivi]
+      [{:tyyppi :vetolaatikon-tila :leveys 5}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
+       {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
+       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15 :hae (fn [rivi]
                                                                      (or (varustetiedot/tietolaji->selitys (:tietolaji rivi))
-                                                                         (:tietolaji rivi))) :leveys "15%"}
-       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :hae (fn [rivi]
-                                                                       (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))
-        :leveys "10%"}
-       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"}
-       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "5%"}
-       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "5%"}
-       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "5%"}
-       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys "5%"}]
+                                                                         (:tietolaji rivi)))}
+       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15 :hae (fn [rivi]
+                                                                       (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))}
+       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10}
+       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5}
+       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5}
+       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5}
+       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}]
       (take 500 toteumat)]
      (when (> (count toteumat) 500)
        [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
