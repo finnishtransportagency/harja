@@ -4,20 +4,14 @@
             [harja.ui.yleiset :refer [kuuntelija raksiboksi] :refer-macros [deftk]]
             [harja.tiedot.urakka.suunnittelu.materiaalit :as t]
             [harja.loki :refer [log logt]]
-            [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.viesti :as viesti]
-            [harja.views.kartta.tasot :as tasot]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :as istunto]
-            [cljs-time.coerce :as tc]
 
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [run! reaction]]))
@@ -26,13 +20,6 @@
   (let [[alkupvm loppupvm] @u/valittu-hoitokausi]
     ;; lisätään kaikkiin riveihin valittu hoitokausi
     (assoc rivi :alkupvm alkupvm :loppupvm loppupvm)))
-
-; From: Leppänen Anne <Anne.Leppanen@liikennevirasto.fi> 
-; Date: Monday 14 September 2015 16:27
-; Asiakkaalta tulleen palautteen perusteella liuoksilla ja kaliumformiaatilla ei ole maksimimäärää
-(def materiaalit-ilman-maksimimaaria #{"Talvisuolaliuos CaCl2"
-                                       "Talvisuolaliuos NaCl"
-                                       "Kaliumformiaatti"})
 
 (defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]}
                                 ur valittu-hk valittu-sop
@@ -62,11 +49,7 @@
           :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
           :validoi [[:ei-tyhja "Valitse materiaali"]]}
          {:otsikko "Määrä" :nimi :maara :leveys "30%"
-          :muokattava? (fn [rivi] (nil? (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))))
-          :hae (fn [rivi]
-                 (if (materiaalit-ilman-maksimimaaria (get-in rivi [:materiaali :nimi]))
-                   "Ei syötettävissä"
-                   (:maara rivi)))
+          :muokattava? (constantly true)
           :tyyppi :positiivinen-numero}
          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
           :tyyppi :string :muokattava? (constantly false)}]
@@ -148,7 +131,6 @@
              ]
     
          [:div.materiaalit
-          [kartta/kartan-paikka]
           [valinnat/urakan-sopimus-ja-hoitokausi ur]
           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                      :virheet yleiset-materiaalit-virheet}

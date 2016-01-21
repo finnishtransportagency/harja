@@ -15,25 +15,25 @@
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
   (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                       urakka-id alkupvm loppupvm
-                                                      (if toimenpide-id true false) toimenpide-id))
+                                                      (not (nil? toimenpide-id)) toimenpide-id))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain db
                                                                              hallintayksikko-id alkupvm loppupvm
-                                                                             (if toimenpide-id true false) toimenpide-id)
+                                                                             (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle db
                                                                  hallintayksikko-id alkupvm loppupvm
-                                                                 (if toimenpide-id true false) toimenpide-id)))
+                                                                 (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn hae-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain db
                                                                        alkupvm loppupvm
-                                                                       (if toimenpide-id true false) toimenpide-id)
+                                                                       (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle db
                                                            alkupvm loppupvm
-                                                           (if toimenpide-id true false) toimenpide-id)))
+                                                           (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn muodosta-raportin-rivit [kuukausittaiset-summat urakoittain?]
   (let [yhdista-tehtavat (fn [tehtavat]
@@ -47,7 +47,7 @@
                                  kuukausittaiset-summat (reduce
                                                           (fn [map tehtava]
                                                             (assoc map
-                                                              (pvm/kuukausi-ja-vuosi (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
+                                                              (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
                                                               (or (:toteutunut_maara tehtava) 0)))
                                                           {}
                                                           tehtavat)]
@@ -139,16 +139,18 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
-                                 {:leveys "20%" :otsikko "Urakka"})
-                               {:leveys "15%" :otsikko "Tehtävä"}
-                               {:leveys "5%" :otsikko "Yk\u00ADsik\u00ADkö"}
+                                 {:leveys 15 :otsikko "Urakka"})
+                               {:leveys 10 :otsikko "Tehtävä"}
+                               {:leveys 5 :otsikko "Yk\u00ADsik\u00ADkö"}
                                (mapv (fn [rivi]
-                                       {:otsikko (pvm/kuukausi-ja-vuosi (c/to-date rivi)) :otsikkorivi-luokka "grid-kk-sarake"})
+                                       {:otsikko (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date rivi))
+                                        :leveys 5
+                                        :otsikkorivi-luokka "grid-kk-sarake"})
                                      listattavat-pvmt)
-                               {:leveys "7%" :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
+                               {:leveys 7 :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
                                (when (= konteksti :urakka)
-                                 [{:leveys "5%" :otsikko "Tot-%"}
-                                 {:leveys "10%" :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
+                                 [{:leveys 5 :otsikko "Tot-%"}
+                                  {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
       (mapv (fn [rivi]
               (flatten (keep identity [(when urakoittain?
                                          (:urakka_nimi rivi))
@@ -156,7 +158,7 @@
                                        (:yksikko rivi)
                                        (mapv (fn [pvm]
                                                (or
-                                                 (get rivi (pvm/kuukausi-ja-vuosi (c/to-date pvm)))
+                                                 (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
                                                  0))
                                              listattavat-pvmt)
                                        (fmt/desimaaliluku (:toteutunut_maara rivi) 1)

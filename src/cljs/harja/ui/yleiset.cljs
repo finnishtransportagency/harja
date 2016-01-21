@@ -314,9 +314,9 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
                                      (k))))})))
 
 (defn kaksi-palstaa-otsikkoja-ja-arvoja
-  "Tekee geneeriset kaksi palstaa. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
-  [optiot & otsikot-ja-arvot]
-  [:div.tietoja.container
+  "Tekee geneeriset kaksi palstaa. Optiossa voi olla :class, joka asetaan containerin lisäluokaksi."
+  [{:keys [class]} & otsikot-ja-arvot]
+  [:div.tietoja.container {:class class}
    (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
          :when arvo]
      ^{:key otsikko}
@@ -327,12 +327,13 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
 (defn tietoja
   "Tekee geneerisen tietonäkymän. 
 Optiot on mäppi, joka tukee seuraavia optioita:
+  :class   asetetaan lisäluokaksi containerille
   :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
-  [optiot & otsikot-ja-arvot]
-  (let [attrs (if (:otsikot-omalla-rivilla? optiot)
+  [{:keys [class otsikot-omalla-rivilla?]} & otsikot-ja-arvot]
+  (let [attrs (if otsikot-omalla-rivilla?
                 {:style {:display "block"}}
                 {})]
-    [:div.tietoja
+    [:div.tietoja {:class class}
      (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
            :when arvo]
        ^{:key otsikko}

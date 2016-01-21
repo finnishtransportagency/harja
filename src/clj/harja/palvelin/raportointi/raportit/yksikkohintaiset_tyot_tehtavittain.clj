@@ -11,26 +11,26 @@
 
 (defn hae-summatut-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
   (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
-                                                           urakka-id alkupvm loppupvm
-                                                           (if toimenpide-id true false) toimenpide-id))
+                                                                urakka-id alkupvm loppupvm
+                                                                (not (nil? toimenpide-id)) toimenpide-id))
 
 (defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
                                                                                        hallintayksikko-id alkupvm loppupvm
-                                                                                       (if toimenpide-id true false) toimenpide-id)
+                                                                                       (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
                                                                            hallintayksikko-id alkupvm loppupvm
-                                                                           (if toimenpide-id true false) toimenpide-id)))
+                                                                           (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn hae-summatut-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain db
                                                                                  alkupvm loppupvm
-                                                                                 (if toimenpide-id true false) toimenpide-id)
+                                                                                 (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
                                                                      alkupvm loppupvm
-                                                                     (if toimenpide-id true false) toimenpide-id)))
+                                                                     (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
@@ -70,16 +70,16 @@
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
-                                 {:leveys "25%" :otsikko "Urakka"})
-                               {:leveys "25%" :otsikko "Tehtävä"}
-                               {:leveys "5%" :otsikko "Yks."}
+                                 {:leveys 25 :otsikko "Urakka"})
+                               {:leveys 25 :otsikko "Tehtävä"}
+                               {:leveys 5 :otsikko "Yks."}
                                (when (= konteksti :urakka)
-                                 [{:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
-                                  {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}])
-                               {:leveys "10%" :otsikko "Toteutunut määrä"}
+                                 [{:leveys 10 :otsikko "Yksikkö\u00adhinta"}
+                                  {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}])
+                               {:leveys 10 :otsikko "Toteutunut määrä"}
                                (when (= konteksti :urakka)
-                                 [{:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-                                  {:leveys "15%" :otsikko "Toteutuneet kustannukset"}])]))
+                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella"}
+                                  {:leveys 15 :otsikko "Toteutuneet kustannukset"}])]))
       (conj (mapv (fn [rivi]
                     (flatten (keep identity [(when urakoittain?
                                                (:urakka_nimi rivi))
