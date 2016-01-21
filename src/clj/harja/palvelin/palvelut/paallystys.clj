@@ -25,25 +25,18 @@
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
-(defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id alku loppu]}]
+(defn hae-urakan-paallystyskohteet [db user {:keys [urakka-id sopimus-id]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
   (jdbc/with-db-transaction [db db]
-    (let [sopimukset (if-not (nil? sopimus-id)
-                       [sopimus-id]
-
-                       (mapv :id (urakat-q/hae-urakan-sopimukset db urakka-id)))
-          _ (log/debug "Haetaan päällystystoteumat urakan " urakka-id " sopimuksista: " (pr-str sopimukset))
-          vastaus (apply (comp vec flatten merge)
-                         (for [sopimus-id sopimukset]
-                           (into []
-                                 (comp (map #(konv/string->avain % [:paallystysilmoitus_tila]))
-                                       (map #(konv/string->avain % [:paikkausilmoitus_tila]))
-                                       (map #(assoc % :kohdeosat
-                                                      (into []
-                                                            kohdeosa-xf
-                                                            (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
-                                                              db urakka-id sopimus-id (:id %))))))
-                                 (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))))]
+    (let [vastaus (into []
+                        (comp (map #(konv/string->avain % [:paallystysilmoitus_tila]))
+                              (map #(konv/string->avain % [:paikkausilmoitus_tila]))
+                              (map #(assoc % :kohdeosat
+                                             (into []
+                                                   kohdeosa-xf
+                                                   (q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                                     db urakka-id sopimus-id (:id %))))))
+                        (q/hae-urakan-paallystyskohteet db urakka-id sopimus-id))]
       (log/debug "Päällystyskohteet saatu: " (pr-str (map :nimi vastaus)))
       vastaus)))
 
