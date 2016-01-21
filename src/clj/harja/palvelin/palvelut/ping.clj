@@ -6,7 +6,7 @@
 
 (defn kasittele-ping [db user tiedot]
   (log/debug "sd")
-  {:ping? :pong})
+  :pong)
 
 (defrecord Ping []
   component/Lifecycle

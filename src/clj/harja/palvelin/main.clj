@@ -169,6 +169,9 @@
      :hallintayksikot (component/using
                        (hallintayksikot/->Hallintayksikot)
                        [:http-palvelin :db])
+     :ping (component/using
+                  (ping/->Ping)
+                  [:http-palvelin :db])
      :haku (component/using
             (haku/->Haku)
             [:http-palvelin :db])
