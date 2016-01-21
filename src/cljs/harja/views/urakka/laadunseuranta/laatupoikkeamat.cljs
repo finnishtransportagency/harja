@@ -106,8 +106,8 @@
   "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja 
    päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
   [laatupoikkeama]
-  (let [laatupoikkeama (-> laatupoikkeama
-                     (assoc :sanktiot (vals (:sanktiot laatupoikkeama))))]
+  (let [laatupoikkeama (assoc laatupoikkeama
+                              :sanktiot (vals (:sanktiot laatupoikkeama)))]
     (go
       (let [tulos (<! (laatupoikkeamat/tallenna-laatupoikkeama laatupoikkeama))]
         (if (k/virhe? tulos)
@@ -171,14 +171,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :validoi       [[:ei-tyhja "Valitse laji"]]}
          {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
           :tyyppi        :valinta
-          :aseta         (fn [sanktio tyyppi]
+          :aseta         (fn [sanktio {tpk :toimenpidekoodi :as  tyyppi}]
                            ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
                            (log "VALITTIIN TYYPPI: " (pr-str tyyppi))
                            (assoc sanktio
                              :tyyppi tyyppi
-                             :toimenpideinstanssi (:tpi_id (first (filter #(= (:toimenpidekoodi tyyppi)
-                                                                              (:id %))
-                                                                          @tiedot-urakka/urakan-toimenpideinstanssit)))))
+                             :toimenpideinstanssi
+                             (when tpk
+                               (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
           :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
           :valinta-nayta :nimi
           :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]
@@ -188,7 +188,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :nimi          :sakko?
           :tyyppi        :valinta
           :hae           #(if (:sakko? %) :sakko :muistutus)
-          :aseta         #(assoc %1 :sakko? (= :sakko %2))
+          :aseta         (fn [rivi arvo]
+                           (let [sakko? (= :sakko arvo)]
+                             (assoc rivi
+                                    :sakko? sakko?
+                                    :summa (when sakko? (:summa rivi))
+                                    :toimenpideinstanssi (when sakko?
+                                                           (:toimenpideinstanssi rivi)))))
           :valinnat      [:sakko :muistutus]
           :valinta-nayta #(case %
                             :sakko "Sakko"
@@ -203,17 +209,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :valinnat-fn   #(when (:sakko? %) @tiedot-urakka/urakan-toimenpideinstanssit)
           :leveys    3
           :validoi       [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
-          :muokattava? :sakko?
-          :fmt (constantly "") ; jos ei muokattava (muistutus valittu), näytä tyhjä tpi
-          }
+          :muokattava? :sakko?}
 
          {:otsikko    "Sakko (€)"
           :tyyppi     :numero
           :nimi       :summa
           :leveys     1.5
           :validoi    [[:ei-tyhja "Anna sakon summa euroina"]]
-          :muokattava? :sakko?
-          :fmt (constantly "")}
+          :muokattava? :sakko?}
 
          {:otsikko       "Indeksi" :nimi :indeksi :leveys 1.5
           :tyyppi        :valinta
