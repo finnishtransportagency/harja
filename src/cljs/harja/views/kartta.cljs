@@ -209,7 +209,6 @@
               "rgba(0, 51, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 204, 51, 0.7)" "rgba(0, 0, 255, 0.7)"
               "rgba(0, 102, 102, 0.7)" "rgba(51, 153, 102, 0.7)" "rgba(51, 102, 0, 0.7)" "rgba(153, 102, 51, 0.7)"
               "rgba(153, 0, 51, 0.7)"])
-#_(def +varit+ ["#E04836ff" "#F39D41ff" "#8D5924ff" "#5696BCff" "#2F5168ff"])
 
 (defonce kartan-koon-paivitys
          (run! (do @yleiset/ikkunan-koko
@@ -227,11 +226,7 @@
                              :XL "Pienennä karttaa"
                              "")]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
-    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when (or
-                                                                   (not (empty? @nav/tarvitsen-isoa-karttaa))
-                                                                   (= sivu :tilannekuva)
-                                                                   (and (= sivu :urakat)
-                                                                        (not v-ur))) "hide")}
+    [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
 
      ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
@@ -299,10 +294,11 @@
                         (reset! ikonien-selitykset-auki false)
                         (.stopPropagation event)
                         (.preventDefault event))} "Sulje"]]
-         [:span.kartan-ikonien-selitykset-avaa.livicon-question-circle.klikattava {:on-click (fn [event]
-                                                                                               (reset! ikonien-selitykset-auki true)
-                                                                                               (.stopPropagation event)
-                                                                                               (.preventDefault event))}])])))
+         [:span.kartan-ikonien-selitykset-avaa.klikattava {:on-click (fn [event]
+                                                                       (reset! ikonien-selitykset-auki true)
+                                                                       (.stopPropagation event)
+                                                                       (.preventDefault event))}
+          "Karttaselitteet"])])))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
@@ -443,13 +439,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (when @pida-geometriat-nakyvilla?
-
-    ;; printtaa tasojen extentit debuggausta varten
-    #_(doseq [[taso geometriat] @tasot/geometriat
-              :let [ext (-> geometriat meta :extent)]]
-        (log "EXTENT TASOLLA: " (pr-str taso) " => " (pr-str ext)))
-    
+  (when @pida-geometriat-nakyvilla?  
     ;; Haetaan kaikkien tasojen extentit ja yhdistetään ne laajentamalla
     ;; extentiä siten, että kaikki mahtuvat.
     ;; Jos extentiä tasoista ei ole, zoomataan urakkaan tai hallintayksikköön.
@@ -510,10 +500,9 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                  (not= (:organisaatio vanha) (:organisaatio uusi)))
                          (zoomaa-geometrioihin)))))))
     (fn []
-      (let [koko @nav/kartan-koko
-            koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
+      (let [koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
                    :L
-                   koko)]
+                   @nav/kartan-koko)]
 
         [openlayers
          {:id                 "kartta"

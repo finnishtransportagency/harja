@@ -16,53 +16,40 @@
 (defonce yksikkohintaiset-tyot-nakymassa? (atom false))
 
 (defonce yks-hint-tehtavien-summat
-  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-               [valittu-sopimus-id _] @u/valittu-sopimusnumero
-               nakymassa? @yksikkohintaiset-tyot-nakymassa?
-               valittu-hoitokausi @u/valittu-hoitokausi
-               valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
-               valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
-                (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id) (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
-                (toteumat/hae-urakan-toteumien-tehtavien-summat valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen valittu-toimenpide-id valittu-tehtava-id))))
+         (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                      nakymassa? @yksikkohintaiset-tyot-nakymassa?
+                      valittu-hoitokausi @u/valittu-hoitokausi
+                      valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
+                      valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (when (and valittu-urakka-id valittu-sopimus-id valittu-hoitokausi nakymassa?)
+                       (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id)
+                            (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
+                       (toteumat/hae-urakan-toteumien-tehtavien-summat
+                         valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen
+                         valittu-toimenpide-id valittu-tehtava-id))))
 
 (defonce yks-hint-tyot-tehtavittain
          (reaction
-           (let [lisaa-yksikkohinta (fn [rivit] (map
-                                                  (fn [rivi]
-                                                    (assoc rivi :yksikkohinta
-                                                                (or (:yksikkohinta (first (filter
-                                                                                            (fn [tyo]
-                                                                                              (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
-                                                                                                   (= (:tehtava tyo) (:id rivi))
-                                                                                                   (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                            @u/urakan-yks-hint-tyot)))
-                                                                    nil)))
-                                                  rivit))
-                 lisa-suunniteltu-maara (fn [rivit] (map
-                                                      (fn [rivi]
-                                                        (assoc rivi :hoitokauden-suunniteltu-maara
-                                                                    (or (:maara (first (filter
-                                                                                         (fn [tyo]
-                                                                                           (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
-                                                                                                (= (:tehtava tyo) (:id rivi))
-                                                                                                (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                         @u/urakan-yks-hint-tyot)))
-                                                                        nil)))
-                                                      rivit))
-                 lisaa-suunnitellut-kustannukset (fn [rivit]
-                                                   (map
-                                                     (fn [rivi]
-                                                       (assoc rivi :hoitokauden-suunnitellut-kustannukset
-                                                                   (or (:yhteensa (first (filter
-                                                                                           (fn [tyo]
-                                                                                             (and (= (:sopimus tyo) (first @u/valittu-sopimusnumero))
-                                                                                                  (= (:tehtava tyo) (:id rivi))
-                                                                                                  (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi))))
-                                                                                           @u/urakan-yks-hint-tyot)))
-                                                                       nil)))
-                                                     rivit))
+           (let [assosioi (fn [avain avain2]
+                            (fn [rivit] (map
+                                          (fn [rivi]
+                                            (assoc rivi avain
+                                                        (or (avain2 (first (filter
+                                                                             (fn [tyo]
+                                                                               (and (= (:sopimus tyo)
+                                                                                       (first @u/valittu-sopimusnumero))
+                                                                                    (= (:tehtava tyo) (:id rivi))
+                                                                                    (pvm/sama-pvm?
+                                                                                      (:alkupvm tyo)
+                                                                                      (first @u/valittu-hoitokausi))))
+                                                                             @u/urakan-yks-hint-tyot)))
+                                                            nil)))
+                                          rivit)))
+                 lisaa-yksikkohinta (assosioi :yksikkohinta :yksikkohinta)
+                 lisa-suunniteltu-maara (assosioi :hoitokauden-suunniteltu-maara :maara)
+                 lisaa-suunnitellut-kustannukset (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
                  lisaa-toteutunut-maara (fn [rivit]
                                           (map
                                             (fn [rivi]
@@ -79,7 +66,9 @@
                                                     rivit))
                  lisaa-erotus (fn [rivit] (map
                                             (fn [rivi]
-                                              (assoc rivi :kustannuserotus (- (:hoit3okauden-suunnitellut-kustannukset rivi) (:hoitokauden-toteutuneet-kustannukset rivi))))
+                                              (assoc rivi :kustannuserotus
+                                                          (- (:hoitokauden-suunnitellut-kustannukset rivi)
+                                                             (:hoitokauden-toteutuneet-kustannukset rivi))))
                                             rivit))
                  tehtavarivit (reaction
                                 (let [urakan-4-tason-tehtavat (map
@@ -123,7 +112,7 @@
             :alkupvm    alkupvm
             :loppupvm   loppupvm
             :toimenpide toimenpide
-            :tehtava tehtava}))
+            :tehtava    tehtava}))
 
 (def haetut-reitit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

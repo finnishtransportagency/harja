@@ -83,7 +83,7 @@
                                          :yksikko (:yksikko (urakan-toimenpiteet/tehtava-nimella %2 tehtavat)))
                :leveys        "45%"}
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
-              {:otsikko "Muutoshinta" :nimi :yksikkohinta :tasaa :oikea
+              {:otsikko "Muutoshinta / yksikkö" :nimi :yksikkohinta :tasaa :oikea
                :validoi [[:ei-tyhja "Anna muutoshinta"]]
                :tyyppi  :positiivinen-numero :fmt fmt/euro-opt :leveys "20%"}]
 

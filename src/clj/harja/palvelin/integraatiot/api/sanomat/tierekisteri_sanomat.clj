@@ -129,14 +129,8 @@
    :poistettu         (xml/json-date-time->xml-xs-date (:poistettu data))})
 
 (defn luo-tierekisteriosoite [parametrit]
-  (into {} (filter val {:numero  (get parametrit "numero")
-                        :aet     (get parametrit "aet")
-                        :aosa    (get parametrit "aosa")
-                        :let     (get parametrit "let")
-                        :losa    (get parametrit "losa")
-                        :ajr     (get parametrit "ajr")
-                        :puoli   (get parametrit "puoli")
-                        :alkupvm (get parametrit "alkupvm")})))
+  (into {} (filter val (zipmap [:numero :aet :aosa :let :losa :ajr :puoli :alkupvm]
+                               (map (partial get parametrit) ["numero" "aet" "aosa" "let" "losa" "ajr" "puoli" "alkupvm"])))))
 
 (defn muunna-tietolajin-hakuvastaus [vastausdata ominaisuudet]
   (dissoc

@@ -55,7 +55,6 @@
                                    :tienumero tienumero})))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
-  (roolit/vaadi-rooli user "tilaajan kayttaja")
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -80,22 +79,22 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
-      (flatten (keep identity [{:leveys "10%" :otsikko "Päivämäärä"}
-                               {:leveys "5%" :otsikko "Klo"}
-                               {:leveys "5%" :otsikko "Tie"}
-                               {:leveys "5%" :otsikko "Aosa"}
-                               {:leveys "5%" :otsikko "Aet"}
-                               {:leveys "5%" :otsikko "Losa"}
-                               {:leveys "5%" :otsikko "Let"}
-                               {:leveys "5%" :otsikko "Ajo\u00ADsuun\u00ADta"}
-                               {:leveys "5%" :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
-                               {:leveys "5%" :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
-                               {:leveys "5%" :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
-                               {:leveys "5%" :otsikko "Kit\u00ADka"}
-                               {:leveys "5%" :otsikko "Läm\u00ADpö\u00ADti\u00ADla"}
-                               {:leveys "5%" :otsikko "Tar\u00ADkas\u00ADtaja"}
-                               {:leveys "10%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "5%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
+      [{:leveys 10 :otsikko "Päivämäärä"}
+       {:leveys 5 :otsikko "Klo"}
+       {:leveys 5 :otsikko "Tie"}
+       {:leveys 5 :otsikko "Aosa"}
+       {:leveys 5 :otsikko "Aet"}
+       {:leveys 5 :otsikko "Losa"}
+       {:leveys 5 :otsikko "Let"}
+       {:leveys 5 :otsikko "Ajo\u00ADsuun\u00ADta"}
+       {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+       {:leveys 5 :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
+       {:leveys 5 :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
+       {:leveys 5 :otsikko "Kit\u00ADka"}
+       {:leveys 5 :otsikko "Läm\u00ADpö\u00ADti\u00ADla"}
+       {:leveys 5 :otsikko "Tar\u00ADkas\u00ADtaja"}
+       {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}
+       {:leveys 5 :otsikko "Liit\u00ADtei\u00ADtä"}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         naytettavat-rivit
         :urakka

@@ -1,6 +1,6 @@
 (ns harja.tyokalut.migraatiot
-  (require [clojure.string :as str]
-           [clojure.java.shell :as sh])
+  (:require [clojure.string :as str]
+            [clojure.java.shell :as sh])
   
   (:gen-class))
 

@@ -21,8 +21,6 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest tallenna-tiestotarkastus
-  (is true))
 
 (defn hae-vapaa-tarkastus-ulkoinen-id []
   (let [id (rand-int 10000)

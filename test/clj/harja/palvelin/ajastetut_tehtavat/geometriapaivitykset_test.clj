@@ -14,8 +14,9 @@
   (:use org.httpkit.fake)
   (:import (java.util Date)))
 
-(defn aja-tieverkon-paivitys []
+(defn aja-tieverkon-paivitys
   "REPL-testiajofunktio"
+  []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
@@ -30,8 +31,9 @@
           testitietokanta
           "file:///Users/mikkoro/Desktop/Tieverkko-testi/Tieosoiteverkko.shp")))))
 
-(defn aja-pohjavesialueen-paivitys []
+(defn aja-pohjavesialueen-paivitys
   "REPL-testiajofunktio"
+  []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
@@ -46,8 +48,9 @@
           testitietokanta
           "file:///Users/jarihan/Desktop/Pohjavesialue-testi/Pohjavesialue.shp")))))
 
-(defn aja-siltojen-paivitys []
+(defn aja-siltojen-paivitys
   "REPL-testiajofunktio"
+  []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
@@ -62,8 +65,9 @@
           testitietokanta
           "file:///Users/jarihan/Desktop/Pohjavesialue-testi/Sillat.shp")))))
 
-(defn aja-soratien-hoitoluokkien-paivitys []
+(defn aja-soratien-hoitoluokkien-paivitys
   "REPL-testiajofunktio"
+  []
   (let [testitietokanta (apply tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)

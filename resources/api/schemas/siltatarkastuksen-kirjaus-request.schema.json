@@ -23,7 +23,7 @@
         },
         "siltanumero": {
           "id": "urn:harja/siltatarkastus/sillantunniste",
-          "type": "string",
+          "type": "number",
           "required": true
         },
         "tarkastusaika": {
