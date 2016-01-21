@@ -4,6 +4,7 @@
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
+            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                                  +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero]]
             [harja.ui.komponentti :as komp]
@@ -45,7 +46,7 @@
 (defn ilmoituksen-tiedot []
   (let [ilmoitus @tiedot/valittu-ilmoitus]
     [:div
-     (if-not @tiedot/uusi-kuittaus
+     (if-not @kuittausten-tiedot/uusi-kuittaus
        [:span
         [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
         (urakan-sivulle-nappi ilmoitus)
@@ -79,9 +80,7 @@
         [bs/panel {}
          "Kuittaukset"
          [:div
-          (napit/uusi "Uusi kuittaus" #(reset! tiedot/uusi-kuittaus
-                                               {:ilmoitusid (:ilmoitusid @tiedot/valittu-ilmoitus)
-                                                :tyyppi     :vastaanotettu}) {:luokka "uusi-kuittaus-nappi"})
+          (napit/uusi "Uusi kuittaus" #(kuittausten-tiedot/alusta-uusi-kuittaus tiedot/valittu-ilmoitus) {:luokka "uusi-kuittaus-nappi"})
           (when-not (empty? (:kuittaukset ilmoitus))
             [:div
              (for [kuittaus (:kuittaukset ilmoitus)]
@@ -149,8 +148,7 @@
                         :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
                         :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi})]
 
-        @tiedot/valinnat
-        ]
+        @tiedot/valinnat]
 
        [:div
         (pollauksen-merkki)

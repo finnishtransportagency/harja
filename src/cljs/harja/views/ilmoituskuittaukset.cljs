@@ -2,7 +2,7 @@
   "Harjan ilmoituskuittausten listaus & uuden kuittauksen kirjaus lomake."
   (:require [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
-            [harja.tiedot.ilmoitukset :as tiedot]
+            [harja.tiedot.ilmoituskuittaukset :as tiedot]
             [harja.domain.ilmoitusapurit :as apurit]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]

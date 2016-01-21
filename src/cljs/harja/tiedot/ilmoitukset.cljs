@@ -8,9 +8,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.geo :as geo])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -31,8 +29,6 @@
 
 (defonce ilmoitushaku (atom 0))
 
-(defonce uusi-kuittaus (atom nil))
-
 (defn hae-ilmoitukset []
   (go (swap! ilmoitushaku inc)))
 
@@ -46,30 +42,23 @@
                     (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
       tulos)))
 
-(defn tallenna-uusi-kuittaus [kuittaus]
-  (k/post! :tallenna-ilmoitustoimenpide kuittaus))
-
 (defonce haetut-ilmoitukset
-  (reaction<! [valinnat @valinnat
-               haku @ilmoitushaku]
-              {:odota 100}
-              (go
-                (if (zero? haku)
-                  []
-                  (let [tulos (<! (k/post! :hae-ilmoitukset
-                                           (-> valinnat
-                                               ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                                               (update-in [:tyypit]
-                                                          #(if (empty? %) +ilmoitustyypit+ %))
-                                               (update-in [:tilat]
-                                                          #(if (empty? %) +ilmoitustilat+ %)))))]
-                    (when-not (k/virhe? tulos)
-                      (when @valittu-ilmoitus ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
-                        (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
-                          (reset! valittu-ilmoitus nil)))
-                      (jarjesta-ilmoitukset tulos)))))))
-
-
+         (reaction<! [valinnat @valinnat haku @ilmoitushaku] {:odota 100}
+           (go
+             (if (zero? haku)
+               []
+               (let [tulos (<! (k/post! :hae-ilmoitukset
+                                        (-> valinnat
+                                            ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                                            (update-in [:tyypit]
+                                                       #(if (empty? %) +ilmoitustyypit+ %))
+                                            (update-in [:tilat]
+                                                       #(if (empty? %) +ilmoitustilat+ %)))))]
+                 (when-not (k/virhe? tulos)
+                   (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
+                     (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
+                       (reset! valittu-ilmoitus nil)))
+                   (jarjesta-ilmoitukset tulos)))))))
 
 (defonce karttataso-ilmoitukset (atom false))
 
