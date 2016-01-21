@@ -82,6 +82,33 @@
           "lumensiirto"                     "Lumensiirto"
           "paannejaan poisto"               "Paannejään poisto"})
 
+(defonce jarjestys
+         {:talvi ["auraus ja sohjonpoisto"
+                  "suolaus"
+                  "pistehiekoitus"
+                  "linjahiekoitus"
+                  "lumivallien madaltaminen"
+                  "sulamisveden haittojen torjunta"
+                  "liuossuolaus"
+                  "aurausviitoitus ja kinostimet"
+                  "lumensiirto"
+                  "paannejaan poisto"
+                  "muu"]
+          :kesa  ["koneellinen niitto"
+                  "koneellinen vesakonraivaus"
+                  "liikennemerkkien puhdistus"
+                  "sorateiden muokkaushoylays"
+                  "sorateiden polynsidonta"
+                  "sorateiden tasaus"
+                  "sorastus"
+                  "harjaus"
+                  "pinnan tasaus"
+                  "paallysteiden paikkaus"
+                  "paallysteiden juotostyot"
+                  "siltojen puhdistus"
+                  "l- ja p-alueiden puhdistus"
+                  "muu"]})
+
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet (atom {:yllapito        {:paallystys false
                                               :paikkaus   false}
@@ -99,19 +126,22 @@
                                               :laatu      false
                                               :pistokoe   false}
                             ;; Näiden pitää osua työkoneen enumeihin
+                            ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
+                            ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
+                            ;; tekoa halutaan seurana livenä, niin arvot on täällä valmiiksi copypastettavissa..
                             :talvi           {"auraus ja sohjonpoisto"          false
                                               "suolaus"                         false
                                               "pistehiekoitus"                  false
                                               "linjahiekoitus"                  false
                                               "lumivallien madaltaminen"        false
                                               "sulamisveden haittojen torjunta" false
-                                              "kelintarkastus"                  false
+                                              ;;"kelintarkastus"                  false
                                               "liuossuolaus"                    false
                                               "aurausviitoitus ja kinostimet"   false
                                               "lumensiirto"                     false
                                               "paannejaan poisto"               false
                                               "muu"                             false}
-                            :kesa            {"tiestotarkastus"            false
+                            :kesa            {;;"tiestotarkastus"            false
                                               "koneellinen niitto"         false
                                               "koneellinen vesakonraivaus" false
 
@@ -215,7 +245,7 @@
                                                     :aikavali-historia    @historiakuvan-aikavali
                                                     :suodattimet          @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila true))
-    
+
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
                                   (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
