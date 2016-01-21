@@ -145,7 +145,9 @@
                                  arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset)
                                  bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi_indeksi)
                                  kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi)
-                                 kokonaishinta (+ muutoshinta-yhteensa
+                                 kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
+                                                  toteutunut-hinta-yhteensa
+                                                  muutoshinta-yhteensa
                                                   arvonvahennykset-yhteensa
                                                   bitumi-indeksi-yhteensa
                                                   kaasuindeksi-yhteensa)]
