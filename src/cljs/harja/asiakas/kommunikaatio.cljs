@@ -144,18 +144,22 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn pingaa-palvelinta []
   (post! :ping {}))
 
+(def pingaus-kaynnissa (atom false))
+
 (def pingausvali-millisekunteina (* 1000 30))
 
 (defn kaynnista-palvelimen-pingaus []
-  (go
-    (loop []
-      (<! (timeout pingausvali-millisekunteina))
-      (log "Pingataan palvelinta.")
-      (let [vastaus (<! (pingaa-palvelinta))]
-        (if (= vastaus :pong)
-          (log "Pingaus onnistui. Vastaus: " (pr-str vastaus))
-          (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus)))
-        (recur)))))
+  (when-not pingaus-kaynnissa
+    (reset! pingaus-kaynnissa true)
+    (go
+      (loop []
+        (<! (timeout pingausvali-millisekunteina))
+        (log "Pingataan palvelinta.")
+        (let [vastaus (<! (pingaa-palvelinta))]
+          (if (= vastaus :pong)
+            (log "Pingaus onnistui. Vastaus: " (pr-str vastaus))
+            (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus)))
+          (recur))))))
 
 
 (defn wmts-polku []
