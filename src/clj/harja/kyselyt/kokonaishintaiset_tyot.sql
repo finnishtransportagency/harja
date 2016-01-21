@@ -34,7 +34,7 @@ WHERE
             INNER JOIN toimenpideinstanssi tpi ON tpi.id = kht.toimenpideinstanssi
           WHERE tpi.urakka = :urakkaid AND
                 kht.sopimus = :sopimusid))
-  AND kokonaishintainen
+  AND hinnoittelu @> '{kokonaishintainen}'
 ORDER BY id;
 
 -- name: paivita-kokonaishintainen-tyo!

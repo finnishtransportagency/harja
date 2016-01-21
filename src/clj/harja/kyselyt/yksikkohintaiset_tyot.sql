@@ -29,7 +29,7 @@ WHERE
     SELECT DISTINCT (tehtava)
     FROM yksikkohintainen_tyo
     WHERE urakka = :urakkaid AND sopimus = :sopimusid) AND
-  hinnoittelu @> ARRAY['yksikkohintainen'::hinnoittelutyyppi];
+  hinnoittelu @> '{yksikkohintainen}';
 
 -- name: paivita-urakan-yksikkohintainen-tyo!
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot
