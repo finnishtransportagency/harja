@@ -21,7 +21,6 @@
                                    (pvm/paivamaaran-hoitokausi alkupvm)
                                    [alkupvm loppupvm])]
     (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
-    (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
     (into []
           (laskutus-q/hae-laskutusyhteenvedon-tiedot db
                                                      (konv/sql-date hk-alkupvm)

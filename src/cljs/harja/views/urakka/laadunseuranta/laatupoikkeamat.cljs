@@ -30,7 +30,6 @@
 
 (defonce listaus (atom :kaikki))
 
-
 (defonce urakan-laatupoikkeamat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                [alku loppu] @tiedot-urakka/valittu-aikavali
