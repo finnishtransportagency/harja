@@ -23,20 +23,29 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.palvelin.palvelut.paallystys :as paallystys]))
 
-(defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
-  (let [vastaus (into []
-                      (comp
-                        (map #(konv/string->avain % [:paatos]))
-                        (map #(konv/string->avain % [:tila]))
-                        (map #(assoc % :kohdeosat
-                                       (into []
-                                             paallystys/kohdeosa-xf
-                                             (paallystys-q/hae-urakan-paallystyskohteen-paallystyskohdeosat
-                                               db urakka-id sopimus-id (:paikkauskohde_id %))))))
-                      (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id))]
-    (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
-    vastaus))
+  (jdbc/with-db-transaction [db db]
+    (let [sopimukset (if-not (nil? sopimus-id)
+                       [sopimus-id]
+
+                       (mapv :id (urakat-q/hae-urakan-sopimukset db urakka-id)))
+
+          _ (log/debug "Haetaan paikkaustoteumat urakan " urakka-id " sopimuksista: " (pr-str sopimukset))
+          vastaus (apply (comp vec flatten merge)
+                         (for [sopimus-id (get sopimukset urakka-id)]
+                           (into []
+                                 (comp
+                                   (map #(konv/string->avain % [:paatos]))
+                                   (map #(konv/string->avain % [:tila]))
+                                   (map #(assoc % :kohdeosat
+                                                  (into []
+                                                        paallystys/kohdeosa-xf
+                                                        (paallystys-q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                                          db urakka-id sopimus-id (:paikkauskohde_id %))))))
+                                 (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id))))]
+      (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
+      vastaus)))
 
 
 (defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
