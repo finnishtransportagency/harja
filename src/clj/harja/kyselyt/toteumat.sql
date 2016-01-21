@@ -670,12 +670,9 @@ SELECT
   arvot,
   tierekisteriurakkakoodi,
   t.id             AS toteuma_id,
-  rp.id            AS reittipiste_id,
-  rp.aika          AS reittipiste_aika,
-  rp.sijainti      AS reittipiste_sijainti
+  t.reitti         AS reitti
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
-  JOIN reittipiste rp ON rp.toteuma = t.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND alkanut >= :alkupvm

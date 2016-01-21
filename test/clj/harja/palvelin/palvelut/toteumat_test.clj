@@ -242,7 +242,7 @@
                                          :alkupvm    alkupvm
                                          :loppupvm   loppupvm})]
     (is (>= (count varustetoteumat) 1))
-    (is (>= (count (:reittipisteet (first varustetoteumat))) 1))))
+    (is (contains? (first varustetoteumat) :reitti))))
 
 (deftest kok-hint-toteumien-reitit-haettu-oikein
   (let [alkupvm (java.sql.Date. 100 9 1)

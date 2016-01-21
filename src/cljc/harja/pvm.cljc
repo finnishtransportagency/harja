@@ -235,8 +235,16 @@
 (defn paivan-alussa [dt]
   (aikana dt 0 0 0 0))
 
+(defn paivan-alussa-opt [dt]
+  (when dt
+    (aikana dt 0 0 0 0)))
+
 (defn paivan-lopussa [dt]
   (aikana dt 23 59 59 999))
+
+(defn paivan-lopussa-opt [dt]
+  (when dt
+    (aikana dt 23 59 59 999)))
 
 (defn kuukauden-nimi [kk]
   (case kk
@@ -360,6 +368,14 @@
                          23 59 59 999)]
        ;; aseta aika
        [alku loppu])))
+
+
+#?(:cljs
+   (defn
+     kuukauden-aikavali-opt
+     [dt]
+     (when dt
+       (kuukauden-aikavali dt))))
 
 #?(:cljs
    (defn hoitokauden-kuukausivalit

@@ -32,6 +32,25 @@
           "pistehiekoitus",
           "suolaus"
         ]
+      },
+      "havainto": {
+        "tyokone": {
+          "id": 31337,
+          "tyokonetyyppi": "aura-auto"
+        },
+        "sijainti": {
+          "koordinaatit": {
+            "x": 429005,
+            "y": 7198151
+          }
+        },
+        "suunta": 46,
+        "havaintoaika": "2016-01-30T12:00:00Z",
+        "urakkaid": 4,
+        "suoritettavatTehtavat": [
+          "pistehiekoitus",
+          "suolaus"
+        ]
       }
     }
   ]

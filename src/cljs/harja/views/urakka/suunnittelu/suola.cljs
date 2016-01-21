@@ -22,7 +22,8 @@
             [harja.tiedot.indeksit :as i]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.views.kartta.tasot :as tasot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
@@ -184,11 +185,15 @@
 
 (defn suola []
   (komp/luo
-    (komp/lippu suolasakot-nakyvissa?)
+    (komp/lippu suolasakot-nakyvissa? (tasot/taso-atom :pohjavesialueet))
+    (komp/sisaan #(do
+                   (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                   (nav/vaihda-kartan-koko! :M)))
     (fn []
       (let [ur @nav/valittu-urakka
             kaytossa? @suolasakko-kaytossa?]
         [:span.suolasakot
+         [kartta/kartan-paikka]
          [yleiset/raksiboksi "Suolasakko käytössä" kaytossa?
           #(go (reset! suolasakko-kaytossa?
                        (<! (suola/aseta-suolasakon-kaytto (:id ur)

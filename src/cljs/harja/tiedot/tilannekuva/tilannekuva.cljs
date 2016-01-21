@@ -199,6 +199,9 @@
                                                 @suodattimet
                                                 (kartta/poista-popup!)))
 
+(defn kartan-tyypiksi [t avain tyyppi]
+  (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
+
 (defn hae-asiat []
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
   (go
@@ -212,6 +215,7 @@
                                                     :aikavali-historia    @historiakuvan-aikavali
                                                     :suodattimet          @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila true))
+    
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
                                   (tapahtumat/julkaise! {:aihe      :uusi-tyokonedata
@@ -259,7 +263,6 @@
         (lopeta-periodinen-haku-jos-kaynnissa)
         (aloita-periodinen-haku))
       (lopeta-periodinen-haku-jos-kaynnissa))))
-
 
 (add-watch nakymassa? :pollaus-muuttui
            (fn [_ _ old new]

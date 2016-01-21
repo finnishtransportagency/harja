@@ -31,6 +31,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
 
+(defonce murupolku-nakyvissa? (atom true))
+
 (defonce kartan-extent (atom nil))
 
 (defonce kartalla-nakyva-alue
@@ -157,6 +159,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                            (not v-ur)) :XL
                       :default valittu-koko)))))
 
+(def kartan-kontrollit-nakyvissa?
+  (reaction
+   (let [sivu @sivu]
+     (or (empty? @tarvitsen-isoa-karttaa)
+         (not= sivu :tilannekuva)
+         (and (not= sivu :urakat)
+              (nil? @valittu-urakka))))))
+
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   (reset! valittu-hallintayksikko-id hy-id)
   (reset! valittu-urakka-id u-id))
@@ -269,7 +279,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
 (def render-lupa? (reaction
-                    (and @render-lupa-hy? @render-lupa-u?)))
+                   (and @render-lupa-hy? @render-lupa-u?)))
 
 
 (defn kasittele-url!
