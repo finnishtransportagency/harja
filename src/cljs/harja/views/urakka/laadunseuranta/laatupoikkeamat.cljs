@@ -153,71 +153,20 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
          :lisaa-rivi   " Lisää sanktio"
          :ohjaus       g
          :uusi-rivi    (fn [rivi]
-                         (grid/avaa-vetolaatikko! g (:id rivi))
-                         (assoc rivi :sakko? true))
-         :vetolaatikot (into {}
-                             (map (juxt first
-                                        (fn [[id sanktio]]
-                                          [lomake/lomake
-                                           {:otsikko  "Sanktion tiedot"
-                                            :luokka   :horizontal
-                                            :muokkaa! (fn [uudet-tiedot]
-                                                        (swap! sanktiot-atom
-                                                               assoc id uudet-tiedot))
-                                            :virheet  (r/wrap (get @sanktio-virheet id)
-                                                              #(swap! sanktio-virheet assoc id %))}
-                                           [{:otsikko       "Sakko/muistutus"
-                                             :nimi          :sakko?
-                                             :tyyppi        :valinta
-                                             :hae           #(if (:sakko? %) :sakko :muistutus)
-                                             :aseta         #(assoc %1 :sakko? (= :sakko %2))
-                                             :valinnat      [:sakko :muistutus]
-                                             :valinta-nayta #(case %
-                                                              :sakko "Sakko"
-                                                              :muistutus "Muistutus")
-                                             :leveys-col    2}
+                         (assoc rivi :sakko? true))}
 
-                                            (when (:sakko? sanktio)
-                                              {:otsikko       "Toimenpide"
-                                               :nimi          :toimenpideinstanssi
-                                               :tyyppi        :valinta
-                                               :valinta-arvo  :tpi_id
-                                               :valinta-nayta :tpi_nimi
-                                               :valinnat      @tiedot-urakka/urakan-toimenpideinstanssit
-                                               :leveys-col    3
-                                               :validoi       [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]})
-
-                                            (when (:sakko? sanktio)
-                                              {:otsikko    "Sakko (€)"
-                                               :tyyppi     :numero
-                                               :nimi       :summa
-                                               :leveys-col 2
-                                               :validoi    [[:ei-tyhja "Anna sakon summa euroina"]]})
-
-                                            (when (:sakko? sanktio)
-                                              {:otsikko       "Sidotaan indeksiin" :nimi :indeksi :leveys 2
-                                               :tyyppi        :valinta
-                                               :valinnat      ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
-                                               :valinta-nayta #(or % "Ei sidota indeksiin")
-                                               :leveys-col    3})
-
-                                            ]
-                                           sanktio]))
-                                  @sanktiot-atom))}
-
-        [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-         {:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 2
+        [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
           :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]]}
-         {:otsikko       "Laji" :tyyppi :valinta :leveys 1
+         {:otsikko       "Laji" :tyyppi :valinta :leveys 0.85
           :nimi          :laji
           :aseta         #(assoc %1
                            :laji %2
                            :tyyppi nil)
           :valinnat      [:A :B :C :muistutus]
           :valinta-nayta #(case %
-                           :A "Ryhmä A"
-                           :B "Ryhmä B"
-                           :C "Ryhmä C"
+                           :A "A"
+                           :B "B"
+                           :C "C"
                            "- valitse -")
           :validoi       [[:ei-tyhja "Valitse laji"]]}
          {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
@@ -234,9 +183,44 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :valinta-nayta :nimi
           :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]
           }
-         {:otsikko     "Sakko" :nimi :summa :hae kuvaile-sanktion-sakko :tyyppi :string :leveys 3.5
-          :muokattava? (constantly false)}
 
+         {:otsikko "Sakko/muistutus"
+          :nimi          :sakko?
+          :tyyppi        :valinta
+          :hae           #(if (:sakko? %) :sakko :muistutus)
+          :aseta         #(assoc %1 :sakko? (= :sakko %2))
+          :valinnat      [:sakko :muistutus]
+          :valinta-nayta #(case %
+                            :sakko "Sakko"
+                            :muistutus "Muistutus")
+          :leveys    2}
+
+         {:otsikko       "Toimenpide"
+          :nimi          :toimenpideinstanssi
+          :tyyppi        :valinta
+          :valinta-arvo  :tpi_id
+          :valinta-nayta :tpi_nimi
+          :valinnat-fn   #(when (:sakko? %) @tiedot-urakka/urakan-toimenpideinstanssit)
+          :leveys    3
+          :validoi       [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
+          :muokattava? :sakko?
+          :fmt (constantly "") ; jos ei muokattava (muistutus valittu), näytä tyhjä tpi
+          }
+
+         {:otsikko    "Sakko (€)"
+          :tyyppi     :numero
+          :nimi       :summa
+          :leveys     1.5
+          :validoi    [[:ei-tyhja "Anna sakon summa euroina"]]
+          :muokattava? :sakko?
+          :fmt (constantly "")}
+
+         {:otsikko       "Indeksi" :nimi :indeksi :leveys 1.5
+          :tyyppi        :valinta
+          :valinnat      ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
+          :valinta-nayta #(or % "Ei sidota indeksiin")
+          :leveys-col    2}
+         
          ]
 
         sanktiot-atom]])))
