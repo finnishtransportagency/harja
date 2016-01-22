@@ -82,7 +82,7 @@
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta http-palvelin kehitysmoodi]} asetukset]
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (konfiguroi-lokitus asetukset)
     (try
       (validoi-asetukset asetukset)
@@ -90,12 +90,8 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
-     :db (tietokanta/luo-tietokanta (:palvelin tietokanta)
-                                    (:portti tietokanta)
-                                    (:tietokanta tietokanta)
-                                    (:kayttaja tietokanta)
-                                    (:salasana tietokanta)
-                                    (:yhteyspoolin-koko tietokanta))
+     :db (tietokanta/luo-tietokanta tietokanta)
+     :db-replica (tietokanta/tietokanta tietokanta-replica)
      :klusterin-tapahtumat (component/using
                             (tapahtumat/luo-tapahtumat)
                             [:db])
