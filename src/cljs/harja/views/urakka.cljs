@@ -32,7 +32,7 @@
     :kohdeluettelo-paallystys (= urakkatyyppi :paallystys)
     :kohdeluettelo-paikkaus (= urakkatyyppi :paikkaus)
     :laadunseuranta true
-    :valitavoitteet (not= urakkatyyppi :hoito)
+    :valitavoitteet true
     :turvallisuuspoikkeamat (= urakkatyyppi :hoito)
     :laskutus))
 

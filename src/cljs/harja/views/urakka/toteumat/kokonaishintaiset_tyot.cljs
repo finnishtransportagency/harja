@@ -29,16 +29,16 @@
     (go (reset! tiedot
                 (<! (tiedot/hae-kokonaishintaisen-toteuman-tiedot (:id @nav/valittu-urakka) pvm toimenpidekoodi))))
     (fn [pvm toimenpidekoodi]
-      (if-not @tiedot
-        [yleiset/ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
-        [grid/grid {:otsikko "Päivän toteumat"
-                    :tunniste :id}
-         [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 3}
-          {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
-          {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
-          {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
-          {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
-         (sort-by :alkanut @tiedot)]))))
+      [grid/grid {:otsikko  "Päivän toteumat"
+                  :tunniste :id
+                  :tyhja    (if (nil? @tiedot) [ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
+                                               "Tietoja ei löytynyt")}
+       [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 3}
+        {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
+        {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
+        {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
+        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
+       (sort-by :alkanut @tiedot)])))
 
 (defn tee-taulukko []
   (let [toteumat (into [] (map-indexed ; Summatuilla riveillä ei ole yksilöivää id:tä, generoidaan omat

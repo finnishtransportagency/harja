@@ -11,7 +11,8 @@
             [harja.fmt :as fmt]
             [cljs-time.core :as t]
             [harja.domain.roolit :as roolit]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -119,7 +120,10 @@
          @tavoitteet]
 
 
-        [grid/grid
+        (when (and (= (:sopimustyyppi @nav/valittu-urakka) :kokonaisurakka)
+                   (or (= (:tyyppi @nav/valittu-urakka) :paallystys)
+                       (= (:tyyppi @nav/valittu-urakka) :paikkaus)))
+          [grid/grid
          {:otsikko "Kohteiden välitavoitteet"
           :tunniste :yha-id
           :tallenna #(go (reset! tallennus-kaynnissa true)
@@ -136,9 +140,8 @@
           {:otsikko "Kohde" :leveys "60%" :nimi :kohde :tyyppi :string :muokattava? (constantly false)}
           {:otsikko "Tila" :leveys "20%" :tyyppi :string :muokattava? (constantly false)
            :nimi :tila }]
-         [{:yha-id 1 :kohde "Mt 22 Ruohonjuuren pätkä" :tila "Kaikki valmiina"}
+         [{:yha-id 1 :kohde "Mt 22 Ruohonjuuren pätkä" :tila "Kaikki valmiina"} ; FIXME Hardkoodattu testidata
           {:yha-id 2 :kohde "Mt 22 Terilän silta" :tila "Kaikki valmiina"}
           {:yha-id 3 :kohde "Mt 22 Matulan  pätkä" :tila "Kohde kesken"}
           {:yha-id 4 :kohde "Mt 22 koskenlaskijan kuru" :tila "Kohde kesken"}
-          {:yha-id 5 :kohde "Mt 22 rampit" :tila "Kaikki valmiina"}
-          ]]]))))
+          {:yha-id 5 :kohde "Mt 22 rampit" :tila "Kaikki valmiina"}]])]))))

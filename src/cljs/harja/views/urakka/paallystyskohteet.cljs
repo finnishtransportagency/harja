@@ -145,7 +145,9 @@
                                  arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset)
                                  bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi_indeksi)
                                  kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi)
-                                 kokonaishinta (+ muutoshinta-yhteensa
+                                 kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
+                                                  toteutunut-hinta-yhteensa
+                                                  muutoshinta-yhteensa
                                                   arvonvahennykset-yhteensa
                                                   bitumi-indeksi-yhteensa
                                                   kaasuindeksi-yhteensa)]
@@ -162,8 +164,17 @@
       (komp/ulos #(kartta/poista-popup!))
       (komp/lippu paallystys-tai-paikkauskohteet-nakymassa)
       (fn []
-        (let [paallystysnakyma? (= :paallystys (:tyyppi @nav/valittu-urakka))]
-
+        (let [haitari-leveys 5
+              id-leveys 10
+              kohde-leveys 20
+              tarjoushinta-leveys 10
+              muutoshinta-leveys 10
+              toteutunut-hinta-leveys 10
+              arvonvahennykset-leveys 10
+              bitumi-indeksi-leveys 10
+              kaasuindeksi-leveys 10
+              yhteensa-leveys 15
+              paallystysnakyma? (= :paallystys (:tyyppi @nav/valittu-urakka))]
           [:div
            [kartta/kartan-paikka]
            [grid/grid
@@ -180,21 +191,21 @@
              :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
                                                       (not (nil? (:paikkausilmoitus_id rivi)))))
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
-            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-             {:otsikko     "YHA-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%"
+            [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
+             {:otsikko     "YHA-ID" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
               :validoi     [[:ei-tyhja "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]
               :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
-             {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "25%" :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys kohde-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
              (when paallystysnakyma?
-               {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]})
+               {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :validoi [[:ei-tyhja "Anna arvo"]]})
              (when paallystysnakyma?
-               {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"})
+               {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
              (when-not paallystysnakyma?
-               {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"})
-             {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-             {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-             {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-             {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys "15%"
+               {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
+             {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
               :hae     (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                                      (:muutoshinta rivi)
                                      (:toteutunut_hinta rivi)
@@ -205,7 +216,7 @@
 
            [grid/grid
             {:otsikko                  "Muut kohteet"       ; NOTE: Muut kohteet ovat alkuperäiseen sopimukseen kuulumattomia töitä.
-             :tyhja                    (if (nil? {}) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
+             :tyhja                    (if (nil? @muut-tyot) [ajax-loader "Haetaan muita töitä..."] "Ei muita töitä")
              :vetolaatikot             (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @paallystyskohderivit))
              :tallenna                 #(go (let [urakka-id (:id @nav/valittu-urakka)
                                                   [sopimus-id _] @u/valittu-sopimusnumero
@@ -217,19 +228,19 @@
              :esta-poistaminen?        (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
                                                       (not (nil? (:paikkausilmoitus_id rivi)))))
              :esta-poistaminen-tooltip (fn [rivi] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
-            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-             {:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys "10%" :validoi [[:ei-tyhja "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-             {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys "25%" :validoi [[:ei-tyhja "Anna arvo"]]}
+            [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
+             {:otsikko "Harja-ID" :nimi :kohdenumero :tyyppi :string :leveys id-leveys  :validoi [[:ei-tyhja "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+             {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys kohde-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
              (when paallystysnakyma?
-               {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]})
+               {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :validoi [[:ei-tyhja "Anna arvo"]]})
              (when paallystysnakyma?
-               {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"})
+               {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
              (when-not paallystysnakyma?
-               {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"})
-             {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-             {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-             {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna arvo"]]}
-             {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys "15%"
+               {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys toteutunut-hinta-leveys})
+             {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+             {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
               :hae     (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                                      (:muutoshinta rivi)
                                      (:arvonvahennykset rivi)
@@ -240,16 +251,18 @@
            [grid/grid
             {:otsikko "Yhteensä"
              :tyhja   (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
-            [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys "5%"}
-             {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys "10%"}
-             {:otsikko "" :nimi :nimi :tyyppi :string :leveys "25%"}
+            [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
+             {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
+             {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
              (when paallystysnakyma?
-               {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-               {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"})
+               {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys})
+             (when paallystysnakyma?
+               {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
              (when-not paallystysnakyma?
-               {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"})
-             {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-             {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-             {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys "10%"}
-             {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys "15%"}]
+               {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
+             {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys arvonvahennykset-leveys}
+             {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys bitumi-indeksi-leveys}
+             {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys kaasuindeksi-leveys}
+             {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys}
+             {:otsikko "" :nimi :muokkaustoiminnot-tyhja :tyyppi :string :leveys 3}]
             @yhteensa]])))))
