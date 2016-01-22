@@ -10,7 +10,7 @@
             [harja.domain.roolit :as roolit]
             [clojure.string :as str]
             [harja.virhekasittely :as vk])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (def +polku+ (let [host (.-host js/location)]
                (if (#{"10.0.2.2" "10.0.2.2:8000" "10.0.2.2:3000" "localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host)
@@ -141,12 +141,15 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                             (str (name nimi) "=" arvo))
                           (partition 2 parametrit)))))
 
+(defn wmts-polku []
+  (str +polku+ "wmts/"))
+
 (defn pingaa-palvelinta []
   (post! :ping {}))
 
 (def pingaus-kaynnissa (atom false))
 
-(def pingausvali-millisekunteina (* 1000 30))
+(def pingausvali-millisekunteina 1000)
 
 (defn kaynnista-palvelimen-pingaus []
   (when-not @pingaus-kaynnissa
@@ -156,12 +159,15 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       (loop []
         (<! (timeout pingausvali-millisekunteina))
         (log "Pingataan palvelinta.")
-        (let [vastaus (<! (pingaa-palvelinta))]
-          (if (= vastaus :pong)
-            (log "Pingaus onnistui. Vastaus: " (pr-str vastaus))
-            (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus)))
+        (let [pingauskanava pingaa-palvelinta
+              odotuskanava (timeout 10000)
+              kasittele-onnistunut-pingaus (fn [vastaus]
+                                             (log "Pingaus onnistui! Vastaus:" (pr-str vastaus)))
+              kasittele-epaonnistunut-pingaus (fn [vastaus]
+                                                (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus)))]
+          (alt!
+            pingauskanava ([vastaus] (if (= vastaus :pong)
+                                       (kasittele-onnistunut-pingaus vastaus)
+                                       (kasittele-epaonnistunut-pingaus vastaus)))
+            odotuskanava ([_] (kasittele-epaonnistunut-pingaus nil)))
           (recur))))))
-
-
-(defn wmts-polku []
-  (str +polku+ "wmts/"))
