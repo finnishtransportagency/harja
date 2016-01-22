@@ -24,7 +24,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.virhekasittely :as virhekasittely]
             [cljs-time.core :as t])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
@@ -81,21 +81,17 @@
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
     [yleiset/ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
-(def pisteanimaatio-kaynnissa (atom false))
-(def pisteanimaation-pisteet (atom "."))
+(def pisteanimaation-pisteet (atom ""))
 
 (defn yhteys-katkennut-varoitus []
   (komp/luo
-    (komp/sisaan #(do (reset! pisteanimaatio-kaynnissa true)
-                      (go (loop []
-                            (<! (timeout 1000))
-                            (case @pisteanimaation-pisteet
-                              "." (reset! pisteanimaation-pisteet "..")
-                              ".." (reset! pisteanimaation-pisteet "...")
-                              "..." (reset! pisteanimaation-pisteet "."))
-                            (when @pisteanimaatio-kaynnissa
-                              (recur))))))
-    (komp/ulos #(reset! pisteanimaatio-kaynnissa false))
+   (komp/ulos (let [pisteanimaatio-kaynnissa (atom true)]
+                (go-loop [[teksti & tekstit] (cycle [""  "." ".." "..."])]
+                  (when @pisteanimaatio-kaynnissa
+                    (<! (timeout 1000))
+                    (reset! pisteanimaation-pisteet teksti)
+                    (recur tekstit)))
+                #(reset! pisteanimaatio-kaynnissa false)))
     (fn []
       [:div.yhteysilmoitin.yhteys-katkennut-varoitus
        [:div.yhteysilmoitin-viesti "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
