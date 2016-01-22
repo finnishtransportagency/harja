@@ -19,7 +19,7 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.ui.viesti :as viesti]))
 
-(defn luo-henkilo-lomakeryhma [avain nimi]
+(defn luo-henkilolomakeryhma [avain nimi]
   (lomake/ryhma {:otsikko    nimi
                  :leveys-col 5}
                 {:nimi       (keyword (str avain "-etunimi"))
@@ -33,15 +33,15 @@
                 {:nimi       (keyword (str avain "-matkapuhelin"))
                  :otsikko    "Matkapuhelin"
                  :leveys-col 3
-                 :tyyppi     :string}
+                 :tyyppi     :puhelin}
                 {:nimi       (keyword (str avain "-tyopuhelin"))
                  :otsikko    "Työpuhelin"
                  :leveys-col 3
-                 :tyyppi     :string}
+                 :tyyppi     :puhelin}
                 {:nimi       (keyword (str avain "-sahkoposti"))
                  :otsikko    "Sähköposti"
                  :leveys-col 3
-                 :tyyppi     :string}
+                 :tyyppi     :email}
                 {:nimi       (keyword (str avain "-organisaatio"))
                  :otsikko    "Organisaation nimi"
                  :leveys-col 3
@@ -58,7 +58,7 @@
     {:muokkaa! #(reset! tiedot/uusi-kuittaus %)
      :luokka   :horizontal
      :footer   [napit/palvelinkutsu-nappi
-                "Tallenna"
+                "Tallenna ja lähetä"
                 #(tiedot/tallenna-uusi-kuittaus @tiedot/uusi-kuittaus)
                 {:ikoni        (ikonit/tallenna)
                  :disabled     false
@@ -87,8 +87,8 @@
       :tyyppi      :string
       :pituus-max  256
       :leveys-col  4}
-     (luo-henkilo-lomakeryhma "kasittelija" "Käsittelijä")
-     (luo-henkilo-lomakeryhma "ilmoittaja" "Ilmoittaja")]
+     (luo-henkilolomakeryhma "kasittelija" "Käsittelijä")
+     (luo-henkilolomakeryhma "ilmoittaja" "Ilmoittaja")]
     @tiedot/uusi-kuittaus]])
 
 (defn uusi-kuittaus-lomake []
