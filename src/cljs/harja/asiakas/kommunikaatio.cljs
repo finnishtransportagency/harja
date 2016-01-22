@@ -49,8 +49,7 @@
              (when-not (nil? vastaus)
                (if (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (do (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus))
-                     (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe))
-                     (put! chan vastaus))
+                     (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
     (go

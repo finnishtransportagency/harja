@@ -15,7 +15,7 @@
 (defonce uusi-kuittaus (atom nil))
 
 (defn tallenna-uusi-kuittaus [kuittaus]
-  (k/post! :tallenna-ilmoitustoimenpide kuittaus))
+  (k/post! :tallenna-ilmoitustoimenpide kuittaus nil true))
 
 (defn alusta-uusi-kuittaus [valittu-ilmoitus]
   (let [kayttaja @istunto/kayttaja
