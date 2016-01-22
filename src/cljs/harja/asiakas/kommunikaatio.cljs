@@ -163,16 +163,20 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
           normaali-pingausvali-millisekunteina)
   (reset! yhteys-katkennut? false))
 
-(defn- kasittele-epaonnistunut-pingaus [vastaus]
-  (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus))
+(defn- kasittele-yhteyskatkos [vastaus]
+  (log "Yhteys katkesi! Vastaus: " (pr-str vastaus))
   (reset! yhteys-katkennut? true)
   (reset! nykyinen-pingausvali-millisekunteina
           yhteys-katkennut-pingausvali-millisekunteina)
   (reset! yhteys-palautui-hetki-sitten false))
 
+(defn lisaa-kuuntelija-selaimen-verkkotilalle []
+  (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil)))
+
 (defn kaynnista-palvelimen-pingaus []
   (when-not @pingaus-kaynnissa?
     (log "Käynnistetään palvelimen pingaus " (/ @nykyinen-pingausvali-millisekunteina 1000) " sekunnin valein")
+    (lisaa-kuuntelija-selaimen-verkkotilalle)
     (reset! pingaus-kaynnissa? true)
     (go-loop []
        (when @yhteys-palautui-hetki-sitten
@@ -184,6 +188,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
          (alt!
            pingauskanava ([vastaus] (if (= vastaus :pong)
                                       (kasittele-onnistunut-pingaus)
-                                      (kasittele-epaonnistunut-pingaus vastaus)))
-           sallittu-viive ([_] (kasittele-epaonnistunut-pingaus nil)))
+                                      (kasittele-yhteyskatkos vastaus)))
+           sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
          (recur)))))
+
