@@ -98,8 +98,8 @@
     (komp/ulos #(reset! pisteanimaatio-kaynnissa false))
     (fn []
       [:div.yhteysilmoitin.yhteys-katkennut-varoitus
-       (str "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen "
-            @pisteanimaation-pisteet)])))
+       [:div.yhteysilmoitin-viesti "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
+        [:div.yhteysilmoitin-pisteet @pisteanimaation-pisteet]]])))
 
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
