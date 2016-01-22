@@ -169,7 +169,6 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
         (let [pingauskanava (pingaa-palvelinta)
               sallittu-viive (timeout 10000)
               kasittele-onnistunut-pingaus (fn []
-                                             (log "Pingaus onnistui!")
                                              (when (true? @yhteys-katkennut?)
                                                (reset! yhteys-palatui-hetki-sitten true))
                                              (reset! nykyinen-pingausvali-millisekunteina
