@@ -22,7 +22,8 @@
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.virhekasittely :as virhekasittely])
+            [harja.virhekasittely :as virhekasittely]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -96,8 +97,12 @@
                               (recur))))))
     (komp/ulos #(reset! pisteanimaatio-kaynnissa false))
     (fn []
-      [:div.yhteysvaroitin (str "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen "
-                                @pisteanimaation-pisteet)])))
+      [:div.yhteysilmoitin.yhteys-katkennut-varoitus
+       (str "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen "
+            @pisteanimaation-pisteet)])))
+
+(defn yhteys-palautunut-ilmoitus []
+  [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
 (defn main
   "Harjan UI:n pääkomponentti"
@@ -121,6 +126,9 @@
                [:div
                 (when @k/yhteys-katkennut?
                   [yhteys-katkennut-varoitus])
+                (when (and (not @k/yhteys-katkennut?)
+                           @k/yhteys-palatui-hetki-sitten)
+                  [yhteys-palautunut-ilmoitus])
                 [:div.container
                  [header sivu]]
 
