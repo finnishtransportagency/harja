@@ -1,3 +1,25 @@
+CREATE OR REPLACE FUNCTION multiline_project_point(amultils geometry, apoint geometry)
+  RETURNS float8 AS
+$$
+DECLARE
+  adist float8;
+  bdist float8;
+  totallen float8;
+BEGIN
+   -- kokonaispituus
+   totallen := ST_Length(amultils);
+
+   adist := ST_Line_Locate_Point(ST_GeometryN(amultils, 1), apoint);
+   bdist := ST_Line_Locate_Point(ST_GeometryN(amultils, 2), apoint);
+
+   IF adist>=1 THEN
+      RETURN (ST_Length(ST_GeometryN(amultils,1)) + ST_Length(ST_Line_Substring(ST_GeometryN(amultils,2),0,bdist)))/totallen;
+   ELSE
+      RETURN ST_Length(ST_Line_Substring(ST_GeometryN(amultils,1), 0, adist)) / totallen;
+   END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteelle(
   piste geometry, treshold INTEGER)
   RETURNS tr_osoite
@@ -42,6 +64,8 @@ DECLARE
   loppuet INTEGER;
   itmp INTEGER;
   tmp geometry;
+  atmp float8;
+  btmp float8;
 BEGIN
    -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä lähimpänä
   SELECT a.tie, 
@@ -100,8 +124,10 @@ ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
 
     -- jos multilinestring, interpoloidaan eri tavalla
     IF ST_NumGeometries(reitti)>1 THEN
-      SELECT ST_Line_Substring(reitti, LEAST(alkuet/ST_Length(reitti), loppuet/ST_Length(reitti)),
-	                               GREATEST(alkuet/ST_Length(reitti), loppuet/ST_Length(reitti))) INTO reitti;
+      atmp := multiline_project_point(reitti, alkupiste);
+      btmp := multiline_project_point(reitti, loppupiste);
+      SELECT ST_Line_Substring(reitti, LEAST(atmp, btmp),
+	                               GREATEST(atmp, btmp)) INTO reitti;
     ELSE       
       SELECT ST_Line_Substring(reitti, LEAST(ST_Line_Locate_Point(reitti, alkupiste), ST_Line_Locate_Point(reitti, loppupiste)),
 				        GREATEST(ST_Line_Locate_Point(reitti, alkupiste),ST_Line_Locate_Point(reitti, loppupiste))) INTO reitti;
