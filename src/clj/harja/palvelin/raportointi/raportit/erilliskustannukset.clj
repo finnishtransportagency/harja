@@ -88,7 +88,7 @@
                         erilliskustannukset)
                   (when (not (empty? erilliskustannukset))
                     (keep identity (flatten [(if (not= konteksti :urakka) ["Yhteensä" ""]
-                                                                       ["Yhteensä"])
+                                                                          ["Yhteensä"])
                                              "" "" ""
                                              (fmt/euro-opt (reduce + (keep :rahasumma erilliskustannukset)))
                                              (fmt/euro-opt (reduce + (keep :indeksikorotus erilliskustannukset)))])))))]]))

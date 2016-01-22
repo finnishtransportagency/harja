@@ -76,7 +76,9 @@
                       (if urakoittain?
                         (group-by :urakka turpot)
                         [[nil turpot]]))
-              [(rivi (when urakoittain? "") "Yksittäisiä ilmoituksia yhteensä" (count turpot))])]
+              (if urakoittain?
+                [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
+                [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))]
      
      (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
