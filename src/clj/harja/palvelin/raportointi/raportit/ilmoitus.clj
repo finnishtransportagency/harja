@@ -85,35 +85,37 @@
                      {:otsikko (ilmoitustyypin-lyhenne-ja-nimi ilmoitustyyppi)
                       :leveys  23})
                    [:toimenpidepyynto :tiedoitus :kysely])))
-      (into
-        []
-        (concat
-          (apply concat
-                 ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
-                 (for [[hy ilmoitukset] ilmoitukset-hyn-mukaan]
-                   (concat
-                     [{:otsikko (or (:nimi hy) "Ilmoitukset ilman urakkaa")}]
-                     (for [[urakka hyn-ilmoitukset] (group-by :urakka ilmoitukset)
-                           :let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")
-                                 tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) hyn-ilmoitukset))
-                                 tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) hyn-ilmoitukset))
-                                 urk (count (filter #(= :kysely (:ilmoitustyyppi %)) hyn-ilmoitukset))]]
-                       [urakan-nimi tpp tur urk])
-                     ;; lasketaan myös hallintayksiköiden summarivi
-                     (when (= :koko-maa konteksti)
-                       (let [hy-tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                             hy-tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
-                             hy-urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
-                         (when (:nimi hy)
-                           [(seq [(str (:nimi hy) " yhteensä") hy-tpp-yht hy-tur-yht hy-urk-yht])]))))))
+      (keep identity
+            (into
+              []
+              (concat
+                (apply concat
+                       ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
+                       (for [[hy ilmoitukset] ilmoitukset-hyn-mukaan]
+                         (concat
+                           [{:otsikko (or (:nimi hy) "Ilmoitukset ilman urakkaa")}]
+                           (for [[urakka hyn-ilmoitukset] (group-by :urakka ilmoitukset)
+                                 :let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")
+                                       tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) hyn-ilmoitukset))
+                                       tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) hyn-ilmoitukset))
+                                       urk (count (filter #(= :kysely (:ilmoitustyyppi %)) hyn-ilmoitukset))]]
+                             [urakan-nimi tpp tur urk])
+                           ;; lasketaan myös hallintayksiköiden summarivi
+                           (when (= :koko-maa konteksti)
+                             (let [hy-tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
+                                   hy-tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
+                                   hy-urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
+                               (when (:nimi hy)
+                                 [(seq [(str (:nimi hy) " yhteensä") hy-tpp-yht hy-tur-yht hy-urk-yht])]))))))
 
-          ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
-          (when-not (= :urakka konteksti)
-            (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
-                  tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
-                  urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
-              [(concat ["Yhteensä"]
-                       [tpp-yht tur-yht urk-yht])]))))]
+                ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
+                (when (and (not= :urakka konteksti)
+                           (not (empty? ilmoitukset)))
+                  (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
+                        tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
+                        urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
+                    [(concat ["Yhteensä"]
+                             [tpp-yht tur-yht urk-yht])])))))]
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
