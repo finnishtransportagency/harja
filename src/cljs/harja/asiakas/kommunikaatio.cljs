@@ -50,8 +50,7 @@
                (if (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (do (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus))
                      (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe))
-                     ;; kaataa seleniumin testiajon, oikea ongelma taustalla, pidä toistaiseksi kommentoituna
-                     #_(vk/arsyttava-virhe (str "Palvelinkutsussa virhe: " vastaus)))
+                     (put! chan vastaus))
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
     (go

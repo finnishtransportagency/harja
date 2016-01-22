@@ -15,7 +15,9 @@
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.ui.viesti :as viesti]))
 
 (defn luo-henkilo-lomakeryhma [avain nimi]
   (lomake/ryhma {:otsikko    nimi
@@ -60,7 +62,12 @@
                 #(tiedot/tallenna-uusi-kuittaus @tiedot/uusi-kuittaus)
                 {:ikoni        (ikonit/tallenna)
                  :disabled     false
-                 :kun-onnistuu (fn [_] (reset! tiedot/uusi-kuittaus nil))}]}
+                 :kun-onnistuu (fn [vastaus]
+                                 (when vastaus
+                                   (viesti/nayta! "Kuittaus lähetetty T-LOIK:n." :success)
+                                   (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
+                                 (reset! tiedot/uusi-kuittaus nil))
+                 :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."}]}
     [{:nimi          :tyyppi
       :otsikko       "Tyyppi"
       :pakollinen?   true

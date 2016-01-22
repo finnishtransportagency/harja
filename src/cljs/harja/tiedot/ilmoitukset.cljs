@@ -42,6 +42,10 @@
                     (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
       tulos)))
 
+(defn lisaa-kuittaus-valitulle-ilmoitukselle [kuittaus]
+  (let [nykyiset-kuittaukset (:kuittaukset @valittu-ilmoitus)]
+    (reset! valittu-ilmoitus (assoc @valittu-ilmoitus :kuittaukset (conj nykyiset-kuittaukset kuittaus)))))
+
 (defonce haetut-ilmoitukset
          (reaction<! [valinnat @valinnat haku @ilmoitushaku] {:odota 100}
            (go

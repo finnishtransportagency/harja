@@ -88,28 +88,29 @@
 
 (defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
-  (let [id (:id (q/luo-ilmoitustoimenpide<!
-                  db
-                  (:ilmoituksen-id ilmoitustoimenpide)
-                  (:ulkoinen-ilmoitusid ilmoitustoimenpide)
-                  (harja.pvm/nyt)
-                  (:vapaateksti ilmoitustoimenpide)
-                  (name (:tyyppi ilmoitustoimenpide))
-                  (:ilmoittaja-etunimi ilmoitustoimenpide)
-                  (:ilmoittaja-sukunimi ilmoitustoimenpide)
-                  (:ilmoittaja-tyopuhelin ilmoitustoimenpide)
-                  (:ilmoittaja-matkapuhelin ilmoitustoimenpide)
-                  (:ilmoittaja-sahkoposti ilmoitustoimenpide)
-                  (:ilmoittaja-organisaatio ilmoitustoimenpide)
-                  (:ilmoittaja-ytunnus ilmoitustoimenpide)
-                  (:kasittelija-etunimi ilmoitustoimenpide)
-                  (:kasittelija-sukunimi ilmoitustoimenpide)
-                  (:kasittelija-tyopuhelin ilmoitustoimenpide)
-                  (:kasittelija-matkapuhelin ilmoitustoimenpide)
-                  (:kasittelija-sahkoposti ilmoitustoimenpide)
-                  (:kasittelija-organisaatio ilmoitustoimenpide)
-                  (:kasittelija-ytunnus ilmoitustoimenpide)))]
-    (tloik/laheta-ilmoitustoimenpide tloik id)))
+  (let [toimenpide (q/luo-ilmoitustoimenpide<!
+                     db
+                     (:ilmoituksen-id ilmoitustoimenpide)
+                     (:ulkoinen-ilmoitusid ilmoitustoimenpide)
+                     (harja.pvm/nyt)
+                     (:vapaateksti ilmoitustoimenpide)
+                     (name (:tyyppi ilmoitustoimenpide))
+                     (:ilmoittaja-etunimi ilmoitustoimenpide)
+                     (:ilmoittaja-sukunimi ilmoitustoimenpide)
+                     (:ilmoittaja-tyopuhelin ilmoitustoimenpide)
+                     (:ilmoittaja-matkapuhelin ilmoitustoimenpide)
+                     (:ilmoittaja-sahkoposti ilmoitustoimenpide)
+                     (:ilmoittaja-organisaatio ilmoitustoimenpide)
+                     (:ilmoittaja-ytunnus ilmoitustoimenpide)
+                     (:kasittelija-etunimi ilmoitustoimenpide)
+                     (:kasittelija-sukunimi ilmoitustoimenpide)
+                     (:kasittelija-tyopuhelin ilmoitustoimenpide)
+                     (:kasittelija-matkapuhelin ilmoitustoimenpide)
+                     (:kasittelija-sahkoposti ilmoitustoimenpide)
+                     (:kasittelija-organisaatio ilmoitustoimenpide)
+                     (:kasittelija-ytunnus ilmoitustoimenpide))]
+    (tloik/laheta-ilmoitustoimenpide tloik (:id toimenpide))
+    toimenpide))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
