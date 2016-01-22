@@ -86,52 +86,53 @@
     (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma)))
 
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]
-  (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
-        nelostason-tehtavat (map #(nth % 3) tehtavat-tasoineen)
-        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
+  (fn []
+    (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
+          nelostason-tehtavat (map #(nth % 3) tehtavat-tasoineen)
+          toimenpideinstanssit @u/urakan-toimenpideinstanssit]
 
-    [grid/muokkaus-grid
-     {:tyhja        "Ei töitä."
-      :voi-muokata? (not jarjestelman-lisaama-toteuma?)
-      :muutos       #(reset! tehtavat-virheet (grid/hae-virheet %))}
-     [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
-       :tyyppi        :valinta
-       :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
-       :valinta-arvo  :tpi_id
-       :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
-       :valinnat      toimenpideinstanssit
-       :leveys        "30%"
-       :validoi       [[:ei-tyhja "Valitse työ"]]
-       :aseta         #(assoc %1 :toimenpideinstanssi %2
-                                 :tehtava nil)}
-      {:otsikko       "Tehtävä" :nimi :tehtava
-       :tyyppi        :valinta
-       :valinta-arvo  #(:id (nth % 3))
-       :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
-       :valinnat-fn   #(let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                                                   (:toimenpideinstanssi %)
-                                                   toimenpideinstanssit tehtavat-tasoineen)
-                             urakan-hoitokauden-yks-hint-tyot (filter
-                                                                (fn [tyo]
-                                                                  (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi)))
-                                                                @u/urakan-yks-hint-tyot)
-                             yksikkohintaiset-tehtavat (filter
-                                                         (fn [tehtava]
-                                                           (let [tehtavan-tiedot (first (filter
-                                                                                          (fn [tiedot]
-                                                                                            (= (:tehtavan_id tiedot) (:id (nth tehtava 3))))
-                                                                                          urakan-hoitokauden-yks-hint-tyot))]
-                                                             (> (:yksikkohinta tehtavan-tiedot) 0)))
-                                                         urakan-tpi-tehtavat)]
-                        yksikkohintaiset-tehtavat)
-       :leveys        "45%"
-       :validoi       [[:ei-tyhja "Valitse tehtävä"]]
-       :aseta         (fn [rivi arvo] (assoc rivi
-                                        :tehtava arvo
-                                        :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "25%" :validoi [[:ei-tyhja "Anna määrä"]]}
-      {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
-     tehtavat]))
+      [grid/muokkaus-grid
+       {:tyhja        "Ei töitä."
+        :voi-muokata? (not jarjestelman-lisaama-toteuma?)
+        :muutos       #(reset! tehtavat-virheet (grid/hae-virheet %))}
+       [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
+         :tyyppi        :valinta
+         :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
+         :valinta-arvo  :tpi_id
+         :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
+         :valinnat      toimenpideinstanssit
+         :leveys        "30%"
+         :validoi       [[:ei-tyhja "Valitse työ"]]
+         :aseta         #(assoc %1 :toimenpideinstanssi %2
+                                   :tehtava nil)}
+        {:otsikko       "Tehtävä" :nimi :tehtava
+         :tyyppi        :valinta
+         :valinta-arvo  #(:id (nth % 3))
+         :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+         :valinnat-fn   #(let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                                                     (:toimenpideinstanssi %)
+                                                     toimenpideinstanssit tehtavat-tasoineen)
+                               urakan-hoitokauden-yks-hint-tyot (filter
+                                                                  (fn [tyo]
+                                                                    (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi)))
+                                                                  @u/urakan-yks-hint-tyot)
+                               yksikkohintaiset-tehtavat (filter
+                                                           (fn [tehtava]
+                                                             (let [tehtavan-tiedot (first (filter
+                                                                                            (fn [tiedot]
+                                                                                              (= (:tehtavan_id tiedot) (:id (nth tehtava 3))))
+                                                                                            urakan-hoitokauden-yks-hint-tyot))]
+                                                               (> (:yksikkohinta tehtavan-tiedot) 0)))
+                                                           urakan-tpi-tehtavat)]
+                          yksikkohintaiset-tehtavat)
+         :leveys        "45%"
+         :validoi       [[:ei-tyhja "Valitse tehtävä"]]
+         :aseta         (fn [rivi arvo] (assoc rivi
+                                          :tehtava arvo
+                                          :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
+        {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "25%" :validoi [[:ei-tyhja "Anna määrä"]]}
+        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
+       tehtavat])))
 
 (defn yksikkohintainen-toteumalomake
   "Valmiin kohteen tietoja tarkasteltaessa tiedot annetaan valittu-yksikkohintainen-toteuma atomille.

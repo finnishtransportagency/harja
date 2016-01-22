@@ -9,6 +9,7 @@
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.tiedot.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.tiedot.urakka.organisaatio :as organisaatio]
+            [harja.tiedot.toimenpidekoodit :as toimenpidekoodit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<!]]
@@ -226,13 +227,17 @@
 (defonce hallinnan-valittu-valilehti (atom :kayttajat))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)]
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
+               _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
               (when ur
                 (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
 
 (defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)]
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
+               _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
               (when ur
                 (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
@@ -255,7 +260,9 @@
                        tehtavat))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)]
+  (reaction<! [ur (:id @nav/valittu-urakka)
+               ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
+               _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
               (when ur
                 (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat ur))))
@@ -276,6 +283,7 @@
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)
+
                nakymassa? (or
                            (= :muut @suunnittelun-valittu-valilehti)
                            (= :muut-tyot @toteumat-valilehti))]

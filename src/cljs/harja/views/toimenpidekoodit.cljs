@@ -4,22 +4,15 @@
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [harja.ui.bootstrap :as bs]
-
+            [harja.tiedot.toimenpidekoodit :refer [koodit]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.roolit :as roolit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
-
-
-;; PENDING: en laittanut näille omia harja.tiedot alla olevaa nimiavaruutta
-;; siirretään omaansa, jos näitä kooditietoja tarvitaan muualtakin kuin täältä
-;; hallintanäkymästä.
-(def koodit "id->koodi mäppäys kaikista toimenpidekoodeista" (atom nil))
 
 (comment
   (add-watch koodit ::debug (fn [_ _ old new]
