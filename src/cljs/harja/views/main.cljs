@@ -117,8 +117,7 @@
              [ladataan]
              (if (or (:poistettu kayttaja)
                      (empty? (:roolit kayttaja)))
-               (when @k/yhteys-katkennut?
-                 [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."])
+               [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                [:div
                 (when @k/yhteys-katkennut?
                   [yhteys-katkennut-varoitus])
@@ -128,8 +127,6 @@
                 (when @nav/murupolku-nakyvissa?
                   [:div.container
                    [murupolku/murupolku]])
-
-
 
                 [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
                  [:div.row.row-sisalto
@@ -141,8 +138,6 @@
                      :hallinta [hallinta/hallinta]
                      :tilannekuva [tilannekuva/tilannekuva]
                      :about [about/about])]]]
-
-
 
                 [modal-container]
                 [viesti-container]
