@@ -147,27 +147,29 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn pingaa-palvelinta []
   (post! :ping {}))
 
-(def pingaus-kaynnissa (atom false))
-
-(def pingausvali-millisekunteina 1000)
+(def yhteys-katkennut? (atom false))
+(def pingaus-kaynnissa? (atom false))
+(def pingausvali-millisekunteina 1000) ; FIXME Testiarvo. Kun toimii, käytä esim 30s.
 
 (defn kaynnista-palvelimen-pingaus []
-  (when-not @pingaus-kaynnissa
+  (when-not @pingaus-kaynnissa?
     (log "Käynnistetään palvelimen pingaus " (/ pingausvali-millisekunteina 1000) " sekunnin valein")
-    (reset! pingaus-kaynnissa true)
+    (reset! pingaus-kaynnissa? true)
     (go
       (loop []
         (<! (timeout pingausvali-millisekunteina))
         (log "Pingataan palvelinta.")
-        (let [pingauskanava pingaa-palvelinta
-              odotuskanava (timeout 10000)
+        (let [pingauskanava (pingaa-palvelinta)
+              sallittu-viive (timeout 10000)
               kasittele-onnistunut-pingaus (fn [vastaus]
+                                             (reset! yhteys-katkennut? false)
                                              (log "Pingaus onnistui! Vastaus:" (pr-str vastaus)))
               kasittele-epaonnistunut-pingaus (fn [vastaus]
+                                                (reset! yhteys-katkennut? true)
                                                 (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus)))]
           (alt!
             pingauskanava ([vastaus] (if (= vastaus :pong)
                                        (kasittele-onnistunut-pingaus vastaus)
                                        (kasittele-epaonnistunut-pingaus vastaus)))
-            odotuskanava ([_] (kasittele-epaonnistunut-pingaus nil)))
+            sallittu-viive ([_] (kasittele-epaonnistunut-pingaus nil)))
           (recur))))))

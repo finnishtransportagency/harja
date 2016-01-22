@@ -12,6 +12,7 @@
             [harja.loki :refer [log logt]]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
+            [cljs.core.async :refer [put! close! chan timeout]]
 
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
@@ -20,7 +21,9 @@
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
-            [harja.virhekasittely :as virhekasittely]))
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.virhekasittely :as virhekasittely])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
@@ -77,6 +80,25 @@
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
     [yleiset/ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
+(def pisteanimaatio-kaynnissa (atom false))
+(def pisteanimaation-pisteet (atom "."))
+
+(defn yhteys-katkennut-varoitus []
+  (komp/luo
+    (komp/sisaan #(do (reset! pisteanimaatio-kaynnissa true)
+                      (go (loop []
+                            (<! (timeout 1000))
+                            (case @pisteanimaation-pisteet
+                              "." (reset! pisteanimaation-pisteet "..")
+                              ".." (reset! pisteanimaation-pisteet "...")
+                              "..." (reset! pisteanimaation-pisteet "."))
+                            (when @pisteanimaatio-kaynnissa
+                              (recur))))))
+    (komp/ulos #(reset! pisteanimaatio-kaynnissa false))
+    (fn []
+      [:div.yhteysvaroitin (str "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen "
+                                @pisteanimaation-pisteet)])))
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
@@ -95,9 +117,11 @@
              [ladataan]
              (if (or (:poistettu kayttaja)
                      (empty? (:roolit kayttaja)))
-               [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
-
+               (when @k/yhteys-katkennut?
+                 [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."])
                [:div
+                (when @k/yhteys-katkennut?
+                  [yhteys-katkennut-varoitus])
                 [:div.container
                  [header sivu]]
 
