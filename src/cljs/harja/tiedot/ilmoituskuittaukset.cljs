@@ -6,7 +6,8 @@
             [cljs.core.async :refer [<!]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.ilmoitukset :as ilmoitukset])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -15,7 +16,7 @@
 
 (defn tallenna-uusi-kuittaus [kuittaus]
   (k/post! :tallenna-ilmoitustoimenpide kuittaus)
-  ;; todo: pitää päivittää valittu ilmoitus
+  #_(assoc @ilmoitukset/valittu-ilmoitus :kuittaukset nil)  ;; todo: pitää päivittää valitun ilmoituksen kuittaukset
   )
 
 (defn alusta-uusi-kuittaus [valittu-ilmoitus]
