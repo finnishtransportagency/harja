@@ -127,7 +127,7 @@
                 (when @k/yhteys-katkennut?
                   [yhteys-katkennut-varoitus])
                 (when (and (not @k/yhteys-katkennut?)
-                           @k/yhteys-palatui-hetki-sitten)
+                           @k/yhteys-palautui-hetki-sitten)
                   [yhteys-palautunut-ilmoitus])
                 [:div.container
                  [header sivu]]

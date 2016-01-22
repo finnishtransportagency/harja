@@ -149,40 +149,41 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn pingaa-palvelinta []
   (post! :ping {}))
 
-(def yhteys-palatui-hetki-sitten (atom false))
+(def yhteys-palautui-hetki-sitten (atom false))
 (def yhteys-katkennut? (atom false))
 (def pingaus-kaynnissa? (atom false))
 (def normaali-pingausvali-millisekunteina (* 1000 20))
 (def yhteys-katkennut-pingausvali-millisekunteina 2000)
 (def nykyinen-pingausvali-millisekunteina (atom normaali-pingausvali-millisekunteina))
 
+(defn- kasittele-onnistunut-pingaus []
+  (when (true? @yhteys-katkennut?)
+    (reset! yhteys-palautui-hetki-sitten true))
+  (reset! nykyinen-pingausvali-millisekunteina
+          normaali-pingausvali-millisekunteina)
+  (reset! yhteys-katkennut? false))
+
+(defn- kasittele-epaonnistunut-pingaus [vastaus]
+  (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus))
+  (reset! yhteys-katkennut? true)
+  (reset! nykyinen-pingausvali-millisekunteina
+          yhteys-katkennut-pingausvali-millisekunteina)
+  (reset! yhteys-palautui-hetki-sitten false))
+
 (defn kaynnista-palvelimen-pingaus []
   (when-not @pingaus-kaynnissa?
     (log "Käynnistetään palvelimen pingaus " (/ @nykyinen-pingausvali-millisekunteina 1000) " sekunnin valein")
     (reset! pingaus-kaynnissa? true)
-    (go
-      (loop []
-        (when @yhteys-palatui-hetki-sitten
-          (<! (timeout 5000))
-          (reset! yhteys-palatui-hetki-sitten false))
-        (<! (timeout @nykyinen-pingausvali-millisekunteina))
-        (let [pingauskanava (pingaa-palvelinta)
-              sallittu-viive (timeout 10000)
-              kasittele-onnistunut-pingaus (fn []
-                                             (when (true? @yhteys-katkennut?)
-                                               (reset! yhteys-palatui-hetki-sitten true))
-                                             (reset! nykyinen-pingausvali-millisekunteina
-                                                     normaali-pingausvali-millisekunteina)
-                                             (reset! yhteys-katkennut? false))
-              kasittele-epaonnistunut-pingaus (fn [vastaus]
-                                                (log "Pingaus epäonnistui! Vastaus: " (pr-str vastaus))
-                                                (reset! yhteys-katkennut? true)
-                                                (reset! nykyinen-pingausvali-millisekunteina
-                                                        yhteys-katkennut-pingausvali-millisekunteina)
-                                                (reset! yhteys-palatui-hetki-sitten false))]
-          (alt!
-            pingauskanava ([vastaus] (if (= vastaus :pong)
-                                       (kasittele-onnistunut-pingaus)
-                                       (kasittele-epaonnistunut-pingaus vastaus)))
-            sallittu-viive ([_] (kasittele-epaonnistunut-pingaus nil)))
-          (recur))))))
+    (go-loop []
+       (when @yhteys-palautui-hetki-sitten
+         (<! (timeout 5000))
+         (reset! yhteys-palautui-hetki-sitten false))
+       (<! (timeout @nykyinen-pingausvali-millisekunteina))
+       (let [pingauskanava (pingaa-palvelinta)
+             sallittu-viive (timeout 10000)]
+         (alt!
+           pingauskanava ([vastaus] (if (= vastaus :pong)
+                                      (kasittele-onnistunut-pingaus)
+                                      (kasittele-epaonnistunut-pingaus vastaus)))
+           sallittu-viive ([_] (kasittele-epaonnistunut-pingaus nil)))
+         (recur)))))
