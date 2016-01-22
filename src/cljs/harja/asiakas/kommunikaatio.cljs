@@ -45,15 +45,26 @@
 
 (def testmode {})
 
+(declare kasittele-yhteyskatkos)
+
+(defn- kasittele-palvelinvirhe [palvelu vastaus]
+  (if (= 0 (:status vastaus))
+    ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
+    ;; PENDING: tässä tilanteessa voisimme jättää requestin pendaamaan ja yrittää sitä uudelleen
+    ;; kun verkkoyhteys on taas saatu takaisin.
+    (kasittele-yhteyskatkos vastaus)
+
+    ;; muuten, logita virhe
+    (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus)))
+  (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
+
+
 (defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi?]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
                (if (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (do (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus))
-                     (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe))
-                     ;; kaataa seleniumin testiajon, oikea ongelma taustalla, pidä toistaiseksi kommentoituna
-                     #_(vk/arsyttava-virhe (str "Palvelinkutsussa virhe: " vastaus)))
+                 (kasittele-palvelinvirhe palvelu vastaus)
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
     (go
@@ -67,7 +78,7 @@
                        :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
                                                                   :raw    true})
                        :handler         cb
-                       :error-handler   (fn [[_ error]]
+                       :error-handler   (fn [[resp error]]
                                           (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
                                           (close! chan))})))
     chan))
@@ -158,10 +169,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn- kasittele-onnistunut-pingaus []
   (when (true? @yhteys-katkennut?)
-    (reset! yhteys-palautui-hetki-sitten true))
-  (reset! nykyinen-pingausvali-millisekunteina
-          normaali-pingausvali-millisekunteina)
-  (reset! yhteys-katkennut? false))
+    (reset! yhteys-palautui-hetki-sitten true)
+    (reset! nykyinen-pingausvali-millisekunteina
+            normaali-pingausvali-millisekunteina)
+    (reset! yhteys-katkennut? false)))
 
 (defn- kasittele-yhteyskatkos [vastaus]
   (log "Yhteys katkesi! Vastaus: " (pr-str vastaus))
@@ -186,9 +197,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
        (let [pingauskanava (pingaa-palvelinta)
              sallittu-viive (timeout 10000)]
          (alt!
-           pingauskanava ([vastaus] (if (= vastaus :pong)
-                                      (kasittele-onnistunut-pingaus)
-                                      (kasittele-yhteyskatkos vastaus)))
+           pingauskanava ([vastaus] (when (= vastaus :pong)
+                                      (kasittele-onnistunut-pingaus)))
            sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
          (recur)))))
 
