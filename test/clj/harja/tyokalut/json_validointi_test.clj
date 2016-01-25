@@ -22,6 +22,15 @@
         (println virheet)
         (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
 
+(deftest tarkista-syntaksiltaan-virheellinen-json
+  (let [json-data "{\"Seppo\": on selkeästi rikki},"]
+    (try+
+      (json/validoi json-skeemat/+virhevastaus+ json-data)
+      (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
+      (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
+        (println virheet)
+        (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
+
 (deftest urakkahaun-vastaus
   (try+
     (json/validoi json-skeemat/+urakan-haku-vastaus+
