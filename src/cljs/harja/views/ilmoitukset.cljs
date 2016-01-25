@@ -38,6 +38,7 @@
 (defn avaa-ilmoitus [ilmoitus]
   (log "Avataan ilmoitus")
   (reset! tiedot/valittu-ilmoitus ilmoitus)
+  (tiedot/sulje-uusi-kuittaus)
   (kuittausten-tiedot/alusta-uusi-kuittaus tiedot/valittu-ilmoitus))
 
 (defn nayta-tierekisteriosoite
@@ -86,8 +87,8 @@
        [:div
         (if @tiedot/uusi-kuittaus-auki?
           [bs/panel {} [:div [kuittaukset/uusi-kuittaus-lomake]]]
-          [:button.nappi-ensisijainen {:class "uusi-kuittaus-nappi"
-                                       :on-click #(swap! tiedot/uusi-kuittaus-auki? not)} (ikonit/plus) " Uusi kuittaus"])
+          [:button.nappi-ensisijainen {:class    "uusi-kuittaus-nappi"
+                                       :on-click #(tiedot/avaa-uusi-kuittaus)} (ikonit/plus) " Uusi kuittaus"])
 
         (when-not (empty? (:kuittaukset ilmoitus))
           [:div

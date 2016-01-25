@@ -19,50 +19,14 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.ui.viesti :as viesti]))
 
-(defonce kasittelija-auki? (atom false))
-
 (defn kasittele-kuittauskasityksen-vastaus [vastaus]
   (when vastaus
     (viesti/nayta! "Kuittaus lähetetty T-LOIK:n." :success)
     (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
-  (reset! ilmoitukset/uusi-kuittaus-auki? false))
+  (ilmoitukset/sulje-uusi-kuittaus))
 
-(defn luo-henkilolomakeryhma [avain nimi]
-  (let [avain (fn [suffix] (keyword (str avain "-" (name suffix))))]
-    (lomake/ryhma {:otsikko    nimi
-                   :leveys-col 3}
-                  {:nimi       (avain :etunimi)
-                   :ulkoasu    :rivi
-                   :otsikko    "Etunimi"
-                   :leveys-col 3
-                   :tyyppi     :string}
-                  {:nimi       (avain :sukunimi)
-                   :otsikko    "Sukunimi"
-                   :leveys-col 3
-                   :tyyppi     :string}
-                  {:nimi       (avain :matkapuhelin)
-                   :otsikko    "Matkapuhelin"
-                   :leveys-col 3
-                   :tyyppi     :puhelin}
-                  {:nimi       (avain :tyopuhelin)
-                   :otsikko    "Työpuhelin"
-                   :leveys-col 3
-                   :tyyppi     :puhelin}
-                  {:nimi       (avain :sahkoposti)
-                   :otsikko    "Sähköposti"
-                   :leveys-col 3
-                   :tyyppi     :email}
-                  {:nimi       (avain :organisaatio)
-                   :otsikko    "Organisaation nimi"
-                   :leveys-col 3
-                   :tyyppi     :string}
-                  {:nimi       (avain :ytunnus)
-                   :otsikko    "Organisaation y-tunnus"
-                   :leveys-col 3
-                   :tyyppi     :string})))
-
-(defn luo-lomake []
+(defn uusi-kuittaus []
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
@@ -79,7 +43,7 @@
                   :luokka       "nappi-ensisijainen"}]
                 [napit/peruuta
                  "Peruuta"
-                 #(swap! ilmoitukset/uusi-kuittaus-auki? not)]]}
+                 #(ilmoitukset/sulje-uusi-kuittaus)]]}
     [(lomake/ryhma {:otsikko    "Kuittaus"
                     :leveys-col 3}
 
@@ -95,14 +59,42 @@
                     :pakollinen? true
                     :tyyppi      :text
                     :leveys-col  3})
-     #_[napit/avattava kasittelija-auki? "Käsittelijä" #(luo-henkilolomakeryhma "kasittelija" "Käsittelijä")]
-
-     (luo-henkilolomakeryhma "kasittelija" "Käsittelijä")]
+     (lomake/ryhma {:otsikko    "Käsittelijä"
+                    :leveys-col 3}
+                   {:nimi       :kasittelija-etunimi
+                    :ulkoasu    :rivi
+                    :otsikko    "Etunimi"
+                    :leveys-col 3
+                    :tyyppi     :string}
+                   {:nimi       :kasittelija-sukunimi
+                    :otsikko    "Sukunimi"
+                    :leveys-col 3
+                    :tyyppi     :string}
+                   {:nimi       :kasittelija-matkapuhelin
+                    :otsikko    "Matkapuhelin"
+                    :leveys-col 3
+                    :tyyppi     :puhelin}
+                   {:nimi       :kasittelija-tyopuhelin
+                    :otsikko    "Työpuhelin"
+                    :leveys-col 3
+                    :tyyppi     :puhelin}
+                   {:nimi       :kasittelija-sahkoposti
+                    :otsikko    "Sähköposti"
+                    :leveys-col 3
+                    :tyyppi     :email}
+                   {:nimi       :kasittelija-organisaatio
+                    :otsikko    "Organisaation nimi"
+                    :leveys-col 3
+                    :tyyppi     :string}
+                   {:nimi       :kasittelija-ytunnus
+                    :otsikko    "Organisaation y-tunnus"
+                    :leveys-col 3
+                    :tyyppi     :string})]
     @tiedot/uusi-kuittaus]])
 
 (defn uusi-kuittaus-lomake []
   (komp/luo
-    luo-lomake))
+    uusi-kuittaus))
 
 (defn kuittauksen-tiedot
   [kuittaus]

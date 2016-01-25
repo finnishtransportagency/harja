@@ -17,6 +17,7 @@
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
 (defonce uusi-kuittaus-auki? (atom false))
+(tarkkaile! "uusi kuittaus auki" uusi-kuittaus-auki?)
 
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
@@ -76,3 +77,9 @@
                  #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
                  @haetut-ilmoitukset)
                @valittu-ilmoitus))))
+
+(defn avaa-uusi-kuittaus []
+  (reset! uusi-kuittaus-auki? true))
+
+(defn sulje-uusi-kuittaus []
+  (reset! uusi-kuittaus-auki? false))
