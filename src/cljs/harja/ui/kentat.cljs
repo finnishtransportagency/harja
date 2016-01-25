@@ -388,7 +388,7 @@
 ;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
-(def +aika-regex+ #"\d{1,2}(:\d*)?")
+(def +aika-regex+ #"\d{1,2}(:\d{0,2})?")
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin

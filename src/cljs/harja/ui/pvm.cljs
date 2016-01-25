@@ -134,17 +134,18 @@ Seuraavat optiot ovat mahdollisia:
               (for [paiva paivat]
                 ^{:key (pvm/millisekunteina paiva)}
                 [:td.pvm-paiva.klikattava {:class    (str
-                                                      (when (and pvm
-                                                                 (= (t/day paiva) (t/day pvm))
-                                                                 (= (t/month paiva) (t/month pvm))
-                                                                 (= (t/year paiva) (t/year pvm)))
-                                                        "pvm-valittu ")
-                                                      (if (naytettava-kk-paiva? paiva)
-                                                        "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
+                                                       (when (pvm/sama-pvm? (pvm/nyt) paiva) "pvm-tanaan ")
+                                                       (when (and pvm
+                                                                  (= (t/day paiva) (t/day pvm))
+                                                                  (= (t/month paiva) (t/month pvm))
+                                                                  (= (t/year paiva) (t/year pvm)))
+                                                         "pvm-valittu ")
+                                                       (if (naytettava-kk-paiva? paiva)
+                                                         "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
                                            :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
                  (t/day paiva)])])]
-          [:tbody.pvm-tanaan
+          [:tbody.pvm-tanaan-text
            [:tr [:td {:colSpan 7}
                  [:a {:on-click #(do
                                    (.preventDefault %)
