@@ -36,6 +36,7 @@
    [harja.palvelin.palvelut.yhteyshenkilot]
    [harja.palvelin.palvelut.paallystys :as paallystys]
    [harja.palvelin.palvelut.paikkaus :as paikkaus]
+   [harja.palvelin.palvelut.ping :as ping]
    [harja.palvelin.palvelut.kayttajat :as kayttajat]
    [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
    [harja.palvelin.palvelut.materiaalit :as materiaalit]
@@ -168,6 +169,9 @@
      :hallintayksikot (component/using
                        (hallintayksikot/->Hallintayksikot)
                        [:http-palvelin :db])
+     :ping (component/using
+                  (ping/->Ping)
+                  [:http-palvelin :db])
      :haku (component/using
             (haku/->Haku)
             [:http-palvelin :db])
