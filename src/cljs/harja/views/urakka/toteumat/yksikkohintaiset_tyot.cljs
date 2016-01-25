@@ -80,6 +80,7 @@
                                                :poistettu       (:poistettu rivi)
                                                })
                                             (grid/filteroi-uudet-poistetut lomakkeen-tehtavat))
+                                :toimenpide-id (:tpi_id @u/valittu-toimenpideinstanssi)
                                 :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
                                 :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))]
     (log "Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
@@ -237,7 +238,13 @@
        [grid/grid
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
-         :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat urakka-id sopimus-id aikavali :yksikkohintainen %))]
+         :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat
+                                               urakka-id
+                                               sopimus-id
+                                               aikavali
+                                               :yksikkohintainen
+                                               %
+                                               (:tpi_id @u/valittu-toimenpideinstanssi)))]
                              (log "Tehtävät tallennettu: " (pr-str vastaus))
                              (reset! toteutuneet-tehtavat (:tehtavat vastaus))
                              (reset! tehtavien-summat (:tehtavien-summat vastaus))))
