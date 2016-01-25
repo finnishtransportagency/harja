@@ -122,8 +122,11 @@
                              kk kk
                              vuosi (pvm/vuoden-aikavali vuosi)
                              :default hk)]
-            (swap! parametri-arvot
-                   assoc "Aikaväli" {:alkupvm alku :loppupvm loppu}))))
+            (if (and alku loppu)
+              (swap! parametri-arvot
+                     assoc "Aikaväli" {:alkupvm alku :loppupvm loppu})
+              (swap! parametri-arvot
+                     assoc "Aikaväli" {:virhe "Aikaväli puuttuu"})))))
 
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
