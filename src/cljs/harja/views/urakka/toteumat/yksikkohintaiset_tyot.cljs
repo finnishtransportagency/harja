@@ -244,7 +244,8 @@
          :voi-lisata? false
          :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
-         {:otsikko "Määrä" :nimi :maara :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi))) :tyyppi :positiivinen-numero :leveys "20%"}
+         {:otsikko "Määrä" :nimi :maara :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi))) :tyyppi :positiivinen-numero :leveys "20%"
+          :fmt #(fmt/desimaaliluku-opt % 1)}
          {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
          {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
@@ -276,16 +277,19 @@
            :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
                                        (filter (fn [rivi]
                                                  (> (:hoitokauden-toteutunut-maara rivi) 0))
-                                               @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain)))
-           }
+                                               @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain)))}
           [{:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"
+            :fmt #(fmt/desimaaliluku-opt % 1)}
+           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"
+            :fmt #(fmt/desimaaliluku-opt 1)}
+           {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
+            :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+           {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt
+            :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
            {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
             (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                          [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]

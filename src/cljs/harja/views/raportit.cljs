@@ -36,6 +36,8 @@
 ;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
 (defonce raporttityypit (atom nil))
 
+(tarkkaile! "Rapsat" raporttityypit)
+
 (defonce mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko
@@ -120,8 +122,11 @@
                              kk kk
                              vuosi (pvm/vuoden-aikavali vuosi)
                              :default hk)]
-            (swap! parametri-arvot
-                   assoc "Aikaväli" {:alkupvm alku :loppupvm loppu}))))
+            (if (and alku loppu)
+              (swap! parametri-arvot
+                     assoc "Aikaväli" {:alkupvm alku :loppupvm loppu})
+              (swap! parametri-arvot
+                     assoc "Aikaväli" {:virhe "Aikaväli puuttuu"})))))
 
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
