@@ -73,9 +73,11 @@
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
               (map #(konv/string->avain % [:paallystysilmoitus :tila])))
-            (q/hae-paallystykset db
-                                 (when-not nykytilanne? (konv/sql-date alku))
-                                 (when-not nykytilanne? (konv/sql-date loppu))))
+            (if nykytilanne?
+              (q/hae-paallystykset-nykytilanteeseen db)
+              (q/hae-paallystykset-historiakuvaan db
+                                                  (konv/sql-date alku)
+                                                  (konv/sql-date loppu))))
       (catch Exception e
         (tulosta-virhe! "paallystyksia" e)
         nil))))
@@ -89,9 +91,11 @@
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
               (map #(konv/string->avain % [:paikkausilmoitus :tila])))
-            (q/hae-paikkaukset db
-                               (when-not nykytilanne? (konv/sql-date alku))
-                               (when-not nykytilanne? (konv/sql-date loppu))))
+            (if nykytilanne?
+              (q/hae-paikkaukset-nykytilanteeseen db)
+              (q/hae-paikkaukset-historiakuvaan db
+                                                (konv/sql-date alku)
+                                                (konv/sql-date loppu))))
       (catch Exception e
         (tulosta-virhe! "paikkauksia" e)
         nil))))
