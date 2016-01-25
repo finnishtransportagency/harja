@@ -76,8 +76,8 @@
             (if nykytilanne?
               (q/hae-paallystykset-nykytilanteeseen db)
               (q/hae-paallystykset-historiakuvaan db
-                                                  (konv/sql-date alku)
-                                                  (konv/sql-date loppu))))
+                                                  (konv/sql-date loppu)
+                                                  (konv/sql-date alku))))
       (catch Exception e
         (tulosta-virhe! "paallystyksia" e)
         nil))))
@@ -94,8 +94,8 @@
             (if nykytilanne?
               (q/hae-paikkaukset-nykytilanteeseen db)
               (q/hae-paikkaukset-historiakuvaan db
-                                                (konv/sql-date alku)
-                                                (konv/sql-date loppu))))
+                                                (konv/sql-date loppu)
+                                                (konv/sql-date alku))))
       (catch Exception e
         (tulosta-virhe! "paikkauksia" e)
         nil))))
