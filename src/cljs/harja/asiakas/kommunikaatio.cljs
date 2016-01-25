@@ -1,6 +1,7 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
-  (:require [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
+  (:require [reagent.core :refer [atom]]
+            [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
             [cljs.core.async :refer [put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
@@ -9,8 +10,9 @@
             [harja.transit :as transit]
             [harja.domain.roolit :as roolit]
             [clojure.string :as str]
-            [harja.virhekasittely :as vk])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+            [harja.virhekasittely :as vk]
+            [cljs-time.core :as time])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (def +polku+ (let [host (.-host js/location)]
                (if (#{"10.0.2.2" "10.0.2.2:8000" "10.0.2.2:3000" "localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host)
@@ -43,15 +45,26 @@
 
 (def testmode {})
 
+(declare kasittele-yhteyskatkos)
+
+(defn- kasittele-palvelinvirhe [palvelu vastaus]
+  (if (= 0 (:status vastaus))
+    ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
+    ;; PENDING: tässä tilanteessa voisimme jättää requestin pendaamaan ja yrittää sitä uudelleen
+    ;; kun verkkoyhteys on taas saatu takaisin.
+    (kasittele-yhteyskatkos vastaus)
+
+    ;; muuten, logita virhe
+    (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus)))
+  (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
+
+
 (defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi?]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
                (if (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (do (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus))
-                     (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe))
-                     ;; kaataa seleniumin testiajon, oikea ongelma taustalla, pidä toistaiseksi kommentoituna
-                     #_(vk/arsyttava-virhe (str "Palvelinkutsussa virhe: " vastaus)))
+                 (kasittele-palvelinvirhe palvelu vastaus)
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
     (go
@@ -65,7 +78,7 @@
                        :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
                                                                   :raw    true})
                        :handler         cb
-                       :error-handler   (fn [[_ error]]
+                       :error-handler   (fn [[resp error]]
                                           (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
                                           (close! chan))})))
     chan))
@@ -139,7 +152,53 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
        "&" (str/join "&"
                      (map (fn [[nimi arvo]]
                             (str (name nimi) "=" arvo))
-                          (partition 2 parametrit))))) 
+                          (partition 2 parametrit)))))
 
 (defn wmts-polku []
   (str +polku+ "wmts/"))
+
+(defn pingaa-palvelinta []
+  (post! :ping {}))
+
+(def yhteys-palautui-hetki-sitten (atom false))
+(def yhteys-katkennut? (atom false))
+(def pingaus-kaynnissa? (atom false))
+(def normaali-pingausvali-millisekunteina (* 1000 20))
+(def yhteys-katkennut-pingausvali-millisekunteina 2000)
+(def nykyinen-pingausvali-millisekunteina (atom normaali-pingausvali-millisekunteina))
+
+(defn- kasittele-onnistunut-pingaus []
+  (when (true? @yhteys-katkennut?)
+    (reset! yhteys-palautui-hetki-sitten true)
+    (reset! nykyinen-pingausvali-millisekunteina
+            normaali-pingausvali-millisekunteina)
+    (reset! yhteys-katkennut? false)))
+
+(defn- kasittele-yhteyskatkos [vastaus]
+  (log "Yhteys katkesi! Vastaus: " (pr-str vastaus))
+  (reset! yhteys-katkennut? true)
+  (reset! nykyinen-pingausvali-millisekunteina
+          yhteys-katkennut-pingausvali-millisekunteina)
+  (reset! yhteys-palautui-hetki-sitten false))
+
+(defn lisaa-kuuntelija-selaimen-verkkotilalle []
+  (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil)))
+
+(defn kaynnista-palvelimen-pingaus []
+  (when-not @pingaus-kaynnissa?
+    (log "Käynnistetään palvelimen pingaus " (/ @nykyinen-pingausvali-millisekunteina 1000) " sekunnin valein")
+    (lisaa-kuuntelija-selaimen-verkkotilalle)
+    (reset! pingaus-kaynnissa? true)
+    (go-loop []
+       (when @yhteys-palautui-hetki-sitten
+         (<! (timeout 5000))
+         (reset! yhteys-palautui-hetki-sitten false))
+       (<! (timeout @nykyinen-pingausvali-millisekunteina))
+       (let [pingauskanava (pingaa-palvelinta)
+             sallittu-viive (timeout 10000)]
+         (alt!
+           pingauskanava ([vastaus] (when (= vastaus :pong)
+                                      (kasittele-onnistunut-pingaus)))
+           sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
+         (recur)))))
+

@@ -186,6 +186,20 @@ yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdoll
   [rivi & kentat]
   (muunna rivi kentat double))
 
+(defn vec->array-yksittaisesta-arvosta
+  "Muuntaa yksittäisen arvon Clojure vektorista JDBC arrayksi."
+  [vektori]
+  (str "{" (clojure.string/join "," (map name vektori)) "}"))
+
+
+(defn vec->array
+  "Muuntaa rivin annetun kentän Clojure vektorista JDBC arrayksi."
+  [rivi kentta]
+  (assoc rivi
+    kentta (if-let [a (get rivi kentta)]
+             (vec->array-yksittaisesta-arvosta a)
+             "{}")))
+
 
 (defn array->vec
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure vektoriksi."

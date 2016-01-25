@@ -42,7 +42,6 @@
         turpo-maarat-kuukausittain (group-by
                                      (comp vuosi-ja-kk :tapahtunut)
                                      turpot)
-        _ (log/debug "turpot" turpot)
         turpomaarat-tyypeittain (reduce-kv
                                   (fn [tulos kk turpot]
                                     (let [maarat (reduce (fn [eka toka]
@@ -77,7 +76,9 @@
                       (if urakoittain?
                         (group-by :urakka turpot)
                         [[nil turpot]]))
-              [(rivi (when urakoittain? "") "Yksittäisiä ilmoituksia yhteensä" (count turpot))])]
+              (if urakoittain?
+                [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
+                [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))]
      
      (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
@@ -98,15 +99,21 @@
                      {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
                       {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}]))
 
-      (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
-                         (pvm/pvm-aika (:tapahtunut %))
-                         (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
-                         (or (:tyontekijanammatti %) "")
-                         (or (:tyotehtava %) "")
-                         (or (:sairaalavuorokaudet %) "")
-                         (or (:sairauspoissaolopaivat %) ""))
+      (keep identity
+            (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
+                               (pvm/pvm-aika (:tapahtunut %))
+                               (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
+                               (or (:tyontekijanammatti %) "")
+                               (or (:tyotehtava %) "")
+                               (or (:sairaalavuorokaudet %) "")
+                               (or (:sairauspoissaolopaivat %) ""))
 
-                  (sort-by :tapahtunut turpot))
-            (rivi (if urakoittain? "" nil) "" "" "" "Yhteensä"
-                  (reduce + 0 (keep :sairaalavuorokaudet turpot))
-                  (reduce + 0 (keep :sairauspoissaolopaivat turpot))))]]))
+                        (sort-by :tapahtunut turpot))
+                  (when (not (empty? turpot))
+                    (if urakoittain?
+                      (rivi "Yhteensä" "" "" "" ""
+                            (reduce + 0 (keep :sairaalavuorokaudet turpot))
+                            (reduce + 0 (keep :sairauspoissaolopaivat turpot)))
+                      (rivi "Yhteensä" "" "" ""
+                            (reduce + 0 (keep :sairaalavuorokaudet turpot))
+                            (reduce + 0 (keep :sairauspoissaolopaivat turpot)))))))]]))

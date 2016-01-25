@@ -44,7 +44,8 @@
     [tyyppi-jarjestysnumero numero]))
 
 (defn ryhmittele-maksuerat [rivit]
-  (let [otsikko (fn [rivi] (tyyppi-enum->string-monikko (:tyyppi (:maksuera rivi))))
+  (when rivit
+    (let [otsikko (fn [rivi] (tyyppi-enum->string-monikko (:tyyppi (:maksuera rivi))))
         otsikon-mukaan (group-by otsikko (sort-by
                                            #(sorttausjarjestys
                                              (:tyyppi (:maksuera %))
@@ -52,7 +53,7 @@
                                            rivit))]
     (doall (mapcat (fn [[otsikko rivit]]
                      (concat [(grid/otsikko otsikko)] rivit))
-                   (seq otsikon-mukaan)))))
+                   (seq otsikon-mukaan))))))
 
 (defn rakenna-kuittausta-odottavat-maksuerat [maksuerat]
   (into #{}
@@ -155,7 +156,7 @@
         [:div
          [grid/grid
           {:otsikko  "Maksuerät"
-           :tyhja    "Ei maksueriä."
+           :tyhja (if (nil? maksuerarivit) [ajax-loader "Maksueriä haetaan..."] "Ei maksueriä")
            :tallenna nil
            :tunniste :numero}
           [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "9%" :pituus 16
@@ -182,6 +183,7 @@
                                                        (count maksuerarivit-ilman-otsikkoja))
                                                   "disabled"
                                                   "")
+                                      :disabled (nil? maksuerarivit)
                                       :on-click #(do (.preventDefault %)
                                                      (laheta-maksuerat
                                                        (into #{}

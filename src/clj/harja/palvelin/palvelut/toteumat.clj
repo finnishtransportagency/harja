@@ -504,6 +504,7 @@
   (let [toteumat (into []
                        (comp
                          (map #(konv/string->keyword % :toimenpide))
+                         (map #(konv/string->keyword % :toteumatyyppi))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                          (map konv/alaviiva->rakenne))
                        (q/hae-urakan-varustetoteumat db
@@ -515,7 +516,8 @@
                                                      tienumero))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
-                                  {:reittipiste :reittipisteet}
+                                  {:reittipiste :reittipisteet
+                                   :toteumatehtava :toteumatehtavat}
                                   :id)]
     (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
     kasitellyt-toteumarivit))

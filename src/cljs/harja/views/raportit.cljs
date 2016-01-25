@@ -36,6 +36,8 @@
 ;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
 (defonce raporttityypit (atom nil))
 
+(tarkkaile! "Rapsat" raporttityypit)
+
 (defonce mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko

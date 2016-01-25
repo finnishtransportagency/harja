@@ -92,21 +92,23 @@
              [{:otsikko "Urakka"}]
              (map (fn [mat]
                     {:otsikko mat}) materiaalit)))
-      (into
-       []
-       (concat
-        ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut toteumat
-        (for [[urakka toteumat] toteumat-urakan-mukaan]
-          (into []
-                (concat [urakka]
-                        (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
-                          (for [m materiaalit]
-                            (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
+      (keep identity
+            (into
+              []
+              (concat
+                ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut toteumat
+                (for [[urakka toteumat] toteumat-urakan-mukaan]
+                  (into []
+                        (concat [urakka]
+                                (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
+                                  (for [m materiaalit]
+                                    (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
 
-        ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
-        [(concat ["Yhteensä"]
-                 (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
-                   (for [m materiaalit]
-                     (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))]]))
+                ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
+                (when (not (empty? toteumat))
+                  [(concat ["Yhteensä"]
+                           (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
+                             (for [m materiaalit]
+                               (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))))]]))
 
     
