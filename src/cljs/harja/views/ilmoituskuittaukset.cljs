@@ -43,7 +43,9 @@
                   :luokka       "nappi-ensisijainen"}]
                 [napit/peruuta
                  "Peruuta"
-                 #(ilmoitukset/sulje-uusi-kuittaus)]]}
+                 #(do
+                   (ilmoitukset/sulje-uusi-kuittaus)
+                   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))]]}
     [(lomake/ryhma {:otsikko    "Kuittaus"
                     :leveys-col 3}
 
