@@ -12,6 +12,7 @@
             [harja.loki :refer [log logt]]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
+            [cljs.core.async :refer [put! close! chan timeout]]
 
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
@@ -20,7 +21,10 @@
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
-            [harja.virhekasittely :as virhekasittely]))
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.virhekasittely :as virhekasittely]
+            [cljs-time.core :as t])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
@@ -77,6 +81,25 @@
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
     [yleiset/ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
+(def pisteanimaation-pisteet (atom ""))
+
+(defn yhteys-katkennut-varoitus []
+  (komp/luo
+   (komp/ulos (let [pisteanimaatio-kaynnissa (atom true)]
+                (go-loop [[teksti & tekstit] (cycle [""  "." ".." "..."])]
+                  (when @pisteanimaatio-kaynnissa
+                    (<! (timeout 1000))
+                    (reset! pisteanimaation-pisteet teksti)
+                    (recur tekstit)))
+                #(reset! pisteanimaatio-kaynnissa false)))
+    (fn []
+      [:div.yhteysilmoitin.yhteys-katkennut-varoitus
+       [:div.yhteysilmoitin-viesti "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
+        [:div.yhteysilmoitin-pisteet @pisteanimaation-pisteet]]])))
+
+(defn yhteys-palautunut-ilmoitus []
+  [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
@@ -96,16 +119,18 @@
              (if (or (:poistettu kayttaja)
                      (empty? (:roolit kayttaja)))
                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
-
                [:div
+                (when @k/yhteys-katkennut?
+                  [yhteys-katkennut-varoitus])
+                (when (and (not @k/yhteys-katkennut?)
+                           @k/yhteys-palautui-hetki-sitten)
+                  [yhteys-palautunut-ilmoitus])
                 [:div.container
                  [header sivu]]
 
                 (when @nav/murupolku-nakyvissa?
                   [:div.container
                    [murupolku/murupolku]])
-
-
 
                 [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
                  [:div.row.row-sisalto
@@ -117,8 +142,6 @@
                      :hallinta [hallinta/hallinta]
                      :tilannekuva [tilannekuva/tilannekuva]
                      :about [about/about])]]]
-
-
 
                 [modal-container]
                 [viesti-container]

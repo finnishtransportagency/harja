@@ -24,7 +24,8 @@
   "Etsii avainpolun, joka päättyy avaimeen liitteet. Käsittelee sen alta löytyvät liitteet tyhjentäen niiden
    sisällön"
   [body]
-  (let [body-clojure-mappina (cheshire/decode body true)
+  (try+
+    (let [body-clojure-mappina (cheshire/decode body true)
         avainpolut (avaimet/keys-in body-clojure-mappina)
         avainpolku-liitteet (first (filter
                                      (fn [avainpolku]
@@ -38,6 +39,9 @@
                                           (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja))]
     (if avainpolku-liitteet
       (cheshire/encode body-ilman-liittteiden-sisaltoa)
+      body))
+    (catch Exception e
+      (log/debug "Ei voida poistaa liitteitä bodystä: " (.getMessage e))
       body)))
 
 (defn lokita-kutsu [integraatioloki resurssi request body]
