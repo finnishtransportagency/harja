@@ -388,7 +388,7 @@
 ;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
-(def +aika-regex+ #"\d{1,2}(:\d*)?")
+(def +aika-regex+ #"\d{1,2}(:\d{0,2})?")
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
@@ -432,7 +432,7 @@
        (fn [_ data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
-               pvm-tyhjana (or pvm-tyhjana #(pvm/nyt))
+               pvm-tyhjana (or pvm-tyhjana (constantly nil))
                naytettava-pvm (or
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
@@ -523,7 +523,7 @@
               nykyinen-pvm @data
               nykyinen-pvm-teksti @pvm-teksti
               nykyinen-aika-teksti @aika-teksti
-              pvm-tyhjana (or pvm-tyhjana #(pvm/nyt))
+              pvm-tyhjana (or pvm-tyhjana (constantly nil))
               naytettava-pvm (or
                                (pvm/->pvm nykyinen-pvm-teksti)
                                nykyinen-pvm
