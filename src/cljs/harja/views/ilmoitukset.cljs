@@ -21,20 +21,24 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
-            [harja.views.ilmoituskuittaukset :as kuittaukset]))
+            [harja.views.ilmoituskuittaukset :as kuittaukset]
+            [harja.ui.ikonit :as ikonit]))
 
-(defn pollauksen-merkki
-  []
+(defn pollauksen-merkki []
   [yleiset/vihje "Ilmoituksia päivitetään automaattisesti"])
 
-(defn urakan-sivulle-nappi
-  [ilmoitus]
+(defn urakan-sivulle-nappi [ilmoitus]
   (when (and (:urakka ilmoitus) (:hallintayksikko ilmoitus))
     [napit/urakan-sivulle "Urakan sivulle" (fn [e]
                                              (if e (.stopPropagation e))
                                              (reset! nav/valittu-hallintayksikko (:hallintayksikko ilmoitus))
                                              (reset! nav/valittu-urakka-id (:urakka ilmoitus))
                                              (reset! nav/sivu :urakat))]))
+
+(defn avaa-ilmoitus [ilmoitus]
+  (log "Avataan ilmoitus")
+  (reset! tiedot/valittu-ilmoitus ilmoitus)
+  (kuittausten-tiedot/alusta-uusi-kuittaus tiedot/valittu-ilmoitus))
 
 (defn nayta-tierekisteriosoite
   [tr]
@@ -46,50 +50,49 @@
 (defn ilmoituksen-tiedot []
   (let [ilmoitus @tiedot/valittu-ilmoitus]
     [:div
-     (if-not @kuittausten-tiedot/uusi-kuittaus
+     [:span
+      [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
+      (urakan-sivulle-nappi ilmoitus)
+      (pollauksen-merkki)
+      [bs/panel {}
+       (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
        [:span
-        [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
-        (urakan-sivulle-nappi ilmoitus)
-        (pollauksen-merkki)
-        [bs/panel {}
-         (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
-         [:span
-          [yleiset/tietoja {}
-           "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-           "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
-           "Otsikko: " (:otsikko ilmoitus)
-           "Lyhyt selite: " (:lyhytselite ilmoitus)
-           "Pitkä selite: " (when (:pitkaselite ilmoitus)
-                              [yleiset/pitka-teksti (:pitkaselite ilmoitus)])]
+        [yleiset/tietoja {}
+         "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+         "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
+         "Otsikko: " (:otsikko ilmoitus)
+         "Lyhyt selite: " (:lyhytselite ilmoitus)
+         "Pitkä selite: " (when (:pitkaselite ilmoitus)
+                            [yleiset/pitka-teksti (:pitkaselite ilmoitus)])]
 
-          [:br]
-          [yleiset/tietoja {}
-           "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
-                               tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
-                           (if (and henkilo tyyppi)
-                             (str henkilo ", " tyyppi)
-                             (str (or henkilo tyyppi))))
-           "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
-           "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+        [:br]
+        [yleiset/tietoja {}
+         "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
+                             tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
+                         (if (and henkilo tyyppi)
+                           (str henkilo ", " tyyppi)
+                           (str (or henkilo tyyppi))))
+         "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
+         "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
 
-          [:br]
-          [yleiset/tietoja {}
-           "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
-           "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
-           "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
-        [bs/panel {}
-         "Kuittaukset"
-         [:div
-          (napit/uusi "Uusi kuittaus" #(kuittausten-tiedot/alusta-uusi-kuittaus tiedot/valittu-ilmoitus) {:luokka "uusi-kuittaus-nappi"})
-          (when-not (empty? (:kuittaukset ilmoitus))
-            [:div
-             (for [kuittaus (:kuittaukset ilmoitus)]
-               (kuittaukset/kuittauksen-tiedot kuittaus))])]]]
+        [:br]
+        [yleiset/tietoja {}
+         "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
+         "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
+         "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
 
-       [bs/panel {}
-        "Uusi kuittaus"
-        [:div
-         [kuittaukset/uusi-kuittaus-lomake]]])]))
+      [bs/panel {}
+       "Kuittaukset"
+       [:div
+        (if @tiedot/uusi-kuittaus-auki?
+          [bs/panel {} [:div [kuittaukset/uusi-kuittaus-lomake]]]
+          [:button.nappi-ensisijainen {:class "uusi-kuittaus-nappi"
+                                       :on-click #(swap! tiedot/uusi-kuittaus-auki? not)} (ikonit/plus) " Uusi kuittaus"])
+
+        (when-not (empty? (:kuittaukset ilmoitus))
+          [:div
+           (for [kuittaus (:kuittaukset ilmoitus)]
+             (kuittaukset/kuittauksen-tiedot kuittaus))])]]]]))
 
 (defn ilmoitusten-paanakyma
   []
@@ -154,9 +157,7 @@
         (pollauksen-merkki)
         [grid
          {:tyhja             (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu     #(do
-                               (log "Avataan ilmoitus")
-                               (reset! tiedot/valittu-ilmoitus %))
+          :rivi-klikattu     #(avaa-ilmoitus %)
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}

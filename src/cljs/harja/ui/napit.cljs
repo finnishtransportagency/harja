@@ -112,13 +112,15 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(uusi-fn)}
     [:span.livicon-plus " " teksti]]))
 
-(defn avattava [auki? otsikko komponentti]
-  [:div
-   [:button.nappi-ensisijainen
-    {:on-click #(swap! auki? not)}
-    (if @auki?
-      [:span.livicon-minus " " otsikko]
-      [:span.livicon-plus " " otsikko])]
-   (when @auki?
-     [komponentti])])
+(defn peruuta
+  ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
+  ([teksti peruuta-fn {:keys [disabled luokka]}]
+   [:button.nappi-kielteinen
+    {:class    (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(peruuta-fn)}
+    [:span
+     (ikonit/ban)
+     (str " " teksti)]]))
+
 

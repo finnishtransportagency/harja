@@ -16,6 +16,7 @@
 ;; FILTTERIT
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
+(defonce uusi-kuittaus-auki? (atom false))
 
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
