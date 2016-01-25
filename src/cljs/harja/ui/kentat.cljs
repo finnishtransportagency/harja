@@ -432,7 +432,7 @@
        (fn [_ data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
-               pvm-tyhjana (or pvm-tyhjana (constantly nil))
+               pvm-tyhjana (or pvm-tyhjana #(pvm/nyt))
                naytettava-pvm (or
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
@@ -523,7 +523,7 @@
               nykyinen-pvm @data
               nykyinen-pvm-teksti @pvm-teksti
               nykyinen-aika-teksti @aika-teksti
-              pvm-tyhjana (or pvm-tyhjana (constantly nil))
+              pvm-tyhjana (or pvm-tyhjana #(pvm/nyt))
               naytettava-pvm (or
                                (pvm/->pvm nykyinen-pvm-teksti)
                                nykyinen-pvm
