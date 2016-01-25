@@ -7,7 +7,7 @@
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
@@ -19,40 +19,54 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.ui.viesti :as viesti]))
 
+(defonce auki? (atom false))
+
+(tarkkaile! "---> AUKI" auki?)
+
+(defn kasittele-kuittauskasityksen-vastaus [vastaus]
+  (when vastaus
+    (viesti/nayta! "Kuittaus lähetetty T-LOIK:n." :success)
+    (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
+  (reset! tiedot/uusi-kuittaus nil))
+
 (defn luo-henkilolomakeryhma [avain nimi]
-  (lomake/ryhma {:otsikko    nimi
-                 :leveys-col 5}
-                {:nimi       (keyword (str avain "-etunimi"))
-                 :otsikko    "Etunimi"
-                 :leveys-col 3
-                 :tyyppi     :string}
-                {:nimi       (keyword (str avain "-sukunimi"))
-                 :otsikko    "Sukunimi"
-                 :leveys-col 3
-                 :tyyppi     :string}
-                {:nimi       (keyword (str avain "-matkapuhelin"))
-                 :otsikko    "Matkapuhelin"
-                 :leveys-col 3
-                 :tyyppi     :puhelin}
-                {:nimi       (keyword (str avain "-tyopuhelin"))
-                 :otsikko    "Työpuhelin"
-                 :leveys-col 3
-                 :tyyppi     :puhelin}
-                {:nimi       (keyword (str avain "-sahkoposti"))
-                 :otsikko    "Sähköposti"
-                 :leveys-col 3
-                 :tyyppi     :email}
-                {:nimi       (keyword (str avain "-organisaatio"))
-                 :otsikko    "Organisaation nimi"
-                 :leveys-col 3
-                 :tyyppi     :string}
-                {:nimi       (keyword (str avain "-ytunnus"))
-                 :otsikko    "Organisaation y-tunnus"
-                 :leveys-col 3
-                 :tyyppi     :string}))
+  (let [avain (fn [suffix] (keyword (str avain "-" (name suffix))))]
+    (lomake/ryhma {:otsikko    nimi
+                   :leveys-col 5}
+                  {:nimi       (avain :etunimi)
+                   :otsikko    "Etunimi"
+                   :leveys-col 3
+                   :tyyppi     :string}
+                  {:nimi       (avain :sukunimi)
+                   :otsikko    "Sukunimi"
+                   :leveys-col 3
+                   :tyyppi     :string}
+                  {:nimi       (avain :matkapuhelin)
+                   :otsikko    "Matkapuhelin"
+                   :leveys-col 3
+                   :tyyppi     :puhelin}
+                  {:nimi       (avain :tyopuhelin)
+                   :otsikko    "Työpuhelin"
+                   :leveys-col 3
+                   :tyyppi     :puhelin}
+                  {:nimi       (avain :sahkoposti)
+                   :otsikko    "Sähköposti"
+                   :leveys-col 3
+                   :tyyppi     :email}
+                  {:nimi       (avain :organisaatio)
+                   :otsikko    "Organisaation nimi"
+                   :leveys-col 3
+                   :tyyppi     :string}
+                  {:nimi       (avain :ytunnus)
+                   :otsikko    "Organisaation y-tunnus"
+                   :leveys-col 3
+                   :tyyppi     :string})))
+
+(defn testikomponentti [auki?] [:div "JEEEJEE!"])
 
 (defn luo-lomake []
   [:span
+   [napit/avattava auki? "Nönnönöö" #(testikomponentti auki?)]
    [napit/takaisin "Palaa ilmoitukseen" #(reset! tiedot/uusi-kuittaus nil)]
    [lomake/lomake
     {:muokkaa! #(reset! tiedot/uusi-kuittaus %)
@@ -62,24 +76,14 @@
                 #(tiedot/tallenna-uusi-kuittaus @tiedot/uusi-kuittaus)
                 {:ikoni        (ikonit/tallenna)
                  :disabled     false
-                 :kun-onnistuu (fn [vastaus]
-                                 (when vastaus
-                                   (viesti/nayta! "Kuittaus lähetetty T-LOIK:n." :success)
-                                   (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
-                                 (reset! tiedot/uusi-kuittaus nil))
+                 :kun-onnistuu (fn [vastaus] (kasittele-kuittauskasityksen-vastaus vastaus))
                  :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."}]}
     [{:nimi          :tyyppi
       :otsikko       "Tyyppi"
       :pakollinen?   true
       :tyyppi        :valinta
-      :valinnat      [:vastaanotto :aloitus :lopetus :muutos :vastaus]
-      :valinta-nayta #(case %
-                       :vastaanotto "Vastaanotettu"
-                       :aloitus "Aloitettu"
-                       :lopetus "Lopetettu"
-                       :muutos "Muutos"
-                       :vastaus "Vastaus"
-                       nil)
+      :valinnat      apurit/kuittaustyypit
+      :valinta-nayta apurit/kuittaustyypin-selite
       :leveys-col    4}
      {:nimi        :vapaateksti
       :otsikko     "Vapaateksti"
@@ -98,9 +102,7 @@
         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
         (nav/vaihda-kartan-koko! :hidden))
       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-
-    (fn []
-      (luo-lomake))))
+    luo-lomake))
 
 (defn kuittauksen-tiedot
   [kuittaus]

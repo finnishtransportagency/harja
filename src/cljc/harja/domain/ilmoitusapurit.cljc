@@ -7,6 +7,16 @@
 
 (def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
 
+(def kuittaustyypit
+  [:vastaanotto :aloitus :lopetus :muutos :vastaus])
+
+(def kuittaustyypin-selite
+  {:vastaanotto "Vastaanotettu"
+   :aloitus     "Aloitettu"
+   :lopetus     "Lopetettu"
+   :muutos      "Muutos"
+   :vastaus     "Vastaus"})
+
 (defn ilmoitustyypin-nimi
   [tyyppi]
   (case tyyppi

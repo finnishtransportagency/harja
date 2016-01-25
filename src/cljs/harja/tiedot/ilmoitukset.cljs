@@ -44,7 +44,7 @@
 
 (defn lisaa-kuittaus-valitulle-ilmoitukselle [kuittaus]
   (let [nykyiset-kuittaukset (:kuittaukset @valittu-ilmoitus)]
-    (reset! valittu-ilmoitus (assoc @valittu-ilmoitus :kuittaukset (conj nykyiset-kuittaukset kuittaus)))))
+    (reset! valittu-ilmoitus (assoc @valittu-ilmoitus :kuittaukset (sort-by :kuitattu pvm/ennen? (conj nykyiset-kuittaukset kuittaus))))))
 
 (defonce haetut-ilmoitukset
          (reaction<! [valinnat @valinnat haku @ilmoitushaku] {:odota 100}

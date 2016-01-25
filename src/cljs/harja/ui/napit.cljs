@@ -112,4 +112,13 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(uusi-fn)}
     [:span.livicon-plus " " teksti]]))
 
+(defn avattava [auki? otsikko komponentti]
+  [:div
+   [:button.nappi-ensisijainen
+    {:on-click #(swap! auki? not)}
+    (if @auki?
+      [:span.livicon-minus " " otsikko]
+      [:span.livicon-plus " " otsikko])]
+   (when @auki?
+     [komponentti])])
 
