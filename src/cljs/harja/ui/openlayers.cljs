@@ -44,7 +44,8 @@
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
-                   [harja.loki :refer [mittaa-aika]]))
+                   [harja.loki :refer [mittaa-aika]]
+                   [harja.ui.openlayers :refer [disable-rendering]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että kartan animoinnit on valmistuneet." :const true}
   animaation-odotusaika 200)
@@ -690,29 +691,34 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
   (let [{:keys [ol3 geometry-layers mapspec]} (reagent/state component)
         geometry-fn (or (:geometry-fn mapspec) identity)]
 
-    ;; Remove any layers that are no longer present
-    (doseq [[key [layer _]] geometry-layers
-            :when (nil? (get geometries key))]
-      (log "POISTETAAN KARTTATASO " (name key) " => " layer)
-      (.removeLayer ol3 layer))
+    (disable-rendering
+     ol3
 
-    ;; For each current layer, update layer geometries
-    (loop [new-geometry-layers {}
-           [layer & layers] (keys geometries)]
-      (if-not layer
-        (do
-          (log "Map layer item counts: "
-               (str/join ", "
-                         (map #(str (count (second (second %))) " " (name (first %))) (seq new-geometry-layers))))
-          (reagent/set-state component {:geometry-layers new-geometry-layers}))
-        (let [layer-geometries (get geometries layer)]
-          (if (nil? layer-geometries)
-            (recur new-geometry-layers layers)
-            (recur (assoc new-geometry-layers
-                          layer (update-ol3-layer-geometries ol3 geometry-fn
-                                                             (get geometry-layers layer)
-                                                             layer-geometries))
-                   layers)))))))
+     (mittaa-aika
+      "update-ol3-geometries"
+      ;; Remove any layers that are no longer present
+      (doseq [[key [layer _]] geometry-layers
+              :when (nil? (get geometries key))]
+        (log "POISTETAAN KARTTATASO " (name key) " => " layer)
+        (.removeLayer ol3 layer))
+
+      ;; For each current layer, update layer geometries
+      (loop [new-geometry-layers {}
+             [layer & layers] (keys geometries)]
+        (if-not layer
+          (do
+            (log "Map layer item counts: "
+                 (str/join ", "
+                           (map #(str (count (second (second %))) " " (name (first %))) (seq new-geometry-layers))))
+            (reagent/set-state component {:geometry-layers new-geometry-layers}))
+          (let [layer-geometries (get geometries layer)]
+            (if (nil? layer-geometries)
+              (recur new-geometry-layers layers)
+              (recur (assoc new-geometry-layers
+                            layer (update-ol3-layer-geometries ol3 geometry-fn
+                                                               (get geometry-layers layer)
+                                                               layer-geometries))
+                     layers)))))))))
 
 
 (defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries extent-key :extent-key}]]
