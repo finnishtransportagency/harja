@@ -92,11 +92,15 @@
 
 (defn takaisin
   [teksti takaisin-fn]
-  [:button.nappi-toissijainen {:on-click #(takaisin-fn)}
+  [:button.nappi-toissijainen {:on-click #(do
+                                           (.preventDefault %)
+                                           (takaisin-fn))}
    [:span.livicon-chevron-left " " teksti]])
 
 (defn urakan-sivulle [teksti click-fn]
-  [:button.nappi-toissijainen {:on-click #(click-fn)}
+  [:button.nappi-toissijainen {:on-click #(do
+                                           (.preventDefault %)
+                                           (click-fn))}
    [:span.livicon-chevron-left " " teksti]])
 
 (defn uusi
@@ -109,7 +113,9 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
    [:button.nappi-ensisijainen
     {:class    (str (when disabled "disabled ") (or luokka ""))
      :disabled disabled
-     :on-click #(uusi-fn)}
+     :on-click #(do
+                 (.preventDefault %)
+                 (uusi-fn))}
     [:span.livicon-plus " " teksti]]))
 
 (defn peruuta
@@ -118,7 +124,9 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
    [:button.nappi-kielteinen
     {:class    (str (when disabled "disabled ") (or luokka ""))
      :disabled disabled
-     :on-click #(peruuta-fn)}
+     :on-click #(do
+                 (.preventDefault %)
+                 (peruuta-fn))}
     [:span
      (ikonit/ban)
      (str " " teksti)]]))
