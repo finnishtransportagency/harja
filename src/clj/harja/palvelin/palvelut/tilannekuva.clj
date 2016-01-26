@@ -144,9 +144,9 @@
                                        (konv/sql-date alku)
                                        (konv/sql-date loppu)
                                        (map name haettavat))))
-          (catch Exception e
-            (tulosta-virhe! "laatupoikkeamia" e)
-            nil)))))
+        (catch Exception e
+          (tulosta-virhe! "laatupoikkeamia" e)
+          nil)))))
 
 (defn- hae-tarkastukset
   [db user {:keys [alue alku loppu tarkastukset]} urakat]
@@ -172,9 +172,9 @@
                                     (konv/sql-date alku)
                                     (konv/sql-date loppu)
                                     (map name haettavat))))
-          (catch Exception e
-            (tulosta-virhe! "tarkastuksia" e)
-            nil)))))
+        (catch Exception e
+          (tulosta-virhe! "tarkastuksia" e)
+          nil)))))
 
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [alue alku loppu turvallisuus]} urakat]
