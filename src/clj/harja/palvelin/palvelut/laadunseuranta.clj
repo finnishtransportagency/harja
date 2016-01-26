@@ -86,7 +86,7 @@
                                         (dissoc kommentti :liite)))))
                          (laatupoikkeamat/hae-laatupoikkeaman-kommentit db laatupoikkeama-id))
         :sanktiot (into []
-                        (comp (map #(konv/array->set % :tyyppi_sanktiolaji keyword))
+                        (comp (map #(konv/array->set % :tyyppi_laji keyword))
                               (map konv/alaviiva->rakenne)
                               (map #(konv/string->keyword % :laji))
                               (map #(assoc %
@@ -110,12 +110,13 @@
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
 (defn tallenna-laatupoikkeaman-sanktio
-  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio] :as sanktio} laatupoikkeama urakka]
+  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio toimenpideinstanssi] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (if (or (nil? id) (neg? id))
     (let [uusi-sanktio (sanktiot/luo-sanktio<!
-                         db (konv/sql-timestamp perintapvm)
-                         (name laji) (:id tyyppi)
+                        db (konv/sql-timestamp perintapvm)
+                        (name laji) (:id tyyppi)
+                        toimenpideinstanssi
                          urakka
                          summa indeksi laatupoikkeama (or suorasanktio false))]
       (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
@@ -125,6 +126,7 @@
       (sanktiot/paivita-sanktio!
         db (konv/sql-timestamp perintapvm)
         (name laji) (:id tyyppi)
+        toimenpideinstanssi
         urakka
         summa indeksi laatupoikkeama (or suorasanktio false)
         id)

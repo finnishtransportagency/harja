@@ -182,23 +182,22 @@
   (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [c db]
-    (let [id
-          (if (:toteuma-id toteuma)
+    (let [id (if (:toteuma-id toteuma)
             (paivita-toteuma c user toteuma)
             (luo-toteuma c user toteuma))
-          paivitetyt-summat
-          (hae-urakan-toteumien-tehtavien-summat c user
-                                                 {:urakka-id  (:urakka-id toteuma)
-                                                  :sopimus-id (:sopimus-id toteuma)
-                                                  :alkupvm    (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
-                                                  :loppupvm   (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))
-                                                  :tyyppi     (:tyyppi toteuma)})]
+          paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat c user
+                                                 {:urakka-id     (:urakka-id toteuma)
+                                                  :sopimus-id    (:sopimus-id toteuma)
+                                                  :alkupvm       (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
+                                                  :loppupvm      (konv/sql-timestamp (:hoitokausi-lopetuspvm toteuma))
+                                                  :toimenpide-id (:toimenpide-id toteuma)
+                                                  :tyyppi        (:tyyppi toteuma)})]
       {:toteuma          (assoc toteuma :toteuma-id id)
        :tehtavien-summat paivitetyt-summat})))
 
 (defn paivita-yk-hint-toiden-tehtavat
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
-  [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat]}]
+  [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat toimenpide-id]}]
   (roolit/vaadi-rooli-urakassa user #{roolit/urakanvalvoja roolit/urakoitsijan-urakan-vastuuhenkilo} urakka-id)
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] tehtavat))))
 
@@ -220,12 +219,13 @@
                                                                                  :tyyppi          tyyppi
                                                                                  :toimenpidekoodi (:toimenpidekoodi (first tehtavat))})
         paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat db user
-                                                                 {:urakka-id  urakka-id
-                                                                  :sopimus-id sopimus-id
-                                                                  :alkupvm    alkupvm
-                                                                  :loppupvm   loppupvm
-                                                                  :tyyppi     tyyppi})]
-    (log/debug "Palautetaan päivittynyt data: " (pr-str paivitetyt-tehtavat))
+                                                                 {:urakka-id     urakka-id
+                                                                  :sopimus-id    sopimus-id
+                                                                  :alkupvm       alkupvm
+                                                                  :loppupvm      loppupvm
+                                                                  :toimenpide-id toimenpide-id
+                                                                  :tyyppi        tyyppi})]
+    (log/debug "Palautetaan päivitetyt tehtävät " (pr-str paivitetyt-tehtavat) " ja summat " (pr-str paivitetyt-summat))
     {:tehtavat paivitetyt-tehtavat :tehtavien-summat paivitetyt-summat}))
 
 (def erilliskustannus-tyyppi-xf
@@ -504,6 +504,7 @@
   (let [toteumat (into []
                        (comp
                          (map #(konv/string->keyword % :toimenpide))
+                         (map #(konv/string->keyword % :toteumatyyppi))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                          (map konv/alaviiva->rakenne))
                        (q/hae-urakan-varustetoteumat db
@@ -515,7 +516,8 @@
                                                      tienumero))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
-                                  {:reittipiste :reittipisteet}
+                                  {:reittipiste :reittipisteet
+                                   :toteumatehtava :toteumatehtavat}
                                   :id)]
     (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
     kasitellyt-toteumarivit))

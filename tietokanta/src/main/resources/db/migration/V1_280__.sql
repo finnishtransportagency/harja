@@ -1,243 +1,51 @@
-CREATE OR REPLACE FUNCTION multiline_project_point(amultils geometry, apoint geometry)
-  RETURNS float8 AS
-$$
-DECLARE
-  adist float8;
-  bdist float8;
-  totallen float8;
-BEGIN
-   -- kokonaispituus
-   totallen := ST_Length(amultils);
+-- Kuvaus: Lisää toimenpidekoodiin hinnoittelu ja jarjestys -sarakkeet
+CREATE TYPE hinnoittelutyyppi
+as ENUM('kokonaishintainen', 'yksikkohintainen', 'muutoshintainen');
 
-   adist := ST_Line_Locate_Point(ST_GeometryN(amultils, 1), apoint);
-   bdist := ST_Line_Locate_Point(ST_GeometryN(amultils, 2), apoint);
+ALTER TABLE toimenpidekoodi ADD COLUMN jarjestys INTEGER;
+ALTER TABLE toimenpidekoodi ADD COLUMN hinnoittelu hinnoittelutyyppi[];
 
-   IF adist>=1 THEN
-      RETURN (ST_Length(ST_GeometryN(amultils,1)) + ST_Length(ST_Line_Substring(ST_GeometryN(amultils,2),0,bdist)))/totallen;
-   ELSE
-      RETURN ST_Length(ST_Line_Substring(ST_GeometryN(amultils,1), 0, adist)) / totallen;
-   END IF;
-END;
-$$ LANGUAGE plpgsql;
+UPDATE toimenpidekoodi
+SET hinnoittelu = ARRAY['kokonaishintainen'::hinnoittelutyyppi]
+  WHERE taso = 4 AND kokonaishintainen;
 
-CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteelle(
-  piste geometry, treshold INTEGER)
-  RETURNS tr_osoite
-AS $$
-DECLARE
-   alkuosa RECORD;
-   alkuet NUMERIC;
-   palojenpit NUMERIC;
-BEGIN
-   SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
-      FROM tieverkko_paloina
-      WHERE ST_DWithin(geom, piste, treshold)
-      ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
-      LIMIT 1
-   INTO alkuosa;
+UPDATE toimenpidekoodi
+SET hinnoittelu = ARRAY['muutoshintainen'::hinnoittelutyyppi]
+WHERE taso = 4 AND kokonaishintainen IS NOT TRUE
+      AND emo =
+          (SELECT ID from toimenpidekoodi
+          WHERE nimi = 'Laaja toimenpide' AND taso = 3
+                AND emo =
+                    (SELECT id FROM toimenpidekoodi
+                    wHERE nimi = 'Talvihoito'
+                          AND taso = 2));
 
-   IF alkuosa IS NULL THEN
-     RAISE EXCEPTION 'pisteelle ei löydy tietä';
-   END IF;
-   
-   SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_Line_Locate_Point(alkuosa.geom, piste))) INTO alkuet;
-   
-   RETURN ROW(alkuosa.tie, alkuosa.osa, alkuet::INTEGER, 0, 0, ST_ClosestPoint(piste, alkuosa.geom)::geometry);
-END;
-$$ LANGUAGE plpgsql;
+UPDATE toimenpidekoodi
+SET hinnoittelu = ARRAY['yksikkohintainen'::hinnoittelutyyppi,
+'muutoshintainen'::hinnoittelutyyppi]
+WHERE taso = 4 AND hinnoittelu IS NULL AND kokonaishintainen IS NOT TRUE;
 
-CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
-  alkupiste geometry, loppupiste geometry, treshold INTEGER)
-  RETURNS tr_osoite
-AS $$
-DECLARE
-  reitti geometry;
-  apiste geometry;
-  bpiste geometry;
-  aosa INTEGER;
-  bosa INTEGER;
-  ajoratavalinta INTEGER;
-  tienosavali RECORD;
-  ap NUMERIC;
-  bp NUMERIC;
-  alkuet INTEGER;
-  loppuet INTEGER;
-  itmp INTEGER;
-  tmp geometry;
-  atmp float8;
-  btmp float8;
-BEGIN
-   -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä lähimpänä
-  SELECT a.tie, 
-         a.osa AS aosa, 
-         b.osa AS bosa,
-         a.ajorata AS arata,
-         b.ajorata AS brata,
-         a.tr_pituus AS apituus,
-         b.tr_pituus AS bpituus
-    FROM tieverkko_paloina a, 
-         tieverkko_paloina b 
-   WHERE ST_DWithin(a.geom, alkupiste, treshold) 
-     AND ST_DWithin(b.geom, loppupiste, treshold) 
-     AND a.tie=b.tie
-ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
-         ST_Length(ST_ShortestLine(loppupiste, b.geom))
-   LIMIT 1
-    INTO tienosavali;
+ALTER TABLE toimenpidekoodi DROP COLUMN kokonaishintainen;
 
-    alkuet := tr_osan_etaisyys(alkupiste, tienosavali.tie, treshold);
-    loppuet := tr_osan_etaisyys(loppupiste, tienosavali.tie, treshold);        
-
-  IF tienosavali.aosa > tienosavali.bosa THEN
-    aosa := tienosavali.bosa;
-    bosa := tienosavali.aosa;
-    apiste := loppupiste;
-    bpiste := alkupiste;
-    ajoratavalinta := 2;
-  ELSEIF tienosavali.aosa = tienosavali.bosa THEN
-    aosa := tienosavali.aosa;
-    bosa := tienosavali.bosa;
-    IF tienosavali.arata=tienosavali.brata AND alkuet>loppuet THEN
-      ajoratavalinta := 2;
-    ELSEIF tienosavali.arata=tienosavali.brata AND alkuet<=loppuet THEN
-      ajoratavalinta := 1;
-    ELSEIF tienosavali.arata!=tienosavali.brata AND alkuet>loppuet THEN
-      ajoratavalinta := 1;
-    ELSEIF tienosavali.arata!=tienosavali.brata AND alkuet<=loppuet THEN
-      ajoratavalinta := 2;
-    END IF;
-  ELSE
-    aosa := tienosavali.aosa;
-    bosa := tienosavali.bosa;
-    ajoratavalinta := 1;
-    apiste := alkupiste;
-    bpiste := loppupiste;
-  END IF;
-
-  IF aosa=bosa THEN
-    SELECT ST_LineMerge(ST_Union(geom))
-      FROM tieverkko_paloina tv
-     WHERE tv.tie = tienosavali.tie
-       AND tv.osa = aosa
-       AND (tv.ajorata = ajoratavalinta OR tv.ajorata=0)
-    INTO reitti; 
-
-    -- jos multilinestring, interpoloidaan eri tavalla
-    IF ST_NumGeometries(reitti)>1 THEN
-      atmp := multiline_project_point(reitti, alkupiste);
-      btmp := multiline_project_point(reitti, loppupiste);
-      SELECT ST_Line_Substring(reitti, LEAST(atmp, btmp),
-	                               GREATEST(atmp, btmp)) INTO reitti;
-    ELSE       
-      SELECT ST_Line_Substring(reitti, LEAST(ST_Line_Locate_Point(reitti, alkupiste), ST_Line_Locate_Point(reitti, loppupiste)),
-				        GREATEST(ST_Line_Locate_Point(reitti, alkupiste),ST_Line_Locate_Point(reitti, loppupiste))) INTO reitti;
-    END IF;
-    
-  ELSE   
-  -- kootaan osien geometriat yhdeksi viivaksi
-  SELECT ST_LineMerge(ST_Union((CASE 
-				 WHEN tv.osa=aosa 
-				    THEN ST_Line_Substring(tv.geom, ST_Line_Locate_Point(tv.geom, apiste), 1)
-				 WHEN tv.osa=bosa 
-				    THEN ST_Line_Substring(tv.geom, 0, ST_Line_Locate_Point(tv.geom, bpiste))
-				 ELSE tv.geom 
-				 END)
-				ORDER BY tv.osa)) 
-    FROM tieverkko_paloina tv
-   WHERE tv.tie=tienosavali.tie
-     AND tv.osa>=aosa
-     AND tv.osa<=bosa
-     AND (tv.ajorata = ajoratavalinta OR tv.ajorata = 0)
-    INTO reitti;
-  END IF;
-  
-  IF reitti IS NULL THEN
-     RAISE EXCEPTION 'pisteillä ei yhteistä tietä';
-  END IF;
-  
-  RETURN ROW(tienosavali.tie, 
-             tienosavali.aosa, 
-             alkuet, 
-             tienosavali.bosa, 
-             loppuet,
-             CASE WHEN ajoratavalinta=1 THEN reitti
-                  ELSE ST_Reverse(reitti) 
-             END);
-END;
-$$ LANGUAGE plpgsql;
-
--- kuvaus: tierekisteriosoittelle_viiva, kaistan päättely
-CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
-  tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
-  RETURNS SETOF geometry
-AS $$
-DECLARE
-   ajoratavalinta INTEGER;
-   aos INTEGER;
-   los INTEGER;
-   aet INTEGER;
-   let INTEGER;
-BEGIN
-   IF aosa_ = losa_ THEN
-        IF aet_ < let_ THEN
-	  ajoratavalinta := 1;
-	  aet := aet_;
-	  let := let_;
-	ELSE
-	  ajoratavalinta := 2;
-	  aet := let_;
-	  let := aet_;
-	END IF;
-	IF ajoratavalinta=2 THEN
-	RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT))
-	FROM tieverkko_paloina
-	WHERE tie=tie_
-	  AND osa=aosa_
-	  AND (ajorata=0 OR ajorata=ajoratavalinta);
-	ELSE
-	RETURN QUERY SELECT ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT)
-	FROM tieverkko_paloina
-	WHERE tie=tie_
-	  AND osa=aosa_
-	  AND (ajorata=0 OR ajorata=ajoratavalinta);
-	END IF;
-   ELSE
-        IF aosa_ < losa_ THEN
-	  ajoratavalinta := 1;
-	  aos := aosa_;
-	  los := losa_;
-	  aet := aet_;
-	  let := let_;
-	ELSE
-	  ajoratavalinta := 2;
-	  aos := losa_;
-	  los := aosa_;
-	  aet := let_;
-	  let := aet_;
-	END IF;
-	IF ajoratavalinta=2 THEN
-        RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN (osa=aos AND ajorata!=0) THEN ST_Line_Substring(geom, LEAST(1, aet/ST_Length(geom)), 1)
-				      WHEN osa=los THEN ST_Line_Substring(geom, 0, LEAST(1,let/ST_Length(geom)))
-				      ELSE geom END) ORDER BY osa)) AS geom
-		     FROM tieverkko_paloina
-		      	WHERE tie = tie_
-			AND osa >= aos
-			AND osa <= los
-			AND (ajorata=0 OR ajorata=ajoratavalinta)
-			)
-	  SELECT ST_Reverse(geom) FROM q;
-	ELSE
-        RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN (osa=aos AND ajorata!=0) THEN ST_Line_Substring(geom, LEAST(1, aet/ST_Length(geom)), 1)
-				      WHEN osa=los THEN ST_Line_Substring(geom, 0, LEAST(1,let/ST_Length(geom)))
-				      ELSE geom END) ORDER BY osa)) AS geom
-		     FROM tieverkko_paloina
-		      	WHERE tie = tie_
-			AND osa >= aos
-			AND osa <= los
-			AND (ajorata=0 OR ajorata=ajoratavalinta)
-			)
-	  SELECT geom FROM q;
-	END IF;
-   END IF;
-END;
-$$ LANGUAGE plpgsql;
+-- Markku Hussi email 2016-01-12 14:17 toivoi tähän järjestykseen hoitoluokat (sama järj. kuin paperilomakkeella)
+UPDATE toimenpidekoodi SET jarjestys = 1000 WHERE nimi = 'Is 2-ajorat. KVL >15000' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1010 WHERE nimi = 'Is 1-ajorat. KVL >15000' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1020 WHERE nimi = 'Is ohituskaistat KVL >15000' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1030 WHERE nimi = 'Is rampit KVL >15000' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1040 WHERE nimi = 'Is 2-ajorat.' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1050 WHERE nimi = 'Is 1-ajorat.' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1060 WHERE nimi = 'Is ohituskaistat' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1070 WHERE nimi = 'Is rampit' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1080 WHERE nimi = 'I 2-ajorat.' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1090 WHERE nimi = 'I 1-ajorat.' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1100 WHERE nimi = 'I ohituskaistat' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1110 WHERE nimi = 'I rampit' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1120 WHERE nimi = 'Ib 2-ajorat.' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1130 WHERE nimi = 'Ib 1-ajorat.' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1140 WHERE nimi = 'Ib ohituskaistat' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1150 WHERE nimi = 'Ib rampit' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1160 WHERE nimi = 'TIb' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1170 WHERE nimi = 'II' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1180 WHERE nimi = 'III' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1190 WHERE nimi = 'K1' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));
+UPDATE toimenpidekoodi SET jarjestys = 1200 WHERE nimi = 'K2' AND emo =(SELECT ID from toimenpidekoodi WHERE nimi = 'Laaja toimenpide' AND taso = 3 AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Talvihoito' AND taso = 2));

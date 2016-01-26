@@ -1,7 +1,7 @@
 @import "livi_tyylit";
 
 @murupolun-korkeus: 65px;
-@murupolun-elementtikorkeus: 32px;
+@murupolun-elementtikorkeus: @input-korkeus;
 
 .murupolku {
     background-color: @harmaa9;
@@ -19,7 +19,6 @@
     }
     > li {
         display: inline-block;
-        height: @murupolun-korkeus;
         margin-right: 0.5rem;
         margin-top: 10px;
         vertical-align: top;

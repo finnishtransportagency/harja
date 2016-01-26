@@ -4,12 +4,14 @@ INSERT
 INTO sanktio
 (perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, laatupoikkeama, suorasanktio)
 VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
-        (
-          SELECT t.id
-          FROM toimenpideinstanssi t
+        COALESCE(
+	  (SELECT t.id -- suoraan annettu tpi
+	     FROM toimenpideinstanssi t
+	    WHERE t.id = :tpi_id AND t.urakka = :urakka),
+          (SELECT t.id
+	     FROM toimenpideinstanssi t -- sanktiotyyppiin linkattu tpi
             JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
-          WHERE s.id = :tyyppi AND t.urakka = :urakka
-        ),
+           WHERE s.id = :tyyppi AND t.urakka = :urakka)),
         :summa, :indeksi, :laatupoikkeama, :suorasanktio);
 
 -- name: paivita-sanktio!
@@ -18,12 +20,12 @@ UPDATE sanktio
 SET perintapvm        = :perintapvm,
   sakkoryhma          = :ryhma :: sanktiolaji,
   tyyppi              = :tyyppi,
-  toimenpideinstanssi = (
-    SELECT t.id
-    FROM toimenpideinstanssi t
-      JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
-    WHERE s.id = :tyyppi AND t.urakka = :urakka
-  ),
+  toimenpideinstanssi = COALESCE(
+    (SELECT t.id FROM toimenpideinstanssi t WHERE t.id = :tpi_id AND t.urakka = :urakka),
+    (SELECT t.id
+       FROM toimenpideinstanssi t
+       JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
+      WHERE s.id = :tyyppi AND t.urakka = :urakka)),
   maara               = :summa,
   indeksi             = :indeksi,
   laatupoikkeama            = :laatupoikkeama,
@@ -42,7 +44,7 @@ SELECT
   t.id              AS tyyppi_id,
   t.nimi            AS tyyppi_nimi,
   t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-  t.sanktiolaji     AS tyyppi_sanktiolaji
+  t.sanktiolaji     AS tyyppi_laji
 FROM sanktio s
   JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE laatupoikkeama = :laatupoikkeama;
