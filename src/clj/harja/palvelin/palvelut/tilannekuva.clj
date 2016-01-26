@@ -255,21 +255,21 @@
       (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
       (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
         {:toteumat               (tulosta-tulos! "toteumaa"
-                                                (hae-toteumien-reitit db user tiedot urakat))
-        :tyokoneet              (tulosta-tulos! "tyokonetta"
-                                                (hae-tyokoneet db user tiedot urakat))
-        :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
-                                                (hae-turvallisuuspoikkeamat db user tiedot urakat))
-        :tarkastukset           (tulosta-tulos! "tarkastusta"
-                                                (hae-tarkastukset db user tiedot urakat))
-        :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
-                                                (hae-laatupoikkeamat db user tiedot urakat))
-        :paikkaus               (tulosta-tulos! "paikkausta"
-                                                (hae-paikkaustyot db user tiedot urakat))
-        :paallystys             (tulosta-tulos! "paallystysta"
-                                                (hae-paallystystyot db user tiedot urakat))
-        :ilmoitukset            (tulosta-tulos! "ilmoitusta"
-                                                (hae-ilmoitukset db user tiedot urakat))}))))
+                                                 (hae-toteumien-reitit db user tiedot urakat))
+         :tyokoneet              (tulosta-tulos! "tyokonetta"
+                                                 (hae-tyokoneet db user tiedot urakat))
+         :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
+                                                 (hae-turvallisuuspoikkeamat db user tiedot urakat))
+         :tarkastukset           (tulosta-tulos! "tarkastusta"
+                                                 (hae-tarkastukset db user tiedot urakat))
+         :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
+                                                 (hae-laatupoikkeamat db user tiedot urakat))
+         :paikkaus               (tulosta-tulos! "paikkausta"
+                                                 (hae-paikkaustyot db user tiedot urakat))
+         :paallystys             (tulosta-tulos! "paallystysta"
+                                                 (hae-paallystystyot db user tiedot urakat))
+         :ilmoitukset            (tulosta-tulos! "ilmoitusta"
+                                                 (hae-ilmoitukset db user tiedot urakat))}))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
