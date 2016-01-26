@@ -206,18 +206,26 @@
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)]
+                  raportin-nimi alkupvm loppupvm)
+        ryhmittellyt-rivit (yleinen/ryhmittele-tulokset-raportin-taulukolle
+                             naytettavat-rivit :urakka raportti-rivi)]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+                 :korosta-rivit (keep-indexed
+                                  (fn [index rivi]
+                                    (when (and (vector? rivi)
+                                               (not (nil? (last rivi)))
+                                               (.contains (last rivi) "Kyllä"))
+                                      index))
+                                  ryhmittellyt-rivit)
                  :viimeinen-rivi-yhteenveto? true}
       taulukon-otsikot
       (remove nil?
               (conj
               ;; Raportin varsinainen data
-              (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                naytettavat-rivit :urakka raportti-rivi)
+              ryhmittellyt-rivit
               ;; Yhteensä-rivi, jos tarvitaan
               (when (not (empty? naytettavat-rivit))
                 (yhteensa-rivi naytettavat-rivit))))]
