@@ -26,6 +26,11 @@
   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
   (ilmoitukset/sulje-uusi-kuittaus))
 
+(defn esta-lahetys? []
+  (let [kuittaus @tiedot/uusi-kuittaus]
+    (or (empty? (:vapaateksti kuittaus))
+        (not (some #(= (:tyyppi kuittaus) %) apurit/kuittaustyypit)))))
+
 (defn uusi-kuittaus []
   [:div
    {:class "uusi-kuittaus"}
@@ -35,9 +40,9 @@
      :footer   [:div
                 [napit/palvelinkutsu-nappi
                  "Lähetä"
-                 #(tiedot/tallenna-uusi-kuittaus @tiedot/uusi-kuittaus)
+                 #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
                  {:ikoni        (ikonit/tallenna)
-                  :disabled     false
+                  :disabled     (esta-lahetys?)
                   :kun-onnistuu (fn [vastaus] (kasittele-kuittauskasityksen-vastaus vastaus))
                   :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
                   :luokka       "nappi-ensisijainen"}]
@@ -48,7 +53,6 @@
                    (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))]]}
     [(lomake/ryhma {:otsikko    "Kuittaus"
                     :leveys-col 3}
-
                    {:nimi          :tyyppi
                     :otsikko       "Tyyppi"
                     :pakollinen?   true

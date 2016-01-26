@@ -8,13 +8,12 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.kommunikaatio :as k])
-
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce uusi-kuittaus (atom nil))
 
-(defn tallenna-uusi-kuittaus [kuittaus]
+(defn laheta-uusi-kuittaus [kuittaus]
   (k/post! :tallenna-ilmoitustoimenpide kuittaus nil true))
 
 (defn alusta-uusi-kuittaus [valittu-ilmoitus]
