@@ -39,7 +39,7 @@
     (/ pit 200)))
 
 (defn- hae-ilmoitukset
-  [db user {{:keys [alue tyypit tilat]} :ilmoitukset :as tiedot} urakat]
+  [db user {:keys [alue] {:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
   (let [haettavat (haettavat tyypit)]
     (when-not (empty? haettavat)
       (try
@@ -188,7 +188,7 @@
                   (geo/muunna-pg-tulokset :sijainti)
                   (map #(konv/array->vec % :tyyppi))
                   (map #(assoc % :tyyppi (mapv keyword (:tyyppi %)))))
-                (q/hae-turvallisuuspoikkeamat db urakat (konv/sql-date alku)
+                (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
                                               (konv/sql-date loppu)))
           {:korjaavatoimenpide :korjaavattoimenpiteet}))
       (catch Exception e
