@@ -143,10 +143,10 @@
                 (q/hae-laatupoikkeamat db toleranssi urakat
                                        (konv/sql-date alku)
                                        (konv/sql-date loppu)
-                                       (map name haettavat)))
+                                       (map name haettavat))))
           (catch Exception e
             (tulosta-virhe! "laatupoikkeamia" e)
-            nil))))))
+            nil)))))
 
 (defn- hae-tarkastukset
   [db user {:keys [alue alku loppu tarkastukset]} urakat]
@@ -171,10 +171,10 @@
                                     urakat
                                     (konv/sql-date alku)
                                     (konv/sql-date loppu)
-                                    (map name haettavat)))
+                                    (map name haettavat))))
           (catch Exception e
             (tulosta-virhe! "tarkastuksia" e)
-            nil))))))
+            nil)))))
 
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [alue alku loppu turvallisuus]} urakat]
