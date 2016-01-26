@@ -193,9 +193,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
+(defn maarita-pudotusvalikon-korkeus [pudotusvalikko-komponentti sijainti-atom]
+  (let [solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
+        r (.getBoundingClientRect solmu)
+        etaisyys-alareunaan (- @korkeus (.-bottom r))]
+    (reset! sijainti-atom etaisyys-alareunaan)))
+
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (kuuntelija
-    {:auki (atom false)}
+    {:auki (atom false)
+     :max-korkeus (atom 0)}
 
     (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
       (let [auki (:auki (r/state (r/current-component)))
