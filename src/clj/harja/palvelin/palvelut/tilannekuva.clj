@@ -190,7 +190,7 @@
         nil))))
 
 (defn- hae-tyokoneet
-  [db user {:keys [toleranssi alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?]} urakat]
+  [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?]} urakat]
   (when nykytilanne?
     (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
       (when-not (empty? haettavat-toimenpiteet)
@@ -210,7 +210,7 @@
                     (map #(assoc % :tyyppi :tyokone))
                     (map #(konv/array->set % :tehtavat))
                     (map (juxt :tyokoneid identity)))
-                  (q/hae-tyokoneet db toleranssi (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
+                  (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
                                    urakka-id tpi-str)))
           (catch Exception e
             (tulosta-virhe! "tyokoneet" e)

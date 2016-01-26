@@ -321,7 +321,7 @@ SELECT
   t.lahetysaika,
   t.vastaanotettu,
   t.tyokonetyyppi,
-  ST_Simplify(t.sijainti, :toleranssi) AS sijainti,
+  t.sijainti,
   t.suunta,
   t.edellinensijainti,
   t.urakkaid,
