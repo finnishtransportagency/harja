@@ -6,8 +6,7 @@
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]))
 
 (defn hakuehto-annettu? [p]
   ;; todo: pitäisi yksinkertaistaa
@@ -145,7 +144,5 @@
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :hae-ilmoitukset)
-    (poista-palvelut (:http-palvelin this) :tallenna-ilmoitustoimenpide)
-
+    (poista-palvelut (:http-palvelin this) :hae-ilmoitukset :tallenna-ilmoitustoimenpide)
     this))

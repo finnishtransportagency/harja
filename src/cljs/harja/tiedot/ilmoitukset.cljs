@@ -46,7 +46,9 @@
 
 (defn lisaa-kuittaus-valitulle-ilmoitukselle [kuittaus]
   (let [nykyiset-kuittaukset (:kuittaukset @valittu-ilmoitus)]
-    (reset! valittu-ilmoitus (assoc @valittu-ilmoitus :kuittaukset (sort-by :kuitattu pvm/ennen? (conj nykyiset-kuittaukset kuittaus))))))
+    (swap! valittu-ilmoitus assoc :kuittaukset
+           (sort-by :kuitattu pvm/ennen?
+                    (conj nykyiset-kuittaukset kuittaus)))))
 
 (defonce haetut-ilmoitukset
          (reaction<! [valinnat @valinnat haku @ilmoitushaku] {:odota 100}
@@ -78,18 +80,18 @@
                  @haetut-ilmoitukset)
                @valittu-ilmoitus))))
 
-(defn avaa-uusi-kuittaus []
+(defn avaa-uusi-kuittaus! []
   (reset! uusi-kuittaus-auki? true))
 
-(defn sulje-uusi-kuittaus []
+(defn sulje-uusi-kuittaus! []
   (reset! uusi-kuittaus-auki? false))
 
-(defn avaa-ilmoitus [ilmoitus]
+(defn avaa-ilmoitus! [ilmoitus]
   (reset! valittu-ilmoitus ilmoitus)
-  (sulje-uusi-kuittaus)
+  (sulje-uusi-kuittaus!)
   (kuittausten-tiedot/alusta-uusi-kuittaus valittu-ilmoitus))
 
-(defn sulje-ilmoitus []
+(defn sulje-ilmoitus! []
   (reset! valittu-ilmoitus nil)
-  (sulje-uusi-kuittaus)
+  (sulje-uusi-kuittaus!)
   (kuittausten-tiedot/alusta-uusi-kuittaus nil))

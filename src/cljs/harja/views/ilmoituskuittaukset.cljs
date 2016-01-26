@@ -24,7 +24,7 @@
     (viesti/nayta! "Kuittaus lähetetty T-LOIK:n." :success)
     (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
-  (ilmoitukset/sulje-uusi-kuittaus))
+  (ilmoitukset/sulje-uusi-kuittaus!))
 
 (defn esta-lahetys? []
   (let [kuittaus @tiedot/uusi-kuittaus]
@@ -49,7 +49,7 @@
                 [napit/peruuta
                  "Peruuta"
                  #(do
-                   (ilmoitukset/sulje-uusi-kuittaus)
+                   (ilmoitukset/sulje-uusi-kuittaus!)
                    (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))]]}
     [(lomake/ryhma {:otsikko    "Kuittaus"
                     :leveys-col 3}
@@ -103,7 +103,7 @@
 
 (defn kuittauksen-tiedot
   [kuittaus]
-  (with-meta
+  ^{:key kuittaukset}
     [bs/panel
      {:class "kuittaus-viesti"}
      (capitalize (name (:kuittaustyyppi kuittaus)))

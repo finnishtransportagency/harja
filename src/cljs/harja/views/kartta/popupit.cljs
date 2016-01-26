@@ -106,7 +106,7 @@
                                                                     (let [putsaa (fn [asia]
                                                                                    (dissoc asia :type :alue))]
                                                                       (reset! nav/sivu :ilmoitukset)
-                                                                      (ilmoitukset/avaa-ilmoitus (putsaa tapahtuma))))}})))
+                                                                      (ilmoitukset/avaa-ilmoitus! (putsaa tapahtuma))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))

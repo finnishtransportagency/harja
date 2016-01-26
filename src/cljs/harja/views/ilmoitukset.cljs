@@ -46,7 +46,7 @@
   (let [ilmoitus @tiedot/valittu-ilmoitus]
     [:div
      [:span
-      [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus)]
+      [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus!)]
       (urakan-sivulle-nappi ilmoitus)
       (pollauksen-merkki)
       [bs/panel {}
@@ -82,7 +82,7 @@
         (if @tiedot/uusi-kuittaus-auki?
           [bs/panel {} [:div [kuittaukset/uusi-kuittaus-lomake]]]
           [:button.nappi-ensisijainen {:class    "uusi-kuittaus-nappi"
-                                       :on-click #(tiedot/avaa-uusi-kuittaus)} (ikonit/plus) " Uusi kuittaus"])
+                                       :on-click #(tiedot/avaa-uusi-kuittaus!)} (ikonit/plus) " Uusi kuittaus"])
 
         (when-not (empty? (:kuittaukset ilmoitus))
           [:div
@@ -152,7 +152,7 @@
         (pollauksen-merkki)
         [grid
          {:tyhja             (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu     #(tiedot/avaa-ilmoitus %)
+          :rivi-klikattu     #(tiedot/avaa-ilmoitus! %)
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
@@ -171,7 +171,7 @@
                         (nav/vaihda-kartan-koko! :L))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
-    (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus %2))
+    (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus! %2))
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 
