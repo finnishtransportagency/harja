@@ -299,6 +299,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :nimi :kuvaus
               :tyyppi :text
               :pakollinen? true
+              :leveys-col 4
               :validoi     [[:ei-tyhja "Kirjoita kuvaus"]] :pituus-max 4096
               :placeholder "Kirjoita kuvaus..." :koko [80 :auto]}
 
@@ -325,7 +326,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
              (when (:id alkuperainen)
                (lomake/ryhma
                  "Käsittely ja päätös"
-
+                 
                  {:otsikko     "Käsittelyn pvm"
                   :nimi        :paatos-pvm
                   :hae         (comp :kasittelyaika :paatos) :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
@@ -367,8 +368,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :nimi        :paatoksen-selitys
                     :tyyppi      :text
                     :hae         (comp :perustelu :paatos)
-                    :koko        [80 4]
-                    :leveys-col  6
+                    :koko        [80 :auto]
+                    :leveys-col  4
                     :aseta       #(assoc-in %1 [:paatos :perustelu] %2)
                     :muokattava? muokattava?
                     :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})
