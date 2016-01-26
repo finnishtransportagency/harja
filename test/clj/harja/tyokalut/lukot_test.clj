@@ -14,7 +14,7 @@
     (is (nil? (second lukko)) "Lukko on avattu ajon jälkeen")))
 
 (deftest tarkista-lukon-kanssa-ajaminen
-  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
         muuttuja (atom nil)
         toiminto-fn (fn [] (reset! muuttuja true))]
     (is (lukot/aja-lukon-kanssa db +testilukko+ toiminto-fn) "Lukko saatiin asetettua oikein")
@@ -22,7 +22,7 @@
     (tarkista-lukon-avaus)))
 
 (deftest tarkista-lukittu-ajo
-  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
         muuttuja (atom nil)
         toiminto-fn (fn [] (reset! muuttuja true))]
     (is (qk/aseta-lukko? db +testilukko+ nil) "Lukon asettaminen onnistui")
@@ -31,7 +31,7 @@
     (is (qk/avaa-lukko? db +testilukko+) "Lukon avaaminen onnistui")))
 
 (deftest tarkista-aikapohjaisen-lukon-ajo
-  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
         muuttuja (atom nil)
         toiminto-fn (fn [] (reset! muuttuja true))]
     (is (qk/aseta-lukko? db +testilukko+ nil) "Lukon asettaminen onnistui")
@@ -44,7 +44,7 @@
 
 
 (deftest tarkista-poikkeusten-kasittely
-  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
         toiminto-fn (fn [] (throw (Exception. "Poikkeus")))]
     (is (thrown? Exception (lukot/aja-lukon-kanssa db +testilukko+ toiminto-fn 1)) "Poikkeus heitettiin ulos")
     (tarkista-lukon-avaus)))
