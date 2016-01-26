@@ -84,16 +84,16 @@
     (try
       (let [toleranssi (karkeistustoleranssi alue)]
         (into []
-             (comp
-               (geo/muunna-pg-tulokset :sijainti)
-               (map konv/alaviiva->rakenne)
-               (map #(konv/string->avain % [:paallystysilmoitus :tila])))
-             (if nykytilanne?
-               (q/hae-paallystykset-nykytilanteeseen db toleranssi)
-               (q/hae-paallystykset-historiakuvaan db
-                                                   toleranssi
-                                                   (konv/sql-date loppu)
-                                                   (konv/sql-date alku)))))
+              (comp
+                (geo/muunna-pg-tulokset :sijainti)
+                (map konv/alaviiva->rakenne)
+                (map #(konv/string->avain % [:paallystysilmoitus :tila])))
+              (if nykytilanne?
+                (q/hae-paallystykset-nykytilanteeseen db toleranssi)
+                (q/hae-paallystykset-historiakuvaan db
+                                                    toleranssi
+                                                    (konv/sql-date loppu)
+                                                    (konv/sql-date alku)))))
       (catch Exception e
         (tulosta-virhe! "paallystyksia" e)
         nil))))
@@ -104,16 +104,16 @@
     (try
       (let [toleranssi (karkeistustoleranssi alue)]
         (into []
-             (comp
-               (geo/muunna-pg-tulokset :sijainti)
-               (map konv/alaviiva->rakenne)
-               (map #(konv/string->avain % [:paikkausilmoitus :tila])))
-             (if nykytilanne?
-               (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
-               (q/hae-paikkaukset-historiakuvaan db
-                                                 toleranssi
-                                                 (konv/sql-date loppu)
-                                                 (konv/sql-date alku)))))
+              (comp
+                (geo/muunna-pg-tulokset :sijainti)
+                (map konv/alaviiva->rakenne)
+                (map #(konv/string->avain % [:paikkausilmoitus :tila])))
+              (if nykytilanne?
+                (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
+                (q/hae-paikkaukset-historiakuvaan db
+                                                  toleranssi
+                                                  (konv/sql-date loppu)
+                                                  (konv/sql-date alku)))))
       (catch Exception e
         (tulosta-virhe! "paikkauksia" e)
         nil))))
@@ -122,59 +122,59 @@
   [db user {:keys [alue alku loppu laatupoikkeamat]} urakat]
   (let [haettavat (haettavat laatupoikkeamat)]
     (when-not (empty? haettavat)
-        (try
-          (let [toleranssi (karkeistustoleranssi alue)]
-         (into []
-               (comp
-                 (geo/muunna-pg-tulokset :sijainti)
-                 (map konv/alaviiva->rakenne)
-                 (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
-                 (map #(dissoc % :selvityspyydetty))
-                 (map #(assoc % :tekija (keyword (:tekija %))))
-                 (map #(update-in % [:paatos :paatos]
-                                  (fn [p]
-                                    (when p (keyword p)))))
-                 (map #(update-in % [:paatos :kasittelytapa]
-                                  (fn [k]
-                                    (when k (keyword k)))))
-                 (map #(if (nil? (:kasittelyaika (:paatos %)))
-                        (dissoc % :paatos)
-                        %)))
-               (q/hae-laatupoikkeamat db toleranssi urakat
-                                      (konv/sql-date alku)
-                                      (konv/sql-date loppu)
-                                      (map name haettavat)))
-         (catch Exception e
-           (tulosta-virhe! "laatupoikkeamia" e)
-           nil))))))
+      (try
+        (let [toleranssi (karkeistustoleranssi alue)]
+          (into []
+                (comp
+                  (geo/muunna-pg-tulokset :sijainti)
+                  (map konv/alaviiva->rakenne)
+                  (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+                  (map #(dissoc % :selvityspyydetty))
+                  (map #(assoc % :tekija (keyword (:tekija %))))
+                  (map #(update-in % [:paatos :paatos]
+                                   (fn [p]
+                                     (when p (keyword p)))))
+                  (map #(update-in % [:paatos :kasittelytapa]
+                                   (fn [k]
+                                     (when k (keyword k)))))
+                  (map #(if (nil? (:kasittelyaika (:paatos %)))
+                         (dissoc % :paatos)
+                         %)))
+                (q/hae-laatupoikkeamat db toleranssi urakat
+                                       (konv/sql-date alku)
+                                       (konv/sql-date loppu)
+                                       (map name haettavat)))
+          (catch Exception e
+            (tulosta-virhe! "laatupoikkeamia" e)
+            nil))))))
 
 (defn- hae-tarkastukset
   [db user {:keys [alue alku loppu tarkastukset]} urakat]
   (let [haettavat (haettavat tarkastukset)]
     (when-not (empty? haettavat)
-        (try
-          (let [toleranssi (karkeistustoleranssi alue)]
-         (into []
-               (comp
-                 (geo/muunna-pg-tulokset :sijainti)
-                 (map konv/alaviiva->rakenne)
-                 (map #(konv/string->keyword % :tyyppi))
-                 (map (fn [tarkastus]
-                        (condp = (:tyyppi tarkastus)
-                          :talvihoito (dissoc tarkastus :soratiemittaus)
-                          :soratie (dissoc tarkastus :talvihoitomittaus)
-                          :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                          :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                          :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
-               (q/hae-tarkastukset db
-                                   toleranssi
-                                   urakat
-                                   (konv/sql-date alku)
-                                   (konv/sql-date loppu)
-                                   (map name haettavat)))
-         (catch Exception e
-           (tulosta-virhe! "tarkastuksia" e)
-           nil))))))
+      (try
+        (let [toleranssi (karkeistustoleranssi alue)]
+          (into []
+                (comp
+                  (geo/muunna-pg-tulokset :sijainti)
+                  (map konv/alaviiva->rakenne)
+                  (map #(konv/string->keyword % :tyyppi))
+                  (map (fn [tarkastus]
+                         (condp = (:tyyppi tarkastus)
+                           :talvihoito (dissoc tarkastus :soratiemittaus)
+                           :soratie (dissoc tarkastus :talvihoitomittaus)
+                           :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                           :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                           :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
+                (q/hae-tarkastukset db
+                                    toleranssi
+                                    urakat
+                                    (konv/sql-date alku)
+                                    (konv/sql-date loppu)
+                                    (map name haettavat)))
+          (catch Exception e
+            (tulosta-virhe! "tarkastuksia" e)
+            nil))))))
 
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [alue alku loppu turvallisuus]} urakat]
@@ -182,15 +182,15 @@
     (try
       (let [toleranssi (karkeistustoleranssi alue)]
         (konv/sarakkeet-vektoriin
-         (into []
-               (comp
-                 (map konv/alaviiva->rakenne)
-                 (geo/muunna-pg-tulokset :sijainti)
-                 (map #(konv/array->vec % :tyyppi))
-                 (map #(assoc % :tyyppi (mapv keyword (:tyyppi %)))))
-               (q/hae-turvallisuuspoikkeamat db urakat (konv/sql-date alku)
-                                             (konv/sql-date loppu)))
-         {:korjaavatoimenpide :korjaavattoimenpiteet}))
+          (into []
+                (comp
+                  (map konv/alaviiva->rakenne)
+                  (geo/muunna-pg-tulokset :sijainti)
+                  (map #(konv/array->vec % :tyyppi))
+                  (map #(assoc % :tyyppi (mapv keyword (:tyyppi %)))))
+                (q/hae-turvallisuuspoikkeamat db urakat (konv/sql-date alku)
+                                              (konv/sql-date loppu)))
+          {:korjaavatoimenpide :korjaavattoimenpiteet}))
       (catch Exception e
         (tulosta-virhe! "turvallisuuspoikkeamia" e)
         nil))))
