@@ -4,7 +4,8 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [reagent.core :refer [atom] :as r])
+            [reagent.core :refer [atom] :as r]
+            [harja.fmt :as fmt])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -43,8 +44,7 @@
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]
                                      (reset! korkeus (-> js/window .-innerHeight))
-                                     (reset! leveys (-> js/window .-innerWidth))
-                                     ))
+                                     (reset! leveys (-> js/window .-innerWidth))))
                              true))
 
 ;;(defonce sisallon-koon-kuuntelija (do
@@ -197,7 +197,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   (let [solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
         r (.getBoundingClientRect solmu)
         etaisyys-alareunaan (- @korkeus (.-bottom r))]
-    (reset! sijainti-atom etaisyys-alareunaan)))
+
+    (reset! sijainti-atom (- etaisyys-alareunaan 10))))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (kuuntelija
@@ -262,21 +263,23 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
           [:div.valittu (format-fn valinta)]
           [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-         [:ul.dropdown-menu.livi-alasvetolista
+         [:ul.dropdown-menu.livi-alasvetolista {:style {:max-height (fmt/pikseleina
+                                                                      @(:max-korkeus (r/state (r/current-component))))}}
           (doall
             (for [vaihtoehto vaihtoehdot]
               ^{:key (hash vaihtoehto)}
               [:li.harja-alasvetolistaitemi
                (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                    (reset! auki false)
-                                                   nil))]))
-          ]]))
+                                                   nil))]))]]))
 
     :body-klikkaus
     (fn [this {klikkaus :tapahtuma}]
       (when-not (sisalla? this klikkaus)
         (reset! (:auki (r/state this)) false)))
-    ))
+    :component-did-mount
+    (fn [this tila]
+      (maarita-pudotusvalikon-korkeus this (:max-korkeus tila)))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
@@ -305,16 +308,22 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
       {:get-initial-state      (fn [this] alkutila)
        :reagent-render         render-fn
        :component-did-mount    (fn [this _]
-                                 (loop [kahvat []
-                                        [[aihe kasittelija] & kuuntelijat] kuuntelijat]
-                                   (if-not aihe
-                                     (r/set-state this {::kuuntelijat kahvat})
-                                     (recur (concat kahvat
-                                                    (doall (map #(t/kuuntele! % (fn [tapahtuma] (kasittelija this tapahtuma)))
-                                                                (if (keyword? aihe)
-                                                                  [aihe]
-                                                                  (seq aihe)))))
-                                            kuuntelijat))))
+                                 ; Käsittele did mount ensin
+                                 (let [mount-kasittelija (second (first (filter
+                                                                    #(= (first %) :component-did-mount)
+                                                                    kuuntelijat)))]
+                                   (when mount-kasittelija
+                                     (mount-kasittelija this alkutila))
+                                   (loop [kahvat []
+                                          [[aihe kasittelija] & kuuntelijat] kuuntelijat]
+                                     (if-not aihe
+                                       (r/set-state this {::kuuntelijat kahvat})
+                                       (recur (concat kahvat
+                                                      (doall (map #(t/kuuntele! % (fn [tapahtuma] (kasittelija this tapahtuma)))
+                                                                  (if (keyword? aihe)
+                                                                    [aihe]
+                                                                    (seq aihe)))))
+                                              kuuntelijat)))))
        :component-will-unmount (fn [this _]
                                  (let [kuuntelijat (-> this r/state ::kuuntelijat)]
                                    (doseq [k kuuntelijat]
