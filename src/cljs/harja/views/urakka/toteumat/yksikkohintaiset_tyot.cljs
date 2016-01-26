@@ -123,7 +123,7 @@
        :valinta-arvo  :tpi_id
        :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
        :valinnat      toimenpideinstanssit
-       :leveys        "30%"
+       :leveys        30
        :validoi       [[:ei-tyhja "Valitse työ"]]
        :aseta         #(assoc %1
                               :toimenpideinstanssi %2
@@ -134,7 +134,7 @@
        :valinta-arvo  #(:id (nth % 3))
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
        :valinnat-fn   valintakasittelija
-       :leveys        "45%"
+       :leveys        45
        :validoi       [[:ei-tyhja "Valitse tehtävä"]]
        :aseta         (fn [rivi arvo] (assoc rivi
                                              :tehtava arvo
@@ -142,13 +142,13 @@
       {:otsikko "Määrä" :nimi
        :maara
        :tyyppi :positiivinen-numero
-       :leveys "25%"
+       :leveys 25
        :validoi [[:ei-tyhja "Anna määrä"]]}
       {:otsikko "Yks."
        :nimi :yksikko
        :tyyppi :string
        :muokattava? (constantly false)
-       :leveys "15%"}]
+       :leveys 15}]
      tehtavat]))
 
 (defn yksikkohintainen-toteumalomake
@@ -237,7 +237,7 @@
             :tyyppi :pvm
             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                                                                     [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
-           {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
+           {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true :leveys 20 :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
@@ -276,27 +276,27 @@
           :muokattava? (constantly false)
           :tyyppi :pvm
           :hae (comp pvm/pvm :alkanut)
-          :leveys "20%"}
+          :leveys 20}
          {:otsikko "Määrä"
           :nimi :maara
           :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
           :tyyppi :positiivinen-numero
-          :leveys "20%"}
+          :leveys 20}
          {:otsikko "Suorittaja"
           :nimi :suorittajan_nimi
           :muokattava? (constantly false)
           :tyyppi :string
-          :leveys "20%"}
+          :leveys 20}
          {:otsikko "Lisätieto"
           :nimi :lisatieto
           :muokattava? (constantly false)
           :tyyppi :string
-          :leveys "20%"}
+          :leveys 20}
          {:otsikko "Tarkastele koko toteumaa"
           :nimi :tarkastele-toteumaa
           :muokattava? (constantly false)
           :tyyppi :komponentti
-          :leveys "20%"
+          :leveys 20
           :komponentti (fn [rivi]
                          [:button.nappi-toissijainen.nappi-grid
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
@@ -326,22 +326,22 @@
                                        (filter (fn [rivi]
                                                  (> (:hoitokauden-toteutunut-maara rivi) 0))
                                                @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain)))}
-          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"
+          [{:tyyppi :vetolaatikon-tila :leveys 5}
+           {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
+           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
-           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"
+           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
             (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                          [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
-                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "10%"}]
+                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
           @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain]])))
 
 (defn yksikkohintaisten-toteumat []
