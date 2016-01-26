@@ -106,7 +106,7 @@
                                                                     (let [putsaa (fn [asia]
                                                                                    (dissoc asia :type :alue))]
                                                                       (reset! nav/sivu :ilmoitukset)
-                                                                      (reset! ilmoitukset/valittu-ilmoitus (putsaa tapahtuma))))}})))
+                                                                      (ilmoitukset/avaa-ilmoitus (putsaa tapahtuma))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
@@ -188,10 +188,10 @@
                                                    ["Päällystys valmistunut" (pvm/pvm-aika paallystys-valmis)])
                                                  (when kohde-valmis
                                                    ["Kohde valmistunut" (pvm/pvm-aika kohde-valmis)])]
-                                                 {:nappi {:nimi     (if (get-in tapahtuma [:paallystysilmoitus :tila])
-                                                                      "Päällystysilmoitus"
-                                                                      "Aloita päällystysilmoitus")
-                                                          :on-click   (:kohde-click tapahtuma)}}))))
+                                                {:nappi {:nimi     (if (get-in tapahtuma [:paallystysilmoitus :tila])
+                                                                     "Päällystysilmoitus"
+                                                                     "Aloita päällystysilmoitus")
+                                                         :on-click (:kohde-click tapahtuma)}}))))
 
 (defmethod nayta-popup :paikkaus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
@@ -219,4 +219,4 @@
                                                 {:nappi {:nimi     (if (get-in tapahtuma [:paikkausilmoitus :tila])
                                                                      "Paikkausilmoitus"
                                                                      "Aloita paikkausilmoitus")
-                                                         :on-click   (:kohde-click tapahtuma)}}))))
+                                                         :on-click (:kohde-click tapahtuma)}}))))

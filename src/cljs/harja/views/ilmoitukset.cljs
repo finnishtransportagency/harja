@@ -35,12 +35,6 @@
                                              (reset! nav/valittu-urakka-id (:urakka ilmoitus))
                                              (reset! nav/sivu :urakat))]))
 
-(defn avaa-ilmoitus [ilmoitus]
-  (log "Avataan ilmoitus")
-  (reset! tiedot/valittu-ilmoitus ilmoitus)
-  (tiedot/sulje-uusi-kuittaus)
-  (kuittausten-tiedot/alusta-uusi-kuittaus tiedot/valittu-ilmoitus))
-
 (defn nayta-tierekisteriosoite
   [tr]
   (if tr
@@ -52,7 +46,7 @@
   (let [ilmoitus @tiedot/valittu-ilmoitus]
     [:div
      [:span
-      [napit/takaisin "Listaa ilmoitukset" #(reset! tiedot/valittu-ilmoitus nil)]
+      [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus)]
       (urakan-sivulle-nappi ilmoitus)
       (pollauksen-merkki)
       [bs/panel {}
@@ -158,7 +152,7 @@
         (pollauksen-merkki)
         [grid
          {:tyhja             (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu     #(avaa-ilmoitus %)
+          :rivi-klikattu     #(tiedot/avaa-ilmoitus %)
           :piilota-toiminnot true}
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
@@ -177,7 +171,7 @@
                         (nav/vaihda-kartan-koko! :L))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
-    (komp/kuuntelija :ilmoitus-klikattu #(reset! tiedot/valittu-ilmoitus %2))
+    (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus %2))
     (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 

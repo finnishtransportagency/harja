@@ -8,7 +8,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
+            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -17,7 +18,6 @@
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
 (defonce uusi-kuittaus-auki? (atom false))
-(tarkkaile! "uusi kuittaus auki" uusi-kuittaus-auki?)
 
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
@@ -83,3 +83,13 @@
 
 (defn sulje-uusi-kuittaus []
   (reset! uusi-kuittaus-auki? false))
+
+(defn avaa-ilmoitus [ilmoitus]
+  (reset! valittu-ilmoitus ilmoitus)
+  (sulje-uusi-kuittaus)
+  (kuittausten-tiedot/alusta-uusi-kuittaus valittu-ilmoitus))
+
+(defn sulje-ilmoitus []
+  (reset! valittu-ilmoitus nil)
+  (sulje-uusi-kuittaus)
+  (kuittausten-tiedot/alusta-uusi-kuittaus nil))

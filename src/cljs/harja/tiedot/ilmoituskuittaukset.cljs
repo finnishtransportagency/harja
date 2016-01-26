@@ -17,16 +17,18 @@
   (k/post! :tallenna-ilmoitustoimenpide kuittaus nil true))
 
 (defn alusta-uusi-kuittaus [valittu-ilmoitus]
-  (let [kayttaja @istunto/kayttaja
-        organisaatio (:organisaatio kayttaja)]
-    (reset! uusi-kuittaus
-            {:ilmoituksen-id          (:id @valittu-ilmoitus)
-             :ulkoinen-ilmoitusid     (:ilmoitusid @valittu-ilmoitus)
-             :tyyppi                  :vastaanotto
-             :ilmoittaja-etunimi      (:etunimi kayttaja)
-             :ilmoittaja-sukunimi     (:sukunimi kayttaja)
-             :ilmoittaja-matkapuhelin (:puhelin kayttaja)
-             :ilmoittaja-tyopuhelin   (:puhelin kayttaja)
-             :ilmoittaja-sahkoposti   (:sahkoposti kayttaja)
-             :ilmoittaja-organisaatio (:nimi organisaatio)
-             :ilmoittaja-ytunnus      (:ytunnus organisaatio)})))
+  (if (nil? valittu-ilmoitus)
+    (reset! uusi-kuittaus nil)
+    (let [kayttaja @istunto/kayttaja
+          organisaatio (:organisaatio kayttaja)]
+      (reset! uusi-kuittaus
+              {:ilmoituksen-id          (:id @valittu-ilmoitus)
+               :ulkoinen-ilmoitusid     (:ilmoitusid @valittu-ilmoitus)
+               :tyyppi                  :vastaanotto
+               :ilmoittaja-etunimi      (:etunimi kayttaja)
+               :ilmoittaja-sukunimi     (:sukunimi kayttaja)
+               :ilmoittaja-matkapuhelin (:puhelin kayttaja)
+               :ilmoittaja-tyopuhelin   (:puhelin kayttaja)
+               :ilmoittaja-sahkoposti   (:sahkoposti kayttaja)
+               :ilmoittaja-organisaatio (:nimi organisaatio)
+               :ilmoittaja-ytunnus      (:ytunnus organisaatio)}))))

@@ -68,7 +68,6 @@
      (lomake/ryhma {:otsikko    "Käsittelijä"
                     :leveys-col 3}
                    {:nimi       :kasittelija-etunimi
-                    :ulkoasu    :rivi
                     :otsikko    "Etunimi"
                     :leveys-col 3
                     :tyyppi     :string}
