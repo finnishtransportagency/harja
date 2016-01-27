@@ -5,12 +5,11 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
-            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.geo :as geo])
+            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -18,6 +17,7 @@
 ;; FILTTERIT
 (defonce ilmoitusnakymassa? (atom false))
 (defonce valittu-ilmoitus (atom nil))
+(defonce uusi-kuittaus-auki? (atom false))
 
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
@@ -44,27 +44,29 @@
                     (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
       tulos)))
 
+(defn lisaa-kuittaus-valitulle-ilmoitukselle [kuittaus]
+  (let [nykyiset-kuittaukset (:kuittaukset @valittu-ilmoitus)]
+    (swap! valittu-ilmoitus assoc :kuittaukset
+           (sort-by :kuitattu pvm/ennen?
+                    (conj nykyiset-kuittaukset kuittaus)))))
+
 (defonce haetut-ilmoitukset
-  (reaction<! [valinnat @valinnat
-               haku @ilmoitushaku]
-              {:odota 100}
-              (go
-                (if (zero? haku)
-                  []
-                  (let [tulos (<! (k/post! :hae-ilmoitukset
-                                           (-> valinnat
-                                               ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                                               (update-in [:tyypit]
-                                                          #(if (empty? %) +ilmoitustyypit+ %))
-                                               (update-in [:tilat]
-                                                          #(if (empty? %) +ilmoitustilat+ %)))))]
-                    (when-not (k/virhe? tulos)
-                      (when @valittu-ilmoitus ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
-                        (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
-                          (reset! valittu-ilmoitus nil)))
-                      (jarjesta-ilmoitukset tulos)))))))
-
-
+         (reaction<! [valinnat @valinnat haku @ilmoitushaku] {:odota 100}
+           (go
+             (if (zero? haku)
+               []
+               (let [tulos (<! (k/post! :hae-ilmoitukset
+                                        (-> valinnat
+                                            ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                                            (update-in [:tyypit]
+                                                       #(if (empty? %) +ilmoitustyypit+ %))
+                                            (update-in [:tilat]
+                                                       #(if (empty? %) +ilmoitustilat+ %)))))]
+                 (when-not (k/virhe? tulos)
+                   (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
+                     (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
+                       (reset! valittu-ilmoitus nil)))
+                   (jarjesta-ilmoitukset tulos)))))))
 
 (defonce karttataso-ilmoitukset (atom false))
 
@@ -77,3 +79,19 @@
                  #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
                  @haetut-ilmoitukset)
                @valittu-ilmoitus))))
+
+(defn avaa-uusi-kuittaus! []
+  (reset! uusi-kuittaus-auki? true))
+
+(defn sulje-uusi-kuittaus! []
+  (reset! uusi-kuittaus-auki? false))
+
+(defn avaa-ilmoitus! [ilmoitus]
+  (reset! valittu-ilmoitus ilmoitus)
+  (sulje-uusi-kuittaus!)
+  (kuittausten-tiedot/alusta-uusi-kuittaus valittu-ilmoitus))
+
+(defn sulje-ilmoitus! []
+  (reset! valittu-ilmoitus nil)
+  (sulje-uusi-kuittaus!)
+  (kuittausten-tiedot/alusta-uusi-kuittaus nil))

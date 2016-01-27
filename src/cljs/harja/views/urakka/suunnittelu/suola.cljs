@@ -128,7 +128,7 @@
                                       :kun-onnistuu #(do
                                                       (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                       (reset! suolasakot-ja-lampotilat %))}]]])])}
-          [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
+          [{:otsikko "Talvisuolan käyttöraja" :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
             :tyyppi :positiivinen-numero :leveys-col 2
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
 
@@ -145,7 +145,7 @@
                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
                             (pohjavesialueet-muokkausdata)]})
            
-           {:otsikko "Suolasakko" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
+           {:otsikko "Suolasakko" :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
             :valinta-arvo  first
             :muokattava?   (constantly saa-muokata?)
