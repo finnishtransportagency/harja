@@ -96,7 +96,7 @@
        {:leveys 35 :otsikko "Ku\u00ADvaus"}
        {:leveys 25 :otsikko "Liit\u00ADtei\u00ADtä"}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
-        laatupoikkeamarivit
+        (sort-by :aika laatupoikkeamarivit)
         :urakka
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
