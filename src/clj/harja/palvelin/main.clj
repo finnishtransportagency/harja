@@ -243,7 +243,7 @@
 
      :ilmoitukset (component/using
                    (ilmoitukset/->Ilmoitukset)
-                   [:http-palvelin :db])
+                   [:http-palvelin :db :tloik])
 
      :turvallisuuspoikkeamat (component/using
                               (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
