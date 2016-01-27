@@ -1,3 +1,5 @@
+// Yleiset raportti-sivun asetukset
+
 .raportti {
     margin-bottom: 20px;
     &.laskutusyhteenveto {
@@ -37,3 +39,40 @@
   .livi-alasveto(250px);
 }
 
+// Soratietarkastusraportti
+
+.soratietarkastusraportti .grid {
+    // Head
+
+    & tr > th:nth-child(8) {
+        border-right: none;
+    }
+    & tr > th:nth-child(9) {
+        border-right: none;
+        border-left: none;
+    }
+    & tr > th:nth-child(10) {
+        border-right: none;
+        border-left: none;
+    }
+    & tr > th:nth-child(11) {
+        border-left: none;
+    }
+
+    // Body
+
+    & tr > td:nth-child(8) {
+        border-right: none;
+    }
+    & tr > td:nth-child(9) {
+        border-right: none;
+        border-left: none;
+    }
+    & tr > td:nth-child(10) {
+        border-right: none;
+        border-left: none;
+    }
+    & tr > td:nth-child(11) {
+        border-left: none;
+    }
+}
