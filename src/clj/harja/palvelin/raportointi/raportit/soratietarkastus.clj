@@ -155,7 +155,7 @@
         (map #(get-in rivi %) tr-kentat)
 
         ;; hoitoluokka
-        [(:hoitoluokka rivi)] 
+        [(fmt/roomalaisena-numerona (:hoitoluokka rivi))]
         
         ;; arvot ja prosentit 1-5
         (map #(str (get-in rivi [% 0]) " (" (get-in rivi [% 1]) "%)") (range 1 6))

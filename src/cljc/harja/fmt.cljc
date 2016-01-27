@@ -35,6 +35,10 @@
     (euro summa)
     ""))
 
+(def roomalaisena-numerona {1 "I"
+                            2 "II"
+                            3 "III"})
+
 (defn euro-indeksikorotus
   "Formatoi euromäärän tai tyhjä, jos nil."
   [summa]
