@@ -41,11 +41,15 @@
 
 // Soratietarkastusraportti
 
-.soratietarkastusraportti .grid {
+.soratietarkastusraportti {
+    @reunaviivan-paksuus: 2px;
+    @reunaviivan-vari: @harmaa6;
+
     // Head
 
     & tr > th:nth-child(8) {
-        border-right: none;
+        border-right-style: none;
+        border-left: @reunaviivan-paksuus solid @reunaviivan-vari;
     }
     & tr > th:nth-child(9) {
         border-right: none;
@@ -57,12 +61,14 @@
     }
     & tr > th:nth-child(11) {
         border-left: none;
+        border-right: @reunaviivan-paksuus solid @reunaviivan-vari;
     }
 
     // Body
 
     & tr > td:nth-child(8) {
-        border-right: none;
+        border-right-style: none;
+        border-left: @reunaviivan-paksuus solid @reunaviivan-vari;
     }
     & tr > td:nth-child(9) {
         border-right: none;
@@ -74,5 +80,6 @@
     }
     & tr > td:nth-child(11) {
         border-left: none;
+        border-right: @reunaviivan-paksuus solid @reunaviivan-vari;
     }
 }
