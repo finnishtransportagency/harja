@@ -37,6 +37,9 @@
       :default
       nil)))
 
+(defn tarkastuksien-laatupoikkeamat [tarkastukset]
+  (sort (keep laatupoikkeama-tapahtunut? tarkastukset)))
+
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
   että sama tieosuus ja sama päivä esiintyy aina yhdellä rivillä.
@@ -77,7 +80,7 @@
                                   (range 5)))
                      {:laatuarvot-yhteensa laatuarvot-yhteensa
                       :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))                     
-                      :laatupoikkeama (laatupoikkeama-tapahtunut? yhdistettava-rivi)})))
+                      :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
           (keys tarkastusryhmat))))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
@@ -160,12 +163,13 @@
         ;; arvot ja prosentit 1-5
         (map #(str (get-in rivi [% 0]) " (" (get-in rivi [% 1]) "%)") (range 1 6))
         
-        ;; yhteensä, 1+2 yhteensä ja laatupoikkeama
+        ;; yhteensä, 1+2 yhteensä
         [(str (:laatuarvot-yhteensa rivi) " (100%)")
          (str (:laatuarvo-1+2-summa rivi) " (" (+ (get-in rivi [1 1])
                                                   (get-in rivi [2 1])) "%)")
-         (when (:laatupoikkeama rivi)
-           (str "Kyllä" " (" (:laatupoikkeama rivi) ")"))])))
+         ;; laatupoikkeamat
+         (when (not (empty? (:laatupoikkeamat rivi)))
+           (str "Kyllä" " (" (clojure.string/join ", " (:laatupoikkeamat rivi)) ")"))])))
 
 (defn yhteensa-rivi [naytettavat-rivit]
   (let [laatuarvo-summat (map (fn [arvo]
@@ -198,7 +202,7 @@
                                                 :tienumero          tienumero}))
         naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
         ainakin-yksi-poikkeama? (true? (some
-                                        #(not (nil? (:laatupoikkeama %)))
+                                        #(not (empty? (:laatupoikkeamat %)))
                                             naytettavat-rivit))
         raportin-nimi "Soratietarkastusraportti"
         otsikko (raportin-otsikko
