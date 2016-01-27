@@ -6,6 +6,8 @@
             [taoensso.timbre :as log]
             [harja.ui.skeema :as skeema]))
 
+(def taulukon-fonttikoko "8pt")
+
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
@@ -19,7 +21,7 @@
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    [:fo:block {:space-before "1em" :font-size "8pt"} otsikko
+    [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko} otsikko
      [:fo:table {:border "solid 0.2mm black"}
       (for [{:keys [otsikko leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])

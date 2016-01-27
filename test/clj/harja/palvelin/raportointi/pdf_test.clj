@@ -1,6 +1,6 @@
 (ns harja.palvelin.raportointi.pdf-test
   "Raportoinnin PDF elementtien muodostamisen testit"
-  (:require [harja.palvelin.raportointi.pdf :refer [muodosta-pdf]]
+  (:require [harja.palvelin.raportointi.pdf :refer [muodosta-pdf taulukon-fonttikoko]]
             [clojure.zip :as zip]
             [clojure.test :refer [deftest is]]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]))
@@ -43,7 +43,7 @@
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
     (is (= fo '[:fo:block
-                {:space-before "1em"}
+                {:space-before "1em" :font-size taulukon-fonttikoko}
                 "Taulukko"
                 [:fo:table
                  {:border "solid 0.2mm black"}
