@@ -439,12 +439,12 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   "Zoomaa kartan joko kartalla näkyviin geometrioihin, tai jos kartalla ei ole geometrioita,
   valittuun hallintayksikköön tai urakkaan"
   []
-  (when @pida-geometriat-nakyvilla?  
+  (when @pida-geometriat-nakyvilla?
     ;; Haetaan kaikkien tasojen extentit ja yhdistetään ne laajentamalla
     ;; extentiä siten, että kaikki mahtuvat.
     ;; Jos extentiä tasoista ei ole, zoomataan urakkaan tai hallintayksikköön.
-    (let [extent  (reduce geo/yhdista-extent
-                          (keep #(-> % meta :extent) (vals @tasot/geometriat)))
+    (let [extent (reduce geo/yhdista-extent
+                         (keep #(-> % meta :extent) (vals @tasot/geometriat)))
           extentin-margin-metreina geo/pisteen-extent-laajennus]
       (log "EXTENT TASOISTA: " (pr-str extent))
       (if extent
