@@ -554,9 +554,9 @@ Optiot on mappi optioita:
                                  [:div.panel-heading
                                   (if-not muokataan
                                     [:span.pull-right.muokkaustoiminnot
-                                     (when tallenna
+                                     (when (and tallenna
+                                                (not (nil? tiedot)))
                                        [:button.nappi-ensisijainen {:disabled (or (= :ei-mahdollinen tallenna)
-                                                                                  (nil? tiedot)
                                                                                   @gridia-muokataan?)
                                                                     :on-click #(do (.preventDefault %)
                                                                                    (aloita-muokkaus! tiedot))}
