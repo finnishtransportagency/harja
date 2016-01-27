@@ -101,20 +101,20 @@
   (komp/luo
     uusi-kuittaus))
 
-(defn kuittauksen-tiedot
-  [kuittaus]
-  ^{:key kuittaukset}
-    [bs/panel
-     {:class "kuittaus-viesti"}
-     (capitalize (name (:kuittaustyyppi kuittaus)))
-     [:span
-      [yleiset/tietoja {}
-       "Kuitattu: " (pvm/pvm-aika-sek (:kuitattu kuittaus))
-       "Lisätiedot: " (:vapaateksti kuittaus)]
-      [:br]
-      [yleiset/tietoja {}
-       "Kuittaaja: " (apurit/nayta-henkilo (:kuittaaja kuittaus))
-       "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
-       "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]]]
-    {:key (:id kuittaus)}))
+(defn kuittauksen-tiedot [kuittaus]
+  ^{:key (str "kuittaus-paneeli-" (:id kuittaus)) }
+  [bs/panel
+   {:class "kuittaus-viesti"}
+   (capitalize (name (:kuittaustyyppi kuittaus)))
+   [:span
+    ^{:key "kuitattu"}
+    [yleiset/tietoja {}
+     "Kuitattu: " (pvm/pvm-aika-sek (:kuitattu kuittaus))
+     "Lisätiedot: " (:vapaateksti kuittaus)]
+    [:br]
+    ^{:key "kuittaaja"}
+    [yleiset/tietoja {}
+     "Kuittaaja: " (apurit/nayta-henkilo (:kuittaaja kuittaus))
+     "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
+     "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]]])
 
