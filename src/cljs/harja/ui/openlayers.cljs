@@ -57,6 +57,9 @@
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos" :const true}
   max-zoom 20)
 
+(def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
+  oletus-zindex 4)
+
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
@@ -487,7 +490,7 @@
         (concat
          [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                :width (or width 2)})
-                                :zIndex 4})]
+                                :zIndex oletus-zindex})]
          (loop [nuolityylit []
                 viimeisin-nuolen-sijainti [0 0]
                 [{:keys [sijainti rotaatio]} & nuolet] @nuolet]
@@ -528,7 +531,7 @@
                   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
         tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
-                                      :zIndex (or zindex 4)})
+                                      :zIndex (or zindex oletus-zindex)})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
@@ -536,7 +539,7 @@
                                                       :anchor  #js [0.5 1]
                                                       :opacity 1
                                                       :scale   (or scale 1)})
-                       :zIndex   ((fnil + 4) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
+                       :zIndex   ((fnil + oletus-zindex) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
     (doto feature
       (.setStyle (clj->js tyylit)))))
 
@@ -550,7 +553,7 @@
                                                :anchor   (if anchor
                                                            (clj->js anchor)
                                                            #js [0.5 0.5])})
-                                :zIndex 4})
+                                :zIndex oletus-zindex})
 
                          (ol.style.Style.
                            #js {:image  (ol.style.Icon.
@@ -559,7 +562,7 @@
                                                :anchor  (if anchor
                                                           (clj->js anchor)
                                                           #js [0.5 0.5])})
-                                :zIndex 5})]))))
+                                :zIndex (inc oletus-zindex)})]))))
 
 (defmethod luo-feature :tack-icon [{:keys [coordinates img scale zindex]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -569,7 +572,7 @@
                                      :anchor  #js [0.5 1]
                                      :opacity 1
                                      :scale   (or scale 1)})
-                      :zIndex (or zindex 4)}))))
+                      :zIndex (or zindex oletus-zindex)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "sticker-sininen.png" img direction [0.5 0.5]))
@@ -578,7 +581,7 @@
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
-                                      :zIndex (or zindex 4)})
+                                      :zIndex (or zindex oletus-zindex)})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
@@ -587,7 +590,7 @@
                                         :rotation (or direction 0)
                                         :opacity  1
                                         :anchor   #js [0.5 0.5]})
-                       :zIndex   4})
+                       :zIndex   oletus-zindex})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
@@ -595,7 +598,7 @@
                                  #js {:src     (str +karttaikonipolku+ img)
                                       :opacity 1
                                       :anchor  #js [0.5 0.5]})
-                       :zIndex 5})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
+                       :zIndex (inc oletus-zindex)})]]
     (doto feature
       (.setStyle (clj->js tyylit)))))
 
@@ -611,7 +614,7 @@
                                      :rotation     (or direction 0)
                                      :anchorXUnits "fraction"
                                      :anchorYUnits "fraction"})
-                      :zIndex 4}))))
+                      :zIndex oletus-zindex}))))
 
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
