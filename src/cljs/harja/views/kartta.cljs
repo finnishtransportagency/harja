@@ -572,7 +572,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                                                    :ur 1
                                                                    :pohjavesialueet 2
                                                                    :sillat 3
-                                                                   4))
+                                                                   openlayers/oletus-zindex))
                                       ;;:marker (= :silta (:type hy))
                                       ))))
 
