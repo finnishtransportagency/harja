@@ -15,40 +15,40 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def api-tulos->kirjain
-  {"eiToimenpiteita" "A"
-   "puhdistettava" "B"
+  {"eiToimenpiteita"     "A"
+   "puhdistettava"       "B"
    "urakanKunnostettava" "C"
    "korjausOhjelmoitava" "D"})
 
 (def api-kohde->numero
   {;; Alusrakenne
-   "maatukienSiisteysJaKunto" 1
-   "valitukienSiisteysJaKunto" 2
-   "laakeritasojenSiisteysJaKunto" 3
+   "maatukienSiisteysJaKunto"                             1
+   "valitukienSiisteysJaKunto"                            2
+   "laakeritasojenSiisteysJaKunto"                        3
    ;; Päällysrakenne
-   "kansilaatta" 4
-   "paallysteenKunto" 5
-   "reunapalkinSiisteysJaKunto" 6
-   "reunapalkinLiikuntasauma" 7
+   "kansilaatta"                                          4
+   "paallysteenKunto"                                     5
+   "reunapalkinSiisteysJaKunto"                           6
+   "reunapalkinLiikuntasauma"                             7
    "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto" 8
-   "sillanpaidenSaumat" 9
-   "sillanJaPenkereenRaja" 10
+   "sillanpaidenSaumat"                                   9
+   "sillanJaPenkereenRaja"                                10
    ;; Varusteet ja laitteet
-   "kaiteidenJaSuojaverkkojenVauriot" 11
-   "liikuntasaumalaitteidenSiisteysJaKunto" 12
-   "laakerit" 13
-   "syoksytorvet" 14
-   "tippuputket" 15
-   "kosketussuojatJaNiidenKiinnitykset" 16
-   "valaistuslaitteet" 17
-   "johdotJaKaapelit" 18
-   "liikennemerkit" 19
+   "kaiteidenJaSuojaverkkojenVauriot"                     11
+   "liikuntasaumalaitteidenSiisteysJaKunto"               12
+   "laakerit"                                             13
+   "syoksytorvet"                                         14
+   "tippuputket"                                          15
+   "kosketussuojatJaNiidenKiinnitykset"                   16
+   "valaistuslaitteet"                                    17
+   "johdotJaKaapelit"                                     18
+   "liikennemerkit"                                       19
    ;; Siltapaikan rakenteet
-   "kuivatuslaitteidenSiisteysJaKunto" 20
-   "etuluiskienSiisteysJaKunto" 21
-   "keilojenSiisteysJaKunto" 22
-   "tieluiskienSiisteysJaKunto" 23
-   "portaidenSiisteysJaKunto" 24})
+   "kuivatuslaitteidenSiisteysJaKunto"                    20
+   "etuluiskienSiisteysJaKunto"                           21
+   "keilojenSiisteysJaKunto"                              22
+   "tieluiskienSiisteysJaKunto"                           23
+   "portaidenSiisteysJaKunto"                             24})
 
 (defn luo-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Luodaan uusi siltarkastus")
@@ -81,13 +81,14 @@
 
 (defn lisaa-siltatarkastuskohteet [sillantarkastuskohteet siltatarkastus-id db]
   (log/debug "Tallennetaan siltatarkastuskohteet")
-  (let [tallenna-kohderyhma (fn [kohderyhma]
-                                   (doseq [kohde (keys kohderyhma)]
-                                     (silta-q/luo-siltatarkastuksen-kohde<! db
-                                                                            (api-tulos->kirjain (get-in kohderyhma [kohde :ehdotettutoimenpide]))
-                                                                            (get-in kohderyhma [kohde :lisatietoja])
-                                                                            siltatarkastus-id
-                                                                            (api-kohde->numero (name kohde)))))]
+  (let [tallenna-kohderyhma
+        (fn [kohderyhma]
+          (doseq [kohde (keys kohderyhma)]
+            (silta-q/luo-siltatarkastuksen-kohde<! db
+                                                   (api-tulos->kirjain (get-in kohderyhma [kohde :ehdotettutoimenpide]))
+                                                   (get-in kohderyhma [kohde :lisatietoja])
+                                                   siltatarkastus-id
+                                                   (api-kohde->numero (name kohde)))))]
     (silta-q/poista-siltatarkastuskohteet! db siltatarkastus-id)
     (tallenna-kohderyhma (:alusrakenne sillantarkastuskohteet))
     (tallenna-kohderyhma (:paallysrakenne sillantarkastuskohteet))
@@ -100,11 +101,11 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction [transaktio db]
       (let [ulkoinen-id (str (get-in data [:siltatarkastus :tunniste :id]))
-            siltanumero (Integer. (get-in data [:siltatarkastus :siltanumero]))
-            silta (first (silta-q/hae-silta-numerolla transaktio siltanumero))]
+            siltatunnus (get-in data [:siltatarkastus :siltatunnus])
+            silta (first (silta-q/hae-silta-tunnuksella transaktio siltatunnus))]
         (if silta
           (do
-            (log/debug "Siltanumerolla löydetty silta: " (pr-str silta))
+            (log/debug "Siltatunnuksella löydetty silta: " (pr-str silta))
             (let [siltatarkastus-id (luo-tai-paivita-siltatarkastus
                                       ulkoinen-id
                                       urakka-id
@@ -116,7 +117,7 @@
               (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)))
           (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
                    :virheet [{:koodi  virheet/+tuntematon-silta+
-                              :viesti (str "Siltaa numerolla " siltanumero " ei löydy.")}]}))))))
+                              :viesti (str "Siltaa ei löydy tunnuksella " siltatunnus)}]}))))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle

@@ -189,15 +189,15 @@ SELECT
 FROM siltatarkastus
 WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = FALSE;
 
--- name: hae-silta-numerolla
+-- name: hae-silta-tunnuksella
 -- Hakee sillan siltanumerolla
 SELECT
   id,
   tyyppi,
-  siltanro,
+  siltatunnus,
   siltanimi
 FROM silta
-WHERE siltanro = :siltanumero;
+WHERE siltatunnus = :siltatunnus;
 
 -- name: luo-siltatarkastus<!
 -- Luo uuden siltatarkastuksen annetulla sillalle.
