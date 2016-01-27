@@ -1,3 +1,31 @@
+DROP FUNCTION laskutusyhteenveto(hk_alkupvm DATE, hk_loppupvm DATE,
+aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER);
+DROP TYPE laskutusyhteenveto_rivi;
+
+CREATE TYPE laskutusyhteenveto_rivi
+AS (nimi VARCHAR, tuotekoodi VARCHAR, tpi INTEGER, perusluku NUMERIC,
+    kaikki_paitsi_kht_laskutettu_ind_korotus NUMERIC, kaikki_laskutettu_ind_korotus NUMERIC,
+    kaikki_paitsi_kht_laskutetaan_ind_korotus NUMERIC, kaikki_laskutetaan_ind_korotus NUMERIC,
+    kaikki_paitsi_kht_laskutettu NUMERIC, kaikki_laskutettu NUMERIC,
+    kaikki_paitsi_kht_laskutetaan NUMERIC, kaikki_laskutetaan NUMERIC,
+    kht_laskutettu  NUMERIC, kht_laskutettu_ind_korotettuna NUMERIC, kht_laskutettu_ind_korotus NUMERIC,
+    kht_laskutetaan NUMERIC, kht_laskutetaan_ind_korotettuna NUMERIC, kht_laskutetaan_ind_korotus NUMERIC,
+    yht_laskutettu  NUMERIC, yht_laskutettu_ind_korotettuna NUMERIC, yht_laskutettu_ind_korotus NUMERIC,
+    yht_laskutetaan NUMERIC, yht_laskutetaan_ind_korotettuna NUMERIC, yht_laskutetaan_ind_korotus NUMERIC,
+    sakot_laskutettu NUMERIC, sakot_laskutettu_ind_korotettuna NUMERIC, sakot_laskutettu_ind_korotus NUMERIC,
+    sakot_laskutetaan NUMERIC, sakot_laskutetaan_ind_korotettuna NUMERIC, sakot_laskutetaan_ind_korotus NUMERIC,
+    suolasakot_laskutettu NUMERIC, suolasakot_laskutettu_ind_korotettuna NUMERIC, suolasakot_laskutettu_ind_korotus NUMERIC,
+    suolasakot_laskutetaan NUMERIC, suolasakot_laskutetaan_ind_korotettuna NUMERIC, suolasakot_laskutetaan_ind_korotus NUMERIC,
+    muutostyot_laskutettu NUMERIC, muutostyot_laskutettu_ind_korotettuna NUMERIC, muutostyot_laskutettu_ind_korotus NUMERIC,
+    muutostyot_laskutetaan NUMERIC, muutostyot_laskutetaan_ind_korotettuna NUMERIC, muutostyot_laskutetaan_ind_korotus NUMERIC,
+    akilliset_hoitotyot_laskutettu NUMERIC, akilliset_hoitotyot_laskutettu_ind_korotettuna NUMERIC, akilliset_hoitotyot_laskutettu_ind_korotus NUMERIC,
+    akilliset_hoitotyot_laskutetaan NUMERIC, akilliset_hoitotyot_laskutetaan_ind_korotettuna NUMERIC, akilliset_hoitotyot_laskutetaan_ind_korotus NUMERIC,
+    erilliskustannukset_laskutettu NUMERIC, erilliskustannukset_laskutettu_ind_korotettuna NUMERIC, erilliskustannukset_laskutettu_ind_korotus NUMERIC,
+    erilliskustannukset_laskutetaan NUMERIC, erilliskustannukset_laskutetaan_ind_korotettuna NUMERIC, erilliskustannukset_laskutetaan_ind_korotus NUMERIC,
+    bonukset_laskutettu NUMERIC, bonukset_laskutettu_ind_korotettuna NUMERIC, bonukset_laskutettu_ind_korotus NUMERIC,
+    bonukset_laskutetaan NuMERIC, bonukset_laskutetaan_ind_korotettuna NUMERIC, bonukset_laskutetaan_ind_korotus NUMERIC,
+    suolasakko_kaytossa BOOLEAN);
+
 CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
   ur         INTEGER)
@@ -114,6 +142,8 @@ DECLARE
   bonukset_laskutetaan_ind_korotus NUMERIC;
   bonukset_laskutetaan_rivi RECORD;
   bi_laskutetaan RECORD;
+
+  suolasakko_kaytossa BOOLEAN;
 
 BEGIN
   -- Päätellään indeksilaskennan perustiedot
@@ -718,17 +748,26 @@ BEGIN
     END LOOP;
     RAISE NOTICE 'Bonuksia laskutetaan: %', bonukset_laskutetaan;
 
+
+    -- Onko suolasakko käytössä urakassa
+    IF (select count(*) FROM suolasakko WHERE urakka = ur
+                                              AND kaytossa
+                                              AND hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM hk_alkupvm) :: INTEGER)) > 0
+    THEN suolasakko_kaytossa = TRUE;
+    ELSE suolasakko_kaytossa = FALSE;
+    END IF;
+
     -- Indeksisummat
     kaikki_paitsi_kht_laskutettu_ind_korotus := 0.0;
     kaikki_laskutettu_ind_korotus := 0.0;
     kaikki_paitsi_kht_laskutetaan_ind_korotus := 0.0;
     kaikki_laskutetaan_ind_korotus := 0.0;
 
-    kaikki_paitsi_kht_laskutettu_ind_korotus := yht_laskutettu_ind_korotus + sakot_laskutettu_ind_korotus + suolasakot_laskutettu_ind_korotus +
+    kaikki_paitsi_kht_laskutettu_ind_korotus := yht_laskutettu_ind_korotus + sakot_laskutettu_ind_korotus + COALESCE(suolasakot_laskutettu_ind_korotus, 0.0) +
                                                 muutostyot_laskutettu_ind_korotus + akilliset_hoitotyot_laskutettu_ind_korotus + erilliskustannukset_laskutettu_ind_korotus + bonukset_laskutettu_ind_korotus;
     kaikki_laskutettu_ind_korotus := kaikki_paitsi_kht_laskutettu_ind_korotus + kht_laskutettu_ind_korotus;
 
-    kaikki_paitsi_kht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + sakot_laskutetaan_ind_korotus + suolasakot_laskutetaan_ind_korotus +
+    kaikki_paitsi_kht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + sakot_laskutetaan_ind_korotus + COALESCE(suolasakot_laskutetaan_ind_korotus, 0.0) +
                                                  muutostyot_laskutetaan_ind_korotus + akilliset_hoitotyot_laskutetaan_ind_korotus  + erilliskustannukset_laskutetaan_ind_korotus + bonukset_laskutetaan_ind_korotus;
     kaikki_laskutetaan_ind_korotus := kaikki_paitsi_kht_laskutetaan_ind_korotus + kht_laskutetaan_ind_korotus;
 
@@ -740,7 +779,7 @@ BEGIN
     kaikki_laskutetaan := 0.0;
 
     kaikki_paitsi_kht_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
-                                    suolasakot_laskutettu_ind_korotettuna + muutostyot_laskutettu_ind_korotettuna +
+                                    COALESCE(suolasakot_laskutettu_ind_korotettuna, 0.0) + muutostyot_laskutettu_ind_korotettuna +
                                     akilliset_hoitotyot_laskutettu_ind_korotettuna + erilliskustannukset_laskutettu_ind_korotettuna +
                                     bonukset_laskutettu_ind_korotettuna
                                     --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
@@ -749,7 +788,7 @@ BEGIN
     kaikki_laskutettu := kaikki_paitsi_kht_laskutettu + kht_laskutettu;
 
     kaikki_paitsi_kht_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
-                                     suolasakot_laskutetaan_ind_korotettuna + muutostyot_laskutetaan_ind_korotettuna +
+                                     COALESCE(suolasakot_laskutetaan_ind_korotettuna, 0.0) + muutostyot_laskutetaan_ind_korotettuna +
                                      akilliset_hoitotyot_laskutetaan_ind_korotettuna + erilliskustannukset_laskutetaan_ind_korotettuna +
                                      bonukset_laskutetaan_ind_korotettuna
                                      --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
@@ -827,7 +866,8 @@ BEGIN
                                                                                              erilliskustannukset_laskutettu, erilliskustannukset_laskutettu_ind_korotettuna, erilliskustannukset_laskutettu_ind_korotus,
                  erilliskustannukset_laskutetaan, erilliskustannukset_laskutetaan_ind_korotettuna, erilliskustannukset_laskutetaan_ind_korotus,
                  bonukset_laskutettu, bonukset_laskutettu_ind_korotettuna, bonukset_laskutettu_ind_korotus,
-                 bonukset_laskutetaan, bonukset_laskutetaan_ind_korotettuna, bonukset_laskutetaan_ind_korotus
+                 bonukset_laskutetaan, bonukset_laskutetaan_ind_korotettuna, bonukset_laskutetaan_ind_korotus,
+                 suolasakko_kaytossa
     );
 
 
