@@ -54,34 +54,38 @@
                              (get-in rivi [:tr :loppuosa])
                              (get-in rivi [:tr :loppuetaisyys])
                              (:hoitoluokka rivi)])
-                          tarkastukset)]
-    (mapv (fn [tarkastusryhma]
-            (let [tarkastukset (get tarkastusryhmat tarkastusryhma)
-                  yhdistettava-rivi (first tarkastukset)
-                  laske-kuntoarvon-summa (fn [rivit arvo]
-                                           "Laskee annetun kuntoarvon summan annettujen rivien kaikista mittausluokista"
-                                           (reduce
-                                             (fn [nykysumma seuraava-rivi]
-                                               (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
-                                                 (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
-                                             0
-                                             rivit))
-                  laatuarvot (mapv (fn [arvo]
-                                     (laske-kuntoarvon-summa tarkastukset arvo))
-                                   (range 1 6))
-                  laatuarvot-yhteensa (reduce + laatuarvot)]
-              (merge yhdistettava-rivi
-                     (zipmap (range 1 6)
-                             (map (juxt
-                                   ;; laatuarvon summa
-                                   #(nth laatuarvot %)
-                                   ;; laatuarvon summan osuus
-                                   #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
-                                  (range 5)))
-                     {:laatuarvot-yhteensa laatuarvot-yhteensa
-                      :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))                     
-                      :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
-          (keys tarkastusryhmat))))
+                          tarkastukset)
+        yhdistetyt-rivit (mapv (fn [tarkastusryhma]
+                                 (let [tarkastukset (get tarkastusryhmat tarkastusryhma)
+                                       yhdistettava-rivi (first tarkastukset)
+                                       laske-kuntoarvon-summa (fn [rivit arvo]
+                                                                "Laskee annetun kuntoarvon summan annettujen rivien kaikista mittausluokista"
+                                                                (reduce
+                                                                  (fn [nykysumma seuraava-rivi]
+                                                                    (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
+                                                                      (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
+                                                                  0
+                                                                  rivit))
+                                       laatuarvot (mapv (fn [arvo]
+                                                          (laske-kuntoarvon-summa tarkastukset arvo))
+                                                        (range 1 6))
+                                       laatuarvot-yhteensa (reduce + laatuarvot)]
+                                   (merge yhdistettava-rivi
+                                          (zipmap (range 1 6)
+                                                  (map (juxt
+                                                         ;; laatuarvon summa
+                                                         #(nth laatuarvot %)
+                                                         ;; laatuarvon summan osuus
+                                                         #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
+                                                       (range 5)))
+                                          {:laatuarvot-yhteensa laatuarvot-yhteensa
+                                           :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))
+                                           :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
+                               (keys tarkastusryhmat))]
+  ;; Ryhmittelyn jälkeen järjestys on väärin, sortataan tulokset käsin
+  (sort-by (fn [rivi] [(pvm/paivan-alussa (:aika rivi))
+                       (get-in rivi [:tr :numero])])
+           yhdistetyt-rivit)))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-soratietarkastukset-raportille db
