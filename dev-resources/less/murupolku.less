@@ -1,0 +1,54 @@
+@import "livi_tyylit";
+
+@murupolun-korkeus: 65px;
+@murupolun-elementtikorkeus: @input-korkeus;
+
+.murupolku {
+    background-color: @harmaa9;
+    height: @murupolun-korkeus;
+    padding: 8px 15px;
+    margin-bottom: 1.25rem;
+    list-style: none;
+    .disabled {
+        .livicon-chevron-down {
+            color: @harmaa7;
+        }
+    }
+    .livicon-chevron-down {
+        color: @sininen4;
+    }
+    > li {
+        display: inline-block;
+        margin-right: 0.5rem;
+        margin-top: 10px;
+        vertical-align: top;
+
+    }
+    .urakoitsija-otsikko {
+        display: inline-block;
+    }
+}
+
+.murupolku-suotimet {
+    position: relative;
+    top: -6px;
+    > * {
+        display: inline-block;
+        margin-left: 10px;
+    }
+}
+
+.murupolku-radiovalinta {
+    margin: 0 5px;
+    > label {
+        padding: 5px;
+    }
+}
+
+.murupolkuteksti {
+    background-color: @harjan-taustavari;
+    border: 1px solid @harmaa7;
+    display: inline-block;
+    height: @murupolun-elementtikorkeus;
+    padding: 6px;
+}

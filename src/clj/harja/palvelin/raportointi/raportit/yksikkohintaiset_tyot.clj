@@ -6,7 +6,8 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 ;; oulu au 2014 - 2019:
 ;; 1.10.2014-30.9.2015 elokuu 2015 kaikki
@@ -20,7 +21,7 @@
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
   (let [naytettavat-rivit (hae-yksikkohintaiset-tyot-per-paiva db
                                                                urakka-id alkupvm loppupvm
-                                                               (if toimenpide-id true false) toimenpide-id)
+                                                               (not (nil? toimenpide-id)) toimenpide-id)
 
         raportin-nimi "Yksikköhintaiset työt päivittäin"
         konteksti :urakka
@@ -33,25 +34,27 @@
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
-      [{:leveys "10%" :otsikko "Päivämäärä"}
-       {:leveys "25%" :otsikko "Tehtävä"}
-       {:leveys "5%" :otsikko "Yks."}
-       {:leveys "10%" :otsikko "Yksikkö\u00adhinta"}
-       {:leveys "10%" :otsikko "Suunniteltu määrä hoitokaudella"}
-       {:leveys "10%" :otsikko "Toteutunut määrä"}
-       {:leveys "15%" :otsikko "Suunnitellut kustannukset hoitokaudella"}
-       {:leveys "15%" :otsikko "Toteutuneet kustannukset"}]
+      [{:leveys 10 :otsikko "Päivämäärä"}
+       {:leveys 25 :otsikko "Tehtävä"}
+       {:leveys 5 :otsikko "Yks."}
+       {:leveys 10 :otsikko "Yksikkö\u00adhinta"}
+       {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}
+       {:leveys 10 :otsikko "Toteutunut määrä"}
+       {:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella"}
+       {:leveys 15 :otsikko "Toteutuneet kustannukset"}]
 
-      (conj (mapv (juxt (comp pvm/pvm :pvm)
-                        :nimi
-                        :yksikko
-                        (comp fmt/euro-opt :yksikkohinta)
-                        (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
-                        (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
-                        (comp fmt/euro-opt :suunnitellut_kustannukset)
-                        (comp fmt/euro-opt :toteutuneet_kustannukset))
-                  naytettavat-rivit)
-            [nil "Yhteensä" nil nil nil nil
-             (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
-             (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])]]))
+      (keep identity
+            (conj (yleinen/ryhmittele-tulokset-raportin-taulukolle
+                    naytettavat-rivit :toimenpide (juxt (comp pvm/pvm :pvm)
+                                                        :nimi
+                                                        :yksikko
+                                                        (comp fmt/euro-opt :yksikkohinta)
+                                                        (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
+                                                        (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
+                                                        (comp fmt/euro-opt :suunnitellut_kustannukset)
+                                                        (comp fmt/euro-opt :toteutuneet_kustannukset)))
+                  (when (not (empty? naytettavat-rivit))
+                    ["Yhteensä" nil nil nil nil nil
+                     (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
+                     (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])))]]))
 

@@ -22,7 +22,8 @@
             [harja.tiedot.indeksit :as i]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.views.kartta.tasot :as tasot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
@@ -127,7 +128,7 @@
                                       :kun-onnistuu #(do
                                                       (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                       (reset! suolasakot-ja-lampotilat %))}]]])])}
-          [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
+          [{:otsikko "Talvisuolan käyttöraja" :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
             :tyyppi :positiivinen-numero :leveys-col 2
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
 
@@ -144,7 +145,7 @@
                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
                             (pohjavesialueet-muokkausdata)]})
            
-           {:otsikko "Suolasakko" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
+           {:otsikko "Suolasakko" :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
             :valinta-arvo  first
             :muokattava?   (constantly saa-muokata?)
@@ -184,11 +185,15 @@
 
 (defn suola []
   (komp/luo
-    (komp/lippu suolasakot-nakyvissa?)
+    (komp/lippu suolasakot-nakyvissa? (tasot/taso-atom :pohjavesialueet))
+    (komp/sisaan #(do
+                   (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                   (nav/vaihda-kartan-koko! :M)))
     (fn []
       (let [ur @nav/valittu-urakka
             kaytossa? @suolasakko-kaytossa?]
         [:span.suolasakot
+         [kartta/kartan-paikka]
          [yleiset/raksiboksi "Suolasakko käytössä" kaytossa?
           #(go (reset! suolasakko-kaytossa?
                        (<! (suola/aseta-suolasakon-kaytto (:id ur)

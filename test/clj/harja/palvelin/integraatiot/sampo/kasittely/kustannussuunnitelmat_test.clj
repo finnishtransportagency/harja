@@ -6,7 +6,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 (deftest tarkista-kokonaishintaisten-vuosisummien-muodostus
-  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
         odotettu [{:alkupvm "2014-10-01T00:00:00.0", :loppupvm "2014-12-31T17:00:00.0", :summa 10500M}
                   {:alkupvm "2015-01-01T00:00:00.0", :loppupvm "2015-12-31T17:00:00.0", :summa 31510M}
                   {:alkupvm "2016-01-01T00:00:00.0", :loppupvm "2016-12-31T17:00:00.0", :summa 0}
@@ -20,7 +20,7 @@
     (is (= odotettu vuosittaiset-summat))))
 
 (deftest tarkista-yksikkohintaisten-vuosisummien-muodostus
-  (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
         odotettu [{:alkupvm "2014-10-01T00:00:00.0", :loppupvm "2014-12-31T17:00:00.0", :summa 300M}
                   {:alkupvm "2015-01-01T00:00:00.0", :loppupvm "2015-12-31T17:00:00.0", :summa 900M}
                   {:alkupvm "2016-01-01T00:00:00.0", :loppupvm "2016-12-31T17:00:00.0", :summa 0}

@@ -388,7 +388,7 @@
 ;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
-(def +aika-regex+ #"\d{1,2}(:\d*)?")
+(def +aika-regex+ #"\d{1,2}(:\d{0,2})?")
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
@@ -505,7 +505,17 @@
 
               muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
               
-              muuta-aika!  #(resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti)
+              muuta-aika!  #(if (re-matches #"\d{3}" %)
+                              ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä, niin 3 merkin kohdalla lisätään se automaattisesti
+                              (let [alku (js/parseInt (.substring % 0 2))]
+                                (if (< alku 24)
+                                  ;; 123 => 12:3
+                                  (reset! aika-teksti
+                                          (str (.substring % 0 2) ":" (.substring % 2)))
+                                  ;; 645 => 6:45
+                                  (reset! aika-teksti
+                                          (str (.substring % 0 1) ":" (.substring % 1)))))
+                              (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
 
               koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
               koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))

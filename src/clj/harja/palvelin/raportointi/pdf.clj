@@ -47,13 +47,14 @@
                  [:fo:block otsikko]]]
                (let [korosta? (when (and viimeinen-rivi-yhteenveto?
                                          (= viimeinen-rivi rivi))
-                                {:font-weight "bold"})]
+                                {:border "solid 0.3mm black"
+                                 :font-weight "bold"})]
                  [:fo:table-row
                   (for [i (range (count sarakkeet))
                         :let [arvo (or (nth rivi i) "")]]
                     [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
                                            korosta?)
-                     (when korosta? [:fo:block {:space-after "0.5em"}])
+                     (when korosta? [:fo:block {:space-after "0.2em"}])
                      [:fo:block (str arvo)]])])))))]]
      [:fo:block {:space-after "1em"}]]))
 

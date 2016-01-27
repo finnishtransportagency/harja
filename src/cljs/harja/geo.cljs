@@ -73,21 +73,22 @@ lopuksi kirjoittaa sen annettuun volatileen."
                     [@minx @miny @maxx @maxy]))
          (xf result))
         ([result input]
-         (loop [minx- @minx
-                miny- @miny
-                maxx- @maxx
-                maxy- @maxy
-                [[x y] & pisteet] (pisteet (:alue input))]
-           (if-not x
-             (do (vreset! minx minx-)
-                 (vreset! miny miny-)
-                 (vreset! maxx maxx-)
-                 (vreset! maxy maxy-))
-             (if minx-
-               (recur (Math/min minx- x) (Math/min miny- y)
-                      (Math/max maxx- x) (Math/max maxy- y)
-                      pisteet)
-               (recur x y x y pisteet))))
+         (when-let [alue (:alue input)]
+           (loop [minx- @minx
+                  miny- @miny
+                  maxx- @maxx
+                  maxy- @maxy
+                  [[x y] & pisteet] (pisteet alue)]
+             (if-not x
+               (do (vreset! minx minx-)
+                   (vreset! miny miny-)
+                   (vreset! maxx maxx-)
+                   (vreset! maxy maxy-))
+               (if minx-
+                 (recur (Math/min minx- x) (Math/min miny- y)
+                        (Math/max maxx- x) (Math/max maxy- y)
+                        pisteet)
+                 (recur x y x y pisteet)))))
          (xf result input))))))
 
 (defn keskipiste

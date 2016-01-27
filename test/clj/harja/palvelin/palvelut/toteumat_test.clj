@@ -13,7 +13,7 @@
     (fn [_]
       (component/start
         (component/system-map
-          :db (apply tietokanta/luo-tietokanta testitietokanta)
+          :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :urakan-erilliskustannukset (component/using
                                         (->Toteumat)
@@ -242,7 +242,7 @@
                                          :alkupvm    alkupvm
                                          :loppupvm   loppupvm})]
     (is (>= (count varustetoteumat) 1))
-    (is (>= (count (:reittipisteet (first varustetoteumat))) 1))))
+    (is (contains? (first varustetoteumat) :reitti))))
 
 (deftest kok-hint-toteumien-reitit-haettu-oikein
   (let [alkupvm (java.sql.Date. 100 9 1)

@@ -19,7 +19,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :pdf-vienti (component/using
                                       (pdf-vienti/luo-pdf-vienti)
@@ -41,7 +41,7 @@
 (deftest hae-ilmoitukset-raportille-test
   ;; parametrit: db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
   ;; +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto
-    (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+    (let [db (tietokanta/luo-tietokanta testitietokanta)
           [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.11.2014"))
           ilmoitukset (ilmoitusraportti/hae-ilmoitukset-raportille
                   db +kayttaja-jvh+ nil nil nil nil

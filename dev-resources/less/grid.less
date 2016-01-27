@@ -1,3 +1,4 @@
+@import "livi_tyylit";
 /* Geneerinen editoitava gridi */
 
 /*
@@ -21,7 +22,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
 .livi-grid {
   color: @harmaa1;
-  min-height: 100px;
   // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
   // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
   .panel-heading {
@@ -45,12 +45,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     padding: 0;
   }
   table {
+    font-size: @fontin-koko-taulukko;
     td {
       overflow: hidden;
 
       input:not([type="checkbox"]), select {
         width: 100%;
         z-index: 10;
+	height: @input-korkeus;
       }
       .kombo {
         width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
@@ -156,6 +158,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
   td.toiminnot span {
     display: inline-block;
+    .livicon-trash {
+      line-height: @input-korkeus;
+    }
   }
 
   div.pvm {
@@ -172,8 +177,10 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     background-color: @harmaa7;
   }
   tr.yhteenveto {
+    background-color: @harmaa10;
+    border-bottom: 2px solid @harmaa7;
+    border-top: 2px solid @harmaa7;
     font-weight: bold;
-    background-color: @harmaa9;
   }
   tr.klikattava:hover {
     cursor: pointer;
@@ -194,20 +201,12 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     height: 35px
   }
 }
-.muokkaustoiminnot .taulukossa-virheita {
-  font-size: 12px;
-  .glyphicon-warning-sign {
-    color: orange;
-  }
-  span {
-    font-size: 12px;
-    font-weight: bold;
-  }
-}
 
 .nappi-toissijainen.nappi-tayta {
-  margin: 1px;
+  height: @input-korkeus;
+  margin: 0;
   padding: 1px 4px;
+  z-index: 1;
 }
 
 .nappi-grid {

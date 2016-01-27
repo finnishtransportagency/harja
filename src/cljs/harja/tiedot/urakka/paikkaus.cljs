@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<! >! chan]]
-            [harja.loki :refer [log logt]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.navigaatio :as nav]
@@ -38,6 +38,8 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
+
+(tarkkaile! "Paikkaustoteumat: " paikkaustoteumat)
 
 (defonce paikkausilmoitus-lomakedata (atom nil))            ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
