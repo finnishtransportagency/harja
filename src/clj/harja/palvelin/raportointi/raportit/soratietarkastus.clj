@@ -127,13 +127,13 @@
                                    :tienumero tienumero})))
 
 (def taulukon-otsikot
-  [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+  [{:leveys 8 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
    {:leveys 5 :otsikko "Tie"}
    {:leveys 6 :otsikko "Aosa"}
    {:leveys 6 :otsikko "Aet"}
    {:leveys 6 :otsikko "Losa"}
    {:leveys 6 :otsikko "Let"}
-   {:leveys 6 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+   {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
    {:leveys 8 :otsikko "1"}
    {:leveys 8 :otsikko "2"}
    {:leveys 8 :otsikko "3"}
@@ -141,7 +141,7 @@
    {:leveys 8 :otsikko "5"}
    {:leveys 8 :otsikko "Yht"}
    {:leveys 8 :otsikko "1+2"}
-   {:leveys 8 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}])
+   {:leveys 10 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}])
 
 (def tr-kentat [[:tr :numero]
                 [:tr :alkuosa]
