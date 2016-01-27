@@ -84,7 +84,7 @@
 (defmethod kenttaryhma [:horizontal :oletus] [_ ryhma skeemat luo-kentta]
   ^{:key (:otsikko ryhma)}
   [:fieldset
-   [:legend (:otsikko ryhma)]
+   [:h3.lomake-ryhman-otsikko (:otsikko ryhma)]
    (doall
      (map
        (fn [skeema]
@@ -108,7 +108,7 @@
 (defmethod kenttaryhma [:default :oletus] [_ ryhma skeemat luo-kentta]
   ^{:key (:otsikko ryhma)}
   [:fieldset
-   [:legend (:otsikko ryhma)]
+   [:h3.lomake-ryhman-otsikko (:otsikko ryhma)]
    (doall
     (map
      (fn [skeema]

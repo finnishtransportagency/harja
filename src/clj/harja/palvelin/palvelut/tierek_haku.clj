@@ -8,6 +8,9 @@
 
 (def +treshold+ 250)
 
+(defn muunna-geometria [tros]
+  (assoc tros :geometria (geo/pg->clj (:geometria tros))))
+
 (defn hae-tr-pisteilla
   "params on mappi {:x1 .. :y1 .. :x2 .. :y2 ..}"
   [db user params]
@@ -15,12 +18,13 @@
                                                    (:x1 params) (:y1 params)
                                                    (:x2 params) (:y2 params)
                                                    +treshold+))]
-    (assoc tros :geometria (geo/pg->clj (:geometria tros)))))
+    (muunna-geometria tros)))
 
 (defn hae-tr-pisteella
   "params on mappi {:x .. :y ..}"
   [db user params]
-  (first (tv/hae-tr-osoite db (:x params) (:y params) +treshold+)))
+  (let [tros (first (tv/hae-tr-osoite db (:x params) (:y params) +treshold+))]
+    (muunna-geometria tros)))
 
 (defn hae-tr-viiva
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"

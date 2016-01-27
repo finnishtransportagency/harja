@@ -29,6 +29,23 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn- rivi-tehtavaksi [rivi]
+  {:toimenpidekoodi (:tehtava rivi)
+   :maara           (:maara rivi)
+   :tehtava-id      (:tehtava-id rivi)
+   :poistettu       (:poistettu rivi)
+   })
+
+(defn- lomakkeen-toteuma-lahetettavaksi [lomakkeen-toteuma lomakkeen-tehtavat]
+  (assoc lomakkeen-toteuma
+         :tyyppi :yksikkohintainen
+         :urakka-id (:id @nav/valittu-urakka)
+         :sopimus-id (first @u/valittu-sopimusnumero)
+         :tehtavat (mapv rivi-tehtavaksi (grid/filteroi-uudet-poistetut lomakkeen-tehtavat))
+         :toimenpide-id (:tpi_id @u/valittu-toimenpideinstanssi)
+         :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
+         :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))
+
 (defn nayta-toteuma-lomakkeessa [urakka-id toteuma-id]
   (go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id toteuma-id))]
          (log "toteuma: " (pr-str toteuma))
@@ -67,73 +84,72 @@
 (defn tallenna-toteuma
   "Ottaa lomakkeen ja tehtävät siinä muodossa kuin ne ovat lomake-komponentissa ja muodostaa palvelimelle lähetettävän payloadin."
   [lomakkeen-toteuma lomakkeen-tehtavat]
-  (let [lahetettava-toteuma (->
-                              (assoc lomakkeen-toteuma
-                                :tyyppi :yksikkohintainen
-                                :urakka-id (:id @nav/valittu-urakka)
-                                :sopimus-id (first @u/valittu-sopimusnumero)
-                                :tehtavat (mapv
-                                            (fn [rivi]
-                                              {:toimenpidekoodi (:tehtava rivi)
-                                               :maara           (:maara rivi)
-                                               :tehtava-id      (:tehtava-id rivi)
-                                               :poistettu       (:poistettu rivi)
-                                               })
-                                            (grid/filteroi-uudet-poistetut lomakkeen-tehtavat))
-                                :toimenpide-id (:tpi_id @u/valittu-toimenpideinstanssi)
-                                :hoitokausi-aloituspvm (first @u/valittu-hoitokausi)
-                                :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))]
+  (let [lahetettava-toteuma (lomakkeen-toteuma-lahetettavaksi lomakkeen-toteuma lomakkeen-tehtavat)]
     (log "Tallennetaan toteuma: " (pr-str lahetettava-toteuma))
     (toteumat/tallenna-toteuma-ja-yksikkohintaiset-tehtavat lahetettava-toteuma)))
 
-(defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]
-  (fn []
-    (let [tehtavat-tasoineen @u/urakan-toimenpiteet-ja-tehtavat
-          nelostason-tehtavat (map #(nth % 3) tehtavat-tasoineen)
-          toimenpideinstanssit @u/urakan-toimenpideinstanssit]
+(defn- nelostason-tehtava [tehtava]
+  (nth tehtava 3))
 
-      [grid/muokkaus-grid
-       {:tyhja        "Ei töitä."
-        :voi-muokata? (not jarjestelman-lisaama-toteuma?)
-        :muutos       #(reset! tehtavat-virheet (grid/hae-virheet %))}
-       [{:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
-         :tyyppi        :valinta
-         :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
-         :valinta-arvo  :tpi_id
-         :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
-         :valinnat      toimenpideinstanssit
-         :leveys        "30%"
-         :validoi       [[:ei-tyhja "Valitse työ"]]
-         :aseta         #(assoc %1 :toimenpideinstanssi %2
-                                   :tehtava nil)}
-        {:otsikko       "Tehtävä" :nimi :tehtava
-         :tyyppi        :valinta
-         :valinta-arvo  #(:id (nth % 3))
-         :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
-         :valinnat-fn   #(let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                                                     (:toimenpideinstanssi %)
-                                                     toimenpideinstanssit tehtavat-tasoineen)
-                               urakan-hoitokauden-yks-hint-tyot (filter
-                                                                  (fn [tyo]
-                                                                    (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi)))
-                                                                  @u/urakan-yks-hint-tyot)
-                               yksikkohintaiset-tehtavat (filter
-                                                           (fn [tehtava]
-                                                             (let [tehtavan-tiedot (first (filter
-                                                                                            (fn [tiedot]
-                                                                                              (= (:tehtavan_id tiedot) (:id (nth tehtava 3))))
-                                                                                            urakan-hoitokauden-yks-hint-tyot))]
-                                                               (> (:yksikkohinta tehtavan-tiedot) 0)))
-                                                           urakan-tpi-tehtavat)]
-                          yksikkohintaiset-tehtavat)
-         :leveys        "45%"
-         :validoi       [[:ei-tyhja "Valitse tehtävä"]]
-         :aseta         (fn [rivi arvo] (assoc rivi
-                                          :tehtava arvo
-                                          :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
-        {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "25%" :validoi [[:ei-tyhja "Anna määrä"]]}
-        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}]
-       tehtavat])))
+(defn- tehtavan-tiedot [tehtava urakan-hoitokauden-yks-hint-tyot]
+  (first (filter
+          (fn [tiedot]
+            (= (:tehtavan_id tiedot) (:id (nelostason-tehtava tehtava))))
+          urakan-hoitokauden-yks-hint-tyot)))
+
+(defn- tyo-hoitokaudella? [tyo]
+  (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi)))
+
+(defn- valintakasittelija [t]
+  (let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat (:toimenpideinstanssi t) @u/urakan-toimenpideinstanssit @u/urakan-toimenpiteet-ja-tehtavat)
+        urakan-hoitokauden-yks-hint-tyot (filter tyo-hoitokaudella? @u/urakan-yks-hint-tyot)]
+    (filter
+     (fn [tehtava]
+       (> (:yksikkohinta (tehtavan-tiedot tehtava urakan-hoitokauden-yks-hint-tyot)) 0))
+     urakan-tpi-tehtavat)))
+
+(defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]
+  (let [nelostason-tehtavat (map nelostason-tehtava @u/urakan-toimenpiteet-ja-tehtavat)
+        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
+
+    [grid/muokkaus-grid
+     {:tyhja        "Ei töitä."
+      :voi-muokata? (not jarjestelman-lisaama-toteuma?)
+      :muutos       #(reset! tehtavat-virheet (grid/hae-virheet %))}
+     [{:otsikko       "Toimenpide"
+       :nimi :toimenpideinstanssi
+       :tyyppi        :valinta
+       :fmt           #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
+       :valinta-arvo  :tpi_id
+       :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
+       :valinnat      toimenpideinstanssit
+       :leveys        30
+       :validoi       [[:ei-tyhja "Valitse työ"]]
+       :aseta         #(assoc %1
+                              :toimenpideinstanssi %2
+                              :tehtava nil)}
+      {:otsikko       "Tehtävä"
+       :nimi          :tehtava
+       :tyyppi        :valinta
+       :valinta-arvo  #(:id (nth % 3))
+       :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+       :valinnat-fn   valintakasittelija
+       :leveys        45
+       :validoi       [[:ei-tyhja "Valitse tehtävä"]]
+       :aseta         (fn [rivi arvo] (assoc rivi
+                                             :tehtava arvo
+                                             :yksikko (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo nelostason-tehtavat))))}
+      {:otsikko "Määrä" :nimi
+       :maara
+       :tyyppi :positiivinen-numero
+       :leveys 25
+       :validoi [[:ei-tyhja "Anna määrä"]]}
+      {:otsikko "Yks."
+       :nimi :yksikko
+       :tyyppi :string
+       :muokattava? (constantly false)
+       :leveys 15}]
+     tehtavat]))
 
 (defn yksikkohintainen-toteumalomake
   "Valmiin kohteen tietoja tarkasteltaessa tiedot annetaan valittu-yksikkohintainen-toteuma atomille.
@@ -143,8 +159,9 @@
   []
   (let [lomake-toteuma (atom (if (empty? @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
                                (if @u/urakan-organisaatio
-                                 (-> (assoc @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma :suorittajan-nimi (:nimi @u/urakan-organisaatio))
-                                     (assoc :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio)))
+                                 (assoc @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
+                                        :suorittajan-nimi (:nimi @u/urakan-organisaatio)
+                                        :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio))
                                  @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
                                @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma))
         lomake-tehtavat (atom (into {}
@@ -214,9 +231,13 @@
                          arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-           {:otsikko "Lopetus" :nimi :paattynyt :pakollinen? true :tyyppi :pvm :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                                                                                                                                       [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
-           {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true :leveys "20%" :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
+           {:otsikko "Lopetus"
+            :nimi :paattynyt
+            :pakollinen? true
+            :tyyppi :pvm
+            :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                                                                                    [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
+           {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true :leveys 20 :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
            {:otsikko "Suorittaja" :nimi :suorittajan-nimi :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
            {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
@@ -250,12 +271,32 @@
                              (reset! tehtavien-summat (:tehtavien-summat vastaus))))
          :voi-lisata? false
          :tunniste    :tehtava_id}
-        [{:otsikko "Päivämäärä" :nimi :alkanut :muokattava? (constantly false) :tyyppi :pvm :hae (comp pvm/pvm :alkanut) :leveys "20%"}
-         {:otsikko "Määrä" :nimi :maara :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi))) :tyyppi :positiivinen-numero :leveys "20%"
-          :fmt #(fmt/desimaaliluku-opt % 1)}
-         {:otsikko "Suorittaja" :nimi :suorittajan_nimi :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
-         {:otsikko "Lisätieto" :nimi :lisatieto :muokattava? (constantly false) :tyyppi :string :leveys "20%"}
-         {:otsikko "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
+        [{:otsikko "Päivämäärä"
+          :nimi :alkanut
+          :muokattava? (constantly false)
+          :tyyppi :pvm
+          :hae (comp pvm/pvm :alkanut)
+          :leveys 20}
+         {:otsikko "Määrä"
+          :nimi :maara
+          :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
+          :tyyppi :positiivinen-numero
+          :leveys 20}
+         {:otsikko "Suorittaja"
+          :nimi :suorittajan_nimi
+          :muokattava? (constantly false)
+          :tyyppi :string
+          :leveys 20}
+         {:otsikko "Lisätieto"
+          :nimi :lisatieto
+          :muokattava? (constantly false)
+          :tyyppi :string
+          :leveys 20}
+         {:otsikko "Tarkastele koko toteumaa"
+          :nimi :tarkastele-toteumaa
+          :muokattava? (constantly false)
+          :tyyppi :komponentti
+          :leveys 20
           :komponentti (fn [rivi]
                          [:button.nappi-toissijainen.nappi-grid
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
@@ -285,22 +326,22 @@
                                        (filter (fn [rivi]
                                                  (> (:hoitokauden-toteutunut-maara rivi) 0))
                                                @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain)))}
-          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"
+          [{:tyyppi :vetolaatikon-tila :leveys 5}
+           {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
+           {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
-           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys "10%"
+           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
+            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
             (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
                          [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
-                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys "10%"}]
+                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
           @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain]])))
 
 (defn yksikkohintaisten-toteumat []

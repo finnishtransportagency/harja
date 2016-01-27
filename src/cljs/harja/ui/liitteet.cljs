@@ -13,15 +13,16 @@
   "Olemassaolevan liitteen näyttäminen. Näyttää pikkukuvan ja tiedoston nimen."
   [tiedosto]
   (let [naytettava? (zero? (.indexOf (:tyyppi tiedosto) "image/"))] ; jos kuva MIME tyyppi, näytetään modaalissa
-    [:div.liite {:on-click #(modal/nayta!
-                             {:otsikko (str "Liite: " (:nimi tiedosto))}
-                             [:div.liite-ikkuna
-                              [:img {:src (k/liite-url (:id tiedosto))}]])}
-     [:img.pikkukuva {:src (k/pikkukuva-url (:id tiedosto))}]
-     ;; FIXME: voiko tässä poistaa myös?
-     (if-not naytettava?
-       [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)]
-       [:span.liite-nimi (:nimi tiedosto)])]))
+    [:div.liite
+     (if naytettava?
+       [:span
+        [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
+                                    :on-click #(modal/nayta!
+                                                {:otsikko (str "Liite: " (:nimi tiedosto))}
+                                                [:div.liite-ikkuna
+                                                 [:img {:src (k/liite-url (:id tiedosto))}]])}]
+        [:span.liite-nimi (:nimi tiedosto)]]
+     [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])]))
 
 (defn liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
