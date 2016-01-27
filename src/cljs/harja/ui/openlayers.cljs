@@ -437,14 +437,15 @@
             :style (merge {:width  (:width mapspec)
                            :height (:height mapspec)}
                           (:style mapspec))}]
-     (when-let [t (:tooltip-fn mapspec)]
+     (when-let [piirra-tooltip? (:tooltip-fn mapspec)]
        (when-let [hover (-> c reagent/state :hover)]
          (go (<! (timeout 1000))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
-          (or (:tooltip hover)
-              (t hover))]))]))
+         (when-let [tooltipin-sisalto (piirra-tooltip? hover)]
+           [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
+            (or (:tooltip hover)
+                (tooltipin-sisalto))])))]))
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to Ol3JS
@@ -644,10 +645,10 @@
 updates (creates/removes) the geometries in the layer to match the new items. Returns a new
 vector with the updates ol3 layer and map of geometries.
 If incoming layer & map vector is nil, a new ol3 layer will be created."
-  [ol3 geometry-fn [geometry-layer geometries-map :as the-layer] items]
+  [ol3 geometry-fn [geometry-layer geometries-map] items]
   (let [create? (nil? geometry-layer)
         geometry-layer (if create?
-                         (doto (create-geometry-layer) (.setZIndex (or (:zindex (meta the-layer)) 12)))
+                         (doto (create-geometry-layer) (.setZIndex (or (:zindex (meta items)) 0)))
                          geometry-layer)
         geometries-map (if create? {} geometries-map)
         geometries-set (into #{} (map geometria-avain) items)

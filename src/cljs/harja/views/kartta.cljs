@@ -477,6 +477,15 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
              {}
              geometriat))
 
+(defn- hoverattu-asia-on-valittu-hallintayksikko-tai-urakka?
+  [geom]
+  (or (and
+        (= (:type geom) :ur)
+        (= (:id geom) (:id @nav/valittu-urakka)))
+      (and
+        (= (:type geom) :hy)
+        (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
+
 (defn kartta-openlayers []
   (komp/luo
 
@@ -514,13 +523,13 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 ;; animoinnin suljettaessa
                                 {:display "none"})
           :class              (when (or
-                                     (= :hidden koko)
-                                     (= :S koko))
+                                      (= :hidden koko)
+                                      (= :S koko))
                                 "piilossa")
 
           ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
-          :extent-key (str koko "_" (name @nav/sivu))
-          :extent @nav/kartan-extent
+          :extent-key         (str koko "_" (name @nav/sivu))
+          :extent             @nav/kartan-extent
 
           :selection          nav/valittu-hallintayksikko
           :on-zoom            paivita-extent
@@ -549,11 +558,16 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                   (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))))
 
           :tooltip-fn         (fn [geom]
-                                (and geom
-                                     [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))
-          
-          :geometries  @tasot/geometriat
-          
+                                ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
+                                ; on valittu hallintayksikkö tai urakka.
+                                (if (hoverattu-asia-on-valittu-hallintayksikko-tai-urakka? geom)
+                                  nil
+                                  (fn []
+                                    (and geom
+                                         [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
+
+          :geometries         @tasot/geometriat
+
           :geometry-fn        (fn [piirrettava]
                                 (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
                                   (when (map? alue)
