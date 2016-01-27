@@ -19,7 +19,7 @@
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    [:fo:block {:space-before "1em"} otsikko
+    [:fo:block {:space-before "1em" :font-size "8pt"} otsikko
      [:fo:table {:border "solid 0.2mm black"}
       (for [{:keys [otsikko leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])

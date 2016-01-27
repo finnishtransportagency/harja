@@ -70,10 +70,10 @@
     (when-not (empty? taulukon-tiedot)
       [:taulukko {:viimeinen-rivi-yhteenveto? true}
        (rivi
-         {:otsikko otsikko :leveys 40}
-         (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 20})
-         (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 20})
-         {:otsikko yhteenveto-teksti :leveys 20})
+         {:otsikko otsikko :leveys 36}
+         (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29})
+         (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24})
+         {:otsikko yhteenveto-teksti :leveys 29})
 
        (into []
              (concat
@@ -89,14 +89,11 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [joda-aikavali (t/plus (tc/from-date alkupvm) (t/hours 2))
-        kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+  (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
-        laskutettu-teksti (str "Laskutettu hoitokaudella ennen " (kuukausi alkupvm) "ta "
-                               (pvm/vuosi joda-aikavali))
-        laskutetaan-teksti (str "Laskutetaan " (kuukausi alkupvm) "ssa "
-                                (pvm/vuosi joda-aikavali))
+        laskutettu-teksti (str "Laskutettu hoito\u00ADkaudella ennen " (pvm/kuukausi-ja-vuosi alkupvm))
+        laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
         yhteenveto-teksti (str (if (or kyseessa-kk-vali? kyseessa-hoitokausi-vali?)
                                  (str "Hoitokaudella " (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm))) " - "
                                       (pvm/vuosi (second (pvm/paivamaaran-hoitokausi alkupvm))) " yhteensä")
