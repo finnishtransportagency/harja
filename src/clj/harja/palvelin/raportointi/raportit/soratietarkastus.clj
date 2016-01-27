@@ -38,7 +38,7 @@
       nil)))
 
 (defn tarkastuksien-laatupoikkeamat [tarkastukset]
-  (sort (keep laatupoikkeama-tapahtunut? tarkastukset)))
+  (sort (distinct (keep laatupoikkeama-tapahtunut? tarkastukset))))
 
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
