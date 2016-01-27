@@ -560,7 +560,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :tooltip-fn         (fn [geom]
                                 ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
                                 ; on valittu hallintayksikkö tai urakka.
-                                (if (hoverattu-asia-on-valittu-hallintayksikko-tai-urakka? geom)
+                                (if (or (hoverattu-asia-on-valittu-hallintayksikko-tai-urakka? geom)
+                                        (and (not (:nimi geom)) (not (:siltanimi geom))))
                                   nil
                                   (fn []
                                     (and geom
