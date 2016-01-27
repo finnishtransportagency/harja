@@ -32,8 +32,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
 
-(defonce murupolku-nakyvissa? (reaction (let [raportti @raportit/suoritettu-raportti]
-                                          (nil? raportti))))
+(defonce murupolku-nakyvissa? (reaction (let [raportti @raportit/suoritettu-raportti
+                                              raporttinakymassa? @raportit/raportit-nakymassa?]
+                                          ;; Piilota murupolku kun tarkastellaan raporttia
+                                          (not (and (some? raportti)
+                                                    raporttinakymassa?)))))
 
 (defonce kartan-extent (atom nil))
 

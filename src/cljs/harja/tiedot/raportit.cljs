@@ -4,7 +4,7 @@
             [cljs.core.async :refer [<! >! chan close!]]
             
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             )
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -12,6 +12,8 @@
 
 ;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
 (defonce suoritettu-raportti (atom nil))
+
+(def raportit-nakymassa? (atom false))
 
 (defn hae-raportit []
   (k/get! :hae-raportit))

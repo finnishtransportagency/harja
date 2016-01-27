@@ -425,10 +425,7 @@
                                       (s/prosessoi-tyorivit ur
                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
 
-    (when v-ur (hae-urakan-tyot @nav/valittu-urakka)) ; FIXME Tämä on kopioitu suoraan views.urakka-namespacesta.
-                                                      ; Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
-                                                      ; Toimisko paremmin jos urakan yks. hint. ja kok. hint. työt käyttäisi
-                                                      ; reactionia(?) --> ajettaisiin aina kun urakka vaihtuu
+    (when v-ur (hae-urakan-tyot @nav/valittu-urakka))
     (let [r @raportit/suoritettu-raportti]
       [:span
        [raporttivalinnat]
@@ -440,16 +437,17 @@
 
 (defn raportit []
   (komp/luo
-   (komp/sisaan #(when (nil? @raporttityypit)
+    (komp/lippu raportit/raportit-nakymassa?)
+    (komp/sisaan #(when (nil? @raporttityypit)
                    (go (reset! raporttityypit (<! (raportit/hae-raportit))))))
-   (komp/sisaan-ulos #(do
-                       (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                       (nav/vaihda-kartan-koko! :M))
-                     #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-   (fn []
-     (if (roolit/voi-nahda-raportit?)
-       [:span
-        (when-not @raportit/suoritettu-raportti
-          [kartta/kartan-paikka @nav/murupolku-nakyvissa?])
-        (raporttivalinnat-ja-raportti)]
-       [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
+    (komp/sisaan-ulos #(do
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                        (nav/vaihda-kartan-koko! :M))
+                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+    (fn []
+      (if (roolit/voi-nahda-raportit?)
+        [:span
+         (when-not @raportit/suoritettu-raportti
+           [kartta/kartan-paikka @nav/murupolku-nakyvissa?])
+         (raporttivalinnat-ja-raportti)]
+        [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
