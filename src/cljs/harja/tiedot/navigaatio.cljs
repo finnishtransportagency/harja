@@ -16,6 +16,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.tiedot.urakoitsijat :as urk]
    [harja.tiedot.hallintayksikot :as hy]
    [harja.tiedot.urakat :as ur]
+   [harja.tiedot.raportit :as raportit]
    [harja.atom :refer-macros [reaction<!]]
    [harja.pvm :as pvm])
   
@@ -31,7 +32,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; Atomi, joka sisältää valitun sivun
 (defonce sivu (atom :urakat))
 
-(defonce murupolku-nakyvissa? (atom true))
+(defonce murupolku-nakyvissa? (reaction (let [raportti @raportit/suoritettu-raportti]
+                                          (nil? raportti))))
 
 (defonce kartan-extent (atom nil))
 

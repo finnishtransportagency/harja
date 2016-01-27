@@ -10,6 +10,9 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
+(defonce suoritettu-raportti (atom nil))
+
 (defn hae-raportit []
   (k/get! :hae-raportit))
 

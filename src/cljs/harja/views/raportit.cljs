@@ -30,9 +30,6 @@
 
 (def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
 
-;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
-(defonce suoritettu-raportti (atom nil))
-
 ;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
 (defonce raporttityypit (atom nil))
 
@@ -62,7 +59,7 @@
 
 (defonce tyhjenna-raportti-kun-valinta-muuttuu
   (run! @valittu-raporttityyppi
-        (reset! suoritettu-raportti nil)))
+        (reset! raportit/suoritettu-raportti nil)))
 
 ;; Raportin parametrit, parametrityypin lisäämiseksi luo
 ;; defmethodit parametrin tyypin mukaan
@@ -80,7 +77,7 @@
 (defonce parametri-arvot (atom {}))
 (defonce tyhjenna-raportti-kun-parametri-muuttuvat
   (run! @parametri-arvot
-        (reset! suoritettu-raportti nil)))
+        (reset! raportit/suoritettu-raportti nil)))
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
@@ -288,7 +285,7 @@
                                 @parametri-arvot))
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
-        raportissa? (some? @suoritettu-raportti)]
+        raportissa? (some? @raportit/suoritettu-raportti)]
     
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
 
@@ -339,7 +336,7 @@
        [:div.raportin-toiminnot
         (when raportissa?
           [napit/takaisin "Palaa raporttivalintoihin"
-           #(reset! suoritettu-raportti nil)])
+           #(reset! raportit/suoritettu-raportti nil)])
         [:form {:target "_blank" :method "POST" :id "raporttipdf"
                 :style {:display "inline"}
                 :action (k/pdf-url :raportointi)}
@@ -362,7 +359,7 @@
           (ikonit/print) " Tallenna PDF"]]
         (when-not raportissa?
           [napit/palvelinkutsu-nappi " Tee raportti"
-           #(go (reset! suoritettu-raportti :ladataan)
+           #(go (reset! raportit/suoritettu-raportti :ladataan)
                 (let [raportti (<! (case konteksti
                                      "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
                                                                                     arvot-nyt)
@@ -372,9 +369,9 @@
                                                                                 (:nimi raporttityyppi)
                                                                                 arvot-nyt)))]
                   (if-not (k/virhe? raportti)
-                    (reset! suoritettu-raportti raportti)
+                    (reset! raportit/suoritettu-raportti raportti)
                     (do
-                      (reset! suoritettu-raportti nil)
+                      (reset! raportit/suoritettu-raportti nil)
                       raportti))))
            {:ikoni    [ikonit/list]
             :disabled (not voi-suorittaa?)}])]]]]))
@@ -388,7 +385,7 @@
                         v-ur "urakka"
                         v-hal "hallintayksikko"
                         :default "koko maa")
-            raportissa? (some? @suoritettu-raportti)]
+            raportissa? (some? @raportit/suoritettu-raportti)]
         [:div.raporttivalinnat
          (when-not raportissa?
            [:span
@@ -415,7 +412,6 @@
 
 (defn nayta-raportti [tyyppi r]
   (komp/luo
-   (komp/lippu-arvo false true nav/murupolku-nakyvissa?)
    (fn [tyyppi r]
      [:span
       [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
@@ -433,7 +429,7 @@
                                                       ; Yritin siirtää urakka-namespaceen yhteyseksi, mutta tuli circular dependency. :(
                                                       ; Toimisko paremmin jos urakan yks. hint. ja kok. hint. työt käyttäisi
                                                       ; reactionia(?) --> ajettaisiin aina kun urakka vaihtuu
-    (let [r @suoritettu-raportti]
+    (let [r @raportit/suoritettu-raportti]
       [:span
        [raporttivalinnat]
        (cond (= :ladataan r)
@@ -453,7 +449,7 @@
    (fn []
      (if (roolit/voi-nahda-raportit?)
        [:span
-        (when-not @suoritettu-raportti
+        (when-not @raportit/suoritettu-raportti
           [kartta/kartan-paikka @nav/murupolku-nakyvissa?])
         (raporttivalinnat-ja-raportti)]
        [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
