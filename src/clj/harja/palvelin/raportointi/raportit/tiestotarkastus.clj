@@ -92,7 +92,7 @@
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys "5%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
-        naytettavat-rivit
+        (sort-by :aika naytettavat-rivit)
         :urakka
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
