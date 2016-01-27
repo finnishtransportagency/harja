@@ -26,6 +26,8 @@
                      :tilannekuva :paallystyskohteet :tr-alkupiste :yksikkohintainen-toteuma
                      :kokonaishintainen-toteuma :varusteet})
 
+(def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
+oletus-zindex 4)
 
 (def organisaatio
   ;; Kartalla näytettävät organisaatiot / urakat
@@ -72,23 +74,34 @@
 (defn poista-geometria! [avain]
   (swap! nakyman-geometriat dissoc avain))
 
+(defn zindex-metatiedolla
+  ([layer] (zindex-metatiedolla layer oletus-zindex))
+  ([layer zindex] (with-meta layer (merge (meta layer) {:zindex zindex}))))
+
 (def geometriat (reaction
-                 (merge 
-                  {:organisaatio @organisaatio
-                   :nakyman-geometriat (vals @nakyman-geometriat)                  
-                   :pohjavesi @pohjavesialueet/pohjavesialueet
-                   :tarkastukset @tarkastukset/tarkastukset-kartalla
-                   :sillat @sillat/sillat
-                   :turvallisuus @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-                   :ilmoitukset @ilmoitukset/ilmoitukset-kartalla
-                   :tr-valitsin @tierekisteri/tr-alkupiste-kartalla
-                   :yks-hint-toteumat @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
-                   :kok-hint-toteumat @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
-                   :varusteet @varusteet/varusteet-kartalla
-                   :muut-tyot @muut-tyot/muut-tyot-kartalla
-                   :paallystyskohteet @paallystys/paallystyskohteet-kartalla
-                   :paikkauskohteet @paikkaus/paikkauskohteet-kartalla}
-                  @tilannekuva/tilannekuvan-asiat-kartalla)))
+                 (merge
+                   {:organisaatio       (zindex-metatiedolla @organisaatio 0)
+                    :pohjavesi          (zindex-metatiedolla @pohjavesialueet/pohjavesialueet 1)
+                    :sillat             (zindex-metatiedolla @sillat/sillat 2)
+
+                    :tarkastukset       (zindex-metatiedolla @tarkastukset/tarkastukset-kartalla)
+                    :turvallisuus       (zindex-metatiedolla @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla)
+                    :ilmoitukset        (zindex-metatiedolla @ilmoitukset/ilmoitukset-kartalla)
+                    :yks-hint-toteumat  (zindex-metatiedolla @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla)
+                    :kok-hint-toteumat  (zindex-metatiedolla @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla)
+                    :varusteet          (zindex-metatiedolla @varusteet/varusteet-kartalla)
+                    :muut-tyot          (zindex-metatiedolla @muut-tyot/muut-tyot-kartalla)
+                    :paallystyskohteet  (zindex-metatiedolla @paallystys/paallystyskohteet-kartalla)
+                    :paikkauskohteet    (zindex-metatiedolla @paikkaus/paikkauskohteet-kartalla)
+
+                    :tr-valitsin        (zindex-metatiedolla @tierekisteri/tr-alkupiste-kartalla (inc oletus-zindex))
+                    :nakyman-geometriat (zindex-metatiedolla (vals @nakyman-geometriat) (inc oletus-zindex))}
+                   (into
+                     {}
+                     (map
+                       (fn [[tason-nimi tason-sisalto]]
+                         {tason-nimi (zindex-metatiedolla tason-sisalto)})
+                       @tilannekuva/tilannekuvan-asiat-kartalla)))))
 
 (defn- taso-atom [nimi]
   (case nimi

@@ -326,7 +326,9 @@
 (defn- create-geometry-layer
   "Create a new ol3 Vector layer with a vector source."
   []
-  (ol.layer.Vector. #js {:source (ol.source.Vector.)}))
+  (ol.layer.Vector. #js {:source (ol.source.Vector.)
+                         :rendererOptions { :zIndexing true
+                                            :yOrdering true}}))
 
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
@@ -642,9 +644,11 @@
 updates (creates/removes) the geometries in the layer to match the new items. Returns a new
 vector with the updates ol3 layer and map of geometries.
 If incoming layer & map vector is nil, a new ol3 layer will be created."
-  [ol3 geometry-fn [geometry-layer geometries-map] items]
+  [ol3 geometry-fn [geometry-layer geometries-map :as the-layer] items]
   (let [create? (nil? geometry-layer)
-        geometry-layer (if create? (create-geometry-layer) geometry-layer)
+        geometry-layer (if create?
+                         (doto (create-geometry-layer) (.setZIndex (or (:zindex (meta the-layer)) 12)))
+                         geometry-layer)
         geometries-map (if create? {} geometries-map)
         geometries-set (into #{} (map geometria-avain) items)
         features (.getSource geometry-layer)]
