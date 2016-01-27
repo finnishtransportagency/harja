@@ -57,6 +57,7 @@ server {
     }
 
     location /laadunseuranta {
+      include /etc/nginx/mime.types;
       alias /opt/harja/laadunseuranta;
     }
     
