@@ -520,7 +520,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 "piilossa")
 
           ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
-          :extent-key (str koko "_" (name @nav/sivu))
+          :extent-key (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/sivu))
           :extent @nav/kartan-extent
 
           :selection          nav/valittu-hallintayksikko
