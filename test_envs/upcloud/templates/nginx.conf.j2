@@ -55,6 +55,10 @@ server {
       proxy_pass_header OAM_REMOTE_USER;
       proxy_pass   http://backend;
     }
+
+    location /laadunseuranta {
+      alias /opt/harja/laadunseuranta;
+    }
     
     location ~ /harja/api/(?<path>.*)$ {
       # buffering off tarvitaan kun halutaan striimata chunked responseja
