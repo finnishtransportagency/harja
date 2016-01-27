@@ -6,32 +6,19 @@
             [harja.kyselyt.siltatarkastukset :as s]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn paivita-silta [db silta]
-  (s/paivita-silta-siltanumerolla! db
-                       (:siltatyy silta)
-                       (int (:nro silta))
-                       (:nimi silta)
-                       (.toString (:the_geom silta))
-                       (:tie silta)
-                       (:aosa silta)
-                       (:aet silta)))
-
-(defn luo-silta [db silta]
-  (s/vie-siltatauluun! db
-                       (:siltatyy silta)
-                       (int (:nro silta))
-                       (:nimi silta)
-                       (.toString (:the_geom silta))
-                       (:tie silta)
-                       (:aosa silta)
-                       (:aet silta)))
-
 (defn luo-tai-paivita-silta [db silta]
-  (if-let [silta-kannassa (first (s/hae-silta-numerolla db (:nro silta)))]
-    (paivita-silta db silta)
-    (luo-silta db silta)))
-; Mahdollisesti voisi olla aiheellista poistaa silta, jota ei enää ole.
-; Sillalle saattaa kuitenkin olla kirjattuna tarkastus.
+  (let [tyyppi (:siltatyy silta)
+        numero (int (:nro silta))
+        nimi (:nimi silta)
+        geometria (.toString (:the_geom silta))
+        tie (:tie silta)
+        alkuosa (:aosa silta)
+        alkuetaisyys (:aet silta)
+        tunnus (:tunnus silta)
+        id (int (:silta_id silta))]
+    (if (first (s/hae-silta-numerolla db (:nro silta)))
+      (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
+      (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
 
 (defn vie-silta-entry [db silta]
   (if (:the_geom silta)
