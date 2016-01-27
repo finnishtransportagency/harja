@@ -29,7 +29,7 @@
   (k/get! :hae-suolamateriaalit))
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [talvikauden-alkuvuosi]
-  (k/post! :hae-lampotilat-ilmatieteenlaitokselta {:vuosi talvikauden-alkuvuosi}))
+  (k/post! :hae-lampotilat-ilmatieteenlaitokselta {:vuosi talvikauden-alkuvuosi} nil true))
 
 (defn hae-teiden-hoitourakoiden-lampotilat [hoitokausi]
   (k/post! :hae-teiden-hoitourakoiden-lampotilat {:hoitokausi hoitokausi}))

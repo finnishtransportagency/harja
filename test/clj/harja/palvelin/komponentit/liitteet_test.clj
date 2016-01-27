@@ -15,7 +15,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :db (tietokanta/luo-tietokanta testitietokanta)
                         :liitteiden-hallinta (component/using (harja.palvelin.komponentit.liitteet/->Liitteet) [:db])
                         ))))
   (testit)

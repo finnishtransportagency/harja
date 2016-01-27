@@ -20,7 +20,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :pdf-vienti (component/using
                                       (pdf-vienti/luo-pdf-vienti)

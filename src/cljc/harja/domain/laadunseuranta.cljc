@@ -37,7 +37,7 @@
   {:aika                               pvm-tyyppi
    :kuvaus                             Teksti
    :tekija                             Osapuoli
-   (s/optional-key :kohde)             (s/maybe s/Str)
+   :kohde                              s/Str
    (s/optional-key :urakka)            s/Any
    (s/optional-key :sijainti)          s/Any
    (s/optional-key :tekijanimi)        s/Str

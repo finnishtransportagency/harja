@@ -24,7 +24,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :db (tietokanta/luo-tietokanta testitietokanta)
                         :sonja (feikki-sonja)
                         :integraatioloki (component/using (->Integraatioloki nil) [:db])
                         :sampo (component/using (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil) [:db :sonja :integraatioloki])))))

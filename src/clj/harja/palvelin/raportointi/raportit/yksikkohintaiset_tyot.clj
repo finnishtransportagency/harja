@@ -6,7 +6,8 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 ;; oulu au 2014 - 2019:
 ;; 1.10.2014-30.9.2015 elokuu 2015 kaikki
@@ -43,15 +44,15 @@
        {:leveys 15 :otsikko "Toteutuneet kustannukset"}]
 
       (keep identity
-            (conj (mapv (juxt (comp pvm/pvm :pvm)
-                              :nimi
-                              :yksikko
-                              (comp fmt/euro-opt :yksikkohinta)
-                              (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
-                              (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
-                              (comp fmt/euro-opt :suunnitellut_kustannukset)
-                              (comp fmt/euro-opt :toteutuneet_kustannukset))
-                        naytettavat-rivit)
+            (conj (yleinen/ryhmittele-tulokset-raportin-taulukolle
+                    naytettavat-rivit :toimenpide (juxt (comp pvm/pvm :pvm)
+                                                        :nimi
+                                                        :yksikko
+                                                        (comp fmt/euro-opt :yksikkohinta)
+                                                        (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
+                                                        (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
+                                                        (comp fmt/euro-opt :suunnitellut_kustannukset)
+                                                        (comp fmt/euro-opt :toteutuneet_kustannukset)))
                   (when (not (empty? naytettavat-rivit))
                     ["Yhteensä" nil nil nil nil nil
                      (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))

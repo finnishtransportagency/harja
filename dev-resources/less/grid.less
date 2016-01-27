@@ -1,3 +1,4 @@
+@import "livi_tyylit";
 /* Geneerinen editoitava gridi */
 
 /*
@@ -202,8 +203,10 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 .nappi-toissijainen.nappi-tayta {
-  margin: 1px;
+  height: @input-korkeus;
+  margin: 0;
   padding: 1px 4px;
+  z-index: 1;
 }
 
 .nappi-grid {
