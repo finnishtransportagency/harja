@@ -42,29 +42,30 @@
 (defonce paivita-kartan-sijainti (chan))
 
 (defn- aseta-kartan-sijainti [x y w h naulattu?]
-  (let [karttasailio (yleiset/elementti-idlla "kartta-container")
-        tyyli (.-style karttasailio)]
-    #_(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
-    (if naulattu?
-      (do
-        (set! (.-position tyyli) "fixed")
-        (set! (.-left tyyli) (fmt/pikseleina x))
-        (set! (.-top tyyli) "0px")
-        (set! (.-width tyyli) (fmt/pikseleina w))
-        (set! (.-height tyyli) (fmt/pikseleina h))
-        (openlayers/set-map-size! w h))
-      (do
-        (set! (.-position tyyli) "absolute")
-        (set! (.-left tyyli) (fmt/pikseleina x))
-        (set! (.-top tyyli) (fmt/pikseleina y))
-        (set! (.-width tyyli) (fmt/pikseleina w))
-        (set! (.-height tyyli) (fmt/pikseleina h))
-        (openlayers/set-map-size! w h)))
-    ;; jotta vältetään muiden kontrollien hautautuminen float:right Näytä kartta alle, kavenna kartta-container
-    (when (= :S @nav/kartan-koko)
-      (set! (.-left tyyli) "")
-      (set! (.-right tyyli) (fmt/pikseleina 20))
-      (set! (.-width tyyli) (fmt/pikseleina 100)))))
+  (when-let
+    [karttasailio (yleiset/elementti-idlla "kartta-container")]
+    (let [tyyli (.-style karttasailio)]
+      #_(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
+      (if naulattu?
+        (do
+          (set! (.-position tyyli) "fixed")
+          (set! (.-left tyyli) (fmt/pikseleina x))
+          (set! (.-top tyyli) "0px")
+          (set! (.-width tyyli) (fmt/pikseleina w))
+          (set! (.-height tyyli) (fmt/pikseleina h))
+          (openlayers/set-map-size! w h))
+        (do
+          (set! (.-position tyyli) "absolute")
+          (set! (.-left tyyli) (fmt/pikseleina x))
+          (set! (.-top tyyli) (fmt/pikseleina y))
+          (set! (.-width tyyli) (fmt/pikseleina w))
+          (set! (.-height tyyli) (fmt/pikseleina h))
+          (openlayers/set-map-size! w h)))
+      ;; jotta vältetään muiden kontrollien hautautuminen float:right Näytä kartta alle, kavenna kartta-container
+      (when (= :S @nav/kartan-koko)
+        (set! (.-left tyyli) "")
+        (set! (.-right tyyli) (fmt/pikseleina 20))
+        (set! (.-width tyyli) (fmt/pikseleina 100))))))
 
 ;; Kun kartan paikkavaraus poistuu, aseta flägi, joka pakottaa seuraavalla
 ;; kerralla paikan asetuksen... läheta false kanavaan
@@ -528,7 +529,8 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 "piilossa")
 
           ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
-          :extent-key         (str koko "_" (name @nav/sivu))
+
+          :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/sivu))
           :extent             @nav/kartan-extent
 
           :selection          nav/valittu-hallintayksikko
