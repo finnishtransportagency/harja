@@ -103,6 +103,9 @@
         (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
         [grid/grid
          {:otsikko "Urakan välitavoitteet"
+          :tyhja (if (nil? @tavoitteet)
+                   [y/ajax-loader "Välitavoitteita haetaan..."]
+                   "Ei välitavoitteita")
           :tallenna #(go (reset! tallennus-kaynnissa true)
                          (go
                            (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
