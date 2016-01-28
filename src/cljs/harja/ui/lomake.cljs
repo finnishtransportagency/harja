@@ -156,7 +156,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          [:div.form-control-static
           (if fmt
             (fmt ((or hae #(get % nimi)) data))
-            (nayta-arvo kentta arvo))]))]))
+            (nayta-arvo s arvo))]))]))
 
 (defn rivi
   "UI yhdelle riville"
