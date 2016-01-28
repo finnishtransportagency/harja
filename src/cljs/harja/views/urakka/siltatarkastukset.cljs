@@ -331,20 +331,20 @@
       (fn []
         [:div.uusi-siltatarkastus
          [napit/takaisin "Palaa tallentamatta" #(reset! uuden-syottaminen false)]
-        [:h3 "Luo uusi siltatarkastus"]
-         [lomake {:luokka   :horizontal
+         
+         [lomake {:otsikko "Luo uusi siltatarkastus"
                   :virheet  lomakkeen-virheet
                   :muokkaa! (fn [uusi]
                               (reset! lomakkeen-tiedot uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
            {:otsikko "Sillan numero" :nimi :siltanro :hae (fn [_] (:siltanro @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true :tyyppi :pvm :palstoja 1
+           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
                       #(when (@olemassa-olevat-tarkastus-pvmt %1)
                         "Tälle päivälle on jo kirjattu tarkastus.")]
             :varoita [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true :palstoja 2
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
             :tyyppi :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
