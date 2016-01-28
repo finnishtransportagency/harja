@@ -11,7 +11,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def +tarkastustyyppi->nimi+ {:tiesto "Tiestötarkastus"
-                              :talvihoito "Talvihoitotarkastus"
+                              :talvihoito "Kelitarkastus"
                               :soratie "Soratien tarkastus"
                               :laatu "Laaduntarkastus"
                               :pistokoe "Pistokoe"})

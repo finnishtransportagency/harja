@@ -65,7 +65,7 @@
                        :valinta-nayta #(case %
                                         nil "Kaikki"
                                         :tiesto "Tiestötarkastukset"
-                                        :talvihoito "Talvihoitotarkastukset"
+                                        :talvihoito "Kelitarkastukset"
                                         :soratie "Soratien tarkastukset"
                                         :laatu "Laaduntarkastus"
                                         :pistokoe "Pistokoe")}
@@ -91,10 +91,17 @@
 
           {:otsikko "TR osoite"
            :nimi :tr
+           :leveys 2
            :fmt #(apply yleiset/tierekisteriosoite
                         (map (fn [kentta] (get % kentta))
-                             [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
-           :leveys 2}]
+                             [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))}
+          {:otsikko "Havainnot"
+           :nimi :havainnot
+           :leveys 4
+           :tyyppi :string
+           :fmt #(if (> (count %) 50)
+                   (str (.substring % 0 50) "...")
+                   %)}]
          @tarkastukset/urakan-tarkastukset]])))
 
 (defn talvihoitomittaus []
@@ -184,7 +191,7 @@
         :valinnat (tarkastustyypit-tekijalle (:tekija tarkastus))
         :valinta-nayta #(case %
                           :tiesto "Tiestötarkastus"
-                          :talvihoito "Talvihoitotarkastus"
+                          :talvihoito "Kelitarkastus"
                           :soratie "Soratien tarkastus"
                           :laatu "Laaduntarkastus"
                           :pistokoe "Pistokoe"
