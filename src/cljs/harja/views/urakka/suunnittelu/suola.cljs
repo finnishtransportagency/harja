@@ -116,33 +116,18 @@
                                (log "virheet: " (pr-str virheet) ", muokattu? " (:muokattu @hoitokauden-tiedot))
                                [:span.lampotilalomake-footer
                                 (if saa-muokata?
-                                  [:div.form-group
-                                   [:div.col-md-4
-                                    [napit/palvelinkutsu-nappi
-                                     "Tallenna"
-                                     #(tallenna-suolasakko)
-                                     {:luokka       "nappi-ensisijainen"
-                                      :disabled (not (empty? virheet))
-                                      :ikoni        (ikonit/tallenna)
-                                      :kun-onnistuu #(do
-                                                      (viesti/nayta! "Tallentaminen onnistui" :success 1500)
-                                                      (reset! suolasakot-ja-lampotilat %))}]]])])}
+                                  [napit/palvelinkutsu-nappi
+                                   "Tallenna"
+                                   #(tallenna-suolasakko)
+                                   {:luokka       "nappi-ensisijainen"
+                                    :disabled     (not (empty? virheet))
+                                    :ikoni        (ikonit/tallenna)
+                                    :kun-onnistuu #(do
+                                                    (viesti/nayta! "Tallentaminen onnistui" :success 1500)
+                                                    (reset! suolasakot-ja-lampotilat %))}])])}
           [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
             :tyyppi :positiivinen-numero :palstoja 1
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
-
-           (when-not (empty? pohjavesialueet)
-             {:otsikko "Pohjavesialueiden käyttörajat"
-              :nimi :pohjavesialueet :palstoja 2 :tyyppi :komponentti
-              :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
-                                                :voi-poistaa? (constantly false)
-                                                :voi-lisata? false
-                                                :jos-tyhja "Urakan alueella ei pohjavesialueita"}
-                            [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}
-                             {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
-                             {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero 
-                              :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
-                            (pohjavesialueet-muokkausdata)]})
            
            {:otsikko "Suolasakko" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
@@ -162,9 +147,22 @@
 
             :palstoja 1}
 
+           (when-not (empty? pohjavesialueet)
+             {:otsikko "Pohjavesialueiden käyttörajat"
+              :nimi :pohjavesialueet :palstoja 2 :tyyppi :komponentti
+              :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
+                                                :voi-poistaa? (constantly false)
+                                                :voi-lisata? false
+                                                :jos-tyhja "Urakan alueella ei pohjavesialueita"}
+                            [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}
+                             {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
+                             {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
+                              :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
+                            (pohjavesialueet-muokkausdata)]})
            
            {:otsikko "Sydäntalven keskilämpötila" :palstoja 2
             :nimi :lampotilat :tyyppi :komponentti
+            :vihje "Järjestelmän vastuuhenkilö syöttää lämpötilatiedot"
             :komponentti [grid/grid {}
                           [{:otsikko "Tämä talvikausi" :nimi :keskilampotila :fmt #(if % (fmt/asteina %) "-")
                             :tasaa :oikea}
