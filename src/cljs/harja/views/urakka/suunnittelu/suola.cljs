@@ -129,12 +129,12 @@
                                                       (viesti/nayta! "Tallentaminen onnistui" :success 1500)
                                                       (reset! suolasakot-ja-lampotilat %))}]]])])}
           [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
-            :tyyppi :positiivinen-numero :leveys-col 2
+            :tyyppi :positiivinen-numero :palstoja 1
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
 
            (when-not (empty? pohjavesialueet)
              {:otsikko "Pohjavesialueiden käyttörajat"
-              :nimi :pohjavesialueet :leveys-col 6
+              :nimi :pohjavesialueet :palstoja 2
               :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
                                                 :voi-poistaa? (constantly false)
                                                 :voi-lisata? false
@@ -145,8 +145,8 @@
                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
                             (pohjavesialueet-muokkausdata)]})
            
-           {:otsikko "Suolasakko" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
-           {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
+           {:otsikko "Suolasakko" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"}
+           {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
             :valinta-arvo  first
             :muokattava?   (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
@@ -161,10 +161,10 @@
                              (if (nil? %) yleiset/+valitse-indeksi+ (str %)))
             :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
 
-            :leveys-col    2}
+            :palstoja 1}
 
            
-           {:otsikko "Sydäntalven keskilämpötila" :leveys-col 4
+           {:otsikko "Sydäntalven keskilämpötila" :palstoja 2
             :nimi :lampotilat
             :komponentti [grid/grid {}
                           [{:otsikko "Tämä talvikausi" :nimi :keskilampotila :fmt #(if % (fmt/asteina %) "-")

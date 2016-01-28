@@ -124,7 +124,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
-          :leveys-col    3}
+          :palstoja 1}
 
          (when (:paatos-tekninen @paatostiedot-tekninen-osa)
            {:otsikko     "Selitys"
@@ -132,7 +132,7 @@
             :tyyppi      :text
             :koko        [60 3]
             :pituus-max  2048
-            :leveys-col  6
+            :palstoja 2
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot-tekninen-osa]
 
@@ -154,7 +154,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
-          :leveys-col    3}
+          :palstoja 1}
 
          (when (:paatos-taloudellinen @paatostiedot-taloudellinen-osa)
            {:otsikko     "Selitys"
@@ -162,7 +162,7 @@
             :tyyppi      :text
             :koko        [60 3]
             :pituus-max  2048
-            :leveys-col  6
+            :palstoja 2
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot-taloudellinen-osa]])))
 
@@ -307,13 +307,13 @@
                            "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
                 :tyyppi  :pvm :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
                {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
+               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :palstoja 1 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
                (when (or (= :valmis (:tila lomakedata-nyt))
                          (= :lukittu (:tila lomakedata-nyt)))
                  {:otsikko     "Kommentit" :nimi :kommentit
                   :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila lomakedata-nyt))
                                                      :voi-liittaa      false
-                                                     :leveys-col       40
+                                                     :palstoja 20
                                                      :placeholder      "Kirjoita kommentti..."
                                                      :uusi-kommentti   (r/wrap (:uusi-kommentti lomakedata-nyt)
                                                                                #(swap! paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}

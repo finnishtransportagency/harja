@@ -690,20 +690,28 @@
              [:div {:class "virhe"}
               [:span (ikonit/warning-sign) [:span @virheet]]]])
           [:table
+           [:thead
+            [:tr
+             [:th "Tie"]
+             [:th "aosa"]
+             [:th "aet"]
+             [:th "losa"]
+             [:th "let"]]]
            [:tbody
             [:tr
-             [tr-kentan-elementti lomake? kartta? muuta! blur "Tie#" numero :numero]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero]
              [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa]
              [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys]
              [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa]
              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys]
              
              (if-not @karttavalinta-kaynnissa
-               [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                                (reset! osoite-ennen-karttavalintaa osoite)
-                                                                (reset! data {})
-                                                                (reset! karttavalinta-kaynnissa true))}
-                     (ikonit/map-marker) " Valitse kartalta"]]
+               [:td.karttavalinta
+                [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                            (reset! osoite-ennen-karttavalintaa osoite)
+                                                            (reset! data {})
+                                                            (reset! karttavalinta-kaynnissa true))}
+                 (ikonit/map-marker) " Valitse kartalta"]]
                [tr/karttavalitsin {:kun-peruttu #(do
                                                    (reset! data @osoite-ennen-karttavalintaa)
                                                    (reset! karttavalinta-kaynnissa false))

@@ -14,6 +14,21 @@
 }
 
 .lomake {
+    padding-bottom: @fontin-koko-leipateksti;
+    border: solid 1px @harmaa7;
+    .lomake-otsikko, .lomake-ryhman-otsikko {
+      margin-left: 1em;
+    }
+
+          
+    .komponentti {
+      /* Asemointisääntöjä lomakkeisiin upotetuille muille komponenteille */
+      .livi-grid {
+        margin-top: -2.3rem; // otsikko ja gridin toimintonapit samalle tasolla
+	margin-bottom: 0; // tyhjä tila alta pois
+      }
+    }
+    
     margin-top: 1rem;
     .varoitukset,
     .virheet {
@@ -37,10 +52,39 @@
   .required label.control-label:after {
     content: " *";
     color: red;
-    font-size: 0.9em;
+    font-size: (0.8 * @fontin-koko-leipateksti);
     position: relative;
     top: -0.15em;
   }
+
+  
+  .kentan-yksikko {
+    font-size: (0.8 * @fontin-koko-leipateksti);
+    margin-left: 0.5rem;
+  }
+
+  /* Kenttätyypeille spesifiset säännöt kun ollaan lomakkeessa */ 
+  .pvm-aika-kentta > table {
+    width: 100%;
+  }
+
+ .tierekisteriosoite-kentta {
+   > table { width: 100%; }
+   .karttavalinta { text-align: right; }
+   .nappi-ensisijainen { margin-right: 0; }
+   thead {
+     font-size: @fontin-koko-leipateksti;
+     th {
+       padding-left: 0.3rem;
+       padding-bottom: 4px; }
+   }
+ }
+
+ .checkbox {
+     // checkbox kentillä ei ole labelia, joten niitä pitää pädätä alaspäin
+     padding-top: @input-korkeus / 2;
+ } 
+
 }
 
 .lomake-footer{

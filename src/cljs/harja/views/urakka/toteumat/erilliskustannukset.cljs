@@ -196,14 +196,14 @@
             :valinta-nayta second
             :valinnat      (:sopimukset ur)
             :fmt           second
-            :leveys-col    4}
+            :palstoja 1}
            {:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
             :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta #(:tpi_nimi %)
             :valinnat      @u/urakan-toimenpideinstanssit
             :fmt           #(:tpi_nimi %)
-            :leveys-col    4}
+            :palstoja 1}
            {:otsikko       "Tyyppi" :nimi :tyyppi
             :pakollinen?   true
             :tyyppi        :valinta
@@ -211,7 +211,7 @@
             :valinnat      (luo-kustannustyypit (:tyyppi ur))
             :fmt           #(erilliskustannustyypin-teksti %)
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
-            :leveys-col    4
+            :palstoja 1
             :aseta         (fn [rivi arvo]
                              (assoc (if (and
                                           urakan-indeksi
@@ -221,7 +221,7 @@
                              :tyyppi arvo))}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :pakollinen?   true
-            :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :leveys-col 4
+            :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :palstoja 2
             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
            {:otsikko     "Rahamäärä"
             :nimi        :rahasumma
@@ -229,7 +229,7 @@
             :yksikko     "€"
             :tyyppi      :positiivinen-numero
             :validoi     [[:ei-tyhja "Anna rahamäärä"]]
-            :leveys-col  4}
+            :palstoja 1}
            {:otsikko     "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
             :pakollinen? true
             ;; hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan
@@ -240,7 +240,7 @@
             :fmt         #(if (nil? %)
                            yleiset/+valitse-indeksi+
                            (str %))
-            :leveys-col  4
+            :palstoja 1
             :vihje       (when (and
                                  (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
                                  (= :hoito (:tyyppi ur)))
@@ -252,7 +252,7 @@
             :valinta-nayta #(maksajavalinnan-teksti %)
             :valinnat      +maksajavalinnat+
             :fmt           #(maksajavalinnan-teksti %)
-            :leveys-col    4
+            :palstoja 1
             }
            {:otsikko     "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
             :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}

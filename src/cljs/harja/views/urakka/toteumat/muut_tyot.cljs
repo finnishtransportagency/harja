@@ -224,21 +224,21 @@
               :valinta-nayta second
               :valinnat      (:sopimukset @nav/valittu-urakka)
               :fmt           second
-              :leveys-col    3}
+              :palstoja 1}
              {:otsikko       "Toimenpide" :nimi :toimenpideinstanssi
               :tyyppi        :valinta
               :pakollinen?   true
               :valinta-nayta #(:tpi_nimi %)
               :valinnat      @u/urakan-toimenpideinstanssit
               :fmt           #(:tpi_nimi %)
-              :leveys-col    3}
+              :palstoja 1}
              {:otsikko       "Tyyppi" :nimi :tyyppi
               :tyyppi        :valinta
               :pakollinen?   true
               :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (muun-tyon-tyypin-teksti %))
               :valinnat      +muun-tyon-tyypit+
               :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
-              :leveys-col    3}
+              :palstoja 1}
              {:otsikko       "Tehtävä" :nimi :tehtava
               :pakollinen?   true
               :hae           #(get-in % [:tehtava :toimenpidekoodi])
@@ -259,7 +259,7 @@
                                                  :yksikko jo-suunniteltu-yksikko
                                                  :yksikkohinta jo-suunniteltu-yksikkohinta
                                                  :yksikkohinta-suunniteltu? jo-suunniteltu-yksikkohinta)))
-              :leveys-col    3}
+              :palstoja 1}
              (when (get-in @muokattu [:tehtava :toimenpidekoodi])
                (lomake/ryhma
                  "Toteutuneen työn tiedot"
@@ -269,7 +269,7 @@
                   :valinta-arvo  first
                   :valinta-nayta second
                   :valinnat      [[:yksikkohinta "Muutoshinta"] [:paivanhinta "Päivän hinta"]]
-                  :leveys-col    3}
+                  :palstoja 1}
                  {:otsikko     "Määrä" :nimi :maara :tyyppi :positiivinen-numero
                   :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
                   :hae         #(get-in % [:tehtava :maara])
@@ -280,7 +280,7 @@
                   :aseta       (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                   :validoi     (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                                  [[:ei-tyhja "Määrä antamatta."]])
-                  :yksikko     (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :leveys-col 3}
+                  :yksikko     (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :palstoja 1}
                  (when (= (:hinnoittelu @muokattu) :paivanhinta)
                    {:otsikko       "Päivän hinta"
                     :nimi :paivanhinta
@@ -290,7 +290,7 @@
                     :aseta         (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
                     :tyyppi        :positiivinen-numero
                     :validoi [[:ei-tyhja "Anna rahamäärä"]]
-                    :leveys-col 3})
+                    :palstoja 1})
                  (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                    {:otsikko     "Sopimushinta" :nimi :yksikkohinta
                     :tyyppi      :positiivinen-numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
@@ -300,15 +300,15 @@
                                    varten Suunnittelun Muutos- ja lisätyöt -osioon.")
                     :muokattava? #(not (:yksikkohinta-suunniteltu? %))
                     :yksikko     (str "€ / " (:yksikko @muokattu))
-                    :leveys-col  3})
+                    :palstoja 1})
                  (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                    {:otsikko     "Kustannus" :nimi :kustannus
                     :muokattava? (constantly false)
                     :tyyppi      :numero
                     :hae         #(* (get-in % [:tehtava :maara]) (:yksikkohinta %))
                     :fmt         fmt/euro-opt
-                    :leveys-col  3})
-                 {:otsikko "Aloitus" :pakollinen? true :nimi :alkanut :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+                    :palstoja 1})
+                 {:otsikko "Aloitus" :pakollinen? true :nimi :alkanut :tyyppi :pvm :palstoja 1 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                   :aseta   (fn [rivi arvo]
                              (assoc
                                (if
@@ -323,7 +323,7 @@
                   :varoita [[:urakan-aikana-ja-hoitokaudella]]}
                  {:otsikko     "Lopetus" :pakollinen? true :nimi :paattynyt :tyyppi :pvm
                   :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
-                  :leveys-col  2
+                  :palstoja 1
                   :validoi     [[:ei-tyhja "Valitse päivämäärä"]
                                 [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
                  {:otsikko "Suorittaja" :nimi :suorittajan-nimi

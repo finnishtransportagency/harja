@@ -173,23 +173,23 @@
 
         [(when @nav/valittu-urakka
            {:nimi          :hoitokausi
-            :leveys-col    4
+            :palstoja 2
             :otsikko       "Hoitokausi"
             :tyyppi        :valinta
             :valinnat      @u/valitun-urakan-hoitokaudet
             :valinta-nayta fmt/pvm-vali-opt})
 
-         (lomake/ryhma {:ulkoasu :rivi :otsikko "Saapunut" :leveys-col 5}
+         (lomake/ryhma {:ulkoasu :rivi :otsikko "Saapunut" :palstoja 2}
                        {:nimi       :saapunut-alkaen
                         :hae        (comp first :aikavali)
                         :aseta      #(assoc-in %1 [:aikavali 0] %2)
                         :otsikko    "Alkaen"
-                        :leveys-col 3
+                        :palstoja 1
                         :tyyppi     :pvm}
 
                        {:nimi       :saapunut-paattyen
                         :otsikko    "Päättyen"
-                        :leveys-col 3
+                        :palstoja 1
                         :hae        (comp second :aikavali)
                         :aseta      #(assoc-in %1 [:aikavali 1] %2)
                         :tyyppi     :pvm})
@@ -198,9 +198,9 @@
           :placeholder "Hae tekstillä..."
           :tyyppi      :string
           :pituus-max  64
-          :leveys-col  6}
+          :palstoja 2}
 
-         (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat" :leveys-col 6}
+         (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat"}
                        {:nimi        :tilat :otsikko "Tila"
                         :tyyppi      :boolean-group
                         :vaihtoehdot [:suljetut :avoimet]}

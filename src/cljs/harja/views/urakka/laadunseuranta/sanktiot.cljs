@@ -93,18 +93,18 @@
          #_{:otsikko "Päätös" :nimi :paatos
           :hae     (comp :paatos :paatos :laatupoikkeama)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :paatos] arvo))
-          :leveys-col  3 :tyyppi :string
+          :palstoja 1 :tyyppi :string
           :muokattava? (constantly false)}
          {:otsikko "Perustelu" :nimi :perustelu
           :pakollinen? true
           :hae     (comp :perustelu :paatos :laatupoikkeama)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
-          :leveys-col  4 :tyyppi :text :koko [80 :auto]
+          :palstoja 2 :tyyppi :text :koko [80 :auto]
           :validoi [[:ei-tyhja "Anna perustelu"]]}
          {:otsikko "Kohde" :nimi :kohde
           :hae     (comp :kohde :laatupoikkeama)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
-          :leveys-col  4 :tyyppi :string}
+          :palstoja 2 :tyyppi :string}
 
          ;; Ei laatupoikkeaman kuvausta, koska annetaan suoraan perustelu
          #_{:otsikko "Kuvaus" :nimi :kuvaus
@@ -129,7 +129,7 @@
                                   :kommentit "Harja-kommenttien perusteella"
                                   :muu "Muu tapa"
                                   nil) "- valitse käsittelytapa -")
-          :leveys-col 4}
+          :palstoja 2}
 
          (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
            {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
@@ -139,7 +139,7 @@
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
          (lomake/ryhma {:otsikko "Sanktio" :leveys 2 :ulkoasu :rivi}
-                       {:otsikko "Summa" :nimi :summa :leveys-col 2 :tyyppi :positiivinen-numero
+                       {:otsikko "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
                         :pakollinen? true
                         :yksikko "€"
                         :validoi [[:ei-tyhja "Anna summa"]]}
@@ -147,7 +147,7 @@
                         :tyyppi :valinta
                         :valinnat ["MAKU 2005" "MAKU 2010"]
                         :valinta-nayta #(or % "Ei sidota indeksiin")
-                        :leveys-col 3})
+                        :palstoja 1})
 
          ;; TODO: Pitäisikö lomakkeessa kuitenkin näyttää, onko tämä sanktio tehty suoraan vai ei?
          #_{:otsikko "Suora sanktio?" :nimi :suorasanktio :leveys 2 :tyyppi :string}
@@ -155,7 +155,7 @@
          (lomake/ryhma {:otsikko "Luokittelu"  :ulkoasu :rivi}
                        {:otsikko       "Laji" :tyyppi :valinta
                         :pakollinen? true
-                        :leveys-col 2
+                        :palstoja 1
                         :nimi          :laji
                         :hae           (comp keyword :laji)
                         :aseta         #(assoc %1 :laji %2 :tyyppi nil)
@@ -168,7 +168,7 @@
                         :validoi       [[:ei-tyhja "Valitse laji"]]}
 
                        {:otsikko       "Tyyppi" :tyyppi :valinta
-                        :leveys-col    6
+                        :palstoja 2
                         :pakollinen?   true
                         :nimi          :tyyppi
                         :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
@@ -187,7 +187,7 @@
           :valinta-arvo  :tpi_id
           :valinta-nayta :tpi_nimi
           :valinnat   @tiedot-urakka/urakan-toimenpideinstanssit
-          :leveys-col    3
+          :palstoja 1
           :validoi       [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}]
         @muokattu]])))
 

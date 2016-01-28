@@ -98,49 +98,51 @@
          @tarkastukset/urakan-tarkastukset]])))
 
 (defn talvihoitomittaus []
-  (lomake/ryhma "Talvihoitomittaus"
+  (lomake/ryhma {:otsikko "Talvihoitomittaus"
+                 :rivi? true}
                 {:otsikko "Lumimäärä" :tyyppi :numero :yksikko "cm"
-                 :nimi :lumimaara :leveys-col 2
+                 :nimi :lumimaara
                  :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
                 {:otsikko "Tasaisuus" :tyyppi :numero :yksikko "cm"
-                 :nimi :tasaisuus :leveys-col 2
+                 :nimi :tasaisuus
                  :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
-                {:otsikko "Kitka" :tyyppi :numero
-                 :nimi :kitka :leveys-col 2
+                {:otsikko "Kitkakerroin" :tyyppi :numero
+                 :nimi :kitka
                  :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
                 {:otsikko "Lämpötila" :tyyppi :numero :yksikko "\u2103"
                  :validoi [#(when-not (<= -55 %1 55)
                               "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
-                 :nimi :lampotila :leveys-col 2
+                 :nimi :lampotila
                  :hae (comp :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila] %2)}))
 
 (defn soratiemittaus []
   (let [kuntoluokka (fn [arvo _]
                       (when (and arvo (not (<= 1 arvo 5)))
                                "Anna arvo 1 - 5"))]
-    (lomake/ryhma "Soratietarkastus"
+    (lomake/ryhma {:otsikko "Soratiemittaus"
+                   :rivi? true}
                   {:otsikko "Tasaisuus" :tyyppi :numero
-                   :nimi :tasaisuus :leveys-col 2
+                   :nimi :tasaisuus :palstoja 1
                    :hae (comp :tasaisuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :tasaisuus] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Kiinteys" :tyyppi :numero
-                   :nimi :kiinteys :leveys-col 2
+                   :nimi :kiinteys :palstoja 1
                    :hae (comp :kiinteys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :kiinteys] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Pölyävyys" :tyyppi :numero
-                   :nimi :polyavyys :leveys-col 2
+                   :nimi :polyavyys :palstoja 1
                    :hae (comp :polyavyys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :polyavyys] %2)
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Sivukaltevuus" :tyyppi :numero :yksikko "%"
-                   :nimi :sivukaltevuus :leveys-col 2
+                   :nimi :sivukaltevuus :palstoja 1
                    :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
                    :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]}
 
                   {:otsikko "Soratiehoitoluokka" :tyyppi :valinta
-                   :nimi :hoitoluokka :leveys-col 2
+                   :nimi :hoitoluokka :palstoja 1
                    :hae (comp :hoitoluokka :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :hoitoluokka] %2)
                    :valinnat [1 2]})))
                  
@@ -150,11 +152,23 @@
     (log (pr-str @tarkastus-atom))
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
-
+     
      [lomake/lomake
-      {:muokkaa!     #(reset! tarkastus-atom %)
+      {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
+       :muokkaa!     #(reset! tarkastus-atom %)
        :voi-muokata? (and @tiedot-laatupoikkeamat/voi-kirjata?
-                          (not jarjestelmasta?))}
+                          (not jarjestelmasta?))
+       :footer [napit/palvelinkutsu-nappi
+                "Tallenna tarkastus"
+                (fn []
+                  (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
+                
+                {:disabled (let [validi? (validi-tarkastus? tarkastus)]
+                             (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
+                             (not validi?))
+                 :kun-onnistuu (fn [tarkastus]
+                                 (reset! tarkastukset/valittu-tarkastus nil)
+                                 (tarkastukset/paivita-tarkastus-listaan! tarkastus))}]}
       [(when jarjestelmasta?
          {:otsikko     "Lähde" :nimi :luoja :tyyppi :string
           :hae         (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
@@ -163,11 +177,7 @@
 
        {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-       {:otsikko "Tie\u00ADrekisteri\u00ADosoite" :nimi :tr
-        :tyyppi :tierekisteriosoite
-        :pakollinen? true
-        :sijainti (r/wrap (:sijainti tarkastus)
-                          #(swap! tarkastus-atom assoc :sijainti %))}
+       
        {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
         :pakollinen? true
         :tyyppi :valinta
@@ -179,50 +189,41 @@
                           :laatu "Laaduntarkastus"
                           :pistokoe "Pistokoe"
                           "- valitse -")
-        :leveys-col 4}
+        :palstoja 1}
+
+       {:tyyppi :tierekisteriosoite
+        :pakollinen? true
+        :sijainti (r/wrap (:sijainti tarkastus)
+                          #(swap! tarkastus-atom assoc :sijainti %))}
        
        {:otsikko "Tar\u00ADkastaja" :nimi :tarkastaja
         :tyyppi :string :pituus-max 256
         :pakollinen? true
         :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
-        :leveys-col 6}
-
-       {:otsikko "Havain\u00ADnot" :nimi :havainnot
-        :koko [80 :auto]
-        :tyyppi :text :pakollinen? true
-        :validoi [[:ei-tyhja "Kirjaa havainnot"]]
-        :leveys-col 6}
+        :palstoja 1}
        
        (case (:tyyppi tarkastus)
          :talvihoito (talvihoitomittaus)
          :soratie (soratiemittaus)
          nil)
+       
+       {:otsikko "Havain\u00ADnot" :nimi :havainnot
+        :koko [80 :auto]
+        :tyyppi :text :pakollinen? true
+        :validoi [[:ei-tyhja "Kirjaa havainnot"]]
+        :palstoja 2}
+
+       
 
        {:otsikko     "Liitteet" :nimi :liitteet
+        :tyyppi :komponentti
         :komponentti [liitteet/liitteet {:urakka-id         (:id @nav/valittu-urakka)
                                          :uusi-liite-atom   (r/wrap (:uusi-liite tarkastus)
                                                                     #(swap! tarkastus-atom assoc :uusi-liite %))
                                          :uusi-liite-teksti "Lisää liite tarkastukseen"}
                       (:liitteet tarkastus)]}]
       
-      tarkastus]
-
-     
-
-     [:div.row
-      [:div.col-sm-2]
-      [:div.col-sm-2
-       [napit/palvelinkutsu-nappi
-        "Tallenna tarkastus"
-        (fn []
-          (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-        
-        {:disabled (let [validi? (validi-tarkastus? tarkastus)]
-                     (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
-                     (not validi?))
-         :kun-onnistuu (fn [tarkastus]
-                         (reset! tarkastukset/valittu-tarkastus nil)
-                         (tarkastukset/paivita-tarkastus-listaan! tarkastus))}]]]]))
+      tarkastus]]))
 
 
 (defn tarkastukset

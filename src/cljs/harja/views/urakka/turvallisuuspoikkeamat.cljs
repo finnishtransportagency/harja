@@ -77,15 +77,15 @@
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                   [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
 
-         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :leveys-col 3}
-         {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys-col 3}
-         {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :leveys-col 4
+         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :palstoja 1}
+         {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
+         {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :palstoja 2
           :pakollinen? true
           :validoi [[:ei-tyhja "Anna kuvaus"]]}
-         {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :leveys-col 4}
-         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :leveys-col 1
+         {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :palstoja 2}
+         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
-         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :leveys-col 1
+         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
