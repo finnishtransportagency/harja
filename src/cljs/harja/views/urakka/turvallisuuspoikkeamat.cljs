@@ -48,7 +48,7 @@
 
        [lomake/lomake
         {:otsikko (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
-         :muokkaa! #(reset! muokattu %)
+         :muokkaa! #(do (log "TURPO: " (pr-str %)) (reset! muokattu %))
          :virheet  lomakkeen-virheet
          :footer   [napit/palvelinkutsu-nappi
                     "Tallenna turvallisuuspoikkeama"

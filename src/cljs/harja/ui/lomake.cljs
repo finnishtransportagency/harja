@@ -138,13 +138,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja "
-  [{:keys [palstoja nimi otsikko tyyppi hae fmt rivi? yksikko pakollinen?] :as s} data atom-fn muokattava?]
+  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s} data atom-fn muokattava?]
   (let [arvo (atom-fn s)]
-    [:div.form-group {:class (str (if rivi?
-                                    "col-xs-3 col-sm-2"
-                                    (case (or palstoja 1)
-                                      1 "col-sm-6 col-md-5 col-lg-4"
-                                      2 "col-sm-12 col-md-10 col-lg-8"))
+    [:div.form-group {:class (str (or col-luokka
+                                      (case (or palstoja 1)
+                                        1 "col-xs-12 col-sm-6 col-md-5 col-lg-3"
+                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-6"))
                                   (when pakollinen?
                                     " required"))}
      (when-not (+piilota-label+ tyyppi)
@@ -163,10 +162,19 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
             (fmt ((or hae #(get % nimi)) data))
             (nayta-arvo s arvo))]))]))
 
+(def ^:private col-luokat
+  ;; PENDING: hyvin vaikea sekä 2 että 3 komponentin määrät saada alignoitua
+  ;; bootstrap col-luokilla 
+  {2 "col-xs-6 col-md-5 col-lg-3"
+   3 "col-xs-3 col-sm-2 col-md-3 col-lg-2"
+   4 "col-xs-3"})
+
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus!]
-  (let [rivi? (-> skeemat meta :rivi?)]
+  (let [rivi? (-> skeemat meta :rivi?)
+        col-luokka (when rivi?
+                     (col-luokat (count skeemat)))]
     [:div.row.lomakerivi
      (doall
       (for [{:keys [nimi muokattava?] :as s} skeemat
@@ -175,7 +183,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                        (muokattava? data)))]]
         ^{:key nimi}
         [kentta (assoc s
-                       :rivi? rivi?) data atom-fn muokattava?]))]))
+                       :col-luokka col-luokka) data atom-fn muokattava?]))]))
 
 ;; FIXME: ulkoinen validointitila on huono idea, pistetään data mäppiin vain nekin
 
