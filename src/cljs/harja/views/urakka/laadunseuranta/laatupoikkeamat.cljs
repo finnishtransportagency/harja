@@ -242,7 +242,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
            [lomake/lomake
             {:otsikko "Laatupoikkeaman tiedot"
              :muokkaa!     #(reset! laatupoikkeama %)
-             :luokka       :horizontal
              :voi-muokata? @laatupoikkeamat/voi-kirjata?
              :footer       [napit/palvelinkutsu-nappi
                             ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
@@ -316,7 +315,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
              (when-not uusi?
                (lomake/ryhma
                 "Kommentit"
-                {:otsikko     "" :nimi :kommentit
+                {:otsikko     "" :nimi :kommentit :tyyppi :komponentti
                  :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                     :voi-liittaa      true
                                                     :liita-nappi-teksti " Lisää liite kommenttiin"

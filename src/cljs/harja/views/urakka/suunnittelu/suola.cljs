@@ -109,8 +109,7 @@
       (let [hoitokausi @u/valittu-hoitokausi
             {:keys [pohjavesialueet pohjavesialue-talvisuola]} @suolasakot-ja-lampotilat]
         [:span.suolasakkolomake
-         [lomake {:luokka    :horizontal
-                  :muokkaa!  (fn [uusi]
+         [lomake {:muokkaa!  (fn [uusi]
                                (log "lomaketta muokattu, tiedot:" (pr-str uusi))
                                (swap! hoitokauden-tiedot assoc :suolasakko uusi :muokattu true))
                   :footer-fn (fn [virheet _]
@@ -134,7 +133,7 @@
 
            (when-not (empty? pohjavesialueet)
              {:otsikko "Pohjavesialueiden käyttörajat"
-              :nimi :pohjavesialueet :palstoja 2
+              :nimi :pohjavesialueet :palstoja 2 :tyyppi :komponentti
               :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
                                                 :voi-poistaa? (constantly false)
                                                 :voi-lisata? false
@@ -165,7 +164,7 @@
 
            
            {:otsikko "Sydäntalven keskilämpötila" :palstoja 2
-            :nimi :lampotilat
+            :nimi :lampotilat :tyyppi :komponentti
             :komponentti [grid/grid {}
                           [{:otsikko "Tämä talvikausi" :nimi :keskilampotila :fmt #(if % (fmt/asteina %) "-")
                             :tasaa :oikea}

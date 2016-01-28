@@ -139,7 +139,6 @@
          [lomake {:otsikko (if (:id @valittu-kustannus)
                              "Muokkaa kustannusta"
                              "Luo uusi kustannus")
-                  :luokka   :horizontal
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))

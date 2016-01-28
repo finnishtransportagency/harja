@@ -153,7 +153,6 @@
                                       "Muokkaa toteumaa"
                                       "Tarkastele toteumaa")
                                     "Luo uusi toteuma")
-                    :luokka       :horizontal
                     :voi-muokata? lomaketta-voi-muokata?
                     :muokkaa!     (fn [uusi]
                                     (reset! muokattu uusi))

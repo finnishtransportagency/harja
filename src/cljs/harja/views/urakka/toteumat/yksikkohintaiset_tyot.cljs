@@ -173,8 +173,7 @@
          [napit/takaisin "Takaisin toteumaluetteloon" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)]
          
 
-         [lomake {:luokka       :horizontal
-                  :otsikko (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
+         [lomake {:otsikko (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
                              (if jarjestelman-lisaama-toteuma?
                                "Tarkastele toteumaa"
                                "Muokkaa toteumaa")
