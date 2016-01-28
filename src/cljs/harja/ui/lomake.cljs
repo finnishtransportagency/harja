@@ -19,6 +19,11 @@
     (->Ryhma otsikko-tai-optiot
              {:ulkoasu :oletus} skeemat)))
 
+(defn rivi
+  "Asettaa annetut skeemat vierekkäin samalle riville"
+  [& skeemat]
+  (->Ryhma nil {:rivi? true} skeemat))
+
 (defn ryhma? [x]
   (instance? Ryhma x))
 
@@ -42,7 +47,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                 [s])))
           skeemat))
 
-(defn rivita
+(defn- rivita
   "Rivittää kentät siten, että kaikki palstat tulee täyteen. 
   Uusi rivi alkaa kun palstat ovat täynnä, :uusi-rivi? true on annettu tai tulee uusi ryhmän otsikko."
   [skeemat]
@@ -158,7 +163,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
             (fmt ((or hae #(get % nimi)) data))
             (nayta-arvo s arvo))]))]))
 
-(defn rivi
+(defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus!]
   (let [rivi? (-> skeemat meta :rivi?)]
@@ -223,7 +228,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                           skeemat (if otsikko
                                     (rest skeemat)
                                     skeemat)
-                          rivi-ui [rivi skeemat
+                          rivi-ui [nayta-rivi skeemat
                                    data
                                    (fn [{nimi :nimi :as s}]
                                      (atomina s data
