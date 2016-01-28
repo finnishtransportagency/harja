@@ -1,12 +1,10 @@
 @import "livi_tyylit";
 
-@murupolun-korkeus: 65px;
 @murupolun-elementtikorkeus: @input-korkeus;
 
 .murupolku {
     background-color: @harmaa9;
-    height: @murupolun-korkeus;
-    padding: 8px 15px;
+    padding: 6px 15px;
     margin-bottom: 1.25rem;
     list-style: none;
     .disabled {
@@ -17,16 +15,37 @@
     .livicon-chevron-down {
         color: @sininen4;
     }
-    > li {
-        display: inline-block;
-        margin-right: 0.5rem;
-        margin-top: 10px;
-        vertical-align: top;
 
-    }
-    .urakoitsija-otsikko {
+    li, .livi-alasveto {
         display: inline-block;
+        vertical-align: top;
+        margin-right: 5px;
     }
+
+    .murupolku-vasen {
+        float: left;
+
+        > li {
+            margin-top: 17px;
+        }
+    }
+
+    .murupolku-oikea {
+        float: right;
+    }
+
+    .murupolku-urakoitsija, .murupolku-urakkatyyppi {
+        display: inline-block;
+        margin-top: 2px;
+    }
+}
+
+.murupolku:after { // Clearfix
+    content: " "; /* Older browser do not support empty content */
+    visibility: hidden;
+    display: block;
+    height: 0;
+    clear: both;
 }
 
 .murupolku-suotimet {
