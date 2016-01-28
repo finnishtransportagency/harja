@@ -132,7 +132,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja "
   [{:keys [palstoja nimi otsikko tyyppi hae fmt rivi? yksikko pakollinen?] :as s} data atom-fn muokattava?]
-  (have #(contains? % :tyyppi) s)
   (let [arvo (atom-fn s)]
     [:div.form-group {:class (str (if rivi?
                                     "col-xs-3 col-sm-2"
@@ -150,6 +149,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
        [:div.komponentti (:komponentti s)]
        (if muokattava?
          (do (log "TEE-KENTTA: " (pr-str (select-keys s [:nimi :tyyppi])))
+             (have #(contains? % :tyyppi) s)
              [tee-kentta (assoc s :lomake? true) arvo])
          [:div.form-control-static
           (if fmt
