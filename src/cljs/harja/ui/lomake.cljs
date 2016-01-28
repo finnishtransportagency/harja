@@ -35,17 +35,21 @@
   "Purkaa skeemat ryhmistä yhdeksi flat listaksi, jossa ei ole nil arvoja.
 Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [skeemat]
-  (mapcat (fn [s]
-            (if (ryhma? s)
-              ;; Lisää ryhmän otsikko ja sen skeemat, jos ryhmä ei ole tyhjä
-              (let [skeemat (remove nil? (:skeemat s))]
-                (when-not (empty? skeemat)
-                  (concat [(->Otsikko (:otsikko s))]
-                          skeemat)))
-              ;; Muuten lisätään itse skeema, jos se ei ole nil
-              (when s
-                [s])))
-          skeemat))
+  (loop [acc []
+         [s & skeemat] skeemat]
+    (if-not s
+      acc
+      (cond
+        (otsikko? s)
+        (recur acc skeemat)
+
+        (ryhma? s)
+        (recur acc
+               (concat (:skeemat s) skeemat))
+
+        :default
+        (recur (conj acc s)
+               skeemat)))))
 
 (defn- rivita
   "Rivittää kentät siten, että kaikki palstat tulee täyteen. 
@@ -54,7 +58,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   (loop [rivit []
          rivi []
          palstoja 0
-         [s & skeemat] (remove nil? skeemat)               ;(pura-ryhmat  skeemat)
+         [s & skeemat] (remove nil? skeemat)             
          ]
     (if-not s
       (if-not (empty? rivi)
@@ -128,14 +132,19 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja "
-  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s} data atom-fn muokattava?]
+  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s} data atom-fn muokattava?
+   muokattu? virheet varoitukset]
   (let [arvo (atom-fn s)]
     [:div.form-group {:class (str (or col-luokka
                                       (case (or palstoja 1)
-                                        1 "col-xs-12 col-sm-6 col-md-5 col-lg-3"
-                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-6"))
+                                        1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
+                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"))
                                   (when pakollinen?
-                                    " required"))}
+                                    " required")
+                                  (when-not (empty? virheet)
+                                    " sisaltaa-virheen")
+                                  (when-not (empty? varoitukset)
+                                    " sisaltaa-varoituksen"))}
      (when-not (+piilota-label+ tyyppi)
        [:label.control-label {:for nimi}
         [:span
@@ -144,26 +153,33 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
      (if (= tyyppi :komponentti)
        [:div.komponentti (:komponentti s)]
        (if muokattava?
-         (do (log "TEE-KENTTA: " (pr-str s))
-           ;(log "TEE-KENTTA: " (pr-str (select-keys s [:nimi :tyyppi])))
-             (have #(contains? % :tyyppi) s)
+         (do (have #(contains? % :tyyppi) s)
              [tee-kentta (assoc s :lomake? true) arvo])
          [:div.form-control-static
           (if fmt
             (fmt ((or hae #(get % nimi)) data))
             (nayta-arvo s arvo))]))
+
+     (when (and muokattu?
+                (not (empty? virheet)))
+       [virheen-ohje virheet :virhe])
+     (when (and muokattu?
+                (not (empty? varoitukset)))
+       [virheen-ohje varoitukset :varoitus])
+     
      [kentan-vihje s]]))
 
 (def ^:private col-luokat
   ;; PENDING: hyvin vaikea sekä 2 että 3 komponentin määrät saada alignoitua
-  ;; bootstrap col-luokilla 
+  ;; bootstrap col-luokilla, pitäisi tehdä siten, että rivi on aina saman
+  ;; määrän colleja kuin 2 palstaa ja sen sisällä on jaettu osien width 100%/(count skeemat)
   {2 "col-xs-6 col-md-5 col-lg-3"
    3 "col-xs-3 col-sm-2 col-md-3 col-lg-2"
    4 "col-xs-3"})
 
 (defn nayta-rivi
   "UI yhdelle riville"
-  [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus!]
+  [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus! muokatut virheet varoitukset]
   (let [rivi? (-> skeemat meta :rivi?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
@@ -175,7 +191,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                        (muokattava? data)))]]
         ^{:key nimi}
         [kentta (assoc s
-                       :col-luokka col-luokka) data atom-fn muokattava?]))]))
+                       :col-luokka col-luokka)
+         data atom-fn muokattava?
+         (get muokatut nimi)
+         (get virheet nimi)
+         (get varoitukset nimi)]))]))
 
 ;; FIXME: ulkoinen validointitila on huono idea, pistetään data mäppiin vain nekin
 
@@ -209,14 +229,23 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata?] :as opts} skeema
    {muokatut ::muokatut
     fokus ::fokus
+    virheet ::virheet
+    varoitukset ::varoitukset
     :as  data}]
   (let [voi-muokata? (if (some? voi-muokata?)
                        voi-muokata?
                        true)
-        kaikki-skeemat (filter (comp not otsikko?) (pura-ryhmat skeema))
-        kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
-        kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)
-        ]
+        muokkaa-kenttaa-fn (fn [nimi]
+                             (fn [uudet-tiedot]
+                               (log "muokkaa kenttää " (pr-str nimi))
+                               (let [kaikki-skeemat (pura-ryhmat skeema)
+                                     kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
+                                     kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)]
+                                 (log "UUDET-TIEDOT: " (pr-str uudet-tiedot))
+                                 (muokkaa! (assoc uudet-tiedot
+                                                  ::muokatut (conj (or muokatut #{}) nimi)
+                                                  ::virheet kaikki-virheet
+                                                  ::varoitukset kaikki-varoitukset)))))]
     [:form.lomake
      (when otsikko
        [:h3.lomake-otsikko otsikko])
@@ -229,17 +258,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     skeemat)
                           rivi-ui [nayta-rivi skeemat
                                    data
-                                   (fn [{nimi :nimi :as s}]
-                                     (atomina s data
-                                              (fn [uudet-tiedot]
-                                                (log "UUDET-TIEDOT: " (pr-str uudet-tiedot))
-                                                ;; FIXME: tässä mukaan validointivirheet
-                                                (muokkaa! (assoc uudet-tiedot
-                                                                 ::muokatut (conj (or muokatut #{})
-                                                                                  nimi))))))
+                                   #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
                                    voi-muokata?
                                    fokus
-                                   #(swap! data assoc ::fokus %)]]
+                                   #(swap! data assoc ::fokus %)
+                                   muokatut
+                                   virheet
+                                   varoitukset]]
                       (if otsikko
                         ^{:key (:otsikko otsikko)}
                         [:span
@@ -250,7 +275,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                   (rivita skeema))
      
      (when-let [footer (if footer-fn
-                         (footer-fn kaikki-virheet kaikki-varoitukset)
+                         (footer-fn virheet varoitukset)
                          footer)]
        [:div.lomake-footer.row
         [:div.col-md-12 footer]])]))
