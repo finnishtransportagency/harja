@@ -546,7 +546,7 @@ Optiot on mappi optioita:
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu] :as opts} skeema tiedot]
          (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
-               colspan (if piilota-toiminnot?
+               colspan (if (or piilota-toiminnot? (nil? tallenna))
                          (count skeema)
                          (inc (count skeema)))
                muokataan (not (nil? @muokatut))

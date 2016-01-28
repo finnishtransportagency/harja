@@ -70,9 +70,9 @@
                     valitun-hoitokauden-kaikkien-tpin-kustannukset
                     kaikkien-hoitokausien-taman-tpin-kustannukset
                     yks-kustannukset]
-  [:div.hoitokauden-kustannukset
-   [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
-    [:div.col-xs-4.piirakka
+  [:div.col-md-6.hoitokauden-kustannukset
+   [:div.piirakka-hoitokauden-kustannukset-per-kaikki
+    [:div.piirakka
      (let [valittu-kust valitun-hoitokauden-ja-tpin-kustannukset
            kaikki-kust kaikkien-hoitokausien-taman-tpin-kustannukset]
        (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
@@ -81,7 +81,7 @@
           [vis/pie
            {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
            {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
-    [:div.col-xs-4.piirakka
+    [:div.piirakka
      (let [valittu-kust valitun-hoitokauden-ja-tpin-kustannukset
            kaikki-kust valitun-hoitokauden-kaikkien-tpin-kustannukset]
        (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
@@ -191,7 +191,7 @@
         (reset! tuleville? false))}
 
      (fn [ur]
-       [:div.kokonaishintaiset-tyot
+       [:div.row.kokonaishintaiset-tyot
         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
 
         
@@ -205,7 +205,9 @@
             puutteet tietosisällössä ovat mahdollisia."]])
           
           [grid/grid
-           {:otsikko                (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+           {:luokat ["col-md-6"]
+            :otsikko                (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+            :piilota-toiminnot? true
             :tyhja                  (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
             :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
                                                                (:id ur)
@@ -226,15 +228,15 @@
                                         (and @tuleville? @varoita-ylikirjoituksesta?)]])}
            
            ;; sarakkeet
-           [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
+           [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
             {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false)
-             :tyyppi  :numero :leveys "25%"}
+             :tyyppi  :numero :leveys 25}
             {:otsikko       "Summa" :nimi :summa :fmt fmt/euro-opt :tasaa :oikea
-             :tyyppi        :positiivinen-numero :leveys "25%"
+             :tyyppi        :positiivinen-numero :leveys 25
              :tayta-alas?   #(not (nil? %))
              :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
             {:otsikko       "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
-             :tyyppi        :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"
+             :tyyppi        :pvm :fmt #(if % (pvm/pvm %)) :leveys 25
              :tayta-alas?   #(not (nil? %))
              :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
              :tayta-fn      (fn [lahtorivi tama-rivi]

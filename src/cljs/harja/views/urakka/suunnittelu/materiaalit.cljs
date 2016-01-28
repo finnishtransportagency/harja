@@ -31,30 +31,32 @@
      (fn [{:keys [virheet voi-muokata?]}
           ur valittu-hk valittu-sop
           materiaalikoodit yleiset-materiaalit-muokattu]
-       [grid/muokkaus-grid
-        {:otsikko "Materiaalit"
-         :voi-muokata? voi-muokata?
-         :voi-poistaa? (constantly false)
-         :voi-lisata? false
-         :ohjaus g
-         :tyhja "Ei kirjattuja materiaaleja."
-         :uusi-rivi aseta-hoitokausi
-         :muutos (when virheet
-                   #(reset! virheet (grid/hae-virheet %)))
-         :jarjesta (comp :nimi :materiaali)
-         }
-   
-        [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
-          :muokattava? (constantly false)
-          :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
-          :validoi [[:ei-tyhja "Valitse materiaali"]]}
-         {:otsikko "Määrä" :nimi :maara :leveys "30%"
-          :muokattava? (constantly true)
-          :tyyppi :positiivinen-numero}
-         {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
-          :tyyppi :string :muokattava? (constantly false)}]
-   
-        yleiset-materiaalit-muokattu]))))
+       [:div.row
+        [grid/muokkaus-grid
+         {:otsikko "Materiaalit"
+          :luokat ["col-md-10"]
+          :voi-muokata? voi-muokata?
+          :voi-poistaa? (constantly false)
+          :voi-lisata? false
+          :ohjaus g
+          :tyhja "Ei kirjattuja materiaaleja."
+          :uusi-rivi aseta-hoitokausi
+          :muutos (when virheet
+                    #(reset! virheet (grid/hae-virheet %)))
+          :jarjesta (comp :nimi :materiaali)
+          }
+         
+         [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
+           :muokattava? (constantly false)
+           :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
+           :validoi [[:ei-tyhja "Valitse materiaali"]]}
+          {:otsikko "Määrä" :nimi :maara :leveys "30%"
+           :muokattava? (constantly true)
+           :tyyppi :positiivinen-numero}
+          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
+           :tyyppi :string :muokattava? (constantly false)}]
+         
+         yleiset-materiaalit-muokattu]]))))
   
 (defn materiaalit [ur]
   (let [;; haetaan kaikki materiaalit urakalle
