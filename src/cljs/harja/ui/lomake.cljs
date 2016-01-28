@@ -102,21 +102,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                        skeemat))))))))
 
 
-
-
 (defn kentan-vihje [{vihje :vihje}]
-  (log "kentän vihje" (pr-str vihje))
   (when vihje
     [:div {:class
            (str "inline-block lomake-vihje")}
      [:div.vihjeen-sisalto
       (harja.ui.ikonit/info-sign)
       (str " " vihje)]]))
-
-
-
-
-(def +ei-otsikkoa+ #{:boolean})
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
