@@ -10,7 +10,8 @@
             [harja.tiedot.urakoitsijat :as urakoitsijat]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
-            [harja.asiakas.tapahtumat :as t]))
+            [harja.asiakas.tapahtumat :as t]
+            [harja.ui.komponentti :as komp]))
 
 (defn koko-maa []
   [:li
@@ -124,12 +125,15 @@
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
-  (kuuntelija
-    {:valinta-auki (atom nil)}                              ;; nil | :hallintayksikko | :urakka
-
-
-    (fn []
-      (let [valinta-auki (:valinta-auki (reagent/state (reagent/current-component)))]
+  (let [valinta-auki (atom nil)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
+      (komp/kuuntelija
+        [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
+        #(reset! valinta-auki false))
+      {:component-did-mount (fn [_]
+                              (t/julkaise! {:aihe :murupolku-muuttunut}))}
+      (fn []
         [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                          (cond
                            (= @nav/sivu :hallinta) "hide"
@@ -150,17 +154,4 @@
             [urakka valinta-auki]
             [:span.pull-right.murupolku-suotimet
              [urakoitsija]
-             [urakkatyyppi]]])]))
-
-    ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
-    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
-    #(reset! (-> % reagent/state :valinta-auki) nil)
-
-    ;; Jos klikataan komponentin ulkopuolelle, vaihdetaan piilotetaan valintalistat
-    :body-klikkaus
-    (fn [this {klikkaus :tapahtuma}]
-      (when-not (sisalla? this klikkaus)
-        (let [valinta-auki (:valinta-auki (reagent/state this))]
-          (reset! valinta-auki false))))
-    :component-did-mount
-    (fn [_] (t/julkaise! {:aihe :murupolku-muuttunut}))))
+             [urakkatyyppi]]])]))))

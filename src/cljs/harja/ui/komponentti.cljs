@@ -11,9 +11,9 @@
 
 (defn luo
   "Luo uuden komponentin instanssin annetuista toteutuksista.
-Toteutus on joko mäppi, joka sisältää lifecycle metodeja tai funktio.
-Funktiototeutuksia saa olla maksimissa yksi ja sitä käytetään :reagent-render lifecycle
-metodina. Muut toteutusten antamat lifecycle metodit yhdistetään siten, että kaikkien
+  Toteutus on joko mäppi, joka sisältää lifecycle metodeja tai funktio.
+  Funktiototeutuksia saa olla maksimissa yksi ja sitä käytetään :reagent-render lifecycle
+  metodina. Muut toteutusten antamat lifecycle metodit yhdistetään siten, että kaikkien
   metodit kutsutaan."
   
   [& toteutukset]
