@@ -298,6 +298,14 @@ jolle annetaan kaksi parametria: komponentti ja tapahtuma. Alkutila on komponent
       {:get-initial-state      (fn [this] alkutila)
        :reagent-render         render-fn
        :component-did-mount    (fn [this _]
+                                 ;; Käsittele component-did-mount ensin
+                                 (let [tama-event (first
+                                                    (filter (fn [kuuntelija]
+                                                              (= :component-did-mount (first kuuntelija)))
+                                                            kuuntelijat))
+                                       tama-event-fn (second tama-event)]
+                                   (if tama-event-fn
+                                     (tama-event-fn this)))
                                  (loop [kahvat []
                                         [[aihe kasittelija] & kuuntelijat] kuuntelijat]
                                    (if-not aihe

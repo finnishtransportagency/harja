@@ -9,7 +9,8 @@
             [harja.loki :refer [log]]
             [harja.tiedot.urakoitsijat :as urakoitsijat]
             [harja.tiedot.hallintayksikot :as hal]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.asiakas.tapahtumat :as t]))
 
 (defn koko-maa []
   [:li
@@ -152,7 +153,7 @@
              [urakkatyyppi]]])]))
 
     ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
-[:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
+    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
     #(reset! (-> % reagent/state :valinta-auki) nil)
 
     ;; Jos klikataan komponentin ulkopuolelle, vaihdetaan piilotetaan valintalistat
@@ -160,4 +161,6 @@
     (fn [this {klikkaus :tapahtuma}]
       (when-not (sisalla? this klikkaus)
         (let [valinta-auki (:valinta-auki (reagent/state this))]
-          (reset! valinta-auki false))))))
+          (reset! valinta-auki false))))
+    :component-did-mount
+    (fn [_] (t/julkaise! {:aihe :murupolku-muuttunut}))))

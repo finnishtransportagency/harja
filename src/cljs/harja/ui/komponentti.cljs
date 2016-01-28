@@ -59,8 +59,8 @@ metodina. Muut toteutusten antamat lifecycle metodit yhdistetään siten, että 
                    
 (defn kuuntelija
   "Komponentti mixin tapahtuma-aiheiden kuuntelemiseen.
-Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.
-aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai vektori avainsanoja) ja käsittelyfunktio,
+  Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.
+  aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai vektori avainsanoja) ja käsittelyfunktio,
   jolle annetaan kaksi parametria: komponentti ja tapahtuma."
   [& aiheet-ja-kasittelijat]
   (let [kuuntelijat (partition 2 aiheet-ja-kasittelijat)]
@@ -82,8 +82,8 @@ aiheet-ja-kasittelijat on vuorotellen aihe (yksi avainsana tai vektori avainsano
 
 (defn dom-kuuntelija
   "Mixin DOM tapahtumien kuuntelemiseen annetussa elementissä.
-Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.
-aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation arvo) ja käsittelyfunktio,
+  Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.
+  aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation arvo) ja käsittelyfunktio,
   jolle annetaan kaksi parametria: komponentti ja tapahtuma."
   [dom-node & aiheet-ja-kasittelijat]
   (let [kuuntelijat (partition 2 aiheet-ja-kasittelijat)]
@@ -137,7 +137,7 @@ aiheet-ja-kasittelijat on vuorotellen aihe (goog.events.EventType enumeraation a
 
 (defn avain-lippu
   "Mixin, joka lisää annettuun atomiin avaimen (conj) ja poistaa sen (disj) kun komponentti poistuu.
-Atomin arvon tulee olla setti."
+  Atomin arvon tulee olla setti."
   [atomi avain]
   (sisaan-ulos #(swap! atomi conj avain)
                #(swap! atomi disj avain)))
@@ -157,7 +157,7 @@ Atomin arvon tulee olla setti."
 (defn kun-muuttuu
   "Mixin, joka seuraa annetun parametrin muuttumista. Tekee :component-will-receive-props elinkaaren
   kuuntelijan ja laukaisee callbackin aina kun järjestysnumerolla (nollasta alkaen) ilmaistu parametri muuttuu.
-Callbackille annetaan samat parametrit kuin render funktiolle."
+  Callbackille annetaan samat parametrit kuin render funktiolle."
   [alkuarvo jarjestys callback]
   (let [arvo (cljs.core/atom alkuarvo)]
     {:component-will-receive-props
@@ -184,7 +184,7 @@ Callbackille annetaan samat parametrit kuin render funktiolle."
   
 (defn watcher
   "Komponentti mixin atomin add-watch/remove-watch tekemiseen kun component-did-mount ja component-will-unmount 
-elinkaaritapahtumien yhteydessä.
+  elinkaaritapahtumien yhteydessä.
   atomit-ja-kasittelijat on vuorotellen atomi ja käsittelyfunktio,
   jolle annetaan kolme parametria: komponentti, vanha arvo ja uusi arvo."
   [& atomit-ja-kasittelijat]
