@@ -840,7 +840,7 @@ Optiot on mappi optioita:
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 
-           [:div.panel.panel-default.livi-grid
+           [:div.panel.panel-default.livi-grid.livi-muokkaus-grid
             {:class (clojure.string/join " " luokat)}
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])
