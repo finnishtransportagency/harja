@@ -78,21 +78,23 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
           
           :default
           ;; Rivitä skeema
-          (if (or (otsikko? s)
-                  (:uusi-rivi? s)
-                  (> (+ palstoja kentan-palstat) 2))
-            ;; Kenttä on uusi otsikko tai rivi menisi yli 2 palstan => aloitetaan uusi rivi tälle
-            (recur (if (empty? rivi)
-                     rivit
-                     (conj rivit rivi))
-                   [s]
-                   0
-                   skeemat)
-            ;; Mahtuu tälle riville, lisätään nykyiseen riviin
-            (recur rivit
-                   (conj rivi s)
-                   (+ palstoja kentan-palstat)
-                   skeemat)))))))
+          (do (log "SKEEMA " (pr-str (select-keys s [:nimi :tyyppi :palstoja :otsikko])) ", palstoja: " palstoja)
+              (if (or (otsikko? s)
+                      (:uusi-rivi? s)
+                      (> (+ palstoja kentan-palstat) 2))
+                (do (log "SKEEMA UUSI RIVI ALKAA! ")
+                    ;; Kenttä on uusi otsikko tai rivi menisi yli 2 palstan => aloitetaan uusi rivi tälle
+                    (recur (if (empty? rivi)
+                             rivit
+                             (conj rivit rivi))
+                           [s]
+                           (if (otsikko? s) 0 kentan-palstat)
+                           skeemat))
+                ;; Mahtuu tälle riville, lisätään nykyiseen riviin
+                (recur rivit
+                       (conj rivi s)
+                       (+ palstoja kentan-palstat)
+                       skeemat))))))))
 
 
 
@@ -215,6 +217,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
      (when otsikko
        [:h3.lomake-otsikko otsikko])
      (map-indexed (fn [i skeemat]
+                    (log "SKEEMA RIVI " (count skeemat) " itemiä, " (pr-str (map :nimi skeemat)))
                     (let [otsikko (when (otsikko? (first skeemat))
                                     (first skeemat))
                           skeemat (if otsikko
