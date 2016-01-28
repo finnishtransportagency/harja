@@ -148,12 +148,12 @@
                                        (not jarjestelman-lisaama-toteuma?))]
           [:div.muun-tyon-tiedot
            [napit/takaisin " Takaisin muiden töiden luetteloon" #(reset! muut-tyot/valittu-toteuma nil)]
-           (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
-             (if lomaketta-voi-muokata?
-               [:h3 "Muokkaa toteumaa"]
-               [:h3 "Tarkastele toteumaa"])
-             [:h3 "Luo uusi toteuma"])
-           [lomake {:luokka       :horizontal
+           [lomake {:otsikko      (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
+                                    (if lomaketta-voi-muokata?
+                                      "Muokkaa toteumaa"
+                                      "Tarkastele toteumaa")
+                                    "Luo uusi toteuma")
+                    :luokka       :horizontal
                     :voi-muokata? lomaketta-voi-muokata?
                     :muokkaa!     (fn [uusi]
                                     (reset! muokattu uusi))

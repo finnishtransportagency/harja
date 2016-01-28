@@ -136,11 +136,10 @@
       (fn []
         [:div.erilliskustannuksen-tiedot
          [napit/takaisin " Takaisin kustannusluetteloon" #(reset! valittu-kustannus nil)]
-         (if (:id @valittu-kustannus)
-           [:h3 "Muokkaa kustannusta"]
-           [:h3 "Luo uusi kustannus"])
-
-         [lomake {:luokka   :horizontal
+         [lomake {:otsikko (if (:id @valittu-kustannus)
+                             "Muokkaa kustannusta"
+                             "Luo uusi kustannus")
+                  :luokka   :horizontal
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
@@ -221,7 +220,7 @@
                              :tyyppi arvo))}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :pakollinen?   true
-            :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]] :palstoja 2
+            :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]]
             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
            {:otsikko     "Rahamäärä"
             :nimi        :rahasumma

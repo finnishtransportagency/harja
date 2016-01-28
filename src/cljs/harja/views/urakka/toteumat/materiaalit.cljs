@@ -152,11 +152,10 @@
       (fn [ur]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! valittu-materiaalin-kaytto nil)]
-         (if vanha-toteuma?
-           [:h3 "Muokkaa toteumaa"]
-           [:h3 "Luo uusi toteuma"])
-
-         [lomake {:luokka   :horizontal
+         [lomake {:otsikko (if vanha-toteuma?
+                             "Muokkaa toteumaa"
+                             "Luo uusi toteuma")
+                  :luokka   :horizontal
                   :muokkaa! (fn [uusi]
                               (reset! muokattu uusi))
                   :footer   [napit/palvelinkutsu-nappi
@@ -186,7 +185,8 @@
                   :virheet  lomakkeen-virheet}
 
           [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko     "Aloitus" :pakollinen? true :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+           {:otsikko     "Aloitus" :pakollinen? true :uusi-rivi? true
+            :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
             :varoita     [[:urakan-aikana-ja-hoitokaudella]]
             :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))
             :aseta       (fn [rivi arvo]
@@ -196,21 +196,22 @@
                                    (pvm/jalkeen? arvo (:paattynyt rivi)))
                                (assoc rivi :paattynyt arvo)
                                rivi)
-                             :alkanut arvo))
-            :leveys      "30%"}
+                             :alkanut arvo))}
            {:otsikko     "Lopetus" :pakollinen? true :tyyppi :pvm :nimi :paattynyt :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                                                                              [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-            :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :leveys "30%"}
+            :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))}
            (when (:jarjestelmanlisaama @muokattu)
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae     (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
-           {:otsikko "Materiaalit" :pakollinen? true :nimi :materiaalit :komponentti [materiaalit-ja-maarat
-                                                                                      materiaalitoteumat-mapissa
-                                                                                      materiaalien-virheet
-                                                                                      (:jarjestelmanlisaama @muokattu)] :tyyppi :komponentti}
+           {:otsikko "Materiaalit" :pakollinen? true :nimi :materiaalit :palstoja 2
+            :komponentti [materiaalit-ja-maarat
+                          materiaalitoteumat-mapissa
+                          materiaalien-virheet
+                          (:jarjestelmanlisaama @muokattu)] :tyyppi :komponentti}
            {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256 :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
            {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256 :nimi :ytunnus :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu))) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
-           {:otsikko "Lisätietoja" :tyyppi :text :nimi :lisatieto :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))}]
+           {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
+            :nimi :lisatieto :muokattava? (constantly (not (:jarjestelmanlisaama @muokattu)))}]
           @muokattu]]))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
