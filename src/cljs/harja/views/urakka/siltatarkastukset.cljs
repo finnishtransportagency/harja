@@ -352,6 +352,7 @@
 
          [grid/grid
           {:otsikko      "Uusi sillan tarkastus"
+           :piilota-toiminnot? true
            :tunniste     :kohdenro
            :ohjaus       g
            :muokkaa-aina true
