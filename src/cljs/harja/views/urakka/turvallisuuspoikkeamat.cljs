@@ -26,7 +26,7 @@
    {:tyhja "Ei korjaavia toimenpiteitä"}
    [{:otsikko "Vastaava henkilö" :nimi :vastaavahenkilo :leveys "20%" :tyyppi :string}
     {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys "15%" :tyyppi :pvm}
-    {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text}]
+    {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
 (def turpo-tyypit {:turvallisuuspoikkeama "Turvallisuuspoikkeama"
@@ -43,12 +43,11 @@
                                    (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
 
     (fnc []
-      (log "MUOKATTU: " (pr-str @muokattu))
-      [:div
+         [:div
        [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
 
        [lomake/lomake
-        {:luokka   :horizontal
+        {:otsikko (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
          :muokkaa! #(reset! muokattu %)
          :virheet  lomakkeen-virheet
          :footer   [napit/palvelinkutsu-nappi
@@ -61,12 +60,13 @@
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not @voi-tallentaa?)}]}
         [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
+          :nayta-rivina? true
           :pakollinen? true
           :vaihtoehto-nayta #(turpo-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
           :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
 
-         (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 3}
+         (lomake/ryhma {:rivi? true}
                        {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
                         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
@@ -77,29 +77,24 @@
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                   [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
 
-         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :palstoja 1}
-         {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
-         {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :palstoja 2
-          :pakollinen? true
-          :validoi [[:ei-tyhja "Anna kuvaus"]]}
-         {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :palstoja 2}
-         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
-          :tyyppi  :positiivinen-numero :kokonaisluku? true}
-         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
-          :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko  "Tierekisteriosoite" :nimi :tr
           :tyyppi   :tierekisteriosoite
           :sijainti (r/wrap (:sijainti @muokattu)
                             #(swap! muokattu assoc :sijainti %))}
-         {:otsikko     "Kommentit" :nimi :kommentit
-          :tyyppi :komponentti
-          :komponentti [kommentit/kommentit {:voi-kommentoida? true
-                                             :voi-liittaa      true
-                                             :placeholder      "Kirjoita kommentti..."
-                                             :uusi-kommentti   (r/wrap (:uusi-kommentti @muokattu)
-                                                                       #(swap! muokattu assoc :uusi-kommentti %))}
-                        (:kommentit @muokattu)]}
+         
+         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true}
+         {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
+         {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :palstoja 1
+          :pakollinen? true
+          :validoi [[:ei-tyhja "Anna kuvaus"]]}
+         {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :palstoja 1}
+         {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
+          :tyyppi  :positiivinen-numero :kokonaisluku? true}
+         {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
+          :tyyppi  :positiivinen-numero :kokonaisluku? true}
+         
          {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
+          :palstoja 2
           :komponentti [korjaavattoimenpiteet (r/wrap
                                                 (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @muokattu)))
                                                 ;swap! muokattu assoc :korjaavattoimenpiteet
@@ -115,7 +110,16 @@
                                                             (and
                                                               (neg? (key kartta))
                                                               (:poistettu (val kartta)))))
-                                                        uusi)))))]}]
+                                                        uusi)))))]}
+         {:otsikko     "Kommentit" :nimi :kommentit
+          :tyyppi :komponentti
+          :palstoja 2
+          :komponentti [kommentit/kommentit {:voi-kommentoida? true
+                                             :voi-liittaa      true
+                                             :placeholder      "Kirjoita kommentti..."
+                                             :uusi-kommentti   (r/wrap (:uusi-kommentti @muokattu)
+                                                                       #(swap! muokattu assoc :uusi-kommentti %))}
+                        (:kommentit @muokattu)]}]
         @muokattu]])))
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
