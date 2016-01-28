@@ -8,6 +8,12 @@
             [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
 
 
+(def Tietokanta {:palvelin s/Str
+                 :tietokanta s/Str
+                 :portti s/Int
+                 (s/optional-key :yhteyspoolin-koko) s/Int
+                 :kayttaja s/Str
+                 :salasana s/Str})
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
   {:http-palvelin                         {:portti                         s/Int
@@ -16,12 +22,8 @@
                                            (s/optional-key :max-body-size) s/Int}
    :kehitysmoodi                          Boolean
    (s/optional-key :testikayttajat)       [{:kayttajanimi s/Str :kuvaus s/Str}]
-   :tietokanta                            {:palvelin                           s/Str
-                                           :tietokanta                         s/Str
-                                           :portti                             s/Int
-                                           (s/optional-key :yhteyspoolin-koko) s/Int
-                                           :kayttaja                           s/Str
-                                           :salasana                           s/Str}
+   :tietokanta                            Tietokanta
+   :tietokanta-replica                    Tietokanta
    :fim                                   {:url s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}

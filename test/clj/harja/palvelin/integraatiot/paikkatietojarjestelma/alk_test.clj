@@ -9,7 +9,7 @@
 (defn aja-tiedoston-muutospaivamaara-kysely
   "REPL-testiajofunktio"
   []
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/hae-tiedoston-muutospaivamaara
@@ -20,7 +20,7 @@
 (defn aja-tiedoston-haku
   "REPL-testiajofunktio"
   []
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/hae-tiedosto
