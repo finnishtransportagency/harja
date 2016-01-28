@@ -114,10 +114,11 @@
                                       kayttaja
                                       transaktio)]
               (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
-              (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)))
+              (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)
+              {:ilmoitukset "Siltatarkistus kirjattu onnistuneesti"}))
           (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
                    :virheet [{:koodi  virheet/+tuntematon-silta+
-                              :viesti (str "Siltaa ei löydy tunnuksella " siltatunnus)}]}))))))
+                              :viesti (str "Siltaa ei löydy tunnuksella: " siltatunnus)}]}))))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
@@ -125,7 +126,8 @@
     (julkaise-reitti
       http :lisaa-siltatarkastus
       (POST "/api/urakat/:id/tarkastus/siltatarkastus" request
-        (kasittele-kutsu db integraatioloki :lisaa-siltatarkastus request json-skeemat/+siltatarkastuksen-kirjaus+ nil
+        (kasittele-kutsu db integraatioloki :lisaa-siltatarkastus request
+                         json-skeemat/+siltatarkastuksen-kirjaus+ json-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db]
                            (lisaa-siltatarkastus parametrit data kayttaja db)))))
     this)
