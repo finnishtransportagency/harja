@@ -92,6 +92,7 @@
           :sijainti (r/wrap (:sijainti @muokattu)
                             #(swap! muokattu assoc :sijainti %))}
          {:otsikko     "Kommentit" :nimi :kommentit
+          :tyyppi :komponentti
           :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                              :voi-liittaa      true
                                              :placeholder      "Kirjoita kommentti..."
