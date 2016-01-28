@@ -86,7 +86,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                      rivit
                      (conj rivit rivi))
                    [s]
-                   kentan-palstat
+                   0
                    skeemat)
             ;; Mahtuu tälle riville, lisätään nykyiseen riviin
             (recur rivit

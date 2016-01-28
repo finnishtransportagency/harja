@@ -38,16 +38,15 @@
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
 
-       (if (:id @muokattu)
-         (if (:suorasanktio @muokattu)
-           [:h3 "Muokkaa suoraa sanktiota"]
-
-           [:h3 "Muokkaa laatupoikkeaman kautta tehtyä sanktiota"])
-
-         [:h3 "Luo uusi suora sanktio"])
+       
 
        [lomake/lomake
-        {:luokka   :horizontal
+        {:otsikko (if (:id @muokattu)
+                    (if (:suorasanktio @muokattu)
+                      "Muokkaa suoraa sanktiota"
+                      "Muokkaa laatupoikkeaman kautta tehtyä sanktiota")
+                    "Luo uusi suora sanktio")
+         :luokka   :horizontal
          :muokkaa! #(reset! muokattu %)
          :virheet lomakkeen-virheet
          :voi-muokata? voi-muokata?
@@ -67,7 +66,7 @@
           :muokattava? (constantly false)}
 
          ;; TODO Mitkä päivämäärät tarvitaan?
-         (lomake/ryhma {:otsikko "Aika" :ulkoasu :rivi :leveys 2}
+         (lomake/ryhma {:rivi? true}
                        {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
                         :pakollinen? true
                         :hae     (comp :aika :laatupoikkeama)
@@ -88,35 +87,12 @@
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                   [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :laatupoikkeama)
                                    "Ei voida periä käsittelyä ennen"]]})
-
-         ;; Päätös on aina sanktio
-         #_{:otsikko "Päätös" :nimi :paatos
-          :hae     (comp :paatos :paatos :laatupoikkeama)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :paatos] arvo))
-          :palstoja 1 :tyyppi :string
-          :muokattava? (constantly false)}
-         {:otsikko "Perustelu" :nimi :perustelu
-          :pakollinen? true
-          :hae     (comp :perustelu :paatos :laatupoikkeama)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
-          :palstoja 2 :tyyppi :text :koko [80 :auto]
-          :validoi [[:ei-tyhja "Anna perustelu"]]}
+         
          {:otsikko "Kohde" :nimi :kohde
           :hae     (comp :kohde :laatupoikkeama)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
-          :palstoja 2 :tyyppi :string}
+          :palstoja 1 :tyyppi :string}
 
-         ;; Ei laatupoikkeaman kuvausta, koska annetaan suoraan perustelu
-         #_{:otsikko "Kuvaus" :nimi :kuvaus
-          :hae     (comp :kuvaus :laatupoikkeama)
-          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kuvaus] arvo))
-          :leveys  3 :tyyppi :string}
-
-         ;; TODO, eikö tekijän tyyppiä oikeasti tarvita? Hard-koodataanko?
-         #_{:otsikko "Tekijätyyppi" :nimi :tekija
-           :hae     (comp :tekija :laatupoikkeama)
-           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekija] arvo))
-           :leveys  1 :tyyppi :string}
          {:otsikko "Käsitelty" :nimi :kasittelytapa
           :pakollinen? true
           :hae (comp :kasittelytapa :paatos :laatupoikkeama)
@@ -129,7 +105,14 @@
                                   :kommentit "Harja-kommenttien perusteella"
                                   :muu "Muu tapa"
                                   nil) "- valitse käsittelytapa -")
-          :palstoja 2}
+          :palstoja 1}
+
+         {:otsikko "Perustelu" :nimi :perustelu
+          :pakollinen? true
+          :hae     (comp :perustelu :paatos :laatupoikkeama)
+          :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
+          :palstoja 2 :tyyppi :text :koko [80 :auto]
+          :validoi [[:ei-tyhja "Anna perustelu"]]}
 
          (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
            {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
@@ -138,49 +121,44 @@
             :leveys  2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         (lomake/ryhma {:otsikko "Sanktio" :leveys 2 :ulkoasu :rivi}
-                       {:otsikko "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
-                        :pakollinen? true
-                        :yksikko "€"
-                        :validoi [[:ei-tyhja "Anna summa"]]}
-                       {:otsikko "Indeksi" :nimi :indeksi :leveys 2
-                        :tyyppi :valinta
-                        :valinnat ["MAKU 2005" "MAKU 2010"]
-                        :valinta-nayta #(or % "Ei sidota indeksiin")
-                        :palstoja 1})
+         {:otsikko "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
+          :pakollinen? true
+          :yksikko "€"
+          :validoi [[:ei-tyhja "Anna summa"]]}
+         {:otsikko "Indeksi" :nimi :indeksi :leveys 2
+          :tyyppi :valinta
+          :valinnat ["MAKU 2005" "MAKU 2010"]
+          :valinta-nayta #(or % "Ei sidota indeksiin")
+          :palstoja 1}
 
-         ;; TODO: Pitäisikö lomakkeessa kuitenkin näyttää, onko tämä sanktio tehty suoraan vai ei?
-         #_{:otsikko "Suora sanktio?" :nimi :suorasanktio :leveys 2 :tyyppi :string}
+         {:otsikko       "Laji" :tyyppi :valinta
+          :pakollinen? true
+          :palstoja 1
+          :nimi          :laji
+          :hae           (comp keyword :laji)
+          :aseta         #(assoc %1 :laji %2 :tyyppi nil)
+          :valinnat      [:A :B :C]
+          :valinta-nayta #(case %
+                            :A "Ryhmä A"
+                            :B "Ryhmä B"
+                            :C "Ryhmä C"
+                            "- valitse -")
+          :validoi       [[:ei-tyhja "Valitse laji"]]}
 
-         (lomake/ryhma {:otsikko "Luokittelu"  :ulkoasu :rivi}
-                       {:otsikko       "Laji" :tyyppi :valinta
-                        :pakollinen? true
-                        :palstoja 1
-                        :nimi          :laji
-                        :hae           (comp keyword :laji)
-                        :aseta         #(assoc %1 :laji %2 :tyyppi nil)
-                        :valinnat      [:A :B :C]
-                        :valinta-nayta #(case %
-                                         :A "Ryhmä A"
-                                         :B "Ryhmä B"
-                                         :C "Ryhmä C"
-                                         "- valitse -")
-                        :validoi       [[:ei-tyhja "Valitse laji"]]}
-
-                       {:otsikko       "Tyyppi" :tyyppi :valinta
-                        :palstoja 2
-                        :pakollinen?   true
-                        :nimi          :tyyppi
-                        :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                                         (assoc sanktio
-                                           :tyyppi tyyppi
-                                           :toimenpideinstanssi
-                                           (when tpk
-                                             (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-                        ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
-                        :valinnat-fn   (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
-                        :valinta-nayta :nimi
-                        :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
+         {:otsikko       "Tyyppi" :tyyppi :valinta
+          :palstoja 1
+          :pakollinen?   true
+          :nimi          :tyyppi
+          :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                           (assoc sanktio
+                                  :tyyppi tyyppi
+                                  :toimenpideinstanssi
+                                  (when tpk
+                                    (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
+          ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
+          :valinnat-fn   (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
+          :valinta-nayta :nimi
+          :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]}
          {:otsikko       "Toimenpide"
           :nimi          :toimenpideinstanssi
           :tyyppi        :valinta
