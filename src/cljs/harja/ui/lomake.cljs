@@ -104,16 +104,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 
 
-(defn kentan-vihje [_ {vihje :vihje}]
+(defn kentan-vihje [{vihje :vihje}]
+  (log "kentän vihje" (pr-str vihje))
   (when vihje
-    ;; FIXME: uuteen palstatyyliin
-    [:div.row
-     [:div.col-sm-2]
-     [:div {:class
-            (str "inline-block lomake-vihje col-sm-10")}
-      [:div.vihjeen-sisalto
-       (harja.ui.ikonit/info-sign)
-       (str " " vihje)]]]))
+    [:div {:class
+           (str "inline-block lomake-vihje")}
+     [:div.vihjeen-sisalto
+      (harja.ui.ikonit/info-sign)
+      (str " " vihje)]]))
 
 
 
@@ -154,13 +152,15 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
      (if (= tyyppi :komponentti)
        [:div.komponentti (:komponentti s)]
        (if muokattava?
-         (do (log "TEE-KENTTA: " (pr-str (select-keys s [:nimi :tyyppi])))
+         (do (log "TEE-KENTTA: " (pr-str s))
+           ;(log "TEE-KENTTA: " (pr-str (select-keys s [:nimi :tyyppi])))
              (have #(contains? % :tyyppi) s)
              [tee-kentta (assoc s :lomake? true) arvo])
          [:div.form-control-static
           (if fmt
             (fmt ((or hae #(get % nimi)) data))
-            (nayta-arvo s arvo))]))]))
+            (nayta-arvo s arvo))]))
+     [kentan-vihje s]]))
 
 (def ^:private col-luokat
   ;; PENDING: hyvin vaikea sekä 2 että 3 komponentin määrät saada alignoitua
@@ -221,7 +221,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   (let [voi-muokata? (if (some? voi-muokata?)
                        voi-muokata?
                        true)
-        luokka (or luokka :horizontal)
         kaikki-skeemat (filter (comp not otsikko?) (pura-ryhmat skeema))
         kaikki-virheet (validointi/validoi-rivi nil data kaikki-skeemat :validoi)
         kaikki-varoitukset (validointi/validoi-rivi nil data kaikki-skeemat :varoita)

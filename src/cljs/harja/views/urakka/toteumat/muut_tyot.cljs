@@ -271,46 +271,46 @@
                   :valinnat      [[:yksikkohinta "Muutoshinta"] [:paivanhinta "Päivän hinta"]]
                   :palstoja 1}
 
-                (lomake/rivi
-                 {:otsikko     "Määrä" :nimi :maara :tyyppi :positiivinen-numero
-                  :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
-                  :hae         #(get-in % [:tehtava :maara])
-                  :vihje       (if (= :paivanhinta (:hinnoittelu @muokattu))
-                                 "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
-                                 ei vaikuta kokonaishintaan."
-                                 "Käytät muutoshintaa. Kokonaiskustannus on muutoshinta kerrottuna tehdyn työn määrällä.")
-                  :aseta       (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
-                  :validoi     (when (= (:hinnoittelu @muokattu) :yksikkohinta)
-                                 [[:ei-tyhja "Määrä antamatta."]])
-                  :yksikko     (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :palstoja 1}
-                 (when (= (:hinnoittelu @muokattu) :paivanhinta)
-                   {:otsikko       "Päivän hinta"
-                    :nimi :paivanhinta
-                    :pakollinen? (= :paivanhinta (:hinnoittelu @muokattu))
-                    :hae           #(get-in % [:tehtava :paivanhinta])
-                    :yksikko       "€"
-                    :aseta         (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
-                    :tyyppi        :positiivinen-numero
-                    :validoi [[:ei-tyhja "Anna rahamäärä"]]
-                    :palstoja 1})
-                 (when (= (:hinnoittelu @muokattu) :yksikkohinta)
-                   {:otsikko     "Sopimushinta" :nimi :yksikkohinta
-                    :tyyppi      :positiivinen-numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
-                    :vihje       (if (:yksikkohinta-suunniteltu? @muokattu)
-                                   "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelun Muutos- ja lisätyöt -osiosta."
-                                   "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
-                                   varten Suunnittelun Muutos- ja lisätyöt -osioon.")
-                    :muokattava? #(not (:yksikkohinta-suunniteltu? %))
-                    :yksikko     (str "€ / " (:yksikko @muokattu))
-                    :palstoja 1})
-                 {:otsikko     "Kustannus" :nimi :kustannus
-                  :muokattava? (constantly false)
-                  :tyyppi      :numero
-                  :hae         #(if (= (:hinnoittelu %) :yksikkohinta)
-                                  (* (get-in % [:tehtava :maara]) (:yksikkohinta %))
-                                  (get-in % [:tehtava :paivanhinta]))
-                  :fmt         fmt/euro-opt
-                  :palstoja 1})
+
+                {:otsikko     "Määrä" :nimi :maara :tyyppi :positiivinen-numero :uusi-rivi? true
+                 :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
+                 :hae         #(get-in % [:tehtava :maara])
+                 :vihje       (if (= :paivanhinta (:hinnoittelu @muokattu))
+                                "Käytät päivän hintaa. Voit syöttää tehdyn työn määrän mutta se
+                                ei vaikuta kokonaishintaan."
+                                "Käytät muutoshintaa. Kokonaiskustannus on muutoshinta kerrottuna tehdyn työn määrällä.")
+                 :aseta       (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
+                 :validoi     (when (= (:hinnoittelu @muokattu) :yksikkohinta)
+                                [[:ei-tyhja "Määrä antamatta."]])
+                 :yksikko     (if (:yksikko @muokattu) (:yksikko @muokattu) nil) :palstoja 1}
+                (when (= (:hinnoittelu @muokattu) :paivanhinta)
+                  {:otsikko     "Päivän hinta"
+                   :nimi        :paivanhinta
+                   :pakollinen? (= :paivanhinta (:hinnoittelu @muokattu))
+                   :hae         #(get-in % [:tehtava :paivanhinta])
+                   :yksikko     "€"
+                   :aseta       (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
+                   :tyyppi      :positiivinen-numero
+                   :validoi     [[:ei-tyhja "Anna rahamäärä"]]
+                   :palstoja    1})
+                (when (= (:hinnoittelu @muokattu) :yksikkohinta)
+                  {:otsikko     "Sopimushinta" :nimi :yksikkohinta
+                   :tyyppi      :positiivinen-numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
+                   :vihje       (if (:yksikkohinta-suunniteltu? @muokattu)
+                                  "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelun Muutos- ja lisätyöt -osiosta."
+                                  "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
+                                  varten Suunnittelun Muutos- ja lisätyöt -osioon.")
+                   :muokattava? #(not (:yksikkohinta-suunniteltu? %))
+                   :yksikko     (str "€ / " (:yksikko @muokattu))
+                   :palstoja    1})
+                {:otsikko     "Kustannus" :nimi :kustannus
+                 :muokattava? (constantly false)
+                 :tyyppi      :numero
+                 :hae         #(if (= (:hinnoittelu %) :yksikkohinta)
+                                (* (get-in % [:tehtava :maara]) (:yksikkohinta %))
+                                (get-in % [:tehtava :paivanhinta]))
+                 :fmt         fmt/euro-opt
+                 :palstoja    1}
                 (lomake/rivi
                  {:otsikko "Aloitus" :pakollinen? true :nimi :alkanut :tyyppi :pvm
                   :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
