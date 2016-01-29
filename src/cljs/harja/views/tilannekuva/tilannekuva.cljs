@@ -15,8 +15,7 @@
             [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.checkbox :as checkbox]
-            [harja.ui.on-off-valinta :as on-off]
-            [harja.ui.dom :as dom])
+            [harja.ui.on-off-valinta :as on-off])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
