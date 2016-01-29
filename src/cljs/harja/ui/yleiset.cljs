@@ -1,8 +1,6 @@
 (ns harja.ui.yleiset
   "Yleisiä UI komponentteja"
-  (:require [goog.string :as gstr]
-            [harja.asiakas.tapahtumat :as t]
-            [harja.loki :refer [log tarkkaile!]]
+  (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
             [harja.ui.komponentti :as komp])
