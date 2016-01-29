@@ -349,8 +349,7 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'soratie'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'soratie'::tarkastustyyppi;
 
 -- name: hae-hallintayksikon-soratietarkastukset-raportille
 -- Hakee hallintayksikön soratietarkastukset aikavälin perusteella raportille
@@ -379,8 +378,7 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'soratie'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'soratie'::tarkastustyyppi;
 
 -- name: hae-koko-maan-soratietarkastukset-raportille
 -- Hakee koko maan soratietarkastukset aikavälin perusteella raportille
@@ -408,5 +406,4 @@ FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'soratie'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'soratie'::tarkastustyyppi;
