@@ -6,7 +6,8 @@
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [taoensso.truss :as truss :refer-macros [have have! have?]]))
+            [taoensso.truss :as truss :refer-macros [have have! have?]])
+  (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 (defrecord Ryhma [otsikko optiot skeemat])
 
@@ -267,53 +268,54 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     virheet ::virheet
     varoitukset ::varoitukset
     :as  data}]
-  (let [voi-muokata? (if (some? voi-muokata?)
-                       voi-muokata?
-                       true)
-        muokkaa-kenttaa-fn (fn [nimi]
-                             (fn [uudet-tiedot]
-                               (log "muokkaa kenttää " (pr-str nimi))
-                               (let [kaikki-skeemat (pura-ryhmat skeema)
-                                     kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
-                                     kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)
-                                     puuttuvat-pakolliset-kentat (into #{}
-                                                                       (map :nimi)
-                                                                       (validointi/puuttuvat-pakolliset-kentat uudet-tiedot kaikki-skeemat))]
-                                 (log "UUDET-TIEDOT: " (pr-str uudet-tiedot))
-                                 (muokkaa! (assoc uudet-tiedot
-                                                  ::muokatut (conj (or muokatut #{}) nimi)
-                                                  ::virheet kaikki-virheet
-                                                  ::varoitukset kaikki-varoitukset
-                                                  :puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
-    [:form.lomake
-     (when otsikko
-       [:h3.lomake-otsikko otsikko])
-     (map-indexed (fn [i skeemat]
-                    (let [otsikko (when (otsikko? (first skeemat))
-                                    (first skeemat))
-                          skeemat (if otsikko
-                                    (rest skeemat)
-                                    skeemat)
-                          rivi-ui [nayta-rivi skeemat
-                                   data
-                                   #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
-                                   voi-muokata?
-                                   fokus
-                                   #(swap! data assoc ::fokus %)
-                                   muokatut
-                                   virheet
-                                   varoitukset]]
-                      (if otsikko
-                        ^{:key (:otsikko otsikko)}
-                        [:span
-                         [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
-                         rivi-ui]
-                        ^{:key i}
-                        rivi-ui)))
-                  (rivita skeema))
-     
-     (when-let [footer (if footer-fn
-                         (footer-fn virheet varoitukset)
-                         footer)]
-       [:div.lomake-footer.row
-        [:div.col-md-12 footer]])]))
+  (kasittele-virhe
+   (let [voi-muokata? (if (some? voi-muokata?)
+                        voi-muokata?
+                        true)
+         muokkaa-kenttaa-fn (fn [nimi]
+                              (fn [uudet-tiedot]
+                                (log "muokkaa kenttää " (pr-str nimi))
+                                (let [kaikki-skeemat (pura-ryhmat skeema)
+                                      kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
+                                      kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)
+                                      puuttuvat-pakolliset-kentat (into #{}
+                                                                        (map :nimi)
+                                                                        (validointi/puuttuvat-pakolliset-kentat uudet-tiedot kaikki-skeemat))]
+                                  (log "UUDET-TIEDOT: " (pr-str uudet-tiedot))
+                                  (muokkaa! (assoc uudet-tiedot
+                                                   ::muokatut (conj (or muokatut #{}) nimi)
+                                                   ::virheet kaikki-virheet
+                                                   ::varoitukset kaikki-varoitukset
+                                                   :puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
+     [:form.lomake
+      (when otsikko
+        [:h3.lomake-otsikko otsikko])
+      (map-indexed (fn [i skeemat]
+                     (let [otsikko (when (otsikko? (first skeemat))
+                                     (first skeemat))
+                           skeemat (if otsikko
+                                     (rest skeemat)
+                                     skeemat)
+                           rivi-ui [nayta-rivi skeemat
+                                    data
+                                    #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
+                                    voi-muokata?
+                                    fokus
+                                    #(swap! data assoc ::fokus %)
+                                    muokatut
+                                    virheet
+                                    varoitukset]]
+                       (if otsikko
+                         ^{:key (:otsikko otsikko)}
+                         [:span
+                          [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
+                          rivi-ui]
+                         ^{:key i}
+                         rivi-ui)))
+                   (rivita skeema))
+      
+      (when-let [footer (if footer-fn
+                          (footer-fn virheet varoitukset)
+                          footer)]
+        [:div.lomake-footer.row
+         [:div.col-md-12 footer]])])))

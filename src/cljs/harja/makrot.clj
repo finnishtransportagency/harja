@@ -17,6 +17,13 @@
        (catch :default e#
          [harja.virhekasittely/rendaa-virhe e#]))))
 
+(defmacro kasittele-virhe
+  [& body]
+  `(try
+     ~@body
+     (catch :default e#
+       [harja.virhekasittely/rendaa-virhe e#])))
+
 (defmacro with-loop-from-channel
   "Makro joka lukee loopissa viestejä annetusta kanavasta kunnes kanava menee kiinni.
    Viestin käsittelypoikkeukset napataan kiinni, logitetaan ja viestien lukeminen 
