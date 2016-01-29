@@ -79,8 +79,8 @@
               [:li.harja-alasvetolistaitemi [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])))
 
 (defn urakoitsija []
-  [:div
-   [:span.livi-valikkonimio.urakoitsija-otsikko "Urakoitsija"]
+  [:div.murupolku-urakoitsija
+   [:div.livi-valikkonimio.murupolku-urakoitsija-otsikko "Urakoitsija"]
    [livi-pudotusvalikko {:valinta    @nav/valittu-urakoitsija
                          :format-fn  #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/valitse-urakoitsija!
@@ -105,8 +105,8 @@
     nav/+urakkatyypit+]])
 
 (defn urakkatyyppi []
-  [:div
-   [:span.livi-valikkonimio.urakoitsija-otsikko "Urakkatyyppi"]
+  [:div.murupolku-urakkatyyppi
+   [:div.livi-valikkonimio.murupolku-urakkatyyppi-otsikko "Urakkatyyppi"]
    [livi-pudotusvalikko {:valinta    @nav/valittu-urakkatyyppi
                          :format-fn  #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/vaihda-urakkatyyppi!
@@ -136,23 +136,25 @@
                            :default ""))}
          (case @murupolku-muoto
            :tilannekuva [:ol.murupolku
-                         [koko-maa]
-                         [hallintayksikko valinta-auki]
-                         [urakkatyyppi-murupolussa]
-                         [urakka valinta-auki]
-                         [:span.pull-right.murupolku-suotimet
+                         [:div.col-sm-8.murupolku-vasen
+                          [koko-maa]
+                          [hallintayksikko valinta-auki]
+                          [urakkatyyppi-murupolussa]
+                          [urakka valinta-auki]]
+                         [:div.col-sm-4.murupolku-oikea
                           [urakoitsija]]]
            ;; Perusversio
            [:ol.murupolku
-            [koko-maa]
-            [hallintayksikko valinta-auki]
-            [urakka valinta-auki]
-            [:span.pull-right.murupolku-suotimet
-             [urakoitsija]
-             [urakkatyyppi]]])]))
+             [:div.col-sm-6.murupolku-vasen
+              [koko-maa]
+              [hallintayksikko valinta-auki]
+              [urakka valinta-auki]]
+             [:div.col-sm-6.murupolku-oikea
+              [urakoitsija]
+              [urakkatyyppi]]])]))
 
     ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
-[:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
+    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
     #(reset! (-> % reagent/state :valinta-auki) nil)
 
     ;; Jos klikataan komponentin ulkopuolelle, vaihdetaan piilotetaan valintalistat
