@@ -104,11 +104,12 @@
         avaimet (map name (keys (first tiedot)))
         laskutettu-korotus-kentat (mapv keyword (filter #(re-find #"laskutettu_ind_korotus" %) avaimet))
         laskutetaan-korotus-kentat (mapv keyword (filter #(re-find #"laskutetaan_ind_korotus" %) avaimet))
-        indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (some nil? (vals (select-keys (first tiedot) laskutettu-korotus-kentat)))
-        indeksiarvo-puuttuu-valitulta-kklta? (some nil? (vals (select-keys (first tiedot) laskutetaan-korotus-kentat)))
+        indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (first (keep #(some nil? (vals (select-keys % laskutettu-korotus-kentat))) tiedot))
+        indeksiarvo-puuttuu-valitulta-kklta? (first (keep #(some nil? (vals (select-keys % laskutetaan-korotus-kentat))) tiedot))
         vain-jvh-viesti "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja Harjaan."
         perusluku-puuttuu? (not (:perusluku (first tiedot)))
         talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
+        ;lampotila-puuttuu? true                             ;FIXME CODE ME!
         mahdollinen-varoitus-indeksiarvojen-puuttumisesta
         (if perusluku-puuttuu?
           [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittava urakan indeksiarvojen perusluku puuttuu tältä urakalta puutteellisten indeksitietojen vuoksi. "
