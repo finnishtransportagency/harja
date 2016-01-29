@@ -38,12 +38,11 @@
     }
 }
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 767px) {
     .murupolku {
         .murupolku-vasen {
             > li {
                 margin-top: 0;
-                margin-right: 5px
             }
         }
         .murupolku-oikea {
@@ -54,7 +53,9 @@
     }
 }
 
-.murupolku:after { // Clearfix
+// Clearfix, varmistaa että murupolun korkeus asettuu oikein vaikka sen sisältö
+// olisikin irrotettu flowsta floateilla.
+.murupolku:after {
     content: " ";
     visibility: hidden;
     display: block;
