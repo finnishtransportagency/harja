@@ -4,7 +4,7 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
             [goog.events :as events]
             [harja.virhekasittely :as virhekasittely]
             [goog.events.EventType :as EventType]))
@@ -172,7 +172,7 @@
   [ulkopuolella-fn]
   (kuuntelija :body-klikkaus
               (fn [this tapahtuma]
-                (when-not (yleiset/sisalla? this (:tapahtuma tapahtuma))
+                (when-not (dom/sisalla? this (:tapahtuma tapahtuma))
                   (ulkopuolella-fn)))))
 
 (defn ulos

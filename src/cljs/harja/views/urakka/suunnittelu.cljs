@@ -10,7 +10,7 @@
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))

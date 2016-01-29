@@ -13,10 +13,11 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.animaatio :as animaatio]
             [harja.ui.komponentti :as komp]
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
             [harja.views.kartta.tasot :as tasot]
             [reagent.core :refer [atom] :as reagent])
 
@@ -30,7 +31,7 @@
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
-                            kork @yleiset/korkeus]
+                            kork @dom/korkeus]
                         (case koko
                           :S +kartan-korkeus-s+
                           :M (int (* 0.25 kork))
@@ -43,7 +44,7 @@
 
 (defn- aseta-kartan-sijainti [x y w h naulattu?]
   (when-let
-    [karttasailio (yleiset/elementti-idlla "kartta-container")]
+    [karttasailio (dom/elementti-idlla "kartta-container")]
     (let [tyyli (.-style karttasailio)]
       #_(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
       (if naulattu?
@@ -115,11 +116,11 @@
                                  :timeout
                                  ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
                                  (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
-                                   (aseta-kartan-sijainti x (- @yleiset/korkeus) w h false)
+                                   (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
                                    (recur nil nil nil w h nil))))
                        paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
-                       [uusi-x uusi-y uusi-w uusi-h] (yleiset/sijainti paikka-elt)
-                       uusi-offset-y (yleiset/offset-korkeus paikka-elt)]
+                       [uusi-x uusi-y uusi-w uusi-h] (dom/sijainti paikka-elt)
+                       uusi-offset-y (dom/offset-korkeus paikka-elt)]
 
                    ;; (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
 
@@ -213,7 +214,7 @@
               "rgba(153, 0, 51, 0.7)"])
 
 (defonce kartan-koon-paivitys
-         (run! (do @yleiset/ikkunan-koko
+         (run! (do @dom/ikkunan-koko
                    (openlayers/invalidate-size!))))
 
 (defn kartan-koko-kontrollit

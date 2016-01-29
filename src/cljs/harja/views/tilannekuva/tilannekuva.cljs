@@ -9,22 +9,21 @@
             [harja.views.kartta.popupit :as popupit]
             [harja.views.murupolku :as murupolku]
             [harja.ui.kentat :as kentat]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
             [reagent.core :as r]
-            [harja.pvm :as pvm]
-            [goog.events :as events]
             [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.checkbox :as checkbox]
             [harja.ui.on-off-valinta :as on-off]
-            [harja.ui.yleiset :as yleiset]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.ui.dom :as dom])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
 
 (defn aseta-hallintapaneelin-max-korkeus [paneelin-sisalto]
   (let [r (.getBoundingClientRect paneelin-sisalto)
-        etaisyys-alareunaan (- @yleiset/korkeus (.-top r))]
+        etaisyys-alareunaan (- @dom/korkeus (.-top r))]
     (reset! hallintapaneeli-max-korkeus (max
                                           200
                                           (- etaisyys-alareunaan 30)))))
@@ -114,7 +113,7 @@
                                   (reset! kokoelma-atom otsikko))
                                 ;; Ylläpitää itse omaa auki/kiinni-tilaansa
                                 (swap! oma-auki-tila not))
-                              (aseta-hallintapaneelin-max-korkeus (yleiset/elementti-idlla "tk-suodattimet")))}
+                              (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
            (if (auki?)
              (ikonit/chevron-down) (ikonit/chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox

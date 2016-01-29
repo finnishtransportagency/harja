@@ -4,7 +4,7 @@
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? alasveto-ei-loydoksia livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [ajax-loader linkki alasveto-ei-loydoksia livi-pudotusvalikko]]
 
             [harja.loki :refer [log]]
             [harja.tiedot.urakoitsijat :as urakoitsijat]
