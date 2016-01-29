@@ -4,7 +4,7 @@
 
 .murupolku {
     background-color: @harmaa9;
-    padding: 6px 15px;
+    padding: 5px 15px;
     margin-bottom: 1.25rem;
     list-style: none;
     .disabled {
@@ -16,22 +16,20 @@
         color: @sininen4;
     }
 
-    li, .livi-alasveto {
-        display: inline-block;
-        vertical-align: top;
-        margin-right: 5px;
-    }
-
     .murupolku-vasen {
-        float: left;
-
         > li {
+            vertical-align: top;
+            display: inline-block;
             margin-top: 17px;
+            margin-right: 5px
         }
     }
 
     .murupolku-oikea {
-        float: right;
+        > div {
+            float: right;
+            margin-right: 5px;
+        }
     }
 
     .murupolku-urakoitsija, .murupolku-urakkatyyppi {
@@ -40,8 +38,24 @@
     }
 }
 
+@media screen and (max-width: 750px) {
+    .murupolku {
+        .murupolku-vasen {
+            > li {
+                margin-top: 0;
+                margin-right: 5px
+            }
+        }
+        .murupolku-oikea {
+            > div {
+                float: left;
+            }
+        }
+    }
+}
+
 .murupolku:after { // Clearfix
-    content: " "; /* Older browser do not support empty content */
+    content: " ";
     visibility: hidden;
     display: block;
     height: 0;
