@@ -36,4 +36,5 @@
   `(try
      ~@body
      (catch :default e#
+       (log "go-blokki kaatui:" e#)
        (harja.virhekasittely/arsyttava-virhe "go-blokki kaatui: " e#))))
