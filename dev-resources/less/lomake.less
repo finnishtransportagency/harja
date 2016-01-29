@@ -59,7 +59,6 @@
     position: relative;
     top: -0.15em;
   }
-
   
   .kentan-yksikko {
     font-size: (0.8 * @fontin-koko-leipateksti);
@@ -96,6 +95,14 @@
  } 
 
 
+
+  .lomake-ryhman-otsikko {
+    border-bottom: solid 1px @harmaa9;
+    font-size: @font-size-h3;
+    margin: 2px 0 10px;
+    padding-left: 5px;
+  }
+
 }
 
 .lomake-footer{
@@ -109,7 +116,6 @@
         margin-left: -1px;
     }
     .nappi-kielteinen {
-        float: right;
         margin-right: @harja-nappien-valinen-etaisyys}
 }
 
@@ -165,8 +171,4 @@
 fieldset.lomake-osa {
   margin-top: 10px;
 
-  legend {
-    padding-left: 5px;
-    font-size: 1.3rem;
-  }
 }

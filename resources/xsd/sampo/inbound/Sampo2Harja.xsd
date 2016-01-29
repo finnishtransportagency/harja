@@ -60,6 +60,9 @@
 		<xs:attribute name="schedule_start" type="xs:dateTime" use="required"/>
 		<xs:attribute name="schedule_finish" type="xs:dateTime" use="required"/>
 		<xs:attribute name="financialDepartmentHash" type="xs:string" use="required"/>
+		<xs:attribute name="vv_alueurakkanro" type="xs:string"/>
+		<xs:attribute name="vv_corporate_id" type="xs:string"/>
+		<xs:attribute name="company_name" type="xs:string"/>
 		<!-- Attributes that Harja uses -->
 		<!-- Extra attributes -->
 	</xs:complexType>

@@ -2,16 +2,14 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konv]
-            [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
-            [clj-time.core :as t]
             [clj-time.coerce :refer [from-sql-time]]
-
             [harja.kyselyt.ilmoitukset :as q]
-            [harja.palvelin.palvelut.urakat :as urakat]))
+            [harja.palvelin.palvelut.urakat :as urakat]
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]))
 
 (defn hakuehto-annettu? [p]
+  ;; todo: pitäisi yksinkertaistaa
   (if (nil? p)
     false
     (do
@@ -89,20 +87,62 @@
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
     tulos))
 
+(defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
+  (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
+  (let [toimenpide (q/luo-ilmoitustoimenpide<!
+                     db
+                     (:ilmoituksen-id ilmoitustoimenpide)
+                     (:ulkoinen-ilmoitusid ilmoitustoimenpide)
+                     (harja.pvm/nyt)
+                     (:vapaateksti ilmoitustoimenpide)
+                     (name (:tyyppi ilmoitustoimenpide))
+                     (:ilmoittaja-etunimi ilmoitustoimenpide)
+                     (:ilmoittaja-sukunimi ilmoitustoimenpide)
+                     (:ilmoittaja-tyopuhelin ilmoitustoimenpide)
+                     (:ilmoittaja-matkapuhelin ilmoitustoimenpide)
+                     (:ilmoittaja-sahkoposti ilmoitustoimenpide)
+                     (:ilmoittaja-organisaatio ilmoitustoimenpide)
+                     (:ilmoittaja-ytunnus ilmoitustoimenpide)
+                     (:kasittelija-etunimi ilmoitustoimenpide)
+                     (:kasittelija-sukunimi ilmoitustoimenpide)
+                     (:kasittelija-tyopuhelin ilmoitustoimenpide)
+                     (:kasittelija-matkapuhelin ilmoitustoimenpide)
+                     (:kasittelija-sahkoposti ilmoitustoimenpide)
+                     (:kasittelija-organisaatio ilmoitustoimenpide)
+                     (:kasittelija-ytunnus ilmoitustoimenpide))]
+    (tloik/laheta-ilmoitustoimenpide tloik (:id toimenpide))
+    (-> toimenpide
+        (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
+        (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi toimenpide))
+        (assoc-in [:kuittaaja :matkapuhelin] (:kuittaaja_henkilo_matkapuhelin toimenpide))
+        (assoc-in [:kuittaaja :tyopuhelin] (:kuittaaja_henkilo_tyopuhelin toimenpide))
+        (assoc-in [:kuittaaja :sahkoposti] (:kuittaaja_henkilo_sahkoposti toimenpide))
+        (assoc-in [:kuittaaja :organisaatio] (:kuittaaja_organisaatio_nimi toimenpide))
+        (assoc-in [:kuittaaja :ytunnus] (:kuittaaja_organisaatio_ytunnus toimenpide))
+        (assoc-in [:ilmoittaja :etunimi] (:ilmoittaja_henkilo_etunimi toimenpide))
+        (assoc-in [:ilmoittaja :sukunimi] (:ilmoittaja_henkilo_sukunimi toimenpide))
+        (assoc-in [:ilmoittaja :matkapuhelin] (:ilmoittaja_henkilo_matkapuhelin toimenpide))
+        (assoc-in [:ilmoittaja :tyopuhelin] (:ilmoittaja_henkilo_tyopuhelin toimenpide))
+        (assoc-in [:ilmoittaja :sahkoposti] (:ilmoittaja_henkilo_sahkoposti toimenpide))
+        (assoc-in [:ilmoittaja :organisaatio] (:ilmoittaja_organisaatio_nimi toimenpide))
+        (assoc-in [:ilmoittaja :ytunnus] (:ilmoittaja_organisaatio_ytunnus toimenpide)))))
+
 (defrecord Ilmoitukset []
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
                       :hae-ilmoitukset
-                      (fn [user tiedot #_[{:keys [hallintayksikko urakka tilat tyypit aikavali hakuehto]} tiedot]]
+                      (fn [user tiedot]
                         (hae-ilmoitukset (:db this) user (:hallintayksikko tiedot)
                                          (:urakka tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                          (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
                                          (:hakuehto tiedot))))
+    (julkaise-palvelu (:http-palvelin this)
+                      :tallenna-ilmoitustoimenpide
+                      (fn [user tiedot]
+                        (tallenna-ilmoitustoimenpide (:db this) (:tloik this) user tiedot)))
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this)
-                     :hae-ilmoitukset)
-
+    (poista-palvelut (:http-palvelin this) :hae-ilmoitukset :tallenna-ilmoitustoimenpide)
     this))
