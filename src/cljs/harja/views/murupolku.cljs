@@ -137,12 +137,12 @@
                            :default ""))}
          (case @murupolku-muoto
            :tilannekuva [:ol.murupolku
-                         [:div.murupolku-vasen
+                         [:div.col-sm-8.murupolku-vasen
                           [koko-maa]
                           [hallintayksikko valinta-auki]
                           [urakkatyyppi-murupolussa]
                           [urakka valinta-auki]]
-                         [:div.murupolku-oikea
+                         [:div.col-sm-4.murupolku-oikea
                           [urakoitsija]]]
            ;; Perusversio
            [:ol.murupolku
