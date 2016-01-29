@@ -44,11 +44,12 @@
 (defn- kuukausi [date]
   (.format (java.text.SimpleDateFormat. "MMMM") date))
 
-(defn- taulukko [otsikko otsikko-jos-tyhja
-                 laskutettu-teksti laskutettu-kentta
-                 laskutetaan-teksti laskutetaan-kentta
-                 yhteenveto-teksti kyseessa-kk-vali?
-                 tiedot]
+(defn- taulukko
+  ([otsikko otsikko-jos-tyhja
+    laskutettu-teksti laskutettu-kentta
+    laskutetaan-teksti laskutetaan-kentta
+    yhteenveto-teksti kyseessa-kk-vali?
+    tiedot summa-fmt]
   (let [laskutettu-kentat (map laskutettu-kentta tiedot)
         laskutetaan-kentat (map laskutetaan-kentta tiedot)
         kaikkien-toimenpiteiden-summa (fn [kentat]
@@ -56,9 +57,9 @@
         laskutettu-yht (kaikkien-toimenpiteiden-summa laskutettu-kentat)
         laskutetaan-yht (kaikkien-toimenpiteiden-summa laskutetaan-kentat)
         yhteenveto (rivi "Toimenpiteet yhteensä"
-                         (when kyseessa-kk-vali? (fmt/euro-indeksikorotus laskutettu-yht))
-                         (when kyseessa-kk-vali? (fmt/euro-indeksikorotus laskutetaan-yht))
-                         (fmt/euro-indeksikorotus (if (and laskutettu-yht laskutetaan-yht)
+                         (when kyseessa-kk-vali? (summa-fmt laskutettu-yht))
+                         (when kyseessa-kk-vali? (summa-fmt laskutetaan-yht))
+                         (summa-fmt (if (and laskutettu-yht laskutetaan-yht)
                                                     (+ laskutettu-yht laskutetaan-yht)
                                                     nil)))
         taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
@@ -69,33 +70,30 @@
     (when-not (empty? taulukon-tiedot)
       [:taulukko {:viimeinen-rivi-yhteenveto? true}
        (rivi
-         {:otsikko otsikko :leveys 40}
-         (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 20})
-         (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 20})
-         {:otsikko yhteenveto-teksti :leveys 20})
+         {:otsikko otsikko :leveys 36}
+         (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29})
+         (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24})
+         {:otsikko yhteenveto-teksti :leveys 29})
 
        (into []
              (concat
                (map (fn [[nimi laskutettu laskutetaan]]
                       (rivi
                         nimi
-                        (when kyseessa-kk-vali? (fmt/euro-indeksikorotus laskutettu))
-                        (when kyseessa-kk-vali? (fmt/euro-indeksikorotus laskutetaan))
-                        (fmt/euro-indeksikorotus (if (and laskutettu laskutetaan)
+                        (when kyseessa-kk-vali? (summa-fmt laskutettu))
+                        (when kyseessa-kk-vali? (summa-fmt laskutetaan))
+                        (summa-fmt (if (and laskutettu laskutetaan)
                                                    (+ laskutettu laskutetaan)
                                                    nil)))) taulukon-tiedot)
-               [yhteenveto]))])))
+               [yhteenveto]))]))))
 
 (defn suorita [db user {:keys [alkupvm loppupvm] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [joda-aikavali (t/plus (tc/from-date alkupvm) (t/hours 2))
-        kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+  (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
-        laskutettu-teksti (str "Laskutettu hoitokaudella ennen " (kuukausi alkupvm) "ta "
-                               (pvm/vuosi joda-aikavali))
-        laskutetaan-teksti (str "Laskutetaan " (kuukausi alkupvm) "ssa "
-                                (pvm/vuosi joda-aikavali))
+        laskutettu-teksti (str "Laskutettu hoito\u00ADkaudella ennen " (pvm/kuukausi-ja-vuosi alkupvm))
+        laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
         yhteenveto-teksti (str (if (or kyseessa-kk-vali? kyseessa-hoitokausi-vali?)
                                  (str "Hoitokaudella " (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm))) " - "
                                       (pvm/vuosi (second (pvm/paivamaaran-hoitokausi alkupvm))) " yhteensä")
@@ -110,6 +108,7 @@
         indeksiarvo-puuttuu-valitulta-kklta? (some nil? (vals (select-keys (first tiedot) laskutetaan-korotus-kentat)))
         vain-jvh-viesti "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja Harjaan."
         perusluku-puuttuu? (not (:perusluku (first tiedot)))
+        talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
         mahdollinen-varoitus-indeksiarvojen-puuttumisesta
         (if perusluku-puuttuu?
           [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittava urakan indeksiarvojen perusluku puuttuu tältä urakalta puutteellisten indeksitietojen vuoksi. "
@@ -123,20 +122,21 @@
               (if indeksiarvo-puuttuu-valitulta-kklta?
                 [:varoitusteksti (str "Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu. "
                                       vain-jvh-viesti)]))))
-        taulukot (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot]]
+        taulukot (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt]]
                          (taulukko otsikko tyhja
                                    laskutettu-teksti laskutettu
                                    laskutetaan-teksti laskutetaan
                                    yhteenveto-teksti kyseessa-kk-vali?
-                                   tiedot))
+                                   tiedot (or summa-fmt fmt/euro-indeksikorotus)))
                        [["Kokonaishintaiset työt" "Ei kokonaishintaisia töitä"
                          :kht_laskutettu :kht_laskutetaan tiedot]
                         ["Yksikköhintaiset työt" "Ei yksikköhintaisia töitä"
                          :yht_laskutettu :yht_laskutetaan tiedot]
                         ["Sanktiot" "Ei sanktioita"
                          :sakot_laskutettu :sakot_laskutetaan tiedot]
-                        ["Talvisuolasakko (autom. laskettu)" "Ei talvisuolasakkoa"
-                         :suolasakot_laskutettu :suolasakot_laskutetaan tiedot]
+                        (when talvisuolasakko-kaytossa?
+                          ["Talvisuolasakko (autom. laskettu)" "Ei talvisuolasakkoa"
+                           :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
                         ["Muutos- ja lisätyöt sekä vahinkojen korjaukset" "Ei muutos- ja lisätöitä"
                          :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
                         ["Äkilliset hoitotyöt" "Ei äkillisiä hoitotöitä"
@@ -151,8 +151,9 @@
                          :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot]
                         ["Sanktioiden indeksitarkistukset" "Ei indeksitarkistuksia"
                          :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
-                        ["Talvisuolasakon indeksitarkistus (autom. laskettu)" "Ei indeksitarkistuksia"
-                         :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot]
+                        (when talvisuolasakko-kaytossa?
+                          ["Talvisuolasakon indeksitarkistus (autom. laskettu)" "Ei indeksitarkistuksia"
+                           :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
                         ["Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset" "Ei indeksitarkistuksia"
                          :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
                         ["Äkillisten hoitotöiden indeksitarkistukset" "Ei indeksitarkistuksia"

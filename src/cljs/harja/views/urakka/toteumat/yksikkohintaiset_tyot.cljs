@@ -301,9 +301,10 @@
                          [:button.nappi-toissijainen.nappi-grid
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
-        (sort
-          (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
-          (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat))]])))
+        (when @toteutuneet-tehtavat
+          (sort
+            (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
+           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat)))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"
