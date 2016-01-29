@@ -28,12 +28,8 @@
 (defn sanktion-tiedot
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
-        lomakkeen-virheet (atom {})
         voi-muokata? @laatupoikkeamat/voi-kirjata?
-        voi-tallentaa? (reaction (and
-                                  voi-muokata?
-                                   (= (count @lomakkeen-virheet) 0)
-                                   (> (count @muokattu) (count @tiedot/+uusi-sanktio+))))]
+        ]
     (fn []
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
@@ -48,7 +44,6 @@
                     "Luo uusi suora sanktio")
          :luokka   :horizontal
          :muokkaa! #(reset! muokattu %)
-         :virheet lomakkeen-virheet
          :voi-muokata? voi-muokata?
          :footer   [napit/palvelinkutsu-nappi
                     "Tallenna sanktio"
@@ -58,7 +53,7 @@
                      :kun-onnistuu #(do
                                      (tiedot/sanktion-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-sanktio nil))
-                     :disabled     (not @voi-tallentaa?)}]}
+                     :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
         [{:otsikko     "Tekijä" :nimi :tekijanimi
           :hae         (comp :tekijanimi :laatupoikkeama)
           :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))

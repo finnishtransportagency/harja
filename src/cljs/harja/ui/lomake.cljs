@@ -27,6 +27,46 @@
 (defn ryhma? [x]
   (instance? Ryhma x))
 
+(defn muokattu?
+  "Tarkista onko mitään lomakkeen kenttää muokattu"
+  [data]
+  (not (empty? (::muokatut data))))
+
+(defn puuttuvat-pakolliset-kentat
+  "Palauttaa setin pakollisia kenttiä, jotka puuttuvat"
+  [data]
+  (::puuttuvat-pakolliset-kentat data))
+
+(defn pakollisia-kenttia-puuttuu? [data]
+  (not (empty? (puuttuvat-pakolliset-kentat data))))
+
+(defn virheita?
+  "Tarkistaa onko lomakkeella validointivirheitä"
+  [data]
+  (not (empty? (::virheet data))))
+
+(defn validi?
+  "Tarkista onko lomake validi, palauttaa true jos lomakkeella ei ole validointivirheitä 
+ja kaikki pakolliset kentät on täytetty"
+  [data]
+  (and (not (virheita? data))
+       (not (pakollisia-kenttia-puuttuu? data))))
+
+(defn voi-tallentaa?
+  "Tarkista onko lomakkeen tallennus sallittu"
+  [data]
+  (and (muokattu? data)
+       (validi? data)))
+
+(defn ilman-lomaketietoja
+  "Palauttaa lomakkeen datan ilman lomakkeen ohjaustietoja"
+  [data]
+  (dissoc data
+          ::muokatut
+          ::virheet
+          ::varoitukset
+          ::puuttuvat-pakolliset-kentat))
+
 (defrecord ^:private Otsikko [otsikko])
 (defn- otsikko? [x]
   (instance? Otsikko x))
@@ -87,23 +127,20 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
           
           :default
           ;; Rivitä skeema
-          (do (log "SKEEMA " (pr-str (select-keys s [:nimi :tyyppi :palstoja :otsikko])) ", palstoja: " palstoja)
-              (if (or (otsikko? s)
-                      (:uusi-rivi? s)
-                      (> (+ palstoja kentan-palstat) 2))
-                (do (log "SKEEMA UUSI RIVI ALKAA! ")
-                    ;; Kenttä on uusi otsikko tai rivi menisi yli 2 palstan => aloitetaan uusi rivi tälle
-                    (recur (if (empty? rivi)
-                             rivit
-                             (conj rivit rivi))
-                           [s]
-                           (if (otsikko? s) 0 kentan-palstat)
-                           skeemat))
-                ;; Mahtuu tälle riville, lisätään nykyiseen riviin
-                (recur rivit
-                       (conj rivi s)
-                       (+ palstoja kentan-palstat)
-                       skeemat))))))))
+          (if (or (otsikko? s)
+                  (:uusi-rivi? s)
+                  (> (+ palstoja kentan-palstat) 2))
+            (recur (if (empty? rivi)
+                     rivit
+                     (conj rivit rivi))
+                   [s]
+                   (if (otsikko? s) 0 kentan-palstat)
+                   skeemat)
+            ;; Mahtuu tälle riville, lisätään nykyiseen riviin
+            (recur rivit
+                   (conj rivi s)
+                   (+ palstoja kentan-palstat)
+                   skeemat)))))))
 
 
 (defn kentan-vihje [{vihje :vihje}]
@@ -197,8 +234,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          (get virheet nimi)
          (get varoitukset nimi)]))]))
 
-;; FIXME: ulkoinen validointitila on huono idea, pistetään data mäppiin vain nekin
-
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
   Ottaa kolme parametria: optiot, skeeman (vektori kenttiä) sekä datan (mäppi).
@@ -240,17 +275,20 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                (log "muokkaa kenttää " (pr-str nimi))
                                (let [kaikki-skeemat (pura-ryhmat skeema)
                                      kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
-                                     kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)]
+                                     kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)
+                                     puuttuvat-pakolliset-kentat (into #{}
+                                                                       (map :nimi)
+                                                                       (validointi/puuttuvat-pakolliset-kentat uudet-tiedot kaikki-skeemat))]
                                  (log "UUDET-TIEDOT: " (pr-str uudet-tiedot))
                                  (muokkaa! (assoc uudet-tiedot
                                                   ::muokatut (conj (or muokatut #{}) nimi)
                                                   ::virheet kaikki-virheet
-                                                  ::varoitukset kaikki-varoitukset)))))]
+                                                  ::varoitukset kaikki-varoitukset
+                                                  :puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
     [:form.lomake
      (when otsikko
        [:h3.lomake-otsikko otsikko])
      (map-indexed (fn [i skeemat]
-                    (log "SKEEMA RIVI " (count skeemat) " itemiä, " (pr-str (map :nimi skeemat)))
                     (let [otsikko (when (otsikko? (first skeemat))
                                     (first skeemat))
                           skeemat (if otsikko
