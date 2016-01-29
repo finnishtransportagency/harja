@@ -380,3 +380,5 @@
               ps (.prepareStatement c (reduce str sql))]
     (.executeUpdate ps)))
 
+(defn explain [sql]
+  (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
