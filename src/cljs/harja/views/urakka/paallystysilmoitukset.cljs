@@ -25,7 +25,6 @@
             [harja.loki :refer [log logt tarkkaile!]]
 
             [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.views.kartta :as kartta]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit])
