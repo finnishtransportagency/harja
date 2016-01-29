@@ -56,7 +56,6 @@
 (defn urakka [valinta-auki]
   (when @nav/valittu-hallintayksikko
     (let [valittu @nav/valittu-urakka]
-      [:div ""]
       [:li.dropdown.livi-alasveto {:class (when (= :urakka @valinta-auki) "open")}
        [:span.valittu-urakka.murupolkuteksti (or (:nimi valittu) "- Urakka -") " "]
 
