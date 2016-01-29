@@ -1,0 +1,77 @@
+(ns harja.ui.dom
+  "Yleisiä apureita DOMin ja selaimen hallintaan"
+  (:require [reagent.core :as r]
+            [harja.asiakas.tapahtumat :as t])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction run!]]))
+
+(defn sisalla?
+  "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
+  [komponentti tapahtuma]
+  (let [dom (r/dom-node komponentti)
+        elt (.-target tapahtuma)]
+    (loop [ylempi (.-parentNode elt)]
+      (if (or (nil? ylempi)
+              (= ylempi js/document.body))
+        false
+        (if (= dom ylempi)
+          true
+          (recur (.-parentNode ylempi)))))))
+
+
+(def ie? (let [ua (-> js/window .-navigator .-userAgent)]
+           (or (not= -1 (.indexOf ua "MSIE "))
+               (not= -1 (.indexOf ua "Trident/"))
+               (not= -1 (.indexOf ua "Edge/")))))
+
+(defn karttakuva
+  "Palauttaa kuvatiedoston nimen, jos käytössä IE palauttaa .png kuvan, muuten .svg"
+  [perusnimi]
+  (str perusnimi (if ie? ".png" ".svg")))
+
+(defonce korkeus (atom (-> js/window .-innerHeight)))
+(defonce leveys (atom (-> js/window .-innerWidth)))
+
+(defonce ikkunan-koko
+         (reaction [@leveys @korkeus]))
+
+(defonce ikkunan-koko-tapahtuman-julkaisu
+         (run!
+           (let [h @korkeus
+                 w @leveys]
+             (t/julkaise! {:aihe :ikkunan-koko-muuttunut :leveys w :korkeus h}))))
+
+(defonce koon-kuuntelija (do (set! (.-onresize js/window)
+                                   (fn [_]
+                                     (reset! korkeus (-> js/window .-innerHeight))
+                                     (reset! leveys (-> js/window .-innerWidth))
+                                     ))
+                             true))
+
+(defn elementti-idlla [id]
+  (.getElementById js/document (name id)))
+
+(defn sijainti
+  "Laskee DOM-elementin sijainnin, palauttaa [x y w h]."
+  [elt]
+  (assert elt (str "Ei voida laskea sijaintia elementille null"))
+  (let [r (.getBoundingClientRect elt)
+        sijainti [(.-left r) (.-top r) (- (.-right r) (.-left r)) (- (.-bottom r) (.-top r))]]
+    sijainti))
+
+(defn offset-korkeus [elt]
+  (loop [offset (.-offsetTop elt)
+         parent (.-offsetParent elt)]
+    (if (or (nil? parent)
+            (= js/document.body parent))
+      offset
+      (recur (+ offset (.-offsetTop parent))
+             (.-offsetParent parent)))))
+
+
+(defn sijainti-sailiossa
+  "Palauttaa elementin sijainnin suhteessa omaan säiliöön."
+  [elt]
+  (let [[x1 y1 w1 h1] (sijainti elt)
+        [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
+    [(- x1 x2) (- y1 y2) w1 h1]))
