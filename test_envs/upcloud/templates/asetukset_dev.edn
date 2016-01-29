@@ -7,18 +7,18 @@
 
  :http-palvelin        {:threads 32}
 
- :tietokanta           {:palvelin   "localhost"
-                        :tietokanta "harja"
-                        :portti     5432
+ :tietokanta           {:palvelin          "localhost"
+                        :tietokanta        "harja"
+                        :portti            5432
                         :yhteyspoolin-koko 32
-                        :kayttaja   "harja"
-                        :salasana   "harja123"}
- :tietokanta-replica  {:palvelin          "localhost"
-                       :tietokanta        "harja"
-                       :portti            5432
-                       :yhteyspoolin-koko 32
-                       :kayttaja          "harja"
-                       :salasana          "harja123"}
+                        :kayttaja          "harja"
+                        :salasana          "harja123"}
+ :tietokanta-replica   {:palvelin          "localhost"
+                        :tietokanta        "harja"
+                        :portti            5432
+                        :yhteyspoolin-koko 32
+                        :kayttaja          "harja"
+                        :salasana          "harja123"}
  :fim                  {:url "https://testisonja.liikennevirasto.fi/FIM/Person.svc/"}
  :log                  {:gelf    {:taso     :debug
                                   :palvelin "localhost"}
@@ -50,8 +50,8 @@
                         :kuittausjono-ulos        "Harja17.SampoToHarja.Ack"
                         :paivittainen-lahetysaika nil
                         }
- :tloik                {:ilmoitusviestijono   "tloik-ilmoitukset"
-                        :ilmoituskuittausjono "tloik-ilmoituskuittaukset"
+ :tloik                {:ilmoitusviestijono     "tloik-ilmoitukset"
+                        :ilmoituskuittausjono   "tloik-ilmoituskuittaukset"
                         :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
                         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}
  :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
@@ -59,11 +59,11 @@
 
  :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali 60
+ :geometriapaivitykset {:tuontivali                                60
 
-                        :tieosoiteverkon-shapefile       "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
-                        :tieosoiteverkon-alk-osoite      "http://10.1.0.96/PTK_tieosoiteverkko.shz"
-                        :tieosoiteverkon-alk-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
+                        :tieosoiteverkon-alk-osoite                "http://10.1.0.96/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-alk-tuontikohde           "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
                         :pohjavesialueen-shapefile                 "file://shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shp"
                         :pohjavesialueen-alk-osoite                "http://10.1.0.96/PTV_TIIRA_KP_POHJAVESIALUE.shz"
