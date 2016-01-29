@@ -21,8 +21,9 @@
             [ol.extent :as ol-extent]
             [ol.proj :as ol-proj]
 
-            [ol.source.Vector]
-            [ol.source.VectorTile]
+            [ol.source.Vector] ;; Käytä ol.source.VectorTile kun ol päivittyy uudempaan kuin 3.10.0
+            
+            
             [ol.layer.Vector]
             [ol.Feature]
             [ol.geom.Polygon]
@@ -325,7 +326,7 @@
 (defn- create-geometry-layer
   "Create a new ol3 Vector layer with a vector source."
   []
-  (ol.layer.Vector. #js {:source (ol.source.VectorTile.)}))
+  (ol.layer.Vector. #js {:source (ol.source.Vector.)}))
 
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
