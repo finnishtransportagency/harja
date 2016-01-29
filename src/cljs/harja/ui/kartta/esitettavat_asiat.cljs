@@ -140,7 +140,7 @@
   (selvita-laadunseurannan-ikoni "tarkastus" tekija))
 
 (defn selvita-laatupoikkeaman-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "havainto" tekija))
+  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
 
 (defn otsikko-tekijalla [etuliite laatupoikkeama]
   (str etuliite " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
