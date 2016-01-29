@@ -230,6 +230,7 @@
                (when (or (= :valmis (:tila @paikkaus/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                  {:otsikko     "Kommentit" :nimi :kommentit
+                  :tyyppi :komponentti
                   :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
                                                      :voi-liittaa      false
                                                      :leveys-col       40
@@ -244,7 +245,7 @@
              (kasittely valmis-kasiteltavaksi?)]]
 
            [:fieldset.lomake-osa
-            [:legend "Ilmoitustiedot"]
+            [:h3 "Ilmoitustiedot"]
 
             [grid/muokkaus-grid
              {:otsikko      "Paikatut tierekisteriosoitteet"
