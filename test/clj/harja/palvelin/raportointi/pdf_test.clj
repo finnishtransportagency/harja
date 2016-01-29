@@ -43,7 +43,7 @@
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
     (is (= fo '[:fo:block
-                {:space-before "1em"}
+                {:space-before "1em" :font-size "8pt"}
                 "Taulukko"
                 [:fo:table
                  {:border "solid 0.2mm black"}
