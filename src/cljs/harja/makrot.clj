@@ -1,5 +1,4 @@
-(ns harja.makrot
-  (:require [harja.loki :refer [log]]))
+(ns harja.makrot)
 
 (defmacro defc [name args & body]
   (assert (symbol? name) "function name must be a symbol")
@@ -37,5 +36,4 @@
   `(try
      ~@body
      (catch :default e#
-       (log "go-blokki kaatui:" e#)
        (harja.virhekasittely/arsyttava-virhe "go-blokki kaatui: " e#))))
