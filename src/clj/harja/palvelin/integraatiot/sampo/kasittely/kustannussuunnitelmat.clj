@@ -45,7 +45,7 @@
     (mapv (fn [vuosi]
             (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
               {:alkupvm  (pvm/aika-iso8601 (:alkupvm vuosi))
-               :loppupvm (.replace (pvm/aika-iso8601 (:loppupvm vuosi)) "00:00:00.0" "17:00:00.0")
+               :loppupvm (pvm/aika-iso8601 (:loppupvm vuosi))
                :summa    summa}))
           vuodet)))
 
