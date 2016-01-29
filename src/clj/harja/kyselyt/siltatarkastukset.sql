@@ -3,7 +3,7 @@
 SELECT
   s.id,
   s.siltanimi,
-  s.siltanro,
+  s.siltatunnus,
   s.alue,
   s1.tarkastusaika,
   s1.tarkastaja,
@@ -26,7 +26,7 @@ WHERE s.id IN (SELECT silta
 SELECT
   s.id,
   s.siltanimi,
-  s.siltanro,
+  s.siltatunnus,
   s.alue,
   s1.tarkastusaika,
   s1.tarkastaja,
@@ -53,7 +53,7 @@ WHERE s.id IN (SELECT silta
 SELECT
   s.id,
   s.siltanimi,
-  s.siltanro,
+  s.siltatunnus,
   s.alue,
   s1.tarkastusaika,
   s1.tarkastaja,
@@ -81,7 +81,7 @@ WHERE s.id IN (SELECT silta
 SELECT
   s.id,
   s.siltanimi,
-  s.siltanro,
+  s.siltatunnus,
   s.alue,
   s1.tarkastusaika,
   s1.tarkastaja,
@@ -117,7 +117,7 @@ SELECT
    WHERE k2.siltatarkastus = st2.id AND (tulos = 'B' OR tulos = 'C')) AS rikki_nyt,
   s.id,
   s.siltanimi,
-  s.siltanro,
+  s.siltatunnus,
   s.alue,
   st2.tarkastusaika,
   st2.tarkastaja,
