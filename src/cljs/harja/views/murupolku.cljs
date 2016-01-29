@@ -11,7 +11,8 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.tapahtumat :as t]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [harja.ui.dom :as dom]))
 
 (defn koko-maa []
   [:li
@@ -127,10 +128,15 @@
   []
   (let [valinta-auki (atom nil)]
     (komp/luo
-      #_(komp/klikattu-ulkopuolelle #(reset! valinta-auki false)) ; FIXME Aiheuttaa mystisen virheen kun raporteista poistutaan
       (komp/kuuntelija
         [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
-        #(reset! valinta-auki false))
+        #(reset! valinta-auki false)
+        ;; FIXME Tässä voisi käyttää (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
+        ;; Mutta aiheuttaa mystisen virheen kun raporteista poistutaan
+        :body-klikkaus
+        (fn [this {klikkaus :tapahtuma}]
+          (when-not (dom/sisalla? this klikkaus)
+            (reset! valinta-auki false))))
       {:component-did-mount (fn [_]
                               (t/julkaise! {:aihe :murupolku-muuttunut}))}
       (fn []
