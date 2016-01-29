@@ -1,4 +1,5 @@
-(ns harja.makrot)
+(ns harja.makrot
+  (:require [harja.loki :refer [log]]))
 
 (defmacro defc [name args & body]
   (assert (symbol? name) "function name must be a symbol")
