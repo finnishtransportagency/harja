@@ -42,6 +42,13 @@
     (euro summa)
     "Indeksi puuttuu"))
 
+(defn euro-ei-voitu-laskea
+  "Formatoi euromäärän tai sanoo ei voitu laskea, jos nil."
+  [summa]
+  (if summa
+    (euro summa)
+    "Ei voitu laskea tai ei käytössä urakassa"))
+
 (defn pikseleina
   [arvo]
   (str arvo "px"))
