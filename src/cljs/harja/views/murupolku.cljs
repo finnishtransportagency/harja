@@ -127,7 +127,7 @@
   []
   (let [valinta-auki (atom nil)]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
+      #_(komp/klikattu-ulkopuolelle #(reset! valinta-auki false)) ; FIXME Aiheuttaa mystisen virheen kun raporteista poistutaan
       (komp/kuuntelija
         [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
         #(reset! valinta-auki false))
