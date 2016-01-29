@@ -73,7 +73,7 @@
           db (:db this)]
       (log/debug "Paikallinen päivitystehtävä: " paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys)
       (when (and (not alk-osoite) (not alk-tuontikohde))
-        (log/debug "Startataan paikallinen paivitystehtava, tiedosto=" shapefile)
+        (log/debug "Käynnistetään paikallinen paivitystehtava tiedostosta:" shapefile)
         (chime-at
           (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
           (fn [_]
