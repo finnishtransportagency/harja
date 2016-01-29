@@ -1,7 +1,7 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.loki :refer [log warn]]
+            [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
             [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
@@ -370,15 +370,17 @@
   ([asiat valittu tunniste]
    (kartalla-esitettavaan-muotoon asiat valittu tunniste nil))
   ([asiat valittu tunniste asia-xf]
-   (let [extent (volatile! nil)
-         selitteet (volatile! #{})]
-     (with-meta
-       (into []
-             (comp (or asia-xf identity)
-                   (map #(kartalla-xf % valittu (or tunniste [:id])))
-                   (geo/laske-extent-xf extent)
-                   (tallenna-selitteet-xf selitteet))
-             asiat)
-       {:extent @extent
-        :selitteet @selitteet}))))
+   (mittaa-aika
+    "kartalla-esitettavaan-muotoon"
+    (let [extent (volatile! nil)
+          selitteet (volatile! #{})]
+      (with-meta
+        (into []
+              (comp (or asia-xf identity)
+                    (map #(kartalla-xf % valittu (or tunniste [:id])))
+                    (geo/laske-extent-xf extent)
+                    (tallenna-selitteet-xf selitteet))
+              asiat)
+        {:extent @extent
+         :selitteet @selitteet})))))
 
