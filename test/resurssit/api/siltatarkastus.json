@@ -16,7 +16,7 @@
     "tunniste": {
       "id": __ID__
     },
-    "siltanumero": __SILTANUMERO__,
+    "siltatunnus": "__SILTATUNNUS__",
     "tarkastusaika": "__TARKASTUSAIKA__",
     "tarkastaja": {
       "etunimi": "__ETUNIMI__",

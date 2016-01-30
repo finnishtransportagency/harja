@@ -15,12 +15,12 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(defn hae-siltanumerot []
-  (q (str "SELECT siltanro FROM silta;")))
+(defn hae-siltatunnukset []
+  (q (str "SELECT siltatunnus FROM silta;")))
 
 (deftest tallenna-siltatarkastus
   (let [ulkoinen-id 12345
-        siltanumero (ffirst (hae-siltanumerot))
+        siltatunnus (ffirst (hae-siltatunnukset))
         tarkastusaika "2014-01-30T12:00:00Z"
         tarkastaja-etunimi "Martti"
         tarkastaja-sukunimi "Ahtisaari"
@@ -43,7 +43,7 @@
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__ETUNIMI__" tarkastaja-etunimi)
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
-                                                    (.replace "__SILTANUMERO__" (str siltanumero))
+                                                    (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
     (println "Vastaus: " vastaus-lisays)
     (is (= 200 (:status vastaus-lisays)))
@@ -62,7 +62,7 @@
 
 (deftest yrita-tallentaa-virheellinen-siltatarkastus-ilman-kaikkia-kohteita
   (let [ulkoinen-id 666
-        siltanumero (ffirst (hae-siltanumerot))
+        siltatunnus (ffirst (hae-siltatunnukset))
         tarkastusaika "2004-01-30T12:00:00Z"
         tarkastaja-etunimi "Simo"
         tarkastaja-sukunimi "Siili"
@@ -72,13 +72,13 @@
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__ETUNIMI__" tarkastaja-etunimi)
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
-                                                    (.replace "__SILTANUMERO__" (str siltanumero))
+                                                    (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
     (is (not= 200 (:status vastaus-lisays)))))
 
 (deftest yrita-tallentaa-siltatarkastus-olemattomalle-sillalle
   (let [ulkoinen-id 999
-        siltanumero 1
+        siltatunnus 1
         tarkastusaika "2004-01-30T12:00:00Z"
         tarkastaja-etunimi "Martti"
         tarkastaja-sukunimi "Ahtisaari"
@@ -88,13 +88,13 @@
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__ETUNIMI__" tarkastaja-etunimi)
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
-                                                    (.replace "__SILTANUMERO__" (str siltanumero))
+                                                    (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
     (is (not= 200 (:status vastaus-lisays)))))
 
 (deftest paivita-siltatarkastus
   (let [ulkoinen-id 787878
-        siltanumero (first (second (hae-siltanumerot)))
+        siltatunnus (first (second (hae-siltatunnukset)))
         tarkastusaika "2016-01-30T12:00:00Z"
         tarkastaja-etunimi "Siooo"
         tarkastaja-sukunimi "Silttttttarkaja"
@@ -104,7 +104,7 @@
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__ETUNIMI__" tarkastaja-etunimi)
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
-                                                    (.replace "__SILTANUMERO__" (str siltanumero))
+                                                    (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
     (is (= 200 (:status vastaus-lisays)))
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE ulkoinen_id = '" ulkoinen-id "';")))]
@@ -121,7 +121,7 @@
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__ETUNIMI__" tarkastaja-etunimi)
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
-                                                    (.replace "__SILTANUMERO__" (str siltanumero))
+                                                    (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
     (is (= 200 (:status vastaus-lisays)))
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE ulkoinen_id = '" ulkoinen-id "';")))]
