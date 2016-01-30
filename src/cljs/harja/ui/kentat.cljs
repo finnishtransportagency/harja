@@ -126,7 +126,7 @@
 
 
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex on-focus lomake? placeholder]} data]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? placeholder]} data]
   [:input {:class       (when lomake? "form-control")
            :placeholder placeholder
            :on-change   #(reset! data (-> % .-target .-value))

@@ -170,7 +170,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja "
-  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s} data atom-fn muokattava?
+  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s}
+   data atom-fn muokattava?
    muokattu? virheet varoitukset]
   (let [arvo (atom-fn s)]
     [:div.form-group {:class (str (or col-luokka
@@ -217,7 +218,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn nayta-rivi
   "UI yhdelle riville"
-  [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus! muokatut virheet varoitukset]
+  [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus!
+   muokatut virheet varoitukset]
   (let [rivi? (-> skeemat meta :rivi?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
@@ -229,7 +231,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                        (muokattava? data)))]]
         ^{:key nimi}
         [kentta (assoc s
-                       :col-luokka col-luokka)
+                       :col-luokka col-luokka
+                       :focus (= nimi nykyinen-fokus)
+                       :on-focus #(aseta-fokus! nimi))
          data atom-fn muokattava?
          (get muokatut nimi)
          (get virheet nimi)
@@ -301,7 +305,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
                                     voi-muokata?
                                     fokus
-                                    #(swap! data assoc ::fokus %)
+                                    #(muokkaa! (assoc data ::fokus %))
                                     muokatut
                                     virheet
                                     varoitukset]]
