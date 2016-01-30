@@ -117,7 +117,7 @@
 
          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
           {:otsikko "Nimi" :leveys "55%" :nimi :nimi :tyyppi :string :pituus-max 128}
-          {:otsikko "Takaraja" :leveys "20%" :nimi :takaraja :fmt pvm/pvm :tyyppi :pvm}
+          {:otsikko "Takaraja" :leveys "20%" :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
           {:otsikko "Tila" :leveys "25%" :tyyppi :string :muokattava? (constantly false)
            :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
          @tavoitteet]
