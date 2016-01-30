@@ -20,7 +20,6 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
 
-            [harja.domain.laadunseuranta :refer [Tarkastus validi-tarkastus?]]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset-kartalla]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -154,7 +153,7 @@
                    :valinnat [1 2]})))
                  
 (defn tarkastus [tarkastus-atom]
-  (let [tarkastus (lomake/ilman-lomaketietoja @tarkastus-atom)
+  (let [tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)]
     (log (pr-str @tarkastus-atom))
     [:div.tarkastus
@@ -170,7 +169,7 @@
                 (fn []
                   (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
                 
-                {:disabled (let [validi? (validi-tarkastus? tarkastus)]
+                {:disabled (let [validi? (lomake/voi-tallentaa? tarkastus)]
                              (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
                              (not validi?))
                  :kun-onnistuu (fn [tarkastus]
@@ -217,8 +216,7 @@
        
        {:otsikko "Havain\u00ADnot" :nimi :havainnot
         :koko [80 :auto]
-        :tyyppi :text :pakollinen? true
-        :validoi [[:ei-tyhja "Kirjaa havainnot"]]
+        :tyyppi :text
         :palstoja 2}
 
        

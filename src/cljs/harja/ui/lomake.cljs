@@ -78,7 +78,7 @@ ja kaikki pakolliset kentät on täytetty"
 Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [skeemat]
   (loop [acc []
-         [s & skeemat] skeemat]
+         [s & skeemat] (remove nil? skeemat)]
     (if-not s
       acc
       (cond
@@ -87,7 +87,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
         (ryhma? s)
         (recur acc
-               (concat (:skeemat s) skeemat))
+               (concat (remove nil? (:skeemat s)) skeemat))
 
         :default
         (recur (conj acc s)
@@ -275,7 +275,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                         true)
          muokkaa-kenttaa-fn (fn [nimi]
                               (fn [uudet-tiedot]
-                                (log "muokkaa kenttää " (pr-str nimi))
+                                
                                 (let [kaikki-skeemat (pura-ryhmat skeema)
                                       kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
                                       kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)
