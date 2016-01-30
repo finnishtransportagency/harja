@@ -128,50 +128,42 @@
   []
   (let [valinta-auki (atom nil)]
     (komp/luo
-      (komp/kuuntelija
-        [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
-        #(reset! valinta-auki false)
-        ;; FIXME Tässä voisi käyttää (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
-        ;; Mutta aiheuttaa mystisen virheen kun raporteista poistutaan
-        :body-klikkaus
-        (fn [this {klikkaus :tapahtuma}]
-          (when-not (dom/sisalla? this klikkaus)
-            (reset! valinta-auki false))))
-      {:component-did-mount (fn [_]
+     (komp/kuuntelija
+      [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
+       :urakka-valittu :urakkavalinta-poistettu]
+      #(reset! valinta-auki false)
+      ;; FIXME Tässä voisi käyttää (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
+      ;; Mutta aiheuttaa mystisen virheen kun raporteista poistutaan
+      :body-klikkaus
+      (fn [this {klikkaus :tapahtuma}]
+        (when-not (dom/sisalla? this klikkaus)
+          (reset! valinta-auki false))))
+     {:component-did-mount (fn [_]
                               (t/julkaise! {:aihe :murupolku-muuttunut}))}
-      (fn []
-        [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
-                         (cond
-                           (= @nav/sivu :hallinta) "hide"
-                           (= @nav/sivu :about) "hide"
-                           :default ""))}
-         (case @murupolku-muoto
-           :tilannekuva [:ol.murupolku
-                         [:div.col-sm-8.murupolku-vasen
-                          [koko-maa]
-                          [hallintayksikko valinta-auki]
-                          [urakkatyyppi-murupolussa]
-                          [urakka valinta-auki]]
-                         [:div.col-sm-4.murupolku-oikea
-                          [urakoitsija]]]
-           ;; Perusversio
-           [:ol.murupolku
-             [:div.col-sm-6.murupolku-vasen
-              [koko-maa]
-              [hallintayksikko valinta-auki]
-              [urakka valinta-auki]]
-             [:div.col-sm-6.murupolku-oikea
-              [urakoitsija]
-              [urakkatyyppi]]])]))
+     (fn []
+       [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
+                        (cond
+                          (= @nav/sivu :hallinta) "hide"
+                          (= @nav/sivu :about) "hide"
+                          :default ""))}
+        (case @murupolku-muoto
+          :tilannekuva [:ol.murupolku
+                        [:div.col-sm-8.murupolku-vasen
+                         [koko-maa]
+                         [hallintayksikko valinta-auki]
+                         [urakkatyyppi-murupolussa]
+                         [urakka valinta-auki]]
+                        [:div.col-sm-4.murupolku-oikea
+                         [urakoitsija]]]
+          ;; Perusversio
+          [:ol.murupolku
+           [:div.col-sm-6.murupolku-vasen
+            [koko-maa]
+            [hallintayksikko valinta-auki]
+            [urakka valinta-auki]]
+           [:div.col-sm-6.murupolku-oikea
+            [urakoitsija]
+            [urakkatyyppi]]])]))))
 
-    ;; Jos hallintayksikkö tai urakka valitaan, piilota dropdown
-    [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu :urakka-valittu :urakkavalinta-poistettu]
-    #(reset! (-> % reagent/state :valinta-auki) nil)
 
-    ;; Jos klikataan komponentin ulkopuolelle, vaihdetaan piilotetaan valintalistat
-    :body-klikkaus
-    (fn [this {klikkaus :tapahtuma}]
-      (when-not (sisalla? this klikkaus)
-        (let [valinta-auki (:valinta-auki (reagent/state this))]
-          (reset! valinta-auki false))))))
 

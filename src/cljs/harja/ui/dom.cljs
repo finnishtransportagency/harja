@@ -1,7 +1,8 @@
 (ns harja.ui.dom
   "Yleisiä apureita DOMin ja selaimen hallintaan"
   (:require [reagent.core :as r]
-            [harja.asiakas.tapahtumat :as t])
+            [harja.asiakas.tapahtumat :as t]
+            [harja.loki :refer [log]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -35,11 +36,13 @@
 (defonce ikkunan-koko
          (reaction [@leveys @korkeus]))
 
+(defn- ikkunan-koko-muuttunut [& _]
+  (t/julkaise! {:aihe :ikkunan-koko-muuttunut :leveys @leveys :korkeus @korkeus}))
+
 (defonce ikkunan-koko-tapahtuman-julkaisu
-         (run!
-           (let [h @korkeus
-                 w @leveys]
-             (t/julkaise! {:aihe :ikkunan-koko-muuttunut :leveys w :korkeus h}))))
+  (do (add-watch korkeus ::ikkunan-koko-muuttunut ikkunan-koko-muuttunut)
+      (add-watch leveys ::ikkunan-koko-muuttunut ikkunan-koko-muuttunut)
+      true))
 
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]

@@ -170,8 +170,9 @@
         scroll-kuuntelija (fn [_]
                             (paivita :scroll))]
     (komp/luo
-      (komp/kuuntelija :ikkunan-koko-muuttunut #(paivita :aseta)
-                       :murupolku-muuttunut #(paivita :aseta))
+     (komp/kuuntelija #{:ikkunan-koko-muuttunut
+                        :murupolku-muuttunut}
+                      #(paivita :aseta))
       {:component-did-mount    #(do
                                  (events/listen js/window
                                                 EventType/SCROLL
