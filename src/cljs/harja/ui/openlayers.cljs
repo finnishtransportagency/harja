@@ -5,8 +5,7 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.ikonit :as ikonit]
+            [harja.ui.dom :as dom]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.geo :as geo]
@@ -589,7 +588,7 @@ oletus-zindex 4)
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
                        :image    (ol.style.Icon.
-                                   #js {:src      (yleiset/karttakuva (str +karttaikonipolku+ "sticker-sininen"))
+                                   #js {:src      (dom/karttakuva (str +karttaikonipolku+ "sticker-sininen"))
                                         :rotation (or direction 0)
                                         :opacity  1
                                         :anchor   #js [0.5 0.5]})

@@ -1,7 +1,7 @@
 (ns harja.views.urakka.suunnittelu.materiaalit
   (:require [reagent.core :refer [atom] :as r]
             [harja.domain.roolit :as roolit]
-            [harja.ui.yleiset :refer [kuuntelija raksiboksi] :refer-macros [deftk]]
+            [harja.ui.yleiset :refer [raksiboksi] :refer-macros [deftk]]
             [harja.tiedot.urakka.suunnittelu.materiaalit :as t]
             [harja.loki :refer [log logt]]
             [harja.tiedot.urakka :as u]

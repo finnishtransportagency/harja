@@ -24,10 +24,22 @@
 (defn haettavat [s]
   (into #{} (keep (fn [[avain arvo]] (when arvo avain)) s)))
 
+(defn alueen-hypotenuusa
+  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [{:keys [xmin ymin xmax ymax]}]
+  (let [dx (- xmax xmin)
+        dy (- ymax ymin)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
 
+(defn karkeistustoleranssi
+  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
+  [alue]
+  (let [pit (alueen-hypotenuusa alue)]
+    (log/debug "Alueen pit: " pit " => karkeistus toleranssi: " (/ pit 200))
+    (/ pit 200)))
 
 (defn- hae-ilmoitukset
-  [db user {{:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
+  [db user {:keys [toleranssi] {:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
   (let [haettavat (haettavat tyypit)]
     (when-not (empty? haettavat)
       (try
@@ -52,6 +64,7 @@
                                 (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
                                 (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
                               (q/hae-ilmoitukset db
+                                                 toleranssi
                                                  (when-not (:nykytilanne? tiedot) (konv/sql-date (:alku tiedot)))
                                                  (when-not (:nykytilanne? tiedot) (konv/sql-date (:loppu tiedot)))
                                                  urakat
@@ -65,7 +78,7 @@
           nil)))))
 
 (defn- hae-paallystystyot
-  [db user {:keys [alku loppu yllapito nykytilanne?]} urakat]
+  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
   (when (:paallystys yllapito)
     (try
       (into []
@@ -74,8 +87,9 @@
               (map konv/alaviiva->rakenne)
               (map #(konv/string->avain % [:paallystysilmoitus :tila])))
             (if nykytilanne?
-              (q/hae-paallystykset-nykytilanteeseen db)
+              (q/hae-paallystykset-nykytilanteeseen db toleranssi)
               (q/hae-paallystykset-historiakuvaan db
+                                                  toleranssi
                                                   (konv/sql-date loppu)
                                                   (konv/sql-date alku))))
       (catch Exception e
@@ -83,7 +97,7 @@
         nil))))
 
 (defn- hae-paikkaustyot
-  [db user {:keys [alku loppu yllapito nykytilanne?]} urakat]
+  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
   (when (:paikkaus yllapito)
     (try
       (into []
@@ -92,8 +106,9 @@
               (map konv/alaviiva->rakenne)
               (map #(konv/string->avain % [:paikkausilmoitus :tila])))
             (if nykytilanne?
-              (q/hae-paikkaukset-nykytilanteeseen db)
+              (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
               (q/hae-paikkaukset-historiakuvaan db
+                                                toleranssi
                                                 (konv/sql-date loppu)
                                                 (konv/sql-date alku))))
       (catch Exception e
@@ -101,7 +116,7 @@
         nil))))
 
 (defn- hae-laatupoikkeamat
-  [db user {:keys [alku loppu laatupoikkeamat]} urakat]
+  [db user {:keys [toleranssi alku loppu laatupoikkeamat]} urakat]
   (let [haettavat (haettavat laatupoikkeamat)]
     (when-not (empty? haettavat)
       (try
@@ -121,7 +136,7 @@
                 (map #(if (nil? (:kasittelyaika (:paatos %)))
                        (dissoc % :paatos)
                        %)))
-              (q/hae-laatupoikkeamat db urakat
+              (q/hae-laatupoikkeamat db toleranssi urakat
                                      (konv/sql-date alku)
                                      (konv/sql-date loppu)
                                      (map name haettavat)))
@@ -130,7 +145,7 @@
           nil)))))
 
 (defn- hae-tarkastukset
-  [db user {:keys [alku loppu tarkastukset]} urakat]
+  [db user {:keys [toleranssi alku loppu tarkastukset]} urakat]
   (let [haettavat (haettavat tarkastukset)]
     (when-not (empty? haettavat)
       (try
@@ -147,6 +162,7 @@
                          :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
                          :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
               (q/hae-tarkastukset db
+                                  toleranssi
                                   urakat
                                   (konv/sql-date alku)
                                   (konv/sql-date loppu)
@@ -156,7 +172,7 @@
           nil)))))
 
 (defn- hae-turvallisuuspoikkeamat
-  [db user {:keys [alku loppu turvallisuus]} urakat]
+  [db user {:keys [toleranssi alku loppu turvallisuus]} urakat]
   (when (:turvallisuuspoikkeamat turvallisuus)
     (try
       (konv/sarakkeet-vektoriin
@@ -166,7 +182,7 @@
                 (geo/muunna-pg-tulokset :sijainti)
                 (map #(konv/array->vec % :tyyppi))
                 (map #(assoc % :tyyppi (mapv keyword (:tyyppi %)))))
-              (q/hae-turvallisuuspoikkeamat db urakat (konv/sql-date alku)
+              (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
                                             (konv/sql-date loppu)))
         {:korjaavatoimenpide :korjaavattoimenpiteet})
       (catch Exception e
@@ -176,11 +192,11 @@
 (defn- hae-tyokoneet
   [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?]} urakat]
   (when nykytilanne?
-    (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
-          tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")]
+    (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
       (when-not (empty? haettavat-toimenpiteet)
         (try
-          (let [valitun-alueen-geometria (if urakka-id
+          (let [tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")
+                valitun-alueen-geometria (if urakka-id
                                            (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
                                              (or (:urakka_alue urakan-aluetiedot)
                                                  (:alueurakka_alue urakan-aluetiedot)))
@@ -200,24 +216,9 @@
             (tulosta-virhe! "tyokoneet" e)
             nil))))))
 
-(defn alueen-hypotenuusa
-  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
-  [{:keys [xmin ymin xmax ymax]}]
-  (let [dx (- xmax xmin)
-        dy (- ymax ymin)]
-    (Math/sqrt (+ (* dx dx) (* dy dy)))))
-
-(defn karkeistustoleranssi
-  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
-  [alue]
-  (let [pit (alueen-hypotenuusa alue)]
-    (log/debug "Alueen pit: " pit " => karkeistus toleranssi: " (/ pit 200))
-    (/ pit 200)))
-
 (defn- hae-toteumien-reitit
-  [db user {:keys [alue alku loppu talvi kesa]} urakat]
-  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))
-        toleranssi (karkeistustoleranssi alue)]
+  [db user {:keys [toleranssi alue alku loppu talvi kesa]} urakat]
+  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
     (when-not (empty? haettavat-toimenpiteet)
       (try
         (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit db haettavat-toimenpiteet))]
@@ -252,22 +253,23 @@
     ;; jos annettu lista on tyhjä.
     (when-not (empty? urakat)
       (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
-      {:toteumat               (tulosta-tulos! "toteumaa"
-                                               (hae-toteumien-reitit db user tiedot urakat))
-       :tyokoneet              (tulosta-tulos! "tyokonetta"
-                                               (hae-tyokoneet db user tiedot urakat))
-       :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
-                                               (hae-turvallisuuspoikkeamat db user tiedot urakat))
-       :tarkastukset           (tulosta-tulos! "tarkastusta"
-                                               (hae-tarkastukset db user tiedot urakat))
-       :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
-                                               (hae-laatupoikkeamat db user tiedot urakat))
-       :paikkaus               (tulosta-tulos! "paikkausta"
-                                               (hae-paikkaustyot db user tiedot urakat))
-       :paallystys             (tulosta-tulos! "paallystysta"
-                                               (hae-paallystystyot db user tiedot urakat))
-       :ilmoitukset            (tulosta-tulos! "ilmoitusta"
-                                               (hae-ilmoitukset db user tiedot urakat))})))
+      (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
+        {:toteumat               (tulosta-tulos! "toteumaa"
+                                                 (hae-toteumien-reitit db user tiedot urakat))
+         :tyokoneet              (tulosta-tulos! "tyokonetta"
+                                                 (hae-tyokoneet db user tiedot urakat))
+         :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
+                                                 (hae-turvallisuuspoikkeamat db user tiedot urakat))
+         :tarkastukset           (tulosta-tulos! "tarkastusta"
+                                                 (hae-tarkastukset db user tiedot urakat))
+         :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
+                                                 (hae-laatupoikkeamat db user tiedot urakat))
+         :paikkaus               (tulosta-tulos! "paikkausta"
+                                                 (hae-paikkaustyot db user tiedot urakat))
+         :paallystys             (tulosta-tulos! "paallystysta"
+                                                 (hae-paallystystyot db user tiedot urakat))
+         :ilmoitukset            (tulosta-tulos! "ilmoitusta"
+                                                 (hae-ilmoitukset db user tiedot urakat))}))))
 
 (defrecord Tilannekuva []
   component/Lifecycle

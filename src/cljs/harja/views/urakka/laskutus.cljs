@@ -5,7 +5,6 @@
             [harja.tiedot.urakka :as u]
 
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]]
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat])

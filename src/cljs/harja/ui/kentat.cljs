@@ -3,18 +3,18 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko linkki ajax-loader nuolivalinta] :as yleiset]
             [harja.ui.protokollat :refer [hae]]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
             [goog.string :as gstr]
             [cljs.core.async :refer [<! >! chan] :as async]
 
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
 
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as tasot]
@@ -608,7 +608,7 @@
 (defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
   {:alue (assoc arvo
                 :type tyyppi
-                :img (yleiset/karttakuva "tr-piste-tack-harmaa")
+                :img (dom/karttakuva "tr-piste-tack-harmaa")
                 :zindex 6
                 :color vari)
    :type :tr-valittu-osoite})

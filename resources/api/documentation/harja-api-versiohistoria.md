@@ -2,6 +2,8 @@
 <b>Julkaistu: 11.12.2015</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.7. Julkaistu: 27.1.2016
+    - Siltatunnus lisätty siltatarkastuksiin
 - Versionumero: 0.0.6. Julkaistu: 11.12.2015 . Muutokset:
     - Soratie-, talvihoito- ja tiestötarkastus rajapinnat on refaktoroitu vastaamaan uutta tietomallia
     - Vanha havainto rajapinta on muutettu laatupoikkeama rajapinnaksi

@@ -4,7 +4,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
