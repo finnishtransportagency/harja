@@ -66,7 +66,8 @@ ja kaikki pakolliset kentät on täytetty"
           ::muokatut
           ::virheet
           ::varoitukset
-          ::puuttuvat-pakolliset-kentat))
+          ::puuttuvat-pakolliset-kentat
+          ::fokus))
 
 (defrecord ^:private Otsikko [otsikko])
 (defn- otsikko? [x]
@@ -259,10 +260,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
                   funktiolle annetaan virheet ja varoitukset parametrina 
 
-  :virheet        atomi, joka sisältää mäpin kentän nimestä virheisiin, jos tätä ei
-                  anneta, lomake luo sisäisesti uuden atomin.
-  :varoitukset    atomi, joka sisältää mäpin kentän nimestä varoituksiin, jos tätä ei
-                  anneta, lomake luo sisäisesti uuden atomin.
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
   "
 
@@ -290,33 +287,33 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                    ::muokatut (conj (or muokatut #{}) nimi)
                                                    ::virheet kaikki-virheet
                                                    ::varoitukset kaikki-varoitukset
-                                                   :puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
+                                                   ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
      [:form.lomake
       (when otsikko
         [:h3.lomake-otsikko otsikko])
-      (map-indexed (fn [i skeemat]
-                     (let [otsikko (when (otsikko? (first skeemat))
-                                     (first skeemat))
-                           skeemat (if otsikko
-                                     (rest skeemat)
-                                     skeemat)
-                           rivi-ui [nayta-rivi skeemat
-                                    data
-                                    #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
-                                    voi-muokata?
-                                    fokus
-                                    #(muokkaa! (assoc data ::fokus %))
-                                    muokatut
-                                    virheet
-                                    varoitukset]]
-                       (if otsikko
-                         ^{:key (:otsikko otsikko)}
-                         [:span
-                          [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
-                          rivi-ui]
-                         ^{:key i}
-                         rivi-ui)))
-                   (rivita skeema))
+      (map-indexed
+       (fn [i skeemat]
+         (let [otsikko (when (otsikko? (first skeemat))
+                         (first skeemat))
+               skeemat (if otsikko
+                         (rest skeemat)
+                         skeemat)
+               rivi-ui [nayta-rivi skeemat
+                        data
+                        #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
+                        voi-muokata?
+                        fokus
+                        #(muokkaa! (assoc data ::fokus %))
+                        muokatut
+                        virheet
+                        varoitukset]]
+           (if otsikko
+             ^{:key i}
+             [:span
+              [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
+              rivi-ui]
+             (with-meta rivi-ui {:key i}))))
+       (rivita skeema))
       
       (when-let [footer (if footer-fn
                           (footer-fn virheet varoitukset)

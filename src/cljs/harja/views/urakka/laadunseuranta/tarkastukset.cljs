@@ -154,7 +154,7 @@
                    :valinnat [1 2]})))
                  
 (defn tarkastus [tarkastus-atom]
-  (let [tarkastus @tarkastus-atom
+  (let [tarkastus (lomake/ilman-lomaketietoja @tarkastus-atom)
         jarjestelmasta? (:jarjestelma tarkastus)]
     (log (pr-str @tarkastus-atom))
     [:div.tarkastus
@@ -199,6 +199,7 @@
         :palstoja 1}
 
        {:tyyppi :tierekisteriosoite
+        :nimi :tr
         :pakollinen? true
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
