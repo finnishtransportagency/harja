@@ -2,6 +2,7 @@
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
@@ -35,7 +36,8 @@
 
          [:span.suunnittelu
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :tabs :classes "tabs-taso2":active u/suunnittelun-valittu-valilehti}
+          [bs/tabs {:style :tabs :classes "tabs-taso2"
+                    :active (nav/valittu-valilehti-atom :suunnittelu)}
 
            "Kokonaishintaiset työt"
            :kokonaishintaiset

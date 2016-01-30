@@ -77,8 +77,8 @@
                                 :luoja                (:kayttajanimi toteuma)
                                 :reittipisteet        (:reittipisteet toteuma)
                                 :organisaatio         (:organisaatio toteuma)}]
-             (reset! u/urakan-valittu-valilehti :toteumat)
-             (reset! u/toteumat-valilehti :yksikkohintaiset-tyot)
+             (nav/aseta-valittu-valilehti! :urakat :toteumat)
+             (nav/aseta-valittu-valilehti! :toteumat :yksikkohintaiset-tyot)
              (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma lomake-tiedot))))))
 
 (defn tallenna-toteuma

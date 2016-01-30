@@ -18,30 +18,32 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce kohdeluettelo-valilehti (atom :paallystyskohteet))
+
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
   (let [paallystyskohde-id (or (:paallystyskohde_id kohde) (:paallystyskohde-id kohde))]
-    (popupit/nayta-popup (-> kohde
-                             (assoc :aihe :paallystys-klikattu)
-                             (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
-                             (assoc :kohdeosa {:nimi (get-in kohde [:osa :nimi])})
-                             (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
-                             (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
-                             (assoc :paallystysilmoitus {:tila (:tila kohde)})
-                             (assoc :tr {:numero        (get-in kohde [:osa :tr_numero])
-                                         :alkuosa       (get-in kohde [:osa :tr_alkuosa])
-                                         :alkuetaisyys  (get-in kohde [:osa :tr_alkuetaisyys])
-                                         :loppuosa      (get-in kohde [:osa :tr_loppuosa])
-                                         :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
-                             (assoc :kohde-click #(do (kartta/poista-popup!)
-                                                      (reset! kohdeluettelo-valilehti :paallystysilmoitukset)
-                                                      (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id})))))))
+    (popupit/nayta-popup
+     (assoc kohde
+         :aihe :paallystys-klikattu
+         :kohde {:nimi (get-in kohde [:kohde :nimi])}
+         :kohdeosa {:nimi (get-in kohde [:osa :nimi])}
+         :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste])
+         :toimenpide (get-in kohde [:osa :toimenpide])
+         :paallystysilmoitus {:tila (:tila kohde)}
+         :tr {:numero        (get-in kohde [:osa :tr_numero])
+              :alkuosa       (get-in kohde [:osa :tr_alkuosa])
+              :alkuetaisyys  (get-in kohde [:osa :tr_alkuetaisyys])
+              :loppuosa      (get-in kohde [:osa :tr_loppuosa])
+              :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])}
+         :kohde-click #(do (kartta/poista-popup!)
+                           (nav/aseta-valittu-valilehti! :paallystyksen-kohdeluettelo :paallystysilmoitukset)
+                           (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id}))))))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
@@ -51,7 +53,8 @@
     (komp/kuuntelija :paallystys-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (fn [ur]
-      [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}
+      [bs/tabs {:style :tabs :classes "tabs-taso2"
+                :active (nav/valittu-valilehti-atom :kohdeluettelo-paallystys)}
 
        "Päällystyskohteet"
        :paallystyskohteet

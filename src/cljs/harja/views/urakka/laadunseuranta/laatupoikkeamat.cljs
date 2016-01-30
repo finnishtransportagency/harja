@@ -34,7 +34,7 @@
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                [alku loppu] @tiedot-urakka/valittu-aikavali
                laadunseurannassa? @laadunseuranta/laadunseurannassa?
-               valilehti @laadunseuranta/valittu-valilehti
+               valilehti (nav/valittu-valilehti :laadunseuranta)
                listaus @listaus]
               {:nil-kun-haku-kaynnissa? true}
               (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))

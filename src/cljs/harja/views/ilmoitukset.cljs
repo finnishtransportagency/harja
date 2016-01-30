@@ -33,7 +33,7 @@
                                              (if e (.stopPropagation e))
                                              (reset! nav/valittu-hallintayksikko (:hallintayksikko ilmoitus))
                                              (reset! nav/valittu-urakka-id (:urakka ilmoitus))
-                                             (reset! nav/sivu :urakat))]))
+                                             (nav/vaihda-sivu! :urakat))]))
 
 (defn nayta-tierekisteriosoite
   [tr]
