@@ -7,7 +7,7 @@
             [harja.ui.ikonit :as ikonit]
             [goog.events :as events]
             [goog.events.EventType :as EventType]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
             [harja.ui.komponentti :as komp]))
 
 (def +paivat+ ["Ma" "Ti" "Ke" "To" "Pe" "La" "Su"])
@@ -18,8 +18,8 @@
 (defn selvita-kalenterin-suunta [kalenteri-komponentti sijainti-atom]
   (let [pvm-input-solmu (.-parentNode (r/dom-node kalenteri-komponentti))
         r (.getBoundingClientRect pvm-input-solmu)
-        etaisyys-alareunaan (- @yleiset/korkeus (.-bottom r))
-        etaisyys-oikeaan-reunaan (- @yleiset/leveys (.-left r))
+        etaisyys-alareunaan (- @dom/korkeus (.-bottom r))
+        etaisyys-oikeaan-reunaan (- @dom/leveys (.-left r))
         uusi-suunta (if (< etaisyys-alareunaan 250)
                       (if (< etaisyys-oikeaan-reunaan 200)
                         :ylos-vasen
