@@ -582,7 +582,6 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
 
           :geometries         @tasot/geometriat
-
           :geometry-fn        (fn [piirrettava]
                                 (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
                                   (when (map? alue)

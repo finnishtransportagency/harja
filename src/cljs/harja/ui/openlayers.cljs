@@ -41,7 +41,8 @@
 
             [ol.Overlay]                                    ;; popup
             [harja.virhekasittely :as vk]
-            [harja.asiakas.tapahtumat :as t])
+            [harja.asiakas.tapahtumat :as t]
+            [harja.ui.openlayers.kuvataso :as kuvataso])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
@@ -49,22 +50,22 @@
                    [harja.ui.openlayers :refer [disable-rendering]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että kartan animoinnit on valmistuneet." :const true}
-animaation-odotusaika 200)
+  animaation-odotusaika 200)
 
 (def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
-initial-resolution 1200)
+  initial-resolution 1200)
 
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos" :const true}
-min-zoom 2)
+  min-zoom 2)
 (def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään" :const true}
-max-zoom 16)
+  max-zoom 16)
 
 (def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
-oletus-zindex 4)
+  oletus-zindex 4)
 
 (def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä turhaan liikaa"
        :const true}
-nuolten-valimatka 3000)
+  nuolten-valimatka 3000)
 
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
@@ -334,6 +335,7 @@ nuolten-valimatka 3000)
                          :rendererOptions {:zIndexing true
                                            :yOrdering true}}))
 
+
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [mapspec (:mapspec (reagent/state this))
@@ -343,7 +345,7 @@ nuolten-valimatka 3000)
                                                                   :dragPan        false})]
                       (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
                       oletukset)
-        map-optiot (clj->js {:layers       [mml]
+        map-optiot (clj->js {:layers       [mml (kuvataso/luo-kuvataso projektio suomen-extent)]
                              :target       (:id mapspec)
                              :controls     (ol-control/defaults #js {})
                              :interactions interaktiot})
@@ -705,7 +707,6 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
                                                         (get geometry-layers layer)
                                                         layer-geometries))
                    layers)))))))
-
 
 (defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries extent-key :extent-key}]]
   (let [{aiempi-extent :extent aiempi-extent-key :extent-key} (reagent/state this)]
