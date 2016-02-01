@@ -173,8 +173,7 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
 
 -- name: hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -201,8 +200,7 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
 
 -- name: hae-koko-maan-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -227,8 +225,7 @@ FROM tarkastus t
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
 
 -- name: hae-urakan-kelitarkastukset-liitteineen-raportille
 -- Hakee urakan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -259,8 +256,7 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
 
 -- name: hae-hallintayksikon-kelitarkastukset-liitteineen-raportille
 -- Hakee hallintayksikön kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -293,8 +289,7 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
 
 -- name: hae-koko-maan-kelitarkastukset-liitteineen-raportille
 -- Hakee koko maan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -327,8 +322,7 @@ FROM tarkastus t
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
-ORDER BY t.aika;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
 
 -- name: hae-urakan-soratietarkastukset-raportille
 -- Hakee urakan soratietarkastukset aikavälin perusteella raportille

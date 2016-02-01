@@ -83,9 +83,9 @@
                                            :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
                                (keys tarkastusryhmat))]
   ;; Ryhmittelyn jälkeen järjestys on väärin, sortataan tulokset käsin
-  (sort-by (fn [rivi] [(pvm/paivan-alussa (:aika rivi))
-                       (get-in rivi [:tr :numero])])
-           yhdistetyt-rivit)))
+  (reverse (sort-by (fn [rivi] [(:aika rivi)
+                        (get-in rivi [:tr :numero])])
+            yhdistetyt-rivit))))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-soratietarkastukset-raportille db
