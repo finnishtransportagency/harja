@@ -400,7 +400,7 @@
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -412,18 +412,18 @@
         auki (atom false)
 
         teksti-paivamaaraksi! (fn [data t]
+                                (log "TEKSTI " t)
                                 (reset! teksti t)
                                 (if (str/blank? t)
-                                  (reset! data nil))
-                                (when-not focus
+                                  (reset! data nil)
                                   (when-let [d (pvm/->pvm t)]
+                                    (log "OLIHAN SE VALIDI")
                                     (reset! data d))))
 
         muuta! (fn [data t]
-                 (when
-                   (or
-                     (re-matches +pvm-regex+ t)
-                     (str/blank? t))
+                 (log "MUUTA! pvm")
+                 (when (or (re-matches +pvm-regex+ t)
+                           (str/blank? t))
                    (reset! teksti t))
                  (if (str/blank? t)
                    (reset! data nil)))]
@@ -432,6 +432,7 @@
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (let [p @data]
+           (log "RECEIVED PROPS")
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))
@@ -454,8 +455,9 @@
                          :on-change   #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                        (reset! auki false)
-                                        %)
+                                         (teksti-paivamaaraksi! data nykyinen-teksti)
+                                         (reset! auki false)
+                                         true)
                          :on-blur     #(do
                                         (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki

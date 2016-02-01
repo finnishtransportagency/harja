@@ -164,7 +164,7 @@
                                          #(swap! tiedot assoc ::materiaalivirheet %))
               muokattava-pred (constantly (not (:jarjestelmanlisaama tiedot)))
               tiedot @tiedot
-              voi-tallentaa? (and (lomake/voi-tallentaa? tiedot)
+              voi-tallentaa? (and (lomake/validi? tiedot)
                                   (> (count @materiaalitoteumat-mapissa) 0)
                                   (zero? (count @materiaalien-virheet)))]
           [:div.toteuman-tiedot
