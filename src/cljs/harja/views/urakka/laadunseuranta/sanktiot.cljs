@@ -182,6 +182,7 @@
                         :valinta-nayta :nimi
                         :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
          {:otsikko       "Toimenpide"
+          :pakollinen?   true
           :nimi          :toimenpideinstanssi
           :tyyppi        :valinta
           :valinta-arvo  :tpi_id
