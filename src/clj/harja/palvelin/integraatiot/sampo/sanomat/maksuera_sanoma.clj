@@ -1,9 +1,8 @@
 (ns harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma
   (:require [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
-            [clojure.string :as str])
-  (:import (java.text SimpleDateFormat)
-           (java.util Date Calendar)))
+            [clojure.string :as str]
+            [harja.pvm :as pvm])
+  (:import (java.util Date Calendar)))
 
 (defn muodosta-kulu-id []
   (str/join "" ["kulu"
@@ -22,9 +21,6 @@
    (for [[key value] values]
      [:ColumnValue {:name key} value])
    content])
-
-(defn formatoi-paivamaara [date]
-  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date))
 
 (defn paattele-tyyppi [tyyppi]
   (case tyyppi
@@ -48,8 +44,8 @@
      [:Products
       [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
-                 :start                 (formatoi-paivamaara alkupvm)
-                 :finish                (formatoi-paivamaara loppupvm)
+                 :start                 (pvm/aika-iso8601 alkupvm)
+                 :finish                (.replace (pvm/aika-iso8601 loppupvm) "00:00:00.0" "17:00:00.0")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
                  :managerUserName       vastuuhenkilo
@@ -89,7 +85,7 @@
                                 (luo-custom-information {"code"                 instance-code
                                                          ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
                                                          ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
-                                                         "vv_payment_date"      (formatoi-paivamaara (Date.))
+                                                         "vv_payment_date"      (pvm/aika-iso8601 (Date.))
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
                                                          "name"                 "Laskutus- ja maksutiedot"})])]]]))

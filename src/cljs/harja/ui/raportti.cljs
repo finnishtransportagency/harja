@@ -1,6 +1,7 @@
 (ns harja.ui.raportti
   "Harjan raporttielementtien HTML näyttäminen."
   (:require [harja.ui.grid :as grid]
+            [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.visualisointi :as vis]
             [harja.loki :refer [log]]))
@@ -14,9 +15,11 @@
             (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
     (first elementti)))
 
-(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?]} sarakkeet data]]
+(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto? korosta-rivit korostustyyli]} sarakkeet data]]
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
-  [grid/grid {:otsikko (or otsikko "") :tunniste hash :piilota-toiminnot? true}
+  [grid/grid {:otsikko (or otsikko "")
+              :tunniste hash
+              :piilota-toiminnot? true}
    (into []
          (map-indexed (fn [i sarake]
                         {:hae     #(get % i)
@@ -30,15 +33,17 @@
      [(grid/otsikko "Ei tietoja")]
      (let [viimeinen-rivi (last data)]
       (into []
-            (map (fn [rivi]
-                   (if-let [otsikko (:otsikko rivi)]
-                     (grid/otsikko otsikko)
-                     (let [mappina (zipmap (range (count sarakkeet))
-                                           rivi)]
-                       (if (and viimeinen-rivi-yhteenveto?
-                                (= viimeinen-rivi rivi))
-                         (assoc mappina :yhteenveto true)
-                         mappina)))))
+            (map-indexed (fn [index rivi]
+                           (if-let [otsikko (:otsikko rivi)]
+                             (grid/otsikko otsikko)
+                             (let [mappina (zipmap (range (count sarakkeet))
+                                                   rivi)]
+                               (cond-> mappina
+                                       (and viimeinen-rivi-yhteenveto?
+                                            (= viimeinen-rivi rivi))
+                                       (assoc :yhteenveto true)
+                                       (some #(= index %) korosta-rivit)
+                                       (assoc :korosta true))))))
             data)))])
 
 
@@ -55,7 +60,7 @@
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
 (defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
-  (let [w (int (* 0.85 @yleiset/leveys))
+  (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 2.9))]
     [:div.pylvaat
      [:h3 otsikko]

@@ -4,7 +4,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
@@ -60,7 +60,7 @@
 (defn sillan-perustiedot [silta]
   [:div [:h3 (:siltanimi silta)]
    [yleiset/tietoja {}
-    "Sillan numero: " (:siltanro silta)
+    "Sillan tunnus: " (:siltatunnus silta)
     "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
    "Tieosoite: " [tieosoite
                      (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
@@ -111,12 +111,12 @@
           {:otsikko       "Sillat"
            :tyhja         (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
            :rivi-klikattu #(reset! st/valittu-silta %)
-           :tunniste      :siltanro
+           :tunniste      :siltatunnus
            }
 
           ;; sarakkeet
           [{:otsikko "Silta" :nimi :siltanimi :leveys "40%"}
-           {:otsikko "Siltanumero" :nimi :siltanro :leveys "10%"}
+           {:otsikko "Siltatunnus" :nimi :siltatunnus :leveys "10%"}
            {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}
            (when-let [listaus (some #{:urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava}
@@ -276,7 +276,7 @@
                                                                  "Poista tarkastus"]
                                                                 ]}
                                                      [:div "Haluatko varmasti poistaa sillalle "
-                                                      [:b (str (:siltanimi @st/valittu-silta) " (nro " (:siltanro @st/valittu-silta)
+                                                      [:b (str (:siltanimi @st/valittu-silta) " (tunnus " (:siltatunnus @st/valittu-silta)
                                                                ") " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)))]
                                                       " tehdyn tarkastuksen?"]))}
            (ikonit/trash) " Poista tarkastus"]
@@ -337,7 +337,7 @@
                   :muokkaa! (fn [uusi]
                               (reset! lomakkeen-tiedot uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Sillan numero" :nimi :siltanro :hae (fn [_] (:siltanro @st/valittu-silta)) :muokattava? (constantly false)}
+           {:otsikko "Sillan tunnus" :nimi :siltatunnus :hae (fn [_] (:siltatunnus @st/valittu-silta)) :muokattava? (constantly false)}
            {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true :tyyppi :pvm :leveys-col 2
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
                       #(when (@olemassa-olevat-tarkastus-pvmt %1)

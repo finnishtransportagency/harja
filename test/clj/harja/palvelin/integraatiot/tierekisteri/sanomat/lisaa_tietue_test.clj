@@ -41,7 +41,7 @@
 
 ; REPL-testausta varten
 #_(defn lisaa-testitietue []
-  (let [testitietokanta (apply tietokanta/luo-tietokanta testi/testitietokanta)
+  (let [testitietokanta (tietokanta/luo-tietokanta testi/testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (harja.palvelin.integraatiot.tierekisteri.tietue/lisaa-tietue integraatioloki "https://testisonja.liikennevirasto.fi/harja/tierekisteri" lisattava-testitietue)))

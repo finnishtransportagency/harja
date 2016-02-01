@@ -1,12 +1,10 @@
 @import "livi_tyylit";
 
-@murupolun-korkeus: 65px;
 @murupolun-elementtikorkeus: @input-korkeus;
 
 .murupolku {
     background-color: @harmaa9;
-    height: @murupolun-korkeus;
-    padding: 8px 15px;
+    padding: 5px 15px;
     margin-bottom: 1.25rem;
     list-style: none;
     .disabled {
@@ -17,16 +15,52 @@
     .livicon-chevron-down {
         color: @sininen4;
     }
-    > li {
-        display: inline-block;
-        margin-right: 0.5rem;
-        margin-top: 10px;
-        vertical-align: top;
 
+    .murupolku-vasen {
+        > li {
+            vertical-align: top;
+            display: inline-block;
+            margin-top: 17px;
+            margin-right: 5px
+        }
     }
-    .urakoitsija-otsikko {
+
+    .murupolku-oikea {
+        > div {
+            float: right;
+            margin-right: 5px;
+        }
+    }
+
+    .murupolku-urakoitsija, .murupolku-urakkatyyppi {
         display: inline-block;
+        margin-top: 2px;
     }
+}
+
+@media screen and (max-width: 767px) {
+    .murupolku {
+        .murupolku-vasen {
+            > li {
+                margin-top: 0;
+            }
+        }
+        .murupolku-oikea {
+            > div {
+                float: left;
+            }
+        }
+    }
+}
+
+// Clearfix, varmistaa että murupolun korkeus asettuu oikein vaikka sen sisältö
+// olisikin irrotettu flowsta floateilla.
+.murupolku:after {
+    content: " ";
+    visibility: hidden;
+    display: block;
+    height: 0;
+    clear: both;
 }
 
 .murupolku-suotimet {

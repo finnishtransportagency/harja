@@ -1,0 +1,1 @@
+ALTER TABLE pohjavesialue ADD COLUMN ulkoinen_id INTEGER;

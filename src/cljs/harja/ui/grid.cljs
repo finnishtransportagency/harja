@@ -342,7 +342,7 @@ Optiot on mappi optioita:
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat] :as opts} skeema tiedot mahdollista-rivin-valinta]
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta] :as opts} skeema tiedot ]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
@@ -351,7 +351,7 @@ Optiot on mappi optioita:
         varoitukset (atom {})                               ;; validointivaroitukset: (:id rivi) => [varoitukset]
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
-        kysely-kaynnissa (atom false)
+        tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
@@ -501,7 +501,7 @@ Optiot on mappi optioita:
                                  (reset! uusi-id 0)
                                  (when rivi-valinta-peruttu (rivi-valinta-peruttu))
                                  (reset! valittu-rivi nil)
-                                 (reset! kysely-kaynnissa false))
+                                 (reset! tallennus-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
                            (nollaa-muokkaustiedot!)
                            (reset! gridia-muokataan? true)
@@ -544,7 +544,7 @@ Optiot on mappi optioita:
 
        :reagent-render
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu] :as opts} skeema tiedot]
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu korostustyyli] :as opts} skeema tiedot]
          (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
                colspan (if piilota-toiminnot?
                          (count skeema)
@@ -554,12 +554,12 @@ Optiot on mappi optioita:
                                  [:div.panel-heading
                                   (if-not muokataan
                                     [:span.pull-right.muokkaustoiminnot
-                                     (when tallenna
-                                       [:button.nappi-ensisijainen (if (or (= :ei-mahdollinen tallenna)
-                                                                           @gridia-muokataan?)
-                                                                     {:disabled true}
-                                                                     {:on-click #(do (.preventDefault %)
-                                                                                     (aloita-muokkaus! tiedot))})
+                                     (when (and tallenna
+                                                (not (nil? tiedot)))
+                                       [:button.nappi-ensisijainen {:disabled (or (= :ei-mahdollinen tallenna)
+                                                                                  @gridia-muokataan?)
+                                                                    :on-click #(do (.preventDefault %)
+                                                                                   (aloita-muokkaus! tiedot))}
                                         [:span.livicon-pen.grid-muokkaa " Muokkaa"]])]
                                     [:span.pull-right.muokkaustoiminnot
                                      [:button.nappi-toissijainen
@@ -578,15 +578,15 @@ Optiot on mappi optioita:
                                      (when-not muokkaa-aina
                                        [:button.nappi-myonteinen.grid-tallenna
                                         {:disabled (or (not (empty? @virheet))
-                                                       @kysely-kaynnissa)
-                                         :on-click #(when-not @kysely-kaynnissa
+                                                       @tallennus-kaynnissa)
+                                         :on-click #(when-not @tallennus-kaynnissa
                                                      (let [kaikki-rivit (mapv second @muokatut)
                                                            tallennettavat
                                                            (if tallenna-vain-muokatut
                                                              (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
                                                              kaikki-rivit)]
                                                        (do (.preventDefault %)
-                                                           (reset! kysely-kaynnissa true)
+                                                           (reset! tallennus-kaynnissa true)
                                                            (go (if (<! (tallenna tallennettavat)))
                                                                (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
                                         [:span.livicon-check " Tallenna"]])
@@ -689,6 +689,7 @@ Optiot on mappi optioita:
                                                          :luokka                    (str (if (even? (+ i 1)) "parillinen" "pariton")
                                                                                          (when rivi-klikattu
                                                                                            " klikattava ")
+                                                                                         (when (:korosta rivi) " korostettu-rivi ")
                                                                                          (when (:yhteenveto rivi) " yhteenveto ")
                                                                                          (when rivin-luokka
                                                                                            (rivin-luokka rivi)))

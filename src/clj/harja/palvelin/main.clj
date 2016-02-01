@@ -83,7 +83,7 @@
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta http-palvelin kehitysmoodi]} asetukset]
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (konfiguroi-lokitus asetukset)
     (try
       (validoi-asetukset asetukset)
@@ -91,12 +91,8 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
-     :db (tietokanta/luo-tietokanta (:palvelin tietokanta)
-                                    (:portti tietokanta)
-                                    (:tietokanta tietokanta)
-                                    (:kayttaja tietokanta)
-                                    (:salasana tietokanta)
-                                    (:yhteyspoolin-koko tietokanta))
+     :db (tietokanta/luo-tietokanta tietokanta)
+     :db-replica (tietokanta/luo-tietokanta tietokanta-replica)
      :klusterin-tapahtumat (component/using
                             (tapahtumat/luo-tapahtumat)
                             [:db])
@@ -157,7 +153,8 @@
 
      :raportointi (component/using
                    (raportointi/luo-raportointi)
-                   [:db :pdf-vienti])
+                   {:db :db-replica
+                    :pdf-vienti :pdf-vienti})
 
      ;; Frontille tarjottavat palvelut
      :kayttajatiedot (component/using
@@ -246,7 +243,7 @@
 
      :ilmoitukset (component/using
                    (ilmoitukset/->Ilmoitukset)
-                   [:http-palvelin :db])
+                   [:http-palvelin :db :tloik])
 
      :turvallisuuspoikkeamat (component/using
                               (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)

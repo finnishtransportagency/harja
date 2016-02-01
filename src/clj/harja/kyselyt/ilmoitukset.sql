@@ -2,8 +2,8 @@
 SELECT
   i.id,
   i.urakka,
-  hy.id AS hallintayksikko_id,
-  hy.nimi AS hallintayksikko_nimi,
+  hy.id                               AS hallintayksikko_id,
+  hy.nimi                             AS hallintayksikko_nimi,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
@@ -118,13 +118,33 @@ FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
 -- name: hae-muuttuneet-ilmoitukset
-SELECT ilmoitusid, ilmoitettu, yhteydenottopyynto, lyhytselite, pitkaselite, otsikko, ilmoitustyyppi,
-       selitteet, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys,
-       ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti,
-       lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti
-  FROM ilmoitus
- WHERE urakka = :urakka AND
-       (muokattu > :aika OR luotu > :aika)
+SELECT
+  ilmoitusid,
+  ilmoitettu,
+  yhteydenottopyynto,
+  lyhytselite,
+  pitkaselite,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE urakka = :urakka AND
+      (muokattu > :aika OR luotu > :aika)
 
 
 -- name: hae-id-ilmoitus-idlla
@@ -204,7 +224,6 @@ SET
   tr_numero = :tr_numero,
   sijainti  = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY
 WHERE id = :id;
-
 
 -- name: hae-ilmoitustoimenpide
 SELECT
@@ -286,3 +305,5 @@ VALUES
    :kasittelija_henkilo_sahkoposti,
    :kasittelija_organisaatio_nimi,
    :kasittelija_organisaatio_ytunnus);
+
+
