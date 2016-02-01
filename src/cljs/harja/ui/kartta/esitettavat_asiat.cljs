@@ -5,7 +5,7 @@
             [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.ui.yleiset :refer [karttakuva]]
+            [harja.ui.dom :refer [karttakuva]]
             [harja.geo :as geo]))
 
 (defn arrow-line [optiot geometria]

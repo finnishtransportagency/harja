@@ -134,6 +134,7 @@
 
 
 (defn aseta-suolasakon-kaytto [db user {:keys [urakka-id kaytossa?]}]
+  (log/debug "Käytössä? " kaytossa?)
   (roolit/vaadi-urakanvalvoja user urakka-id)
   (jdbc/with-db-transaction [db db]
     (q/aseta-suolasakon-kaytto! db kaytossa? urakka-id)

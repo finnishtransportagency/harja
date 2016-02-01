@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
                                       alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]

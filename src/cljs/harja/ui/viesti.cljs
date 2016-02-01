@@ -1,7 +1,7 @@
 (ns harja.ui.viesti
   "Flash-viestin näyttäminen UI:n päällä, jolla voidaan kertoa käyttäjälle statustietoa operaatioista."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -29,7 +29,7 @@
           ^{:key "viesti"}
           [:div.modal {:style {:display "block"}}
            ;; PENDING: viestilläkin backdrop, ehkä joku drop shadow olisi riittävä?
-           [:div.modal-backdrop.in {:style {:height @yleiset/korkeus}
+           [:div.modal-backdrop.in {:style {:height @dom/korkeus}
                                     :on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}]
            [:div.flash-viesti {:on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
             [:div.alert {:class (when luokka
