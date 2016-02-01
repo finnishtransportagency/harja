@@ -3,7 +3,11 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [goog.events :as events]
+            [goog.events.EventType :as EventType]
+            [harja.ui.dom :as dom]
+            [harja.fmt :as fmt])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -43,7 +47,7 @@
   (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
 
 (defn nuolivalinta
-  "Tekee handlerin, joka helpottaa nuolivalinnan tekemistä. Ottaa kolme funktiota: ylös, alas ja enter, 
+  "Tekee handlerin, joka helpottaa nuolivalinnan tekemistä. Ottaa kolme funktiota: ylös, alas ja enter,
 joita kutsutaan kun niiden näppäimiä paineetaan."
   [ylos alas enter]
   #(let [kc (.-keyCode %)]
@@ -111,10 +115,27 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
+(defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti sijainti-atom]
+  (let [solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
+        r (.getBoundingClientRect solmu)
+        etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
+
+    (reset! sijainti-atom (- etaisyys-alareunaan 10) 100)))
+
 (defn livi-pudotusvalikko [_ vaihtoehdot]
-  (let [auki (atom false)]
+  (let [auki (atom false)
+        max-korkeus (atom 0)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
+      {:component-did-mount
+       (fn [this]
+         (maarita-pudotusvalikon-max-korkeus this max-korkeus))}
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL (fn [this _]
+                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus)))
+      (komp/dom-kuuntelija js/window
+                           EventType/RESIZE (fn [this _]
+                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus)))
       (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)]
@@ -172,7 +193,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-           [:ul.dropdown-menu.livi-alasvetolista
+           [:ul.dropdown-menu.livi-alasvetolista {:style {:max-height (fmt/pikseleina @max-korkeus)}}
             (doall
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
