@@ -20,10 +20,9 @@
             [ol.extent :as ol-extent]
             [ol.proj :as ol-proj]
 
-            [ol.source.Vector] ;; Käytä ol.source.VectorTile kun ol päivittyy uudempaan kuin 3.10.0
-
-
+            [ol.source.Vector]
             [ol.layer.Vector]
+
             [ol.Feature]
             [ol.geom.Polygon]
             [ol.geom.Point]
@@ -731,6 +730,3 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
      :component-did-update         ol3-did-update
      :component-will-receive-props ol3-will-receive-props}))
 
-
-
-  

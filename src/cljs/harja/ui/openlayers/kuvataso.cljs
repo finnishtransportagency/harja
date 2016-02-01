@@ -1,36 +1,35 @@
 (ns harja.ui.openlayers.kuvataso
   "Taso, joka hakee kuvan Harja palvelimelta"
-  (:require [ol.layer.Image]
-            [ol.source.Image]
+  (:require [kuvataso.Lahde]
             [ol.Image]
-            [ol.Attribution]
+            [ol.layer.Image]
+            [ol.source.Image]
+            [ol.source.ImageStatic]
             [harja.loki :refer [log]]
-            [harja.asiakas.kommunikaatio :refer [karttakuva-url]])
-  (:require-macros [harja.makrot :refer [goog-extend]]))
+            [harja.asiakas.kommunikaatio :refer [karttakuva-url]]))
 
-(def viimeksi-haettu-kuva (atom nil))
+(defn hae-fn []
+  (let [kuva (atom nil)]
+    (fn [extent resolution pixel-ratio projection]
+      (second
+       (swap! kuva
+              (fn [[url image]]
+                (let [[x1 y1 x2 y2] extent
+                      uusi-url (karttakuva-url "x1" x1 "y1" y1 "x2" x2 "y2" y2
+                                               "r" resolution "pr" pixel-ratio)]
+                  (if (= uusi-url url)
+                    [url image]
+                    (do (log "UUSI KUVA URL: " uusi-url)
+                        [uusi-url
+                         (ol.Image. extent resolution 1 nil
+                                    uusi-url ""
+                                    ol.source.Image/defaultImageLoadFunction)])))))))))
 
-(goog-extend
- Kuvalahde ol.source.Image
- ([options]
-  (goog/base (js* "this") options)
-  (log "[Kuvalahde] luotu.. optiot: " (pr-str options)))
-
- (getImage
-  [extent resolution pixel-ratio projection]
-
-  #_(log "[Kuvalahde] extent=" extent ", resolution=" resolution ", pixel-ratio=" pixel-ratio ", projection=" projection)
-  (reset! viimeksi-haettu-kuva
-         (ol.Image. extent resolution 2
-                    (clj->js [(ol.Attribution. #js {:html "foo"})])
-                    (let [[x1 y1 x2 y2] extent]
-                      (karttakuva-url "x1" x1 "y1" y1 "x2" x2 "y2" y2
-                                      "r" resolution "pr" pixel-ratio))
-                    nil ol.source.Image/defaultImageLoadFunction))))
 
 (defn luo-kuvataso [projection extent]
-  (doto (ol.layer.Image. (clj->js {:source (Kuvalahde.
+  (doto (ol.layer.Image.
+         (clj->js {:source (kuvataso.Lahde. (hae-fn)
                                             #js {:projection projection
                                                  :imageExtent extent})
-                                   :wrapX true}))
+                   :wrapX true}))
     (.setZIndex 99)))

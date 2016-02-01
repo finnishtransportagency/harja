@@ -157,7 +157,8 @@
                                        ;;:preamble ["reagent/react.js"]
                                        :output-to     "dev-resources/js/harja.js"
                                        :output-dir    "dev-resources/js/out"
-
+                                       :foreign-libs [{:file "src/js/kuvataso.js"
+                                                       :provides ["kuvataso.Lahde"]}]
                                        }}
                        {:id             "test"
                         :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
@@ -183,6 +184,8 @@
                                        :output-dir                "resources/public/js/"
 
                                        :parallel-build true
+                                       :foreign-libs [{:file "src/js/kuvataso.js"
+                                                       :provides ["kuvataso.Lahde"]}]
                                        }}
 
                        ]}
