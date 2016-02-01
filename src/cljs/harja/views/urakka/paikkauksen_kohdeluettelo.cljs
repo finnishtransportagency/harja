@@ -42,7 +42,7 @@
                                          :loppuosa      (get-in kohde [:osa :tr_loppuosa])
                                          :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
                              (assoc :kohde-click #(do (kartta/poista-popup!)
-                                                      (nav/aseta-valittu-valilehti! :paikkauksen-kohdeluettelo :paikkausilmoitukset)
+                                                      (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaus :paikkausilmoitukset)
                                                       (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id})))))))
 
 (defn kohdeluettelo

@@ -42,7 +42,7 @@
               :loppuosa      (get-in kohde [:osa :tr_loppuosa])
               :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])}
          :kohde-click #(do (kartta/poista-popup!)
-                           (nav/aseta-valittu-valilehti! :paallystyksen-kohdeluettelo :paallystysilmoitukset)
+                           (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystysilmoitukset)
                            (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id}))))))
 
 (defn kohdeluettelo
