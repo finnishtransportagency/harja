@@ -334,7 +334,7 @@
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
-            :fmt #(fmt/desimaaliluku-opt 1)}
+            :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
             :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt
