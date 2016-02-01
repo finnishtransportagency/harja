@@ -785,9 +785,7 @@ Optiot on mappi optioita:
                                                (update-in muokatut [id]
                                                           (fn [rivi]
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
-                     (log "VANHAT TIEDOT: " (pr-str vanhat-tiedot))
-                     (log "UUDET TIEDOT: " (pr-str uudet-tiedot))
-
+                     
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
