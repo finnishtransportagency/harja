@@ -52,7 +52,7 @@
         tapahtuma-id (integraatioloki/kirjaa-saapunut-jms-viesti integraatioloki "sampo" "sisaanluku" viesti-id viestin-sisalto)]
     (try+
       (let [tuonti (fn [] (tuo-data db viestin-sisalto))
-            kuittaukset (lukot/aja-tiedoituslukon-kanssa db (:sampo lukot/lukkoidt) tuonti)]
+            kuittaukset (lukot/aja-tietokantalukon-kanssa db (:sampo lukot/lukkoidt) tuonti)]
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
