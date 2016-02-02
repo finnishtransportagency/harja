@@ -95,7 +95,8 @@
                                       :ei-valittu
                                       :osittain-valittu)))]
     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-      (let [ryhman-elementit-ja-tilat (get-in @suodattimet-atom ryhma-polku)
+      (let [ryhman-elementtien-avaimet (or (get-in tiedot/jarjestys ryhma-polku)
+                                           (keys (get-in @suodattimet-atom ryhma-polku)))
             auki? (fn [] (or @oma-auki-tila
                              (and kokoelma-atom
                                   (= otsikko @kokoelma-atom))))]
@@ -131,12 +132,12 @@
 
          (when (auki?)
            [:div.tk-checkbox-ryhma-sisalto
-            (doall (for [elementti (seq ryhman-elementit-ja-tilat)]
-                     ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
+            (doall (for [elementti (seq ryhman-elementtien-avaimet)]
+                     ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet elementti))}
                      [yksittainen-suodatincheckbox
-                      (get tiedot/suodattimien-nimet (first elementti))
+                      (get tiedot/suodattimien-nimet elementti)
                       suodattimet-atom
-                      (conj ryhma-polku (first elementti))]))])]))))
+                      (conj ryhma-polku elementti)]))])]))))
 
 (defn aikasuodattimet []
   [:div#tk-paavalikko
