@@ -528,7 +528,7 @@ Optiot on mappi optioita:
                                           rivit)))))
                            nil)
         maarita-rendattavien-rivien-maara (fn [this _]
-                                            (let [solmu (.-parentNode (r/dom-node this))
+                                            (let [solmu (r/dom-node this)
                                                   r (.getBoundingClientRect solmu)
                                                   etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
                                               (when (and (pos? etaisyys-alareunaan)
