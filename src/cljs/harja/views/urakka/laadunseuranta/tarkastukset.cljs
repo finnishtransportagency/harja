@@ -50,7 +50,8 @@
   "Tarkastuksien listauskomponentti"
   []
    (fn []
-     (let [urakka @nav/valittu-urakka]
+     (let [urakka @nav/valittu-urakka
+           tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
        [:div.tarkastukset
 
         
@@ -96,6 +97,7 @@
            :fmt #(apply yleiset/tierekisteriosoite
                         (map (fn [kentta] (get % kentta))
                              [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))}
+
           {:otsikko "Havainnot"
            :nimi :havainnot
            :leveys 4
@@ -104,6 +106,7 @@
                    (str (.substring % 0 50) "...")
                    %)}]
          @tarkastukset/urakan-tarkastukset]])))
+
 
 (defn talvihoitomittaus []
   (lomake/ryhma {:otsikko "Talvihoitomittaus"

@@ -66,35 +66,35 @@
 (defn laatupoikkeamalistaus
   "Listaa urakan laatupoikkeamat"
   []
+  (let [poikkeamat (reverse (sort-by :aika @urakan-laatupoikkeamat))]
+    [:div.laatupoikkeamat
+     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
+     [yleiset/pudotusvalikko
+      "Näytä laatupoikkeamat"
+      {:valinta    @listaus
+       :valitse-fn #(reset! listaus %)
+       :format-fn  #(case %
+                     :kaikki "Kaikki"
+                     :kasitellyt "Käsitellyt (päätös tehty)"
+                     :selvitys "Odottaa urakoitsijan selvitystä"
+                     :omat "Minun kirjaamat / kommentoimat")}
 
-  [:div.laatupoikkeamat
-   [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-   [yleiset/pudotusvalikko
-    "Näytä laatupoikkeamat"
-    {:valinta    @listaus
-     :valitse-fn #(reset! listaus %)
-     :format-fn  #(case %
-                   :kaikki "Kaikki"
-                   :kasitellyt "Käsitellyt (päätös tehty)"
-                   :selvitys "Odottaa urakoitsijan selvitystä"
-                   :omat "Minun kirjaamat / kommentoimat")}
+      [:kaikki :selvitys :kasitellyt :omat]]
 
-    [:kaikki :selvitys :kasitellyt :omat]]
+     [urakka-valinnat/aikavali]
 
-   [urakka-valinnat/aikavali]
+     (when @laatupoikkeamat/voi-kirjata?
+       [napit/uusi "Uusi laatupoikkeama" #(reset! valittu-laatupoikkeama-id :uusi)])
 
-   (when @laatupoikkeamat/voi-kirjata?
-     [napit/uusi "Uusi laatupoikkeama" #(reset! valittu-laatupoikkeama-id :uusi)])
-
-   [grid/grid
-    {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
-     :tyhja   "Ei laatupoikkeamia."}
-    [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-     {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1}
-     {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
-     {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
-     {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}]  ;; Päätös
-    @urakan-laatupoikkeamat]])
+     [grid/grid
+      {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
+       :tyhja   "Ei laatupoikkeamia."}
+      [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+       {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1}
+       {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
+       {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
+       {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}] ;; Päätös
+      poikkeamat]]))
 
 (defn paatos?
   "Onko annetussa laatupoikkeamassa päätös?"

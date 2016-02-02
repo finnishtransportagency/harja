@@ -277,8 +277,7 @@ FROM laatupoikkeama lp
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE lp.urakka = :urakka
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
-      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
-ORDER BY lp.aika;
+      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
 
 -- name: hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille
 -- Hakee hallintayksikön laatupoikkeamat aikavälin perusteella raportille
@@ -299,8 +298,7 @@ FROM laatupoikkeama lp
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
-      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
-ORDER BY lp.aika;
+      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
 
 -- name: hae-koko-maan-laatupoikkeamat-liitteineen-raportille
 -- Hakee koko maan laatupoikkeamat aikavälin perusteella raportille
@@ -320,5 +318,4 @@ FROM laatupoikkeama lp
   LEFT JOIN tarkastus_liite ON lp.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE (lp.aika >= :alku AND lp.aika <= :loppu)
-      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
-ORDER BY lp.aika;
+      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
