@@ -19,23 +19,23 @@
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
 
-(def testitietokanta [(if (ollaanko-jenkinsissa?)
-                        "172.17.238.100"
-                        "localhost")
-                      5432
-                      "harjatest"
-                      "harjatest"
-                      nil])
+(def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
+                                  "172.17.238.100"
+                                  "localhost")
+                      :portti 5432
+                      :tietokanta "harjatest"
+                      :kayttaja "harjatest"
+                      :salasana nil})
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta [(if (ollaanko-jenkinsissa?)
-                         "172.17.238.100"
-                         "localhost")
-                       5432
-                       "temp"
-                       "harjatest"
-                       nil])
+(def temppitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
+                                   "172.17.238.100"
+                                   "localhost")
+                       :portti 5432
+                       :tietokanta "temp"
+                       :kayttaja "harjatest"
+                       :salasana nil})
 
 (defn odota [ehto-fn viesti max-aika]
   (loop [max-ts (+ max-aika (System/currentTimeMillis))]
@@ -45,10 +45,10 @@
         (recur max-ts)))))
 
 (defn luo-testitietokanta []
-  (apply tietokanta/luo-tietokanta testitietokanta))
+  (tietokanta/luo-tietokanta testitietokanta))
 
 (defn luo-temppitietokanta []
-  (apply tietokanta/luo-tietokanta temppitietokanta))
+  (tietokanta/luo-tietokanta temppitietokanta))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -363,7 +363,7 @@
                      (fn [_#]
                        (component/start
                         (component/system-map
-                         :db (apply tietokanta/luo-tietokanta testitietokanta)
+                         :db (tietokanta/luo-tietokanta testitietokanta)
                          :klusterin-tapahtumat (component/using
                                                 (tapahtumat/luo-tapahtumat)
                                                 [:db])

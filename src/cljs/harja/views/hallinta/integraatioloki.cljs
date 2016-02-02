@@ -12,8 +12,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.grid :as grid])
+            [harja.ui.dom :as dom])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.ui.yleiset :refer [deftk]]))
@@ -102,7 +101,7 @@
           @viestit]]]))))
 
 (defn tapahtumien-maarat-graafi [tiedot]
-  (let [w (int (* 0.85 @yleiset/leveys))
+  (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 3))
         tiedot-pvm-sortattu (sort-by :pvm tiedot)
         eka-pvm (pvm/pvm (:pvm (first tiedot-pvm-sortattu)))

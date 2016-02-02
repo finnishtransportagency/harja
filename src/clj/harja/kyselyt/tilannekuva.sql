@@ -15,7 +15,7 @@ SELECT
   i.urakkatyyppi,
   i.suljettu,
 
-  i.sijainti,
+  ST_Simplify(i.sijainti, :toleranssi) AS sijainti,
   i.tr_numero,
   i.tr_alkuosa,
   i.tr_loppuosa,
@@ -76,7 +76,7 @@ SELECT
   l.kohde,
   l.tekija,
   l.kuvaus,
-  l.sijainti,
+  ST_Simplify(l.sijainti, :toleranssi) AS sijainti,
   l.tarkastuspiste,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
   l.kasittelyaika                    AS paatos_kasittelyaika,
@@ -110,7 +110,7 @@ SELECT
   t.tr_alkuetaisyys,
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
-  t.sijainti,
+  ST_Simplify(t.sijainti, :toleranssi) AS sijainti,
   t.tarkastaja,
   t.havainnot,
   t.tyyppi
@@ -134,7 +134,7 @@ SELECT
   t.vammat,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
-  t.sijainti,
+  ST_Simplify(t.sijainti, :toleranssi) AS sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
   t.tr_loppuetaisyys,
@@ -157,13 +157,40 @@ WHERE
    t.luotu BETWEEN :alku AND :loppu OR
    t.muokattu BETWEEN :alku AND :loppu);
 
--- name: hae-paallystykset
+-- name: hae-paallystykset-nykytilanteeseen
 SELECT
   pk.id,
   pk.kohdenumero,
   pk.nimi AS kohde_nimi,
   pko.nimi AS kohdeosa_nimi,
-  pko.sijainti,
+  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
+  pko.tr_numero,
+  pko.tr_alkuosa,
+  pko.tr_alkuetaisyys,
+  pko.tr_loppuosa,
+  pko.tr_loppuetaisyys,
+  pko.nykyinen_paallyste,
+  pko.toimenpide,
+  pi.id   AS paallystysilmoitus_id,
+  pi.tila AS paallystysilmoitus_tila,
+  pi.aloituspvm,
+  pi.valmispvm_paallystys AS paallystysvalmispvm,
+  pi.valmispvm_kohde AS kohdevalmispvm,
+  pi.tila
+FROM paallystyskohdeosa pko
+  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
+    AND (pi.tila :: TEXT != 'valmis' OR
+             (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
+WHERE pk.poistettu IS NOT TRUE;
+
+-- name: hae-paallystykset-historiakuvaan
+SELECT
+  pk.id,
+  pk.kohdenumero,
+  pk.nimi AS kohde_nimi,
+  pko.nimi AS kohdeosa_nimi,
+  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
   pko.tr_numero,
   pko.tr_alkuosa,
   pko.tr_alkuetaisyys,
@@ -181,20 +208,42 @@ FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
-      -- Nykytilanne
-      (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
-      (pi.tila :: TEXT != 'valmis' OR
-       (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
-       -- Historiakuva
-       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku)));
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
--- name: hae-paikkaukset
+-- name: hae-paikkaukset-nykytilanteeseen
 SELECT
   pk.id,
   pk.kohdenumero,
   pk.nimi AS kohde_nimi,
   pko.nimi AS kohdeosa_nimi,
-  pko.sijainti,
+  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
+  pko.tr_numero,
+  pko.tr_alkuosa,
+  pko.tr_alkuetaisyys,
+  pko.tr_loppuosa,
+  pko.tr_loppuetaisyys,
+  pko.nykyinen_paallyste,
+  pko.toimenpide,
+  pi.id   AS paikkausilmoitus_id,
+  pi.tila AS paikkausilmoitus_tila,
+  pi.aloituspvm,
+  pi.valmispvm_paikkaus AS paikkausvalmispvm,
+  pi.valmispvm_kohde AS kohdevalmispvm,
+  pi.tila
+FROM paallystyskohdeosa pko
+  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
+  AND (pi.tila :: TEXT != 'valmis' OR
+             (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
+WHERE pk.poistettu IS NOT TRUE;
+
+-- name: hae-paikkaukset-historiakuvaan
+SELECT
+  pk.id,
+  pk.kohdenumero,
+  pk.nimi AS kohde_nimi,
+  pko.nimi AS kohdeosa_nimi,
+  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
   pko.tr_numero,
   pko.tr_alkuosa,
   pko.tr_alkuetaisyys,
@@ -212,12 +261,7 @@ FROM paallystyskohdeosa pko
   LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
-      -- Nykytilanne
-      (((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL) AND
-      (pi.tila :: TEXT != 'valmis' OR
-       (now() - pi.valmispvm_kohde) < INTERVAL '7 days')) OR
-       -- Historiakuva
-       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku)));
+       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
 SELECT

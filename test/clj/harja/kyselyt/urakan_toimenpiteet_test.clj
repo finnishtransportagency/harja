@@ -13,7 +13,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)
+                        :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)))))
 
   (testit)
@@ -25,7 +25,7 @@
                       urakkatieto-fixture))
 
 (deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot 
-    (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+    (let [db (tietokanta/luo-tietokanta testitietokanta)
           urakka-id @oulun-alueurakan-2005-2010-id
           maara-kannassa (ffirst (q
                                    (str "SELECT count(*)
@@ -47,7 +47,7 @@
       (is (= (:taso (nth rivi 3)) 4)))))
 
 (deftest hae-pudun-urakan-toimenpiteet-ja-tehtavat-tasot 
-    (let [db (apply tietokanta/luo-tietokanta testitietokanta)
+    (let [db (tietokanta/luo-tietokanta testitietokanta)
        urakka-id @pudasjarven-alueurakan-id
           maara-kannassa (ffirst (q
                                    (str "SELECT count(*)

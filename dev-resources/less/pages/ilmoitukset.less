@@ -1,3 +1,15 @@
-.kuittaus-viesti{
+.kuittauksen-reuna {
   border: 1px ridge @harmaa7;
+}
+@kuittauksen-padding: 3px 10px;
+
+.kuittaus-viesti{
+  .kuittauksen-reuna();
+}
+.uusi-kuittaus  {
+  .kuittauksen-reuna();
+  padding: @kuittauksen-padding;
+}
+.uusi-kuittaus-nappi {
+  margin-bottom: 10px;
 }

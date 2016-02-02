@@ -21,9 +21,9 @@
           "required": true,
           "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
         },
-        "siltanumero": {
+        "siltatunnus": {
           "id": "urn:harja/siltatarkastus/sillantunniste",
-          "type": "number",
+          "type": "string",
           "required": true
         },
         "tarkastusaika": {

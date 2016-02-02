@@ -14,7 +14,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (apply tietokanta/luo-tietokanta testitietokanta)))))
+                        :db (tietokanta/luo-tietokanta testitietokanta)))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -85,6 +85,7 @@
                                :sakot_laskutettu                                100.0M
                                :sakot_laskutettu_ind_korotettuna                99.48930737312480054200M
                                :sakot_laskutettu_ind_korotus                    -0.51069262687519945800M
+                               :suolasakko_kaytossa                             true
                                :suolasakot_laskutetaan                          2280.00000M
                                :suolasakot_laskutetaan_ind_korotettuna          2388.680000000000076000000M
                                :suolasakot_laskutetaan_ind_korotus              108.680000000000076000000M
@@ -146,6 +147,7 @@
                                       :sakot_laskutettu                                1200.0M
                                       :sakot_laskutettu_ind_korotettuna                1203.6706032556655000M
                                       :sakot_laskutettu_ind_korotus                    3.6706032556655000M
+                                      :suolasakko_kaytossa                             true
                                       :suolasakot_laskutetaan                          0.0M
                                       :suolasakot_laskutetaan_ind_korotettuna          0.0M
                                       :suolasakot_laskutetaan_ind_korotus              0.0M
@@ -207,6 +209,7 @@
                              :sakot_laskutettu                                0.0M
                              :sakot_laskutettu_ind_korotettuna                0.0M
                              :sakot_laskutettu_ind_korotus                    0.0M
+                             :suolasakko_kaytossa                             true
                              :suolasakot_laskutetaan                          0.0M
                              :suolasakot_laskutetaan_ind_korotettuna          0.0M
                              :suolasakot_laskutetaan_ind_korotus              0.0M

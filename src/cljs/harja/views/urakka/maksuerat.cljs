@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan timeout alts!]]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.maksuerat :as maksuerat]

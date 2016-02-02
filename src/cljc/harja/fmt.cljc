@@ -35,12 +35,23 @@
     (euro summa)
     ""))
 
+(def roomalaisena-numerona {1 "I"
+                            2 "II"
+                            3 "III"})
+
 (defn euro-indeksikorotus
   "Formatoi euromäärän tai tyhjä, jos nil."
   [summa]
   (if summa
     (euro summa)
     "Indeksi puuttuu"))
+
+(defn euro-ei-voitu-laskea
+  "Formatoi euromäärän tai sanoo ei voitu laskea, jos nil."
+  [summa]
+  (if summa
+    (euro summa)
+    "Ei voitu laskea tai ei käytössä urakassa"))
 
 (defn pikseleina
   [arvo]

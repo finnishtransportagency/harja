@@ -37,6 +37,9 @@
       :default
       nil)))
 
+(defn tarkastuksien-laatupoikkeamat [tarkastukset]
+  (sort (distinct (keep laatupoikkeama-tapahtunut? tarkastukset))))
+
 (defn muodosta-raportin-rivit [tarkastukset]
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
   että sama tieosuus ja sama päivä esiintyy aina yhdellä rivillä.
@@ -51,34 +54,38 @@
                              (get-in rivi [:tr :loppuosa])
                              (get-in rivi [:tr :loppuetaisyys])
                              (:hoitoluokka rivi)])
-                          tarkastukset)]
-    (mapv (fn [tarkastusryhma]
-            (let [tarkastukset (get tarkastusryhmat tarkastusryhma)
-                  yhdistettava-rivi (first tarkastukset)
-                  laske-kuntoarvon-summa (fn [rivit arvo]
-                                           "Laskee annetun kuntoarvon summan annettujen rivien kaikista mittausluokista"
-                                           (reduce
-                                             (fn [nykysumma seuraava-rivi]
-                                               (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
-                                                 (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
-                                             0
-                                             rivit))
-                  laatuarvot (mapv (fn [arvo]
-                                     (laske-kuntoarvon-summa tarkastukset arvo))
-                                   (range 1 6))
-                  laatuarvot-yhteensa (reduce + laatuarvot)]
-              (merge yhdistettava-rivi
-                     (zipmap (range 1 6)
-                             (map (juxt
-                                   ;; laatuarvon summa
-                                   #(nth laatuarvot %)
-                                   ;; laatuarvon summan osuus
-                                   #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
-                                  (range 5)))
-                     {:laatuarvot-yhteensa laatuarvot-yhteensa
-                      :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))                     
-                      :laatupoikkeama (laatupoikkeama-tapahtunut? yhdistettava-rivi)})))
-          (keys tarkastusryhmat))))
+                          tarkastukset)
+        yhdistetyt-rivit (mapv (fn [tarkastusryhma]
+                                 (let [tarkastukset (get tarkastusryhmat tarkastusryhma)
+                                       yhdistettava-rivi (first tarkastukset)
+                                       laske-kuntoarvon-summa (fn [rivit arvo]
+                                                                "Laskee annetun kuntoarvon summan annettujen rivien kaikista mittausluokista"
+                                                                (reduce
+                                                                  (fn [nykysumma seuraava-rivi]
+                                                                    (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
+                                                                      (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
+                                                                  0
+                                                                  rivit))
+                                       laatuarvot (mapv (fn [arvo]
+                                                          (laske-kuntoarvon-summa tarkastukset arvo))
+                                                        (range 1 6))
+                                       laatuarvot-yhteensa (reduce + laatuarvot)]
+                                   (merge yhdistettava-rivi
+                                          (zipmap (range 1 6)
+                                                  (map (juxt
+                                                         ;; laatuarvon summa
+                                                         #(nth laatuarvot %)
+                                                         ;; laatuarvon summan osuus
+                                                         #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
+                                                       (range 5)))
+                                          {:laatuarvot-yhteensa laatuarvot-yhteensa
+                                           :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))
+                                           :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
+                               (keys tarkastusryhmat))]
+  ;; Ryhmittelyn jälkeen järjestys on väärin, sortataan tulokset käsin
+  (reverse (sort-by (fn [rivi] [(:aika rivi)
+                        (get-in rivi [:tr :numero])])
+            yhdistetyt-rivit))))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-soratietarkastukset-raportille db
@@ -124,13 +131,13 @@
                                    :tienumero tienumero})))
 
 (def taulukon-otsikot
-  [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+  [{:leveys 8 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
    {:leveys 5 :otsikko "Tie"}
    {:leveys 6 :otsikko "Aosa"}
    {:leveys 6 :otsikko "Aet"}
    {:leveys 6 :otsikko "Losa"}
    {:leveys 6 :otsikko "Let"}
-   {:leveys 6 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+   {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
    {:leveys 8 :otsikko "1"}
    {:leveys 8 :otsikko "2"}
    {:leveys 8 :otsikko "3"}
@@ -138,7 +145,7 @@
    {:leveys 8 :otsikko "5"}
    {:leveys 8 :otsikko "Yht"}
    {:leveys 8 :otsikko "1+2"}
-   {:leveys 8 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}])
+   {:leveys 10 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}])
 
 (def tr-kentat [[:tr :numero]
                 [:tr :alkuosa]
@@ -155,17 +162,18 @@
         (map #(get-in rivi %) tr-kentat)
 
         ;; hoitoluokka
-        [(:hoitoluokka rivi)] 
+        [(fmt/roomalaisena-numerona (:hoitoluokka rivi))]
         
         ;; arvot ja prosentit 1-5
         (map #(str (get-in rivi [% 0]) " (" (get-in rivi [% 1]) "%)") (range 1 6))
         
-        ;; yhteensä, 1+2 yhteensä ja laatupoikkeama
+        ;; yhteensä, 1+2 yhteensä
         [(str (:laatuarvot-yhteensa rivi) " (100%)")
          (str (:laatuarvo-1+2-summa rivi) " (" (+ (get-in rivi [1 1])
                                                   (get-in rivi [2 1])) "%)")
-         (when (:laatupoikkeama rivi)
-           (str "Kyllä" " (" (:laatupoikkeama rivi) ")"))])))
+         ;; laatupoikkeamat
+         (when (not (empty? (:laatupoikkeamat rivi)))
+           (str "Kyllä" " (" (clojure.string/join ", " (:laatupoikkeamat rivi)) ")"))])))
 
 (defn yhteensa-rivi [naytettavat-rivit]
   (let [laatuarvo-summat (map (fn [arvo]
@@ -198,7 +206,7 @@
                                                 :tienumero          tienumero}))
         naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
         ainakin-yksi-poikkeama? (true? (some
-                                        #(not (nil? (:laatupoikkeama %)))
+                                        #(not (empty? (:laatupoikkeamat %)))
                                             naytettavat-rivit))
         raportin-nimi "Soratietarkastusraportti"
         otsikko (raportin-otsikko
@@ -206,18 +214,26 @@
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)]
+                  raportin-nimi alkupvm loppupvm)
+        ryhmittellyt-rivit (yleinen/ryhmittele-tulokset-raportin-taulukolle
+                             naytettavat-rivit :urakka raportti-rivi)]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+                 :korosta-rivit (keep-indexed
+                                  (fn [index rivi]
+                                    (when (and (vector? rivi)
+                                               (not (nil? (last rivi)))
+                                               (.contains (last rivi) "Kyllä"))
+                                      index))
+                                  ryhmittellyt-rivit)
                  :viimeinen-rivi-yhteenveto? true}
       taulukon-otsikot
       (remove nil?
               (conj
               ;; Raportin varsinainen data
-              (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                naytettavat-rivit :urakka raportti-rivi)
+              ryhmittellyt-rivit
               ;; Yhteensä-rivi, jos tarvitaan
               (when (not (empty? naytettavat-rivit))
                 (yhteensa-rivi naytettavat-rivit))))]

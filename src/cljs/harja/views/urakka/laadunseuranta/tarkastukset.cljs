@@ -51,7 +51,8 @@
   "Tarkastuksien listauskomponentti"
   []
    (fn []
-     (let [urakka @nav/valittu-urakka]
+     (let [urakka @nav/valittu-urakka
+           tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
        [:div.tarkastukset
         [valinnat/urakan-hoitokausi urakka]
         [valinnat/aikavali]
@@ -95,7 +96,7 @@
                         (map (fn [kentta] (get % kentta))
                              [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))
            :leveys 2}]
-         @tarkastukset/urakan-tarkastukset]])))
+         tarkastukset]])))
 
 (defn talvihoitomittaus []
   (lomake/ryhma "Talvihoitomittaus"
