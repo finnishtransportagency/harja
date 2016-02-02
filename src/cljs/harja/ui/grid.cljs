@@ -1,7 +1,7 @@
 (ns harja.ui.grid
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log tarkkaile! logt]]
+            [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
@@ -357,6 +357,7 @@ Optiot on mappi optioita:
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
+        rivien-maara (atom (count tiedot))
         renderoi-rivia-kerralla 100
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
@@ -529,7 +530,7 @@ Optiot on mappi optioita:
                            nil)
         maarita-rendattavien-rivien-maara (fn [this _]
                                             (when (and (pos? (dom/elementin-etaisyys-alareunaan (r/dom-node this)))
-                                                       (< @renderoi-max-rivia (count tiedot)))
+                                                       (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))]
 
     (when-let [ohj (:ohjaus opts)]
@@ -542,11 +543,13 @@ Optiot on mappi optioita:
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL maarita-rendattavien-rivien-maara)
       {:component-will-receive-props
-       (fn [this new-argv]
+       (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
          (when muokkaa-aina
-           (aloita-muokkaus! (nth new-argv 3))))
+           (aloita-muokkaus! tiedot))
+         (reset! rivien-maara (count tiedot))
+         (maarita-rendattavien-rivien-maara this nil))
 
        :component-did-mount
        (fn [this _]
@@ -556,7 +559,8 @@ Optiot on mappi optioita:
        (fn []
          (nollaa-muokkaustiedot!))}
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu korostustyyli] :as opts} skeema tiedot]
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
+                    korostustyyli] :as opts} skeema tiedot]
          (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
                colspan (if piilota-toiminnot?
                          (count skeema)
