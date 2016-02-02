@@ -2,38 +2,39 @@
 - hosts: all
   sudo: true
   tasks:
-  - name: Add maven repository
-    apt_repository: repo='ppa:andrei-pozolotin/maven3' state=present
-  - name: Add postgresql repository
-    apt_repository: repo='deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' state=present
-  - name: Add postgresql repository key
-    apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
+  - name: disable selinux
+    selinux: state=disabled
+  - name: Install EPEL
+    yum: name=epel-release state=present
+  - name: install Postgres repositories
+    yum: name=http://yum.postgresql.org/9.5/redhat/rhel-7-x86_64/pgdg-centos95-9.5-2.noarch.rpm state=present
+  - name: install Postgres 9.5
+    yum: name=postgresql95
+  - name: install Postgres 9.5 server
+    yum: name=postgresql95-server state=present
+  - name: install Postgres 9.5 contrib
+    yum: name=postgresql95-contrib state=present
+  - name: Install PostGIS
+    yum: name=postgis2_95 state=present
+  - name: Initialize postgresql
+    command: /usr/pgsql-9.5/bin/postgresql95-setup initdb
+    sudo: yes
+    sudo_user: root
+    ignore_errors: yes
   - name: Copy .bash_profile
     template: src=templates/bash_profile.conf.j2 dest=/home/vagrant/.bash_profile
-  - name: Add PostGIS repository key
-    apt_key: keyserver=keyserver.ubuntu.com id=6B827C12C2D425E227EDCA75089EBE08314DF160
-  - name: Add PostGIS repository
-    apt_repository: repo='deb http://ppa.launchpad.net/ubuntugis/ppa/ubuntu devel main' state=present
-  - name: apt-get update
-    apt: update_cache=yes
   - name: Install GIT
-    apt: name=git state=present
+    yum: name=git state=present
   - name: Install NGINX
-    apt: name=nginx state=present
+    yum: name=nginx state=present
   - name: Install Maven
-    apt: name=maven3 state=present
-  - name: Install PostgreSQL 9.4+
-    apt: name=postgresql-9.4 state=present
-  - name: Install PostGIS
-    apt: name=postgresql-9.4-postgis-2.1 state=present force=yes
-  - name: Install PostGIS scripts
-    apt: name=postgresql-9.4-postgis-2.1-scripts state=present force=yes
+    yum: name=maven state=present
   - name: Trust local connections to PostgresSQL
-    template: src=templates/pg_hba.conf.j2 dest=/etc/postgresql/9.4/main/pg_hba.conf
+    template: src=templates/pg_hba.conf.j2 dest=/var/lib/pgsql/9.5/data/pg_hba.conf
   - name: Make PostgreSQL listen on all interfaces
-    template: src=templates/postgresql.conf.j2 dest=/etc/postgresql/9.4/main/postgresql.conf
+    template: src=templates/postgresql.conf.j2 dest=/var/lib/pgsql/9.5/data/postgresql.conf
   - name: restart postgres
-    service: name=postgresql state=restarted
+    service: name=postgresql-9.5 state=restarted
   - name: Configure NGINX
     template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf
   - name: Restart NGINX
