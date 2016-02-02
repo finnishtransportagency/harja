@@ -256,7 +256,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
                             #(tallenna-laatupoikkeama @laatupoikkeama)
                             {:ikoni        (ikonit/tallenna)
-                             :disabled     (not (validi-laatupoikkeama? @laatupoikkeama))
+                             :disabled     (not (lomake/voi-tallentaa? @laatupoikkeama))
                              :kun-onnistuu (fn [_] (reset! valittu-laatupoikkeama-id nil))}]}
 
             [{:otsikko     "Päivämäärä ja aika"
