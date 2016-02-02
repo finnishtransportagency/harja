@@ -528,12 +528,9 @@ Optiot on mappi optioita:
                                           rivit)))))
                            nil)
         maarita-rendattavien-rivien-maara (fn [this _]
-                                            (let [solmu (r/dom-node this)
-                                                  r (.getBoundingClientRect solmu)
-                                                  etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
-                                              (when (and (pos? etaisyys-alareunaan)
-                                                         (< @renderoi-max-rivia (count tiedot)))
-                                                (swap! renderoi-max-rivia + renderoi-rivia-kerralla))))]
+                                            (when (and (pos? (dom/elementin-etaisyys-alareunaan (r/dom-node this)))
+                                                       (< @renderoi-max-rivia (count tiedot)))
+                                              (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
