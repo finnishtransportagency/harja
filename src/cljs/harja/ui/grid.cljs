@@ -528,12 +528,13 @@ Optiot on mappi optioita:
                                           rivit)))))
                            nil)
         maarita-rendattavat-rivit (fn [this _]
-                                    (let [pvm-input-solmu (.-parentNode (r/dom-node this))
-                                          r (.getBoundingClientRect pvm-input-solmu)
-                                          etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
-                                      (when (and (pos? etaisyys-alareunaan)
-                                                 (< @renderoi-max-rivia (count tiedot)))
-                                        (swap! renderoi-max-rivia + renderoi-rivia-kerralla))))]
+                                    (when this
+                                      (let [pvm-input-solmu (.-parentNode (r/dom-node this))
+                                            r (.getBoundingClientRect pvm-input-solmu)
+                                            etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
+                                        (when (and (pos? etaisyys-alareunaan)
+                                                   (< @renderoi-max-rivia (count tiedot)))
+                                          (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))))]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
