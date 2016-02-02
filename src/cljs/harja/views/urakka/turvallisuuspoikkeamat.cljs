@@ -36,12 +36,7 @@
 (defn turvallisuuspoikkeaman-tiedot
   []
 
-  (let [muokattu (reaction @tiedot/valittu-turvallisuuspoikkeama)
-        lomakkeen-virheet (reaction @tiedot/valittu-turvallisuuspoikkeama {})
-        voi-tallentaa? (reaction (and
-                                   (= (count @lomakkeen-virheet) 0)
-                                   (> (count @muokattu) (count tiedot/+uusi-turvallisuuspoikkeama+))))]
-
+  (let [muokattu (reaction @tiedot/valittu-turvallisuuspoikkeama)]
     (fnc []
          [:div
        [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
@@ -49,7 +44,6 @@
        [lomake/lomake
         {:otsikko (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
          :muokkaa! #(do (log "TURPO: " (pr-str %)) (reset! muokattu %))
-         :virheet  lomakkeen-virheet
          :footer   [napit/palvelinkutsu-nappi
                     "Tallenna turvallisuuspoikkeama"
                     #(tiedot/tallenna-turvallisuuspoikkeama @muokattu)
@@ -58,7 +52,7 @@
                      :kun-onnistuu #(do
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                     :disabled     (not @voi-tallentaa?)}]}
+                     :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
         [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :nayta-rivina? true
           :pakollinen? true
