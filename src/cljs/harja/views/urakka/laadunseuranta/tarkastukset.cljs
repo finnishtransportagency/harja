@@ -58,8 +58,7 @@
         [valinnat/urakan-hoitokausi urakka]
         [valinnat/aikavali]
 
-        [valinnat/tienumero tarkastukset/tienumero]
-        
+                
         [:span.label-ja-kentta
          [:span.kentan-otsikko "Tyyppi"]
          [:div.kentta
@@ -72,6 +71,8 @@
                                         :laatu "Laaduntarkastus"
                                         :pistokoe "Pistokoe")}
            tarkastukset/tarkastustyyppi]]]
+        [valinnat/tienumero tarkastukset/tienumero]
+
 
         (when @tiedot-laatupoikkeamat/voi-kirjata?
           [napit/uusi "Uusi tarkastus"
