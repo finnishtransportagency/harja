@@ -25,15 +25,8 @@
             [harja.ui.ikonit :as ikonit]))
 
 (defn pollauksen-merkki []
-  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti"])
+  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
 
-(defn urakan-sivulle-nappi [ilmoitus]
-  (when (and (:urakka ilmoitus) (:hallintayksikko ilmoitus))
-    [napit/urakan-sivulle "Urakan sivulle" (fn [e]
-                                             (if e (.stopPropagation e))
-                                             (reset! nav/valittu-hallintayksikko (:hallintayksikko ilmoitus))
-                                             (reset! nav/valittu-urakka-id (:urakka ilmoitus))
-                                             (nav/vaihda-sivu! :urakat))]))
 
 (defn nayta-tierekisteriosoite
   [tr]
@@ -47,7 +40,6 @@
     [:div
      [:span
       [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus!)]
-      (urakan-sivulle-nappi ilmoitus)
       (pollauksen-merkki)
       [bs/panel {}
        (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
@@ -76,11 +68,11 @@
          "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
 
-      [bs/panel {}
-       "Kuittaukset"
+      [:div.kuittaukset
+       [:h3 "Kuittaukset"]
        [:div
         (if @tiedot/uusi-kuittaus-auki?
-          [bs/panel {} [:div [kuittaukset/uusi-kuittaus-lomake]]]
+          [kuittaukset/uusi-kuittaus-lomake]
           [:button.nappi-ensisijainen {:class    "uusi-kuittaus-nappi"
                                        :on-click #(tiedot/avaa-uusi-kuittaus!)} (ikonit/plus) " Uusi kuittaus"])
 

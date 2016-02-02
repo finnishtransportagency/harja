@@ -52,11 +52,13 @@
    (fn []
      (let [urakka @nav/valittu-urakka]
        [:div.tarkastukset
+
+        
         [valinnat/urakan-hoitokausi urakka]
         [valinnat/aikavali]
 
         [valinnat/tienumero tarkastukset/tienumero]
-
+        
         [:span.label-ja-kentta
          [:span.kentan-otsikko "Tyyppi"]
          [:div.kentta

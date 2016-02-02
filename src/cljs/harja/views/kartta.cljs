@@ -27,7 +27,8 @@
 
 (def kartta-kontentin-vieressa? (atom false))
 
-(def +kartan-korkeus-s+ 26)
+(def +kartan-napit-padding+ 26)
+(def +kartan-korkeus-s+ 0)
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
@@ -236,7 +237,10 @@
      ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
      [:div.kartan-koko-napit {:style {:position   "absolute"
                                       :text-align "center"
-                                      :top        (fmt/pikseleina (- kartan-korkeus +kartan-korkeus-s+))
+                                      :top        (fmt/pikseleina (- kartan-korkeus
+                                                                     (if (= :S koko)
+                                                                       0
+                                                                       +kartan-napit-padding+)))
                                       :width      "100%"
                                       :z-index    100}}
       (if (= :S koko)
