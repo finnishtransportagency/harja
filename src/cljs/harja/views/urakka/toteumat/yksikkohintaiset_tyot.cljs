@@ -4,7 +4,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
@@ -334,7 +334,7 @@
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
-            :fmt #(fmt/desimaaliluku-opt 1)}
+            :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
             :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt

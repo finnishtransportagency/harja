@@ -5,7 +5,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
             [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.ui.yleiset :refer [linkki elementti-idlla sijainti] :as yleiset]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko]]
+            [harja.ui.dom :as dom]
             [harja.ui.modal :refer [modal-container]]
             [harja.ui.viesti :refer [viesti-container]]
             [harja.tiedot.navigaatio :as nav]
@@ -21,9 +22,7 @@
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.virhekasittely :as virhekasittely]
-            [cljs-time.core :as t])
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -40,7 +39,7 @@
          (if testikayttaja
            [:span.alert-warning "TESTIKÄYTTÖ"]
            kayttajainfo)
-         [yleiset/livi-pudotusvalikko {:valinta testikayttaja
+         [livi-pudotusvalikko {:valinta testikayttaja
                                        :class      "testikaytto-alasveto"
                                        :title "Järjestelmän vastuuhenkilönä voit testata Harjaa myös muissa rooleissa."
                                        :format-fn #(if %
@@ -79,7 +78,7 @@
 (defn ladataan []
   [:div {:style {:position "absolute" :top "50%" :left "50%"}}
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
-    [yleiset/ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
+    [ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
 (def pisteanimaation-pisteet (atom ""))
 
@@ -109,7 +108,7 @@
      (if @nav/render-lupa?
        (let [sivu @nav/sivu
              aikakatkaistu? @istunto/istunto-aikakatkaistu
-             korkeus @yleiset/korkeus
+             korkeus @dom/korkeus
              kayttaja @istunto/kayttaja]
 
          (if aikakatkaistu?
@@ -149,7 +148,7 @@
                 ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
                 ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
                 ;; se asemoidaan mountin jälkeen
-                [:div#kartta-container {:style {:position "absolute" :top (- @yleiset/korkeus)}}
+                [:div#kartta-container {:style {:position "absolute" :top (- @dom/korkeus)}}
                  [kartta/kartta]]]))))
        [ladataan]))))
 

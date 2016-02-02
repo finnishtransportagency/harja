@@ -182,6 +182,7 @@
                         :valinta-nayta :nimi
                         :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
          {:otsikko       "Toimenpide"
+          :pakollinen?   true
           :nimi          :toimenpideinstanssi
           :tyyppi        :valinta
           :valinta-arvo  :tpi_id
@@ -193,25 +194,25 @@
 
 (defn sanktiolistaus
   []
-  [:div.sanktiot
-   [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-   (when @laatupoikkeamat/voi-kirjata?
-     [:button.nappi-ensisijainen
-      {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
-      (ikonit/plus) " Lisää sanktio"])
+  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))]
+    [:div.sanktiot
+    [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
+    (when @laatupoikkeamat/voi-kirjata?
+      [:button.nappi-ensisijainen
+       {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
+       (ikonit/plus) " Lisää sanktio"])
 
-   [grid/grid
-    {:otsikko       "Sanktiot"
-     :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
-     :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
-    [{:otsikko "Päivämäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
-     {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1}
-     {:otsikko "Perustelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
-     {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3}
-     {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
-     {:otsikko "Summa" :nimi :summa :leveys 1 :tyyppi :numero}]
-    @tiedot/haetut-sanktiot
-    ]])
+    [grid/grid
+     {:otsikko       "Sanktiot"
+      :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+      :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
+     [{:otsikko "Päivämäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
+      {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1}
+      {:otsikko "Perustelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
+      {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3}
+      {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
+      {:otsikko "Summa" :nimi :summa :leveys 1 :tyyppi :numero}]
+     sanktiot]]))
 
 
 (defn sanktiot []

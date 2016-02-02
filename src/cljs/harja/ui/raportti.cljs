@@ -1,6 +1,7 @@
 (ns harja.ui.raportti
   "Harjan raporttielementtien HTML näyttäminen."
   (:require [harja.ui.grid :as grid]
+            [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.visualisointi :as vis]
             [harja.loki :refer [log]]))
@@ -59,7 +60,7 @@
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
 (defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
-  (let [w (int (* 0.85 @yleiset/leveys))
+  (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 2.9))]
     [:div.pylvaat
      [:h3 otsikko]

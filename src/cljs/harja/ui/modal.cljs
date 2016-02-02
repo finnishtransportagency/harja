@@ -1,15 +1,14 @@
 (ns harja.ui.modal
   "Modaali näyttökomponentti. Näitä yksi kappale päätasolle."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.dom :as dom]))
 
 (def modal-sisalto (atom {:otsikko nil
                           :sisalto nil
                           :footer nil
                           :luokka nil
                           :sulje nil
-                          :nakyvissa? false
-                          }))
+                          :nakyvissa? false}))
 
 (defn piilota! []
   (when (:sulje @modal-sisalto) ((:sulje @modal-sisalto)))
@@ -29,7 +28,7 @@
        ^{:key "modaali"}
        [:div.modal.fade.in.harja-modal {:style {:display "block"}
                                         :on-click piilota!}
-        [:div.modal-backdrop.fade.in {:style {:height @yleiset/korkeus :z-index -1}}]
+        [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
         [:div.modal-dialog.modal-sm {:style {:width (or leveys "600px")}}
          [:div {:class (str "modal-content " (or luokka "")) :style {:width "100%"}
                 :on-click #(do
