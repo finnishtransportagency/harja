@@ -357,7 +357,7 @@ Optiot on mappi optioita:
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
-        renderoi-rivia-kerralla 2
+        renderoi-rivia-kerralla 100
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
@@ -527,14 +527,13 @@ Optiot on mappi optioita:
                                           (conj jarj id)
                                           rivit)))))
                            nil)
-        maarita-rendattavat-rivit (fn [this _]
-                                    (when this
-                                      (let [pvm-input-solmu (.-parentNode (r/dom-node this))
-                                            r (.getBoundingClientRect pvm-input-solmu)
-                                            etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
-                                        (when (and (pos? etaisyys-alareunaan)
-                                                   (< @renderoi-max-rivia (count tiedot)))
-                                          (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))))]
+        maarita-rendattavien-rivien-maara (fn [this _]
+                                            (let [solmu (.-parentNode (r/dom-node this))
+                                                  r (.getBoundingClientRect solmu)
+                                                  etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
+                                              (when (and (pos? etaisyys-alareunaan)
+                                                         (< @renderoi-max-rivia (count tiedot)))
+                                                (swap! renderoi-max-rivia + renderoi-rivia-kerralla))))]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
@@ -544,15 +543,17 @@ Optiot on mappi optioita:
 
     (komp/luo
       (komp/dom-kuuntelija js/window
-                           EventType/RESIZE maarita-rendattavat-rivit)
-      (komp/dom-kuuntelija js/window
-                           EventType/SCROLL maarita-rendattavat-rivit)
+                           EventType/SCROLL maarita-rendattavien-rivien-maara)
       {:component-will-receive-props
        (fn [this new-argv]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
          (when muokkaa-aina
            (aloita-muokkaus! (nth new-argv 3))))
+
+       :component-did-mount
+       (fn [this _]
+         (maarita-rendattavien-rivien-maara this nil))
 
        :component-will-unmount
        (fn []
