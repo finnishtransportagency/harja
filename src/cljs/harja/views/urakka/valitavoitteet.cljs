@@ -48,14 +48,15 @@
                                             :value @kommentti}]]
 
         [:div.toiminnot
-         [:button.btn.btn-default {:disabled (nil? @valmis-pvm)
-                                   :on-click #(do (.preventDefault %)
-                                                  (reset! tallennus-kaynnissa true)
-                                                  (go (when-let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
-                                                                                                 @valmis-pvm @kommentti))]
-                                                        (aseta-tavoitteet res)
-                                                        (reset! tallennus-kaynnissa false)))
-                                                  (log "merkitään " (pr-str vt) " valmiiksi"))}
+         [:button.nappi-ensisijainen
+          {:disabled (nil? @valmis-pvm)
+           :on-click #(do (.preventDefault %)
+                          (reset! tallennus-kaynnissa true)
+                          (go (when-let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
+                                                                         @valmis-pvm @kommentti))]
+                                (aseta-tavoitteet res)
+                                (reset! tallennus-kaynnissa false)))
+                          (log "merkitään " (pr-str vt) " valmiiksi"))}
           "Merkitse valmiiksi"]]]])))
             
 (defn valitavoite-lomake [opts ur vt]
