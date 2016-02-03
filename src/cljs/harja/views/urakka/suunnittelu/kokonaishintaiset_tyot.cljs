@@ -90,7 +90,7 @@
           [vis/pie
            {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
            {"Valittu toimenpide" valittu-kust "Muut toimenpiteet" (- kaikki-kust valittu-kust)}]]))]
-    [:div.col-xs-4.piirakka
+    [:div.piirakka
      (let [kok-hint-yhteensa valitun-hoitokauden-kaikkien-tpin-kustannukset
            yks-hint-yhteensa yks-kustannukset]
          (when (or (not= 0 kok-hint-yhteensa) (not= 0 yks-hint-yhteensa))
