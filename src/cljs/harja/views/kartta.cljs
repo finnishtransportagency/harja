@@ -19,7 +19,8 @@
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
             [harja.ui.dom :as dom]
             [harja.views.kartta.tasot :as tasot]
-            [reagent.core :refer [atom] :as reagent])
+            [reagent.core :refer [atom] :as reagent]
+            [harja.ui.ikonit :as ikonit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -225,11 +226,11 @@
         kartan-korkeus @kartan-korkeus
         sivu (nav/sivu)
         v-ur @nav/valittu-urakka
-        muuta-kokoa-teksti (case koko
-                             :M "Suurenna karttaa"
-                             :L "Pienennä karttaa"
-                             :XL "Pienennä karttaa"
-                             "")]
+        [muuta-kokoa-teksti ikoni] (case koko
+                             :M ["Suurenna karttaa" (ikonit/arrow-down)]
+                             :L ["Pienennä karttaa" (ikonit/arrow-up)]
+                             :XL ["Pienennä karttaa" (ikonit/arrow-up)]
+                             ["" nil])]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
@@ -246,7 +247,7 @@
       (if (= :S koko)
         [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right
          {:on-click #(nav/vaihda-kartan-koko! :L)}
-         "Näytä kartta"]
+         (ikonit/expand) " Näytä kartta"]
         [:span
          (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
            [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
@@ -256,10 +257,10 @@
                                                              ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
                                                              ;; suurenna | pienennä | piilota
                                                              :XL :M))}
-            muuta-kokoa-teksti])
+            ikoni muuta-kokoa-teksti])
 
          [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
-          "Piilota kartta"]])]]))
+          (ikonit/compress) " Piilota kartta"]])]]))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 (defn keskita-kartta-alueeseen! [alue]

@@ -181,13 +181,13 @@
 (defn ban-circle []
   [:span.glyphicon.glyphicon-ban-circle])
 (defn arrow-left []
-  [:span.glyphicon.glyphicon-arrow-left])
+  [:span.livicon-arrow-left])
 (defn arrow-right []
-  [:span.glyphicon.glyphicon-arrow-right])
+  [:span.livicon-arrow-right])
 (defn arrow-up []
-  [:span.glyphicon.glyphicon-arrow-up])
+  [:span.livicon-arrow-up])
 (defn arrow-down []
-  [:span.glyphicon.glyphicon-arrow-down])
+  [:span.livicon-arrow-down])
 (defn share-alt []
   [:span.glyphicon.glyphicon-share-alt])
 (defn resize-full []
@@ -301,7 +301,7 @@
 (defn unchecked []
   [:span.glyphicon.glyphicon-unchecked])
 (defn expand []
-  [:span.glyphicon.glyphicon-expand])
+  [:span.glyphicon.livicon-expand])
 (defn collapse-down []
   [:span.glyphicon.glyphicon-collapse-down])
 (defn collapse-up []
@@ -348,6 +348,8 @@
   [:span.glyphicon.glyphicon-header])
 (defn compressed []
   [:span.glyphicon.glyphicon-compressed])
+(defn compress []
+  [:span.glyphicon.livicon-compress])
 (defn earphone []
   [:span.glyphicon.glyphicon-earphone])
 (defn phone-alt []
