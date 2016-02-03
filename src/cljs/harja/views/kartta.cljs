@@ -554,12 +554,15 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :on-dblclick        nil
 
           :on-dblclick-select (fn [item event]
+                                (kun-geometriaa-klikattu item event)
+                                (.stopPropagation event)
+                                (.preventDefault event)
+
                                 ;; Zoomaa kartta tuplaklikattuun asiaan (ei kuitenkaan urakka/hallintayksikkö)
+                                ;; HY/Urakka valinta aiheuttaa organisaatioon zoomaamisen muun koodin avulla, ei
+                                ;; tehdä "tuplazoomausta"
                                 (when-not (or (= :ur (:type item))
                                               (= :hy (:type item)))
-                                  (kun-geometriaa-klikattu item event)
-                                  (.stopPropagation event)
-                                  (.preventDefault event)
                                   (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))))
 
           :tooltip-fn         (fn [geom]
