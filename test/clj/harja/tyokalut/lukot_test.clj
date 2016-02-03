@@ -53,9 +53,9 @@
   (let [db (luo-testitietokanta)
         muuttuja (atom [])
         toiminto-fn (fn [tunnus] (swap! muuttuja conj tunnus))
-        ensimmainen (future (lukot/aja-lukon-kanssa db "sampo-sisaanluku" (fn [] (Thread/sleep 2000) (toiminto-fn "A")) nil 1))
+        ensimmainen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (Thread/sleep 2000) (toiminto-fn "A")) nil 1))
         _ (Thread/sleep 10)
-        toinen (future (lukot/aja-lukon-kanssa db "sampo-sisaanluku" (fn [] (toiminto-fn "B")) nil 1))
+        toinen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (toiminto-fn "B")) nil 1))
         odotettu-tulos ["A" "B"]]
     (is (= ["A"] @ensimmainen))
     (is (= ["A" "B"] @toinen))
@@ -63,7 +63,7 @@
 
 (deftest tarkista-lukon-odotus-poikkeuksen-kanssa
   (let [db (luo-testitietokanta)]
-    (is (thrown? RuntimeException (lukot/aja-lukon-kanssa db "sampo-sisaanluku" (fn [] (throw (RuntimeException. ""))) nil 1)))
+    (is (thrown? RuntimeException (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (throw (RuntimeException. ""))) nil 1)))
     (is (nil? (first (first (q "select lukko from lukko where tunniste = 'sampo-sisaanluku'")))))))
 
 
