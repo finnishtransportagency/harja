@@ -44,7 +44,8 @@
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
   että sama tieosuus ja sama päivä esiintyy aina yhdellä rivillä.
   Jokaisella yhdistetyllä rivillä lasketaan yhteen saman päivän ja tien tarkastuksista saadut kuntoarvot (1-5),
-  toisin sanoen kuinka monessa mittauksessa mikäkin kuntoarvo esiintyi."
+  toisin sanoen kuinka monessa mittauksessa mikäkin kuntoarvo esiintyi.
+  Ei säilytä rivien järjestystä."
   (let [tarkastusryhmat (group-by
                           (fn [rivi]
                             [(pvm/paivan-alussa (:aika rivi))
@@ -82,10 +83,7 @@
                                            :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))
                                            :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
                                (keys tarkastusryhmat))]
-  ;; Ryhmittelyn jälkeen järjestys on väärin, sortataan tulokset käsin
-  (reverse (sort-by (fn [rivi] [(:aika rivi)
-                        (get-in rivi [:tr :numero])])
-            yhdistetyt-rivit))))
+    yhdistetyt-rivit))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-soratietarkastukset-raportille db
@@ -216,7 +214,11 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         ryhmittellyt-rivit (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                             naytettavat-rivit :urakka raportti-rivi)
+                             (reverse (sort-by (fn [rivi] [(:aika rivi)
+                                                           (get-in rivi [:tr :numero])])
+                                               naytettavat-rivit))
+                             :urakka
+                             raportti-rivi)
         kylla-loppuiset-rivi-indeksit (fn [ryhmittellyt-rivit]
                                         (into #{} (keep-indexed
                                                     (fn [index rivi]
