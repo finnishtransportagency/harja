@@ -312,10 +312,11 @@
 
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
-  []
+  ([] (kartan-yleiset-kontrollit "kartan-yleiset-kontrollit"))
+  ([luokka-str]
   (let [sisalto @kartan-yleiset-kontrollit-sisalto]
     (when (and sisalto (not= :S @nav/kartan-koko))
-      [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto])))
+      [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto]))))
 
 (def paivitetaan-karttaa-tila (atom false))
 
@@ -344,7 +345,7 @@
     (when (and sisalto (not= :S @nav/kartan-koko))
       [:div.kartan-kontrollit.kartan-ohjelaatikko sisalto])))
 
-(defn aseta-ohjelaatikon-sisalto [uusi-sisalto]
+(defn aseta-ohjelaatikon-sisalto! [uusi-sisalto]
   (reset! kartan-ohjelaatikko-sisalto uusi-sisalto))
 
 (defn tyhjenna-ohjelaatikko []
