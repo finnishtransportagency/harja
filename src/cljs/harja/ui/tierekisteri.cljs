@@ -72,6 +72,10 @@
                                            (:alkuosa osoite) " / "
                                            (:alkuetaisyys osoite))]))
 
+(defn nayta-ohjeet-ohjelaatikossa! []
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
+                                       "Valitse alkupiste kartalta."]))
+
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
   Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
@@ -153,7 +157,8 @@
                             (reset! nav/kartan-edellinen-koko kartan-koko)
                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
-                            (kartta/aseta-kursori! :crosshair))
+                            (kartta/aseta-kursori! :crosshair)
+                            (nayta-ohjeet-ohjelaatikossa!))
                          #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
