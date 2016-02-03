@@ -113,9 +113,14 @@
 
         perusluku-puuttuu? (not (:perusluku (first tiedot)))
         talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
-        lampotila-puuttuu? (first (keep #(some? (:lampotila_puuttuu %))
-                                        tiedot))
-        varoitus-lampotilojen-puuttumisesta (if lampotila-puuttuu?
+        suolasakkoja-tulossa-tai-ei-voitu-laskea? (some
+                                #(or (and (number? (val %)) (not= 0.0M (val %))) (nil? (val %)))
+                                (select-keys (first (filter #(= "Talvihoito" (:nimi %)) tiedot))
+                                             [:suolasakot_laskutetaan :suolasakot_laskutettu]))
+        nayta-etta-lampotila-puuttuu? (when (and talvisuolasakko-kaytossa? suolasakkoja-tulossa-tai-ei-voitu-laskea?)
+                                        (first (keep #(true? (:lampotila_puuttuu %))
+                                                     tiedot)))
+        varoitus-lampotilojen-puuttumisesta (if nayta-etta-lampotila-puuttuu?
                                               " Lämpötilatietoja puuttuu. "
                                               " ")
         varoitus-indeksitietojen-puuttumisesta
@@ -133,10 +138,10 @@
                                                    ""
                                                    " indeksiarvoja ")
                                                  (if (and (not (str/blank? varoitus-indeksitietojen-puuttumisesta))
-                                                          lampotila-puuttuu?)
+                                                          nayta-etta-lampotila-puuttuu?)
                                                    " ja "
                                                    "")
-                                                 (if lampotila-puuttuu? " lämpötiloja " " ") " Harjaan. ")
+                                                 (if nayta-etta-lampotila-puuttuu? " lämpötiloja " " ") " Harjaan. ")
 
         varoitus-tietojen-puuttumisesta
         (when (or (not (str/blank? varoitus-indeksitietojen-puuttumisesta))
