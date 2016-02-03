@@ -54,7 +54,7 @@
         muuttuja (atom [])
         toiminto-fn (fn [tunnus] (swap! muuttuja conj tunnus))
         ensimmainen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (Thread/sleep 2000) (toiminto-fn "A")) nil 1))
-        _ (Thread/sleep 10)
+        _ (Thread/sleep 100)
         toinen (future (lukot/aja-lukon-kanssa db "odotus-testi" (fn [] (toiminto-fn "B")) nil 1))
         odotettu-tulos ["A" "B"]]
     (is (= ["A"] @ensimmainen))
