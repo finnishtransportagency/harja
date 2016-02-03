@@ -16,8 +16,10 @@
                              (.setMinimumFractionDigits 2)
                              (.setMaximumFractionDigits 2))))
 
-(defn euro [eur]
-  "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja euromerkin kanssa."
+(defn euro
+  "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
+  ([eur] (euro true eur))
+  ([nayta-euromerkki eur]
   #?(:cljs
      ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
      ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
@@ -25,8 +27,14 @@
      (str (.format euro-number-format eur) " \u20AC")
 
      :clj
-     (.format (NumberFormat/getCurrencyInstance) eur)))
-   
+     (.format (doto
+                (if nayta-euromerkki
+                  (NumberFormat/getCurrencyInstance)
+                  (NumberFormat/getNumberInstance))
+                (.setMaximumFractionDigits 2)
+                (.setMinimumFractionDigits 2)) eur))))
+
+
 
 (defn euro-opt
   "Formatoi euromäärän tai tyhjä, jos nil."
@@ -40,11 +48,12 @@
                             3 "III"})
 
 (defn euro-indeksikorotus
-  "Formatoi euromäärän tai tyhjä, jos nil."
+  "Formatoi euromäärän tai stringin Indeksi puuttuu, jos nil."
   [summa]
   (if summa
     (euro summa)
     "Indeksi puuttuu"))
+
 
 (defn euro-ei-voitu-laskea
   "Formatoi euromäärän tai sanoo ei voitu laskea, jos nil."
@@ -99,7 +108,7 @@
   #?(:cljs([luku] (desimaaliluku luku 2)))
   #?(:cljs([luku tarkkuus] (.toFixed luku tarkkuus)))
   #?(:clj ([luku] (desimaaliluku luku 2)))
-  #?(:clj ([luku tarkkuus] (format (str "%." tarkkuus "f") luku tarkkuus))))
+  #?(:clj ([luku tarkkuus] (format (str "%." tarkkuus "f") (double luku) tarkkuus))))
 
 (defn desimaaliluku-opt
   #?(:cljs ([luku] (desimaaliluku-opt luku 2)))
@@ -136,3 +145,10 @@
   (if (nil? metria)
     ""
     (pituus metria)))
+
+(defn luku-indeksikorotus
+  "Formatoi luvun ilman yksikköä tai stringin Indeksi puuttuu, jos nil."
+  [summa]
+  (if summa
+    (euro false summa)
+    "Indeksi puuttuu"))

@@ -431,8 +431,7 @@
      [alkupvm loppupvm]
 
      (let [alku (l/to-local-date-time alkupvm)
-           loppu (l/to-local-date-time loppupvm)
-           _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu )]
+           loppu (l/to-local-date-time loppupvm)]
        (and (= 1 (paiva alku))
             (= 10 (kuukausi alku))
             (= 30 (paiva loppu))

@@ -2,7 +2,7 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi tasaa-kentat-oikealle]]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [clj-time.local :as l]
@@ -65,7 +65,8 @@
                                 (map (juxt :nimi laskutettu-kentta laskutetaan-kentta)
                                      tiedot))]
     (when-not (empty? taulukon-tiedot)
-      [:taulukko {:viimeinen-rivi-yhteenveto? true}
+      [:taulukko {:oikealle-tasattavat-kentat (tasaa-kentat-oikealle :laskutusyhteenveto)
+                  :viimeinen-rivi-yhteenveto? true}
        (rivi
          {:otsikko otsikko :leveys 36}
          (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29})
@@ -89,13 +90,13 @@
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
-        laskutettu-teksti (str "Laskutettu hoito\u00ADkaudella ennen " (pvm/kuukausi-ja-vuosi alkupvm))
-        laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
+        laskutettu-teksti (str "Laskutettu hoito\u00ADkaudella ennen " (pvm/kuukausi-ja-vuosi alkupvm) " \u20AC")
+        laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm) " \u20AC")
         yhteenveto-teksti (str (if (or kyseessa-kk-vali? kyseessa-hoitokausi-vali?)
                                  (str "Hoitokaudella " (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm))) " - "
-                                      (pvm/vuosi (second (pvm/paivamaaran-hoitokausi alkupvm))) " yhteensä")
+                                      (pvm/vuosi (second (pvm/paivamaaran-hoitokausi alkupvm))) " yhteensä" " \u20AC")
                                  (if kyseessa-vuosi-vali?
-                                   (str "Vuonna " (pvm/vuosi (l/to-local-date-time alkupvm)) " yhteensä")
+                                   (str "Vuonna " (pvm/vuosi (l/to-local-date-time alkupvm)) " yhteensä" " \u20AC")
                                    (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) " yhteensä"))))
         tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
         avaimet (map name (keys (first tiedot)))
@@ -138,16 +139,18 @@
                                                  (if lampotila-puuttuu? " lämpötiloja " " ") " Harjaan. ")
 
         varoitus-tietojen-puuttumisesta
-        [:varoitusteksti (str varoitus-indeksitietojen-puuttumisesta
-                              varoitus-lampotilojen-puuttumisesta
-                              vain-jvh-voi-muokata-tietoja-viesti)]
+        (when (or (not (str/blank? varoitus-indeksitietojen-puuttumisesta))
+                (not (str/blank? varoitus-lampotilojen-puuttumisesta)))
+          [:varoitusteksti (str varoitus-indeksitietojen-puuttumisesta
+                                varoitus-lampotilojen-puuttumisesta
+                                vain-jvh-voi-muokata-tietoja-viesti)])
 
         taulukot (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt]]
                          (taulukko otsikko tyhja
                                    laskutettu-teksti laskutettu
                                    laskutetaan-teksti laskutetaan
                                    yhteenveto-teksti kyseessa-kk-vali?
-                                   tiedot (or summa-fmt fmt/euro-indeksikorotus)))
+                                   tiedot (or summa-fmt fmt/luku-indeksikorotus)))
                        [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
                          :kht_laskutettu :kht_laskutetaan tiedot]
                         [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
@@ -191,10 +194,11 @@
                         [" Kaikki yhteensä " " Ei kustannuksia "
                          :kaikki_laskutettu :kaikki_laskutetaan tiedot]])]
 
-    [:raportti {:nimi " Laskutusyhteenveto "}
-     varoitus-tietojen-puuttumisesta
+    [:raportti {:nimi "Laskutusyhteenveto"}
+     (when-not (empty? taulukot)
+       varoitus-tietojen-puuttumisesta)
      (if (empty? taulukot)
-       [:teksti " Ei laskutettavaa "]
+       [:teksti " Ei laskutettavaa"]
        taulukot)]))
                 
                                                 

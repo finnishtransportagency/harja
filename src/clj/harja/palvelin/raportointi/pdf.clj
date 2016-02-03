@@ -7,6 +7,7 @@
             [harja.ui.skeema :as skeema]))
 
 (def taulukon-fonttikoko "8pt")
+(def otsikon-fonttikoko "10pt")
 
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -19,7 +20,8 @@
                  (pr-str elementti)))
     (first elementti)))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto? korosta-rivit] :as optiot} sarakkeet data]]
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
+                                              korosta-rivit oikealle-tasattavat-kentat] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko} otsikko
      [:fo:table {:border "solid 0.2mm black"}
@@ -58,7 +60,10 @@
                  [:fo:table-row
                   (for [i (range (count sarakkeet))
                         :let [arvo (or (nth rivi i) "")]]
-                    [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"}
+                    [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"
+                                            :text-align  (if oikealle-tasattavat-kentat
+                                                           (when (oikealle-tasattavat-kentat i) "right")
+                                                           "left")}
                                            yhteenveto?
                                            korosta?)
                      (when korosta?
@@ -105,7 +110,7 @@
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)
-  [:fo:table
+  [:fo:table {:font-size otsikon-fonttikoko}
    [:fo:table-column {:column-width "25%"}]
    [:fo:table-column {:column-width "75%"}]
    [:fo:table-body
@@ -122,7 +127,7 @@
 
 (defn- luo-header [raportin-nimi]
   (let [nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
-    [:fo:table
+    [:fo:table {:font-size otsikon-fonttikoko}
      [:fo:table-column {:column-width "40%"}]
      [:fo:table-column {:column-width "40%"}]
      [:fo:table-column {:column-width "20%"}]
@@ -140,7 +145,7 @@
                         :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
          (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
-                    [:fo:block {:padding "2mm" :border "solid 0.2mm black" :margin-bottom "2mm"}
+                    [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
                      (muodosta-pdf [:yhteenveto tiedot])])]
                  (keep identity
                        (mapcat #(when %

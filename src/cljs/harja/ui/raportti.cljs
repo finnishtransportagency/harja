@@ -15,19 +15,23 @@
             (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
     (first elementti)))
 
-(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto? korosta-rivit korostustyyli]} sarakkeet data]]
+
+(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
+                                               korosta-rivit korostustyyli oikealle-tasattavat-kentat]} sarakkeet data]]
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
-  [grid/grid {:otsikko (or otsikko "")
-              :tunniste hash
+  [grid/grid {:otsikko            (or otsikko "")
+              :tunniste           hash
               :piilota-toiminnot? true}
    (into []
          (map-indexed (fn [i sarake]
-                        {:hae     #(get % i)
-                         :leveys  (:leveys sarake)
-                         :otsikko (:otsikko sarake)
-                         :pakota-rivitys? (:pakota-rivitys? sarake)
+                        {:hae                #(get % i)
+                         :leveys             (:leveys sarake)
+                         :otsikko            (:otsikko sarake)
+                         :pakota-rivitys?    (:pakota-rivitys? sarake)
                          :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
-                         :nimi    (str "sarake" i)})
+                         :nimi               (str "sarake" i)
+                         :tasaa              (when oikealle-tasattavat-kentat
+                                               (when (oikealle-tasattavat-kentat i) :oikea))})
                       sarakkeet))
    (if (empty? data)
      [(grid/otsikko "Ei tietoja")]
