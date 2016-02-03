@@ -136,7 +136,7 @@
 
 
   :plugins [[lein-cljsbuild "1.1.2"]
-            [lein-less "1.7.2"]
+            [lein-less "1.7.5"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.5.0-2"]
             [cider/cider-nrepl "0.10.0"]

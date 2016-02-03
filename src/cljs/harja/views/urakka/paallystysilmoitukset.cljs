@@ -105,9 +105,9 @@
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
        [:h3 "Käsittely"]
-       [:h4 "Tekninen osa"]
+       
        [lomake/lomake
-        {:luokka   :horizontal
+        {:otsikko "Tekninen osa"
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot-tekninen-osa uusi))
          :voi-muokata? muokattava?}
@@ -123,7 +123,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
-          :leveys-col    3}
+          :palstoja 1}
 
          (when (:paatos-tekninen @paatostiedot-tekninen-osa)
            {:otsikko     "Selitys"
@@ -131,13 +131,13 @@
             :tyyppi      :text
             :koko        [60 3]
             :pituus-max  2048
-            :leveys-col  6
+            :palstoja 2
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot-tekninen-osa]
 
-       [:h4 "Taloudellinen osa"]
+       
        [lomake/lomake
-        {:luokka   :horizontal
+        {:otsikko "Taloudellinen osa"
          :muokkaa! (fn [uusi]
                      (reset! paatostiedot-taloudellinen-osa uusi))
          :voi-muokata? muokattava?}
@@ -153,7 +153,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
-          :leveys-col    3}
+          :palstoja 1}
 
          (when (:paatos-taloudellinen @paatostiedot-taloudellinen-osa)
            {:otsikko     "Selitys"
@@ -161,7 +161,7 @@
             :tyyppi      :text
             :koko        [60 3]
             :pituus-max  2048
-            :leveys-col  6
+            :palstoja 2
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot-taloudellinen-osa]])))
 
@@ -289,30 +289,32 @@
            [:div.row
             [:div.col-md-6
              [:h3 "Perustiedot"]
-             [lomake/lomake {:luokka   :horizontal
-                             :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
+             [lomake/lomake {:voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                                 (false? @lomake-lukittu-muokkaukselta?))
                              :muokkaa! (fn [uusi]
                                          (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                                          (swap! paallystysilmoitus-lomakedata merge uusi))}
-              [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero lomakedata-nyt) " " (:kohdenimi lomakedata-nyt))) :muokattava? (constantly false)}
-               {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-               {:otsikko "Päällystys valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm}
-               {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
+              [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero lomakedata-nyt) " " (:kohdenimi lomakedata-nyt))) :muokattava? (constantly false)
+                :palstoja 2}
+               {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 2}
+               {:otsikko "Päällystys valmistunut" :nimi :valmispvm_paallystys :tyyppi :pvm :palstoja 2}
+               {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde :palstoja 2
                 :vihje   (when (and
                                 (:valmispvm_paallystys lomakedata-nyt)
                                 (:valmispvm_kohde lomakedata-nyt)
                                 (= :aloitettu (:tila lomakedata-nyt)))
                            "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
                 :tyyppi  :pvm :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm_paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
-               {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm}
-               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :leveys-col 2 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
+               {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 2}
+               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero :palstoja 2 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
                (when (or (= :valmis (:tila lomakedata-nyt))
                          (= :lukittu (:tila lomakedata-nyt)))
                  {:otsikko     "Kommentit" :nimi :kommentit
+                  :palstoja 2
+                  :tyyppi :komponentti
                   :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila lomakedata-nyt))
                                                      :voi-liittaa      false
-                                                     :leveys-col       40
+                                                     :palstoja 40
                                                      :placeholder      "Kirjoita kommentti..."
                                                      :uusi-kommentti   (r/wrap (:uusi-kommentti lomakedata-nyt)
                                                                                #(swap! paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
@@ -324,7 +326,7 @@
              (kasittely valmis-kasiteltavaksi?)]]
 
            [:fieldset.lomake-osa
-            [:legend "Tekninen osa"]
+            [:h3 "Tekninen osa"]
 
             [grid/muokkaus-grid
              {:otsikko      "Päällystetyt tierekisteriosoitteet"

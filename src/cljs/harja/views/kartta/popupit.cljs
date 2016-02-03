@@ -93,20 +93,22 @@
                                                               (:lisatieto tapahtuma))]])))
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
-  (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-arvolistaus-popup (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
-                                                "Toimenpidepyyntö"
-                                                (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
-                                              [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-                                               ["Selite" (:lyhytselite tapahtuma)]
-                                               ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-                                              {:linkki {:nimi     "Siirry ilmoitusnäkymään"
-                                                        :on-click #(do
-                                                                    (.preventDefault %)
-                                                                    (let [putsaa (fn [asia]
-                                                                                   (dissoc asia :type :alue))]
-                                                                      (reset! nav/sivu :ilmoitukset)
-                                                                      (ilmoitukset/avaa-ilmoitus! (putsaa tapahtuma))))}})))
+  (kartta/nayta-popup!
+   (geometrian-koordinaatti tapahtuma)
+   (tee-arvolistaus-popup
+    (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
+      "Toimenpidepyyntö"
+      (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
+    [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+     ["Selite" (:lyhytselite tapahtuma)]
+     ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
+    {:linkki {:nimi     "Siirry ilmoitusnäkymään"
+              :on-click #(do
+                           (.preventDefault %)
+                           (let [putsaa (fn [asia]
+                                          (dissoc asia :type :alue))]
+                             (nav/vaihda-sivu! :ilmoitukset)
+                             (ilmoitukset/avaa-ilmoitus! (putsaa tapahtuma))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))

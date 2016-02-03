@@ -27,7 +27,8 @@
 
 (def kartta-kontentin-vieressa? (atom false))
 
-(def +kartan-korkeus-s+ 26)
+(def +kartan-napit-padding+ 26)
+(def +kartan-korkeus-s+ 0)
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
@@ -222,7 +223,7 @@
   []
   (let [koko @nav/kartan-koko
         kartan-korkeus @kartan-korkeus
-        sivu @nav/sivu
+        sivu (nav/sivu)
         v-ur @nav/valittu-urakka
         muuta-kokoa-teksti (case koko
                              :M "Suurenna karttaa"
@@ -236,7 +237,10 @@
      ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
      [:div.kartan-koko-napit {:style {:position   "absolute"
                                       :text-align "center"
-                                      :top        (fmt/pikseleina (- kartan-korkeus +kartan-korkeus-s+))
+                                      :top        (fmt/pikseleina (- kartan-korkeus
+                                                                     (if (= :S koko)
+                                                                       0
+                                                                       +kartan-napit-padding+)))
                                       :width      "100%"
                                       :z-index    100}}
       (if (= :S koko)
@@ -533,7 +537,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 
           ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
 
-          :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/sivu))
+          :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name (nav/sivu)))
           :extent             @nav/kartan-extent
 
           :selection          nav/valittu-hallintayksikko
