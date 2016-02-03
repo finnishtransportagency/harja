@@ -31,9 +31,10 @@
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko
+     [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
-                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
+                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")
+                 :oikealle-tasattavat-kentat #{3 6 7}}
       [{:leveys 10 :otsikko "Päivämäärä"}
        {:leveys 25 :otsikko "Tehtävä"}
        {:leveys 5 :otsikko "Yks."}
