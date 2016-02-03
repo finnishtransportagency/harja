@@ -598,14 +598,15 @@
 (defn- onko-tr-osoite-pistemainen? [osoite]
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys]))
 
-(defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key]
+(defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key disabled?]
   [:td
-   [:input.tierekisteri {:class     (when lomake? "form-control")
-                         :size      5 :max-length 10
+   [:input.tierekisteri {:class       (str (when lomake? "form-control ") (when disabled? "disabled"))
+                         :size        5 :max-length 10
                          :placeholder placeholder
-                         :value     value
-                         :on-change (muuta! key)
-                         :on-blur   blur}]])
+                         :value       value
+                         :disabled disabled?
+                         :on-change   (muuta! key)
+                         :on-blur     blur}]])
 
 (defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
   {:alue (assoc arvo
@@ -711,11 +712,11 @@
              [:th "let"]]]
            [:tbody
             [:tr
-             [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero]
-             [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa]
-             [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys]
-             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa]
-             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa @karttavalinta-kaynnissa]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
              
              (if-not @karttavalinta-kaynnissa
                [:td.karttavalinta
