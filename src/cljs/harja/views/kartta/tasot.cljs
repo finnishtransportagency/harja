@@ -34,17 +34,18 @@ oletus-zindex 4)
   (reaction
     (let [hals @hal/hallintayksikot
           v-hal @nav/valittu-hallintayksikko
-          v-ur @nav/valittu-urakka]
+          v-ur @nav/valittu-urakka
+          sivu (nav/sivu)]
       (cond
         ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin tarkoitettuja
         ;; geometrioita (kuten urakat), mutta jos esim HY on valittu, voidaan näyttää sen rajat.
-        (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? v-hal))
+        (and (#{:tilannekuva :ilmoitukset} sivu) (nil? v-hal))
         nil
 
-        (and (#{:tilannekuva :ilmoitukset} @nav/sivu) (nil? @nav/valittu-urakka))
+        (and (#{:tilannekuva :ilmoitukset} sivu) (nil? @nav/valittu-urakka))
         [(assoc v-hal :valittu true)]
 
-        (and (#{:tilannekuva :ilmoitukset} @nav/sivu) @nav/valittu-urakka)
+        (and (#{:tilannekuva :ilmoitukset} sivu) @nav/valittu-urakka)
         [(assoc v-ur :valittu true)]
 
         ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt

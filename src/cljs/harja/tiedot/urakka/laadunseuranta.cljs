@@ -9,4 +9,4 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce laadunseurannassa? (atom false)) ; jos true, laadunseurantaosio nyt käytössä
-(defonce valittu-valilehti (atom :tarkastukset))
+

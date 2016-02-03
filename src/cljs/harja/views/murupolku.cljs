@@ -126,7 +126,8 @@
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
-  (let [valinta-auki (atom nil)]
+  (let [valinta-auki (atom nil)
+        sivu (nav/sivu)]
     (komp/luo
      (komp/kuuntelija
       [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
@@ -143,8 +144,8 @@
      (fn []
        [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                         (cond
-                          (= @nav/sivu :hallinta) "hide"
-                          (= @nav/sivu :about) "hide"
+                          (= sivu :hallinta) "hide"
+                          (= sivu :about) "hide"
                           :default ""))}
         (case @murupolku-muoto
           :tilannekuva [:ol.murupolku

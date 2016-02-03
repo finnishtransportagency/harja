@@ -106,7 +106,7 @@
 
    (fn []
      (if @nav/render-lupa?
-       (let [sivu @nav/sivu
+       (let [sivu (nav/sivu)
              aikakatkaistu? @istunto/istunto-aikakatkaistu
              korkeus @dom/korkeus
              kayttaja @istunto/kayttaja]

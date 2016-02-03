@@ -25,15 +25,8 @@
             [harja.ui.ikonit :as ikonit]))
 
 (defn pollauksen-merkki []
-  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti"])
+  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
 
-(defn urakan-sivulle-nappi [ilmoitus]
-  (when (and (:urakka ilmoitus) (:hallintayksikko ilmoitus))
-    [napit/urakan-sivulle "Urakan sivulle" (fn [e]
-                                             (if e (.stopPropagation e))
-                                             (reset! nav/valittu-hallintayksikko (:hallintayksikko ilmoitus))
-                                             (reset! nav/valittu-urakka-id (:urakka ilmoitus))
-                                             (reset! nav/sivu :urakat))]))
 
 (defn nayta-tierekisteriosoite
   [tr]
@@ -47,7 +40,6 @@
     [:div
      [:span
       [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus!)]
-      (urakan-sivulle-nappi ilmoitus)
       (pollauksen-merkki)
       [bs/panel {}
        (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
@@ -76,11 +68,11 @@
          "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
 
-      [bs/panel {}
-       "Kuittaukset"
+      [:div.kuittaukset
+       [:h3 "Kuittaukset"]
        [:div
         (if @tiedot/uusi-kuittaus-auki?
-          [bs/panel {} [:div [kuittaukset/uusi-kuittaus-lomake]]]
+          [kuittaukset/uusi-kuittaus-lomake]
           [:button.nappi-ensisijainen {:class    "uusi-kuittaus-nappi"
                                        :on-click #(tiedot/avaa-uusi-kuittaus!)} (ikonit/plus) " Uusi kuittaus"])
 
@@ -109,23 +101,23 @@
 
         [(when @nav/valittu-urakka
            {:nimi          :hoitokausi
-            :leveys-col    4
+            :palstoja 2
             :otsikko       "Hoitokausi"
             :tyyppi        :valinta
             :valinnat      @u/valitun-urakan-hoitokaudet
             :valinta-nayta fmt/pvm-vali-opt})
 
-         (lomake/ryhma {:ulkoasu :rivi :otsikko "Saapunut" :leveys-col 5}
+         (lomake/ryhma {:ulkoasu :rivi :otsikko "Saapunut" :palstoja 2}
                        {:nimi       :saapunut-alkaen
                         :hae        (comp first :aikavali)
                         :aseta      #(assoc-in %1 [:aikavali 0] %2)
                         :otsikko    "Alkaen"
-                        :leveys-col 3
+                        :palstoja 1
                         :tyyppi     :pvm}
 
                        {:nimi       :saapunut-paattyen
                         :otsikko    "Päättyen"
-                        :leveys-col 3
+                        :palstoja 1
                         :hae        (comp second :aikavali)
                         :aseta      #(assoc-in %1 [:aikavali 1] %2)
                         :tyyppi     :pvm})
@@ -134,9 +126,9 @@
           :placeholder "Hae tekstillä..."
           :tyyppi      :string
           :pituus-max  64
-          :leveys-col  6}
+          :palstoja 2}
 
-         (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat" :leveys-col 6}
+         (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat"}
                        {:nimi        :tilat :otsikko "Tila"
                         :tyyppi      :boolean-group
                         :vaihtoehdot [:suljetut :avoimet]}

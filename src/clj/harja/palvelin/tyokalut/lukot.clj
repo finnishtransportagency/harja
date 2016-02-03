@@ -8,9 +8,20 @@
      (do
        (try
          (toiminto-fn)
-         (lukko/avaa-lukko? db tunniste)
-         (catch Exception e
-           (lukko/avaa-lukko? db tunniste)
-           (throw e)))
+         (finally
+           (lukko/avaa-lukko? db tunniste)))
        true)
      false)))
+
+(defn aja-tietokantalukon-kanssa [db tunniste toiminto-fn]
+  (lukko/aseta-tietokantalukko db tunniste)
+  (try
+    (let [tulos (toiminto-fn)]
+      tulos)
+    (finally
+      (lukko/avaa-tietokantalukko db tunniste))))
+
+(def lukkoidt {:sampo 10001})
+
+
+

@@ -4,6 +4,7 @@
             [harja.ui.bootstrap :as bs]
 
             [harja.domain.roolit :as roolit]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.views.toimenpidekoodit :as tp]
             [harja.views.indeksit :as i]
@@ -16,7 +17,8 @@
 (def +vain-jvhn-kaytossa+ "Tämä osio on vain järjestelmän vastuuhenkilön käytössä.")
 
 (defn hallinta []
-  [bs/tabs {:style :tabs :classes "tabs-taso1" :active u/hallinnan-valittu-valilehti}
+  [bs/tabs {:style :tabs :classes "tabs-taso1"
+            :active (nav/valittu-valilehti-atom :hallinta)}
 
    "Käyttäjät"
    :kayttajat

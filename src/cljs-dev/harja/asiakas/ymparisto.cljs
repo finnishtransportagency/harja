@@ -23,11 +23,11 @@
                               (test-runner/aja-testit))
                             ))})
   
-  (.log js/console "Alustetaan less.js uudelleenlataus")
-  (let [less (aget js/window "less")
+  #_(.log js/console "Alustetaan less.js uudelleenlataus")
+  #_(let [less (aget js/window "less")
         logger (aget less "logger")]
     (aset logger "info" (fn [& args])))
-  (js/setInterval #(let [less (aget js/window "less")
+  #_(js/setInterval #(let [less (aget js/window "less")
                          refresh (aget less "refresh")]
                      (try
                        (refresh true)

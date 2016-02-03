@@ -48,14 +48,15 @@
                                             :value @kommentti}]]
 
         [:div.toiminnot
-         [:button.btn.btn-default {:disabled (nil? @valmis-pvm)
-                                   :on-click #(do (.preventDefault %)
-                                                  (reset! tallennus-kaynnissa true)
-                                                  (go (when-let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
-                                                                                                 @valmis-pvm @kommentti))]
-                                                        (aseta-tavoitteet res)
-                                                        (reset! tallennus-kaynnissa false)))
-                                                  (log "merkitään " (pr-str vt) " valmiiksi"))}
+         [:button.nappi-ensisijainen
+          {:disabled (nil? @valmis-pvm)
+           :on-click #(do (.preventDefault %)
+                          (reset! tallennus-kaynnissa true)
+                          (go (when-let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
+                                                                         @valmis-pvm @kommentti))]
+                                (aseta-tavoitteet res)
+                                (reset! tallennus-kaynnissa false)))
+                          (log "merkitään " (pr-str vt) " valmiiksi"))}
           "Merkitse valmiiksi"]]]])))
             
 (defn valitavoite-lomake [opts ur vt]
@@ -103,6 +104,9 @@
         (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
         [grid/grid
          {:otsikko "Urakan välitavoitteet"
+          :tyhja (if (nil? @tavoitteet)
+                   [y/ajax-loader "Välitavoitteita haetaan..."]
+                   "Ei välitavoitteita")
           :tallenna #(go (reset! tallennus-kaynnissa true)
                          (go
                            (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
@@ -114,7 +118,7 @@
 
          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
           {:otsikko "Nimi" :leveys "55%" :nimi :nimi :tyyppi :string :pituus-max 128}
-          {:otsikko "Takaraja" :leveys "20%" :nimi :takaraja :fmt pvm/pvm :tyyppi :pvm}
+          {:otsikko "Takaraja" :leveys "20%" :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
           {:otsikko "Tila" :leveys "25%" :tyyppi :string :muokattava? (constantly false)
            :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
          @tavoitteet]
