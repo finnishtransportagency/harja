@@ -67,7 +67,10 @@
                                                 (seq (group-by :hallintayksikko
                                                                erilliskustannukset)))]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko                    otsikko
+     [:taulukko {:oikealle-tasattavat-kentat (if (not= konteksti :urakka)
+                                               #{5 6}
+                                               #{4 5})
+                 :otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (keep identity [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
                       {:leveys 7 :otsikko "Pvm"}
