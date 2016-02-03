@@ -441,8 +441,7 @@ oletus-zindex 4)
          (go (<! (timeout 1000))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         (when-let [tooltipin-sisalto (or (piirra-tooltip? hover) (constantly (:tooltip hover)))]
-
+         (when-let [tooltipin-sisalto (or (piirra-tooltip? hover) (some-> (:tooltip hover) (constantly)))]
            [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
             (tooltipin-sisalto)])))]))
 
