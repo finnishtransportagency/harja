@@ -41,12 +41,12 @@
    [:div.tr-valitsin-tila tila-teksti]
    [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])
 
-(defn poistu-tr-valinnasta []
+(defn poistu-tr-valinnasta! []
   (karttatasot/taso-pois! :tr-alkupiste)
   (kartta/tyhjenna-ohjelaatikko))
 
-(defn pisteelle-ei-loydy-tieta-ilmoitus []
-  (kartta/aseta-ohjelaatikon-sisalto [:span
+(defn pisteelle-ei-loydy-tieta-ilmoitus! []
+  (kartta/aseta-ohjelaatikon-sisalto! [:span
                                       [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
                                       " "
                                       [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]]))
@@ -65,8 +65,8 @@
    :alkuetaisyys (:aet osoite)
    :geometria (:geometria osoite)})
 
-(defn nayta-alkupiste-ohjelaatikossa [osoite]
-  (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
+(defn nayta-alkupiste-ohjelaatikossa! [osoite]
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
                                       (str "Valittu alkupiste: "
                                            (:numero osoite) " / "
                                            (:alkuosa osoite) " / "
@@ -114,7 +114,7 @@
           :enter
           (when (= @tila :alku-valittu)
             ((:kun-valmis @optiot) @tr-osoite)
-            (poistu-tr-valinnasta))
+            (poistu-tr-valinnasta!))
 
           :click
           (if (= :alku-valittu @tila)
@@ -125,7 +125,7 @@
 
     (with-loop-from-channel vkm-haku osoite
       (if (vkm/virhe? osoite)
-        (pisteelle-ei-loydy-tieta-ilmoitus)          
+        (pisteelle-ei-loydy-tieta-ilmoitus!)
         (let [{:keys [kun-valmis paivita]} @optiot]
           (kartta/tyhjenna-ohjelaatikko)
           (case @tila
@@ -133,13 +133,13 @@
             (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
               (paivita osoite)
               (karttatasot/taso-paalle! :tr-alkupiste)
-              (reset! tila :alku-valittu) 
+              (reset! tila :alku-valittu)
               (reset! tierekisteri/valittu-alkupiste (:geometria osoite))
-              (nayta-alkupiste-ohjelaatikossa osoite))
+              (nayta-alkupiste-ohjelaatikossa! osoite))
 
             :alku-valittu
             (let [osoite (reset! tr-osoite (konvertoi-tr-osoitteeksi osoite))]
-              (poistu-tr-valinnasta)
+              (poistu-tr-valinnasta!)
               (kun-valmis osoite))))))
 
     (let [kartan-koko @nav/kartan-koko]
@@ -157,14 +157,14 @@
                          #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
-                            (poistu-tr-valinnasta)
+                            (poistu-tr-valinnasta!)
                             (kartta/aseta-kursori! nil)))
        (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
        (komp/kuuntelija :esc-painettu
                         (fn [_]
                           (log "optiot: " @optiot)
                           ((:kun-peruttu @optiot))
-                          (poistu-tr-valinnasta))
+                          (poistu-tr-valinnasta!))
                         :enter-painettu
                         #(go (>! tapahtumat {:tyyppi :enter})))
        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
