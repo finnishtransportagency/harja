@@ -384,7 +384,8 @@ oletus-zindex 4)
                          vp (.-viewport_ ol3)
                          style (.-style vp)]
                      (set! (.-cursor style) (case cursor
-                                              :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                              :crosshair "crosshair"
+                                              :progress "progress"
                                               "")))
                    ::tooltip
                    (let [[x y teksti] args]

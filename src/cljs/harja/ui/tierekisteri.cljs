@@ -132,12 +132,16 @@
 
           :click
           (if (= :alku-valittu @tila)
-            (>! vkm-haku (<! (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)))
+            (do
+              (kartta/aseta-kursori! :progress)
+              (>! vkm-haku (<! (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti))))
             (do
               (reset! alkupiste sijainti)
+              (kartta/aseta-kursori! :progress)
               (>! vkm-haku (<! (vkm/koordinaatti->trosoite sijainti))))))))
 
     (with-loop-from-channel vkm-haku osoite
+      (kartta/aseta-kursori! :crosshair)
       (if (vkm/virhe? osoite)
         (pisteelle-ei-loydy-tieta-ilmoitus!)
         (let [{:keys [kun-valmis paivita]} @optiot]
