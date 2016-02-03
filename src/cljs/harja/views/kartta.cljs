@@ -327,13 +327,13 @@
      [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
       [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
 
-(defn aseta-paivitetaan-karttaa-tila [uusi-tila]
+(defn aseta-paivitetaan-karttaa-tila! [uusi-tila]
   (reset! paivitetaan-karttaa-tila uusi-tila))
 
-(defn aseta-yleiset-kontrollit [uusi-sisalto]
+(defn aseta-yleiset-kontrollit! [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 
-(defn tyhjenna-yleiset-kontrollit []
+(defn tyhjenna-yleiset-kontrollit! []
   (reset! kartan-yleiset-kontrollit-sisalto nil))
 
 (def kartan-ohjelaatikko-sisalto (atom nil))
@@ -348,7 +348,7 @@
 (defn aseta-ohjelaatikon-sisalto! [uusi-sisalto]
   (reset! kartan-ohjelaatikko-sisalto uusi-sisalto))
 
-(defn tyhjenna-ohjelaatikko []
+(defn tyhjenna-ohjelaatikko! []
   (reset! kartan-ohjelaatikko-sisalto nil))
 
 (defn nayta-popup!

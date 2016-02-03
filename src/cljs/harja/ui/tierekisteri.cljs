@@ -43,7 +43,7 @@
 
 (defn poistu-tr-valinnasta! []
   (karttatasot/taso-pois! :tr-alkupiste)
-  (kartta/tyhjenna-ohjelaatikko))
+  (kartta/tyhjenna-ohjelaatikko!))
 
 (defn pisteelle-ei-loydy-tieta-ilmoitus! []
   (kartta/aseta-ohjelaatikon-sisalto! [:span
@@ -131,7 +131,7 @@
       (if (vkm/virhe? osoite)
         (pisteelle-ei-loydy-tieta-ilmoitus!)
         (let [{:keys [kun-valmis paivita]} @optiot]
-          (kartta/tyhjenna-ohjelaatikko)
+          (kartta/tyhjenna-ohjelaatikko!)
           (case @tila
             :ei-valittu
             (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
