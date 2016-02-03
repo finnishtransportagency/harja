@@ -38,10 +38,11 @@
 
 (defn euro-opt
   "Formatoi euromäärän tai tyhjä, jos nil."
-  [summa]
-  (if summa
-    (euro summa)
-    ""))
+  ([summa] (euro-opt true summa))
+  ([nayta-euromerkki summa]
+   (if summa
+     (euro nayta-euromerkki summa)
+     "")))
 
 (def roomalaisena-numerona {1 "I"
                             2 "II"
