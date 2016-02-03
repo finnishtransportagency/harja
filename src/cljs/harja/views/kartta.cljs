@@ -312,11 +312,11 @@
 
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
-  ([] (kartan-yleiset-kontrollit "kartan-yleiset-kontrollit"))
-  ([luokka-str]
-  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
+  []
+  (let [sisalto @kartan-yleiset-kontrollit-sisalto
+        luokka-str (or (:class (meta sisalto)) "kartan-yleiset-kontrollit")]
     (when (and sisalto (not= :S @nav/kartan-koko))
-      [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto]))))
+      [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto])))
 
 (def paivitetaan-karttaa-tila (atom false))
 
