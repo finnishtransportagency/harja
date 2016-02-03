@@ -301,6 +301,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
    (when (and (not piilota-toiminnot?)
            tallenna) [:td.toiminnot])])
 
+(def renderoi-rivia-kerralla 100)
+
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
 Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
@@ -358,7 +360,6 @@ Optiot on mappi optioita:
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
         rivien-maara (atom (count tiedot))
-        renderoi-rivia-kerralla 100
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
