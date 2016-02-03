@@ -216,18 +216,20 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         ryhmittellyt-rivit (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                             naytettavat-rivit :urakka raportti-rivi)]
+                             naytettavat-rivit :urakka raportti-rivi)
+        kylla-loppuiset-rivi-indeksit (fn [ryhmittellyt-rivit]
+                                        (into #{} (keep-indexed
+                                                    (fn [index rivi]
+                                                      (when (and (vector? rivi)
+                                                                 (not (nil? (last rivi)))
+                                                                 (.contains (last rivi) "Kyllä"))
+                                                        index))
+                                                    ryhmittellyt-rivit)))]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
-                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
-                 :korosta-rivit (keep-indexed
-                                  (fn [index rivi]
-                                    (when (and (vector? rivi)
-                                               (not (nil? (last rivi)))
-                                               (.contains (last rivi) "Kyllä"))
-                                      index))
-                                  ryhmittellyt-rivit)
+                 :tyhja                      (when (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+                 :korosta-rivit (kylla-loppuiset-rivi-indeksit ryhmittellyt-rivit)
                  :viimeinen-rivi-yhteenveto? true}
       taulukon-otsikot
       (remove nil?
