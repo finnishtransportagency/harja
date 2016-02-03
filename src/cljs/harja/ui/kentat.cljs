@@ -642,10 +642,12 @@
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (tasot/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo @alkuperainen-sijainti)
-                             (do (tasot/nayta-geometria! :tr-valittu-osoite
+                             (do
+                               (tasot/nayta-geometria! :tr-valittu-osoite
                                                          (if (viivatyyppinen? arvo)
                                                            (valitun-tr-osoitteen-esitys arvo :tack-icon-line "gray")
-                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon nil)))))))]
+                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon nil)))
+                               (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go-loop []
