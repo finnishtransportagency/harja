@@ -234,10 +234,13 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 (defn luo-http-palvelin [asetukset kehitysmoodi]
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
 
-(defn julkaise-reitti [http nimi reitti]
-  (julkaise-palvelu http nimi (wrap-params reitti)
-                    {:ring-kasittelija? true
-                     :tarkista-polku?   false}))
+(defn julkaise-reitti
+  ([http nimi reitti] (julkaise-reitti http nimi reitti false))
+  ([http nimi reitti julkinen?]
+   (julkaise-palvelu http nimi (wrap-params reitti)
+                     {:ring-kasittelija? true
+                      :tarkista-polku?   false
+                      :julkinen julkinen?})))
 
 
 (defn julkaise-palvelut [http & palveluiden-nimet-ja-funktiot]

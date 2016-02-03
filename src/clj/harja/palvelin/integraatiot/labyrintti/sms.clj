@@ -3,7 +3,9 @@
   (:require [clojure.string :as string]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http])
+            [compojure.core :refer [POST GET]]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol Sms
@@ -24,14 +26,22 @@
                                            :error body}))
                                 {:sisalto body :otsikot headers})))))
 
+(defn vastaanota-tekstiviesti [request]
+  (log/debug (format "Vastaanotettiin tekstiviesti: %s" request))
+  {:status 200})
+
 (defrecord Labyrintti [url kayttajatunnus salasana]
   component/Lifecycle
-  (start [this]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (assoc this
       :url url
       :kayttajatunnus kayttajatunnus
-      :salasana salasana))
-  (stop [this]
+      :salasana salasana)
+    (julkaise-reitti
+      http :vastaanota-tekstiviesti
+      (GET "/sms" request (vastaanota-tekstiviesti request))))
+  (stop [{http :http-palvelin :as this}]
+    (poista-palvelut http :vastaanota-tekstiviesti)
     this)
 
   Sms
