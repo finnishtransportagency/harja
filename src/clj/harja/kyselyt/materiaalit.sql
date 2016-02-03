@@ -52,74 +52,31 @@ WHERE mk.urakka = :urakka AND
 -- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
 -- määrä = suunniteltu määrä. kokonaismäärä = toteutunut määrä
-SELECT DISTINCT
-           m.nimi    AS materiaali_nimi,
-           m.yksikko AS materiaali_yksikko,
-           m.id      AS materiaali_id,
-  (SELECT  SUM(maara) AS maara
-   FROM materiaalin_kaytto
-   WHERE materiaali = m.id
-         AND poistettu IS NOT TRUE
-         AND alkupvm :: DATE BETWEEN :alku AND :loppu
-         AND loppupvm :: DATE BETWEEN :alku AND :loppu
-         AND sopimus = :sopimus),
+SELECT mat.* FROM 
+  (SELECT m.nimi    AS materiaali_nimi,
+          m.yksikko AS materiaali_yksikko,
+          m.id      AS materiaali_id,
+      (SELECT  SUM(maara)
+         FROM materiaalin_kaytto
+        WHERE materiaali = m.id
+              AND poistettu IS NOT TRUE
+              AND alkupvm :: DATE BETWEEN :alku AND :loppu
+              AND loppupvm :: DATE BETWEEN :alku AND :loppu
+              AND sopimus = :sopimus) AS maara,
+      (SELECT SUM(maara) 
+         FROM toteuma_materiaali
+        WHERE materiaalikoodi = m.id AND
+              toteuma IN (SELECT id
+                            FROM toteuma
+                           WHERE alkanut :: DATE >= :alku AND
+			         alkanut :: DATE <= :loppu AND
+				 sopimus = :sopimus AND
+				 poistettu IS NOT TRUE) AND
+              poistettu IS NOT TRUE) AS kokonaismaara
+   FROM materiaalikoodi m
+  WHERE m.materiaalityyppi != 'talvisuola' :: materiaalityyppi) as mat
+WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 
-  (
-    SELECT SUM(maara) AS kokonaismaara
-    FROM toteuma_materiaali
-    WHERE materiaalikoodi = m.id AND
-          toteuma IN
-          (
-            SELECT id
-            FROM toteuma
-            WHERE
-              alkanut :: DATE >= :alku AND
-              alkanut :: DATE <= :loppu AND
-              sopimus = :sopimus AND
-              poistettu IS NOT TRUE) AND
-          poistettu IS NOT TRUE
-  )
-
-FROM materiaalikoodi m
-  LEFT JOIN materiaalin_kaytto mk
-    ON m.id = mk.materiaali
-       AND mk.poistettu IS NOT TRUE
-       AND mk.alkupvm :: DATE BETWEEN :alku AND :loppu
-       AND mk.loppupvm :: DATE BETWEEN :alku AND :loppu
-       AND mk.sopimus = :sopimus
-
-
-  LEFT JOIN toteuma_materiaali tm
-    ON tm.materiaalikoodi = m.id
-       AND tm.poistettu IS NOT TRUE
-
-  LEFT JOIN toteuma t
-    ON t.id = tm.toteuma AND t.poistettu IS NOT TRUE
-       AND t.alkanut :: DATE BETWEEN :alku AND :loppu
-       AND t.sopimus = :sopimus
-WHERE m.materiaalityyppi != 'talvisuola' :: materiaalityyppi
-      AND ((SELECT SUM(maara) AS maara
-            FROM materiaalin_kaytto
-            WHERE materiaali = m.id
-                  AND poistettu IS NOT TRUE
-                  AND alkupvm :: DATE BETWEEN :alku AND :loppu
-                  AND loppupvm :: DATE BETWEEN :alku AND :loppu
-                  AND sopimus = :sopimus) IS NOT NULL
-           OR (
-                SELECT SUM(maara) AS kokonaismaara
-                FROM toteuma_materiaali
-                WHERE materiaalikoodi = m.id AND
-                      toteuma IN
-                      (
-                        SELECT id
-                        FROM toteuma
-                        WHERE
-                          alkanut :: DATE >= :alku AND
-                          alkanut :: DATE <= :loppu AND
-                          sopimus = :sopimus AND
-                          poistettu IS NOT TRUE) AND
-                      poistettu IS NOT TRUE
-              ) IS NOT NULL);
 
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT

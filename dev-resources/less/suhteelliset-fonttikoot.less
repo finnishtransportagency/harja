@@ -76,17 +76,20 @@ pre {
 }
 
 .form-horizontal {
-    .radio, .checkbox, .radio-inline, .checkbox-inline {
+    .radio, .radio-inline, .checkbox-inline {
         padding: @padding-base-vertical;
         border: 1px solid transparent;
+    }
+    .checkbox {
+        padding: 2px;
     }
     .radio, .checkbox {
         min-height: calc((@line-height-computed + @padding-base-vertical) ~"+ 1px");
     }
     .form-control-static {
-        padding-top: @padding-base-vertical;
+        padding-top: 0;
         border-top: 1px solid transparent;
-        padding-bottom: @padding-base-vertical;
+        padding-bottom: 0;
         border-bottom: 1px solid transparent;
     }
 

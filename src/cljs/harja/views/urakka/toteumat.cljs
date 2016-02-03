@@ -35,7 +35,8 @@
                           (nav/vaihda-kartan-koko! :S))
                         #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
       (fn []
-        [bs/tabs {:style :tabs :classes "tabs-taso2" :active u/toteumat-valilehti}
+        [bs/tabs {:style :tabs :classes "tabs-taso2"
+                  :active (nav/valittu-valilehti-atom :toteumat)}
 
          "Kokonaishintaiset työt" :kokonaishintaiset-tyot
          [kokonaishintaiset-tyot/kokonaishintaiset-toteumat]

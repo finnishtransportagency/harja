@@ -441,10 +441,10 @@ oletus-zindex 4)
          (go (<! (timeout 1000))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         (when-let [tooltipin-sisalto (piirra-tooltip? hover)]
+         (when-let [tooltipin-sisalto (or (piirra-tooltip? hover) (constantly (:tooltip hover)))]
+
            [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
-            (or (:tooltip hover)
-                (tooltipin-sisalto))])))]))
+            (tooltipin-sisalto)])))]))
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to Ol3JS

@@ -24,6 +24,7 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn valilehti-mahdollinen? [valilehti urakkatyyppi sopimustyyppi]
+  ;; FIXME: siirrä navigaatioon
   (case valilehti
     :yleiset true
     :suunnittelu (not= sopimustyyppi :kokonaisurakka)
@@ -40,8 +41,8 @@
   "Urakkanäkymä"
   []
   (let [ur @nav/valittu-urakka
-        _ (when-not (valilehti-mahdollinen? @u/urakan-valittu-valilehti (:tyyppi ur) (:sopimustyyppi ur))
-            (reset! u/urakan-valittu-valilehti :yleiset))
+        _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) (:tyyppi ur) (:sopimustyyppi ur))
+            (nav/aseta-valittu-valilehti! :urakat :yleiset))
         hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
                           (go (reset! u/urakan-yks-hint-tyot
@@ -52,7 +53,8 @@
     @u/valittu-toimenpideinstanssi
 
     (hae-urakan-tyot ur)
-    [bs/tabs {:style :tabs :classes "tabs-taso1" :active u/urakan-valittu-valilehti}
+    [bs/tabs {:style :tabs :classes "tabs-taso1"
+              :active (nav/valittu-valilehti-atom :urakat)}
      "Yleiset"
      :yleiset
      ^{:key "yleiset"}

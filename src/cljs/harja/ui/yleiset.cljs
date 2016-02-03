@@ -82,8 +82,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    (raksiboksi teksti checked toiminto info-teksti nayta-infoteksti? nil))
   ([teksti checked toiminto info-teksti nayta-infoteksti? komponentti]
    (let [toiminto-fn (fn [e] (do (.preventDefault e) (toiminto) nil))]
-     [:span
-      [:div.raksiboksi.input-group
+     [:span.raksiboksi
+      [:div.input-group
        [:div.input-group-addon
         [:input {:type      "checkbox"
                  :checked   (if checked "checked" "")

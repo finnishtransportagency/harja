@@ -64,9 +64,15 @@
   border: none;
 }
 
-.panel-default > .panel-heading {
-  background-color: @harjan-taustavari;
-  border: none;
+.panel-default {
+  > .panel-heading {
+    background-color: @harjan-taustavari;
+    border: none;
+    padding: 3px 15px;
+  }
+  > .panel-body {
+    padding-top: 3px;
+  }
 }
 
 li.active > a {

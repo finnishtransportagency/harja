@@ -547,7 +547,7 @@ Optiot on mappi optioita:
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu korostustyyli] :as opts} skeema tiedot]
          (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
-               colspan (if piilota-toiminnot?
+               colspan (if (or piilota-toiminnot? (nil? tallenna))
                          (count skeema)
                          (inc (count skeema)))
                muokataan (not (nil? @muokatut))
@@ -786,9 +786,7 @@ Optiot on mappi optioita:
                                                (update-in muokatut [id]
                                                           (fn [rivi]
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
-                     (log "VANHAT TIEDOT: " (pr-str vanhat-tiedot))
-                     (log "UUDET TIEDOT: " (pr-str uudet-tiedot))
-
+                     
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]
@@ -842,7 +840,7 @@ Optiot on mappi optioita:
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 
-           [:div.panel.panel-default.livi-grid
+           [:div.panel.panel-default.livi-grid.livi-muokkaus-grid
             {:class (clojure.string/join " " luokat)}
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])

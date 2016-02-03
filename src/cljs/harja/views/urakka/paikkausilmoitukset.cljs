@@ -106,7 +106,7 @@
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
           :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
-          :leveys-col    3}
+          :palstoja 1}
 
          (when (:paatos @paatostiedot)
            {:otsikko    "Selitys"
@@ -114,7 +114,7 @@
             :tyyppi     :text
             :koko       [60 3]
             :pituus-max 2048
-            :leveys-col 6
+            :palstoja 2
             :validoi    [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot]])))
 
@@ -226,10 +226,11 @@
                                  (= :aloitettu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                            "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
                 :tyyppi  :pvm :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
-               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :positiivinen-numero :leveys-col 2 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
+               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :positiivinen-numero :palstoja 1 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
                (when (or (= :valmis (:tila @paikkaus/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                  {:otsikko     "Kommentit" :nimi :kommentit
+                  :tyyppi :komponentti
                   :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
                                                      :voi-liittaa      false
                                                      :leveys-col       40
@@ -244,7 +245,7 @@
              (kasittely valmis-kasiteltavaksi?)]]
 
            [:fieldset.lomake-osa
-            [:legend "Ilmoitustiedot"]
+            [:h3 "Ilmoitustiedot"]
 
             [grid/muokkaus-grid
              {:otsikko      "Paikatut tierekisteriosoitteet"

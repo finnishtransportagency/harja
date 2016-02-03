@@ -220,11 +220,6 @@
          (recur ryhmitelty hoitokaudet)
          (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
 
-(defonce urakan-valittu-valilehti (atom :yleiset))
-(defonce suunnittelun-valittu-valilehti (atom :kokonaishintaiset))
-(defonce toteumat-valilehti (atom :kokonaishintaiset-tyot))
-(defonce laskutus-valittu-valilehti (atom :laskutusyhteenveto))
-(defonce hallinnan-valittu-valilehti (atom :kayttajat))
 
 (defonce urakan-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)
@@ -285,8 +280,8 @@
   (reaction<! [ur (:id @nav/valittu-urakka)
 
                nakymassa? (or
-                           (= :muut @suunnittelun-valittu-valilehti)
-                           (= :muut-tyot @toteumat-valilehti))]
+                           (= :muut (nav/valittu-valilehti :suunnittelu))
+                           (= :muut-tyot (nav/valittu-valilehti :toteumat)))]
               {:nil-kun-haku-kaynnissa? true}
               (when (and ur nakymassa?)
                 (urakan-toimenpiteet/hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat ur))))
@@ -299,8 +294,8 @@
 
 (defonce muutoshintaiset-tyot
   (reaction<! [ur (:id @nav/valittu-urakka)
-               suunnittelun-sivu @suunnittelun-valittu-valilehti
-               toteuman-sivu @toteumat-valilehti]
+               suunnittelun-sivu (nav/valittu-valilehti :suunnittelu)
+               toteuman-sivu (nav/valittu-valilehti :toteumat)]
               {:nil-kun-haku-kaynnissa? true}
               (when (and ur (or
                              (= :muut suunnittelun-sivu)
@@ -311,7 +306,7 @@
   (reaction<! [ur (:id @nav/valittu-urakka)
                sopimus-id (first @valittu-sopimusnumero)
                aikavali @valittu-hoitokausi
-               sivu @toteumat-valilehti]
+               sivu (nav/valittu-valilehti :toteumat)]
               {:nil-kun-haku-kaynnissa? true}
               (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
                 (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
@@ -319,7 +314,7 @@
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                aikavali @valittu-hoitokausi
-               sivu @toteumat-valilehti
+               sivu (nav/valittu-valilehti :toteumat)
                _ @toteumat/erilliskustannukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and ur aikavali (= :erilliskustannukset sivu))

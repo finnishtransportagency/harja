@@ -12,25 +12,25 @@
   (:require-macros [harja.e2e.macros :refer [wait-reactions]]))
 
 (deftest ^:async e2e-testaus
-  (tu/muokkaa-atomia nav/sivu :urakat)
-  (tu/muokkaa-atomia u/urakan-valittu-valilehti :siltatarkastukset)
+  (nav/vaihda-sivu! :urakat)
+  (tu/muokkaa-atomia (nav/valittu-valilehti-atom :urakat) :siltatarkastukset)
   (wait-reactions [sillat/sillat]
                  (is (= (dommy/text (aget (sel [:.grid :tr :td]) 0)) "Oulujoen silta"))
                  (is (= (dommy/text (aget (sel [:.grid :tr :td]) 1)) "902"))))
 
 (deftest ^:async laadunseuranta
-  (tu/muokkaa-atomia nav/sivu :urakat)
-  (tu/muokkaa-atomia u/urakan-valittu-valilehti :laadunseuranta)
-  (tu/muokkaa-atomia urakka-laadunseuranta/valittu-valilehti :tarkastukset)
+  (nav/vaihda-sivu! :urakat)
+  (tu/muokkaa-atomia (nav/valittu-valilehti-atom :urakat) :laadunseuranta)
+  (tu/muokkaa-atomia (nav/valittu-valilehti-atom :laadunseuranta) :tarkastukset)
   (tu/muokkaa-atomia tarkastukset/tienumero 99)
   (wait-reactions [tarkastukset/urakan-tarkastukset]
                   (is (= (dommy/text (sel1 [:.grid :td])) "Ei tarkastuksia"))))
 
 
 (deftest ^:async laadunseuranta-toimivalla-tienumerolla
-  (tu/muokkaa-atomia nav/sivu :urakat)
-  (tu/muokkaa-atomia u/urakan-valittu-valilehti :laadunseuranta)
-  (tu/muokkaa-atomia urakka-laadunseuranta/valittu-valilehti :tarkastukset)
+  (nav/vaihda-sivu! :urakat)
+  (tu/muokkaa-atomia (nav/valittu-valilehti-atom :urakat) :laadunseuranta)
+  (tu/muokkaa-atomia (nav/valittu-valilehti-atom :laadunseuranta) :tarkastukset)
   (tu/muokkaa-atomia tarkastukset/tienumero nil)
   (wait-reactions [tarkastukset/urakan-tarkastukset]
                   (is (= (dommy/text (sel1 [:.grid :td])) "24.8.2015 17:55"))))

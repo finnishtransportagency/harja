@@ -7,5 +7,4 @@
 
 (defonce turvallisuus-valilehdella? (atom false))
 
-(defonce valittu-valilehti (atom :turvallisuuspoikkeamat))
 
