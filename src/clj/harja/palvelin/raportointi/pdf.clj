@@ -39,7 +39,8 @@
                            :number-columns-spanned (count sarakkeet)}
            [:fo:block {:space-after "0.5em"}]
            [:fo:block "Ei tietoja"]]]
-         (let [viimeinen-rivi (last data)]
+         (let [viimeinen-rivi (last data)
+               oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
            (for [i-rivi (range (count data))
                  :let [rivi (or (nth data i-rivi) "")]]
              (if-let [otsikko (:otsikko rivi)]
@@ -61,9 +62,9 @@
                   (for [i (range (count sarakkeet))
                         :let [arvo (or (nth rivi i) "")]]
                     [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"
-                                            :text-align  (if oikealle-tasattavat-kentat
-                                                           (when (oikealle-tasattavat-kentat i) "right")
-                                                           "left")}
+                                            :text-align (if (oikealle-tasattavat-kentat i)
+                                                          "right"
+                                                          "left")}
                                            yhteenveto?
                                            korosta?)
                      (when korosta?
@@ -73,7 +74,7 @@
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
-  [:fo:block {:padding-top "5mm" :font-size "16pt"} teksti])
+  [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
 
 (defmethod muodosta-pdf :otsikko-kuin-pylvaissa [[_ teksti]]
   [:fo:block {:font-weight "bold"
@@ -82,7 +83,8 @@
 
 
 (defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari]}]]
-  [:fo:block {:color (when vari vari)} teksti])
+  [:fo:block {:color (when vari vari)
+              :font-size otsikon-fonttikoko} teksti])
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))

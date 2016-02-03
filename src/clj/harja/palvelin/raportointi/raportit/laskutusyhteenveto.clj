@@ -2,7 +2,7 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi tasaa-kentat-oikealle]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [clj-time.local :as l]
@@ -65,7 +65,7 @@
                                 (map (juxt :nimi laskutettu-kentta laskutetaan-kentta)
                                      tiedot))]
     (when-not (empty? taulukon-tiedot)
-      [:taulukko {:oikealle-tasattavat-kentat (tasaa-kentat-oikealle :laskutusyhteenveto)
+      [:taulukko {:oikealle-tasattavat-kentat #{1 2 3}
                   :viimeinen-rivi-yhteenveto? true}
        (rivi
          {:otsikko otsikko :leveys 36}

@@ -8,13 +8,6 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
-(defn tasaa-kentat-oikealle
-  "Kertoo mitkä sarakenumerot tasataan oikealle missäkin raportissa. Oletuksena ei mitkään."
-  [raportti]
-  (case raportti
-    nil #{}
-    :laskutusyhteenveto #{1 2 3}))
-
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]

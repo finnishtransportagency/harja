@@ -60,7 +60,7 @@
   [summa]
   (if summa
     (euro false summa)
-    "Ei voitu laskea tai ei käytössä urakassa"))
+    "Ei voitu laskea"))
 
 (defn pikseleina
   [arvo]
