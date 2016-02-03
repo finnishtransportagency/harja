@@ -39,8 +39,9 @@
   component/Lifecycle
   (start [this]
     (-> this
-        (assoc :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono))
-        (assoc :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija this toimenpidekuittausjono))))
+        (assoc
+          :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)
+          :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija this toimenpidekuittausjono))))
   (stop [this]
     (let [poista-ilmoitusviestikuuntelija (:sonja-ilmoitusviestikuuntelija this)
           poista-toimenpidekuittauskuuntelija (:sonja-toimenpidekuittauskuuntelija this)]

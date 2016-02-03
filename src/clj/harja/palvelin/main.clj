@@ -152,7 +152,7 @@
                                     (labyrintti/->Labyrintti (:url l)
                                                              (:kayttajatunnus l)
                                                              (:salasana l)))
-                                    [:integraatioloki])
+                                    [:http-palvelin :db :integraatioloki])
 
      :raportointi (component/using
                    (raportointi/luo-raportointi)
