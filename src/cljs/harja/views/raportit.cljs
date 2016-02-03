@@ -144,7 +144,7 @@
                      (pvm/vuosi (:loppupvm ur))
                      (pvm/vuosi (pvm/nyt)))]
     [:span
-     [:div
+     [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
