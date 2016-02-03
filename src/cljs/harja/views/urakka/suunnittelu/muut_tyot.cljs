@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
                                       alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
@@ -49,12 +49,13 @@
               valitun-tpin-tehtavat-tasoineen (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                                                 valittu-tpi-id
                                                 toimenpideinstanssit tehtavat-tasoineen)]
-          [:div.muut-tyot
+          [:div.row.muut-tyot
            [valinnat/urakan-sopimus ur]
            [valinnat/urakan-toimenpide+muut ur]
            (if-not (empty? valitun-tpin-tehtavat-tasoineen)
              [grid/grid
              {:otsikko      "Urakkasopimuksen mukaiset muutos- ja lisätyöhinnat"
+              :luokat ["col-md-10"]
               :tyhja        (if (nil? @u/muutoshintaiset-tyot)
                               [ajax-loader "Muutoshintaisia töitä haetaan..."]
                               "Ei muutoshintaisia töitä")
@@ -88,7 +89,7 @@
                :tyyppi  :positiivinen-numero :fmt fmt/euro-opt :leveys "20%"}]
 
               @valitut-tyot]
-             [vihje "Ei tehtäviä valitulla toimenpiteellä tässä urakassa"])
+             [vihje "Ei tehtäviä valitulla toimenpiteellä tässä urakassa" "col-xs-12"])
 
-           [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+]])))))
+           [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+ "col-xs-12"]])))))
 

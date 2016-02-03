@@ -1,9 +1,12 @@
 /* Tässä tiedostossa on navigointiin liittyvien komponenttien tyylejä.
    Huom. osa hyvin yleiskäyttöisistä navigointielementeistä löytyy yleiset-namespacesta. */
 
+
 .tabs-taso1 {
-  > li {
-    margin-top: 3px;
+  + .valilehti {
+    border-right: 1px solid @harmaa7;
+    border-left: 1px solid @harmaa7;
+    border-bottom: 1px solid @harmaa7;
   }
 
   > li:not(.active) > a {

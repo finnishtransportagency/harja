@@ -125,8 +125,6 @@
               (when nakymassa?
                 (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
 
-(tarkkaile! "TPI: " u/valittu-toimenpideinstanssi)
-
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
 (defonce yksikkohintainen-toteuma-kartalla

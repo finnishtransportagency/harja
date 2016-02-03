@@ -2,6 +2,7 @@
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
@@ -10,7 +11,7 @@
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]])
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -35,7 +36,8 @@
 
          [:span.suunnittelu
           ;; suunnittelun välilehdet
-          [bs/tabs {:style :tabs :classes "tabs-taso2":active u/suunnittelun-valittu-valilehti}
+          [bs/tabs {:style :tabs :classes "tabs-taso2"
+                    :active (nav/valittu-valilehti-atom :suunnittelu)}
 
            "Kokonaishintaiset työt"
            :kokonaishintaiset

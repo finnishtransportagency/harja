@@ -2,10 +2,9 @@
   "Päätason sivu Laskutus"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
-            [harja.tiedot.urakka :as u]
+            [harja.tiedot.navigaatio :as nav]
 
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? livi-pudotusvalikko]]
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat])
@@ -17,7 +16,8 @@
   (komp/luo
     (fn []
       [:span.laskutus
-       [bs/tabs {:style :tabs :classes "tabs-taso2" :active u/laskutus-valittu-valilehti}
+       [bs/tabs {:style :tabs :classes "tabs-taso2"
+                 :active (nav/valittu-valilehti-atom :laskutus)}
 
         "Laskutusyhteenveto"
         :laskutusyhteenveto

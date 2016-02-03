@@ -1,10 +1,15 @@
 -- name: hae-lukko-idlla
 -- Hakee lukon id:llä
-SELECT m.id, m.kayttaja, m.aikaleima, k.etunimi, k.sukunimi,
-       (EXTRACT(EPOCH FROM NOW()::TIMESTAMP WITHOUT TIME ZONE) - EXTRACT(EPOCH FROM aikaleima)) as ika
-  FROM muokkauslukko m
+SELECT
+  m.id,
+  m.kayttaja,
+  m.aikaleima,
+  k.etunimi,
+  k.sukunimi,
+  (EXTRACT(EPOCH FROM NOW() :: TIMESTAMP WITHOUT TIME ZONE) - EXTRACT(EPOCH FROM aikaleima)) AS ika
+FROM muokkauslukko m
   JOIN kayttaja k ON k.id = m.kayttaja
- WHERE m.id = :id;
+WHERE m.id = :id;
 
 -- name: luo-lukko<!
 -- Tekee uuden lukon
@@ -14,18 +19,18 @@ VALUES (:id, :kayttaja, NOW());
 -- name: virkista-lukko<!
 -- Virkistää lukon aikaleiman
 UPDATE muokkauslukko
-   SET aikaleima = NOW()
- WHERE id = :id
- AND kayttaja = :kayttaja;
+SET aikaleima = NOW()
+WHERE id = :id
+      AND kayttaja = :kayttaja;
 
 -- name: vapauta-lukko!
 -- Vapauttaa lukon
 DELETE FROM muokkauslukko
-WHERE id = :id
+WHERE id = :id;
 
 -- name: vapauta-kayttajan-lukko!
 -- Vapauttaa käyttäjän lukon
 DELETE FROM muokkauslukko
 WHERE id = :id
-AND kayttaja = :kayttaja
+      AND kayttaja = :kayttaja;
 

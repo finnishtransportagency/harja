@@ -5,12 +5,11 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.ikonit :as ikonit]
+            [harja.ui.dom :as dom]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.geo :as geo]
-            
+
             [ol]
             [ol.Map]
             [ol.Attribution]
@@ -50,15 +49,18 @@
                    [harja.ui.openlayers :refer [disable-rendering]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että kartan animoinnit on valmistuneet." :const true}
-  animaation-odotusaika 200)
+animaation-odotusaika 200)
 
 (def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
-  initial-resolution 1200)
+initial-resolution 1200)
 
 (def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään" :const true}
-  min-zoom 5)
+min-zoom 5)
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos" :const true}
-  max-zoom 20)
+max-zoom 20)
+
+(def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
+oletus-zindex 4)
 
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
@@ -326,7 +328,9 @@
 (defn- create-geometry-layer
   "Create a new ol3 Vector layer with a vector source."
   []
-  (ol.layer.Vector. #js {:source (ol.source.Vector.)}))
+  (ol.layer.Vector. #js {:source          (ol.source.Vector.)
+                         :rendererOptions {:zIndexing true
+                                           :yOrdering true}}))
 
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
@@ -361,46 +365,46 @@
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
              (when-not (= ch unmount-ch)
                (nappaa-virhe
-                (case komento
-                  
-                  ::popup
-                  (let [[coordinate content] args]
-                    (nayta-popup! this coordinate content))
+                 (case komento
 
-                  ::invalidate-size
-                  (do
-                    (.updateSize ol3)
-                    (.render ol3))
+                   ::popup
+                   (let [[coordinate content] args]
+                     (nayta-popup! this coordinate content))
 
-                  ::hide-popup
-                  (poista-popup! this)
+                   ::invalidate-size
+                   (do
+                     (.updateSize ol3)
+                     (.render ol3))
 
-                  ::hide-popup-without-event
-                  (poista-popup-ilman-eventtia! this)
+                   ::hide-popup
+                   (poista-popup! this)
 
-                  ::cursor
-                  (let [[cursor] args
-                        vp (.-viewport_ ol3)
-                        style (.-style vp)]
-                    (set! (.-cursor style) (case cursor
-                                             :crosshair "crosshair" ;; lisää tarvittavia kursoreita
-                                             "")))
-                  ::tooltip
-                  (let [[x y teksti] args]
-                    (reagent/set-state this
-                                       {:hover {:x x :y y :tooltip teksti}}))))
+                   ::hide-popup-without-event
+                   (poista-popup-ilman-eventtia! this)
+
+                   ::cursor
+                   (let [[cursor] args
+                         vp (.-viewport_ ol3)
+                         style (.-style vp)]
+                     (set! (.-cursor style) (case cursor
+                                              :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                              "")))
+                   ::tooltip
+                   (let [[x y teksti] args]
+                     (reagent/set-state this
+                                        {:hover {:x x :y y :tooltip teksti}}))))
                (recur (alts! [komento-ch unmount-ch]))))
 
-    (.setView ol3 (ol.View. #js {:center  (clj->js (geo/extent-keskipiste extent))
+    (.setView ol3 (ol.View. #js {:center     (clj->js (geo/extent-keskipiste extent))
                                  :resolution initial-resolution
-                                 :maxZoom max-zoom
-                                 :minZoom min-zoom}))
+                                 :maxZoom    max-zoom
+                                 :minZoom    min-zoom}))
 
     ;;(.log js/console "L.map = " ol3)
-    (reagent/set-state this {:ol3            ol3
-                             :geometry-layers {} ;; key => vector layer
-                             :hover          nil
-                             :unmount-ch     unmount-ch})
+    (reagent/set-state this {:ol3             ol3
+                             :geometry-layers {}            ;; key => vector layer
+                             :hover           nil
+                             :unmount-ch      unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
@@ -435,14 +439,15 @@
             :style (merge {:width  (:width mapspec)
                            :height (:height mapspec)}
                           (:style mapspec))}]
-     (when-let [t (:tooltip-fn mapspec)]
+     (when-let [piirra-tooltip? (:tooltip-fn mapspec)]
        (when-let [hover (-> c reagent/state :hover)]
          (go (<! (timeout 1000))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
-          (or (:tooltip hover)
-              (t hover))]))]))
+         (when-let [tooltipin-sisalto (or (piirra-tooltip? hover) (constantly (:tooltip hover)))]
+
+           [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
+            (tooltipin-sisalto)])))]))
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to Ol3JS
@@ -471,58 +476,58 @@
 
 (defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image arrow-image-size] :as line}]
   (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})        
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         nuolet (atom [])]
 
     ;; Kerätään viivasegmenteille loppusijainnit ja viivan suunta
     (.forEachSegment
       (.getGeometry feature)
       (fn [start end]
-        (swap! nuolet conj {:sijainti (js->clj  end)
+        (swap! nuolet conj {:sijainti (js->clj end)
                             :rotaatio (- (js/Math.atan2
-                                          (- (second end) (second start))
-                                          (- (first end) (first start))))})
+                                           (- (second end) (second start))
+                                           (- (first end) (first start))))})
         ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
         false))
     (doto feature
       (.setStyle
-       (clj->js
-        (concat
-         [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                               :width (or width 2)})
-                                :zIndex 4})]
-         (loop [nuolityylit []
-                viimeisin-nuolen-sijainti [0 0]
-                [{:keys [sijainti rotaatio]} & nuolet] @nuolet]
-           (if-not sijainti
-             ;; Kaikki käsitelty, palauta nuolet
-             nuolityylit
-             
-             ;; Tee uusi nuoli, jos aiempaan on matkaa yli 3000 yksikköä
-             ;; tai jos tämä on viimeinen
-             (let [[x1 y1] viimeisin-nuolen-sijainti
-                   [x2 y2] sijainti
-                   dx (- x1 x2)
-                   dy (- y1 y2)
-                   dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
-               
-               (if (or (> dist 3000)
-                       (empty? nuolet))
-                 (recur (conj nuolityylit
-                              (ol.style.Style.
-                               #js {:geometry (ol.geom.Point. (clj->js sijainti))
-                                    :image    (ol.style.Icon. #js {:src (or arrow-image 
-                                                                            "images/nuoli-punainen.png")
-                                                                   :opacity        1
-                                                                   :scale          (or scale 2.5)
-                                                                   :zIndex         6
-                                                                   :rotateWithView false
-                                                                   :rotation       rotaatio})}))
-                        sijainti
-                        nuolet)
-                 (recur nuolityylit
-                        viimeisin-nuolen-sijainti
-                        nuolet)))))))))))
+        (clj->js
+          (concat
+            [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
+                                                                  :width (or width 2)})
+                                   :zIndex oletus-zindex})]
+            (loop [nuolityylit []
+                   viimeisin-nuolen-sijainti [0 0]
+                   [{:keys [sijainti rotaatio]} & nuolet] @nuolet]
+              (if-not sijainti
+                ;; Kaikki käsitelty, palauta nuolet
+                nuolityylit
+
+                ;; Tee uusi nuoli, jos aiempaan on matkaa yli 3000 yksikköä
+                ;; tai jos tämä on viimeinen
+                (let [[x1 y1] viimeisin-nuolen-sijainti
+                      [x2 y2] sijainti
+                      dx (- x1 x2)
+                      dy (- y1 y2)
+                      dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
+
+                  (if (or (> dist 3000)
+                          (empty? nuolet))
+                    (recur (conj nuolityylit
+                                 (ol.style.Style.
+                                   #js {:geometry (ol.geom.Point. (clj->js sijainti))
+                                        :image    (ol.style.Icon. #js {:src            (or arrow-image
+                                                                                           "images/nuoli-punainen.png")
+                                                                       :opacity        1
+                                                                       :scale          (or scale 2.5)
+                                                                       :zIndex         6
+                                                                       :rotateWithView false
+                                                                       :rotation       rotaatio})}))
+                           sijainti
+                           nuolet)
+                    (recur nuolityylit
+                           viimeisin-nuolen-sijainti
+                           nuolet)))))))))))
 
 
 (defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
@@ -531,7 +536,7 @@
                   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
         tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
-                                      :zIndex (or zindex 4)})
+                                      :zIndex (or zindex oletus-zindex)})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
@@ -539,7 +544,7 @@
                                                       :anchor  #js [0.5 1]
                                                       :opacity 1
                                                       :scale   (or scale 1)})
-                       :zIndex   ((fnil + 4) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
+                       :zIndex   ((fnil + oletus-zindex) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
     (doto feature
       (.setStyle (clj->js tyylit)))))
 
@@ -553,7 +558,7 @@
                                                :anchor   (if anchor
                                                            (clj->js anchor)
                                                            #js [0.5 0.5])})
-                                :zIndex 4})
+                                :zIndex oletus-zindex})
 
                          (ol.style.Style.
                            #js {:image  (ol.style.Icon.
@@ -562,7 +567,7 @@
                                                :anchor  (if anchor
                                                           (clj->js anchor)
                                                           #js [0.5 0.5])})
-                                :zIndex 5})]))))
+                                :zIndex (inc oletus-zindex)})]))))
 
 (defmethod luo-feature :tack-icon [{:keys [coordinates img scale zindex]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -572,7 +577,7 @@
                                      :anchor  #js [0.5 1]
                                      :opacity 1
                                      :scale   (or scale 1)})
-                      :zIndex (or zindex 4)}))))
+                      :zIndex (or zindex oletus-zindex)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "sticker-sininen.png" img direction [0.5 0.5]))
@@ -581,24 +586,24 @@
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
                                                                      :width (or width 2)})
-                                      :zIndex (or zindex 4)})
+                                      :zIndex (or zindex oletus-zindex)})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
                        :image    (ol.style.Icon.
-                                   #js {:src      (yleiset/karttakuva (str +karttaikonipolku+ "sticker-sininen"))
+                                   #js {:src      (dom/karttakuva (str +karttaikonipolku+ "sticker-sininen"))
                                         :rotation (or direction 0)
                                         :opacity  1
                                         :anchor   #js [0.5 0.5]})
-                       :zIndex   4})
+                       :zIndex   oletus-zindex})
 
                 (ol.style.Style.
                   #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image  (ol.style.Icon.
-                                 #js {:src     (str +karttaikonipolku+ img)
-                                      :opacity 1
-                                      :anchor  #js [0.5 0.5]})
-                       :zIndex 5})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
+                       :image    (ol.style.Icon.
+                                   #js {:src     (str +karttaikonipolku+ img)
+                                        :opacity 1
+                                        :anchor  #js [0.5 0.5]})
+                       :zIndex   (inc oletus-zindex)})]]
     (doto feature
       (.setStyle (clj->js tyylit)))))
 
@@ -614,7 +619,7 @@
                                      :rotation     (or direction 0)
                                      :anchorXUnits "fraction"
                                      :anchorYUnits "fraction"})
-                      :zIndex 4}))))
+                      :zIndex oletus-zindex}))))
 
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -644,14 +649,16 @@ vector with the updates ol3 layer and map of geometries.
 If incoming layer & map vector is nil, a new ol3 layer will be created."
   [ol3 geometry-fn [geometry-layer geometries-map] items]
   (let [create? (nil? geometry-layer)
-        geometry-layer (if create? (create-geometry-layer) geometry-layer)
+        geometry-layer (if create?
+                         (doto (create-geometry-layer) (.setZIndex (or (:zindex (meta items)) 0)))
+                         geometry-layer)
         geometries-map (if create? {} geometries-map)
         geometries-set (into #{} (map geometria-avain) items)
         features (.getSource geometry-layer)]
 
     (when create?
       (.addLayer ol3 geometry-layer))
-    
+
     ;; Remove all ol3 feature objects that are no longer in the new geometries
     (doseq [[avain feature] (seq geometries-map)
             :when (not (geometries-set avain))]
@@ -663,29 +670,29 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
       (if-not item
         ;; When all items are processed, return layer and new geometries map
         [geometry-layer new-geometries-map]
-        
+
         (let [geom (geometry-fn item)
               avain (geometria-avain item)]
           (if-not geom
             (recur new-geometries-map items)
             (recur (assoc new-geometries-map avain
-                          (or (geometries-map avain)
-                              (when-let [new-shape (try
-                                                     (luo-feature geom)
+                                             (or (geometries-map avain)
+                                                 (when-let [new-shape (try
+                                                                        (luo-feature geom)
+                                                                        (catch js/Error e
+                                                                          (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+                                                                          nil))]
+                                                   (aseta-feature-geometria! new-shape item)
+                                                   (try
+                                                     (.addFeature features new-shape)
                                                      (catch js/Error e
-                                                       (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
-                                                       nil))]
-                                (aseta-feature-geometria! new-shape item)
-                                (try
-                                  (.addFeature features new-shape)
-                                  (catch js/Error e
-                                    (log (pr-str "problem in addFeature, avain: " avain "\ngeom: "  geom  "\nnew-shape: " new-shape))))
+                                                       (log (pr-str "problem in addFeature, avain: " avain "\ngeom: " geom "\nnew-shape: " new-shape))))
 
-                                ;; Aseta geneerinen tyyli tyypeille, joiden luo-feature ei sitä tee
-                                (when (#{:polygon :point :circle :multipolygon :multiline :line} (:type geom))
-                                  (aseta-tyylit new-shape geom))
+                                                   ;; Aseta geneerinen tyyli tyypeille, joiden luo-feature ei sitä tee
+                                                   (when (#{:polygon :point :circle :multipolygon :multiline :line} (:type geom))
+                                                     (aseta-tyylit new-shape geom))
 
-                                new-shape)))
+                                                   new-shape)))
                    items)))))))
 
 (defn- update-ol3-geometries [component geometries]
@@ -693,44 +700,39 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
   (let [{:keys [ol3 geometry-layers mapspec]} (reagent/state component)
         geometry-fn (or (:geometry-fn mapspec) identity)]
 
-    (disable-rendering
-     ol3
+    ;; Remove any layers that are no longer present
+    (doseq [[key [layer _]] geometry-layers
+            :when (nil? (get geometries key))]
+      (log "POISTETAAN KARTTATASO " (name key) " => " layer)
+      (.removeLayer ol3 layer))
 
-     (mittaa-aika
-      "update-ol3-geometries"
-      ;; Remove any layers that are no longer present
-      (doseq [[key [layer _]] geometry-layers
-              :when (nil? (get geometries key))]
-        (log "POISTETAAN KARTTATASO " (name key) " => " layer)
-        (.removeLayer ol3 layer))
-
-      ;; For each current layer, update layer geometries
-      (loop [new-geometry-layers {}
-             [layer & layers] (keys geometries)]
-        (if-not layer
-          (do
-            (log "Map layer item counts: "
-                 (str/join ", "
-                           (map #(str (count (second (second %))) " " (name (first %))) (seq new-geometry-layers))))
-            (reagent/set-state component {:geometry-layers new-geometry-layers}))
-          (let [layer-geometries (get geometries layer)]
-            (if (nil? layer-geometries)
-              (recur new-geometry-layers layers)
-              (recur (assoc new-geometry-layers
-                            layer (update-ol3-layer-geometries ol3 geometry-fn
-                                                               (get geometry-layers layer)
-                                                               layer-geometries))
-                     layers)))))))))
+    ;; For each current layer, update layer geometries
+    (loop [new-geometry-layers {}
+           [layer & layers] (keys geometries)]
+      (if-not layer
+        (do
+          (log "Map layer item counts: "
+               (str/join ", "
+                         (map #(str (count (second (second %))) " " (name (first %))) (seq new-geometry-layers))))
+          (reagent/set-state component {:geometry-layers new-geometry-layers}))
+        (let [layer-geometries (get geometries layer)]
+          (if (nil? layer-geometries)
+            (recur new-geometry-layers layers)
+            (recur (assoc new-geometry-layers
+                     layer (update-ol3-layer-geometries ol3 geometry-fn
+                                                        (get geometry-layers layer)
+                                                        layer-geometries))
+                   layers)))))))
 
 
 (defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries extent-key :extent-key}]]
   (let [{aiempi-extent :extent aiempi-extent-key :extent-key} (reagent/state this)]
     (reagent/set-state this {:extent-key extent-key
-                             :extent extent})
+                             :extent     extent})
     (when (or (not (identical? aiempi-extent extent))
               (not= aiempi-extent-key extent-key))
       (.setTimeout js/window #(keskita-kartta-alueeseen! extent) animaation-odotusaika)))
-  
+
   (update-ol3-geometries this geometries))
 
 ;;;;;;;;;
@@ -739,11 +741,11 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
 (defn openlayers [mapspec]
   "A OpenLayers map component."
   (reagent/create-class
-    {:get-initial-state      (fn [_] {:mapspec mapspec})
-     :component-did-mount    ol3-did-mount
-     :reagent-render         ol3-render
-     :component-will-unmount ol3-will-unmount
-     :component-did-update   ol3-did-update
+    {:get-initial-state            (fn [_] {:mapspec mapspec})
+     :component-did-mount          ol3-did-mount
+     :reagent-render               ol3-render
+     :component-will-unmount       ol3-will-unmount
+     :component-did-update         ol3-did-update
      :component-will-receive-props ol3-will-receive-props}))
 
 

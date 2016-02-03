@@ -134,3 +134,18 @@
                                           validoi)]
              (recur (if (empty? virheet) v (assoc v nimi virheet))
                     skeema))))))))
+
+(defn tyhja-arvo? [arvo]
+  (or (nil? arvo)
+      (str/blank? arvo)))
+
+(defn puuttuvat-pakolliset-kentat
+  "Palauttaa pakolliset kenttäskeemat, joiden arvo puuttuu"
+  [rivi skeema]
+  (keep (fn [{:keys [pakollinen? hae nimi] :as s}]
+          (when (and pakollinen?
+                     (tyhja-arvo? (if hae
+                                    (hae rivi)
+                                    (get rivi nimi))))
+            s))
+        skeema))

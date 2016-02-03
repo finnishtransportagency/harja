@@ -3,18 +3,18 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko linkki ajax-loader nuolivalinta] :as yleiset]
             [harja.ui.protokollat :refer [hae]]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
             [goog.string :as gstr]
             [cljs.core.async :refer [<! >! chan] :as async]
 
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
 
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as tasot]
@@ -126,7 +126,7 @@
 
 
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex on-focus lomake? placeholder]} data]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? placeholder]} data]
   [:input {:class       (when lomake? "form-control")
            :placeholder placeholder
            :on-change   #(reset! data (-> % .-target .-value))
@@ -140,7 +140,7 @@
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus lomake? pituus-max]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
-                      2
+                      1
                       koko-rivit))
         pituus-max (or pituus-max 256)
         muuta! (fn [data e]
@@ -288,11 +288,11 @@
            "\u2713 "
            "\u2610 ") otsikko])
 
-(defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki?]} data]
+(defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
-    [:span
+    [:div
      ;; Esimerkiksi tilannekuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
      ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
      ;; ei voi vain yksinkertaisesti resetoida datan sisältöä tyhjäksi tai kaikiksi vaihtoehdoiksi.
@@ -302,16 +302,24 @@
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [:span.livicon-check " Valitse kaikki"]])
-     (doall
-       (for [v vaihtoehdot]
-         ^{:key (str "boolean-group-" (name v))}
-         [:div.checkbox
-          [:label
-           [:input {:type      "checkbox" :checked (if (valitut v) true false)
-                    :on-change #(let [valittu? (-> % .-target .-checked)]
-                                 (reset! data
-                                         ((if valittu? conj disj) valitut v)))}
-            (vaihtoehto-nayta v)]]]))]))
+     (let [checkboxit (doall
+                       (for [v vaihtoehdot]
+                         ^{:key (str "boolean-group-" (name v))}
+                         [:div.checkbox
+                          [:label
+                           [:input {:type      "checkbox" :checked (if (valitut v) true false)
+                                    :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                  (reset! data
+                                                          ((if valittu? conj disj) valitut v)))}
+                            (vaihtoehto-nayta v)]]]))]
+       (if nayta-rivina?
+         [:table.boolean-group
+          [:tr
+           (map-indexed (fn [i cb]
+                          ^{:key i}
+                          [:td cb])
+                        checkboxit)]]
+         checkboxit))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus jos-tyhja]} data]
@@ -388,11 +396,11 @@
 ;; Tämän takia merkkien lukumäärien vaatimukset alkavat aina nollasta.
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
-(def +aika-regex+ #"\d{1,2}(:\d*)?")
+(def +aika-regex+ #"\d{1,2}(:\d{0,2})?")
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
-(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]} data]
+(defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -404,18 +412,18 @@
         auki (atom false)
 
         teksti-paivamaaraksi! (fn [data t]
+                                (log "TEKSTI " t)
                                 (reset! teksti t)
                                 (if (str/blank? t)
-                                  (reset! data nil))
-                                (when-not focus
+                                  (reset! data nil)
                                   (when-let [d (pvm/->pvm t)]
+                                    (log "OLIHAN SE VALIDI")
                                     (reset! data d))))
 
         muuta! (fn [data t]
-                 (when
-                   (or
-                     (re-matches +pvm-regex+ t)
-                     (str/blank? t))
+                 (log "MUUTA! pvm")
+                 (when (or (re-matches +pvm-regex+ t)
+                           (str/blank? t))
                    (reset! teksti t))
                  (if (str/blank? t)
                    (reset! data nil)))]
@@ -424,12 +432,13 @@
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (let [p @data]
+           (log "RECEIVED PROPS")
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))
 
        :reagent-render
-       (fn [_ data]
+       (fn [{:keys [on-focus]} data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
@@ -446,8 +455,9 @@
                          :on-change   #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
-                                        (reset! auki false)
-                                        %)
+                                         (teksti-paivamaaraksi! data nykyinen-teksti)
+                                         (reset! auki false)
+                                         true)
                          :on-blur     #(do
                                         (teksti-paivamaaraksi! data (-> % .-target .-value)))}]
             (when @auki
@@ -600,7 +610,7 @@
 (defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
   {:alue (assoc arvo
                 :type tyyppi
-                :img (yleiset/karttakuva "tr-piste-tack-harmaa")
+                :img (dom/karttakuva "tr-piste-tack-harmaa")
                 :zindex 6
                 :color vari)
    :type :tr-valittu-osoite})
@@ -690,20 +700,28 @@
              [:div {:class "virhe"}
               [:span (ikonit/warning-sign) [:span @virheet]]]])
           [:table
+           [:thead
+            [:tr
+             [:th "Tie"]
+             [:th "aosa"]
+             [:th "aet"]
+             [:th "losa"]
+             [:th "let"]]]
            [:tbody
             [:tr
-             [tr-kentan-elementti lomake? kartta? muuta! blur "Tie#" numero :numero]
+             [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero]
              [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa]
              [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys]
              [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa]
              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys]
              
              (if-not @karttavalinta-kaynnissa
-               [:td [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                                (reset! osoite-ennen-karttavalintaa osoite)
-                                                                (reset! data {})
-                                                                (reset! karttavalinta-kaynnissa true))}
-                     (ikonit/map-marker) " Valitse kartalta"]]
+               [:td.karttavalinta
+                [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                            (reset! osoite-ennen-karttavalintaa osoite)
+                                                            (reset! data {})
+                                                            (reset! karttavalinta-kaynnissa true))}
+                 (ikonit/map-marker) " Valitse kartalta"]]
                [tr/karttavalitsin {:kun-peruttu #(do
                                                    (reset! data @osoite-ennen-karttavalintaa)
                                                    (reset! karttavalinta-kaynnissa false))

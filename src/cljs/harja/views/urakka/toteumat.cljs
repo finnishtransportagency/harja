@@ -2,7 +2,7 @@
   "Urakan 'Toteumat' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
             [harja.tiedot.urakka :as u]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
@@ -35,7 +35,8 @@
                           (nav/vaihda-kartan-koko! :S))
                         #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
       (fn []
-        [bs/tabs {:style :tabs :classes "tabs-taso2" :active u/toteumat-valilehti}
+        [bs/tabs {:style :tabs :classes "tabs-taso2"
+                  :active (nav/valittu-valilehti-atom :toteumat)}
 
          "Kokonaishintaiset työt" :kokonaishintaiset-tyot
          [kokonaishintaiset-tyot/kokonaishintaiset-toteumat]

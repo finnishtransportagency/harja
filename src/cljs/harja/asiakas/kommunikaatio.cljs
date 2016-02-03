@@ -65,6 +65,7 @@
              (when-not (nil? vastaus)
                (if (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (kasittele-palvelinvirhe palvelu vastaus)
+
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
     (go

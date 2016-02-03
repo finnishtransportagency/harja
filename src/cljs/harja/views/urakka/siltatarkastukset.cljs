@@ -4,7 +4,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
@@ -18,7 +18,7 @@
             [harja.tiedot.sillat :as sillat]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.kartta :as kartta]
-            [harja.ui.lomake :refer [lomake]]
+            [harja.ui.lomake :as lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [cljs.core.async :refer [<! >! chan]]
@@ -60,7 +60,7 @@
 (defn sillan-perustiedot [silta]
   [:div [:h3 (:siltanimi silta)]
    [yleiset/tietoja {}
-    "Sillan numero: " (:siltanro silta)
+    "Sillan tunnus: " (:siltatunnus silta)
     "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
    "Tieosoite: " [tieosoite
                      (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
@@ -111,12 +111,12 @@
           {:otsikko       "Sillat"
            :tyhja         (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
            :rivi-klikattu #(reset! st/valittu-silta %)
-           :tunniste      :siltanro
+           :tunniste      :siltatunnus
            }
 
           ;; sarakkeet
           [{:otsikko "Silta" :nimi :siltanimi :leveys "40%"}
-           {:otsikko "Siltanumero" :nimi :siltanro :leveys "10%"}
+           {:otsikko "Siltatunnus" :nimi :siltatunnus :leveys "10%"}
            {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}
            (when-let [listaus (some #{:urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava}
@@ -276,7 +276,7 @@
                                                                  "Poista tarkastus"]
                                                                 ]}
                                                      [:div "Haluatko varmasti poistaa sillalle "
-                                                      [:b (str (:siltanimi @st/valittu-silta) " (nro " (:siltanro @st/valittu-silta)
+                                                      [:b (str (:siltanimi @st/valittu-silta) " (tunnus " (:siltatunnus @st/valittu-silta)
                                                                ") " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)))]
                                                       " tehdyn tarkastuksen?"]))}
            (ikonit/trash) " Poista tarkastus"]
@@ -308,43 +308,38 @@
 (defn uuden-tarkastuksen-syottaminen []
   (let [uusi-tarkastus (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
         lomakkeen-tiedot (atom (dissoc uusi-tarkastus :kohteet))
-        lomake-taytetty (reaction (and
-                                    (not (nil? (:tarkastusaika @lomakkeen-tiedot)))
-                                    (not (str/blank? (:tarkastaja @lomakkeen-tiedot)))))
         tallennus-kaynnissa (atom false)
         taulukon-rivit (reaction
                          (uuden-siltatarkastusten-rivit uusi-tarkastus))
         taulukon-riveilla-tulos (reaction (= (count @taulukon-rivit)
                                               (count (filter #(not (nil? (:tulos %))) @taulukon-rivit))))
         g (grid/grid-ohjaus)
-        lomakkeen-virheet (atom {})
         olemassa-olevat-tarkastus-pvmt
         (reaction (into #{}
                      (mapv #(:tarkastusaika %)
                        @st/valitun-sillan-tarkastukset)))
         voi-tallentaa? (reaction (and
-                                   @lomake-taytetty
-                                   @taulukon-riveilla-tulos
-                                   (empty? @lomakkeen-virheet)))]
+                                   (lomake/voi-tallentaa? @lomakkeen-tiedot)
+                                   @taulukon-riveilla-tulos))]
 
     (komp/luo
       (fn []
         [:div.uusi-siltatarkastus
          [napit/takaisin "Palaa tallentamatta" #(reset! uuden-syottaminen false)]
-        [:h3 "Luo uusi siltatarkastus"]
-         [lomake {:luokka   :horizontal
-                  :virheet  lomakkeen-virheet
+         
+         [lomake {:otsikko "Luo uusi siltatarkastus"
                   :muokkaa! (fn [uusi]
                               (reset! lomakkeen-tiedot uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Sillan numero" :nimi :siltanro :hae (fn [_] (:siltanro @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true :tyyppi :pvm :leveys-col 2
+           {:otsikko "Sillan tunnus" :nimi :siltatunnus :hae (fn [_] (:siltatunnus @st/valittu-silta)) :muokattava? (constantly false)}
+           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true
+            :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
                       #(when (@olemassa-olevat-tarkastus-pvmt %1)
                         "Tälle päivälle on jo kirjattu tarkastus.")]
             :varoita [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true :leveys-col 4
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
             :tyyppi :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
@@ -352,6 +347,7 @@
 
          [grid/grid
           {:otsikko      "Uusi sillan tarkastus"
+           :piilota-toiminnot? true
            :tunniste     :kohdenro
            :ohjaus       g
            :muokkaa-aina true

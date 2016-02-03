@@ -2,7 +2,7 @@
   "Tierekisteri-UI-komponenttiin liittyvät asiat, joita ei voinut laittaa viewiin circular dependencyn takia"
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.dom :as dom])
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
     [cljs.core.async.macros :refer [go]]))
@@ -15,6 +15,6 @@
                                [{:alue {:type        :tack-icon
                                         :coordinates (:coordinates @valittu-alkupiste)
                                         :zindex      6
-                                        :img         (yleiset/karttakuva "tr-piste-tack-harmaa")}}])))
+                                        :img         (dom/karttakuva "tr-piste-tack-harmaa")}}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)

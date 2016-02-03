@@ -6,7 +6,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :as kentat]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
@@ -57,7 +57,11 @@
         tr-sijainnit (atom {})
 
         ;; virheelliset TR sijainnit 
-        tr-virheet (atom {})]
+        tr-virheet (atom {})
+
+        resetoi-tr-tiedot (fn []
+                          (reset! tr-sijainnit {})
+                          (reset! tr-virheet {}))]
     (komp/luo
       (komp/ulos #(kartta/poista-popup!))
       (fn [{:keys [kohdeosat id] :as rivi}]
@@ -80,8 +84,10 @@
                                                 %)
                                      vastaus (<! (paallystys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) osat))]
                                  (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
+                                 (resetoi-tr-tiedot)
                                  (paivita-kohde! id assoc :kohdeosat vastaus)))
            :luokat        ["paallystyskohdeosat-haitari"]
+           :peruuta       #(resetoi-tr-tiedot)
            :muutos        (fn [g]
                             (log "VIRHEET:" (pr-str (grid/hae-virheet g)))
                             (let [haetut (into #{} (keys @tr-sijainnit))]

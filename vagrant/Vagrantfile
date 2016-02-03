@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "geerlingguy/centos7"
 
   #config.vm.network "public_network"
   # forwardoidaan postgresql:n portti
@@ -26,5 +26,9 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "db_provision.yml"
+  end
+
+  if defined? config.vbguest
+    config.vbguest.auto_update = false
   end
 end

@@ -43,7 +43,7 @@
           (log/debug (format "Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
           true)
         (do
-          (log/debug (format  "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
+          (log/debug (format "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
           false)))
     (catch Exception e
       (log/warn e (format "Tarkistettaessa paikallista ajoa geometriapäivitykselle: %s tapahtui poikkeus." paivitystunnus))
@@ -73,7 +73,7 @@
           db (:db this)]
       (log/debug "Paikallinen päivitystehtävä: " paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys)
       (when (and (not alk-osoite) (not alk-tuontikohde))
-        (log/debug "Startataan paikallinen paivitystehtava, tiedosto=" shapefile)
+        (log/debug "Käynnistetään paikallinen paivitystehtava tiedostosta:" shapefile)
         (chime-at
           (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
           (fn [_]
@@ -200,34 +200,36 @@
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
-    (-> this
-        (assoc :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset))
-        (assoc :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset))
-        (assoc :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset))
-        (assoc :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset))
-        (assoc :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-alk-paivitystehtava this asetukset))
-        (assoc :talvihoidon-hoitoluokkien-paivitystehtava (tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
-        (assoc :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset))
-        (assoc :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset))
-        (assoc :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset))
-        (assoc :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset))
-        (assoc :urakoiden-hakutehtava (tee-urakoiden-alk-paivitystehtava this asetukset))
-        (assoc :urakoiden-paivitystehtava (tee-urakoiden-paikallinen-paivitystehtava this asetukset))
-        (assoc :elyjen-hakutehtava (tee-elyjen-alk-paivitystehtava this asetukset))
-        (assoc :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset))))
+    (assoc this
+      :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset)
+      :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset)
+      :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset)
+      :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset)
+      :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-alk-paivitystehtava this asetukset)
+      :talvihoidon-hoitoluokkien-paivitystehtava (tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava this asetukset)
+      :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset)
+      :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset)
+      :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset)
+      :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset)
+      :urakoiden-hakutehtava (tee-urakoiden-alk-paivitystehtava this asetukset)
+      :urakoiden-paivitystehtava (tee-urakoiden-paikallinen-paivitystehtava this asetukset)
+      :elyjen-hakutehtava (tee-elyjen-alk-paivitystehtava this asetukset)
+      :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset)))
   (stop [this]
-    ((:tieverkon-hakutehtava this))
-    ((:tieverkon-paivitystehtava this))
-    ((:pohjavesialueiden-hakutehtava this))
-    ((:pohjavesialueiden-paivitystehtava this))
-    ((:talvihoidon-hoitoluokkien-hakutehtava this))
-    ((:talvihoidon-hoitoluokkien-paivitystehtava this))
-    ((:soratien-hoitoluokkien-hakutehtava this))
-    ((:soratien-hoitoluokkien-paivitystehtava this))
-    ((:siltojen-hakutehtava this))
-    ((:siltojen-paivitystehtava this))
-    ((:urakoiden-hakutehtava this))
-    ((:urakoiden-paivitystehtava this))
-    ((:elyjen-hakutehtava this))
-    ((:elyjen-paivitystehtava this))
+    (doseq [tehtava [:tieverkon-hakutehtava
+                     :tieverkon-paivitystehtava
+                     :pohjavesialueiden-hakutehtava
+                     :pohjavesialueiden-paivitystehtava
+                     :talvihoidon-hoitoluokkien-hakutehtava
+                     :talvihoidon-hoitoluokkien-paivitystehtava
+                     :soratien-hoitoluokkien-hakutehtava
+                     :soratien-hoitoluokkien-paivitystehtava
+                     :siltojen-hakutehtava
+                     :siltojen-paivitystehtava
+                     :urakoiden-hakutehtava
+                     :urakoiden-paivitystehtava
+                     :elyjen-hakutehtava
+                     :elyjen-paivitystehtava]
+            :let [lopeta-fn (get this tehtava)]]
+      (when lopeta-fn (lopeta-fn)))
     this))

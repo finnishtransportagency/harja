@@ -92,7 +92,9 @@
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys "5%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
-        naytettavat-rivit
+        (reverse (sort-by (fn [rivi] [(:aika rivi)
+                                      (get-in rivi [:tr :numero])])
+                          naytettavat-rivit))
         :urakka
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
@@ -101,7 +103,7 @@
            (get-in rivi [:tr :alkuosa])
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
-           (get-in rivi [:tr :loppyetaisyys])
+           (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
            (:havainnot rivi)
            (count (:liitteet rivi))]))]]))

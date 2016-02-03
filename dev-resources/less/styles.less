@@ -14,7 +14,7 @@
 
 .alasveto-urakkatyyppi,
 .alasveto-urakoitsija {
-  .livi-alasveto(200px);
+  .livi-alasveto(160px 160px);
 }
 .alasveto-vuosi {
   .livi-alasveto(85px, 85px);
@@ -52,18 +52,9 @@
 }
 
 div.valilehti {
-  padding: 10px;
+  padding: 3px 10px 10px 10px;
 }
 
-.tabs-taso1 + .valilehti {
-  border-right: 1px solid @harmaa7;
-  border-left: 1px solid @harmaa7;
-  border-bottom: 1px solid @harmaa7;
-}
-
-.tabs-taso2 {
-  padding-top: 40px;
-}
 
 .haku-container {
   > input {
@@ -269,19 +260,21 @@ tr.uusitehtavakoodi td {
 
 .raksiboksi {
   background-color: @harjan-taustavari;
-  border: 1px solid @harmaa5;
   margin: 10px 0;
   width: 315px;
   .input-group-addon {
     background-color: @harjan-taustavari;
     border: none;
     text-align: left;
+    input[type=checkbox] {
+       padding: 10px;
+    }
   }
 }
 
 .raksiboksi-teksti {
   color: @harmaa1;
-  line-height: 34px;
+  margin-left: .5rem;
   padding: 0 2px;
 }
 

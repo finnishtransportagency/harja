@@ -107,46 +107,32 @@
 
     (fn []
       (let [hoitokausi @u/valittu-hoitokausi
-            {:keys [pohjavesialueet pohjavesialue-talvisuola]} @suolasakot-ja-lampotilat]
+            {:keys [pohjavesialueet pohjavesialue-talvisuola]} @suolasakot-ja-lampotilat
+            tiedot (:suolasakko @hoitokauden-tiedot)]
         [:span.suolasakkolomake
-         [lomake {:luokka    :horizontal
-                  :muokkaa!  (fn [uusi]
+         [lomake {:muokkaa!  (fn [uusi]
                                (log "lomaketta muokattu, tiedot:" (pr-str uusi))
                                (swap! hoitokauden-tiedot assoc :suolasakko uusi :muokattu true))
-                  :footer-fn (fn [virheet _]
-                               (log "virheet: " (pr-str virheet) ", muokattu? " (:muokattu @hoitokauden-tiedot))
-                               [:span.lampotilalomake-footer
-                                (if saa-muokata?
-                                  [:div.form-group
-                                   [:div.col-md-4
-                                    [napit/palvelinkutsu-nappi
-                                     "Tallenna"
-                                     #(tallenna-suolasakko)
-                                     {:luokka       "nappi-ensisijainen"
-                                      :disabled (not (empty? virheet))
-                                      :ikoni        (ikonit/tallenna)
-                                      :kun-onnistuu #(do
-                                                      (viesti/nayta! "Tallentaminen onnistui" :success 1500)
-                                                      (reset! suolasakot-ja-lampotilat %))}]]])])}
-          [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :talvisuolaraja
-            :tyyppi :positiivinen-numero :leveys-col 2
+                  :footer [:span.lampotilalomake-footer
+                           (if saa-muokata?
+                             [napit/palvelinkutsu-nappi
+                              "Tallenna"
+                              #(tallenna-suolasakko)
+                              {:luokka       "nappi-ensisijainen"
+                               :disabled     (not (lomake/voi-tallentaa? tiedot))
+                               :ikoni        (ikonit/tallenna)
+                               :kun-onnistuu #(do
+                                                (viesti/nayta! "Tallentaminen onnistui" :success 1500)
+                                                (reset! suolasakot-ja-lampotilat %))}])]}
+          [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true
+            :muokattava? (constantly saa-muokata?)
+            :nimi :talvisuolaraja
+            :tyyppi :positiivinen-numero :palstoja 1
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
-
-           (when-not (empty? pohjavesialueet)
-             {:otsikko "Pohjavesialueiden käyttörajat"
-              :nimi :pohjavesialueet :leveys-col 6
-              :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
-                                                :voi-poistaa? (constantly false)
-                                                :voi-lisata? false
-                                                :jos-tyhja "Urakan alueella ei pohjavesialueita"}
-                            [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}
-                             {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
-                             {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero 
-                              :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
-                            (pohjavesialueet-muokkausdata)]})
-           
-           {:otsikko "Suolasakko" :pakollinen? true :muokattava? (constantly saa-muokata?) :nimi :maara :tyyppi :positiivinen-numero :leveys-col 2 :yksikko "€ / ylittävä tonni"}
-           {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :leveys-col 2
+           {:otsikko "Suolasakko" :pakollinen? true
+            :muokattava? (constantly saa-muokata?) :nimi :maara
+            :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"}
+           {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
             :valinta-arvo  first
             :muokattava?   (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
@@ -161,11 +147,24 @@
                              (if (nil? %) yleiset/+valitse-indeksi+ (str %)))
             :valinnat      (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
 
-            :leveys-col    2}
+            :palstoja 1}
 
+           (when-not (empty? pohjavesialueet)
+             {:otsikko "Pohjavesialueiden käyttörajat"
+              :nimi :pohjavesialueet :palstoja 2 :tyyppi :komponentti
+              :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
+                                                :voi-poistaa? (constantly false)
+                                                :voi-lisata? false
+                                                :jos-tyhja "Urakan alueella ei pohjavesialueita"}
+                            [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}
+                             {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
+                             {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
+                              :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
+                            (pohjavesialueet-muokkausdata)]})
            
-           {:otsikko "Sydäntalven keskilämpötila" :leveys-col 4
-            :nimi :lampotilat
+           {:otsikko "Sydäntalven keskilämpötila" :palstoja 2
+            :nimi :lampotilat :tyyppi :komponentti
+            :vihje "Järjestelmän vastuuhenkilö syöttää lämpötilatiedot"
             :komponentti [grid/grid {}
                           [{:otsikko "Tämä talvikausi" :nimi :keskilampotila :fmt #(if % (fmt/asteina %) "-")
                             :tasaa :oikea}
@@ -175,13 +174,13 @@
                             :tasaa :oikea}]
 
                           [(let [{:keys [keskilampotila pitkakeskilampotila] :as hk}
-                                 (:suolasakko @hoitokauden-tiedot)]
+                                 tiedot]
                              (log "HK: " (pr-str hk))
                              (assoc hk
                                     :id 1
                                     :erotus (and keskilampotila pitkakeskilampotila
                                                  (.toFixed (- keskilampotila pitkakeskilampotila) 1))))]]}]
-          (:suolasakko @hoitokauden-tiedot)]]))))
+          tiedot]]))))
 
 (defn suola []
   (komp/luo

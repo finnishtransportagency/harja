@@ -2,7 +2,7 @@
   "Paikkauksen 'Kohdeluettelo' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.yleiset :refer [ajax-loader kuuntelija linkki sisalla? raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
             [harja.views.urakka.paallystyskohteet :as paallystyskohteet-yhteenveto]
             [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]
@@ -16,12 +16,13 @@
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce kohdeluettelo-valilehti (atom :paikkauskohteet))
+
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
   ;; FIXME Paikkauksessä ja päällystyksessä on sekaisin _id ja -id muotoa.
@@ -41,7 +42,7 @@
                                          :loppuosa      (get-in kohde [:osa :tr_loppuosa])
                                          :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
                              (assoc :kohde-click #(do (kartta/poista-popup!)
-                                                      (reset! kohdeluettelo-valilehti :paikkausilmoitukset)
+                                                      (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaus :paikkausilmoitukset)
                                                       (tapahtumat/julkaise! {:aihe :avaa-paikkausilmoitus :paikkauskohde-id paikkauskohde-id})))))))
 
 (defn kohdeluettelo
@@ -52,7 +53,8 @@
     (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn [ur]
-      [bs/tabs {:style :tabs :classes "tabs-taso2" :active kohdeluettelo-valilehti}
+      [bs/tabs {:style :tabs :classes "tabs-taso2"
+                :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaus)}
 
        "Paikkauskohteet"
        :paikkauskohteet
