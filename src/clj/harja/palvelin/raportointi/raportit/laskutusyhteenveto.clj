@@ -113,11 +113,11 @@
 
         perusluku-puuttuu? (not (:perusluku (first tiedot)))
         talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
-        suolasakkoja-tulossa-tai-ei-voitu-laskea? (some
-                                #(or (and (number? (val %)) (not= 0.0M (val %))) (nil? (val %)))
-                                (select-keys (first (filter #(= "Talvihoito" (:nimi %)) tiedot))
-                                             [:suolasakot_laskutetaan :suolasakot_laskutettu]))
-        nayta-etta-lampotila-puuttuu? (when (and talvisuolasakko-kaytossa? suolasakkoja-tulossa-tai-ei-voitu-laskea?)
+        suolasakkojen-laskenta-epaonnistui? (some
+                                              #(nil? (val %))
+                                              (select-keys (first (filter #(= "Talvihoito" (:nimi %)) tiedot))
+                                                           [:suolasakot_laskutetaan :suolasakot_laskutettu]))
+        nayta-etta-lampotila-puuttuu? (when (and talvisuolasakko-kaytossa? suolasakkojen-laskenta-epaonnistui?)
                                         (first (keep #(true? (:lampotila_puuttuu %))
                                                      tiedot)))
         varoitus-lampotilojen-puuttumisesta (if nayta-etta-lampotila-puuttuu?
