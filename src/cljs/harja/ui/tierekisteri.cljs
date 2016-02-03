@@ -10,7 +10,8 @@
             [harja.tiedot.tierekisteri :as tierekisteri]
             [cljs.core.async :refer [>! <! alts! chan] :as async]
             [harja.geo :as geo]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.napit :as napit])
 
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
@@ -76,6 +77,11 @@
   (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
                                        "Valitse alkupiste kartalta."]))
 
+(defn tr-kontrollit [peruttu hyvaksytty]
+  [:span.tr-valitsin-ohje
+   [napit/peruuta "Peruuta" peruttu]
+   [napit/hyvaksy hyvaksytty]])
+
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
   Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
@@ -101,7 +107,11 @@
         tila (atom :ei-valittu)
         alkupiste (atom nil)
         tr-osoite (atom {})
-        optiot (cljs.core/atom optiot)]
+        optiot (cljs.core/atom optiot)
+        valinta-peruttu (fn [_]
+                          ((:kun-peruttu @optiot))
+                          (poistu-tr-valinnasta!))
+        valinta-hyvaksytty #(go (>! tapahtumat {:tyyppi :enter}))]
 
     ;; voisi olla vieläkin selkeämpi lukea (with-items-from-channel tapahtumat arvo ...) joka generoi (go-loop [] .. (recur)):n
     (with-loop-from-channel tapahtumat arvo
@@ -158,20 +168,20 @@
                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
                             (kartta/aseta-kursori! :crosshair)
+                            (kartta/aseta-yleiset-kontrollit!
+                              (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty] {:class "kartan-tr-kontrollit"}))
                             (nayta-ohjeet-ohjelaatikossa!))
                          #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
                             (poistu-tr-valinnasta!)
+                            (kartta/tyhjenna-yleiset-kontrollit!)
                             (kartta/aseta-kursori! nil)))
        (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
        (komp/kuuntelija :esc-painettu
-                        (fn [_]
-                          (log "optiot: " @optiot)
-                          ((:kun-peruttu @optiot))
-                          (poistu-tr-valinnasta!))
+                        valinta-peruttu
                         :enter-painettu
-                        #(go (>! tapahtumat {:tyyppi :enter})))
+                        valinta-hyvaksytty)
        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
          [:div.tr-valitsin-teksti.form-control
           [:div (case @tila
