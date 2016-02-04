@@ -44,8 +44,8 @@
   (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
     (mapv (fn [vuosi]
             (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
-              {:alkupvm  (pvm/aika-iso8601 (:alkupvm vuosi))
-               :loppupvm (pvm/aika-iso8601 (:loppupvm vuosi))
+              {:alkupvm  (str (time/year (coerce/from-date (:alkupvm vuosi))) "-01-01T00:00:00.0")
+               :loppupvm (str (time/year (coerce/from-date (:loppupvm vuosi))) "-12-31T00:00:00.0")
                :summa    summa}))
           vuodet)))
 
