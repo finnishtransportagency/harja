@@ -459,7 +459,7 @@
                          tehtava))]
     toteumat))
 
-(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tehtava]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [reitit (into []
                      (comp
@@ -470,7 +470,6 @@
                                                              sopimus-id
                                                              (konv/sql-date alkupvm)
                                                              (konv/sql-date loppupvm)
-                                                             toimenpide
                                                              tehtava))
         kasitellyt-reitit (konv/sarakkeet-vektoriin
                             reitit

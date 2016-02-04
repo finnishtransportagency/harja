@@ -475,3 +475,4 @@
                    [[(vuoden-eka-pvm viimeinen-vuosi) loppupvm]])))))
 
 
+(def paivan-aikavali (juxt paivan-alussa paivan-lopussa))

@@ -29,13 +29,12 @@
             :toimenpide toimenpide
             :tehtava    tehtava}))
 
-(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
+(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] tehtava]
   (k/post! :urakan-kokonaishintaisten-toteumien-reitit
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
             :alkupvm    alkupvm
             :loppupvm   loppupvm
-            :toimenpide toimenpide
             :tehtava    tehtava}))
 
 (def nakymassa? (atom false))
@@ -53,35 +52,18 @@
               (when nakymassa?
                 (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
-(def haetut-reitit
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               sopimus-id (first @urakka/valittu-sopimusnumero)
-               hoitokausi @urakka/valittu-hoitokausi
-               aikavali @urakka/valittu-aikavali
-               toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
-               tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
-               nakymassa? @nakymassa?]
-              {:nil-kun-haku-kaynnissa? true}
-              (when nakymassa?
-                (hae-toteumareitit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
 (defonce kokonaishintainen-toteuma-kartalla
-  (reaction
-   (let [taso-paalla? @karttataso-kokonaishintainen-toteuma
-         valittu-paivakohtainen-tehtava @valittu-paivakohtainen-tehtava
-         haetut-reitit @haetut-reitit]
-     (when taso-paalla?
-       (kartalla-esitettavaan-muotoon
-        haetut-reitit
-        nil nil
-        (comp (if valittu-paivakohtainen-tehtava
-                (filter (fn [reitti]
-                          ;; Reittiin liittyvä toteuma on tapahtunut samana päivänä kuin gridistä valitun summarivin
-                          ;; pvm. Lisäksi reitillä on tehty kyseistä tehtävää.
-                          (and (= (pvm/paivan-alussa (:alkanut reitti))
-                                  (pvm/paivan-alussa (:pvm valittu-paivakohtainen-tehtava)))
-                               ((into #{} (mapv :toimenpide (:tehtavat reitti))) (:nimi valittu-paivakohtainen-tehtava)))))
-                identity)
-              (map #(assoc % :tyyppi-kartalla :toteuma))))))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               sopimus-id (first @urakka/valittu-sopimusnumero)
+               taso-paalla? @karttataso-kokonaishintainen-toteuma
+               valittu-paivakohtainen-tehtava @valittu-paivakohtainen-tehtava]
+              (when (and taso-paalla? valittu-paivakohtainen-tehtava)
+                (go (kartalla-esitettavaan-muotoon
+                     (<! (hae-toteumareitit urakka-id sopimus-id
+                                            (pvm/paivan-aikavali (:pvm valittu-paivakohtainen-tehtava))
+                                            (:toimenpidekoodi valittu-paivakohtainen-tehtava)))
+                     nil nil
+                     (map #(assoc % :tyyppi-kartalla :toteuma)))))))

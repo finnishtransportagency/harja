@@ -20,7 +20,9 @@
             [ol.extent :as ol-extent]
             [ol.proj :as ol-proj]
 
-            [ol.source.Vector]
+            [ol.source.Vector] ;; Käytä ol.source.VectorTile kun ol päivittyy uudempaan kuin 3.10.0
+            
+            
             [ol.layer.Vector]
             [ol.Feature]
             [ol.geom.Polygon]
@@ -43,7 +45,8 @@
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
-                   [harja.loki :refer [mittaa-aika]]))
+                   [harja.loki :refer [mittaa-aika]]
+                   [harja.ui.openlayers :refer [disable-rendering]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että kartan animoinnit on valmistuneet." :const true}
 animaation-odotusaika 200)

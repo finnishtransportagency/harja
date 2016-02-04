@@ -1,6 +1,11 @@
 (ns harja.loki
   "Apufunktioita lokittamiseen.")
 
+(def +mittaa-aika+ false)
+
+(defn ajan-mittaus-paalle []
+  (set! +mittaa-aika+ true))
+
 (defn warn [& things]
   (.apply js/console.warn (apply array things)))
 

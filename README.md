@@ -121,3 +121,48 @@ kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 Hae työkalu: https://github.com/jarnovayrynen/cloverage
 Työkalun cloverage/cloverage kansiossa aja "lein install"
 Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
+
+## Tietokantadumpin ottaminen stg koneelta omalle
+
+> ssh harja-db1-stg
+> sudo bash
+> su postgres
+> pg_dump harja > harja-stg-dump.sql
+> exit
+> cd ~omatunnus
+> mv ~postgres/harja-stg-dump.sql .
+> chown omatunnus harja-stg-dump.sql
+
+Poistu koneelta ja kopio scp:llä harja projektin alla tietokanta kansioon:
+
+> scp harja-db1-stg:harja-stg-dump.sql tietokanta/
+
+Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
+Mene vagrant koneelle:
+
+> cd vagrant
+> vagrant ssh
+> sudo bash
+> su postgres
+> psql
+> drop database harja;
+> create database harja;
+> poistu <ctrl-d>
+> psql harja -f /harja-tietokanta/harja-stg-dump.sql
+
+Valmis!
+
+
+
+
+
+laitat sen harja/tietokanta hakemistoon ja purat
+koska tuo hakemisto on vagrantille näkyvä
+sitten: vagrant ssh
+sudo bash
+su postgres
+psql
+drop database harja
+create database harja
+ctrl-d
+psql harja -f /harja-tietokanta/sql-tiedosto.sql
