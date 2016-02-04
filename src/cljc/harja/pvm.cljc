@@ -75,7 +75,7 @@
    :clj
    (defn ennen? [eka toka]
      (if (and eka toka)
-       (.before eka toka)
+       (t/before? eka toka) ;; Oli aikaisemmin .before. En tiedä miksi -Teemu
        false)))
 
 (defn sama-tai-ennen? [eka toka]
@@ -355,27 +355,108 @@
     [ed-vuosi ed-kk]))
 
 
-
-#?(:cljs
-   (defn
-     kuukauden-aikavali
-     "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
-  kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
-     [dt]
-     (let [alku (aikana (t/first-day-of-the-month dt)
-                        0 0 0 0)
-           loppu (aikana (t/last-day-of-the-month dt)
-                         23 59 59 999)]
-       ;; aseta aika
-       [alku loppu])))
+(defn
+  kuukauden-aikavali
+  "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
+kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
+  [dt]
+  (let [alku (aikana (t/first-day-of-the-month dt)
+                     0 0 0 0)
+        loppu (aikana (t/last-day-of-the-month dt)
+                      23 59 59 999)]
+    ;; aseta aika
+    [alku loppu]))
 
 
-#?(:cljs
-   (defn
-     kuukauden-aikavali-opt
-     [dt]
-     (when dt
-       (kuukauden-aikavali dt))))
+(defn
+  kuukauden-aikavali-opt
+  [dt]
+  (when dt
+    (kuukauden-aikavali dt)))
+
+(defn- siirtyma [dt valittu yksikko-fn n]
+  (if (= valittu :alku)
+    [dt (t/plus dt (yksikko-fn n))]
+    [(t/minus dt (yksikko-fn n)) dt]))
+
+(defn- pakota-paivalla [dt n valittu]
+  (siirtyma dt valittu t/days n))
+
+(defn- samalle-kuukaudelle [dt valittu]
+  (if (= valittu :alku)
+    (let [[_ b] (kuukauden-aikavali dt)]
+      [dt b])
+
+    (let [[a _] (kuukauden-aikavali dt)]
+      [a dt])))
+
+(defn- pakota-kuukaudella [dt n valittu]
+  ;; Kuukaudella pakottamisessa on erikoistapaus: jos halutaan yhden kuukauden
+  ;; aikaväli, niin palautetaan sellainen aikaväli, jossa molemmat päivät osuvat
+  ;; samalle kuukaudelle, eli arvo jota EI muokattu on aina joko kuukauden viimeinen tai
+  ;; ensimmäinen päivä
+  (if (= n 1)
+    (samalle-kuukaudelle dt valittu)
+
+    (siirtyma dt valittu t/months n)))
+
+(defn- pakota-vuodella [dt n valittu]
+  (siirtyma dt valittu t/years n))
+
+(defn- pakota-aikavali [alku loppu [n yksikko] valittu]
+  (assert (not (= n 0)) "pvm/pakota-aikavali: n ei saa olla nolla")
+  (let [parametrit [(if (= valittu :alku) alku loppu) n valittu]]
+    (condp = yksikko
+         :paiva
+          (apply pakota-paivalla parametrit)
+         :kuukausi
+          (apply pakota-kuukaudella parametrit)
+         :vuosi
+          (apply pakota-vuodella parametrit))))
+
+(defn- assertoi-aikavalin-yksikko [[_ yksikko]]
+  (assert (#{:paiva :kuukausi :vuosi} yksikko)
+          "pvm/varmista-aikavali: yksikön pitää olla :paiva :kuukausi tai :vuosi"))
+
+(defn liian-suuri-aikavali? [alku loppu [n yksikko :as maksimi]]
+  (assertoi-aikavalin-yksikko maksimi)
+  (if (sama-tai-ennen?
+        (t/plus alku (condp = yksikko
+                           :paiva
+                           (t/days n)
+                           :kuukausi
+                           (t/months n)
+                           :vuosi
+                           (t/years n)))
+        loppu)
+    true
+    false))
+
+(defn varmista-aikavali
+  "Funktiolla voi varmistaa, että annettu aikaväli on maksimissaan tietyn mittainen.
+  Jos ei ole, palauttaa aikavälistä sääntöä muokatun version. Palautettava versio riippuu
+  siitä, kumpi arvoista oli muokattu.
+
+  - Aikaväli: [alku loppu]
+  - Maksimi: [montako mitä], mitä on :paiva, :kuukausi tai :vuosi. montako on kokonaisluku,
+    jos haluttu aikaväli on yksi kuukausi, niin montako on 1.
+  - Valittu: Keyword joka kertoo, kumpi aikavälin arvoista valittiin, eli kumpi pysyy vakiona,
+    jos palautettavaa aikaväliä joudutaan muokkaamaan."
+  ([[alku loppu] [n yksikko :as maksimi] valittu]
+  (assertoi-aikavalin-yksikko maksimi)
+  (assert (#{:alku :loppu} valittu)
+          "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
+  (if (or (jalkeen? alku loppu) (liian-suuri-aikavali? alku loppu maksimi))
+    (pakota-aikavali alku loppu maksimi valittu)
+    [alku loppu]))
+  ([aikavali] (varmista-aikavali aikavali :alku))
+  ([[alku loppu] valittu]
+   (assert (#{:alku :loppu} valittu)
+           "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
+   (if (jalkeen? alku loppu)
+     (samalle-kuukaudelle (if (= valittu :alku) alku loppu) valittu)
+     [alku loppu])))
+
 
 #?(:cljs
    (defn hoitokauden-kuukausivalit
