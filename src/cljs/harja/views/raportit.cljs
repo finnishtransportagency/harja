@@ -104,7 +104,7 @@
                           :default
                           []))))))
 
-(defonce valittu-kuukausi (reaction @nav/valittu-urakka nil))
+(defonce valittu-kuukausi (reaction @u/valittu-hoitokauden-kuukausi))
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
