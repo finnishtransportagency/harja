@@ -418,11 +418,13 @@
      (let [alku (l/to-local-date-time alkupvm)
            loppu (l/to-local-date-time loppupvm)
            paivia-kkssa (t/number-of-days-in-the-month alku)
+           alku-pv (paiva alku)
            loppu-pv (paiva loppu)]
        (and (and (= (vuosi alku)
                     (vuosi loppu))
                  (= (kuukausi alku)
                     (kuukausi loppu)))
+            (= 1 alku-pv)
             (= paivia-kkssa loppu-pv)))))
 
 #?(:clj
