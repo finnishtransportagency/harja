@@ -41,11 +41,12 @@
   (map #(hash-map :alkupvm (:alkupvm %), :loppupvm (:loppupvm %), :summa 1) vuodet))
 
 (defn tee-vuosisummat [vuodet summat]
-  (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
+  (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)
+        ota-vuosi #(subs (pvm/aika-iso8601 %) 0 4)]
     (mapv (fn [vuosi]
             (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
-              {:alkupvm  (str (time/year (coerce/from-date (:alkupvm vuosi))) "-01-01T00:00:00.0")
-               :loppupvm (str (time/year (coerce/from-date (:loppupvm vuosi))) "-12-31T00:00:00.0")
+              {:alkupvm  (str (ota-vuosi (:alkupvm vuosi)) "-01-01T00:00:00.0")
+               :loppupvm (str (ota-vuosi (:loppupvm vuosi)) "-12-31T00:00:00.0")
                :summa    summa}))
           vuodet)))
 
