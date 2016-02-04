@@ -235,7 +235,8 @@
    "Ympäristöraportti" :ymparisto})
 
 (defmethod raportin-parametri "checkbox" [p arvo]
-  (let [avaimet [(:nimi @valittu-raporttityyppi) (:nimi p)]
+  (let [avaimet [(:nimi @valittu-raporttityyppi)
+                 (or (tyomaakokousraportit (:nimi p)) (:nimi p))]
         paivita! #(do (swap! muistetut-parametrit
                              update-in avaimet not)
                       (reset! arvo
@@ -267,8 +268,6 @@
 
 (def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
-
-
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
                                  100)
@@ -283,6 +282,8 @@
                                   (when (nakyvat-parametrit nimi)
                                     arvot))
                                 @parametri-arvot))
+        arvot-nyt (merge arvot-nyt
+                         (get @muistetut-parametrit (:nimi raporttityyppi)))
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)]
