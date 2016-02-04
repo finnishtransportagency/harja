@@ -311,6 +311,7 @@ Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   :ohjaus                               gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
+  :tasaa                                voit antaa :oikea jos haluat tasata kentän oikealle (esim. rahasummat)
 
 Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
@@ -342,7 +343,7 @@ Optiot on mappi optioita:
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta] :as opts} skeema tiedot ]
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä

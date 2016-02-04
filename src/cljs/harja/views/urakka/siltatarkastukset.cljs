@@ -115,24 +115,23 @@
            }
 
           ;; sarakkeet
-          [{:otsikko "Silta" :nimi :siltanimi :leveys "40%"}
-           {:otsikko "Siltatunnus" :nimi :siltatunnus :leveys "10%"}
-           {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}
+          [{:otsikko "Silta" :nimi :siltanimi :leveys 35}
+           {:otsikko "Silta\u00ADtunnus" :nimi :siltatunnus :leveys 13}
+           {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys 20}
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys 30}
            (when-let [listaus (some #{:urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava}
                                     [@sillat/listaus])]
              {:otsikko (case listaus
                          :urakan-korjattavat "Korjattavat"
                          :urakassa-korjatut "Korjatut"
                          :korjaus-ohjelmoitava  "Ohjelmoitavat")
-              :nimi :kohteet :leveys "30%"
+              :nimi :kohteet :leveys 30
               :fmt (fn [kohteet]
                      (case listaus
                        :urakassa-korjatut [kohdesarake kohteet true]
                        [kohdesarake kohteet]))})]
 
-          @urakan-sillat
-          ]]))))
+          @urakan-sillat]]))))
 
 
 

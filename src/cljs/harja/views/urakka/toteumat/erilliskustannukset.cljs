@@ -288,8 +288,9 @@
              :rivin-luokka  #(aseta-rivin-luokka %)}
             [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "17%"}
              {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "13%"}
-             {:otsikko "Raha\u00ADmäärä (€)" :tyyppi :string :nimi :rahasumma :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
-             {:otsikko "Indeksi\u00ADkorjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna
+             {:otsikko "Raha\u00ADmäärä (€)" :tyyppi :string :nimi :rahasumma :tasaa :oikea
+              :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
+             {:otsikko "Indeksi\u00ADkorjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna :tasaa :oikea
               :hae     #(if (nil? (:indeksin_nimi %))
                          "Ei sidottu indeksiin"
                          (if (and

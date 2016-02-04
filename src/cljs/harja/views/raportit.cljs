@@ -104,7 +104,7 @@
                           :default
                           []))))))
 
-(defonce valittu-kuukausi (reaction @nav/valittu-urakka nil))
+(defonce valittu-kuukausi (reaction @u/valittu-hoitokauden-kuukausi))
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
@@ -144,7 +144,7 @@
                      (pvm/vuosi (:loppupvm ur))
                      (pvm/vuosi (pvm/nyt)))]
     [:span
-     [:div
+     [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
@@ -235,7 +235,8 @@
    "Ympäristöraportti" :ymparisto})
 
 (defmethod raportin-parametri "checkbox" [p arvo]
-  (let [avaimet [(:nimi @valittu-raporttityyppi) (:nimi p)]
+  (let [avaimet [(:nimi @valittu-raporttityyppi)
+                 (or (tyomaakokousraportit (:nimi p)) (:nimi p))]
         paivita! #(do (swap! muistetut-parametrit
                              update-in avaimet not)
                       (reset! arvo
@@ -267,8 +268,6 @@
 
 (def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
-
-
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
                                  100)
@@ -283,6 +282,8 @@
                                   (when (nakyvat-parametrit nimi)
                                     arvot))
                                 @parametri-arvot))
+        arvot-nyt (merge arvot-nyt
+                         (get @muistetut-parametrit (:nimi raporttityyppi)))
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)]

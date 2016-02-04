@@ -68,7 +68,12 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
-                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
+                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")
+                 :oikealle-tasattavat-kentat (if (= konteksti :urakka)
+                                               #{2 5 6}
+                                               (if urakoittain?
+                                               #{4}
+                                               #{}))}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys 25 :otsikko "Urakka"})
                                {:leveys 25 :otsikko "Tehtävä"}
@@ -102,4 +107,4 @@
                       (flatten [(if urakoittain? ["Yhteensä" ""]
                                                  ["Yhteensä"])
                                 nil
-                                (fmt/euro-opt (reduce + (keep :toteutunut_maara naytettavat-rivit)))])))))]]))
+                                (fmt/desimaaliluku (reduce + (keep :toteutunut_maara naytettavat-rivit)) 1)])))))]]))

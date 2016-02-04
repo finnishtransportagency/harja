@@ -349,13 +349,14 @@
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+            :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
-           {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
-            (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
-                         [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
-                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
+            :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false)
+            :tyyppi :komponentti :tasaa :oikea
+            :komponentti (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
+                                      [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
+                                      [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
           @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain]])))
 
 (defn yksikkohintaisten-toteumat []
