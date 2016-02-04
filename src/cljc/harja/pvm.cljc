@@ -49,6 +49,20 @@
                  (.set Calendar/SECOND sekunnit)
                  (.set Calendar/MILLISECOND millisekunnit)))))
 
+(defn paivan-alussa [dt]
+  (aikana dt 0 0 0 0))
+
+(defn paivan-alussa-opt [dt]
+  (when dt
+    (aikana dt 0 0 0 0)))
+
+(defn paivan-lopussa [dt]
+  (aikana dt 23 59 59 999))
+
+(defn paivan-lopussa-opt [dt]
+  (when dt
+    (aikana dt 23 59 59 999)))
+
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
 
@@ -78,10 +92,15 @@
        (t/before? eka toka) ;; Oli aikaisemmin .before. En tiedä miksi -Teemu
        false)))
 
-(defn sama-tai-ennen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
-    (or (ennen? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
-    false))
+(defn sama-tai-ennen?
+  ([eka toka] (sama-tai-ennen? eka toka true))
+  ([eka toka ilman-kellonaikaa?]
+
+   (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+         toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
+     (if-not (or (nil? eka) (nil? toka))
+       (or (ennen? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
+       false))))
 
 (defn jalkeen? [eka toka]
   (if-not (or (nil? eka) (nil? toka))
@@ -232,20 +251,6 @@
               :clj  Exception) e
       nil)))
 
-(defn paivan-alussa [dt]
-  (aikana dt 0 0 0 0))
-
-(defn paivan-alussa-opt [dt]
-  (when dt
-    (aikana dt 0 0 0 0)))
-
-(defn paivan-lopussa [dt]
-  (aikana dt 23 59 59 999))
-
-(defn paivan-lopussa-opt [dt]
-  (when dt
-    (aikana dt 23 59 59 999)))
-
 (defn kuukauden-nimi [kk]
   (case kk
     1 "tammikuu"
@@ -376,8 +381,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 (defn- siirtyma [dt valittu yksikko-fn n]
   (if (= valittu :alku)
-    [dt (t/plus dt (yksikko-fn n))]
-    [(t/minus dt (yksikko-fn n)) dt]))
+    [(paivan-alussa dt) (paivan-lopussa (t/plus dt (yksikko-fn n)))]
+    [(paivan-alussa (t/minus dt (yksikko-fn n))) (paivan-lopussa dt)]))
 
 (defn- pakota-paivalla [dt n valittu]
   (siirtyma dt valittu t/days n))
@@ -385,10 +390,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 (defn- samalle-kuukaudelle [dt valittu]
   (if (= valittu :alku)
     (let [[_ b] (kuukauden-aikavali dt)]
-      [dt b])
+      [(paivan-alussa dt) b])
 
     (let [[a _] (kuukauden-aikavali dt)]
-      [a dt])))
+      [a (paivan-lopussa dt)])))
 
 (defn- pakota-kuukaudella [dt n valittu]
   ;; Kuukaudella pakottamisessa on erikoistapaus: jos halutaan yhden kuukauden
@@ -428,7 +433,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                            (t/months n)
                            :vuosi
                            (t/years n)))
-        loppu)
+        loppu
+        true)
     true
     false))
 
@@ -446,16 +452,23 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (assertoi-aikavalin-yksikko maksimi)
   (assert (#{:alku :loppu} valittu)
           "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
-  (if (or (jalkeen? alku loppu) (liian-suuri-aikavali? alku loppu maksimi))
-    (pakota-aikavali alku loppu maksimi valittu)
-    [alku loppu]))
+   (cond
+     (jalkeen? alku loppu)
+     (if (= valittu :alku)
+       [alku (paivan-lopussa alku)]
+       [(paivan-alussa loppu) loppu])
+
+     (liian-suuri-aikavali? alku loppu maksimi)
+     (pakota-aikavali alku loppu maksimi valittu)
+
+     :else [alku loppu]))
   ([aikavali] (varmista-aikavali aikavali :alku))
   ([[alku loppu] valittu]
    (assert (#{:alku :loppu} valittu)
            "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
    (if (jalkeen? alku loppu)
      (samalle-kuukaudelle (if (= valittu :alku) alku loppu) valittu)
-     [alku loppu])))
+     [(paivan-alussa alku) (paivan-lopussa loppu)])))
 
 
 #?(:cljs
