@@ -260,7 +260,7 @@
 
    [grid/grid
     {:otsikko  "Suunnitellut ja toteutuneet materiaalit"
-     :tyhja    (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Toteuman materiaaleja haetaan."] "Ei löytyneitä tietoja.")
+     :tyhja    (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Materiaaleja haetaan"] "Ei löytyneitä tietoja.")
      :tunniste #(:id (:materiaali %))
      :luokat   ["toteumat-paasisalto"]
      :vetolaatikot
