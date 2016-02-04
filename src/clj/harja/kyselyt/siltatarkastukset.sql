@@ -199,6 +199,16 @@ SELECT
 FROM silta
 WHERE siltatunnus = :siltatunnus;
 
+-- name: hae-silta-idlla
+-- Hakee sillan siltaidlla
+SELECT
+  id,
+  tyyppi,
+  siltatunnus,
+  siltanimi
+FROM silta
+WHERE siltaid = :id;
+
 -- name: luo-siltatarkastus<!
 -- Luo uuden siltatarkastuksen annetulla sillalle.
 INSERT
@@ -252,8 +262,8 @@ DELETE FROM siltatarkastuskohde
 WHERE siltatarkastus = :siltatarkastus;
 
 -- name: luo-silta!
-INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_alkuetaisyys, siltatunnus, siltaid) VALUES
-  (:nimi, :siltanro, :siltanimi, ST_GeomFromText(:geometria) :: GEOMETRY, :numero, :aosa, :aet, :tunnus, :siltaid);
+INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_alkuetaisyys, siltatunnus, siltaid)
+VALUES (:nimi, :siltanro, :siltanimi, ST_GeomFromText(:geometria) :: GEOMETRY, :numero, :aosa, :aet, :tunnus, :siltaid);
 
 -- name: paivita-silta-idlla!
 UPDATE silta
@@ -264,7 +274,7 @@ SET tyyppi        = :tyyppi,
   tr_numero       = :numero,
   tr_alkuosa      = :aosa,
   tr_alkuetaisyys = :aet,
-  siltatunnus          = :tunnus
+  siltatunnus     = :tunnus
 WHERE siltaid = :siltaid;
 
 -- name: paivita-urakoiden-sillat!
