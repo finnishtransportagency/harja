@@ -9,7 +9,7 @@
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera])
-  (:import (java.util UUID)))
+  (:import (java.util UUID Calendar TimeZone)))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
 
@@ -40,24 +40,22 @@
 (defn tee-oletus-vuosisummat [vuodet]
   (map #(hash-map :alkupvm (:alkupvm %), :loppupvm (:loppupvm %), :summa 1) vuodet))
 
+(defn aseta-pvm [pvm vuosi kuukausi paiva]
+  (.setTime pvm vuosi)
+  (.set pvm Calendar/MONTH kuukausi)
+  (.set pvm Calendar/DAY_OF_MONTH paiva)
+  (.setTimeZone pvm (TimeZone/getTimeZone "EET")))
+
 (defn tee-vuosisummat [vuodet summat]
-  (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)
-        vuoden-ensimmainen-paiva #(pvm/vuoden-eka-pvm (pvm/vuosi %))
-        vuoden-viimeinen-paiva #(pvm/vuoden-viim-pvm (pvm/vuosi %))
-        formatteri (clj-time.format/with-zone (clj-time.format/formatter "yyyy-MM-dd hh:mm:ss") (clj-time.core/time-zone-for-id "EET"))
-        formatoi-vuosi #(clj-time.format/unparse formatteri (clj-time.coerce/from-sql-date %))]
+  (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
     (mapv (fn [vuosi]
-            (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
-              (println "alku: " (formatoi-vuosi (vuoden-ensimmainen-paiva(:alkupvm vuosi))))
-              (println "loppu: " (formatoi-vuosi (vuoden-viimeinen-paiva(:loppupvm vuosi))))
-
-              ;; todo: jatka tästä http://www.coderanch.com/t/547230/java/java/java-util-Date-getYear-method
-              (def aika (java.util.Calendar/getInstance))
-              (.setTime (java.util.Calendar/getInstance) (pvm/nyt))
-              (.get aika java.util.Calendar/YEAR)
-
-              {:alkupvm  (vuoden-ensimmainen-paiva (:alkupvm vuosi))
-               :loppupvm (vuoden-viimeinen-paiva (:loppupvm vuosi))
+            (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)
+                  alku (Calendar/getInstance)
+                  loppu (Calendar/getInstance)]
+              (aseta-pvm alku (:alkupvm vuosi) Calendar/JANUARY 1)
+              (aseta-pvm loppu (:loppupvm vuosi) Calendar/DECEMBER 31)
+              {:alkupvm  (pvm/aika-iso8601 (.getTime alku))
+               :loppupvm (pvm/aika-iso8601 (.getTime loppu))
                :summa    summa}))
           vuodet)))
 
