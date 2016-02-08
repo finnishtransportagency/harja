@@ -51,10 +51,9 @@
     (catch Exception e
       (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))
 
-
 (defn kuuntele-ja-kuittaa [lokittaja sonja jono-sisaan jono-ulos
-                            viestiparseri kuittausmuodostaja
-                            viesti->id kasittelija]
+                           viestiparseri kuittausmuodostaja
+                           kasittelija]
   (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)
   (try
     (sonja/kuuntele
@@ -62,15 +61,23 @@
      (fn [viesti]
        (log/debug "Vastaanotettiin viesti jonosta " jono-sisaan ": " viesti)
        (let [viestin-sisalto (.getText viesti)
-             correlation-id (.getJMSCorrelationID viesti)
-             data (viestiparseri viestin-sisalto)
-             viesti-id (viesti->id data)
-             tapahtuma-id (lokittaja :saapunut-jms-viesti viesti-id viestin-sisalto)]
-         (try 
-           (let [vastaus (kasittelija data)
-                 vastauksen-sisalto (kuittausmuodostaja vastaus)]
-             (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "")
-             (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id correlation-id}))
-           (catch Exception e
-             ;; Hallitsematon virhe viestin käsittelyssä, kirjataan epäonnistunut integraatio
-             (lokittaja :epaonnistunut viestin-sisalto "" tapahtuma-id viesti-id))))))))
+             ulkoinen-id (.getJMSCorrelationID viesti)
+             tapahtuma-id (lokittaja :saapunut-jms-viesti ulkoinen-id viestin-sisalto)
+             [onnistui? data] (try
+                                [true (viestiparseri viestin-sisalto)]
+                                (catch Exception e
+                                  [false e]))]
+         (if onnistui?
+           ;; Viestin parsinta onnistui, yritetään käsitellä se
+           (try 
+             (let [vastaus (kasittelija data)
+                   vastauksen-sisalto (kuittausmuodostaja vastaus)]
+               (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "")
+               (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))
+             (catch Exception e
+               ;; Hallitsematon virhe viestin käsittelyssä, kirjataan epäonnistunut integraatio
+               (lokittaja :epaonnistunut viestin-sisalto "" tapahtuma-id ulkoinen-id)))
+           
+           ;; Viestin parsinta epäonnistui, kirjataan suoraan epäonnistunut integraatio
+           (lokittaja :epaonnistunut viestin-sisalto (str "Viestin lukeminen epäonnistui" (.getMessage data))
+                      tapahtuma-id ulkoinen-id)))))))

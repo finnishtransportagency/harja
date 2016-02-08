@@ -41,7 +41,6 @@
   (jms/kuuntele-ja-kuittaa (tee-lokittaja this) sonja
                            sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono
                            sahkoposti/lue-sahkoposti sahkoposti/kirjoita-kuittaus
-                           :viesti-id
                            (fn [viesti]
                              (let [virheet (kuittaukset/vastaanota-sahkopostikuittaus db viesti)]
                                (sahkoposti/kuittaus viesti virheet)))))
