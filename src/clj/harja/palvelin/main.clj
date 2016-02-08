@@ -133,11 +133,7 @@
                              [:sonja :db :integraatioloki])
 
      ;; T-LOIK
-     :tloik (component/using (let [tloik (:tloik asetukset)]
-                               (tloik/->Tloik (:ilmoitusviestijono tloik)
-                                              (:ilmoituskuittausjono tloik)
-                                              (:toimenpideviestijono tloik)
-                                              (:toimenpidekuittausjono tloik)))
+     :tloik (component/using (tloik/->Tloik (:tloik asetukset))
                              [:sonja :db :integraatioloki :klusterin-tapahtumat])
 
      ;; Tierekisteri

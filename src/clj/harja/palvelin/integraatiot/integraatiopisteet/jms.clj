@@ -50,3 +50,27 @@
                         (kasittelija data viesti-id onnistunut))))
     (catch Exception e
       (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))
+
+
+(defn kuuntele-ja-kuittaa [lokittaja sonja jono-sisaan jono-ulos
+                            viestiparseri kuittausmuodostaja
+                            viesti->id kasittelija]
+  (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)
+  (try
+    (sonja/kuuntele
+     sonja jono-sisaan
+     (fn [viesti]
+       (log/debug "Vastaanotettiin viesti jonosta " jono-sisaan ": " viesti)
+       (let [viestin-sisalto (.getText viesti)
+             correlation-id (.getJMSCorrelationID viesti)
+             data (viestiparseri viestin-sisalto)
+             viesti-id (viesti->id data)]
+         (lokittaja :saapunut-jms-viesti viesti-id viestin-sisalto)
+         (try 
+           (let [vastaus (kasittelija viesti)
+                 vastauksen-sisalto (kuittausmuodostaja vastaus)]
+             (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto viesti-id true "")
+             (sonja/laheta jono-ulos vastaus {:correlation-id correlation-id})
+             (lokittaja :onnistunut vastauksen-sisalto "" viesti-id))
+           (catch Exception e
+             (lokittaja :epaonnistunut viesti-id ))))))))

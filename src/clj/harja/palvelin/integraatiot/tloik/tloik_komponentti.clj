@@ -5,9 +5,11 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.tloik.ilmoitukset :as ilmoitukset]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+            [harja.palvelin.integraatiot.tloik.kuittaukset :as kuittaukset]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]))
+            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
+            [harja.palvelin.integraatiot.tloik.sanomat.sahkoposti :as sahkoposti]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -35,20 +37,32 @@
                                 (fn [_ viesti-id onnistunut]
                                   (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
-(defrecord Tloik [ilmoitusviestijono ilmoituskuittausjono toimenpidejono toimenpidekuittausjono]
+(defn tee-sahkopostikuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono]
+  (jms/kuuntele-ja-kuittaa (tee-lokittaja this) sonja
+                           sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono
+                           sahkoposti/lue-sahkoposti str ; FIXME: kuittausmuodostaja
+                           :viesti-id
+                           (partial kuittaukset/vastaanota-sahkopostikuittaus db)))
+
+(defrecord Tloik [jonot]
   component/Lifecycle
   (start [this]
-    (-> this
-        (assoc :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono))
-        (assoc :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija this toimenpidekuittausjono))))
+    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidejono toimenpidekuittausjono
+                  sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono]} jonot]
+      (assoc this
+             :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)
+             :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija this toimenpidekuittausjono)
+             :sonja-sahkopostikuittauskuuntelija (tee-sahkopostikuittauskuuntelija this sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono))))
   (stop [this]
-    (let [poista-ilmoitusviestikuuntelija (:sonja-ilmoitusviestikuuntelija this)
-          poista-toimenpidekuittauskuuntelija (:sonja-toimenpidekuittauskuuntelija this)]
-      (poista-ilmoitusviestikuuntelija)
-      (poista-toimenpidekuittauskuuntelija))
-    this)
+    (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
+                       :sonja-toimenpidekuittauskuuntelija
+                       :sonja-sahkopostikuittauskuuntelija]]
+      (doseq [kuuntelija kuuntelijat
+              :let [poista-kuuntelija-fn (get this kuuntelija)]]
+        (poista-kuuntelija-fn))
+      (apply dissoc this kuuntelijat)))
 
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
-    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this) (:sonja this) toimenpidejono)]
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this) (:sonja this) (:toimenpidejono jonot))]
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id))))

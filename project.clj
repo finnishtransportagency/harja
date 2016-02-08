@@ -1,7 +1,7 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.7.228"] 
 
                  ;;;;;;; Yleiset ;;;;;;;
@@ -14,7 +14,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki
-                 [com.stuartsierra/component "0.2.3"]
+                 [com.stuartsierra/component "0.3.1"]
 
                  ;; Lokitus
                  ;;[org.clojure/tools.logging "0.3.1"]
