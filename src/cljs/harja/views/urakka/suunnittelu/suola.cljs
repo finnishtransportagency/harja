@@ -140,7 +140,7 @@
             :muokattava? (constantly saa-muokata?) :nimi :maara
             :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"}
            {:otsikko       "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
-            :valinta-arvo  first
+            :valinta-arvo  first :pakollinen? true
             :muokattava?   (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
                              ""
