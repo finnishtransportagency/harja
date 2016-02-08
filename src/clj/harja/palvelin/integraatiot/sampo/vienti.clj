@@ -7,9 +7,7 @@
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-samposta-sanoma :as kuittaus-sampoon-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")

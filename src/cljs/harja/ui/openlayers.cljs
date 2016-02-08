@@ -20,7 +20,9 @@
             [ol.extent :as ol-extent]
             [ol.proj :as ol-proj]
 
-            [ol.source.Vector]
+            [ol.source.Vector] ;; Käytä ol.source.VectorTile kun ol päivittyy uudempaan kuin 3.10.0
+            
+            
             [ol.layer.Vector]
             [ol.Feature]
             [ol.geom.Polygon]
@@ -43,7 +45,8 @@
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
-                   [harja.loki :refer [mittaa-aika]]))
+                   [harja.loki :refer [mittaa-aika]]
+                   [harja.ui.openlayers :refer [disable-rendering]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että kartan animoinnit on valmistuneet." :const true}
 animaation-odotusaika 200)
@@ -384,7 +387,8 @@ oletus-zindex 4)
                          vp (.-viewport_ ol3)
                          style (.-style vp)]
                      (set! (.-cursor style) (case cursor
-                                              :crosshair "crosshair" ;; lisää tarvittavia kursoreita
+                                              :crosshair "crosshair"
+                                              :progress "progress"
                                               "")))
                    ::tooltip
                    (let [[x y teksti] args]
@@ -441,10 +445,9 @@ oletus-zindex 4)
          (go (<! (timeout 1000))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         (when-let [tooltipin-sisalto (piirra-tooltip? hover)]
+         (when-let [tooltipin-sisalto (or (piirra-tooltip? hover) (some-> (:tooltip hover) (constantly)))]
            [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
-            (or (:tooltip hover)
-                (tooltipin-sisalto))])))]))
+            (tooltipin-sisalto)])))]))
 
 ;;;;;;;;;;
 ;; Code to sync ClojureScript geometries vector data to Ol3JS

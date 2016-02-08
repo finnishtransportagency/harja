@@ -8,6 +8,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
+
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
   (let [kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)

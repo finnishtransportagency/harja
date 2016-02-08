@@ -71,6 +71,7 @@
                                :kht_laskutettu                                  35010.0M
                                :kht_laskutettu_ind_korotettuna                  35126.35173954676051829000M
                                :kht_laskutettu_ind_korotus                      116.35173954676051829000M
+                               :lampotila_puuttuu                               false
                                :muutostyot_laskutetaan                          1000.0M
                                :muutostyot_laskutetaan_ind_korotettuna          1016.91669326524100000M
                                :muutostyot_laskutetaan_ind_korotus              16.91669326524100000M
@@ -133,6 +134,7 @@
                                       :kht_laskutettu                                  0.0M
                                       :kht_laskutettu_ind_korotettuna                  0.0M
                                       :kht_laskutettu_ind_korotus                      0.0M
+                                      :lampotila_puuttuu                               false
                                       :muutostyot_laskutetaan                          8000.0M
                                       :muutostyot_laskutetaan_ind_korotettuna          8033.83338653048200000M
                                       :muutostyot_laskutetaan_ind_korotus              33.83338653048200000M
@@ -195,6 +197,7 @@
                              :kht_laskutettu                                  100000.0M
                              :kht_laskutettu_ind_korotettuna                  100331.95020746888030940000M
                              :kht_laskutettu_ind_korotus                      331.95020746888030940000M
+                             :lampotila_puuttuu                               false
                              :muutostyot_laskutetaan                          0.0M
                              :muutostyot_laskutetaan_ind_korotettuna          0.0M
                              :muutostyot_laskutetaan_ind_korotus              0.0M

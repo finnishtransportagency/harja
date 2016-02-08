@@ -86,7 +86,8 @@
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
-                 :viimeinen-rivi-yhteenveto? true}
+                 :viimeinen-rivi-yhteenveto? true
+                 :oikealle-tasattavat-kentat #{9 10 11 12}}
       [{:leveys "15%" :otsikko "Urakka"}
        {:otsikko "Keski\u00ADlämpö\u00ADtila"}
        {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
@@ -96,10 +97,10 @@
        {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)"}
        {:otsikko "Käytetty suola\u00ADmäärä (t)"}
        {:otsikko "Suola\u00ADerotus (t)"}
-       {:otsikko "Sakko / tonni"}
-       {:otsikko "Sakko"}
-       {:otsikko "Indeksi"}
-       {:otsikko "Indeksi\u00ADkorotettu sakko"}]
+       {:otsikko "Sakko \u20AC / tonni"}
+       {:otsikko "Sakko €"}
+       {:otsikko "Indeksi €"}
+       {:otsikko "Indeksi\u00ADkorotettu sakko €"}]
       (keep identity
             (concat
               (for [rivi raportin-data]
@@ -119,12 +120,12 @@
                    (:suola_kaytetty rivi)
                    (when (and (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
                      (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi)))
-                   (fmt/euro-opt (:sakko_maara_per_tonni rivi))
-                   (fmt/euro-opt (laske-sakko rivi))
+                   (fmt/euro-opt false (:sakko_maara_per_tonni rivi))
+                   (fmt/euro-opt false (laske-sakko rivi))
                    (when (and sakko indeksikorotettu-sakko)
-                     (fmt/euro-opt (- indeksikorotettu-sakko sakko)))
+                     (fmt/euro-opt false (- indeksikorotettu-sakko sakko)))
                    (when (and (:kerroin rivi) sakko)
-                     (fmt/euro-opt (* (:kerroin rivi) sakko)))]))
+                     (fmt/euro-opt false (* (:kerroin rivi) sakko)))]))
               (when (not (empty? raportin-data))
                 [["Yhteensä"
                   nil
@@ -138,13 +139,13 @@
                     (reduce + (keep :suola_kaytetty raportin-data))
                     (reduce + (keep :suola_suunniteltu raportin-data)))
                   nil
-                  (fmt/euro-opt
+                  (fmt/euro-opt false
                     (reduce + (keep
                                 (fn [rivi]
                                   (laske-sakko rivi))
                                 raportin-data)))
                   nil
-                  (fmt/euro-opt
+                  (fmt/euro-opt false
                     (reduce + (keep
                                 (fn [rivi]
                                   (laske-indeksikorotettu-sakko rivi))

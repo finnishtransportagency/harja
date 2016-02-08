@@ -95,7 +95,8 @@
                                       :ei-valittu
                                       :osittain-valittu)))]
     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-      (let [ryhman-elementit-ja-tilat (get-in @suodattimet-atom ryhma-polku)
+      (let [ryhman-elementtien-avaimet (or (get-in tiedot/jarjestys ryhma-polku)
+                                           (keys (get-in @suodattimet-atom ryhma-polku)))
             auki? (fn [] (or @oma-auki-tila
                              (and kokoelma-atom
                                   (= otsikko @kokoelma-atom))))]
@@ -131,12 +132,12 @@
 
          (when (auki?)
            [:div.tk-checkbox-ryhma-sisalto
-            (doall (for [elementti (seq ryhman-elementit-ja-tilat)]
-                     ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet (first elementti)))}
+            (doall (for [elementti (seq ryhman-elementtien-avaimet)]
+                     ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet elementti))}
                      [yksittainen-suodatincheckbox
-                      (get tiedot/suodattimien-nimet (first elementti))
+                      (get tiedot/suodattimien-nimet elementti)
                       suodattimet-atom
-                      (conj ryhma-polku (first elementti))]))])]))))
+                      (conj ryhma-polku elementti)]))])]))))
 
 (defn aikasuodattimet []
   [:div#tk-paavalikko
@@ -182,10 +183,10 @@
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
     (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
                            (reset! kartta/pida-geometriat-nakyvilla? false)
-                           (kartta/aseta-paivitetaan-karttaa-tila true))
+                           (kartta/aseta-paivitetaan-karttaa-tila! true))
                       #(do (murupolku/aseta-murupolku-perusmuotoon)
                            (reset! kartta/pida-geometriat-nakyvilla? true)
-                           (kartta/aseta-paivitetaan-karttaa-tila false)))
+                           (kartta/aseta-paivitetaan-karttaa-tila! false)))
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
@@ -193,11 +194,11 @@
                      (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
                      :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
     {:component-will-mount   (fn [_]
-                               (kartta/aseta-yleiset-kontrollit
+                               (kartta/aseta-yleiset-kontrollit!
                                  [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
                                                                    :luokka               "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
-                               (kartta/tyhjenna-yleiset-kontrollit)
+                               (kartta/tyhjenna-yleiset-kontrollit!)
                                (kartta/poista-popup!))}
     (fn []
       [:span.tilannekuva

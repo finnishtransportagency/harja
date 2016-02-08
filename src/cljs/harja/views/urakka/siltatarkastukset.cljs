@@ -18,7 +18,7 @@
             [harja.tiedot.sillat :as sillat]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.kartta :as kartta]
-            [harja.ui.lomake :refer [lomake]]
+            [harja.ui.lomake :as lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [cljs.core.async :refer [<! >! chan]]
@@ -115,24 +115,23 @@
            }
 
           ;; sarakkeet
-          [{:otsikko "Silta" :nimi :siltanimi :leveys "40%"}
-           {:otsikko "Siltatunnus" :nimi :siltatunnus :leveys "10%"}
-           {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys "20%"}
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys "30%"}
+          [{:otsikko "Silta" :nimi :siltanimi :leveys 35}
+           {:otsikko "Silta\u00ADtunnus" :nimi :siltatunnus :leveys 13}
+           {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys 20}
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys 30}
            (when-let [listaus (some #{:urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava}
                                     [@sillat/listaus])]
              {:otsikko (case listaus
                          :urakan-korjattavat "Korjattavat"
                          :urakassa-korjatut "Korjatut"
                          :korjaus-ohjelmoitava  "Ohjelmoitavat")
-              :nimi :kohteet :leveys "30%"
+              :nimi :kohteet :leveys 30
               :fmt (fn [kohteet]
                      (case listaus
                        :urakassa-korjatut [kohdesarake kohteet true]
                        [kohdesarake kohteet]))})]
 
-          @urakan-sillat
-          ]]))))
+          @urakan-sillat]]))))
 
 
 
@@ -308,43 +307,38 @@
 (defn uuden-tarkastuksen-syottaminen []
   (let [uusi-tarkastus (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
         lomakkeen-tiedot (atom (dissoc uusi-tarkastus :kohteet))
-        lomake-taytetty (reaction (and
-                                    (not (nil? (:tarkastusaika @lomakkeen-tiedot)))
-                                    (not (str/blank? (:tarkastaja @lomakkeen-tiedot)))))
         tallennus-kaynnissa (atom false)
         taulukon-rivit (reaction
                          (uuden-siltatarkastusten-rivit uusi-tarkastus))
         taulukon-riveilla-tulos (reaction (= (count @taulukon-rivit)
                                               (count (filter #(not (nil? (:tulos %))) @taulukon-rivit))))
         g (grid/grid-ohjaus)
-        lomakkeen-virheet (atom {})
         olemassa-olevat-tarkastus-pvmt
         (reaction (into #{}
                      (mapv #(:tarkastusaika %)
                        @st/valitun-sillan-tarkastukset)))
         voi-tallentaa? (reaction (and
-                                   @lomake-taytetty
-                                   @taulukon-riveilla-tulos
-                                   (empty? @lomakkeen-virheet)))]
+                                   (lomake/voi-tallentaa? @lomakkeen-tiedot)
+                                   @taulukon-riveilla-tulos))]
 
     (komp/luo
       (fn []
         [:div.uusi-siltatarkastus
          [napit/takaisin "Palaa tallentamatta" #(reset! uuden-syottaminen false)]
-        [:h3 "Luo uusi siltatarkastus"]
-         [lomake {:luokka   :horizontal
-                  :virheet  lomakkeen-virheet
+         
+         [lomake {:otsikko "Luo uusi siltatarkastus"
                   :muokkaa! (fn [uusi]
                               (reset! lomakkeen-tiedot uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
            {:otsikko "Sillan tunnus" :nimi :siltatunnus :hae (fn [_] (:siltatunnus @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true :tyyppi :pvm :leveys-col 2
+           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true
+            :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
                       #(when (@olemassa-olevat-tarkastus-pvmt %1)
                         "Tälle päivälle on jo kirjattu tarkastus.")]
             :varoita [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true :leveys-col 4
+           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
             :tyyppi :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
@@ -352,6 +346,7 @@
 
          [grid/grid
           {:otsikko      "Uusi sillan tarkastus"
+           :piilota-toiminnot? true
            :tunniste     :kohdenro
            :ohjaus       g
            :muokkaa-aina true

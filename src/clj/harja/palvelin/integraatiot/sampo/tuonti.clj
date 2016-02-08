@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
             [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.tyokalut.lukot :as lukot])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id lisatietoja]
@@ -50,14 +51,15 @@
         viestin-sisalto (.getText viesti)
         tapahtuma-id (integraatioloki/kirjaa-saapunut-jms-viesti integraatioloki "sampo" "sisaanluku" viesti-id viestin-sisalto)]
     (try+
-      (let [kuittaukset (tuo-data db viestin-sisalto)]
+      (let [tuonti (fn [] (tuo-data db viestin-sisalto))
+            kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
         (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)
         (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id (str virheet)))
       (catch Exception e
-        (log/error e "Sampo sisäänluvussa tapahtui poikkeus." )
+        (log/error e "Sampo sisäänluvussa tapahtui poikkeus.")
         (integraatioloki/kirjaa-epaonnistunut-integraatio
           integraatioloki
           "Sampo sisäänluvussa tapahtui poikkeus"

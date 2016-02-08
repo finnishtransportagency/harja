@@ -77,8 +77,8 @@
                                 :luoja                (:kayttajanimi toteuma)
                                 :reittipisteet        (:reittipisteet toteuma)
                                 :organisaatio         (:organisaatio toteuma)}]
-             (reset! u/urakan-valittu-valilehti :toteumat)
-             (reset! u/toteumat-valilehti :yksikkohintaiset-tyot)
+             (nav/aseta-valittu-valilehti! :urakat :toteumat)
+             (nav/aseta-valittu-valilehti! :toteumat :yksikkohintaiset-tyot)
              (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma lomake-tiedot))))))
 
 (defn tallenna-toteuma
@@ -188,13 +188,13 @@
       (fn [ur]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin toteumaluetteloon" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)]
-         (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
-           (if jarjestelman-lisaama-toteuma?
-             [:h3 "Tarkastele toteumaa"]
-             [:h3 "Muokkaa toteumaa"])
-           [:h3 "Luo uusi toteuma"])
+         
 
-         [lomake {:luokka       :horizontal
+         [lomake {:otsikko (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
+                             (if jarjestelman-lisaama-toteuma?
+                               "Tarkastele toteumaa"
+                               "Muokkaa toteumaa")
+                             "Luo uusi toteuma")
                   :voi-muokata? (and (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
                                      (not jarjestelman-lisaama-toteuma?))
                   :muokkaa!     (fn [uusi]
@@ -218,7 +218,9 @@
               :muokattava? (constantly false)
               :vihje       "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu."})
            {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
-           {:otsikko "Aloitus" :nimi :alkanut :pakollinen? true :tyyppi :pvm :leveys-col 2 :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+           {:otsikko "Aloitus" :nimi :alkanut :pakollinen? true :tyyppi :pvm
+            :uusi-rivi? true
+            :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
             :aseta   (fn [rivi arvo]
                        (assoc
                          (if
@@ -231,16 +233,27 @@
                          arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-           {:otsikko "Lopetus"
-            :nimi :paattynyt
-            :pakollinen? true
-            :tyyppi :pvm
-            :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                                                                    [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]] :leveys-col 2}
-           {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true :leveys 20 :tyyppi :komponentti :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
-           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+
+           {:otsikko "Lopetus" :nimi :paattynyt :pakollinen? true :tyyppi :pvm
+            :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                      [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
+
+           {:otsikko "Suorittaja" :nimi :suorittajan-nimi :pituus-max 256 :tyyppi :string
+            :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
-           {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :koko [80 :auto]}]
+           
+           {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
+            :uusi-rivi? true :palstoja 2
+            :tyyppi :komponentti
+            :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
+           
+           {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text
+            :uusi-rivi? true
+            :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+            :koko [80 :auto]
+            :palstoja 2}]
           @lomake-toteuma]
          (when-not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
            "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")]))))
@@ -334,15 +347,16 @@
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
-            :fmt #(fmt/desimaaliluku-opt 1)}
+            :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+            :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt
-            :muokattava? (constantly false) :tyyppi :numero :leveys 10}
-           {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false) :tyyppi :komponentti :komponentti
-            (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
-                         [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
-                         [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
+            :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Budjettia jäljellä" :nimi :kustannuserotus :muokattava? (constantly false)
+            :tyyppi :komponentti :tasaa :oikea
+            :komponentti (fn [rivi] (if (>= (:kustannuserotus rivi) 0)
+                                      [:span.kustannuserotus.kustannuserotus-positiivinen (fmt/euro-opt (:kustannuserotus rivi))]
+                                      [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
           @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain]])))
 
 (defn yksikkohintaisten-toteumat []

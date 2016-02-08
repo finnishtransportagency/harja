@@ -3,23 +3,41 @@
     bottom: 0;
     color: @vari;
     padding: 5px;
-    position: absolute;
 }
 
 .kentta-text {
     > textarea {
-        padding: 2px 6px;
+        padding: 4px 6px;
         width: 100%;
+	border-style: solid;
+	border-width: 1px;
     }
 }
 
 .lomake {
-    margin-top: 1rem;
-    .varoitukset,
-    .virheet {
-        position: absolute;
-        width: 100%;
+    padding-bottom: @fontin-koko-leipateksti;
+    border: solid 1px @harmaa7;
+    .lomake-otsikko, .lomake-ryhman-otsikko {
+      margin-left: 1em;
     }
+
+          
+    .komponentti {
+      /* Asemointisääntöjä lomakkeisiin upotetuille muille komponenteille */
+
+      .livi-grid {
+         margin-top: -0.5rem;
+	 margin-bottom: 0;
+
+         &.livi-muokkaus-grid {
+          margin-top: -1.75rem; // otsikko ja gridin toimintonapit samalle tasolla
+          margin-bottom: 0; // tyhjä tila alta pois
+         }
+      }
+    }
+    
+    margin-top: 0.25rem;
+
     .varoitus {
         .virhe-tai-varoitus-lomake(@varoitus, @valkoinen);
     }
@@ -37,19 +55,58 @@
   .required label.control-label:after {
     content: " *";
     color: red;
-    font-size: 0.9em;
+    font-size: (0.8 * @fontin-koko-leipateksti);
     position: relative;
     top: -0.15em;
   }
+  
+  .kentan-yksikko {
+    font-size: (0.8 * @fontin-koko-leipateksti);
+    margin-left: 0.5rem;
+  }
+
+  /* Kenttätyypeille spesifiset säännöt kun ollaan lomakkeessa */ 
+  .pvm-aika-kentta > table {
+    width: 100%;
+  }
+
+ .tierekisteriosoite-kentta {
+   > table { width: 100%; }
+   .karttavalinta { text-align: right; }
+   .nappi-ensisijainen { margin-right: 0; }
+   thead {
+     font-size: @fontin-koko-leipateksti;
+     th {
+       padding-left: 0.3rem;
+       padding-bottom: 4px; }
+   }
+ }
+ 
+ table.boolean-group {
+   td {
+     .checkbox { padding-top: 0; }
+     label { font-size: @fontin-koko-leipateksti; }
+     padding-right: 2em;
+   }
+ }
+ .checkbox {
+     // checkbox kentillä ei ole labelia, joten niitä pitää pädätä alaspäin
+     padding-top: @input-korkeus / 2;
+ } 
+
+
+
   .lomake-ryhman-otsikko {
     border-bottom: solid 1px @harmaa9;
     font-size: @font-size-h3;
     margin: 2px 0 10px;
     padding-left: 5px;
   }
+
 }
 
 .lomake-footer{
+    margin-top: 20px;
     button + button {
         margin-left: @harja-nappien-valinen-etaisyys;
         margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs

@@ -50,7 +50,8 @@
                  "Peruuta"
                  #(do
                    (ilmoitukset/sulje-uusi-kuittaus!)
-                   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))]]}
+                   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))
+                 {:luokka "pull-right"}]]}
     [(lomake/ryhma {:otsikko    "Kuittaus"
                     :leveys-col 3}
                    {:nimi          :tyyppi

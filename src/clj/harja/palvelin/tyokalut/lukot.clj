@@ -1,16 +1,28 @@
 (ns harja.palvelin.tyokalut.lukot
   (:require [harja.kyselyt.lukot :as lukko]))
 
+(defn aja-toiminto [db tunniste toiminto-fn]
+  (try
+    (toiminto-fn)
+    (catch Exception e
+      (throw e))
+    (finally
+      (lukko/avaa-lukko? db tunniste))))
+
 (defn aja-lukon-kanssa
   ([db tunniste toiminto-fn] (aja-lukon-kanssa db tunniste toiminto-fn nil))
-  ([db tunniste toiminto-fn aikaraja]
-   (if (lukko/aseta-lukko? db tunniste aikaraja)
+  ([db tunniste toiminto-fn vanhenemisaika]
+   (if (lukko/aseta-lukko? db tunniste vanhenemisaika)
      (do
-       (try
-         (toiminto-fn)
-         (lukko/avaa-lukko? db tunniste)
-         (catch Exception e
-           (lukko/avaa-lukko? db tunniste)
-           (throw e)))
+       (aja-toiminto db tunniste toiminto-fn)
        true)
-     false)))
+     false))
+  ([db tunniste toiminto-fn vanhenemisaika odotusvali]
+   (let [odotusvali (* odotusvali 1000)]
+     (loop []
+       (if (lukko/aseta-lukko? db tunniste vanhenemisaika)
+         (do
+           (aja-toiminto db tunniste toiminto-fn))
+         (do
+           (Thread/sleep odotusvali)
+           (recur)))))))

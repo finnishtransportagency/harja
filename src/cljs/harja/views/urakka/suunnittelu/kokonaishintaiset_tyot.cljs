@@ -70,9 +70,9 @@
                     valitun-hoitokauden-kaikkien-tpin-kustannukset
                     kaikkien-hoitokausien-taman-tpin-kustannukset
                     yks-kustannukset]
-  [:div.hoitokauden-kustannukset
-   [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
-    [:div.col-xs-4.piirakka
+  [:div.col-md-6.hoitokauden-kustannukset
+   [:div.piirakka-hoitokauden-kustannukset-per-kaikki
+    [:div.piirakka
      (let [valittu-kust valitun-hoitokauden-ja-tpin-kustannukset
            kaikki-kust kaikkien-hoitokausien-taman-tpin-kustannukset]
        (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
@@ -81,7 +81,7 @@
           [vis/pie
            {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
            {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
-    [:div.col-xs-4.piirakka
+    [:div.piirakka
      (let [valittu-kust valitun-hoitokauden-ja-tpin-kustannukset
            kaikki-kust valitun-hoitokauden-kaikkien-tpin-kustannukset]
        (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
@@ -90,7 +90,7 @@
           [vis/pie
            {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
            {"Valittu toimenpide" valittu-kust "Muut toimenpiteet" (- kaikki-kust valittu-kust)}]]))]
-    [:div.col-xs-4.piirakka
+    [:div.piirakka
      (let [kok-hint-yhteensa valitun-hoitokauden-kaikkien-tpin-kustannukset
            yks-hint-yhteensa yks-kustannukset]
          (when (or (not= 0 kok-hint-yhteensa) (not= 0 yks-hint-yhteensa))
@@ -191,79 +191,83 @@
         (reset! tuleville? false))}
 
      (fn [ur]
-       [:div.kokonaishintaiset-tyot
-        [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]
-
+       [:span
+        [:div.row
+         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]]
         
-        
-        (if (empty? @toimenpiteet)
-          (when @toimenpiteet
-            [:span
-             [:h5 "Töitä ei voi suunnitella"]
-             [:p "Toimenpide pitää olla valittuna, jotta voidaan suunnitella urakalle kokonaishintaisia töitä.
+        [:div.row.kokonaishintaiset-tyot
+         
+         
+         (if (empty? @toimenpiteet)
+           (when @toimenpiteet
+             [:span
+              [:h5 "Töitä ei voi suunnitella"]
+              [:p "Toimenpide pitää olla valittuna, jotta voidaan suunnitella urakalle kokonaishintaisia töitä.
             Varmista että urakalla on ainakin yksi Samposta tullut toimenpideinstanssi. Varsinkin kehitysvaiheessa
             puutteet tietosisällössä ovat mahdollisia."]])
-          
-          [grid/grid
-           {:otsikko                (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
-            :tyhja                  (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-            :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                               (:id ur)
-                                                               #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                               urakan-kok-hint-tyot % tuleville?)
-                                                               :ei-mahdollinen)
-            :tallenna-vain-muokatut false
-            :peruuta                #(reset! tuleville? false)
-            :tunniste               #((juxt :vuosi :kuukausi) %)
-            :voi-lisata?            false
-            :voi-poistaa?           (constantly false)
-            :muokkaa-footer         (fn [g]
-                                      [:div.kok-hint-muokkaa-footer
-                                       [raksiboksi "Tallenna tulevillekin hoitokausille"
-                                        @tuleville?
-                                        #(swap! tuleville? not)
-                                        [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                        (and @tuleville? @varoita-ylikirjoituksesta?)]])}
            
-           ;; sarakkeet
-           [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys "25%"}
-            {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false)
-             :tyyppi  :numero :leveys "25%"}
-            {:otsikko       "Summa" :nimi :summa :fmt fmt/euro-opt :tasaa :oikea
-             :tyyppi        :positiivinen-numero :leveys "25%"
-             :tayta-alas?   #(not (nil? %))
-             :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
-            {:otsikko       "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
-             :tyyppi        :pvm :fmt #(if % (pvm/pvm %)) :leveys "25%"
-             :tayta-alas?   #(not (nil? %))
-             :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
-             :tayta-fn      (fn [lahtorivi tama-rivi]
-                              ;; lasketaan lähtörivin maksupäivän erotus sen rivin vuosi/kk
-                              ;; ja tehdään vastaavalla erotuksella oleva muutos
-                              (let [maksupvm (:maksupvm lahtorivi)
-                                    p (t/day maksupvm)
-                                    kk-alku (pvm/luo-pvm (:vuosi lahtorivi) (dec (:kuukausi lahtorivi)) 1)
-                                    suunta (if (pvm/sama-kuukausi? maksupvm kk-alku)
-                                             0
-                                             (if (t/before? kk-alku maksupvm) 1 -1))
-                                    kk-ero                 ;; lasketaan kuinka monta kuukautta eroa on maksupäivällä ja rivin kuukaudella
-                                    (loop [ero 0
-                                           kk kk-alku]
-                                      (if (pvm/sama-kuukausi? kk maksupvm)
-                                        ero
-                                        (recur (+ ero suunta)
-                                               (t/plus kk (t/months suunta)))))
-                                    maksu-kk (t/plus (pvm/luo-pvm (:vuosi tama-rivi) (dec (:kuukausi tama-rivi)) 1)
-                                                     (t/months kk-ero))
-                                    paivia (t/number-of-days-in-the-month maksu-kk)
-                                    maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) (min p paivia))]
-                                
-                                (assoc tama-rivi :maksupvm maksu-pvm)))}]
-           @tyorivit])
+           [grid/grid
+            {:luokat ["col-md-6"]
+             :otsikko                (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+             :piilota-toiminnot? true
+             :tyhja                  (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
+             :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                                (:id ur)
+                                                                #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
+                                                                                urakan-kok-hint-tyot % tuleville?)
+                                                                :ei-mahdollinen)
+             :tallenna-vain-muokatut false
+             :peruuta                #(reset! tuleville? false)
+             :tunniste               #((juxt :vuosi :kuukausi) %)
+             :voi-lisata?            false
+             :voi-poistaa?           (constantly false)
+             :muokkaa-footer         (fn [g]
+                                       [:div.kok-hint-muokkaa-footer
+                                        [raksiboksi "Tallenna tulevillekin hoitokausille"
+                                         @tuleville?
+                                         #(swap! tuleville? not)
+                                         [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                         (and @tuleville? @varoita-ylikirjoituksesta?)]])}
+            
+            ;; sarakkeet
+            [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
+             {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false)
+              :tyyppi  :numero :leveys 25}
+             {:otsikko       "Summa" :nimi :summa :fmt fmt/euro-opt :tasaa :oikea
+              :tyyppi        :positiivinen-numero :leveys 25
+              :tayta-alas?   #(not (nil? %))
+              :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
+             {:otsikko       "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
+              :tyyppi        :pvm :fmt #(if % (pvm/pvm %)) :leveys 25
+              :tayta-alas?   #(not (nil? %))
+              :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
+              :tayta-fn      (fn [lahtorivi tama-rivi]
+                               ;; lasketaan lähtörivin maksupäivän erotus sen rivin vuosi/kk
+                               ;; ja tehdään vastaavalla erotuksella oleva muutos
+                               (let [maksupvm (:maksupvm lahtorivi)
+                                     p (t/day maksupvm)
+                                     kk-alku (pvm/luo-pvm (:vuosi lahtorivi) (dec (:kuukausi lahtorivi)) 1)
+                                     suunta (if (pvm/sama-kuukausi? maksupvm kk-alku)
+                                              0
+                                              (if (t/before? kk-alku maksupvm) 1 -1))
+                                     kk-ero                 ;; lasketaan kuinka monta kuukautta eroa on maksupäivällä ja rivin kuukaudella
+                                     (loop [ero 0
+                                            kk kk-alku]
+                                       (if (pvm/sama-kuukausi? kk maksupvm)
+                                         ero
+                                         (recur (+ ero suunta)
+                                                (t/plus kk (t/months suunta)))))
+                                     maksu-kk (t/plus (pvm/luo-pvm (:vuosi tama-rivi) (dec (:kuukausi tama-rivi)) 1)
+                                                      (t/months kk-ero))
+                                     paivia (t/number-of-days-in-the-month maksu-kk)
+                                     maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) (min p paivia))]
+                                 
+                                 (assoc tama-rivi :maksupvm maksu-pvm)))}]
+            @tyorivit])
 
-        ;; Näytetään kustannusten summat ja piirakkadiagrammit
-        [kustannukset
-         @valitun-hoitokauden-ja-tpin-kustannukset
-         @s/valitun-hoitokauden-kok-hint-kustannukset
-         @kaikkien-hoitokausien-taman-tpin-kustannukset
-         @valitun-hoitokauden-yks-hint-kustannukset]]))))
+         ;; Näytetään kustannusten summat ja piirakkadiagrammit
+         [kustannukset
+          @valitun-hoitokauden-ja-tpin-kustannukset
+          @s/valitun-hoitokauden-kok-hint-kustannukset
+          @kaikkien-hoitokausien-taman-tpin-kustannukset
+          @valitun-hoitokauden-yks-hint-kustannukset]]]))))

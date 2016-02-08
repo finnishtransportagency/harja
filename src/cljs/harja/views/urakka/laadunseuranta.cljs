@@ -16,7 +16,8 @@
       (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
       (fn []
         [bs/tabs
-         {:style :tabs :classes "tabs-taso2" :active urakka-laadunseuranta/valittu-valilehti}
+         {:style :tabs :classes "tabs-taso2"
+          :active (nav/valittu-valilehti-atom :laadunseuranta)}
 
          "Tarkastukset" :tarkastukset
          [tarkastukset/tarkastukset]
