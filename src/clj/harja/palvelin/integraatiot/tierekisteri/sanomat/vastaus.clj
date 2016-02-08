@@ -70,7 +70,7 @@
 
 (defn parsi-tietueen-tietolaji [data]
   {:tietolajitunniste (z/xml1-> data :tietolajitunniste z/text)
-   :arvot             (:content (first (z/xml1-> data :arvot)))})
+   :arvot             (xml/raakateksti data :arvot)})
 
 (defn parsi-tietueet [data]
   (let [tietueet (z/xml-> data :ns2:tietueet :ns2:tietue)]
