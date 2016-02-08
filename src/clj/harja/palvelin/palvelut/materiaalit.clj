@@ -208,7 +208,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
-        (q/hae-suolatoteumathae-suolatoteumat db alkupvm loppupvm urakka-id)))
+        (q/hae-suolatoteumat db alkupvm loppupvm urakka-id)))
 
 (defn hae-suolamateriaalit [db user]
   (into []
