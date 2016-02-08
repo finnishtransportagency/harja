@@ -1,7 +1,6 @@
 (ns harja.domain.ilmoitusapurit
   "Selain- ja palvelinpuolen yhteisiä ilmoituksiin liittyviä asioita"
   (:require
-    [clojure.string :as str]
     #?(:cljs [harja.loki :refer [log]])))
 
 
@@ -83,5 +82,84 @@
                   (when (and puhelin sp) ", ")
                   (when sp (str sp))))]
     (if (empty? tulos) nil tulos)))
+
+(defn parsi-selitteet [selitteet]
+  #?(:cljs (log "-----> SELITTEET:" (pr-str selitteet)))
+  (clojure.string/join ", "
+                       (mapv #(case %
+                               :tyomaajarjestelyihinLiittyvaIlmoitus "työmaajärjestelyt"
+                               :kuoppiaTiessa "kuoppia tiessa"
+                               :kelikysely "kelikysely"
+                               :soratienKuntoHuono "soratien kunto huono"
+                               :saveaTiella "savea tiellä"
+                               :liikennettaVaarantavaEsteTiella "liikennettä vaarantava este tiella"
+                               :irtokiviaTiella "irtokiviä tiella"
+                               :kevyenLiikenteenVaylaanLiittyvaIlmoitus "kevyen liikenteen väylää"
+                               :raivausJaKorjaustoita "raivaus ja korjaustöitä"
+                               :auraustarve "auraustarve"
+                               :kaivonKansiRikki "kaivon kansiRikki"
+                               :kevyenLiikenteenVaylatOvatLiukkaita "kevyenLiikenteenVaylatOvatLiukkaita"
+                               :routaheitto "routaheitto"
+                               :avattavatPuomit "avattavatPuomit"
+                               :tievalaistusVioittunutOnnettomuudessa "tievalaistusVioittunutOnnettomuudessa"
+                               :muuKyselyTaiNeuvonta "muuKyselyTaiNeuvonta"
+                               :soratienTasaustarve "soratienTasaustarve"
+                               :tieTaiTienReunaOnPainunut "tieTaiTienReunaOnPainunut"
+                               :siltaanLiittyvaIlmoitus "siltaanLiittyvaIlmoitus"
+                               :polynsidontatarve "polynsidontatarve"
+                               :liikennevalotEivatToimi "liikennevalotEivatToimi"
+                               :kunnossapitoJaHoitotyo "kunnossapitoJaHoitotyo"
+                               :vettaTiella "vettaTiella"
+                               :aurausvallitNakemaesteena "aurausvallitNakemaesteena"
+                               :ennakoivaVaroitus "ennakoivaVaroitus"
+                               :levahdysalueeseenLiittyvaIlmoitus "levahdysalueeseenLiittyvaIlmoitus"
+                               :sohjonPoisto "sohjonPoisto"
+                               :liikennekeskusKuitannutLoppuneeksi "liikennekeskusKuitannutLoppuneeksi"
+                               :muuToimenpidetarve "muuToimenpidetarve"
+                               :hiekoitustarve "hiekoitustarve"
+                               :tietOvatJaatymassa "tietOvatJaatymassa"
+                               :jaatavaaSadetta "jaatavaaSadetta"
+                               :tienvarsilaitteisiinLiittyvaIlmoitus "tienvarsilaitteisiinLiittyvaIlmoitus"
+                               :oljyaTiella "oljyaTiella"
+                               :sahkojohtoOnPudonnutTielle "sahkojohtoOnPudonnutTielle"
+                               :tieOnSortunut "tieOnSortunut"
+                               :tievalaistusVioittunut "tievalaistusVioittunut"
+                               :testilahetys "testilahetys"
+                               :tievalaistuksenLamppujaPimeana "tievalaistuksenLamppujaPimeana"
+                               :virkaApupyynto "virkaApupyynto"
+                               :tiemerkintoihinLiittyvaIlmoitus "tiemerkintoihinLiittyvaIlmoitus"
+                               :tulvavesiOnNoussutTielle "tulvavesiOnNoussutTielle"
+                               :niittotarve "niittotarve"
+                               :kuormaOnLevinnytTielle "kuormaOnLevinnytTielle"
+                               :tieOnLiukas "tieOnLiukas"
+                               :tiellaOnEste "tiellaOnEste"
+                               :harjaustarve "harjaustarve"
+                               :hoylaystarve "hoylaystarve"
+                               :tietyokysely "tietyokysely"
+                               :paallystevaurio "paallystevaurio"
+                               :rikkoutunutAjoneuvoTiella "rikkoutunutAjoneuvoTiella"
+                               :mustaaJaataTiella "mustaaJaataTiella"
+                               :kevyenLiikenteenVaylillaOnLunta "kevyenLiikenteenVaylillaOnLunta"
+                               :hirviaitaVaurioitunut "hirviaitaVaurioitunut"
+                               :korvauskysely "korvauskysely"
+                               :puitaOnKaatunutTielle "puitaOnKaatunutTielle"
+                               :rumpuunLiittyvaIlmoitus "rumpuunLiittyvaIlmoitus"
+                               :lasiaTiella "lasiaTiella"
+                               :liukkaudentorjuntatarve "liukkaudentorjuntatarve"
+                               :alikulkukaytavassaVetta "alikulkukaytavassaVetta"
+                               :tievalaistuksenLamppuPimeana "tievalaistuksenLamppuPimeana"
+                               :kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita "kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita"
+                               :kuoppa "kuoppa"
+                               :toimenpidekysely "toimenpidekysely"
+                               :pysakkiinLiittyvaIlmoitus "pysakkiinLiittyvaIlmoitus"
+                               :nakemaalueenRaivaustarve "nakemaalueenRaivaustarve"
+                               :vesakonraivaustarve "vesakonraivaustarve"
+                               :muuttuvatOpasteetEivatToimi "muuttuvatOpasteetEivatToimi"
+                               :tievalaistus "tievalaistus"
+                               :vesiSyovyttanytTienReunaa "vesiSyovyttanytTienReunaa"
+                               :raskasAjoneuvoJumissa "raskasAjoneuvoJumissa"
+                               :myrskyvaurioita "myrskyvaurioita"
+                               :kaidevaurio "kaidevaurio"
+                               :liikennemerkkeihinLiittyvaIlmoitus "liikennemerkkeihinLiittyvaIlmoitus") selitteet)))
 
 (def +ilmoitustilat+ #{:suljetut :avoimet})

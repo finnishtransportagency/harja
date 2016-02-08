@@ -1,12 +1,11 @@
 (ns harja.views.ilmoitukset
   "Harjan ilmoituksien pääsivu."
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :refer [atom]]
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
-                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero]]
+                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero parsi-selitteet]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -50,7 +49,8 @@
          "Otsikko: " (:otsikko ilmoitus)
          "Lyhyt selite: " (:lyhytselite ilmoitus)
          "Pitkä selite: " (when (:pitkaselite ilmoitus)
-                            [yleiset/pitka-teksti (:pitkaselite ilmoitus)])]
+                            [yleiset/pitka-teksti (:pitkaselite ilmoitus)])
+         "Selitteet: " (parsi-selitteet (:selitteet ilmoitus))]
 
         [:br]
         [yleiset/tietoja {}
@@ -101,32 +101,32 @@
 
         [(when @nav/valittu-urakka
            {:nimi          :hoitokausi
-            :palstoja 2
+            :palstoja      2
             :otsikko       "Hoitokausi"
             :tyyppi        :valinta
             :valinnat      @u/valitun-urakan-hoitokaudet
             :valinta-nayta fmt/pvm-vali-opt})
 
          (lomake/ryhma {:ulkoasu :rivi :otsikko "Saapunut" :palstoja 2}
-                       {:nimi       :saapunut-alkaen
-                        :hae        (comp first :aikavali)
-                        :aseta      #(assoc-in %1 [:aikavali 0] %2)
-                        :otsikko    "Alkaen"
+                       {:nimi     :saapunut-alkaen
+                        :hae      (comp first :aikavali)
+                        :aseta    #(assoc-in %1 [:aikavali 0] %2)
+                        :otsikko  "Alkaen"
                         :palstoja 1
-                        :tyyppi     :pvm}
+                        :tyyppi   :pvm}
 
-                       {:nimi       :saapunut-paattyen
-                        :otsikko    "Päättyen"
+                       {:nimi     :saapunut-paattyen
+                        :otsikko  "Päättyen"
                         :palstoja 1
-                        :hae        (comp second :aikavali)
-                        :aseta      #(assoc-in %1 [:aikavali 1] %2)
-                        :tyyppi     :pvm})
+                        :hae      (comp second :aikavali)
+                        :aseta    #(assoc-in %1 [:aikavali 1] %2)
+                        :tyyppi   :pvm})
 
          {:nimi        :hakuehto :otsikko "Hakusana"
           :placeholder "Hae tekstillä..."
           :tyyppi      :string
           :pituus-max  64
-          :palstoja 2}
+          :palstoja    2}
 
          (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat"}
                        {:nimi        :tilat :otsikko "Tila"
@@ -147,12 +147,12 @@
           :rivi-klikattu     #(tiedot/avaa-ilmoitus! %)
           :piilota-toiminnot true}
 
-         [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "20%"}
-          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "20%"}
-          {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "20%"}
-          {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
-           :hae     #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "20%"}
-          {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "20%"}]
+         [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "15%"}
+          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "15%"}
+          {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "15%"}
+          {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %)) :leveys "15%"}
+          {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "15%"}
+          {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "10%"}]
 
          @tiedot/haetut-ilmoitukset]]])))
 
