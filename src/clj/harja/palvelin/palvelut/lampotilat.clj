@@ -12,15 +12,6 @@
             [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]
             [harja.pvm :as pvm]))
 
-(defn keskilampo-ja-pitkalampo-floatiksi
-  [kartta]
-  (let [kl (:keskilampotila kartta)
-        pl (:pitka_keskilampotila kartta)]
-    (dissoc
-      (assoc
-        (assoc kartta :keskilampo (if (nil? kl) kl (float kl)))
-        :pitkalampo (if (nil? pl) pl (float pl)))
-      :pitka_keskilampotila :keskilampotila)))
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [db user url vuosi]
   (log/debug "hae-lampotilat-ilmatieteenlaitokselta, url " url " vuosi " vuosi)
