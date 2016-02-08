@@ -115,27 +115,33 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
-(defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti sijainti-atom]
+(defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti max-korkeus-atom suunta-atom]
   (let [solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
-        r (.getBoundingClientRect solmu)
-        etaisyys-alareunaan (- @dom/korkeus (.-bottom r))]
-
-    (reset! sijainti-atom (- etaisyys-alareunaan 10) 100)))
+        etaisyys-alareunaan (dom/elementin-etaisyys-alareunaan solmu)
+        etaisyys-ylareunaan (dom/elementin-etaisyys-ylareunaan solmu)
+        suunta (if (< etaisyys-alareunaan 75)
+                 :ylos
+                 :alas)]
+    (reset! suunta-atom suunta)
+    (if (= suunta :alas)
+      (reset! max-korkeus-atom (- etaisyys-alareunaan 5))
+      (reset! max-korkeus-atom etaisyys-ylareunaan))))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (let [auki (atom false)
+        avautumissuunta (atom :alas)
         max-korkeus (atom 0)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
       {:component-did-mount
        (fn [this]
-         (maarita-pudotusvalikon-max-korkeus this max-korkeus))}
+         (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta))}
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus)))
-      (komp/dom-kuuntelija js/window
+                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
+      #_(komp/dom-kuuntelija js/window ; FIXME Kaatuu jostain syystä
                            EventType/RESIZE (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus)))
+                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
       (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)]
@@ -193,7 +199,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-           [:ul.dropdown-menu.livi-alasvetolista {:style {:max-height (fmt/pikseleina @max-korkeus)}}
+           [:ul.dropdown-menu.livi-alasvetolista {:style (merge {:max-height (fmt/pikseleina @max-korkeus)}
+                                                                (when (= @avautumissuunta :alas)
+                                                                  {:top "calc(100% - 3px)"
+                                                                   :bottom "auto"})
+                                                                (when (= @avautumissuunta :ylos)
+                                                                  {:bottom "100%"
+                                                                   :top "auto"}))}
             (doall
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
