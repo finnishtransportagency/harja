@@ -167,7 +167,6 @@
                              {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
                              {:otsikko     "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
                               :aseta       (fn [rivi arvo]
-                                             (log "rivi" (pr-str rivi) " arvo " (pr-str arvo))
                                              (reset! pohjavesialueita-muokattu? true)
                                              (assoc rivi :talvisuolaraja arvo))
                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
