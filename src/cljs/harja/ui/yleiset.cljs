@@ -204,7 +204,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                   {:top "calc(100% - 3px)"
                                                                    :bottom "auto"})
                                                                 (when (= @avautumissuunta :ylos)
-                                                                  {:bottom "100%"
+                                                                  {:bottom "calc(100% - 3px)"
                                                                    :top "auto"}))}
             (doall
               (for [vaihtoehto vaihtoehdot]
