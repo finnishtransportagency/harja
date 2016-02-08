@@ -118,6 +118,18 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
                  (uusi-fn))}
     [:span.livicon-plus " " teksti]]))
 
+(defn hyvaksy
+  ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
+  ([teksti hyvaksy-fn] (hyvaksy teksti hyvaksy-fn))
+  ([teksti hyvaksy-fn {:keys [disabled luokka]}]
+    [:button.nappi-myonteinen
+     {:class (str (when disabled "disabled") (or luokka ""))
+      :disabled disabled
+      :on-click #(do
+                  (.preventDefault %)
+                  (hyvaksy-fn))}
+     [:span (ikonit/check) (str " " teksti)]]))
+
 (defn peruuta
   ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
   ([teksti peruuta-fn {:keys [disabled luokka]}]
