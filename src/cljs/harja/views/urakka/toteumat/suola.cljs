@@ -19,20 +19,21 @@
 (defonce suolatoteumissa? (atom false))
 
 (defonce toteumat
-  (reaction<! [hae? @suolatoteumissa?
-               ur @nav/valittu-urakka
-               sopimus @tiedot-urakka/valittu-sopimusnumero
-               hk @tiedot-urakka/valittu-hoitokausi
-               kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and hae? ur)
-                (go
-                  (into []
-                        ;; luodaan kaikille id
-                        (map-indexed (fn [i rivi]
-                                       (assoc rivi :id i)))
-                        (<! (suola/hae-toteumat (:id ur) (first sopimus)
-                                                (or kk hk))))))))
+         (reaction<! [hae? @suolatoteumissa?
+                      ur @nav/valittu-urakka
+                      sopimus @tiedot-urakka/valittu-sopimusnumero
+                      hk @tiedot-urakka/valittu-hoitokausi
+                      kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (when (and hae? ur)
+                       (go
+                         (into []
+                               ;; luodaan kaikille id
+                               (map-indexed (fn [i rivi]
+                                              (assoc rivi :id i)))
+
+                               (<! (suola/hae-toteumat (:id ur) (first sopimus)
+                                                       (or kk hk))))))))
 
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
@@ -46,7 +47,8 @@
    (fn []
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
-           muokattava? (comp not :koneellinen)]
+           muokattava? (comp not :koneellinen)
+           listaus  (reverse (sort-by :alkanut @toteumat))]
        [:div.suolatoteumat
 
         [:span.valinnat
@@ -64,9 +66,11 @@
            :tyyppi :valinta
            :valinta-nayta #(or (:nimi %) "- valitse -")
            :valinnat @materiaalit}
-          {:otsikko "Pvm" :nimi :alkanut :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?}
-          {:otsikko "Käytetty määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?}
+          {:otsikko "Pvm" :nimi :alkanut :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
+           :varoita [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
+          {:otsikko "Käytetty määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
+           :validoi [[:ei-tyhja "Anna määrä"]]}
           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
            :hae #(if (muokattava? %) (:lisatieto %) "Koneellisesti raportoitu")}]
 
-         @toteumat]]))))
+         listaus]]))))

@@ -194,17 +194,21 @@
   Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
   (roolit/vaadi-toteumien-kirjaus-urakkaan user (:urakka tiedot))
-  (jdbc/with-db-transaction [c db]
-                            (q/poista-toteuma-materiaali! c (:id user) (:id tiedot))
-                            (when (:hk-alku tiedot)
-                              (hae-urakassa-kaytetyt-materiaalit
-                                c user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
+  (jdbc/with-db-transaction
+    [db db]
+    (when (:tmid tiedot)
+      (q/poista-toteuma-materiaali! db (:id user) (:tmid tiedot)))
+    (when (:tid tiedot)
+      (toteumat/poista-toteuma! db (:id user) (:tid tiedot)))
+    (when (:hk-alku tiedot)
+      (hae-urakassa-kaytetyt-materiaalit
+        db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
 (defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
-        (q/hae-suolatoteumat db alkupvm loppupvm urakka-id)))
+        (q/hae-suolatoteumathae-suolatoteumat db alkupvm loppupvm urakka-id)))
 
 (defn hae-suolamateriaalit [db user]
   (into []
@@ -230,11 +234,16 @@
       (if (neg? (:id toteuma))
         (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
         (let [tmid (:tmid toteuma)]
-          (log/info "päivitä toteuma materiaali id: " tmid)
-          (toteumat/paivita-toteuma-materiaali!
-           db (:id (:materiaali toteuma))
-           (:maara toteuma) (:id user)
-           (:tmid toteuma) urakka-id))))
+          (if (:poistettu toteuma)
+            (do
+              (log/debug "poista toteuma materiaali id: " tmid)
+              (poista-toteuma-materiaali! db (:id user) toteuma))
+            (do
+              (log/debug "päivitä toteuma materiaali id: " tmid)
+              (toteumat/paivita-toteuma-materiaali!
+               db (:id (:materiaali toteuma))
+               (:maara toteuma) (:id user)
+               (:tmid toteuma) urakka-id))))))
     true))
 
 (defrecord Materiaalit []
