@@ -16,7 +16,7 @@
         alkuetaisyys (:aet silta)
         tunnus (:tunnus silta)
         id (int (:silta_id silta))]
-    (if (first (s/hae-silta-tunnuksella db (:tunnus silta)))
+    (if (first (s/hae-silta-idlla db id))
       (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
       (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
 

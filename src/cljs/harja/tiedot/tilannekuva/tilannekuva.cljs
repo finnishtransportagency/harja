@@ -85,28 +85,29 @@ hakutiheys-historiakuva 1200000)
 (def jarjestys
   {:talvi ["auraus ja sohjonpoisto"
            "suolaus"
+           "liuossuolaus"
            "pistehiekoitus"
            "linjahiekoitus"
+           "pinnan tasaus"
            "lumivallien madaltaminen"
            "sulamisveden haittojen torjunta"
-           "liuossuolaus"
            "aurausviitoitus ja kinostimet"
            "lumensiirto"
            "paannejaan poisto"
            "muu"]
-   :kesa  ["harjaus"
+   :kesa  ["sorateiden polynsidonta"
            "sorastus"
-           "sorateiden muokkaushoylays"
-           "sorateiden polynsidonta"
            "sorateiden tasaus"
-           "pinnan tasaus"
-           "koneellinen niitto"
-           "koneellinen vesakonraivaus"
-           "liikennemerkkien puhdistus"
+           "sorateiden muokkaushoylays"
            "paallysteiden paikkaus"
            "paallysteiden juotostyot"
-           "siltojen puhdistus"
+           "koneellinen niitto"
+           "koneellinen vesakonraivaus"
+           "harjaus"
+           "pinnan tasaus"
+           "liikennemerkkien puhdistus"
            "l- ja p-alueiden puhdistus"
+           "siltojen puhdistus"
            "muu"]})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
@@ -140,7 +141,13 @@ hakutiheys-historiakuva 1200000)
                                               "aurausviitoitus ja kinostimet"   false
                                               "lumensiirto"                     false
                                               "paannejaan poisto"               false
-                                              "muu"                             false}
+                                              "muu"                             false
+
+                                              ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne mailissaan
+                                              ;; pyysi, että pinnan tasaus tulee myös talvitoimenpiteisiin.
+                                              ;; Maili liittyi suodattimien järjestykseen. Pyysin tarkennusta, mutta
+                                              ;; päätin commitoida tämän talteen ettei vaan pääse unohtumaan.
+                                              "pinnan tasaus"                   false}
                             :kesa            {;;"tiestotarkastus"            false
                                               "koneellinen niitto"         false
                                               "koneellinen vesakonraivaus" false

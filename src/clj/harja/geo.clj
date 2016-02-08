@@ -2,7 +2,7 @@
   "Yleiskäyttöisiä paikkatietoon ja koordinaatteihin liittyviä apureita."
   (:require [taoensso.timbre :as log])
   (:import (org.postgresql.geometric PGpoint PGpolygon)
-           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString)))
+           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection)))
 
 (declare euref->osm)
 
@@ -21,6 +21,13 @@
     (pg->clj (.getGeometry g)))
 
 
+  GeometryCollection
+  (pg->clj [^GeometryCollection gc]
+    {:type :geometry-collection
+     :geometries (into []
+                       (map pg->clj)
+                       (.getGeometries gc))})
+  
   MultiPolygon
   (pg->clj [^MultiPolygon mp]
     {:type :multipolygon

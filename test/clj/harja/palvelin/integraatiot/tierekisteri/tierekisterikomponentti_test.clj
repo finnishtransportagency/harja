@@ -73,7 +73,7 @@
                                :karttapvm   #inst "2015-03-02T22:00:00.000-00:00",
                                :urakka      100,
                                :tietolaji   {:tietolajitunniste "tl506",
-                                             :arvot             "9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40"},
+                                             :arvot             ["9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40"]},
                                :kuntoluokka "1",
                                :alkupvm     #inst "2015-03-02T22:00:00.000-00:00",
                                :tunniste    "1245rgfsd"}]
@@ -102,7 +102,7 @@
                              :karttapvm   #inst "2015-03-02T22:00:00.000-00:00",
                              :urakka      100,
                              :tietolaji   {:tietolajitunniste "tl506",
-                                           :arvot             "9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40"},
+                                           :arvot             ["9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40"]},
                              :kuntoluokka "1",
                              :alkupvm     #inst "2015-03-02T22:00:00.000-00:00",
                              :tunniste    "1245rgfsd"}

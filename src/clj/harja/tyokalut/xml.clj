@@ -5,7 +5,8 @@
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [clj-time.format :as f])
+            [clj-time.format :as f]
+            [clojure.data.zip.xml :as z])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
@@ -108,3 +109,8 @@
   (when aika
     (joda-time->xml-xs-date
       (json-date-time->joda-time aika))))
+
+(defn raakateksti
+  "Palauttaa elementin arvon raakatekstinä, jolloin mm. mukana on kaikki välimerkit"
+  [data avain]
+  (:content (first (z/xml1-> data avain))))

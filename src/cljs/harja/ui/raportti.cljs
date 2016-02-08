@@ -15,36 +15,40 @@
             (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
     (first elementti)))
 
-(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto? korosta-rivit korostustyyli]} sarakkeet data]]
+
+(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
+                                               korosta-rivit korostustyyli oikealle-tasattavat-kentat]} sarakkeet data]]
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
-  [grid/grid {:otsikko (or otsikko "")
-              :tunniste hash
-              :piilota-toiminnot? true}
-   (into []
-         (map-indexed (fn [i sarake]
-                        {:hae     #(get % i)
-                         :leveys  (:leveys sarake)
-                         :otsikko (:otsikko sarake)
-                         :pakota-rivitys? (:pakota-rivitys? sarake)
-                         :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
-                         :nimi    (str "sarake" i)})
-                      sarakkeet))
-   (if (empty? data)
-     [(grid/otsikko "Ei tietoja")]
-     (let [viimeinen-rivi (last data)]
-      (into []
-            (map-indexed (fn [index rivi]
-                           (if-let [otsikko (:otsikko rivi)]
-                             (grid/otsikko otsikko)
-                             (let [mappina (zipmap (range (count sarakkeet))
-                                                   rivi)]
-                               (cond-> mappina
-                                       (and viimeinen-rivi-yhteenveto?
-                                            (= viimeinen-rivi rivi))
-                                       (assoc :yhteenveto true)
-                                       (some #(= index %) korosta-rivit)
-                                       (assoc :korosta true))))))
-            data)))])
+  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+    [grid/grid {:otsikko            (or otsikko "")
+                :tunniste           hash
+                :piilota-toiminnot? true}
+     (into []
+           (map-indexed (fn [i sarake]
+                          {:hae                #(get % i)
+                           :leveys             (:leveys sarake)
+                           :otsikko            (:otsikko sarake)
+                           :pakota-rivitys?    (:pakota-rivitys? sarake)
+                           :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
+                           :nimi               (str "sarake" i)
+                           :tasaa              (when (oikealle-tasattavat-kentat i) :oikea)})
+                        sarakkeet))
+     (if (empty? data)
+       [(grid/otsikko "Ei tietoja")]
+       (let [viimeinen-rivi (last data)]
+         (into []
+               (map-indexed (fn [index rivi]
+                              (if-let [otsikko (:otsikko rivi)]
+                                (grid/otsikko otsikko)
+                                (let [mappina (zipmap (range (count sarakkeet))
+                                                      rivi)]
+                                  (cond-> mappina
+                                          (and viimeinen-rivi-yhteenveto?
+                                               (= viimeinen-rivi rivi))
+                                          (assoc :yhteenveto true)
+                                          (some #(= index %) korosta-rivit)
+                                          (assoc :korosta true))))))
+               data)))]))
 
 
 (defmethod muodosta-html :otsikko [[_ teksti]]

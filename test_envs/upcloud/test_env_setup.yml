@@ -9,6 +9,8 @@
     java_name: "{{download_folder}}/jdk1.8.0_60"
     java_archive: "{{download_folder}}/jdk-8u60-linux-x64.tar.gz"
   tasks:
+    - name: disable selinux
+      selinux: state=disabled
     - name: fix hostname
       hostname: name={{harja_hostname}}
     - name: fix hosts
@@ -16,9 +18,8 @@
     - name: install nginx repo rpm
       yum:
         name: http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
-    - name: install postgresql repo rpm
-      yum:
-        name: http://yum.postgresql.org/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-1.noarch.rpm
+    - name: install Postgres repositories
+      yum: name=http://yum.postgresql.org/9.5/redhat/rhel-7-x86_64/pgdg-centos95-9.5-2.noarch.rpm state=present
     - name: install wget
       yum: pkg=wget update_cache=yes state=latest
     - name: install git
@@ -27,14 +28,29 @@
       yum: pkg=python-psycopg2.x86_64 state=latest
     - name: install nginx
       yum: pkg=nginx state=latest
-    - name: install postgresql
-      yum: pkg=postgresql94-server state=latest
+    - name: remove old postgresql
+      yum: pkg=postgresql94 state=absent
+    - name: remove old postgresql server
+      yum: pkg=postgresql94-server state=absent
+    - name: remove old postgresql contrib
+      yum: pkg=postgresql94-contrib state=absent
+    - name: remove old postgis
+      yum: pkg=postgis2_94.x86_64 state=absent
+    - name: install Postgres 9.5
+      yum: name=postgresql95
+    - name: install postgresql-server 9.5
+      yum: pkg=postgresql95-server state=latest
+    - name: install postgresql-contrib 9.5
+      yum: pkg=postgresql95-contrib state=latest
     - name: install postgis
-      yum: pkg=postgis2_94.x86_64 state=latest
-    - name: install pgrouting
-      yum: pkg=pgrouting_94 state=latest
-    - name: install dblink
-      yum: pkg=postgresql94-contrib state=latest
+      yum: pkg=postgis2_95 state=latest
+    - name: update geos
+      yum: pkg=geos state=latest
+    - name: initialize postgres
+      shell: /usr/pgsql-9.5/bin/postgresql95-setup initdb
+      environment:
+        PGSETUP_INITDB_OPTIONS: --encoding=UTF-8 --lc-collate=fi_FI.UTF-8 --lc-ctype=fi_FI.UTF-8
+      ignore_errors: yes
     - name: install maven 3
       yum: pkg=maven.noarch state=latest   
     - name: download java 8
@@ -72,13 +88,8 @@
       command: git clone /opt/harja-repo
       args:
         chdir: "/opt/harja-build"
-    - name: initialize postgres
-      shell: /usr/pgsql-9.4/bin/postgresql94-setup initdb
-      environment:
-        PGSETUP_INITDB_OPTIONS: --encoding=UTF-8 --lc-collate=fi_FI.UTF-8 --lc-ctype=fi_FI.UTF-8
-      ignore_errors: yes
     - name: start postgres
-      service: name=postgresql-9.4 state=started
+      service: name=postgresql-9.5 state=restarted
     - name: set up harja database user
       sudo: yes
       sudo_user: postgres      
@@ -92,11 +103,11 @@
       sudo_user: postgres      
       postgresql_ext: name=postgis db=harja
     - name: configure postgresql.conf
-      template: src=templates/postgresql.conf.j2 dest=/var/lib/pgsql/9.4/data/postgresql.conf owner=postgres group=postgres mode=0600
+      template: src=templates/postgresql.conf.j2 dest=/var/lib/pgsql/9.5/data/postgresql.conf owner=postgres group=postgres mode=0600
       notify:
         - restart postgres
     - name: configure pg_hba.conf
-      template: src=templates/pg_hba.conf.j2 dest=/var/lib/pgsql/9.4/data/pg_hba.conf owner=postgres group=postgres mode=0600
+      template: src=templates/pg_hba.conf.j2 dest=/var/lib/pgsql/9.5/data/pg_hba.conf owner=postgres group=postgres mode=0600
       notify:
         - restart postgres
     - name: upload server key
@@ -131,4 +142,4 @@
     - name: restart nginx
       service: name=nginx state=restarted
     - name: restart postgres
-      service: name=postgresql-9.4 state=restarted
+      service: name=postgresql-9.5 state=restarted

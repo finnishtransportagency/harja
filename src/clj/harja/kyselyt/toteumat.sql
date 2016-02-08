@@ -582,10 +582,6 @@ WHERE
   AND t.paattynyt <= :paattynyt
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
-  AND (:toimenpide :: INTEGER IS NULL OR
-       tk.emo = (SELECT toimenpide
-                 FROM toimenpideinstanssi
-                 WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava);
 
 -- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
