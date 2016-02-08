@@ -29,24 +29,24 @@
                  :sopimus              {:sampoid "00LZM-0033600"}
                  :kustannussuunnitelma {:summa 93999M}
                  :tuotenumero          111
-                 :vuosittaiset-summat    [{:alkupvm "2014-10-01T00:00:00.0",
-                                           :loppupvm "2014-12-31T02:00:00.0",
-                                           :summa 300M}
-                                          {:alkupvm "2015-01-01T02:00:00.0",
-                                           :loppupvm "2015-12-31T02:00:00.0",
-                                           :summa 900M}
-                                          {:alkupvm "2016-01-01T02:00:00.0",
-                                           :loppupvm "2016-12-31T02:00:00.0",
-                                           :summa 0}
-                                          {:alkupvm "2017-01-01T02:00:00.0",
-                                           :loppupvm "2017-12-31T02:00:00.0",
-                                           :summa 0}
-                                          {:alkupvm "2018-01-01T02:00:00.0",
-                                           :loppupvm "2018-12-31T02:00:00.0",
-                                           :summa 0}
-                                          {:alkupvm "2019-01-01T02:00:00.0",
-                                           :loppupvm "2019-09-30T00:00:00.0",
-                                           :summa 0}]})
+                 :vuosittaiset-summat  [{:alkupvm  "2014-01-01T00:00:00.0",
+                                         :loppupvm "2014-12-31T02:00:00.0",
+                                         :summa    300M}
+                                        {:alkupvm  "2015-01-01T02:00:00.0",
+                                         :loppupvm "2015-12-31T02:00:00.0",
+                                         :summa    900M}
+                                        {:alkupvm  "2016-01-01T02:00:00.0",
+                                         :loppupvm "2016-12-31T02:00:00.0",
+                                         :summa    0}
+                                        {:alkupvm  "2017-01-01T02:00:00.0",
+                                         :loppupvm "2017-12-31T02:00:00.0",
+                                         :summa    0}
+                                        {:alkupvm  "2018-01-01T02:00:00.0",
+                                         :loppupvm "2018-12-31T02:00:00.0",
+                                         :summa    0}
+                                        {:alkupvm  "2019-01-01T02:00:00.0",
+                                         :loppupvm "2019-12-31T00:00:00.0",
+                                         :summa    0}]})
 
 (deftest tarkista-kustannussuunnitelman-validius
   (let [kustannussuunnitelma (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
@@ -73,7 +73,7 @@
 
 (deftest tarkista-kulun-jakaminen-vuosille
   (let [segmentit (kustannussuunnitelma-sanoma/luo-summat
-                    [{:alkupvm  "2014-10-01T00:00:00.0",
+                    [{:alkupvm  "2014-01-01T00:00:00.0",
                       :loppupvm "2014-12-31T02:00:00.0",
                       :summa    300M}
                      {:alkupvm  "2015-01-01T02:00:00.0",
