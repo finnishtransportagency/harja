@@ -24,12 +24,13 @@
 ;; Testataan eri tyyppisten elementtien muodostus perustasolla
 
 (deftest otsikko
-  (is (= [:fo:block {:padding-top "5mm" :font-size "16pt"} "TÄMÄ ON OTSIKKO"]
+  (is (= [:fo:block {:padding-top "5mm" :font-size "10pt"} "TÄMÄ ON OTSIKKO"]
          (muodosta-pdf [:otsikko "TÄMÄ ON OTSIKKO"]))))
 
 (deftest teksti
   (is (= [:fo:block
-          {:color nil}
+          {:color nil
+           :font-size "10pt"}
           "TEKSTIÄ"]
          (muodosta-pdf [:teksti "TEKSTIÄ"]))))
 
@@ -80,19 +81,22 @@
                   ([:fo:table-row
                     ([:fo:table-cell
                       {:border  "solid 0.1mm black"
-                       :padding "1mm"}
+                       :padding "1mm"
+                       :text-align "left"}
                       nil
                       [:fo:block
                        "eka"]]
                       [:fo:table-cell
                        {:border  "solid 0.1mm black"
-                        :padding "1mm"}
+                        :padding "1mm"
+                        :text-align "left"}
                        nil
                        [:fo:block
                         "toka"]]
                       [:fo:table-cell
                        {:border  "solid 0.1mm black"
-                        :padding "1mm"}
+                        :padding "1mm"
+                        :text-align "left"}
                        nil
                        [:fo:block
                         "kolmas"]])])]]
@@ -112,7 +116,7 @@
 (deftest yhteenveto
   (let [fo (muodosta-pdf [:yhteenveto [["otsikko" "arvo"]
                                        ["toinen juttu" 4242]]])
-        [_  s1 s2 [_ [r1 r2]]] fo]
+        [_ _  s1 s2 [_ [r1 r2]]] fo]
     (is (= s1 [:fo:table-column {:column-width "25%"}]))
     (is (= s2 [:fo:table-column {:column-width "75%"}]))
     (is (= r1 [:fo:table-row

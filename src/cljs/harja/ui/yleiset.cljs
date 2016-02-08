@@ -85,10 +85,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
      [:span.raksiboksi
       [:div.input-group
        [:div.input-group-addon
-        [:input {:type      "checkbox"
+        [:input.klikattava {:type      "checkbox"
                  :checked   (if checked "checked" "")
                  :on-change #(toiminto-fn %)}]
-        [:span.raksiboksi-teksti {:on-click #(toiminto-fn %)} teksti]]
+        [:span.raksiboksi-teksti.klikattava {:on-click #(toiminto-fn %)} teksti]]
        (when komponentti
          komponentti)]
       (when nayta-infoteksti?

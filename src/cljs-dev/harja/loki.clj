@@ -2,9 +2,12 @@
 
 
 (defmacro mittaa-aika [nimi & body]
-  `(let [nimi# ~nimi]
+  `(let [nimi# ~nimi
+         mittaa-aika?# harja.loki/+mittaa-aika+]
      (try 
-       (.time js/console nimi#)
+       (when mittaa-aika?#
+         (.time js/console nimi#))
        ~@body
-       (finally 
-         (.timeEnd js/console nimi#)))))
+       (finally
+         (when mittaa-aika?#
+           (.timeEnd js/console nimi#))))))

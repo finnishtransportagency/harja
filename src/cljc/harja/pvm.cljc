@@ -418,11 +418,13 @@
      (let [alku (l/to-local-date-time alkupvm)
            loppu (l/to-local-date-time loppupvm)
            paivia-kkssa (t/number-of-days-in-the-month alku)
+           alku-pv (paiva alku)
            loppu-pv (paiva loppu)]
        (and (and (= (vuosi alku)
                     (vuosi loppu))
                  (= (kuukausi alku)
                     (kuukausi loppu)))
+            (= 1 alku-pv)
             (= paivia-kkssa loppu-pv)))))
 
 #?(:clj
@@ -431,8 +433,7 @@
      [alkupvm loppupvm]
 
      (let [alku (l/to-local-date-time alkupvm)
-           loppu (l/to-local-date-time loppupvm)
-           _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu )]
+           loppu (l/to-local-date-time loppupvm)]
        (and (= 1 (paiva alku))
             (= 10 (kuukausi alku))
             (= 30 (paiva loppu))
@@ -474,3 +475,4 @@
                    [[(vuoden-eka-pvm viimeinen-vuosi) loppupvm]])))))
 
 
+(def paivan-aikavali (juxt paivan-alussa paivan-lopussa))

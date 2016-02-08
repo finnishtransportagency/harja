@@ -1,7 +1,7 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.loki :refer [log warn]]
+            [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
             [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
@@ -381,4 +381,5 @@
              asiat)
        {:extent    @extent
         :selitteet @selitteet}))))
+
 

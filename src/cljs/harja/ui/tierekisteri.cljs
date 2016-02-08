@@ -10,7 +10,8 @@
             [harja.tiedot.tierekisteri :as tierekisteri]
             [cljs.core.async :refer [>! <! alts! chan] :as async]
             [harja.geo :as geo]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.napit :as napit])
 
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
@@ -41,12 +42,12 @@
    [:div.tr-valitsin-tila tila-teksti]
    [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])
 
-(defn poistu-tr-valinnasta []
+(defn poistu-tr-valinnasta! []
   (karttatasot/taso-pois! :tr-alkupiste)
-  (kartta/tyhjenna-ohjelaatikko))
+  (kartta/tyhjenna-ohjelaatikko!))
 
-(defn pisteelle-ei-loydy-tieta-ilmoitus []
-  (kartta/aseta-ohjelaatikon-sisalto [:span
+(defn pisteelle-ei-loydy-tieta-ilmoitus! []
+  (kartta/aseta-ohjelaatikon-sisalto! [:span
                                       [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
                                       " "
                                       [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]]))
@@ -65,12 +66,21 @@
    :alkuetaisyys (:aet osoite)
    :geometria (:geometria osoite)})
 
-(defn nayta-alkupiste-ohjelaatikossa [osoite]
-  (kartta/aseta-ohjelaatikon-sisalto [:span.tr-valitsin-ohje
+(defn nayta-alkupiste-ohjelaatikossa! [osoite]
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
                                       (str "Valittu alkupiste: "
                                            (:numero osoite) " / "
                                            (:alkuosa osoite) " / "
                                            (:alkuetaisyys osoite))]))
+
+(defn nayta-ohjeet-ohjelaatikossa! []
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
+                                       "Valitse alkupiste kartalta."]))
+
+(defn tr-kontrollit [peruttu hyvaksytty]
+  [:span.tr-valitsin-ohje
+   [napit/peruuta "Peruuta" peruttu]
+   [napit/hyvaksy hyvaksytty]])
 
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
@@ -97,7 +107,11 @@
         tila (atom :ei-valittu)
         alkupiste (atom nil)
         tr-osoite (atom {})
-        optiot (cljs.core/atom optiot)]
+        optiot (cljs.core/atom optiot)
+        valinta-peruttu (fn [_]
+                          ((:kun-peruttu @optiot))
+                          (poistu-tr-valinnasta!))
+        valinta-hyvaksytty #(go (>! tapahtumat {:tyyppi :enter}))]
 
     ;; voisi olla vieläkin selkeämpi lukea (with-items-from-channel tapahtumat arvo ...) joka generoi (go-loop [] .. (recur)):n
     (with-loop-from-channel tapahtumat arvo
@@ -114,32 +128,36 @@
           :enter
           (when (= @tila :alku-valittu)
             ((:kun-valmis @optiot) @tr-osoite)
-            (poistu-tr-valinnasta))
+            (poistu-tr-valinnasta!))
 
           :click
           (if (= :alku-valittu @tila)
-            (>! vkm-haku (<! (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti)))
+            (do
+              (kartta/aseta-kursori! :progress)
+              (>! vkm-haku (<! (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti))))
             (do
               (reset! alkupiste sijainti)
+              (kartta/aseta-kursori! :progress)
               (>! vkm-haku (<! (vkm/koordinaatti->trosoite sijainti))))))))
 
     (with-loop-from-channel vkm-haku osoite
+      (kartta/aseta-kursori! :crosshair)
       (if (vkm/virhe? osoite)
-        (pisteelle-ei-loydy-tieta-ilmoitus)          
+        (pisteelle-ei-loydy-tieta-ilmoitus!)
         (let [{:keys [kun-valmis paivita]} @optiot]
-          (kartta/tyhjenna-ohjelaatikko)
+          (kartta/tyhjenna-ohjelaatikko!)
           (case @tila
             :ei-valittu
             (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
               (paivita osoite)
               (karttatasot/taso-paalle! :tr-alkupiste)
-              (reset! tila :alku-valittu) 
+              (reset! tila :alku-valittu)
               (reset! tierekisteri/valittu-alkupiste (:geometria osoite))
-              (nayta-alkupiste-ohjelaatikossa osoite))
+              (nayta-alkupiste-ohjelaatikossa! osoite))
 
             :alku-valittu
             (let [osoite (reset! tr-osoite (konvertoi-tr-osoitteeksi osoite))]
-              (poistu-tr-valinnasta)
+              (poistu-tr-valinnasta!)
               (kun-valmis osoite))))))
 
     (let [kartan-koko @nav/kartan-koko]
@@ -153,20 +171,21 @@
                             (reset! nav/kartan-edellinen-koko kartan-koko)
                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
-                            (kartta/aseta-kursori! :crosshair))
+                            (kartta/aseta-kursori! :crosshair)
+                            (kartta/aseta-yleiset-kontrollit!
+                              (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty] {:class "kartan-tr-kontrollit"}))
+                            (nayta-ohjeet-ohjelaatikossa!))
                          #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
-                            (poistu-tr-valinnasta)
+                            (poistu-tr-valinnasta!)
+                            (kartta/tyhjenna-yleiset-kontrollit!)
                             (kartta/aseta-kursori! nil)))
        (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
        (komp/kuuntelija :esc-painettu
-                        (fn [_]
-                          (log "optiot: " @optiot)
-                          ((:kun-peruttu @optiot))
-                          (poistu-tr-valinnasta))
+                        valinta-peruttu
                         :enter-painettu
-                        #(go (>! tapahtumat {:tyyppi :enter})))
+                        valinta-hyvaksytty)
        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
          [:div.tr-valitsin-teksti.form-control
           [:div (case @tila
