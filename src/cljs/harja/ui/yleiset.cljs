@@ -201,10 +201,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
            [:ul.dropdown-menu.livi-alasvetolista {:style (merge {:max-height (fmt/pikseleina @max-korkeus)}
                                                                 (when (= @avautumissuunta :alas)
-                                                                  {:top "calc(100% - 3px)"
+                                                                  {:top "calc(100% - 1px)"
                                                                    :bottom "auto"})
                                                                 (when (= @avautumissuunta :ylos)
-                                                                  {:bottom "calc(100% - 3px)"
+                                                                  {:bottom "calc(100% - 1px)"
                                                                    :top "auto"}))}
             (doall
               (for [vaihtoehto vaihtoehdot]
