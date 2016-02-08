@@ -9,7 +9,8 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
-            [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]))
+            [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]
+            [harja.pvm :as pvm]))
 
 (defn keskilampo-ja-pitkalampo-floatiksi
   [kartta]
@@ -118,26 +119,30 @@
 ;;  :muokattu true
 ;;  :hoitokauden_alkuvuosi 2015}
 (defn tallenna-suolasakko-ja-pohjavesialueet
-  [db user {:keys [hoitokauden-alkuvuosi urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
-  (log/info "TIEDOT: " (pr-str tiedot))
+  [db user {:keys [hoitokaudet urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
+  (log/debug"tallenna-suolasakko-ja-pohjavesialueet tiedot: " (pr-str tiedot))
   (roolit/vaadi-rooli-urakassa user
                                #{roolit/urakanvalvoja}
                                urakka)
-  (jdbc/with-db-transaction [db db]
-    (let [_ (log/debug "tallenna-suolasakko-ja-lampotilat" tiedot)
-          suolasakon-id (tallenna-suolasakko db user urakka hoitokauden-alkuvuosi suolasakko)]
+  (jdbc/with-db-transaction
+    [db db]
+    (doseq [hk hoitokaudet]
+      (let [hoitokauden-alkuvuosi (pvm/vuosi (first hk))
+            suolasakon-id (tallenna-suolasakko db user urakka
+                                               hoitokauden-alkuvuosi suolasakko)]
+        (doseq [{:keys [pohjavesialue talvisuolaraja]} pohjavesialue-talvisuola]
+          (tallenna-pohjavesialue-talvisuola db user urakka
+                                             hoitokauden-alkuvuosi pohjavesialue talvisuolaraja))))
 
-      (doseq [{:keys [pohjavesialue talvisuolaraja]} pohjavesialue-talvisuola]
-        (tallenna-pohjavesialue-talvisuola db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja)))
-
-    (hae-urakan-suolasakot-ja-lampotilat db user urakka)))        
+    (hae-urakan-suolasakot-ja-lampotilat db user urakka)))
 
 
 (defn aseta-suolasakon-kaytto [db user {:keys [urakka-id kaytossa?]}]
   (log/debug "Käytössä? " kaytossa?)
   (roolit/vaadi-urakanvalvoja user urakka-id)
-  (jdbc/with-db-transaction [db db]
-    (q/aseta-suolasakon-kaytto! db kaytossa? urakka-id)
+  (jdbc/with-db-transaction
+    [db db]
+    (q/aseta-suolasakon-kaytto! db kaytossa? (:id user) urakka-id)
     (:kaytossa (first (q/onko-suolasakko-kaytossa? db urakka-id)))))
 
 (defrecord Lampotilat [ilmatieteenlaitos-url]
@@ -170,6 +175,6 @@
                      :hae-teiden-hoitourakoiden-lampotilat
                      :tallenna-teiden-hoitourakoiden-lampotilat
                      :hae-urakan-suolasakot-ja-lampotilat
-                     :tallenna-suolasakko-ja-lampotilat
+                     :tallenna-suolasakko-ja-pohjavesialueet
                      :aseta-suolasakon-kaytto)
     this))
