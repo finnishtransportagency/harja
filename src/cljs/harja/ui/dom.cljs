@@ -78,3 +78,13 @@
   (let [[x1 y1 w1 h1] (sijainti elt)
         [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
     [(- x1 x2) (- y1 y2) w1 h1]))
+
+(defn elementin-etaisyys-alareunaan [solmu]
+    (let [r (.getBoundingClientRect solmu)
+          etaisyys-alareunaan (- @korkeus (.-bottom r))]
+      etaisyys-alareunaan))
+
+(defn elementin-etaisyys-oikeaan-reunaan [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys-alareunaan (- @korkeus (.-left r))]
+    etaisyys-alareunaan))

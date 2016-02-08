@@ -298,7 +298,7 @@ documentation:
     /turvallisuuspoikkeama:
       post:
         is: [secured]
-        description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen.
+        description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen. Vakavat turvallisuuspoikkeamat täytyy raportoida Harjaan 24h kuluessa. Lievät turvallisuuspoikkeamat täytyy taas raportoida 5 vuorokauden sisällä. Käsittelyyn liittyvät tiedot voidaan päivittää myöhemmi lähettämällä uusi kutsu samalla turvallisuuspoikkeaman tunnisteella.
         body:
           application/json:
             example: !include examples/turvallisuuspoikkeamien-kirjaus-request.json
