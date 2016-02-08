@@ -2,4 +2,6 @@
   (:require [taoensso.timbre :as log]))
 
 (defn vastaanota-sahkopostikuittaus [db viesti]
-  (log/info viesti))
+  (log/info "VASTAANOTETAANPA VEISTIÄ: " viesti)
+  nil
+  )

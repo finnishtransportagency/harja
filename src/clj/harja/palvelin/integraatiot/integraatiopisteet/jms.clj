@@ -64,13 +64,13 @@
        (let [viestin-sisalto (.getText viesti)
              correlation-id (.getJMSCorrelationID viesti)
              data (viestiparseri viestin-sisalto)
-             viesti-id (viesti->id data)]
-         (lokittaja :saapunut-jms-viesti viesti-id viestin-sisalto)
+             viesti-id (viesti->id data)
+             tapahtuma-id (lokittaja :saapunut-jms-viesti viesti-id viestin-sisalto)]
          (try 
-           (let [vastaus (kasittelija viesti)
+           (let [vastaus (kasittelija data)
                  vastauksen-sisalto (kuittausmuodostaja vastaus)]
-             (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto viesti-id true "")
-             (sonja/laheta jono-ulos vastaus {:correlation-id correlation-id})
-             (lokittaja :onnistunut vastauksen-sisalto "" viesti-id))
+             (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "")
+             (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id correlation-id}))
            (catch Exception e
-             (lokittaja :epaonnistunut viesti-id ))))))))
+             ;; Hallitsematon virhe viestin käsittelyssä, kirjataan epäonnistunut integraatio
+             (lokittaja :epaonnistunut viestin-sisalto "" tapahtuma-id viesti-id))))))))

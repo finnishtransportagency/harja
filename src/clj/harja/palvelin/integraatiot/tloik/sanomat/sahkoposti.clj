@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.tloik.sanomat.sahkoposti
   (:require [harja.tyokalut.xml :as xml]
-            [clojure.data.zip.xml :as z]))
+            [clojure.data.zip.xml :as z]
+            [harja.pvm :as pvm]))
 
 (def ^:const +xsd-polku+ "xsd/sahkoposti/")
 (def ^:const +sahkoposti-xsd+ "sahkoposti.xsd")
@@ -22,3 +23,17 @@
      :lahettaja (v :lahettaja)
      :otsikko (v :otsikko)
      :sisalto (v :sisalto)}))
+
+(defn kuittaus
+  "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"
+  [{viesti-id :viesti-id} virheet]
+  [:kuittaus
+   [:viestiId viesti-id]
+   [:aika (xml/formatoi-aikaleima (pvm/nyt))]
+   [:onnistunut (nil? virheet)]
+   (when virheet
+     (for [virhe virheet]
+       [:virheet virhe]))])
+
+(defn kirjoita-kuittaus [kuittaus]
+  (xml/tee-xml-sanoma kuittaus))
