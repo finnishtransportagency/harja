@@ -42,11 +42,22 @@
 
 (defn tee-vuosisummat [vuodet summat]
   (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)
-        ota-vuosi #(subs (pvm/aika-iso8601 %) 0 4)]
+        vuoden-ensimmainen-paiva #(pvm/vuoden-eka-pvm (pvm/vuosi %))
+        vuoden-viimeinen-paiva #(pvm/vuoden-viim-pvm (pvm/vuosi %))
+        formatteri (clj-time.format/with-zone (clj-time.format/formatter "yyyy-MM-dd hh:mm:ss") (clj-time.core/time-zone-for-id "EET"))
+        formatoi-vuosi #(clj-time.format/unparse formatteri (clj-time.coerce/from-sql-date %))]
     (mapv (fn [vuosi]
             (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
-              {:alkupvm  (str (ota-vuosi (:alkupvm vuosi)) "-01-01T00:00:00.0")
-               :loppupvm (str (ota-vuosi (:loppupvm vuosi)) "-12-31T00:00:00.0")
+              (println "alku: " (formatoi-vuosi (vuoden-ensimmainen-paiva(:alkupvm vuosi))))
+              (println "loppu: " (formatoi-vuosi (vuoden-viimeinen-paiva(:loppupvm vuosi))))
+
+              ;; todo: jatka tästä http://www.coderanch.com/t/547230/java/java/java-util-Date-getYear-method
+              (def aika (java.util.Calendar/getInstance))
+              (.setTime (java.util.Calendar/getInstance) (pvm/nyt))
+              (.get aika java.util.Calendar/YEAR)
+
+              {:alkupvm  (vuoden-ensimmainen-paiva (:alkupvm vuosi))
+               :loppupvm (vuoden-viimeinen-paiva (:loppupvm vuosi))
                :summa    summa}))
           vuodet)))
 
