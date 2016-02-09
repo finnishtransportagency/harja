@@ -46,4 +46,4 @@
   (mapv
     (fn [_]
       (hae-vapaa-toteuma-ulkoinen-id))
-    (range 10)))
+    (range maara)))
