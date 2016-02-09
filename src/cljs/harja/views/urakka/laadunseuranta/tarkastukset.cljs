@@ -125,7 +125,7 @@
                  :validoi [#(when-not (<= -55 %1 55)
                               "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
                  :nimi :lampotila_ilma
-                 :hae (comp :tie :lampotila_ilma :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :ilma] %2)}
+                 :hae (comp :ilma :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :ilma] %2)}
                 {:otsikko "Tien lämpötila" :tyyppi :numero :yksikko "\u2103"
                  :validoi [#(when-not (<= -55 %1 55)
                              "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
