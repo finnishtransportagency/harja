@@ -232,4 +232,4 @@ SELECT
   p.varahenkilo
 FROM paivystys p
   INNER JOIN yhteyshenkilo yh ON p.yhteyshenkilo = yh.id
-WHERE urakka = :urakkaid AND now() BETWEEN p.alku AND p.loppu;
+WHERE urakka = :urakkaid AND ((now() BETWEEN p.alku AND p.loppu ) OR (now() <= p.alku and loppu is null ) );

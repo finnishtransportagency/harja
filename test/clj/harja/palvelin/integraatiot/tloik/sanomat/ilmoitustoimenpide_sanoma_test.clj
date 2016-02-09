@@ -46,7 +46,6 @@
 (deftest tarkista-sisalto
   (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ "123"))
         data (xml-zip (parse (ByteArrayInputStream. (.getBytes xml "UTF-8"))))]
-    (println data)
     (is (= "12345" (z/xml1-> data :ilmoitusId z/text)))
     (is (= "Soitan kunhan kerkeän" (z/xml1-> data :vapaateksti z/text)))
     (is (= "vastaus" (z/xml1-> data :tyyppi z/text)))

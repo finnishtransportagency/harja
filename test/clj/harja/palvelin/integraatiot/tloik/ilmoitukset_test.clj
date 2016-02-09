@@ -13,8 +13,8 @@
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
-
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+            [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]))
 
 (def kayttaja "jvh")
 
@@ -30,7 +30,12 @@
                       +tloik-ilmoituskuittausjono+
                       +tloik-ilmoitustoimenpideviestijono+
                       +tloik-ilmoitustoimenpidekuittausjono+)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat])))
+             [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])
+    :labyrintti (component/using
+                  (->Labyrintti "http://localhost:28080/sendsms"
+                                "solita-2"
+                                "ne8aCrasesev")
+                  [:db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 (use-fixtures :once jarjestelma-fixture)
@@ -61,7 +66,7 @@
   (poista-ilmoitus))
 
 ;; fixme: poistettu flaky testi, feilaili oudosti
-#_(deftest tarkista-viestin-kasittely-ja-kuittaukset
+(deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
     (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))

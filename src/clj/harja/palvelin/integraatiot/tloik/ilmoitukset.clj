@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
             [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def +xsd-polku+ "xsd/tloik/")
@@ -19,7 +20,7 @@
   (lokittaja :lahteva-jms-kuittaus kuittaus tapahtuma-id onnistunut lisatietoja)
   (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
 
-(defn vastaanota-ilmoitus [sonja lokittaja tapahtumat db kuittausjono viesti]
+(defn vastaanota-ilmoitus [sonja lokittaja sms tapahtumat db kuittausjono viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
@@ -31,6 +32,8 @@
         (try+
           (let [urakka-id (jdbc/with-db-transaction [transaktio db] (ilmoitus/kasittele-ilmoitus transaktio ilmoitus))
                 urakka (first (urakat/hae-urakka db urakka-id))]
+            (paivystajaviestit/laheta-paivystajalle sms db ilmoitus urakka-id)
+            ;; todo: liitä paivystäjätiedot kuittauksen välitystietoihin
             (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
             (notifikaatiot/kun-ilmoitus-lahetetty
               tapahtumat ilmoitus-id
