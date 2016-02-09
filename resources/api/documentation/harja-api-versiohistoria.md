@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 0.0.6</b>
+<b>Nykyinen versio: 0.0.8</b>
 <b>Julkaistu: 11.12.2015</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.8. Julkaistu: 9.2.2016
+    - Pistetoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "pistetoteumat" avaimen alle
+    - Reittitoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "reittitoteumat" avaimen alle
+    - Muutokset ovat taaksepäinyhteensopivia, eli toteumia on edelleen mahdollista kirjata myös yksi samalla tavalla kuin aiemmin.
 - Versionumero: 0.0.7. Julkaistu: 27.1.2016
     - Siltatunnus lisätty siltatarkastuksiin
 - Versionumero: 0.0.6. Julkaistu: 11.12.2015 . Muutokset:
