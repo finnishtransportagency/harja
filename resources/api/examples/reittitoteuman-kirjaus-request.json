@@ -147,5 +147,145 @@
         }
       }
     ]
-  }
+  },
+  "reittitoteumat": [
+    {
+      "reittitoteuma": {
+        "toteuma": {
+          "tunniste": {
+            "id": 64554456
+          },
+          "suorittaja": {
+            "nimi": "Tehotekijät Oy",
+            "ytunnus": "8765432-1"
+          },
+          "sopimusId": 1,
+          "alkanut": "2016-01-30T12:00:00Z",
+          "paattynyt": "2016-02-01T12:00:00Z",
+          "toteumatyyppi": "kokonaishintainen",
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1359,
+                "maara": {
+                  "yksikko": "km",
+                  "maara": 123
+                }
+              }
+            },
+            {
+              "tehtava": {
+                "id": 1360,
+                "maara": {
+                  "yksikko": "km",
+                  "maara": 123
+                }
+              }
+            }
+          ],
+          "materiaalit": [
+            {
+              "materiaali": "Talvisuolaliuos NaCl",
+              "maara": {
+                "yksikko": "kg",
+                "maara": 4.62
+              }
+            }
+          ]
+        },
+        "reitti": [
+          {
+            "reittipiste": {
+              "aika": "2016-01-30T12:00:00Z",
+              "koordinaatit": {
+                "x": 448353,
+                "y": 7225182
+              },
+              "tehtavat": [
+                {
+                  "tehtava": {
+                    "id": 1359
+                  }
+                },
+                {
+                  "tehtava": {
+                    "id": 1360
+                  }
+                }
+              ],
+              "materiaalit": [
+                {
+                  "materiaali": "Talvisuolaliuos NaCl",
+                  "maara": {
+                    "yksikko": "kg",
+                    "maara": 1.32
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "reittipiste": {
+              "aika": "2016-01-30T13:00:00Z",
+              "koordinaatit": {
+                "x": 455574,
+                "y": 7227716
+              },
+              "tehtavat": [
+                {
+                  "tehtava": {
+                    "id": 1359
+                  }
+                },
+                {
+                  "tehtava": {
+                    "id": 1360
+                  }
+                }
+              ],
+              "materiaalit": [
+                {
+                  "materiaali": "Talvisuolaliuos NaCl",
+                  "maara": {
+                    "yksikko": "kg",
+                    "maara": 0.9
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "reittipiste": {
+              "aika": "2016-01-30T13:00:00Z",
+              "koordinaatit": {
+                "x": 459628,
+                "y": 7223852
+              },
+              "tehtavat": [
+                {
+                  "tehtava": {
+                    "id": 1359
+                  }
+                },
+                {
+                  "tehtava": {
+                    "id": 1360
+                  }
+                }
+              ],
+              "materiaalit": [
+                {
+                  "materiaali": "Talvisuolaliuos NaCl",
+                  "maara": {
+                    "yksikko": "kg",
+                    "maara": 2.4
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
 }
