@@ -119,7 +119,6 @@
      "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
      "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
     [:br]
-
     (when (:kasittelija kuittaus)
       ^{:key "kasittelija"}
       [yleiset/tietoja {}
