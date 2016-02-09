@@ -95,7 +95,7 @@
   (f/with-zone (f/formatters :date-hour-minute-second)  (org.joda.time.DateTimeZone/forID "EET")))
 
 (defn parsi-xsd-datetime [teksti]
-  (f/parse xsd-datetime-fmt teksti))
+  (tc/to-date (f/parse xsd-datetime-fmt teksti)))
 
 (defn formatoi-xsd-datetime [date]
   (f/unparse xsd-datetime-fmt
