@@ -270,4 +270,4 @@
                                   :toimenpide nil
                                   :tehtava    nil})]
     (is (>= (count toteumat) 2))
-    (is (>= (count (:reittipisteet (first toteumat))) 3))))
+    (is (some #(> (count (:reittipisteet %)) 3) toteumat))))
