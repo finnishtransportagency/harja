@@ -66,6 +66,7 @@
   (poista-ilmoitus))
 
 ;; fixme: poistettu flaky testi, feilaili oudosti
+;; todo: kommentoi pois
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
