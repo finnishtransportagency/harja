@@ -27,9 +27,9 @@
                                 {:sisalto body :otsikot headers})))))
 
 (defn vastaanota-tekstiviesti [db integraatioloki request]
+  (spit "/Users/mikkoro/Desktop/sms-viesti.txt" (format "\n\nVastaanotettiin viesti: %s " request) :append true)
   (println (format "Vastaanotettiin viesti: %s " request))
-  {:status 200
-   :body "ok"})
+  {:status 200})
 
 (defrecord Labyrintti [url kayttajatunnus salasana]
   component/Lifecycle
