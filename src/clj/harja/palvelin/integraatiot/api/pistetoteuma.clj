@@ -37,7 +37,10 @@
     (doseq [pistetoteuma (:pistetoteumat data)]
       (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma)))))
 
-(defn tarkista-kaikki-pyynnon-pistetoteumat [db urakka-id data]
+(defn tarkista-pyynto [db urakka-id kirjaaja data]
+  (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :pistetoteuma :pistetoteumat data)]
+    (doseq [sopimus-id sopimus-idt]
+      (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:pistetoteuma data)
     (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:pistetoteuma :toteuma :tehtavat])))
   (doseq [pistetoteuma (:pistetoteumat data)]
@@ -46,8 +49,7 @@
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi pistetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (tarkista-kaikki-pyynnon-pistetoteumat db urakka-id data)
+    (tarkista-pyynto db urakka-id kirjaaja data)
     (tallenna-kaikki-pyynnon-pistetoteumat db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
