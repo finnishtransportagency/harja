@@ -6,6 +6,7 @@
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clj-time.format :as f]
+            [clj-time.coerce :as tc]
             [clojure.data.zip.xml :as z])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
@@ -89,6 +90,18 @@
 
 (defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
+
+(def xsd-datetime-fmt
+  (f/with-zone (f/formatters :date-hour-minute-second)  (org.joda.time.DateTimeZone/forID "EET")))
+
+(defn parsi-xsd-datetime [teksti]
+  (f/parse xsd-datetime-fmt teksti))
+
+(defn formatoi-xsd-datetime [date]
+  (f/unparse xsd-datetime-fmt
+             (if (instance? java.util.Date date)
+               (tc/from-date date)
+               date)))
 
 (defn json-date-time->joda-time
   "Muuntaa JSONin date-time -formaatissa olevan stringin (esim. 2016-01-30T12:00:00.000)
