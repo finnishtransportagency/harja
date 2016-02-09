@@ -68,6 +68,7 @@
                                 [true (viestiparseri viestin-sisalto)]
                                 (catch Exception e
                                   [false e]))]
+         (log/debug "Viesti parsinta onnistui? " onnistui?)
          (if onnistui?
            ;; Viestin parsinta onnistui, yritetään käsitellä se
            (try 
