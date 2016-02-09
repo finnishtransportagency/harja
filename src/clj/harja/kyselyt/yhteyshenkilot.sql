@@ -95,7 +95,6 @@ FROM kayttaja_urakka_rooli kur
 WHERE kur.urakka = :urakka
       AND kur.poistettu = FALSE AND k.poistettu = FALSE;
 
-
 -- name: hae-yhteyshenkilotyypit
 -- Hakee käytetyt yhteyshenkilötyypit
 SELECT DISTINCT (rooli)
@@ -141,7 +140,6 @@ DELETE FROM yhteyshenkilo
 WHERE id = :id AND id IN (SELECT yhteyshenkilo
                           FROM yhteyshenkilo_urakka
                           WHERE urakka = :urakka);
-
 
 -- name: poista-paivystaja!
 -- Poista päivystäjän annetusta urakasta.,
@@ -232,4 +230,7 @@ SELECT
   p.varahenkilo
 FROM paivystys p
   INNER JOIN yhteyshenkilo yh ON p.yhteyshenkilo = yh.id
-WHERE urakka = :urakkaid AND ((now() BETWEEN p.alku AND p.loppu ) OR (now() <= p.alku and loppu is null ) );
+WHERE
+  urakka = :urakkaid AND
+  ((now() BETWEEN p.alku AND p.loppu) OR
+   (now() <= p.alku AND loppu IS NULL));
