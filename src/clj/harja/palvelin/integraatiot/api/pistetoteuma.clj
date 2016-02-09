@@ -18,12 +18,12 @@
   (let [vastauksen-data {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn tallenna-toteuma [db urakka-id kirjaaja data]
+(defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja pistetoteuma]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma (assoc (get-in data [:pistetoteuma :toteuma]) :reitti nil)
+    (let [toteuma (assoc (:toteuma pistetoteuma) :reitti nil)
           toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
-          sijainti (get-in data [:pistetoteuma :sijainti])
-          aika (aika-string->java-sql-date (get-in data [:pistetoteuma :toteuma :alkanut]))]
+          sijainti (:sijainti pistetoteuma)
+          aika (aika-string->java-sql-date (get-in pistetoteuma [:toteuma :alkanut]))]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
       (log/debug "Aloitetaan sijainnin tallennus")
       (api-toteuma/tallenna-sijainti transaktio sijainti aika toteuma-id)
@@ -35,7 +35,9 @@
     (log/debug "Kirjataan uusi pistetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:pistetoteuma :toteuma :tehtavat]))
-    (tallenna-toteuma db urakka-id kirjaaja data)
+    (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data))
+    (doseq [pistetoteuma (:pistetoteumat data)]
+      (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma)))
     (tee-onnistunut-vastaus)))
 
 (defrecord Pistetoteuma []
