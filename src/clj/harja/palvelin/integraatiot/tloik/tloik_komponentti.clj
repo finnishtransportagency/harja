@@ -1,15 +1,17 @@
 (ns harja.palvelin.integraatiot.tloik.tloik-komponentti
-  (:require [taoensso.timbre :as log]
-            [hiccup.core :refer [html]]
-            [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.tloik.ilmoitukset :as ilmoitukset]
-            [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
-            [harja.palvelin.integraatiot.tloik.kuittaukset :as kuittaukset]
-            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
+  (:require [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
-            [harja.palvelin.integraatiot.tloik.sanomat.sahkoposti :as sahkoposti]))
+            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
+            [harja.palvelin.integraatiot.tloik
+             [ilmoitukset :as ilmoitukset]
+             [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+             [kuittaukset :as kuittaukset]]
+            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma
+             :as
+             tloik-kuittaus-sanoma]
+            [harja.palvelin.komponentit.sonja :as sonja]
+            [hiccup.core :refer [html]]
+            [taoensso.timbre :as log]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -37,13 +39,6 @@
                                 (fn [_ viesti-id onnistunut]
                                   (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
-(defn tee-sahkopostikuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono]
-  (jms/kuuntele-ja-kuittaa (tee-lokittaja this) sonja
-                           sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono
-                           sahkoposti/lue-sahkoposti sahkoposti/kirjoita-kuittaus
-                           (fn [viesti]
-                             (let [virheet (kuittaukset/vastaanota-sahkopostikuittaus db viesti)]
-                               (sahkoposti/kuittaus viesti virheet)))))
 
 (defrecord Tloik [jonot]
   component/Lifecycle

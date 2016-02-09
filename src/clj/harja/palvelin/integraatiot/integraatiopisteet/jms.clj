@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.kyselyt.integraatiot :as q])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-epaonnistunut-lahetys [lokittaja tapahtuma-id virheviesti]
@@ -81,3 +82,8 @@
            ;; Viestin parsinta epäonnistui, kirjataan suoraan epäonnistunut integraatio
            (lokittaja :epaonnistunut viestin-sisalto (str "Viestin lukeminen epäonnistui" (.getMessage data))
                       tapahtuma-id ulkoinen-id)))))))
+
+(defn kasittele-kuittaus
+  "Yleinen kuittauskäsittelijä, joka merkitsee integraatiotapahtuman päättyneeksi ulkoisen id:n perusteella"
+  [db integraatio-jarjestelma integraatio-nimi]
+  (fn [viesti ]))

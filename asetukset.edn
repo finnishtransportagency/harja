@@ -52,11 +52,13 @@
  :tloik                {:ilmoitusviestijono     "Harja.T-LOIKToHarja.Msg"
                         :ilmoituskuittausjono   "Harja.T-LOIKToHarja.Ack"
                         :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
-                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
-                        :sahkoposti-sisaan-jono "Harja.EmailToHarja.Msg"
-                        :sahkoposti-sisaan-kuittausjono "Harja.EmailToHarja.Ack"
-                        :sahkoposti-ulos-jono "Harja.HarjaToEmail.Msg"
-                        :sahkoposti-ulos-kuittausjono "Harja.HarjaToEmail.Ack"}
+                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}
+
+ :sonja-sahkoposti {:sahkoposti-sisaan-jono "Harja.EmailToHarja.Msg"
+                    :sahkoposti-sisaan-kuittausjono "Harja.EmailToHarja.Ack"
+                    :sahkoposti-ulos-jono "Harja.HarjaToEmail.Msg"
+                    :sahkoposti-ulos-kuittausjono "Harja.HarjaToEmail.Ack"}
+ 
  :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
 
  :integraatiot         {:paivittainen-lokin-puhdistusaika nil}
