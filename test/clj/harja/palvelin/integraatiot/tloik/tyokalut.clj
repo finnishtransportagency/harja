@@ -23,6 +23,7 @@
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
   <otsikko>Korkeat vallit</otsikko>
+  <lyhytSelite>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lyhytSelite>
   <pitkaSelite>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</pitkaSelite>
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>

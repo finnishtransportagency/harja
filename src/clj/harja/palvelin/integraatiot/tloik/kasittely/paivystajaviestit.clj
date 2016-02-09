@@ -5,15 +5,17 @@
             [harja.domain.ilmoitusapurit :as apurit]))
 
 
+(def +ilmoitustekstiviesti+ "Uusi toimenpidepyyntö: %s (id: %s). \n\n%s\n\nSelitteet: %s.\n\nVastaa viestiin: \nV = vastaanotettu, \nA = aloitettu, \nL = lopetettu.")
+
 (defn laheta-ilmoitus-tekstiviestilla [sms ilmoitus paivystaja]
   ;; todo: mieti miten hanskataan poikkeukset, jos lähetys ei onnistu
   (if-let [puhelinnumero (or (:matkapuhelin paivystaja) (:tyopuhelin paivystaja))]
-    (let [viesti (format "Uusi toimenpidepyyntö (%s): %s: %s. Selitteet: (%s). Vastaa viestiin: V = vastaanotettu, A = aloitettu, L = lopetettu."
-                         (:ilmoitus-id ilmoitus)
+    (let [selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
+          viesti (format +ilmoitustekstiviesti+
                          (:otsikko ilmoitus)
+                         (:ilmoitus-id ilmoitus)
                          (:lyhytselite ilmoitus)
-                         ;; todo: parsi selitteet
-                         (:selitteet ilmoitus))]
+                         selitteet)]
       (sms/laheta sms puhelinnumero viesti)
       ;; todo: kirjaa uusi päivystäjäviesti kantaan
       )
