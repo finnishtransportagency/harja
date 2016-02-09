@@ -218,3 +218,18 @@ SELECT exists(
     SELECT id
     FROM paivystys
     WHERE yhteyshenkilo = :yhteyshenkilo);
+
+-- name: hae-urakan-taman-hetkiset-paivystajat
+SELECT
+  yh.etunimi,
+  yh.sukunimi,
+  yh.matkapuhelin,
+  yh.tyopuhelin,
+  yh.sahkoposti,
+  p.alku,
+  p.loppu,
+  p.vastuuhenkilo,
+  p.varahenkilo
+FROM paivystys p
+  INNER JOIN yhteyshenkilo yh ON p.yhteyshenkilo = yh.id
+WHERE urakka = :urakkaid AND now() BETWEEN p.alku AND p.loppu;
