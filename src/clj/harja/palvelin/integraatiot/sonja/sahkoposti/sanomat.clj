@@ -30,11 +30,11 @@
 
 (defn sahkoposti
   "Luo sähköpostiviestin JMS sanoman"
-  [lahettaja vastaanottaja otsikko sisalto]
+  [viesti-id lahettaja vastaanottaja otsikko sisalto]
   [:sahkoposti:sahkoposti {:xmlns:sahkoposti +sahkoposti-ns+}
-   [:viestiId (str (java.util.UUID/randomUUID))]
-   [:lahettaja lahettaja]
+   [:viestiId viesti-id]
    [:vastaanottajat [:vastaanottaja vastaanottaja]]
+   [:lahettaja lahettaja]
    [:otsikko otsikko]
    [:sisalto sisalto]])
 
