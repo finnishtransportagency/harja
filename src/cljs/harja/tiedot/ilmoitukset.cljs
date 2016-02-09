@@ -19,6 +19,8 @@
 (defonce valittu-ilmoitus (atom nil))
 (defonce uusi-kuittaus-auki? (atom false))
 
+(tarkkaile! "----> Valittu ilmoitus: " valittu-ilmoitus)
+
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
                              :urakoitsija     (:id @nav/valittu-urakoitsija)

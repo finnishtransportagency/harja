@@ -103,7 +103,7 @@
     uusi-kuittaus))
 
 (defn kuittauksen-tiedot [kuittaus]
-  ^{:key (str "kuittaus-paneeli-" (:id kuittaus)) }
+  ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
   [bs/panel
    {:class "kuittaus-viesti"}
    (capitalize (name (:kuittaustyyppi kuittaus)))
@@ -117,5 +117,13 @@
     [yleiset/tietoja {}
      "Kuittaaja: " (apurit/nayta-henkilo (:kuittaaja kuittaus))
      "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
-     "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]]])
+     "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
+    [:br]
+
+    (when (:kasittelija kuittaus)
+      ^{:key "kasittelija"}
+      [yleiset/tietoja {}
+       "Käsittelijä: " (apurit/nayta-henkilo (:kasittelija kuittaus))
+       "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
+       "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
 
