@@ -107,8 +107,8 @@ WHERE urakka = :urakka AND id = :id;
 -- Luo uuden talvihoitomittauksen annetulle tarkastukselle.
 INSERT
 INTO talvihoitomittaus
-(talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila, ajosuunta, tarkastus)
-VALUES (:talvihoitoluokka, :lumimaara, :tasaisuus, :kitka, :lampotila, :ajosuunta, :tarkastus)
+(talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta, tarkastus)
+VALUES (:talvihoitoluokka, :lumimaara, :tasaisuus, :kitka, :lampotila_ilma, :lampotila_tie, :ajosuunta, :tarkastus)
 
 -- name: paivita-talvihoitomittaus!
 -- Päivittää tarkastuksen aiemmin luodun talvihoitomittauksen.
@@ -117,7 +117,8 @@ SET talvihoitoluokka = :talvihoitoluokka,
   lumimaara          = :lumimaara,
   tasaisuus          = :tasaisuus,
   kitka              = :kitka,
-  lampotila          = :lampotila,
+  lampotila_ilma     = :lampotila_ilma,
+  lampotila_tie      = :lampotila_tie,
   ajosuunta          = :ajosuunta
 WHERE tarkastus = :tarkastus
 

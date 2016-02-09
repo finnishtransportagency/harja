@@ -52,7 +52,8 @@
         "lumimaara": 15,
         "tasaisuus": 5,
         "kitka": 3.2,
-        "lampotila": -10
+        "lampotilaIlma": -10,
+        "lampotilaTie": -10
       }
     }
   ]
