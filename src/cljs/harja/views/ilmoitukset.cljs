@@ -86,7 +86,7 @@
   (tiedot/hae-ilmoitukset)
   (komp/luo
     (fn []
-      [:span
+      [:span.ilmoitukset
        [lomake/lomake
         {:luokka   :horizontal
          :muokkaa! (fn [uusi]
@@ -101,13 +101,13 @@
 
         [(when @nav/valittu-urakka
            {:nimi          :hoitokausi
-            :palstoja      2
+            :palstoja      1
             :otsikko       "Hoitokausi"
             :tyyppi        :valinta
             :valinnat      @u/valitun-urakan-hoitokaudet
             :valinta-nayta fmt/pvm-vali-opt})
 
-         (lomake/ryhma {:ulkoasu :rivi :otsikko "Saapunut" :palstoja 2}
+         (lomake/ryhma {:ulkoasu :rivi :palstoja 2}
                        {:nimi     :saapunut-alkaen
                         :hae      (comp first :aikavali)
                         :aseta    #(assoc-in %1 [:aikavali 0] %2)
@@ -128,7 +128,7 @@
           :pituus-max  64
           :palstoja    2}
 
-         (lomake/ryhma {:ulkoasu :rivi :otsikko "Valinnat"}
+         (lomake/ryhma {:ulkoasu :rivi}
                        {:nimi        :tilat :otsikko "Tila"
                         :tyyppi      :boolean-group
                         :vaihtoehdot [:suljetut :avoimet]}
