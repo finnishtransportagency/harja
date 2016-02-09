@@ -19,25 +19,30 @@
     vastauksen-data))
 
 (defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja pistetoteuma]
+  (log/debug "Käsitellään yksittäinen pistetoteuma tunnisteella " (get-in pistetoteuma [:toteuma :tunniste :id]))
+  (let [toteuma (assoc (:toteuma pistetoteuma) :reitti nil)
+        toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)
+        sijainti (:sijainti pistetoteuma)
+        aika (aika-string->java-sql-date (get-in pistetoteuma [:toteuma :alkanut]))]
+    (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+    (log/debug "Aloitetaan sijainnin tallennus")
+    (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
+    (log/debug "Aloitetaan toteuman tehtävien tallennus")
+    (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)))
+
+(defn tallenna-kaikki-pyynnon-pistetoteumat [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
-    (let [toteuma (assoc (:toteuma pistetoteuma) :reitti nil)
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
-          sijainti (:sijainti pistetoteuma)
-          aika (aika-string->java-sql-date (get-in pistetoteuma [:toteuma :alkanut]))]
-      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-      (log/debug "Aloitetaan sijainnin tallennus")
-      (api-toteuma/tallenna-sijainti transaktio sijainti aika toteuma-id)
-      (log/debug "Aloitetaan toteuman tehtävien tallennus")
-      (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id))))
+    (when (:pistetoteuma data)
+      (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data)))
+    (doseq [pistetoteuma (:pistetoteumat data)]
+      (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma)))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi pistetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:pistetoteuma :toteuma :tehtavat]))
-    (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data))
-    (doseq [pistetoteuma (:pistetoteumat data)]
-      (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma)))
+    (tallenna-kaikki-pyynnon-pistetoteumat db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
 (defrecord Pistetoteuma []
