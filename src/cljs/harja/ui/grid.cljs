@@ -206,9 +206,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
           (if (or (nil? muokattava?) (muokattava? rivi))
             ^{:key (str nimi)}
             [:td {:class (str tasaus-luokka (if-not (empty? kentan-virheet)
-                                              " sisaltaa-virheen")
-                              (when-not (empty? kentan-varoitukset)
-                                " sisaltaa-varoituksen"))}
+                                              " sisaltaa-virheen"
+                                              (when-not (empty? kentan-varoitukset)
+                                                " sisaltaa-varoituksen")))}
              (if-not (empty? kentan-virheet)
                (virheen-ohje kentan-virheet)
                (if-not (empty? kentan-varoitukset)
