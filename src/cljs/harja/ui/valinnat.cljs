@@ -99,7 +99,10 @@
              (fn [uusi-arvo]
                (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)]
                  (if-not aikavalin-rajoitus
-                   (reset! valittu-aikavali-atom [uusi-arvo (second @valittu-aikavali-atom)])
+                   ;; Varmista että alku ei ole lopun jälkeen
+                   (reset! valittu-aikavali-atom (pvm/varmista-aikavali
+                                                   [uusi-arvo (second @valittu-aikavali-atom)]
+                                                   :alku))
 
                    (reset! valittu-aikavali-atom (pvm/varmista-aikavali
                                                    [uusi-arvo (second @valittu-aikavali-atom)]
