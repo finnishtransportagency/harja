@@ -444,8 +444,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   siitä, kumpi arvoista oli muokattu.
 
   - Aikaväli: [alku loppu]
-  - Maksimi: [montako mitä], mitä on :paiva, :kuukausi tai :vuosi. montako on kokonaisluku,
-    jos haluttu aikaväli on yksi kuukausi, niin montako on 1.
+  - Maksimi: [montako mitä], mitä on :paiva, :kuukausi tai :vuosi. montako on kokonaisluku.
+    jos haluttu aikaväli on esim yksi kuukausi, niin montako on 1.
   - Valittu: Keyword joka kertoo, kumpi aikavälin arvoista valittiin, eli kumpi pysyy vakiona,
     jos palautettavaa aikaväliä joudutaan muokkaamaan."
   ([[alku loppu] [n yksikko :as maksimi] valittu]
