@@ -54,7 +54,8 @@ SELECT
   thm.lumimaara        AS talvihoitomittaus_lumimaara,
   thm.tasaisuus        AS talvihoitomittaus_tasaisuus,
   thm.kitka            AS talvihoitomittaus_kitka,
-  thm.lampotila        AS talvihoitomittaus_lampotila,
+  thm.lampotila_tie    AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma   AS talvihoitomittaus_lampotila_ilma,
   thm.ajosuunta        AS talvihoitomittaus_ajosuunta
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
@@ -246,7 +247,8 @@ SELECT
   thm.lumimaara,
   thm.tasaisuus,
   thm.kitka,
-  thm.lampotila,
+  thm.lampotila_ilma,
+  thm.lampotila_tie,
   thm.ajosuunta,
   liite.id   as liite_id,
   liite.nimi as liite_nimi
@@ -277,7 +279,8 @@ SELECT
   thm.lumimaara,
   thm.tasaisuus,
   thm.kitka,
-  thm.lampotila,
+  thm.lampotila_ilma,
+  thm.lampotila_tie,
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
@@ -311,7 +314,8 @@ SELECT
   thm.lumimaara,
   thm.tasaisuus,
   thm.kitka,
-  thm.lampotila,
+  thm.lampotila_ilma,
+  thm.lampotila_tie,
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
