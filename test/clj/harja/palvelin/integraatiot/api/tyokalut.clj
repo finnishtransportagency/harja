@@ -43,7 +43,11 @@
     (if (empty? vastaus) id (recur))))
 
 (defn hae-usea-vapaa-toteuma-ulkoinen-id [maara]
-  (mapv
-    (fn [_]
-      (hae-vapaa-toteuma-ulkoinen-id))
+  (reduce
+    (fn [edellinen index]
+      (let [id (hae-vapaa-toteuma-ulkoinen-id)]
+        (if (some #(= % id) edellinen)
+          (recur edellinen index)
+          (conj edellinen id))))
+    []
     (range maara)))
