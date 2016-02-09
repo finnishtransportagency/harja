@@ -56,6 +56,30 @@
             (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm hoitokausi-alku)
                  " - " (pvm/pvm hoitokausi-loppu)))))))
 
+(defmethod validoi-saanto :valitun-kkn-aikana-urakan-hoitokaudella [_ _ data _ _ & [viesti]]
+  (let [urakka @nav/valittu-urakka
+        alkupvm (:alkupvm urakka)
+        loppupvm (:loppupvm urakka)
+        hoitokausi-alku (first @u/valittu-hoitokausi)
+        hoitokausi-loppu (second @u/valittu-hoitokausi)
+        urakan-aikana? (and data alkupvm loppupvm
+                            (pvm/valissa? data alkupvm loppupvm))
+        hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))
+        [valittu-kk-alkupvm valittu-kk-loppupvm] @u/valittu-hoitokauden-kuukausi
+        valitun-kkn-aikana? (and data valittu-kk-alkupvm valittu-kk-loppupvm
+                                (pvm/valissa? data valittu-kk-alkupvm valittu-kk-loppupvm))]
+    (if (false? urakan-aikana?)
+      (or viesti
+          (str "Päivämäärä ei ole urakan aikana (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")"))
+      (if (false? hoitokaudella?)
+        (or viesti
+            (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm hoitokausi-alku)
+                 " - " (pvm/pvm hoitokausi-loppu)))
+        (when-not valitun-kkn-aikana?
+          (or viesti
+              (str "Päivämäärä ei ole valitun kuukauden aikana (" (pvm/pvm valittu-kk-alkupvm)
+                   " \u2014 " (pvm/pvm valittu-kk-loppupvm) ")")))))))
+
 (defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi taulukko & [setti-atom viesti]]
   "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
   (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str @setti-atom))
