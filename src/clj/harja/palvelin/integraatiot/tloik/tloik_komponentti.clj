@@ -47,12 +47,10 @@
                   sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono]} jonot]
       (assoc this
              :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)
-             :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija this toimenpidekuittausjono)
-             :sonja-sahkopostikuittauskuuntelija (tee-sahkopostikuittauskuuntelija this sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono))))
+             :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija this toimenpidekuittausjono))))
   (stop [this]
     (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
-                       :sonja-toimenpidekuittauskuuntelija
-                       :sonja-sahkopostikuittauskuuntelija]]
+                       :sonja-toimenpidekuittauskuuntelija]]
       (doseq [kuuntelija kuuntelijat
               :let [poista-kuuntelija-fn (get this kuuntelija)]]
         (poista-kuuntelija-fn))
