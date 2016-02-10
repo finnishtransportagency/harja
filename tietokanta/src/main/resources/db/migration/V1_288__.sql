@@ -4,8 +4,7 @@ CREATE TYPE turvallisuuspoikkeama_luokittelu AS ENUM ('tyotapaturma', 'vaaratila
 CREATE TYPE turvallisuuspoikkeama_vahinkoluokittelu AS ENUM ('henkilovahinko','omaisuusvahinko', 'ymparistovahinko');
 CREATE TYPE turvallisuuspoikkeama_vakavuusaste AS ENUM ('vakava','lievä');
 
-ALTER TABLE turvallisuuspoikkeama ADD COLUMN luokittelu turvallisuuspoikkeama_luokittelu;
+ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyyppi;
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN tyyppi turvallisuuspoikkeama_luokittelu;
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahinkoluokittelu turvallisuuspoikkeama_vahinkoluokittelu;
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN vakavuusaste turvallisuuspoikkeama_vakavuusaste;
-
--- FIXME Pudota poikkeamatyyppi.
