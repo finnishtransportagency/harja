@@ -16,7 +16,8 @@
    [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
    [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-
+   [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
+   
    ;; Raportointi
    [harja.palvelin.raportointi :as raportointi]
 
@@ -119,7 +120,9 @@
 
      ;; Sonja (Sonic ESB) JMS yhteyskomponentti
      :sonja (sonja/luo-sonja (:sonja asetukset))
-
+     :sonja-sahkoposti (component/using (sonja-sahkoposti/luo-sahkoposti (:sonja-sahkoposti asetukset))
+                                        [:sonja :integraatioloki :db])
+     
      ;; FIM REST rajapinta
      :fim (fim/->FIM (:url (:fim asetukset)))
 
@@ -133,12 +136,8 @@
                              [:sonja :db :integraatioloki])
 
      ;; T-LOIK
-     :tloik (component/using (let [tloik (:tloik asetukset)]
-                               (tloik/->Tloik (:ilmoitusviestijono tloik)
-                                              (:ilmoituskuittausjono tloik)
-                                              (:toimenpideviestijono tloik)
-                                              (:toimenpidekuittausjono tloik)))
-                             [:sonja :db :integraatioloki :klusterin-tapahtumat])
+     :tloik (component/using (tloik/->Tloik (:tloik asetukset))
+                             [:sonja :db :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])
 
      ;; Tierekisteri
      :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))

@@ -80,11 +80,16 @@
     [(- x1 x2) (- y1 y2) w1 h1]))
 
 (defn elementin-etaisyys-alareunaan [solmu]
-    (let [r (.getBoundingClientRect solmu)
-          etaisyys-alareunaan (- @korkeus (.-bottom r))]
-      etaisyys-alareunaan))
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (- @korkeus (.-bottom r))]
+    etaisyys))
+
+(defn elementin-etaisyys-ylareunaan [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (.-top r)]
+    etaisyys))
 
 (defn elementin-etaisyys-oikeaan-reunaan [solmu]
   (let [r (.getBoundingClientRect solmu)
-        etaisyys-alareunaan (- @korkeus (.-left r))]
-    etaisyys-alareunaan))
+        etaisyys (- @leveys (.-right r))]
+    etaisyys))
