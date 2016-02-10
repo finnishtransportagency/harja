@@ -11,7 +11,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     nil
-    :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+ "testi" "testi") [:db :integraatioloki])))
+    :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+ "testi" "testi" (atom #{})) [:db :integraatioloki :http-palvelin])))
 
 (use-fixtures :once jarjestelma-fixture)
 

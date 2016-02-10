@@ -28,13 +28,13 @@
                                            :error body}))
                                 {:sisalto body :otsikot headers})))))
 
-(defn vastaanota-tekstiviesti [db integraatioloki kutsu kuuntelijat]
+(defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
   (log/debug (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
-  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "vastaanota" nil nil)
-        url (:remote-addr kutsu)
+  (let [url (:remote-addr kutsu)
         otsikot (:headers kutsu)
         parametrit (:params kutsu)
-        _ (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id "sisään" url nil nil otsikot (str parametrit))
+        viesti (integraatioloki/tee-rest-lokiviesti "sisään" url nil nil otsikot (str parametrit))
+        tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "vastaanota" nil viesti)
         numero (get parametrit "source")
         viesti (get parametrit "text")]
     (try
@@ -44,15 +44,15 @@
         (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." e))
         (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki "Tekstiveistin vastaanotossa tapahtui poikkeus" (.toString e) tapahtuma-id nil)
         {:status 500}))
-    (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki "Tekstiviesti käsitelty onnistuneesti" nil tapahtuma-id nil)
+    (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki nil nil tapahtuma-id nil)
     {:status 200}))
 
 (defrecord Labyrintti [url kayttajatunnus salasana kuuntelijat]
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :vastaanota-tekstiviesti
-      (POST "/sms" request (vastaanota-tekstiviesti db integraatioloki request kuuntelijat))
+      (POST "/sms" request (vastaanota-tekstiviesti integraatioloki request kuuntelijat))
       true)
     (assoc this
       :url url

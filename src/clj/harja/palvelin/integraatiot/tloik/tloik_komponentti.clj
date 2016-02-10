@@ -40,12 +40,13 @@
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
 (defn vastaanota-tekstiviesti-ilmoitustoimenpide [numero viesti]
-  (log/debug (format "Vastaanotettiin ilmoitustoimenpide. Numero: %s, viesti: %s." numero viesti)))
+  (log/debug (format "Vastaanotettiin ilmoitustoimenpide tekstiviestillä. Numero: %s, viesti: %s." numero viesti)))
 
 (defrecord Tloik [ilmoitusviestijono ilmoituskuittausjono toimenpidejono toimenpidekuittausjono]
   component/Lifecycle
   (start [this]
-    (sms/rekisteroi-kuuntelija! (:labyrintti this) (fn [numero viesti] (vastaanota-tekstiviesti-ilmoitustoimenpide numero viesti)))
+    (when-let [labyrintti (:labyrintti this)]
+      (sms/rekisteroi-kuuntelija! labyrintti (fn [numero viesti] (vastaanota-tekstiviesti-ilmoitustoimenpide numero viesti))))
     (-> this
         (assoc
           :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)
