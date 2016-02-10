@@ -33,6 +33,10 @@
                    :vaaratilanne "Vaaratilanne"
                    :turvallisuushavainto "Turvallisuushavainto"})
 
+(def vahinkoluokittelu-tyypit {:henkilovahinko   "Henkilövahinko"
+                               :omaisuusvahinko  "Omaisuusvahinko"
+                               :ymparistovahinko "Ympäristövahinko"})
+
 (defn turvallisuuspoikkeaman-tiedot
   []
 
@@ -53,12 +57,18 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
-        [{:otsikko     "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
+        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
           :nayta-rivina? true
           :pakollinen? true
           :vaihtoehto-nayta #(turpo-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
-          :vaihtoehdot [:tyotapaturma :vaaratilanne :turvallisuushavainto]}
+          :vaihtoehdot (keys turpo-tyypit)}
+         {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :boolean-group
+          :nayta-rivina? true
+          :pakollinen? true
+          :vaihtoehto-nayta #(vahinkoluokittelu-tyypit %)
+          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vahinkoluokittelu")]
+          :vaihtoehdot (keys vahinkoluokittelu-tyypit)}
 
          (lomake/ryhma {:rivi? true}
                        {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
