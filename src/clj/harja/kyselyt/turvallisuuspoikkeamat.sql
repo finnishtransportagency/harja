@@ -141,7 +141,8 @@ VALUES
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20.
 UPDATE turvallisuuspoikkeama
-SET urakka               = :urakka,
+SET
+  urakka                 = :urakka,
   tapahtunut             = :tapahtunut,
   paattynyt              = :paattynyt,
   kasitelty              = :kasitelty,
@@ -188,6 +189,8 @@ SET urakka               = :urakka,
   sairaalavuorokaudet    = :sairaalassa,
   tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
   muokkaaja              = :kayttaja,
+  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
+  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
   muokattu               = NOW()
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;

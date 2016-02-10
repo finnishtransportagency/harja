@@ -84,9 +84,9 @@
       sairaalahoitovuorokaudet
       (json-array->sql-array luokittelu)
       (:id kirjaaja)
-      (:id tunniste)
       (json-array->sql-array vahinkoluokittelu)
       vakavuusaste
+      (:id tunniste)
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
            db
