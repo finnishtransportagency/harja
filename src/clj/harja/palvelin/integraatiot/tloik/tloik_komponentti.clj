@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]))
+            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
+            [harja.palvelin.integraatiot.labyrintti.sms :as sms]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -18,26 +19,33 @@
 (defn tee-ilmoitusviestikuuntelija [this ilmoitusviestijono ilmoituskuittausjono]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
-    (sonja/kuuntele (:sonja this) ilmoitusviestijono
-                    (fn [viesti]
-                      (ilmoitukset/vastaanota-ilmoitus (:sonja this)
-                                                       (tee-lokittaja this)
-                                                       (:klusterin-tapahtumat this)
-                                                       (:db this)
-                                                       ilmoituskuittausjono viesti)))))
+    (sonja/kuuntele
+      (:sonja this) ilmoitusviestijono
+      (fn [viesti]
+        (ilmoitukset/vastaanota-ilmoitus
+          (:sonja this)
+          (tee-lokittaja this)
+          (:klusterin-tapahtumat this)
+          (:db this)
+          ilmoituskuittausjono viesti)))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
-    (jms/kuittausjonokuuntelija (tee-lokittaja this) (:sonja this) toimenpidekuittausjono
-                                (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
-                                :viesti-id
-                                (comp not :virhe)
-                                (fn [_ viesti-id onnistunut]
-                                  (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
+    (jms/kuittausjonokuuntelija
+      (tee-lokittaja this) (:sonja this) toimenpidekuittausjono
+      (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
+      :viesti-id
+      (comp not :virhe)
+      (fn [_ viesti-id onnistunut]
+        (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
+
+(defn vastaanota-tekstiviesti-ilmoitustoimenpide [numero viesti]
+  (log/debug (format "Vastaanotettiin ilmoitustoimenpide. Numero: %s, viesti: %s." numero viesti)))
 
 (defrecord Tloik [ilmoitusviestijono ilmoituskuittausjono toimenpidejono toimenpidekuittausjono]
   component/Lifecycle
   (start [this]
+    (sms/rekisteroi-kuuntelija! (:labyrintti this) (fn [numero viesti] (vastaanota-tekstiviesti-ilmoitustoimenpide numero viesti)))
     (-> this
         (assoc
           :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)

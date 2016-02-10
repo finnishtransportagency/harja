@@ -138,15 +138,14 @@
                                                (:ilmoituskuittausjono tloik)
                                                (:toimenpideviestijono tloik)
                                                (:toimenpidekuittausjono tloik)))
-                              [:sonja :db :integraatioloki :klusterin-tapahtumat])
+                              [:sonja :db :integraatioloki :klusterin-tapahtumat :labyrintti])
 
       ;; Tierekisteri
       :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
                                      [:db :integraatioloki])
 
       ;; Labyrintti SMS Gateway
-      :labyrintti (component/using (let [l (:labyrintti asetukset)]
-                                     (labyrintti/->Labyrintti (:url l) (:kayttajatunnus l) (:salasana l)))
+      :labyrintti (component/using (labyrintti/luo-labyrintti (:labyrintti asetukset))
                                    [:http-palvelin :db :integraatioloki])
 
       :raportointi (component/using

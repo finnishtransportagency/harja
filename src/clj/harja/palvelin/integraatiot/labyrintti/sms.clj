@@ -10,7 +10,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol Sms
-  (rekisteroi-kuuntelija! this kasittely-fn)
+  (rekisteroi-kuuntelija! [this kasittely-fn])
   (laheta [this numero viesti]))
 
 (defn laheta-sms [integraatioloki kayttajatunnus salasana url numero viesti]
@@ -30,23 +30,22 @@
 
 (defn vastaanota-tekstiviesti [db integraatioloki kutsu kuuntelijat]
   (log/debug (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
-  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "tekstiviestin-vastaanotto" nil nil)
+  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "vastaanota" nil nil)
         url (:remote-addr kutsu)
         otsikot (:headers kutsu)
         parametrit (:params kutsu)
         _ (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id "sisään" url nil nil otsikot (str parametrit))
-        numero (get "source" parametrit)
-        viesti (get "text" parametrit)]
+        numero (get parametrit "source")
+        viesti (get parametrit "text")]
     (try
       (doseq [kuuntelija @kuuntelijat]
         (kuuntelija numero viesti))
       (catch Exception e
         (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." e))
         (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki "Tekstiveistin vastaanotossa tapahtui poikkeus" (.toString e) tapahtuma-id nil)
-        {:status 500})))
-
-  (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki "Tekstiviesti käsitelty onnistuneesti" nil tapahtuma-id nil)
-  {:status 200})
+        {:status 500}))
+    (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki "Tekstiviesti käsitelty onnistuneesti" nil tapahtuma-id nil)
+    {:status 200}))
 
 (defrecord Labyrintti [url kayttajatunnus salasana kuuntelijat]
   component/Lifecycle
@@ -71,3 +70,6 @@
 
   (laheta [this numero viesti]
     (laheta-sms (:integraatioloki this) (:kayttajatunnus this) (:salasana this) (:url this) numero viesti)))
+
+(defn luo-labyrintti [asetukset]
+  (->Labyrintti (:url asetukset) (:kayttajatunnus asetukset) (:salasana asetukset) (atom #{})))
