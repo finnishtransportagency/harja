@@ -71,6 +71,7 @@
                                "Leipäteksti")
     (odota #(not (nil? @lahetetty)) "Odotetaan, että viesti on lähetetty" 500)
     (is (= (:vastaanottaja @lahetetty) "ville.vastaanottaja@example.com"))
+    (is (= (:lahettaja @lahetetty) "lasse.lahettaja@example.com"))
 
     (let [db (:db jarjestelma)
           integraatio (integraatiot/integraation-id db "sonja" "sahkoposti-lahetys")]

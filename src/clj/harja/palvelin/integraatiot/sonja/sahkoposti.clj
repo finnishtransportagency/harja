@@ -53,11 +53,11 @@
     (swap! kuuntelijat conj kuuntelija-fn)
     #(swap! kuuntelijat disj kuuntelija-fn))
 
-  (laheta-viesti! [{lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti! [{jms-lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
     (let [viesti-id (str (java.util.UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
-      (lahettaja viesti viesti-id))))
+      (jms-lahettaja viesti viesti-id))))
 
 (defn luo-sahkoposti [jonot]
   (->SonjaSahkoposti jonot (atom #{})))
