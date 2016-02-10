@@ -20,6 +20,7 @@
         (map #(konv/array->vec % :tyyppi))
         (map #(konv/array->vec % :vahinkoluokittelu))
         (map #(konv/string-vector->keyword-vector % :tyyppi))
+        (map #(konv/string->keyword % :vakavuusaste))
         (map #(konv/string-vector->keyword-vector % :vahinkoluokittelu))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
