@@ -148,7 +148,7 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))
                                                _ (log "filtterissä itemit" (pr-str itemit))]
-                                           itemit))))}
+                                           (vec itemit)))))}
 
          (lomake/ryhma {:ulkoasu :rivi}
                        {:nimi        :tilat :otsikko "Tila"
