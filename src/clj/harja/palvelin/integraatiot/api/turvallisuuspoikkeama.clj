@@ -30,8 +30,8 @@
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
-    (let [_ (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
-          tp-id (:id (turvallisuuspoikkeamat/luo-turvallisuuspoikkeama<!
+    (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
+    (let [tp-id (:id (turvallisuuspoikkeamat/luo-turvallisuuspoikkeama<!
                        db
                        urakka-id
                        (aika-string->java-sql-date tapahtumapaivamaara)
@@ -66,41 +66,41 @@
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
-    (do
-      (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
-      (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
-        db
-        urakka-id
-        (aika-string->java-sql-date tapahtumapaivamaara)
-        (aika-string->java-sql-date paattynyt)
-        (aika-string->java-sql-date kasitelty)
-        tyontekijanammatti
-        tyotehtava
-        kuvaus
-        aiheutuneetVammat
-        sairauspoissaolopaivat
-        sairaalahoitovuorokaudet
-        (str "{" (clojure.string/join "," (map name luokittelu)) "}")
-        (:id kirjaaja)
-        (:id tunniste)
-        (:id kirjaaja))
-      (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
-             db
-             (:x koordinaatit)
-             (:y koordinaatit)
-             (:numero tie)
-             (:aet tie)
-             (:let tie)
-             (:aos tie)
-             (:los tie)
-             (:id tunniste)
-             (:id kirjaaja))))))
+    (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
+    (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
+      db
+      urakka-id
+      (aika-string->java-sql-date tapahtumapaivamaara)
+      (aika-string->java-sql-date paattynyt)
+      (aika-string->java-sql-date kasitelty)
+      tyontekijanammatti
+      tyotehtava
+      kuvaus
+      aiheutuneetVammat
+      sairauspoissaolopaivat
+      sairaalahoitovuorokaudet
+      (str "{" (clojure.string/join "," (map name luokittelu)) "}")
+      (:id kirjaaja)
+      (:id tunniste)
+      (:id kirjaaja))
+    (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+           db
+           (:x koordinaatit)
+           (:y koordinaatit)
+           (:numero tie)
+           (:aet tie)
+           (:let tie)
+           (:aos tie)
+           (:los tie)
+           (:id tunniste)
+           (:id kirjaaja)))))
 
 (defn luo-tai-paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (log/debug "Onko turvallisuuspoikkeama jo olmessa?")
-  (if (turvallisuuspoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
-    (luo-turvallisuuspoikkeama db urakka-id kirjaaja data)
-    (paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)))
+  (let [{:keys [tunniste sijainti]} data]
+    (log/debug "Onko turvallisuuspoikkeama jo olmessa?")
+    (if (turvallisuuspoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
+      (luo-turvallisuuspoikkeama db urakka-id kirjaaja data)
+      (paivita-turvallisuuspoikkeama db urakka-id kirjaaja data))))
 
 (defn tallenna-kommentit [db tp-id kirjaaja kommentit]
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count kommentit) " kommenttia.")
@@ -110,7 +110,7 @@
       (turvallisuuspoikkeamat/liita-kommentti<! db tp-id kommentti-id))))
 
 (defn tallenna-korjaavat-toimenpiteet
-  "Luo tarkoituksella aina uudet korjaavat toimenpiteet. Halutaan, ettei tuleva uusi päivitys turpoon
+  "Luo tarkoituksella aina uudet korjaavat toimenpiteet. Halutaan, ettei tuleva uusi päivitys turvallisuuspoikkeamaan
   ylikirjoita mahdollisesti UI:n kautta kirjattuja juttuja."
   [db tp-id _ korjaavat]
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count korjaavat) " korjaavaa toimenpidettä.")
