@@ -2,7 +2,7 @@
 
 CREATE TYPE turvallisuuspoikkeama_luokittelu AS ENUM ('tyotapaturma', 'vaaratilanne', 'turvallisuushavainto');
 CREATE TYPE turvallisuuspoikkeama_vahinkoluokittelu AS ENUM ('henkilovahinko','omaisuusvahinko', 'ymparistovahinko');
-CREATE TYPE turvallisuuspoikkeama_vakavuusaste AS ENUM ('vakava','lievä');
+CREATE TYPE turvallisuuspoikkeama_vakavuusaste AS ENUM ('vakava','lieva');
 
 ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyyppi;
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN tyyppi turvallisuuspoikkeama_luokittelu[];
