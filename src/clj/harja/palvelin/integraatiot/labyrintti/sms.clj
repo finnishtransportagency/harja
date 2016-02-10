@@ -5,10 +5,12 @@
             [taoensso.timbre :as log]
             [compojure.core :refer [POST GET]]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]])
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol Sms
+  (rekisteroi-kuuntelija! this kasittely-fn)
   (laheta [this numero viesti]))
 
 (defn laheta-sms [integraatioloki kayttajatunnus salasana url numero viesti]
@@ -26,19 +28,32 @@
                                            :error body}))
                                 {:sisalto body :otsikot headers})))))
 
-(defn vastaanota-tekstiviesti [db integraatioloki kutsu kasittely-fn]
-  (spit "/Users/mikkoro/Desktop/sms-viesti.txt" (format "\n\nVastaanotettiin viesti: %s " kutsu) :append true)
-  (println (format "Vastaanotettiin viesti: %s " kutsu))
+(defn vastaanota-tekstiviesti [db integraatioloki kutsu kuuntelijat]
+  (log/debug (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
+  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "tekstiviestin-vastaanotto" nil nil)
+        url (:remote-addr kutsu)
+        otsikot (:headers kutsu)
+        parametrit (:params kutsu)
+        _ (integraatioloki/kirjaa-rest-viesti integraatioloki tapahtuma-id "sisään" url nil nil otsikot (str parametrit))
+        numero (get "source" parametrit)
+        viesti (get "text" parametrit)]
+    (try
+      (doseq [kuuntelija @kuuntelijat]
+        (kuuntelija numero viesti))
+      (catch Exception e
+        (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." e))
+        (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki "Tekstiveistin vastaanotossa tapahtui poikkeus" (.toString e) tapahtuma-id nil)
+        {:status 500})))
 
-
+  (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki "Tekstiviesti käsitelty onnistuneesti" nil tapahtuma-id nil)
   {:status 200})
 
-(defrecord Labyrintti [url kayttajatunnus salasana]
+(defrecord Labyrintti [url kayttajatunnus salasana kuuntelijat]
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :vastaanota-tekstiviesti
-      (POST "/sms" request (vastaanota-tekstiviesti db integraatioloki request (fn [numero viesti] (println (str numero viesti)))))
+      (POST "/sms" request (vastaanota-tekstiviesti db integraatioloki request kuuntelijat))
       true)
     (assoc this
       :url url
@@ -50,5 +65,9 @@
     this)
 
   Sms
+  (rekisteroi-kuuntelija! [this kuuntelija-fn]
+    (swap! kuuntelijat conj kuuntelija-fn)
+    #(swap! kuuntelijat disj kuuntelija-fn))
+
   (laheta [this numero viesti]
     (laheta-sms (:integraatioloki this) (:kayttajatunnus this) (:salasana this) (:url this) numero viesti)))
