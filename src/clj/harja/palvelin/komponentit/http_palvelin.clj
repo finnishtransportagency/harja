@@ -173,6 +173,11 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
          :headers {"Content-Type" "text/html"}
          :body    "Access denied"}))))
 
+(defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
+  (let [{ei-todennettavat true
+         todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
+    [todennettavat ei-todennettavat]))
+
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
@@ -183,21 +188,22 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                       (route/resources ""))]
       (swap! lopetus-fn
              (constantly
-               (http/run-server (cookies/wrap-cookies
-                                  (fn [req]
-                                    (try+
-                                      (let [ei-todennettavat-sessiottomat-kasittelijat (keep #(when (:ei-todennettava %) %) @sessiottomat-kasittelijat)
-                                            todennettavat-sessiottomat-kasittelijat (filter #(not (:ei-todennettava %)) @sessiottomat-kasittelijat)
-                                            ui-kasittelijat (mapv :fn @kasittelijat)
-                                            uikasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                              (wrap-anti-forgery))]
-                                        (or (reitita req (mapv :fn ei-todennettavat-sessiottomat-kasittelijat))
-                                            (reitita (todennus/todenna-pyynto todennus req)
-                                                     (-> (mapv :fn todennettavat-sessiottomat-kasittelijat)
-                                                         (conj (partial index-kasittelija kehitysmoodi) resurssit)
-                                                         (conj uikasittelija)))))
-                                      (catch [:virhe :todennusvirhe] _
-                                        {:status 403 :body "Todennusvirhe"}))))
+              (http/run-server
+               (cookies/wrap-cookies
+                (fn [req]
+                  (try+
+                   (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                         ui-kasittelijat (mapv :fn @kasittelijat)
+                         uikasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                           (wrap-anti-forgery))]
+                     
+                     (or (reitita req (mapv :fn ei-todennettavat))
+                         (reitita (todennus/todenna-pyynto todennus req)
+                                  (-> (mapv :fn todennettavat)
+                                      (conj (partial index-kasittelija kehitysmoodi) resurssit)
+                                      (conj uikasittelija)))))
+                   (catch [:virhe :todennusvirhe] _
+                     {:status 403 :body "Todennusvirhe"}))))
 
                                 {:port     (or (:portti asetukset) asetukset)
                                  :thread   (or (:threads asetukset) 8)
