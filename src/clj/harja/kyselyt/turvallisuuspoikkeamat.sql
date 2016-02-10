@@ -151,7 +151,7 @@ SET urakka               = :urakka,
   vammat                 = :vammat,
   sairauspoissaolopaivat = :poissa,
   sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeamatyyppi [],
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
   muokkaaja              = :kayttaja,
   muokattu               = NOW()
 WHERE id = :id;
@@ -184,7 +184,7 @@ SET urakka               = :urakka,
   vammat                 = :vammat,
   sairauspoissaolopaivat = :poissa,
   sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeamatyyppi [],
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
   muokkaaja              = :kayttaja,
   muokattu               = NOW()
 WHERE ulkoinen_id = :id AND
@@ -215,4 +215,4 @@ INSERT INTO turvallisuuspoikkeama
  sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
-   :tyyppi :: turvallisuuspoikkeamatyyppi [], :kayttaja, NOW());
+   :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW());
