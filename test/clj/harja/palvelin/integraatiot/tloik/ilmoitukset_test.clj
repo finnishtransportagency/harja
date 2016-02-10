@@ -15,7 +15,8 @@
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]))
+            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]))
 
 (def kayttaja "jvh")
 
@@ -26,14 +27,20 @@
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
-    :tloik (component/using
-             (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])
+    :sonja-sahkoposti (component/using
+                        (sahkoposti/luo-sahkoposti {:sahkoposti-sisaan-jono         "email-to-harja"
+                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                    :sahkoposti-ulos-jono           "harja-to-email"
+                                                    :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                        [:sonja :db :integraatioloki])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
                     {:url            "http://localhost:28080/sendsms"
                      :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
-                  [:db :integraatioloki])))
+                  [:db :http-palvelin :integraatioloki])
+    :tloik (component/using
+             (luo-tloik-komponentti)
+             [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
 (use-fixtures :once jarjestelma-fixture)
 (use-fixtures :once jarjestelma-fixture)

@@ -49,7 +49,7 @@
       labyrintti
       (fn [numero viesti] (kuittaukset/vastaanota-tekstiviestikuittaus (:db this) numero viesti))))
   (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
-    (email/rekisteroi-kuuntelija! sonja-sahkoposti #(kuittaukset/vastaanota-sahkopostikuittaus (:db this) %))))
+    (email/rekisteroi-kuuntelija! sonja-sahkoposti #(ilmoitustoimenpiteet/vastaanota-sahkopostikuittaus (:db this) %))))
 
 (defrecord Tloik [jonot]
   component/Lifecycle

@@ -37,3 +37,15 @@
       (log/error (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db viesti-id))))
 
+(defn vastaanota-sahkopostikuittaus [db viesti]
+  ;; PENDING: viestien käsittely toteutettava,
+  ;; ks. otsikosta esim. pattern #ur/ilm, jossa urakan ja ilmoituksen id
+  ;; bodysta haetaan onko kyseessä minkä tyyppinen kuittaus
+
+  (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
+  nil)
+
+(defn vastaanota-tekstiviestikuittaus [db numero viesti]
+  (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." numero viesti)))
+
+
