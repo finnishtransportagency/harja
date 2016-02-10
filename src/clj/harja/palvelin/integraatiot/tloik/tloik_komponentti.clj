@@ -46,7 +46,9 @@
   component/Lifecycle
   (start [this]
     (when-let [labyrintti (:labyrintti this)]
-      (sms/rekisteroi-kuuntelija! labyrintti (fn [numero viesti] (vastaanota-tekstiviesti-ilmoitustoimenpide numero viesti))))
+      (sms/rekisteroi-kuuntelija!
+        labyrintti
+        (fn [numero viesti] (vastaanota-tekstiviesti-ilmoitustoimenpide numero viesti))))
     (-> this
         (assoc
           :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)

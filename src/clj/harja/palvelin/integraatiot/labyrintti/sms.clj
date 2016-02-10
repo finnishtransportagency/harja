@@ -40,12 +40,17 @@
     (try
       (doseq [kuuntelija @kuuntelijat]
         (kuuntelija numero viesti))
+      (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki nil nil tapahtuma-id nil)
+      {:status 200}
       (catch Exception e
         (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." e))
-        (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki "Tekstiveistin vastaanotossa tapahtui poikkeus" (.toString e) tapahtuma-id nil)
-        {:status 500}))
-    (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki nil nil tapahtuma-id nil)
-    {:status 200}))
+        (integraatioloki/kirjaa-epaonnistunut-integraatio
+          integraatioloki
+          "Tekstiviestin vastaanotossa tapahtui poikkeus"
+          (.toString e)
+          tapahtuma-id
+          nil)
+        {:status 500}))))
 
 (defrecord Labyrintti [url kayttajatunnus salasana kuuntelijat]
   component/Lifecycle
