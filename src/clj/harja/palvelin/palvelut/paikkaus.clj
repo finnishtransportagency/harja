@@ -27,8 +27,8 @@
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string->avain % [:paatos]))
-                        (map #(konv/string->avain % [:tila]))
+                        (map #(konv/string-polusta>keyword % [:paatos]))
+                        (map #(konv/string-polusta>keyword % [:tila]))
                         (map #(assoc % :kohdeosat
                                        (into []
                                              paallystys/kohdeosa-xf
@@ -51,8 +51,8 @@
         paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                             (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
-                                            (map #(konv/string->avain % [:tila]))
-                                            (map #(konv/string->avain % [:paatos])))
+                                            (map #(konv/string-polusta>keyword % [:tila]))
+                                            (map #(konv/string-polusta>keyword % [:paatos])))
                                       (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]
     (log/debug "Paikkausilmoitus saatu: " (pr-str paikkausilmoitus))
     ;; Uusi paikkausilmoitus

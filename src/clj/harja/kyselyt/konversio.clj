@@ -123,7 +123,7 @@
   [rivi & kentat]
   (muunna rivi kentat keyword))
 
-(defn string->avain
+(defn string-polusta>keyword
   "Muuntaa annetussa polussa olevan stringin Clojure-keywordiksi"
   [data avainpolku]
   (-> data
@@ -138,7 +138,6 @@
   "Muuntaa yksittäisen arvon Clojure vektorista JDBC arrayksi."
   [vektori]
   (str "{" (clojure.string/join "," (map name vektori)) "}"))
-
 
 (defn vec->array
   "Muuntaa rivin annetun kentän Clojure vektorista JDBC arrayksi."
@@ -201,6 +200,3 @@
   java.util.Date
   (sql-value [v]
       (sql-timestamp v)))
-
-(defn sekvenssi->sql-array [array]
-  (str "{" (clojure.string/join "," (map name array)) "}"))

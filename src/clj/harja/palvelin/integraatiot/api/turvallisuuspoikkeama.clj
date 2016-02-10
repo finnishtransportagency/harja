@@ -43,9 +43,9 @@
                        aiheutuneetVammat
                        sairauspoissaolopaivat
                        sairaalahoitovuorokaudet
-                       (konv/sekvenssi->sql-array luokittelu)
+                       (konv/vec->array-yksittaisesta-arvosta luokittelu)
                        (:id kirjaaja)
-                       (konv/sekvenssi->sql-array vahinkoluokittelu)
+                       (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
                        vakavuusaste))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
@@ -81,9 +81,9 @@
       aiheutuneetVammat
       sairauspoissaolopaivat
       sairaalahoitovuorokaudet
-      (konv/sekvenssi->sql-array luokittelu)
+      (konv/vec->array-yksittaisesta-arvosta luokittelu)
       (:id kirjaaja)
-      (konv/sekvenssi->sql-array vahinkoluokittelu)
+      (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
       vakavuusaste
       (:id tunniste)
       (:id kirjaaja))
