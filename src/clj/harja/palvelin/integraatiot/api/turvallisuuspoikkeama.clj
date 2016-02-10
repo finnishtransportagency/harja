@@ -99,7 +99,10 @@
           kommentti-id (:id kommentti)]
       (turvallisuuspoikkeamat/liita-kommentti<! db tp-id kommentti-id))))
 
-(defn tallenna-korjaavat-toimenpiteet [db tp-id _ korjaavat]
+(defn tallenna-korjaavat-toimenpiteet
+  "Luo tarkoituksella aina uudet korjaavat toimenpiteet. Halutaan, ettei tuleva uusi päivitys turpoon
+  ylikirjoita mahdollisesti UI:n kautta kirjattuja juttuja."
+  [db tp-id _ korjaavat]
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count korjaavat) " korjaavaa toimenpidettä.")
   (doseq [korjaava korjaavat]
     (turvallisuuspoikkeamat/luo-korjaava-toimenpide<! db tp-id (:kuvaus korjaava)
