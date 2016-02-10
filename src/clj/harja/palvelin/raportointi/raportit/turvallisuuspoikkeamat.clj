@@ -16,9 +16,9 @@
 
 
 (def turvallisuuspoikkeama-tyyppi
-  {"turvallisuuspoikkeama" "Turvallisuus\u00ADpoikkeama"
-   "tyoturvallisuuspoikkeama" "Työ\u00ADturvallisuus\u00ADpoikkeama"
-   "prosessipoikkeama" "Prosessi\u00ADpoikkeama"})
+  {"tyotapaturma" "Ty\u00ADö\u00ADta\u00ADpa\u00ADtur\u00ADma"
+   "vaaratilanne" "Vaa\u00ADra\u00ADti\u00ADlan\u00ADne"
+   "turvallisuushavainto" "Tur\u00ADval\u00ADli\u00ADsuus\u00ADha\u00ADvain\u00ADto"})
 
 (defn ilmoituksen-tyyppi [{tyyppi :tyyppi}]
   (into {}
@@ -49,9 +49,9 @@
                                                          (map ilmoituksen-tyyppi turpot))]
                                       (assoc tulos
                                         kk
-                                        [(get maarat "turvallisuuspoikkeama")
-                                         (get maarat "prosessipoikkeama")
-                                         (get maarat "tyoturvallisuuspoikkeama")])))
+                                        [(get maarat "tyotapaturma")
+                                         (get maarat "vaaratilanne")
+                                         (get maarat "turvallisuushavainto")])))
                                   {} turpo-maarat-kuukausittain)
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
@@ -70,9 +70,9 @@
       
       (concat (mapcat (fn [[urakka turpot]]
                         (let [turpo-maarat-per-tyyppi (frequencies (mapcat :tyyppi turpot))]
-                          [(rivi (:nimi urakka) "Turvallisuuspoikkeama" (or (turpo-maarat-per-tyyppi "turvallisuuspoikkeama") 0))
-                           (rivi (:nimi urakka) "Prosessipoikkeama" (or (turpo-maarat-per-tyyppi "prosessipoikkeama") 0))
-                           (rivi (:nimi urakka) "Työturvallisuuspoikkeama" (or (turpo-maarat-per-tyyppi "tyoturvallisuuspoikkeama") 0))]))
+                          [(rivi (:nimi urakka) "Työtapaturma" (or (turpo-maarat-per-tyyppi "tyotapaturma") 0))
+                           (rivi (:nimi urakka) "Vaaratilanne" (or (turpo-maarat-per-tyyppi "vaaratilanne") 0))
+                           (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))]))
                       (if urakoittain?
                         (group-by :urakka turpot)
                         [[nil turpot]]))
@@ -86,7 +86,7 @@
                  :alkupvm               alkupvm :loppupvm loppupvm
                  :kuukausittainen-data  turpomaarat-tyypeittain
                  :piilota-arvo?         #{0}
-                 :legend                ["Turvallisuuspoikkeamat" "Prosessipoikkeamat" "Työturvallisuuspoikkeamat"]}))
+                 :legend                ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]}))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []
