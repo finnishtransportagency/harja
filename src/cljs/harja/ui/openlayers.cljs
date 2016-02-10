@@ -543,8 +543,7 @@ nuolten-valimatka 3000)
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-viivalle-tyyli
   [kasvava-zindex {:keys [color width zindex dash cap join miter]}]
-  (ol.style.Style. #js {:stroke
-                                (ol.style.Stroke. #js {:color      (or color "black")
+  (ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color      (or color "black")
                                                        :width      (or width 2)
                                                        :lineDash   (or (clj->js dash) nil)
                                                        :lineCap    (or cap "round")
@@ -552,10 +551,9 @@ nuolten-valimatka 3000)
                                                        :miterLimit (or miter 10)})
                         :zindex (or zindex (swap! kasvava-zindex inc))}))
 
-(defmethod luo-feature :viiva [{:keys [viivat points lines ikonit]}]
-  (let [feature (if (not (nil? lines))
-                  (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (map :points lines)))})
-                  (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
+(defmethod luo-feature :viiva
+  [{:keys [viivat points ikonit]}]
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
         kasvava-zindex (atom oletus-zindex)
         taitokset (atom [])
         laske-taitokset (fn []
@@ -576,6 +574,16 @@ nuolten-valimatka 3000)
         tee-viiva (partial tee-viivalle-tyyli kasvava-zindex)
         tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
     (doto feature (.setStyle (clj->js tyylit)))))
+
+(defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor]}]
+  (doto (ol.Feature #js {:geometry (-> coordinates clj->js ol.geom.Point)})
+    (.setStyle (ol.style.Style.
+                 #js {:image  (ol.style.Icon.
+                                #js {:src    (str +karttaikonipolku+ img)
+                                     :anchor (or (clj->js anchor) #js [0.5 1])
+                                     :scale  (or scale 1)})
+                      :zIndex (or zindex oletus-zindex)}))))
+
 
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
