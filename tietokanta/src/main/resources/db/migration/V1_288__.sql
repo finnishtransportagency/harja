@@ -8,3 +8,5 @@ ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyyppi;
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN tyyppi turvallisuuspoikkeama_luokittelu;
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahinkoluokittelu turvallisuuspoikkeama_vahinkoluokittelu;
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN vakavuusaste turvallisuuspoikkeama_vakavuusaste;
+
+DROP TYPE turvallisuuspoikkeamatyyppi;
