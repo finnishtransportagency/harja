@@ -24,9 +24,6 @@
   (when henkilo
     (str (:etunimi henkilo) " " (:sukunimi henkilo))))
 
-(defn json-array->sql-array [array]
-  (str "{" (clojure.string/join "," (map name array)) "}"))
-
 (defn sijainti->tr
   "Antaa json skeeman mukaiselle sijainnille tierekisterosoitteen Harja muodossa."
   [sijainti]

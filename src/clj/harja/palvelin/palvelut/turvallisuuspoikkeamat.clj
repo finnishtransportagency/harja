@@ -68,7 +68,7 @@
      sairaalavuorokaudet sijainti tr
      tyyppi]}]
 
-  (log/debug "tallennetaan tyypit: " (str "{" (clojure.string/join "," (map name tyyppi)) "}"))
+  (log/debug "tallennetaan tyypit: " (konv/sekvenssi->sql-array tyyppi))
 
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
@@ -85,7 +85,7 @@
       (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                              (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                              kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                             (str "{" (clojure.string/join "," (map name tyyppi)) "}")
+                                             (konv/sekvenssi->sql-array tyyppi)
                                              (:id user) id)
           (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                     sijainti
@@ -95,7 +95,7 @@
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                                    (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                                   (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
+                                                   (konv/sekvenssi->sql-array tyyppi) (:id user)))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id))))

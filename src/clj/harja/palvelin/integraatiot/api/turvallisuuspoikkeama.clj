@@ -9,8 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date
-                                                                   json-array->sql-array]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-turvallisuuspoikkeamalle]]
 
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -44,9 +43,9 @@
                        aiheutuneetVammat
                        sairauspoissaolopaivat
                        sairaalahoitovuorokaudet
-                       (json-array->sql-array luokittelu)
+                       (konv/sekvenssi->sql-array luokittelu)
                        (:id kirjaaja)
-                       (json-array->sql-array vahinkoluokittelu)
+                       (konv/sekvenssi->sql-array vahinkoluokittelu)
                        vakavuusaste))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
@@ -82,9 +81,9 @@
       aiheutuneetVammat
       sairauspoissaolopaivat
       sairaalahoitovuorokaudet
-      (json-array->sql-array luokittelu)
+      (konv/sekvenssi->sql-array luokittelu)
       (:id kirjaaja)
-      (json-array->sql-array vahinkoluokittelu)
+      (konv/sekvenssi->sql-array vahinkoluokittelu)
       vakavuusaste
       (:id tunniste)
       (:id kirjaaja))

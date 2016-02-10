@@ -202,3 +202,5 @@
   (sql-value [v]
       (sql-timestamp v)))
 
+(defn sekvenssi->sql-array [array]
+  (str "{" (clojure.string/join "," (map name array)) "}"))
