@@ -2,7 +2,7 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -15,6 +15,8 @@
 (def nakymassa? (atom false))
 (def +uusi-turvallisuuspoikkeama+ {})
 (defonce valittu-turvallisuuspoikkeama (atom nil))
+
+(tarkkaile! "Valittu turpo: " valittu-turvallisuuspoikkeama)
 
 (defn hae-urakan-turvallisuuspoikkeamat
   [urakka-id [alku loppu]]

@@ -19,8 +19,9 @@
         (geo/muunna-pg-tulokset :sijainti)
         (map #(konv/array->vec % :tyyppi))
         (map #(konv/array->vec % :vahinkoluokittelu))
-        (map #(assoc % :tyyppi (mapv keyword (:tyyppi %))))
-        (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi]))))))
+        (map #(konv/string-vector->keyword-vector % :tyyppi))
+        (map #(konv/string-vector->keyword-vector % :vahinkoluokittelu))
+        (map #(konv/string-polusta>keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))

@@ -147,6 +147,10 @@
              (vec->array-yksittaisesta-arvosta a)
              "{}")))
 
+(defn string-vector->keyword-vector
+  "Muuntaa mapin kentän vectorissa olevat stringit keywordeiksi."
+  [rivi kentta]
+  (assoc rivi kentta (mapv keyword (kentta rivi))))
 
 (defn array->vec
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure vektoriksi."

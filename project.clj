@@ -131,7 +131,7 @@
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/repository/solita/"]
-                 ["harja-data" "http://185.26.50.104/mvn/"]]
+                 ["http://185.26.50.104/mvn/"]]
 
 
   :plugins [[lein-cljsbuild "1.1.2"]
@@ -205,7 +205,7 @@
   :repl-options {:init-ns harja.palvelin.main
                  :init    (harja.palvelin.main/-main)
                  :port    4005
-                 :timeout 120000}
+                 :timeout 600000}
 
 
   ;; Clientin reload ja REPL
