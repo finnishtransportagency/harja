@@ -324,7 +324,7 @@
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
-        valittu (or @data nil)]Korjaa radiogrou
+        valittu (or @data nil)]
     [:div
      (let [radiobuttonit (doall
                            (for [v vaihtoehdot]
