@@ -59,6 +59,8 @@ SELECT
   t.tr_loppuetaisyys,
   t.tr_alkuosa,
   t.tr_loppuosa,
+  t.vakavuusaste,
+  t.vahinkoluokittelu,
   t.tyyppi,
 
   k.id                   AS korjaavatoimenpide_id,

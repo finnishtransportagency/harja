@@ -65,14 +65,14 @@
   [db user
    {:keys
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
-     sairaalavuorokaudet sijainti tr
+     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste
      tyyppi]}]
 
   (log/debug "tallennetaan tyypit: " (konv/sekvenssi->sql-array tyyppi))
 
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
-  ;; Nämä kyselyt vaativat 21 (!!) argumenttia, joten kyselyt piti katkaista kahtia.
+  ;; Nämä kyselyt enemmän argumentteja, joten kyselyt piti katkaista kahtia.
   ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
   ;; että betan vuoksi sitä ei liene järkevää tehdä.
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
@@ -85,8 +85,8 @@
       (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                              (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                              kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                             (konv/sekvenssi->sql-array tyyppi)
-                                             (:id user) id)
+                                             (konv/sekvenssi->sql-array tyyppi) (konv/sekvenssi->sql-array vahinkoluokittelu)
+                                             vakavuusaste (:id user) id)
           (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                     sijainti
                                                     tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
@@ -95,7 +95,8 @@
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                                    (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                                   (konv/sekvenssi->sql-array tyyppi) (:id user)))]
+                                                   (konv/sekvenssi->sql-array tyyppi) (konv/sekvenssi->sql-array vahinkoluokittelu)
+                                                   vakavuusaste (:id user)))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id))))
