@@ -266,7 +266,7 @@
       :nimi (or (:nimi laatupoikkeama) otsikko)
       :selite {:teksti otsikko
                :img    ikoni}
-      :alue (tack-ikoni laatupoikkeama ikoni valittu-fn?))))
+      :alue (maarittele-feature laatupoikkeama valittu-fn? ikoni))))
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (selvita-tarkastuksen-ikoni (:tekija tarkastus))]
@@ -276,7 +276,7 @@
                 (otsikko-tekijalla (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tarkastus))
       :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
                :img    ikoni}
-      :alue (tack-ikoni tarkastus ikoni valittu-fn?))))
+      :alue (maarittele-feature tarkastus valittu-fn? ikoni))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
   (let [ikoni (karttakuva "varusteet-ja-laitteet-tack-violetti")]
