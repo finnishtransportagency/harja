@@ -188,7 +188,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                                     (try+
                                       (let [ei-todennettavat-sessiottomat-kasittelijat (keep #(when (:ei-todennettava %) %) @sessiottomat-kasittelijat)
                                             todennettavat-sessiottomat-kasittelijat (filter #(not (:ei-todennettava %)) @sessiottomat-kasittelijat)
-                                            ui-kasittelijat (mapv :fn todennettavat-sessiottomat-kasittelijat)
+                                            ui-kasittelijat (mapv :fn @kasittelijat)
                                             uikasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                               (wrap-anti-forgery))]
                                         (or (reitita req (mapv :fn ei-todennettavat-sessiottomat-kasittelijat))
