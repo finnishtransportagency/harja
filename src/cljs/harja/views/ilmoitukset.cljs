@@ -5,7 +5,8 @@
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
-                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero parsi-selitteet]]
+                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
+                                                 +ilmoitusten-selitteet+ parsi-selitteet]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -126,7 +127,13 @@
           :placeholder "Hae tekstillä..."
           :tyyppi      :string
           :pituus-max  64
-          :palstoja    2}
+          :palstoja    1}
+         {:nimi          :selite
+          :palstoja      1
+          :otsikko       "Selite"
+          :tyyppi        :valinta
+          :valinnat      +ilmoitusten-selitteet+
+          :valinta-nayta second}
 
          (lomake/ryhma {:ulkoasu :rivi}
                        {:nimi        :tilat :otsikko "Tila"
