@@ -483,7 +483,7 @@ nuolten-valimatka 3000)
                      #js {:src            (str +karttaikonipolku+ img)
                           :scale          (or scale 1)
                           :rotation       rotaatio
-                          :anchor         (or (clj->js anchor) #[0.5 0.5])
+                          :anchor         (or (clj->js anchor) #js [0.5 0.5])
                           :rotateWithView false})}))
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
@@ -527,10 +527,10 @@ nuolten-valimatka 3000)
                                        "Merkin paikan pitää olla :alku, :loppu, :taitokset")
                                (condp = paikka
                                  :alku
-                                 [[(-> (laske-taitokset-fn) first :sijainti first clj->js ol.geom.Point)
+                                 [[(-> (laske-taitokset-fn) first :sijainti first clj->js ol.geom.Point.)
                                    (-> (laske-taitokset-fn) first :rotaatio)]]
                                  :loppu
-                                 [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol.geom.Point)
+                                 [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol.geom.Point.)
                                    (-> (laske-taitokset-fn) last :rotaatio)]]
                                  :taitokset
                                  (taitokset-valimatkoin nuolten-valimatka (butlast (laske-taitokset-fn)))))
@@ -538,7 +538,7 @@ nuolten-valimatka 3000)
         pisteet-ja-rotaatiot (mapv palauta-paikat (if (coll? paikka) paikka [paikka]))]
     (condp = tyyppi
       :nuoli (map #(tee-nuoli zindex ikoni %) pisteet-ja-rotaatiot)
-      :merkki (map (tee-merkki zindex ikoni %) pisteet-ja-rotaatiot))))
+      :merkki (map #(tee-merkki zindex ikoni %) pisteet-ja-rotaatiot))))
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-viivalle-tyyli
@@ -576,7 +576,7 @@ nuolten-valimatka 3000)
     (doto feature (.setStyle (clj->js tyylit)))))
 
 (defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor]}]
-  (doto (ol.Feature #js {:geometry (-> coordinates clj->js ol.geom.Point)})
+  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
                                 #js {:src    (str +karttaikonipolku+ img)
@@ -794,12 +794,14 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
                                                  (when-let [new-shape (try
                                                                         (luo-feature geom)
                                                                         (catch js/Error e
+                                                                          (log (pr-str e))
                                                                           (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
                                                                           nil))]
                                                    (aseta-feature-geometria! new-shape item)
                                                    (try
                                                      (.addFeature features new-shape)
                                                      (catch js/Error e
+                                                       (log (pr-str e))
                                                        (log (pr-str "problem in addFeature, avain: " avain "\ngeom: " geom "\nnew-shape: " new-shape))))
 
                                                    ;; Aseta geneerinen tyyli tyypeille, joiden luo-feature ei sitä tee
