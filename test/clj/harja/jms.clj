@@ -42,7 +42,10 @@
           (log/debug "Lähetys menossa.")
           (doseq [k (get @kuuntelijat nimi)]
             (log/debug "Kutsutaan kuuntelijaa:" k)
-            (k msg)))
+            (try
+              (k msg)
+              (catch Exception e
+                (log/warn "VIRHE KUUNTELIJASSA: " e)))))
       (.getJMSMessageID msg)))
 
   (laheta [this nimi viesti]

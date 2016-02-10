@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
 
+
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
@@ -49,6 +50,12 @@
   </seliteet>
   </harja:ilmoitus>
 ")
+
+(defn luo-tloik-komponentti []
+  (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
+            :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
+            :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
+            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
 
 (def +ilmoitus-ruotsissa+
   (clojure.string/replace
