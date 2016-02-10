@@ -324,7 +324,7 @@
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
-        valittu (or @data nil)]
+        valittu (or @data nil)]Korjaa radiogrou
     [:div
      (let [radiobuttonit (doall
                            (for [v vaihtoehdot]
@@ -333,7 +333,8 @@
                               [:label
                                [:input {:type      "radio" :checked (= valittu v)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (reset! data valittu?))}
+                                                     (if valittu?
+                                                       (reset! data v)))}
                                 (vaihtoehto-nayta v)]]]))]
        (if nayta-rivina?
          [:table.boolean-group

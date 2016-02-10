@@ -76,7 +76,7 @@
           :nayta-rivina? true
           :pakollinen? true
           :vaihtoehto-nayta #(turpo-vakavuusasteet %)
-          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
+          :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
           :vaihtoehdot (keys turpo-vakavuusasteet)}
          (lomake/ryhma {:rivi? true}
                        {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
