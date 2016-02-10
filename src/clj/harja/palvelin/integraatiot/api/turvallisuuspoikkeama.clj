@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date
+                                                                   json-array->sql-array]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-turvallisuuspoikkeamalle]]
 
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -27,7 +28,7 @@
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet]} data
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
@@ -43,8 +44,10 @@
                        aiheutuneetVammat
                        sairauspoissaolopaivat
                        sairaalahoitovuorokaudet
-                       (str "{" (clojure.string/join "," (map name luokittelu)) "}")
-                       (:id kirjaaja)))]
+                       (json-array->sql-array luokittelu)
+                       (:id kirjaaja)
+                       (json-array->sql-array vahinkoluokittelu)
+                       vakavuusaste))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
@@ -63,7 +66,7 @@
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet]} data
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
@@ -79,9 +82,11 @@
       aiheutuneetVammat
       sairauspoissaolopaivat
       sairaalahoitovuorokaudet
-      (str "{" (clojure.string/join "," (map name luokittelu)) "}")
+      (json-array->sql-array luokittelu)
       (:id kirjaaja)
       (:id tunniste)
+      (json-array->sql-array vahinkoluokittelu)
+      vakavuusaste
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
            db
