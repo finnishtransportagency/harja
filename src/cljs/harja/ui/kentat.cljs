@@ -331,7 +331,7 @@
                              ^{:key (str "radio-group-" (name v))}
                              [:div.radio
                               [:label
-                               [:input {:type      "radio" :checked (if (some #(= % valittu) vaihtoehdot) true false)
+                               [:input {:type      "radio" :checked (= valittu v)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
                                                      (reset! data valittu?))}
                                 (vaihtoehto-nayta v)]]]))]
