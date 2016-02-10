@@ -99,8 +99,8 @@
   (let [{:keys [tunniste sijainti]} data]
     (log/debug "Onko turvallisuuspoikkeama jo olmessa?")
     (if (turvallisuuspoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
-      (luo-turvallisuuspoikkeama db urakka-id kirjaaja data)
-      (paivita-turvallisuuspoikkeama db urakka-id kirjaaja data))))
+      (paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
+      (luo-turvallisuuspoikkeama db urakka-id kirjaaja data))))
 
 (defn tallenna-kommentit [db tp-id kirjaaja kommentit]
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count kommentit) " kommenttia.")
