@@ -38,6 +38,8 @@
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
+(def +zindex+ 4)
+(def +oletusikoni+ "turvallisuuspoikkeama-tack-vihrea")
 
 (defn- laske-skaala [valittu?]
   (if valittu? +valitun-skaala+ +normaali-skaala+))
@@ -65,6 +67,117 @@
         :img   ikoni}
        optiot)
      (:sijainti asia))))
+
+;; Varmistaa, että merkkiasetukset ovat vähintään [{}].
+;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]
+(defn- validoi-merkkiasetukset [merkit]
+  (cond
+    (empty? merkit) [{}]
+    (string? merkit) [{:img merkit}]
+    (map? merkit) [merkit]
+    :else merkit))
+
+(defn- validoi-viiva-asetukset [viivat]
+  (cond
+    (empty? viivat) [{}]
+    (map? viivat) [viivat]
+    :else viivat))
+
+(defn- maarittele-piste
+  [asia valittu-fn? merkki]
+  (let [merkki (first (validoi-merkkiasetukset merkki))
+        valittu? (valittu-fn? asia)]
+    (merge
+      {:img (karttakuva +oletusikoni+)
+       :scale (laske-skaala valittu?)}
+      merkki)))
+
+(defn- maarittele-viiva
+  [asia valittu-fn? merkit viivat]
+  (let [valittu? (valittu-fn? asia)
+        merkit (validoi-merkkiasetukset merkit)
+        viivat (validoi-viiva-asetukset viivat)]
+    {:viivat (mapv (fn [v] (merge
+                             ;; Ylikirjoitettavat oletusasetukset
+                             {:color (viivan-vari valittu?)
+                              :width (viivan-leveys valittu?)}
+                             v)) viivat)
+     :ikonit (mapv (fn [i] (merge
+                             ;; Oletusasetukset
+                             {:tyyppi :merkki
+                              :paikka :loppu
+                              :scale  (laske-skaala valittu?)
+                              :img    (karttakuva +oletusikoni+)}
+                             i)) merkit)}))
+
+(defn- maarittele-feature
+  "Funktio palauttaa mäpin, joka määrittelee featuren openlayersin haluamassa muodossa.
+  Pakolliset parametrit:
+  * Asia: kannasta haettu, piirrettävä asia
+  * Valittu-fn?: Funktio, joka ottaa parametriksi em. asian, ja palauttaa true/false
+
+  Valinnaiset (mutta tärkeät!) parametrit:
+  * Merkit: Vektori mäppejä, mäppi, tai string, joka määrittelee featureen piirrettävät ikonit
+    - Jos parametri on string, muutetaan se muotoon {:img string}. Jos siis piirrettävä
+      asia on pistemäinen, riittää parametriksi pelkkä string, muuten voidaan mennä
+      oletusasetuksilla
+    - Reittimäisille asioille tällä parametrilla on enemmän merkitystä.
+      Mäpille voi antaa seuraavia arvoja:
+      -- paikka: alku, loppu, taitokset, tai vektori näitä. Mihin paikkoihin ikoni piirretään?
+      -- tyyppi: nuoli tai merkki. Merkit kääntyvät viivan suunnan mukaan, merkit aina pystyssä.
+      -- img: käytettävä ikoni
+      -- Lisäksi openlayersin asetukset scale, zindex, anchor. Jätä mieluummin antamatta
+  * Viivat: Vektori mäppejä tai mäppi, joka määrittelee viivan piirtotyylit
+    - Käytä vektoria mäppejä, jos haluat tehdä kaksivärisiä viivoja. Voit esim. piirtää
+      paksumman mustan viivan, ja sitten ohuemman sinisen viivan sen päälle.
+    - Mäpillä on seuraavat arvot:
+    -- Openlayersin color, width, zindex, dash, cap, join, miter
+  * Pisteen merkki: Valinnainen parametri, johon pätee samat säännöt kuin em. merkkeihin.
+    Jos tätä ei ole annettu, käytetään merkin piirtämiseen merkit vektorissa ensimmäisenä
+    määriteltyä merkkiä (tai jos taas merkit on string tai pelkkä mäp, niin käytetään vaan sitä..).
+    Käytännöllinen jos haluaa esim piirtää reitit nuoliviivoilla, ja pisteen ikonilla.
+
+  Esimerkkejä:
+
+  (maarittele-feature juttu val? (karttakuva 'mun-ikoni'))
+    Juttu on todennäköisesti pistemäinen asia. Käytetään ikonia mun-ikoni. Jos juttu
+    onkin reitillinen, käytetään reitin piirtämiseen puhtaasti oletusasetuksia.
+
+  (maarittele-feature homma val? (karttakuva 'mun-homma) {:color (if (val? homma) 'green' 'yellow')})
+    Samanlainen kuin edellinen, mutta on määritelty millä värillä halutaan piirtää reitti
+
+  (maarittele-feature foo val? [{:paikka :loppu :img (karttakuva 'mun-foo')}
+                                {:paikka :taitokset :img (karttakuva 'nuoli-foo')}]
+                                [{:width 12 :color 'black'} {:width 6 :color 'red'}])
+    Jos foo on pistemäinen, käytetään ikonia 'mun-foo'. Reitilliselle foolle piirretään
+    kaksivärinen viiva, jonka taitoksissa on nuoli, ja loppupäässä 'mun-foo' ikoni.
+
+  (maarittele-feature bar val? {:paikka [:alku :loppu :taitokset] :img (karttakuva 'nuoli-bar')}
+                      nil (karttakuva 'mun-bar')
+    Reitillinen bar piirretään käyttäen viivojen oletusasetuksia. Alku- ja loppupäähän sekä
+    jokaiseen taitokseen piirretään nuoli. Jos bar onkin piste, käytetään vaan 'mun-bar' ikonia."
+  ([asia valittu-fn?] (maarittele-feature asia valittu-fn? [{}] [{}]))
+  ([asia valittu-fn? merkit] (maarittele-feature asia valittu-fn? merkit [{}]))
+  ([asia valittu-fn? merkit viivat] (maarittele-feature asia valittu-fn? merkit viivat nil))
+  ([asia valittu-fn? merkit viivat pisteen-ikoni]
+   (case (get-in asia [:sijainti :type])
+     :line
+     (merge
+       (maarittele-viiva asia valittu-fn? merkit viivat)
+       {:type :viiva
+        :points (get-in asia [:sijainti :points])})
+
+     :multiline
+     (merge
+       (maarittele-viiva asia valittu-fn? merkit viivat)
+       {:type :viiva
+        :points (mapcat :points (get-in asia [:sijainti :lines]))})
+
+     :point
+     (merge
+       (maarittele-piste asia valittu-fn? (or pisteen-ikoni merkit))
+       {:type :merkki
+        :coordinates (get-in asia [:sijainti :coordinates])}))))
 
 (defmulti
   ^{:private true}
