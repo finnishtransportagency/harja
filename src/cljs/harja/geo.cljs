@@ -53,7 +53,9 @@
     :tack-icon-line (:points g)
     :sticker-icon [(:coordinates g)]
     :sticker-icon-line (:points g)
-    :circle [(:coordinates g)]))
+    :circle [(:coordinates g)]
+    :viiva (:points g)
+    :merkki [(:coordinates g)]))
 
 (defn laske-extent-xf
   "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja 
@@ -138,7 +140,13 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod extent :tack-icon [{c :coordinates}]
   (extent-point-circle c))
 
+(defmethod extent :merkki [{c :coordinates}]
+  (extent-point-circle c))
+
 (defmethod extent :tack-icon-line [{points :points}]
+  (laske-pisteiden-extent points))
+
+(defmethod extent :viiva [{points :points}]
   (laske-pisteiden-extent points))
 
 (defmethod extent :sticker-icon [{c :coordinates}]
