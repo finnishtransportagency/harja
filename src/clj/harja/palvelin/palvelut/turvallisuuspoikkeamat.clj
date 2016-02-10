@@ -18,6 +18,7 @@
   (comp (map konv/alaviiva->rakenne)
         (geo/muunna-pg-tulokset :sijainti)
         (map #(konv/array->vec % :tyyppi))
+        (map #(konv/array->vec % :vahinkoluokittelu))
         (map #(assoc % :tyyppi (mapv keyword (:tyyppi %))))
         (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi]))))))
 
