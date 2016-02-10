@@ -37,6 +37,9 @@
                                :omaisuusvahinko  "Omaisuusvahinko"
                                :ymparistovahinko "Ympäristövahinko"})
 
+(def turpo-vakavuusasteet {:vakava "Vakava"
+                           :lieva "Lievä"})
+
 (defn turvallisuuspoikkeaman-tiedot
   []
 
@@ -57,19 +60,24 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
-        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :boolean-group
+        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
           :nayta-rivina? true
           :pakollinen? true
           :vaihtoehto-nayta #(turpo-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
           :vaihtoehdot (keys turpo-tyypit)}
-         {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :boolean-group
+         {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group
           :nayta-rivina? true
           :pakollinen? true
           :vaihtoehto-nayta #(vahinkoluokittelu-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vahinkoluokittelu")]
           :vaihtoehdot (keys vahinkoluokittelu-tyypit)}
-
+         {:otsikko "Vakavuusaste" :nimi :vakavuusaste :tyyppi :radio-group
+          :nayta-rivina? true
+          :pakollinen? true
+          :vaihtoehto-nayta #(turpo-vakavuusasteet %)
+          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
+          :vaihtoehdot (keys turpo-vakavuusasteet)}
          (lomake/ryhma {:rivi? true}
                        {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
@@ -144,11 +152,11 @@
       {:otsikko       "Turvallisuuspoikkeamat"
        :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
-      [{:otsikko "Tapahtunut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
-       {:otsikko "Työntekija" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
-       {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
-       {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
-       {:otsikko "Poissa" :nimi :poissa :tyyppi :string :leveys "5%"
+      [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
+       {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
+       {:otsikko "Ty\u00ADöteh\u00ADtä\u00ADvä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
+       {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
+       {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys "5%"
         :hae     (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
         :hae     (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
