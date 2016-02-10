@@ -88,8 +88,11 @@
       (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                              (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                              kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                             (konv/vec->array-yksittaisesta-arvosta tyyppi) (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
-                                             vakavuusaste (:id user) id)
+                                             (konv/vec->array-yksittaisesta-arvosta tyyppi)
+                                             (:id user)
+                                             (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
+                                             (name vakavuusaste)
+                                             id)
           (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                     sijainti
                                                     tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
@@ -98,8 +101,10 @@
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                                    (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                                   (konv/vec->array-yksittaisesta-arvosta tyyppi) (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
-                                                   vakavuusaste (:id user)))]
+                                                   (konv/vec->array-yksittaisesta-arvosta tyyppi)
+                                                   (:id user)
+                                                   (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
+                                                   (name vakavuusaste)))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id))))
