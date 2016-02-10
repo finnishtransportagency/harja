@@ -29,9 +29,9 @@
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
-(def turpo-tyypit {:turvallisuuspoikkeama "Turvallisuuspoikkeama"
-                   :prosessipoikkeama "Prosessipoikkeama"
-                   :tyoturvallisuuspoikkeama "Työturvallisuuspoikkeama"})
+(def turpo-tyypit {:tyotapaturma "Tyotapaturma"
+                   :vaaratilanne "Vaaratilanne"
+                   :turvallisuushavainto "Turvallisuushavainto"})
 
 (defn turvallisuuspoikkeaman-tiedot
   []
@@ -58,7 +58,7 @@
           :pakollinen? true
           :vaihtoehto-nayta #(turpo-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
-          :vaihtoehdot [:turvallisuuspoikkeama :prosessipoikkeama :tyoturvallisuuspoikkeama]}
+          :vaihtoehdot [:tyotapaturma :vaaratilanne :turvallisuushavainto]}
 
          (lomake/ryhma {:rivi? true}
                        {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
