@@ -89,7 +89,7 @@
    :clj
    (defn ennen? [eka toka]
      (if (and eka toka)
-       (t/before? eka toka) ;; Oli aikaisemmin .before. En tiedä miksi -Teemu
+       (t/before? eka toka)
        false)))
 
 (defn sama-tai-ennen?
@@ -411,7 +411,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 (defn- pakota-aikavali [alku loppu [n yksikko] valittu]
   (assert (not (= n 0)) "pvm/pakota-aikavali: n ei saa olla nolla")
   (let [parametrit [(if (= valittu :alku) alku loppu) n valittu]]
-    (condp = yksikko
+    (case yksikko
          :paiva
           (apply pakota-paivalla parametrit)
          :kuukausi
