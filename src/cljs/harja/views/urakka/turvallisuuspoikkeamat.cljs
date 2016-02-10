@@ -37,8 +37,8 @@
                                :omaisuusvahinko  "Omaisuusvahinko"
                                :ymparistovahinko "Ympäristövahinko"})
 
-(def turpo-vakavuusasteet {:vakava "Vakava"
-                           :lieva "Lievä"})
+(def turpo-vakavuusasteet {:lieva "Lievä"
+                           :vakava "Vakava"})
 
 (defn turvallisuuspoikkeaman-tiedot
   []
