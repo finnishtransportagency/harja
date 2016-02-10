@@ -24,73 +24,83 @@
   (let [vastauksen-data {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn tallenna-turvallisuuspoikkeama [db urakka-id kirjaaja data]
+(defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
-    (log/debug "Onko turvallisuuspoikkeama jo olmessa?")
-    (if (turvallisuuspoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
-      (do
-        (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
-        (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
-          db
-          urakka-id
-          (aika-string->java-sql-date tapahtumapaivamaara)
-          (aika-string->java-sql-date paattynyt)
-          (aika-string->java-sql-date kasitelty)
-          tyontekijanammatti
-          tyotehtava
-          kuvaus
-          aiheutuneetVammat
-          sairauspoissaolopaivat
-          sairaalahoitovuorokaudet
-          (str "{" (clojure.string/join "," (map name luokittelu)) "}")
-          (:id kirjaaja)
-          (:id tunniste)
-          (:id kirjaaja))
-        (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
-               db
-               (:x koordinaatit)
-               (:y koordinaatit)
-               (:numero tie)
-               (:aet tie)
-               (:let tie)
-               (:aos tie)
-               (:los tie)
-               (:id tunniste)
-               (:id kirjaaja))))
+    (let [_ (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
+          tp-id (:id (turvallisuuspoikkeamat/luo-turvallisuuspoikkeama<!
+                       db
+                       urakka-id
+                       (aika-string->java-sql-date tapahtumapaivamaara)
+                       (aika-string->java-sql-date paattynyt)
+                       (aika-string->java-sql-date kasitelty)
+                       tyontekijanammatti
+                       tyotehtava
+                       kuvaus
+                       aiheutuneetVammat
+                       sairauspoissaolopaivat
+                       sairaalahoitovuorokaudet
+                       (str "{" (clojure.string/join "," (map name luokittelu)) "}")
+                       (:id kirjaaja)))]
+      (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
+      (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
+      (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+        db
+        (:x koordinaatit)
+        (:y koordinaatit)
+        (:numero tie)
+        (:aet tie)
+        (:let tie)
+        (:aos tie)
+        (:los tie)
+        (:id tunniste)
+        (:id kirjaaja))
+      tp-id)))
 
-      (let [_ (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
-            tp-id (:id (turvallisuuspoikkeamat/luo-turvallisuuspoikkeama<!
-                         db
-                         urakka-id
-                         (aika-string->java-sql-date tapahtumapaivamaara)
-                         (aika-string->java-sql-date paattynyt)
-                         (aika-string->java-sql-date kasitelty)
-                         tyontekijanammatti
-                         tyotehtava
-                         kuvaus
-                         aiheutuneetVammat
-                         sairauspoissaolopaivat
-                         sairaalahoitovuorokaudet
-                         (str "{" (clojure.string/join "," (map name luokittelu)) "}")
-                         (:id kirjaaja)))]
-        (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
-        (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
-        (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
-          db
-          (:x koordinaatit)
-          (:y koordinaatit)
-          (:numero tie)
-          (:aet tie)
-          (:let tie)
-          (:aos tie)
-          (:los tie)
-          (:id tunniste)
-          (:id kirjaaja))
-        tp-id))))
+(defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
+  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet]} data
+        tie (:tie sijainti)
+        koordinaatit (:koordinaatit sijainti)]
+    (do
+      (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
+      (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
+        db
+        urakka-id
+        (aika-string->java-sql-date tapahtumapaivamaara)
+        (aika-string->java-sql-date paattynyt)
+        (aika-string->java-sql-date kasitelty)
+        tyontekijanammatti
+        tyotehtava
+        kuvaus
+        aiheutuneetVammat
+        sairauspoissaolopaivat
+        sairaalahoitovuorokaudet
+        (str "{" (clojure.string/join "," (map name luokittelu)) "}")
+        (:id kirjaaja)
+        (:id tunniste)
+        (:id kirjaaja))
+      (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+             db
+             (:x koordinaatit)
+             (:y koordinaatit)
+             (:numero tie)
+             (:aet tie)
+             (:let tie)
+             (:aos tie)
+             (:los tie)
+             (:id tunniste)
+             (:id kirjaaja))))))
+
+(defn luo-tai-paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
+  (log/debug "Onko turvallisuuspoikkeama jo olmessa?")
+  (if (turvallisuuspoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
+    (luo-turvallisuuspoikkeama db urakka-id kirjaaja data)
+    (paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)))
 
 (defn tallenna-kommentit [db tp-id kirjaaja kommentit]
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count kommentit) " kommenttia.")
@@ -109,10 +119,10 @@
                                                         " "
                                                         (get-in korjaava [:vastaavahenkilo :sukunimi])))))
 
-(defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]
+(defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
   (jdbc/with-db-transaction [db db]
-    (let [tp-id (tallenna-turvallisuuspoikkeama db urakka-id kirjaaja data)
+    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
           kommentit (:kommentit data)
           korjaavat (:korjaavatToimenpiteet data)
           liitteet (:liitteet data)]
@@ -128,7 +138,7 @@
                (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) ") tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
-      (tallenna liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
+      (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
     (tee-onnistunut-vastaus)))
 
 (defrecord Turvallisuuspoikkeama []
