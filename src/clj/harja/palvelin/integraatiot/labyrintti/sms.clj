@@ -26,20 +26,23 @@
                                            :error body}))
                                 {:sisalto body :otsikot headers})))))
 
-(defn vastaanota-tekstiviesti [request]
-  (log/debug (format "Vastaanotettiin tekstiviesti: %s" request))
+(defn vastaanota-tekstiviesti [db integraatioloki request]
+  (spit "/Users/mikkoro/Desktop/sms-viesti.txt" (format "\n\nVastaanotettiin viesti: %s " request) :append true)
+  (println (format "Vastaanotettiin viesti: %s " request))
   {:status 200})
 
 (defrecord Labyrintti [url kayttajatunnus salasana]
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+    (julkaise-reitti
+      http :vastaanota-tekstiviesti
+      (POST "/sms" request (vastaanota-tekstiviesti db integraatioloki request))
+      true)
     (assoc this
       :url url
       :kayttajatunnus kayttajatunnus
-      :salasana salasana)
-    (julkaise-reitti
-      http :vastaanota-tekstiviesti
-      (GET "/sms" request (vastaanota-tekstiviesti request))))
+      :salasana salasana))
+
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :vastaanota-tekstiviesti)
     this)

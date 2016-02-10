@@ -19,7 +19,8 @@
             [harja.domain.roolit]
 
             [slingshot.slingshot :refer [try+ throw+]])
-  (:import (java.text SimpleDateFormat)))
+  (:import (java.text SimpleDateFormat)
+           (java.io ByteArrayInputStream ByteArrayOutputStream)))
 
 
 (defn- reitita
@@ -104,9 +105,9 @@
                                  {"cache-control" "private, max-age=0, must-revalidate"
                                   "Last-Modified" (.format (SimpleDateFormat. muokkaus-pvm-muoto) last-modified)}
                                  {"cache-control" "no-cache"}))
-               :body    (with-open [out (java.io.ByteArrayOutputStream.)]
+               :body    (with-open [out (ByteArrayOutputStream.)]
                           (t/write (t/writer out :json) vastaus)
-                          (java.io.ByteArrayInputStream. (.toByteArray out)))})))))))
+                          (ByteArrayInputStream. (.toByteArray out)))})))))))
 
 (defprotocol HttpPalvelut
   "Protokolla HTTP palveluiden julkaisemiseksi."
@@ -185,13 +186,16 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                (http/run-server (cookies/wrap-cookies
                                   (fn [req]
                                     (try+
-                                      (let [ui-kasittelijat (mapv :fn @kasittelijat)
+                                      (let [ei-todennettavat-sessiottomat-kasittelijat (keep #(when (:ei-todennettava %) %) @sessiottomat-kasittelijat)
+                                            todennettavat-sessiottomat-kasittelijat (filter #(not (:ei-todennettava %)) @sessiottomat-kasittelijat)
+                                            ui-kasittelijat (mapv :fn todennettavat-sessiottomat-kasittelijat)
                                             uikasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                               (wrap-anti-forgery))]
-                                        (reitita (todennus/todenna-pyynto todennus req)
-                                                 (-> (mapv :fn @sessiottomat-kasittelijat)
-                                                     (conj (partial index-kasittelija kehitysmoodi) resurssit)
-                                                     (conj uikasittelija))))
+                                        (or (reitita req (mapv :fn ei-todennettavat-sessiottomat-kasittelijat))
+                                            (reitita (todennus/todenna-pyynto todennus req)
+                                                     (-> (mapv :fn todennettavat-sessiottomat-kasittelijat)
+                                                         (conj (partial index-kasittelija kehitysmoodi) resurssit)
+                                                         (conj uikasittelija)))))
                                       (catch [:virhe :todennusvirhe] _
                                         {:status 403 :body "Todennusvirhe"}))))
 
@@ -204,7 +208,6 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
     (@lopetus-fn :timeout 100)
     this)
 
-
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
@@ -212,7 +215,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
       (swap! sessiottomat-kasittelijat conj {:nimi nimi
                                              :fn   (if (= false (:tarkista-polku? optiot))
                                                      palvelu-fn
-                                                     (ring-kasittelija nimi palvelu-fn))})
+                                                     (ring-kasittelija nimi palvelu-fn))
+                                             :ei-todennettava (:ei-todennettava optiot)})
       (let [ar (arityt palvelu-fn)
             liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
         (when liikaa-parametreja
@@ -236,12 +240,11 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti false))
-  ([http nimi reitti julkinen?]
+  ([http nimi reitti ei-todennettava?]
    (julkaise-palvelu http nimi (wrap-params reitti)
                      {:ring-kasittelija? true
                       :tarkista-polku?   false
-                      :julkinen julkinen?})))
-
+                      :ei-todennettava   ei-todennettava?})))
 
 (defn julkaise-palvelut [http & palveluiden-nimet-ja-funktiot]
   (doseq [[nimi funktio] (partition 2 palveluiden-nimet-ja-funktiot)]
