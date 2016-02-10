@@ -29,11 +29,15 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+        ;; vielä ei ole implementoitu selitevalintaa, mutta jos se tulee, niin logiikka tähän
+        selite nil
+
         ilmoitukset (hae-ilmoitukset-raportille
                       db user hallintayksikko-id urakka-id
                       nil nil
                       +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "" nil)
+                      [alkupvm loppupvm] "" selite)
+
         ;; graafia varten haetaan joko ilmoitukset pitkältä aikaväliltä tai jos kk raportti, niin hoitokaudelta
         hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
         ilmoitukset-hoitokaudella (when kyseessa-kk-vali?
@@ -41,7 +45,7 @@
                                       db user hallintayksikko-id urakka-id
                                       nil nil
                                       +ilmoitustilat+ +ilmoitustyypit+
-                                      [hoitokauden-alkupvm loppupvm] ""))
+                                      [hoitokauden-alkupvm loppupvm] "" selite))
         ilmoitukset-kuukausittain (group-by ffirst
                                             (frequencies (map (juxt (comp vuosi-ja-kk :ilmoitettu)
                                                                     :ilmoitustyyppi)
