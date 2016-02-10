@@ -84,18 +84,16 @@
     :else viivat))
 
 (defn- maarittele-piste
-  [asia valittu-fn? merkki]
-  (let [merkki (first (validoi-merkkiasetukset merkki))
-        valittu? (valittu-fn? asia)]
+  [valittu? merkki]
+  (let [merkki (first (validoi-merkkiasetukset merkki))]
     (merge
       {:img (karttakuva +oletusikoni+)
        :scale (laske-skaala valittu?)}
       merkki)))
 
 (defn- maarittele-viiva
-  [asia valittu-fn? merkit viivat]
-  (let [valittu? (valittu-fn? asia)
-        merkit (validoi-merkkiasetukset merkit)
+  [valittu? merkit viivat]
+  (let [merkit (validoi-merkkiasetukset merkit)
         viivat (validoi-viiva-asetukset viivat)]
     {:viivat (mapv (fn [v] (merge
                              ;; Ylikirjoitettavat oletusasetukset
@@ -113,8 +111,8 @@
 (defn- maarittele-feature
   "Funktio palauttaa mäpin, joka määrittelee featuren openlayersin haluamassa muodossa.
   Pakolliset parametrit:
-  * Asia: kannasta haettu, piirrettävä asia
-  * Valittu-fn?: Funktio, joka ottaa parametriksi em. asian, ja palauttaa true/false
+  * Asia: kannasta haettu, piirrettävä asia. Tai pelkästään juttu joka sisältää geometriatiedot.
+  * Valittu?: Onko asia valittu? true/false
 
   Valinnaiset (mutta tärkeät!) parametrit:
   * Merkit: Vektori mäppejä, mäppi, tai string, joka määrittelee featureen piirrettävät ikonit
@@ -156,28 +154,29 @@
                       nil (karttakuva 'mun-bar')
     Reitillinen bar piirretään käyttäen viivojen oletusasetuksia. Alku- ja loppupäähän sekä
     jokaiseen taitokseen piirretään nuoli. Jos bar onkin piste, käytetään vaan 'mun-bar' ikonia."
-  ([asia valittu-fn?] (maarittele-feature asia valittu-fn? [{}] [{}]))
-  ([asia valittu-fn? merkit] (maarittele-feature asia valittu-fn? merkit [{}]))
-  ([asia valittu-fn? merkit viivat] (maarittele-feature asia valittu-fn? merkit viivat nil))
-  ([asia valittu-fn? merkit viivat pisteen-ikoni]
-   (case (get-in asia [:sijainti :type])
-     :line
-     (merge
-       (maarittele-viiva asia valittu-fn? merkit viivat)
-       {:type :viiva
-        :points (get-in asia [:sijainti :points])})
+  ([asia valittu?] (maarittele-feature asia valittu? [{}] [{}]))
+  ([asia valittu? merkit] (maarittele-feature asia valittu? merkit [{}]))
+  ([asia valittu? merkit viivat] (maarittele-feature asia valittu? merkit viivat nil))
+  ([asia valittu? merkit viivat pisteen-ikoni]
+   (let [geo (or (:sijainti asia) asia)]
+     (case (:type geo)
+      :line
+      (merge
+        (maarittele-viiva valittu? merkit viivat)
+        {:type   :viiva
+         :points (:points geo)})
 
-     :multiline
-     (merge
-       (maarittele-viiva asia valittu-fn? merkit viivat)
-       {:type :viiva
-        :points (mapcat :points (get-in asia [:sijainti :lines]))})
+      :multiline
+      (merge
+        (maarittele-viiva valittu? merkit viivat)
+        {:type   :viiva
+         :points (mapcat :points (:lines geo))})
 
-     :point
-     (merge
-       (maarittele-piste asia valittu-fn? (or pisteen-ikoni merkit))
-       {:type :merkki
-        :coordinates (get-in asia [:sijainti :coordinates])}))))
+      :point
+      (merge
+        (maarittele-piste valittu? (or pisteen-ikoni merkit))
+        {:type        :merkki
+         :coordinates (:coordinates geo)})))))
 
 (defmulti
   ^{:private true}
@@ -204,7 +203,7 @@
     :nimi (ilmoituksen-tooltip ilmoitus "Tiedotus")
     :selite {:teksti "Tiedotus"
              :img    (karttakuva "tiedotus-tack-violetti")}
-    :alue (maarittele-feature ilmoitus valittu-fn? (karttakuva "tiedotus-tack-violetti"))))
+    :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) (karttakuva "tiedotus-tack-violetti"))))
 
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu-fn?]
@@ -222,7 +221,7 @@
                          lopetettu? "Kysely, lopetettu"
                          :else "Kysely, ei aloituskuittausta.")
                :img    ikoni}
-      :alue (maarittele-feature ilmoitus valittu-fn? ikoni))))
+      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu-fn?]
   (let [vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
@@ -239,7 +238,7 @@
                          lopetettu? "Toimenpidepyyntö, lopetettu"
                          :else "Toimenpidepyyntö, kuittaamaton")
                :img    ikoni}
-      :alue (maarittele-feature ilmoitus valittu-fn? ikoni))))
+      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
 (defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
   (karttakuva
@@ -266,7 +265,7 @@
       :nimi (or (:nimi laatupoikkeama) otsikko)
       :selite {:teksti otsikko
                :img    ikoni}
-      :alue (maarittele-feature laatupoikkeama valittu-fn? ikoni))))
+      :alue (maarittele-feature laatupoikkeama (valittu-fn? laatupoikkeama) ikoni))))
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (selvita-tarkastuksen-ikoni (:tekija tarkastus))]
@@ -276,7 +275,7 @@
                 (otsikko-tekijalla (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tarkastus))
       :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
                :img    ikoni}
-      :alue (maarittele-feature tarkastus valittu-fn? ikoni))))
+      :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
   (let [ikoni (karttakuva "varusteet-ja-laitteet-tack-violetti")]
@@ -285,7 +284,7 @@
       :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
       :selite {:teksti "Varustetoteuma"
                :img    ikoni}
-      :alue (tack-ikoni varustetoteuma ikoni valittu-fn?))))
+      :alue (maarittele-feature varustetoteuma (valittu-fn? varustetoteuma) ikoni))))
 
 (def toteuma-varit-ja-nuolet
   [["rgb(255,0,0)" "punainen"]
@@ -319,11 +318,13 @@
         :nimi nimi
         :selite {:teksti nimi
                  :vari   vari}
-        :alue (arrow-line {:width       5
-                           :color       vari
-                           :arrow-image (karttakuva (str "images/nuoli-" nuoli))
-                           :scale       (if (valittu-fn? toteuma) 1.0 0.75)}
-                          reitti)))))
+        :alue (maarittele-feature reitti (valittu-fn? toteuma)
+                                  {:paikka [:taitokset :loppu]
+                                   :tyyppi :nuoli
+                                   :img    (karttakuva (str "nuoli-" nuoli))
+                                   :scale  (if (valittu-fn? toteuma) 1.0 0.75)}
+                                  {:color vari
+                                   :width 5})))))
 
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
@@ -343,7 +344,7 @@
         :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
         :selite {:teksti selite
                  :img    ikoni}
-        :alue (tack-ikoni tp ikoni valittu-fn?)))))
+        :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
 (defn- paattele-yllapidon-ikoni-ja-viivan-vari
   [teksti asia]
@@ -363,10 +364,10 @@
       :nimi (or (:nimi pt) teksti)
       :selite {:teksti teksti
                :img    ikoni}
-      :alue (tack-ikoni pt ikoni valittu-fn? {:color viiva
-                                              :width (if (:avoin? pt)
-                                                       (if (valittu-fn? pt) 8 5)
-                                                       (if (valittu-fn? pt) 8 nil))})))) ;; nil on default, joka on kommentin kirjoittamisen hetkellä 2.
+      :alue (maarittele-feature pt (valittu-fn? pt) ikoni {:color viiva
+                                                      :width (if (:avoin? pt)
+                                                               (if (valittu-fn? pt) 8 5)
+                                                               (if (valittu-fn? pt) 8 nil))})))) ;; nil on default
 
 (defmethod asia-kartalle :paallystys [pt valittu-fn?]
   (assoc (paikkaus-paallystys pt valittu-fn? "paallystystyo" "Päällystys")
