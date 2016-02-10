@@ -29,8 +29,8 @@
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
   (jdbc/with-db-transaction [db db]
                             (let [vastaus (into []
-                                                (comp (map #(konv/string-polusta>keyword % [:paallystysilmoitus_tila]))
-                                                      (map #(konv/string-polusta>keyword % [:paikkausilmoitus_tila]))
+                                                (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus_tila]))
+                                                      (map #(konv/string-polusta->keyword % [:paikkausilmoitus_tila]))
                                                       (map #(assoc % :kohdeosat
                                                                      (into []
                                                                            kohdeosa-xf
@@ -54,9 +54,9 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-polusta>keyword % [:paatos_taloudellinen_osa]))
-                        (map #(konv/string-polusta>keyword % [:paatos_tekninen_osa]))
-                        (map #(konv/string-polusta>keyword % [:tila]))
+                        (map #(konv/string-polusta->keyword % [:paatos_taloudellinen_osa]))
+                        (map #(konv/string-polusta->keyword % [:paatos_tekninen_osa]))
+                        (map #(konv/string-polusta->keyword % [:tila]))
                         (map #(assoc % :kohdeosat
                                        (into []
                                              kohdeosa-xf
@@ -77,9 +77,9 @@
         paallystysilmoitus (first (into []
                                         (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                               (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                              (map #(konv/string-polusta>keyword % [:tila]))
-                                              (map #(konv/string-polusta>keyword % [:paatos_tekninen_osa]))
-                                              (map #(konv/string-polusta>keyword % [:paatos_taloudellinen_osa])))
+                                              (map #(konv/string-polusta->keyword % [:tila]))
+                                              (map #(konv/string-polusta->keyword % [:paatos_tekninen_osa]))
+                                              (map #(konv/string-polusta->keyword % [:paatos_taloudellinen_osa])))
                                         (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
     (if-not paallystysilmoitus

@@ -123,7 +123,7 @@
   [rivi & kentat]
   (muunna rivi kentat keyword))
 
-(defn string-polusta>keyword
+(defn string-polusta->keyword
   "Muuntaa annetussa polussa olevan stringin Clojure-keywordiksi"
   [data avainpolku]
   (-> data

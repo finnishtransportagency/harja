@@ -21,7 +21,7 @@
         (map #(konv/array->vec % :vahinkoluokittelu))
         (map #(konv/string-vector->keyword-vector % :tyyppi))
         (map #(konv/string-vector->keyword-vector % :vahinkoluokittelu))
-        (map #(konv/string-polusta>keyword % [:kommentti :tyyppi]))))
+        (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
