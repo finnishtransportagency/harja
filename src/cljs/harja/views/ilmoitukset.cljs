@@ -15,6 +15,7 @@
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
+            [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
             [harja.ui.bootstrap :as bs]
@@ -22,7 +23,8 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn pollauksen-merkki []
   [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
@@ -128,12 +130,25 @@
           :tyyppi      :string
           :pituus-max  64
           :palstoja    1}
-         {:nimi          :selite
-          :palstoja      1
-          :otsikko       "Selite"
-          :tyyppi        :valinta
-          :valinnat      +ilmoitusten-selitteet+
-          :valinta-nayta second}
+         {:nimi                  :selite
+          :palstoja              1
+          :otsikko               "Selite"
+          :placeholder           "Kirjoita selite"
+          :tyyppi                :haku
+          :hae-kun-yli-n-merkkia 0
+          :nayta                 second :fmt second
+          :lahde                 (reify protokollat/Haku
+                                   (hae [_ teksti]
+                                     (go (let [haku second
+                                               selitteet +ilmoitusten-selitteet+
+                                               _ (log "filtterissä teksti" (pr-str teksti))
+                                               _ (log "selitteet " (pr-str selitteet))
+                                               itemit (if (< (count teksti) 1)
+                                                        selitteet
+                                                        (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
+                                                                selitteet))
+                                               _ (log "filtterissä itemit" (pr-str itemit))]
+                                           itemit))))}
 
          (lomake/ryhma {:ulkoasu :rivi}
                        {:nimi        :tilat :otsikko "Tila"

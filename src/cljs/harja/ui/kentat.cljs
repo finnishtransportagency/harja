@@ -59,12 +59,13 @@
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake?]} data]
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
         tulokset (atom nil)
-        valittu-idx (atom nil)]
+        valittu-idx (atom nil)
+        hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)]
     (fn [_ data]
       [:div.dropdown {:class (when-not (nil? @tulokset) "open")}
 
@@ -78,7 +79,7 @@
                                (let [v (-> % .-target .-value)]
                                  (reset! data nil)
                                  (reset! teksti v)
-                                 (if (> (count v) 2)
+                                 (if (> (count v) hae-kun-yli-n-merkkia)
                                    (do (reset! tulokset :haetaan)
                                        (go (let [tul (<! (hae lahde v))]
                                              (reset! tulokset tul)

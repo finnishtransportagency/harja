@@ -28,7 +28,7 @@
                              :tyypit          +ilmoitustyypit+
                              :tilat           +ilmoitustilat+
                              :hakuehto        ""
-                             :selite          [nil "Kaikki"]}))
+                             :selite          [nil ""]}))
 
 (defonce ilmoitushaku (atom 0))
 
