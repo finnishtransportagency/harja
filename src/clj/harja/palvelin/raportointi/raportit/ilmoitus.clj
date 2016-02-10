@@ -17,12 +17,12 @@
 
 (defn hae-ilmoitukset-raportille
   [db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
-   +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto]
+   +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto selite]
   (ilmoituspalvelu/hae-ilmoitukset
     db user hallintayksikko-id urakka-id
     urakoitsija urakkatyyppi
     +ilmoitustilat+ +ilmoitustyypit+
-    [alkupvm loppupvm] hakuehto))
+    [alkupvm loppupvm] hakuehto selite))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
@@ -33,7 +33,7 @@
                       db user hallintayksikko-id urakka-id
                       nil nil
                       +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "")
+                      [alkupvm loppupvm] "" nil)
         ;; graafia varten haetaan joko ilmoitukset pitkältä aikaväliltä tai jos kk raportti, niin hoitokaudelta
         hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
         ilmoitukset-hoitokaudella (when kyseessa-kk-vali?

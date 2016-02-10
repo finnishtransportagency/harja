@@ -141,13 +141,10 @@
                                    (hae [_ teksti]
                                      (go (let [haku second
                                                selitteet +ilmoitusten-selitteet+
-                                               _ (log "filtterissä teksti" (pr-str teksti))
-                                               _ (log "selitteet " (pr-str selitteet))
                                                itemit (if (< (count teksti) 1)
                                                         selitteet
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
-                                                                selitteet))
-                                               _ (log "filtterissä itemit" (pr-str itemit))]
+                                                                selitteet))]
                                            (vec itemit)))))}
 
          (lomake/ryhma {:ulkoasu :rivi}
