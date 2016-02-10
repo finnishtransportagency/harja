@@ -204,7 +204,7 @@
     :nimi (ilmoituksen-tooltip ilmoitus "Tiedotus")
     :selite {:teksti "Tiedotus"
              :img    (karttakuva "tiedotus-tack-violetti")}
-    :alue (tack-ikoni ilmoitus (karttakuva "tiedotus-tack-violetti") valittu-fn?)))
+    :alue (maarittele-feature ilmoitus valittu-fn? (karttakuva "tiedotus-tack-violetti"))))
 
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu-fn?]
@@ -222,7 +222,7 @@
                          lopetettu? "Kysely, lopetettu"
                          :else "Kysely, ei aloituskuittausta.")
                :img    ikoni}
-      :alue (tack-ikoni ilmoitus ikoni valittu-fn?))))
+      :alue (maarittele-feature ilmoitus valittu-fn? ikoni))))
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu-fn?]
   (let [vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
@@ -239,7 +239,7 @@
                          lopetettu? "Toimenpidepyyntö, lopetettu"
                          :else "Toimenpidepyyntö, kuittaamaton")
                :img    ikoni}
-      :alue (tack-ikoni ilmoitus ikoni valittu-fn?))))
+      :alue (maarittele-feature ilmoitus valittu-fn? ikoni))))
 
 (defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
   (karttakuva
