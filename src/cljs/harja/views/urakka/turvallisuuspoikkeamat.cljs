@@ -29,7 +29,7 @@
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
-(def turpo-tyypit {:tyotapaturma "Tyotapaturma"
+(def turpo-tyypit {:tyotapaturma "Työtapaturma"
                    :vaaratilanne "Vaaratilanne"
                    :turvallisuushavainto "Turvallisuushavainto"})
 
