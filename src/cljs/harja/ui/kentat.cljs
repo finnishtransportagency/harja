@@ -329,7 +329,7 @@
      (let [radiobuttonit (doall
                            (for [v vaihtoehdot]
                              ^{:key (str "radio-group-" (name v))}
-                             [:div.radiobox
+                             [:div.radio
                               [:label
                                [:input {:type      "radio" :checked (if (some #(= % valittu) vaihtoehdot) true false)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
