@@ -37,6 +37,10 @@
                                            :kayttaja                s/Str
                                            :salasana                s/Str
                                            (s/optional-key :tyyppi) s/Keyword}
+   (s/optional-key :sonja-sahkoposti) {:sahkoposti-sisaan-jono s/Str
+                                       :sahkoposti-sisaan-kuittausjono s/Str
+                                       :sahkoposti-ulos-jono s/Str
+                                       :sahkoposti-ulos-kuittausjono s/Str}
    (s/optional-key :sampo)                {:lahetysjono-sisaan       s/Str
                                            :kuittausjono-sisaan      s/Str
                                            :lahetysjono-ulos         s/Str

@@ -29,12 +29,13 @@
 // The dropdown menu (ul)
 .dropdown-menu {
   position: absolute;
-  top: calc(100% - 10px);
+  top: calc(100% - 3px);
   z-index: @zindex-dropdown;
   display: none; // none by default, but block on "open" of the menu
   min-width: 160px;
   padding: 5px 0;
-  margin: 2px 0 0; // override default ul
+  margin: 0; // override default ul
+  overflow: auto;
   list-style: none;
   font-size: @font-size-base;
   text-align: left; // Ensures proper alignment if parent has it changed (e.g., modal footer)
@@ -189,7 +190,6 @@
   .dropdown-menu {
     top: auto;
     bottom: 100%;
-    margin-bottom: 2px;
   }
 }
 

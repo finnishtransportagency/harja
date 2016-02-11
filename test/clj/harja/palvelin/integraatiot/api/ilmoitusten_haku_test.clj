@@ -27,10 +27,7 @@
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
     :tloik (component/using
-             (->Tloik +tloik-ilmoitusviestijono+
-                      +tloik-ilmoituskuittausjono+
-                      +tloik-ilmoitustoimenpideviestijono+
-                      +tloik-ilmoitustoimenpidekuittausjono+)
+            (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat])))
 
 (use-fixtures :once jarjestelma-fixture)
