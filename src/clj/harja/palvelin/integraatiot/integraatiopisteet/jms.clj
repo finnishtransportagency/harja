@@ -37,20 +37,20 @@
 
 (defn kuittausjonokuuntelija [lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija]
   (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
-  (try x
-       (sonja/kuuntele sonja jono
-                       (fn [viesti]
-                         (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
-                         (let [viestin-sisalto (.getText viesti)
-                               data (viestiparseri viestin-sisalto)
-                               viesti-id (viesti->id data)
-                               onnistunut (onnistunut? data)]
-                           (if viesti-id
-                             (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut)
-                             (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))
-                           (kasittelija data viesti-id onnistunut))))
-       (catch Exception e
-         (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))
+  (try
+    (sonja/kuuntele sonja jono
+                    (fn [viesti]
+                      (log/debug (format "Vastaanotettiin jonosta: %s viesti: %s" jono viesti))
+                      (let [viestin-sisalto (.getText viesti)
+                            data (viestiparseri viestin-sisalto)
+                            viesti-id (viesti->id data)
+                            onnistunut (onnistunut? data)]
+                        (if viesti-id
+                          (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut)
+                          (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))
+                        (kasittelija data viesti-id onnistunut))))
+    (catch Exception e
+      (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))
 
 (defn kuuntele-ja-kuittaa [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
   (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)
