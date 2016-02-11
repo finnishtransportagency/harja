@@ -27,6 +27,7 @@
         paivystaja-id (hae-paivystaja-id)
         ilmoitus-idt [1111 2222 3333]]
 
+    (println "-----> paivystaja-id:" paivystaja-id)
     (doseq [ilmoitus-id ilmoitus-idt] (luo-ilmoitus ilmoitus-id))
 
     (is (= 1 (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id (nth ilmoitus-idt 0)))

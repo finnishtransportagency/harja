@@ -9,10 +9,9 @@ CREATE OR REPLACE FUNCTION hae_seuraava_vapaa_viestinumero(yhteyshenkilo_id INTE
   RETURNS INTEGER AS $$
 BEGIN
   LOCK TABLE paivystajatekstiviesti IN ACCESS EXCLUSIVE MODE;
-  RETURN (SELECT max(coalesce(
-                         (SELECT (SELECT p.viestinumero
-                                  FROM paivystajatekstiviesti p
-                                    INNER JOIN ilmoitus i ON p.ilmoitus = i.id AND i.suljettu IS NOT TRUE
-                                  WHERE yhteyshenkilo = yhteyshenkilo_id)), 0)) + 1 AS viestinumero);
+  RETURN (SELECT coalesce((SELECT (SELECT max(p.viestinumero)
+                                   FROM paivystajatekstiviesti p
+                                     INNER JOIN ilmoitus i ON p.ilmoitus = i.id AND i.suljettu IS NOT TRUE
+                                   WHERE yhteyshenkilo = yhteyshenkilo_id)), 0) + 1 AS viestinumero);
 END;
 $$ LANGUAGE plpgsql;
