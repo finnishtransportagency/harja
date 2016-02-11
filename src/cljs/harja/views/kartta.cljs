@@ -20,7 +20,8 @@
             [harja.ui.dom :as dom]
             [harja.views.kartta.tasot :as tasot]
             [reagent.core :refer [atom] :as reagent]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.kartta.varit.alpha :as varit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -209,12 +210,7 @@
          (t/kuuntele! :urakka-valittu
                       #(openlayers/hide-popup!)))
 
-;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
-(def +varit+ ["rgba(102, 204, 255, 0.7)" "rgba(0, 255, 204, 0.7)" "rgba(0, 102, 0, 0.7)" "rgba(255, 153, 0, 0.7)"
-              "rgba(204, 0, 102, 0.7)" "rgba(255, 204, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 51, 204, 0.7)"
-              "rgba(0, 51, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 204, 51, 0.7)" "rgba(0, 0, 255, 0.7)"
-              "rgba(0, 102, 102, 0.7)" "rgba(51, 153, 102, 0.7)" "rgba(51, 102, 0, 0.7)" "rgba(153, 102, 51, 0.7)"
-              "rgba(153, 0, 51, 0.7)"])
+(def +varit+ varit/kaikki)
 
 (defonce kartan-koon-paivitys
          (run! (do @dom/ikkunan-koko
