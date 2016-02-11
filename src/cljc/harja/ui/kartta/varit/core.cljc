@@ -56,4 +56,4 @@
            (when-not (empty? ylimaaraiset)
              (str "\nNamespacessa " ns " on määritelty värejä jotka tulee lisätä coreen: " (pr-str ylimaaraiset))))))))
 
-(varmenna-kaikki-vektori 'harja.ui.kartta.varit.core)
+#?(:clj (varmenna-kaikki-vektori 'harja.ui.kartta.varit.core))
