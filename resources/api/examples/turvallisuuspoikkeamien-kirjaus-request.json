@@ -52,7 +52,7 @@
         }
       },
       "vaylamuoto": "tie",
-      "luokittelu": ["tyoturvallisuuspoikkeama"],
+      "luokittelu": ["tyotapaturma"],
       "ilmoittaja": {
         "id":5468135,
         "etunimi": "Veera",
@@ -67,6 +67,8 @@
       "aiheutuneetVammat": "Tikattava haava otsassa",
       "sairauspoissaolopaivat": 2,
       "sairaalahoitovuorokaudet": 0,
+      "vahinkoluokittelu": ["omaisuusvahinko", "ymparistovahinko"],
+      "vakavuusaste": "vakava",
       "korjaavatToimenpiteet": [
         {
           "kuvaus": "Kaadetaan risteystä pimentävä pensaikko",

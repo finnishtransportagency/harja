@@ -288,7 +288,7 @@
            "\u2713 "
            "\u2610 ") otsikko])
 
-(defmethod tee-kentta :boolean-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina?]} data]
+(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
@@ -320,6 +320,30 @@
                           [:td cb])
                         checkboxit)]]
          checkboxit))]))
+
+(defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
+  (let [vaihtoehto-nayta (or vaihtoehto-nayta
+                             #(clojure.string/capitalize (name %)))
+        valittu (or @data nil)]
+    [:div
+     (let [radiobuttonit (doall
+                           (for [v vaihtoehdot]
+                             ^{:key (str "radio-group-" (name v))}
+                             [:div.radio
+                              [:label
+                               [:input {:type      "radio" :checked (= valittu v)
+                                        :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                     (if valittu?
+                                                       (reset! data v)))}
+                                (vaihtoehto-nayta v)]]]))]
+       (if nayta-rivina?
+         [:table.boolean-group
+          [:tr
+           (map-indexed (fn [i cb]
+                          ^{:key i}
+                          [:td cb])
+                        radiobuttonit)]]
+         radiobuttonit))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus jos-tyhja]} data]
