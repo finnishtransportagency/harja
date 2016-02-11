@@ -1,5 +1,5 @@
 -- name: hae-seuraa-vapaa-viestinumero
-SELECT hae_seuraava_vapaa_viestinumero(:yhteyshenkilo_id);
+SELECT hae_seuraava_vapaa_viestinumero(:yhteyshenkilo_id :: INTEGER) AS viestinumero;
 
 -- name: kirjaa-uusi-paivystajatekstiviesti!
 INSERT INTO paivystajaviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES

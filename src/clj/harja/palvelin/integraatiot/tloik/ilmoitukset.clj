@@ -1,7 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.ilmoitukset
   (:require [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [clojure.java.jdbc :as jdbc]
             [clj-time.core :as time]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitus-sanoma]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
@@ -27,17 +26,18 @@
   (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
 
 (defn lue-ilmoitus [sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti]
-  (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" (.getText viesti))
-    (ilmoitus-sanoma/lue-viesti viesti)
-    (let [virhe "XML-sanoma ei ole harja-tloik.xsd skeeman mukainen."
-          kuittaus (kuittaus-sanoma/muodosta "-" nil (.toString (time/now)) "virhe" nil nil virhe)]
-      (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id false virhe))))
+  (let [viesti (.getText viesti)]
+    (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" viesti)
+      (ilmoitus-sanoma/lue-viesti viesti)
+      (let [virhe "XML-sanoma ei ole harja-tloik.xsd skeeman mukainen."
+            kuittaus (kuittaus-sanoma/muodosta "-" nil (.toString (time/now)) "virhe" nil nil virhe)]
+        (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id false virhe)))))
 
 (defn hae-urakka [db ilmoitus]
   (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus)))]
-    (urakka (first (urakat/hae-urakka db urakka-id)))))
+    (first (urakat/hae-urakka db urakka-id))))
 
-(defn kasittele-ilmoitus [sms db tapahtumat urakka ilmoitus]
+(defn kasittele-ilmoitus [sonja sms lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id]
   (let [urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)]
     (ilmoitus/tallenna-ilmoitus db ilmoitus)
@@ -67,7 +67,7 @@
     (try+
       (let [urakka (hae-urakka db ilmoitus)]
         (if urakka
-          (kasittele-ilmoitus sms db tapahtumat urakka ilmoitus)
+          (kasittele-ilmoitus sonja sms lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id)
           (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id korrelaatio-id tapahtuma-id)))
       (catch Exception e
         (log/error e (format "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta (id: %s, viesti id: %s)" ilmoitus-id viesti-id))

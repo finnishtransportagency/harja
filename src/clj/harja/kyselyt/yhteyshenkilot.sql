@@ -219,7 +219,7 @@ SELECT exists(
 
 -- name: hae-urakan-taman-hetkiset-paivystajat
 SELECT
-  yh.id
+  yh.id,
   yh.etunimi,
   yh.sukunimi,
   yh.matkapuhelin,

@@ -78,7 +78,7 @@
     (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
-    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
