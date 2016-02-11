@@ -10,8 +10,7 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as email]
             [harja.palvelin.integraatiot.tloik
              [ilmoitukset :as ilmoitukset]
-             [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
-             [kuittaukset :as kuittaukset]]))
+             [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -47,7 +46,7 @@
   (when-let [labyrintti (:labyrintti this)]
     (sms/rekisteroi-kuuntelija!
       labyrintti
-      (fn [numero viesti] (kuittaukset/vastaanota-tekstiviestikuittaus (:db this) numero viesti))))
+      (fn [numero viesti] (ilmoitustoimenpiteet/vastaanota-tekstiviestikuittaus (:db this) numero viesti))))
   (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
     (email/rekisteroi-kuuntelija! sonja-sahkoposti #(ilmoitustoimenpiteet/vastaanota-sahkopostikuittaus (:db this) %))))
 
