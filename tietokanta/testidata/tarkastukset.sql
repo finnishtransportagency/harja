@@ -17,9 +17,6 @@ INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'järjestelmän raportoima testitarkastus 4'), 'B', 6, 6, 0.5, -15, -5, 1);
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin'), 'A', 10, 5, 1, -16, -3, 1);
 
-INSERT INTO liite (nimi) VALUES ('kelitarkastus_2016.jpg');
-INSERT INTO tarkastus_liite (tarkastus, liite) VALUES ((SELECT id FROM tarkastus WHERE havainnot ='järjestelmän raportoima testitarkastus 2'), (SELECT id FROM liite WHERE nimi ='kelitarkastus_2016.jpg'));
-
 -- Tiestö
 
 INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2015-01-02 16:02:00', 4 ,364, 8012, null, null, point(430877.5189858716, 7200994.6888509365)::GEOMETRY, 'Tarmo Tarkastaja', 'tiesto'::tarkastustyyppi, 'Tiessä oli pieni kuoppa', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'yit_uuvh'));
