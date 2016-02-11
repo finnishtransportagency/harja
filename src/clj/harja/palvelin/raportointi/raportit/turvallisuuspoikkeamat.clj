@@ -32,10 +32,10 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         turpot (into []
-                     (comp 
-                      (map #(konv/array->vec % :tyyppi))
-                      (map konv/alaviiva->rakenne))
-                     (hae-turvallisuuspoikkeamat db 
+                     (comp
+                       (map #(konv/array->vec % :tyyppi))
+                       (map konv/alaviiva->rakenne))
+                     (hae-turvallisuuspoikkeamat db
                                                  (if urakka-id true false) urakka-id
                                                  (if hallintayksikko-id true false) hallintayksikko-id
                                                  alkupvm loppupvm))
@@ -94,15 +94,18 @@
                       [{:otsikko "Urakka" :leveys 14}])
                     [{:otsikko "Pvm" :leveys 14}
                      {:otsikko "Tyyppi" :leveys 24}
+                     {:otsikko "Vakavuusaste" :leveys 15}
+                     {:otsikko "Tyyppi" :leveys 24}
                      {:otsikko "Ammatti" :leveys 14}
                      {:otsikko "Työ\u00ADtehtävä" :leveys 14}
                      {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
-                      {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}]))
+                     {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}]))
 
       (keep identity
             (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
                                (pvm/pvm-aika (:tapahtunut %))
                                (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
+                               (or (:vakavuusaste %) "")
                                (or (:tyontekijanammatti %) "")
                                (or (:tyotehtava %) "")
                                (or (:sairaalavuorokaudet %) "")
@@ -111,9 +114,9 @@
                         (sort-by :tapahtunut turpot))
                   (when (not (empty? turpot))
                     (if urakoittain?
-                      (rivi "Yhteensä" "" "" "" ""
+                      (rivi "Yhteensä" "" "" "" "" ""
                             (reduce + 0 (keep :sairaalavuorokaudet turpot))
                             (reduce + 0 (keep :sairauspoissaolopaivat turpot)))
-                      (rivi "Yhteensä" "" "" ""
+                      (rivi "Yhteensä" "" "" "" ""
                             (reduce + 0 (keep :sairaalavuorokaudet turpot))
                             (reduce + 0 (keep :sairauspoissaolopaivat turpot)))))))]]))
