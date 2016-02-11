@@ -20,7 +20,7 @@
    (if devmode
      [:html
       [:head
-       [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
+       [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
        [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
@@ -39,7 +39,7 @@
      [:html
       [:head
        [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
-       [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
+       [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
        [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
