@@ -56,10 +56,9 @@
         tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto)
         {:keys [viesti-id ilmoitus-id] :as ilmoitus} (lue-ilmoitus sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti)]
     (try+
-      (let [urakka (hae-urakka db ilmoitus)]
-        (if urakka
-          (kasittele-ilmoitus sonja sms lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id)
-          (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id korrelaatio-id tapahtuma-id)))
+      (if-let [urakka (hae-urakka db ilmoitus)]
+        (kasittele-ilmoitus sonja sms lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id)
+        (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id korrelaatio-id tapahtuma-id))
       (catch Exception e
         (log/error e (format "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta (id: %s, viesti id: %s)" ilmoitus-id viesti-id))
         (let [virhe (str (format "Poikkeus (id: %s, viesti id: %s) " ilmoitus-id viesti-id) e)
