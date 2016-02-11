@@ -18,8 +18,11 @@
   (comp (map konv/alaviiva->rakenne)
         (geo/muunna-pg-tulokset :sijainti)
         (map #(konv/array->vec % :tyyppi))
-        (map #(assoc % :tyyppi (mapv keyword (:tyyppi %))))
-        (map #(assoc-in % [:kommentti :tyyppi] (keyword (get-in % [:kommentti :tyyppi]))))))
+        (map #(konv/array->vec % :vahinkoluokittelu))
+        (map #(konv/string-vector->keyword-vector % :tyyppi))
+        (map #(konv/string->keyword % :vakavuusaste))
+        (map #(konv/string-vector->keyword-vector % :vahinkoluokittelu))
+        (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
@@ -65,14 +68,14 @@
   [db user
    {:keys
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
-     sairaalavuorokaudet sijainti tr
+     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste
      tyyppi]}]
 
-  (log/debug "tallennetaan tyypit: " (str "{" (clojure.string/join "," (map name tyyppi)) "}"))
+  (log/debug "tallennetaan tyypit: " (konv/vec->array-yksittaisesta-arvosta tyyppi))
 
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
-  ;; Nämä kyselyt vaativat 21 (!!) argumenttia, joten kyselyt piti katkaista kahtia.
+  ;; Nämä kyselyt enemmän argumentteja, joten kyselyt piti katkaista kahtia.
   ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
   ;; että betan vuoksi sitä ei liene järkevää tehdä.
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
@@ -85,8 +88,11 @@
       (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                              (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                              kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                             (str "{" (clojure.string/join "," (map name tyyppi)) "}")
-                                             (:id user) id)
+                                             (konv/vec->array-yksittaisesta-arvosta tyyppi)
+                                             (:id user)
+                                             (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
+                                             (name vakavuusaste)
+                                             id)
           (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                     sijainti
                                                     tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
@@ -95,7 +101,10 @@
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                                    (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                                   (str "{" (clojure.string/join "," (map name tyyppi)) "}") (:id user)))]
+                                                   (konv/vec->array-yksittaisesta-arvosta tyyppi)
+                                                   (:id user)
+                                                   (konv/vec->array-yksittaisesta-arvosta vahinkoluokittelu)
+                                                   (name vakavuusaste)))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id))))
