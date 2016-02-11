@@ -12,6 +12,15 @@
             [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn hae-toteuman-kaikki-sopimus-idt [toteumatyyppi-yksikko toteumatyyppi-monikko data]
+  (keep identity
+        (reduce
+          conj
+          [(get-in data [toteumatyyppi-yksikko :toteuma :sopimusId])]
+          (mapv
+            #(get-in % [toteumatyyppi-yksikko :toteuma :sopimusId])
+            (toteumatyyppi-monikko data)))))
+
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (validointi/tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))

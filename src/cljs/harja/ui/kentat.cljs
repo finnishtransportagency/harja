@@ -292,7 +292,7 @@
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
-    [:div
+    [:div.boolean-group
      ;; Esimerkiksi tilannekuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
      ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
      ;; ei voi vain yksinkertaisesti resetoida datan sisältöä tyhjäksi tai kaikiksi vaihtoehdoiksi.
