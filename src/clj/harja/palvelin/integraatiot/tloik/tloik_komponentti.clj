@@ -15,8 +15,8 @@
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
 
-(defn tee-lokittaja [this]
-  (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" "toimenpiteen-lahetys"))
+(defn tee-lokittaja [this integraatio]
+  (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" integraatio))
 
 (defn tee-ilmoitusviestikuuntelija [this ilmoitusviestijono ilmoituskuittausjono]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
@@ -26,7 +26,7 @@
       (fn [viesti]
         (ilmoitukset/vastaanota-ilmoitus
           (:sonja this)
-          (tee-lokittaja this)
+          (tee-lokittaja this "ilmoituksen-vastaanotto")
           (:labyrintti this)
           (:klusterin-tapahtumat this)
           (:db this)
@@ -35,7 +35,7 @@
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
     (jms/kuittausjonokuuntelija
-      (tee-lokittaja this) (:sonja this) toimenpidekuittausjono
+      (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) toimenpidekuittausjono
       (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
       :viesti-id
       (comp not :virhe)
@@ -68,5 +68,5 @@
 
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
-    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this) (:sonja this) (:toimenpidejono jonot))]
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpidejono jonot))]
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id))))

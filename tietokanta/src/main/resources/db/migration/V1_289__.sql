@@ -1,3 +1,5 @@
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('tloik', 'ilmoituksen-vastaanotto');
+
 CREATE TABLE paivystajatekstiviesti (
   id            SERIAL PRIMARY KEY,
   viestinumero  INTEGER,
