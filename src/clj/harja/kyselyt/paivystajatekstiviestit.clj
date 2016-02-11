@@ -3,5 +3,5 @@
 
 (defqueries "harja/kyselyt/paivystajatekstiviestit.sql")
 
-(defn hae-seuraava-viestinumero[db yhteyshenkilo-id]
-  (:viestinumero (first (harja.kyselyt.paivystajatekstiviestit/hae-seuraa-vapaa-viestinumero db yhteyshenkilo-id))))
+(defn kirjaa-uusi-viesti [db yhteyshenkilo-id ilmoitus-id]
+  (:viestinumero (harja.kyselyt.paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db yhteyshenkilo-id ilmoitus-id)))

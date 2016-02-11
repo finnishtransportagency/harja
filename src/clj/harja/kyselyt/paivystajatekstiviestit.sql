@@ -1,10 +1,7 @@
--- name: hae-seuraa-vapaa-viestinumero
-SELECT hae_seuraava_vapaa_viestinumero(:yhteyshenkilo_id :: INTEGER) AS viestinumero;
-
--- name: kirjaa-uusi-paivystajatekstiviesti!
-INSERT INTO paivystajaviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES
-  (:viestinumero,
+-- name: kirjaa-uusi-paivystajatekstiviesti<!
+INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES
+  ((SELECT hae_seuraava_vapaa_viestinumero(:yhteyshenkiloid :: INTEGER)),
    (SELECT id
     FROM ilmoitus
     WHERE ilmoitusid = :ilmoitusid),
-   :yhteyshenkilo);
+   :yhteyshenkiloid);

@@ -24,7 +24,7 @@
               otsikko (:otsikko ilmoitus)
               lyhytselite (:lyhytselite ilmoitus)
               selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
-              viestinumero (paivystajatekstiviestit/hae-seuraava-viestinumero db paivystaja-id)
+              viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ilmoitus-id)
               viesti (format +ilmoitustekstiviesti+
                              otsikko
                              ilmoitus-id
@@ -33,8 +33,7 @@
                              viestinumero
                              viestinumero
                              viestinumero)]
-          (sms/laheta sms puhelinnumero viesti)
-          (paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti! db viestinumero ilmoitus-id paivystaja-id)))
+          (sms/laheta sms puhelinnumero viesti)))
       (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
     (catch Exception e
       (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))
