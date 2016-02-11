@@ -156,6 +156,9 @@
       :kayttajatiedot (component/using
                         (kayttajatiedot/->Kayttajatiedot (:testikayttajat asetukset))
                         [:http-palvelin :db])
+      :urakoitsijat (component/using
+                      (urakoitsijat/->Urakoitsijat)
+                      [:http-palvelin :db])
       :hallintayksikot (component/using
                          (hallintayksikot/->Hallintayksikot)
                          [:http-palvelin :db])
