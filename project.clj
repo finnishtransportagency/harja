@@ -8,7 +8,7 @@
                  [prismatic/schema "1.0.4"]
                  [org.clojure/core.async "0.2.374"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.232"]
+                 [com.cognitect/transit-cljs "0.8.237"]
                  [com.cognitect/transit-clj "0.8.285"]
 
                  ;;;;;;; Palvelin ;;;;;;;
@@ -33,7 +33,7 @@
                  [org.clojure/core.cache "0.6.4"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "9.3-1102-jdbc41"]
+                 [org.postgresql/postgresql "9.4.1207"]
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5"]
@@ -63,8 +63,8 @@
                  [spyscope "0.1.5"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
-                 [cljs-ajax "0.5.2"]
-                 [figwheel "0.5.0-2"]
+                 [cljs-ajax "0.5.3"]
+                 [figwheel "0.5.0-6"]
 
                  [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
@@ -74,7 +74,7 @@
                  [clj-time "0.11.0"]
                  [com.andrewmcveigh/cljs-time "0.3.14"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
 
-                 [cljsjs/openlayers "3.10.1"]
+                 [cljsjs/openlayers "3.13.0"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.13"]                ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
@@ -83,7 +83,7 @@
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjastoe
-                 [jarohen/chime "0.1.7"]
+                 [jarohen/chime "0.1.9"]
 
                  ;; Pikkukuvien muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
@@ -101,7 +101,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.0"]
+                 [org.apache.xmlgraphics/fop "2.1"]
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.2"]
