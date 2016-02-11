@@ -47,7 +47,7 @@
     (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpidejono jonot))]
       (sms/rekisteroi-kuuntelija!
         labyrintti
-        (fn [numero viesti] (ilmoitustoimenpiteet/vastaanota-tekstiviestikuittaus jms-lahettaja (:sms this) (:db this) numero viesti))))
+        (fn [numero viesti] (ilmoitustoimenpiteet/vastaanota-tekstiviestikuittaus jms-lahettaja labyrintti (:db this) numero viesti))))
     (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
       (email/rekisteroi-kuuntelija! sonja-sahkoposti #(ilmoitustoimenpiteet/vastaanota-sahkopostikuittaus (:db this) %)))))
 

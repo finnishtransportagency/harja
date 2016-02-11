@@ -55,15 +55,15 @@
 
 (defn hae-paivystaja [db puhelinnumero]
   ;; todo: tämä on naivi toteutus. jatkossa pitää käyttää jarin tekemää puhelinnumeron parsintaa, jotta tuetaan useita eri puhelinnumeron muotoja.
-  (if-let [paivystaja (yhteyshenkilot/hae-paivystaja-puhelinnumerolla db puhelinnumero)]
+  (if-let [paivystaja (first (yhteyshenkilot/hae-paivystaja-puhelinnumerolla db puhelinnumero))]
     paivystaja
     (throw+ {:type :tuntematon-kayttaja})))
 
 (defn parsi-toimenpide [toimenpide]
   (case toimenpide
-    "V" :vastaanotto
-    "A" :aloitus
-    "L" :lopetus
+    "V" "vastaanotto"
+    "A" "aloitus"
+    "L" "lopetus"
     (throw+ {:type    :tuntematon-ilmoitustoimenpide
              :virheet [{:koodi  :tuntematon-ilmoitustoimenpide
                         :viesti (format "Tuntematon ilmoitustoimenpide: %s" toimenpide)}]})))
@@ -80,7 +80,7 @@
    :viestinumero (parsi-viestinumero (str (nth viesti 1)))})
 
 (defn hae-ilmoitus-id [db viestinumero paivystaja]
-  (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db viestinumero (:id paivystaja))]
+  (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db (:id paivystaja) viestinumero)]
     ilmoitus
     (throw+ {:type :tuntematon-ilmoitus})))
 
@@ -88,10 +88,10 @@
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
          (:id ilmoitus)
-         (:ilmoitus-id ilmoitus)
+         (:ilmoitusid ilmoitus)
          (harja.pvm/nyt)
          nil
-         (name toimenpide)
+         toimenpide
          (:etunimi paivystaja)
          (:sukunimi paivystaja)
          (:tyopuhelin paivystaja)
@@ -114,7 +114,7 @@
     (let [paivystaja (hae-paivystaja db puhelinnumero)
           data (parsi-tekstiviesti viesti)
           ilmoitus-id (hae-ilmoitus-id db (:viestinumero data) paivystaja)
-          ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus-id (:toimepide data) paivystaja)]
+          ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus-id (:toimenpide data) paivystaja)]
 
       (laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
       (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!")

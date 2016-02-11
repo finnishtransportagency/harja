@@ -11,6 +11,7 @@ SELECT
   i.id,
   i.ilmoitusid
 FROM paivystajatekstiviesti p
-  INNER JOIN ilmoitus i on i.id = p.ilmoitus
-  WHERE p.yhteyshenkilo = :yhteyshenkilo AND
-p.viestinumero = :viestinumero;
+  INNER JOIN ilmoitus i ON i.id = p.ilmoitus
+WHERE p.yhteyshenkilo = :yhteyshenkilo AND
+      p.viestinumero = :viestinumero
+LIMIT 1;
