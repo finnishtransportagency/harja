@@ -1,0 +1,59 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "varustetoteuma": {
+    "toteuma": {
+      "tunniste": {
+        "id": __ID__
+      },
+      "alkanut": "2016-01-30T12:00:00Z",
+      "paattynyt": "2016-01-30T12:00:00Z",
+      "toteumatyyppi": "yksikkohintainen",
+      "sopimusId": 5,
+      "suorittaja": {
+        "nimi": "Tehotekijät Oy",
+        "ytunnus": "8765432-1"
+      },
+      "tehtavat": [
+        {
+          "tehtava": {
+            "id": 1370
+          }
+        }
+      ]
+    },
+    "sijainti": {
+      "koordinaatit": {
+        "x": 64000,
+        "y": 7250503
+      }
+    },
+    "varuste": {
+      "tietolaji": "tl505",
+      "toimenpide": "tarkastus",
+      "tunniste": "HARJ951547ZK",
+      "tarkastusaika": "2016-01-30T12:00:00Z",
+      "arvot": "----livitunniste----        2                           ----livitunniste----          01  ",
+      "sijainti": {
+        "tie": {
+          "numero": 89,
+          "aet": 12,
+          "aosa": 1,
+          "ajr": 0,
+          "puoli": 1
+        }
+      }
+    }
+  }
+}
