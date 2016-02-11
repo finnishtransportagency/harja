@@ -1,0 +1,10 @@
+[Unit]
+Description=ActiveMQ
+
+[Service]
+ExecStart=/harja/activemq/apache-activemq-5.12.3/bin/activemq start
+ExecReload=/harja/activemq/apache-activemq-5.12.3/bin/activemq restart
+ExecStop=/harja/activemq/apache-activemq-5.12.3/bin/activemq stop
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,77 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+  "pistetoteumat": [
+    {
+      "pistetoteuma": {
+        "toteuma": {
+          "tunniste": {
+            "id": __ID1__
+          },
+          "sopimusId": 5,
+          "suorittaja": {
+            "nimi": "__SUORITTAJA1_NIMI__",
+            "ytunnus": "8765432-1"
+          },
+          "alkanut": "2016-01-30T12:00:00Z",
+          "paattynyt": "2016-01-30T12:00:00Z",
+          "toteumatyyppi": "__TOTEUMA1_TYYPPI__",
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1370
+              }
+            }
+          ]
+        },
+        "sijainti": {
+          "koordinaatit": {
+            "x": 62000,
+            "y": 7210200
+          }
+        }
+      }
+    },
+    {
+      "pistetoteuma": {
+        "toteuma": {
+          "tunniste": {
+            "id": __ID2__
+          },
+          "sopimusId": 5,
+          "suorittaja": {
+            "nimi": "__SUORITTAJA2_NIMI__",
+            "ytunnus": "8765432-1"
+          },
+          "alkanut": "2016-01-30T12:00:00Z",
+          "paattynyt": "2016-01-30T12:00:00Z",
+          "toteumatyyppi": "__TOTEUMA2_TYYPPI__",
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1370
+              }
+            }
+          ]
+        },
+        "sijainti": {
+          "koordinaatit": {
+            "x": 62000,
+            "y": 7210200
+          }
+        }
+      }
+    }
+  ]
+}
