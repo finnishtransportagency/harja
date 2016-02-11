@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 0.0.8</b>
-<b>Julkaistu: 11.12.2015</b>
+<b>Nykyinen versio: 0.0.9</b>
+<b>Julkaistu: 11.2.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.0.9. Julkaistu 11.2.2016
+    - Turvallisuuspoikkeamalle vaihdettu uudet tyyppi-arvot, yksi tai useampi: tyotapaturma, vaaratilanne, turvallisuushavainto
+    - Turvallisuuspoikkeama vastaanottaa vahinkoluokittelun, yksi tai useampi: henkilovahinko, omaisuusvahinko, ymparistovahinko
+    - Turvallisuuspoikkeama vastaanottaa vakavuusastee: vakava tai lieva
 - Versionumero: 0.0.8. Julkaistu: 9.2.2016
     - Pistetoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "pistetoteumat" avaimen alle
     - Reittitoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "reittitoteumat" avaimen alle

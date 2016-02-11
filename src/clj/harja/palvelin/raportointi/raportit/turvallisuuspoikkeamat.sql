@@ -2,6 +2,7 @@
 -- Hakee turvallisuuspoikkeamat aikavälillä
 SELECT t.id, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.tyyppi,
+      t.vakavuusaste,
        u.nimi as urakka_nimi,
        u.id as urakka_id
   FROM turvallisuuspoikkeama t

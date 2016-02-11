@@ -1,17 +1,15 @@
-CREATE TABLE paivystajatekstiviesti (
-  id            SERIAL PRIMARY KEY,
-  viestinumero  INTEGER,
-  ilmoitus      INTEGER REFERENCES ilmoitus (id),
-  yhteyshenkilo INTEGER REFERENCES yhteyshenkilo (id)
-);
+-- Turvallisuuspoikkeaman muutokset (HAR-1743)
+-- Vanhoja turpo-tyyppejä ei voi mäpätä suoraan uusiin. Mäpätään Mikon toiveesta kaikki työtapaturmiksi.
 
-CREATE OR REPLACE FUNCTION hae_seuraava_vapaa_viestinumero(yhteyshenkilo_id INTEGER)
-  RETURNS INTEGER AS $$
-BEGIN
-  LOCK TABLE paivystajatekstiviesti IN ACCESS EXCLUSIVE MODE;
-  RETURN (SELECT coalesce((SELECT (SELECT max(p.viestinumero)
-                                   FROM paivystajatekstiviesti p
-                                     INNER JOIN ilmoitus i ON p.ilmoitus = i.id AND i.suljettu IS NOT TRUE
-                                   WHERE yhteyshenkilo = yhteyshenkilo_id)), 0) + 1 AS viestinumero);
-END;
-$$ LANGUAGE plpgsql;
+CREATE TYPE turvallisuuspoikkeama_luokittelu AS ENUM ('tyotapaturma', 'vaaratilanne', 'turvallisuushavainto');
+CREATE TYPE turvallisuuspoikkeama_vahinkoluokittelu AS ENUM ('henkilovahinko','omaisuusvahinko', 'ymparistovahinko');
+CREATE TYPE turvallisuuspoikkeama_vakavuusaste AS ENUM ('vakava','lieva');
+
+ALTER TABLE turvallisuuspoikkeama RENAME COLUMN tyyppi TO tyyppi_;
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN tyyppi turvallisuuspoikkeama_luokittelu[];
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahinkoluokittelu turvallisuuspoikkeama_vahinkoluokittelu[];
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vakavuusaste turvallisuuspoikkeama_vakavuusaste;
+UPDATE turvallisuuspoikkeama SET tyyppi = ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[];
+ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyyppi_;
+
+DROP TYPE turvallisuuspoikkeamatyyppi;

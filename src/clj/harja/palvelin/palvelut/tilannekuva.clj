@@ -85,7 +85,7 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
-              (map #(konv/string->avain % [:paallystysilmoitus :tila])))
+              (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
             (if nykytilanne?
               (q/hae-paallystykset-nykytilanteeseen db toleranssi)
               (q/hae-paallystykset-historiakuvaan db
@@ -104,7 +104,7 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
-              (map #(konv/string->avain % [:paikkausilmoitus :tila])))
+              (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
             (if nykytilanne?
               (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
               (q/hae-paikkaukset-historiakuvaan db
@@ -181,7 +181,8 @@
                 (map konv/alaviiva->rakenne)
                 (geo/muunna-pg-tulokset :sijainti)
                 (map #(konv/array->vec % :tyyppi))
-                (map #(assoc % :tyyppi (mapv keyword (:tyyppi %)))))
+                (map #(konv/string-vector->keyword-vector % :tyyppi))
+                (map #(konv/string->keyword % :vakavuusaste)))
               (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
                                             (konv/sql-date loppu)))
         {:korjaavatoimenpide :korjaavattoimenpiteet})
