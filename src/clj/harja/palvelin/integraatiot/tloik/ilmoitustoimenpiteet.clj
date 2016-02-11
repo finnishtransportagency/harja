@@ -14,6 +14,8 @@
       (do
         (jms-lahettaja xml viesti-id)
         (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db viesti-id id)
+        (when (= "lopetus" (:kuittaustyyppi data))
+          (ilmoitukset/merkitse-ilmoitustoimenpide-suljetuksi! db (:ilmoitus data)))
         (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id)))
       (do
         (log/error (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n epäonnistui." id))
@@ -25,7 +27,8 @@
     (lukko/aja-lukon-kanssa db "tloik-ilm.toimenpidelahetys" (fn [] (laheta jms-lahettaja db id)))
     (catch Exception e
       (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
-      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id))))
+      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id)
+      (throw e))))
 
 (defn vastaanota-kuittaus [db viesti-id onnistunut]
   (if onnistunut
