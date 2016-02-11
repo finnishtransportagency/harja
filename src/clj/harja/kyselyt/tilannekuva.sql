@@ -134,6 +134,7 @@ SELECT
   t.vammat,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
+  t.vakavuusaste,
   ST_Simplify(t.sijainti, :toleranssi) AS sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
