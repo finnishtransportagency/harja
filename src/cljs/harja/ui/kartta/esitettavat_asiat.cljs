@@ -158,25 +158,30 @@
   ([asia valittu? merkit] (maarittele-feature asia valittu? merkit [{}]))
   ([asia valittu? merkit viivat] (maarittele-feature asia valittu? merkit viivat nil))
   ([asia valittu? merkit viivat pisteen-ikoni]
-   (let [geo (or (:sijainti asia) asia)]
-     (case (:type geo)
-      :line
-      (merge
-        (maarittele-viiva valittu? merkit viivat)
-        {:type   :viiva
-         :points (:points geo)})
+   (let [geo (or (:sijainti asia) asia)
+         tyyppi (:type geo)
 
-      :multiline
-      (merge
-        (maarittele-viiva valittu? merkit viivat)
-        {:type   :viiva
-         :points (mapcat :points (:lines geo))})
+         koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
+     (cond
+       ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
+       ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
+       (or (= :point tyyppi) (= 1 (count koordinaatit)))
+       (merge
+         (maarittele-piste valittu? (or pisteen-ikoni merkit))
+         {:type        :merkki
+          :coordinates (flatten koordinaatit)}) ;; [x y] -> [x y] && [[x y]] -> [x y]
 
-      :point
-      (merge
-        (maarittele-piste valittu? (or pisteen-ikoni merkit))
-        {:type        :merkki
-         :coordinates (:coordinates geo)})))))
+       (= :line tyyppi)
+       (merge
+         (maarittele-viiva valittu? merkit viivat)
+         {:type   :viiva
+          :points koordinaatit})
+
+       (= :multiline tyyppi)
+       (merge
+         (maarittele-viiva valittu? merkit viivat)
+         {:type   :viiva
+          :points koordinaatit})))))
 
 (defmulti
   ^{:private true}
