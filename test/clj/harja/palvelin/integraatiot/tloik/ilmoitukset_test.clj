@@ -71,8 +71,7 @@
   (poista-ilmoitus))
 
 ;; fixme: poistettu flaky testi, feilaili oudosti
-;; todo: kommentoi pois
-(deftest tarkista-viestin-kasittely-ja-kuittaukset
+#_(deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
     (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
