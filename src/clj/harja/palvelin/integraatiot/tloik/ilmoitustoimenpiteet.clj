@@ -79,7 +79,7 @@
   {:toimenpide   (parsi-toimenpide (str (nth viesti 0)))
    :viestinumero (parsi-viestinumero (str (nth viesti 1)))})
 
-(defn hae-ilmoitus-id [db viestinumero paivystaja]
+(defn hae-ilmoitus [db viestinumero paivystaja]
   (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db (:id paivystaja) viestinumero)]
     ilmoitus
     (throw+ {:type :tuntematon-ilmoitus})))
@@ -113,8 +113,8 @@
   (try+
     (let [paivystaja (hae-paivystaja db puhelinnumero)
           data (parsi-tekstiviesti viesti)
-          ilmoitus-id (hae-ilmoitus-id db (:viestinumero data) paivystaja)
-          ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus-id (:toimenpide data) paivystaja)]
+          ilmoitus (hae-ilmoitus db (:viestinumero data) paivystaja)
+          ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus (:toimenpide data) paivystaja)]
 
       (laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
       (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!")
