@@ -51,10 +51,3 @@
           (conj edellinen id))))
     []
     (range maara)))
-
-(deftest usean-vapaan-idn-haku-toimii []
-  (loop [index 0]
-    (let [idt (hae-usea-vapaa-toteuma-ulkoinen-id 10)]
-      (is (= (distinct idt) idt)))
-    (when (< index 10)
-      (recur (inc index)))))
