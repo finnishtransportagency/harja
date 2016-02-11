@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
+            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat-kuukausittain]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
@@ -34,6 +35,7 @@
         turpot (into []
                      (comp
                        (map #(konv/array->vec % :tyyppi))
+                       (map #(konv/string->keyword % :vakavuusaste))
                        (map konv/alaviiva->rakenne))
                      (hae-turvallisuuspoikkeamat db
                                                  (if urakka-id true false) urakka-id
@@ -105,7 +107,7 @@
             (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
                                (pvm/pvm-aika (:tapahtunut %))
                                (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
-                               (or (:vakavuusaste %) "")
+                               (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
                                (or (:tyontekijanammatti %) "")
                                (or (:tyotehtava %) "")
                                (or (:sairaalavuorokaudet %) "")

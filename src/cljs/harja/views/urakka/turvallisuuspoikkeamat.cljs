@@ -3,6 +3,7 @@
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
+            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -20,7 +21,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defc korjaavattoimenpiteet
+(defn korjaavattoimenpiteet
   [toimenpiteet]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
@@ -28,17 +29,6 @@
     {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys "15%" :tyyppi :pvm}
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
-
-(def turpo-tyypit {:tyotapaturma "Työtapaturma"
-                   :vaaratilanne "Vaaratilanne"
-                   :turvallisuushavainto "Turvallisuushavainto"})
-
-(def vahinkoluokittelu-tyypit {:henkilovahinko   "Henkilövahinko"
-                               :omaisuusvahinko  "Omaisuusvahinko"
-                               :ymparistovahinko "Ympäristövahinko"})
-
-(def turpo-vakavuusasteet {:lieva "Lievä"
-                           :vakava "Vakava"})
 
 (defn turvallisuuspoikkeaman-tiedot
   []
@@ -63,21 +53,21 @@
         [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
           :nayta-rivina? true
           :pakollinen? true
-          :vaihtoehto-nayta #(turpo-tyypit %)
+          :vaihtoehto-nayta #(turpodomain/turpo-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
-          :vaihtoehdot (keys turpo-tyypit)}
+          :vaihtoehdot (keys turpodomain/turpo-tyypit)}
          {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group
           :nayta-rivina? true
           :pakollinen? true
-          :vaihtoehto-nayta #(vahinkoluokittelu-tyypit %)
+          :vaihtoehto-nayta #(turpodomain/vahinkoluokittelu-tyypit %)
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vahinkoluokittelu")]
-          :vaihtoehdot (keys vahinkoluokittelu-tyypit)}
+          :vaihtoehdot (keys turpodomain/vahinkoluokittelu-tyypit)}
          {:otsikko "Vakavuusaste" :nimi :vakavuusaste :tyyppi :radio-group
           :nayta-rivina? true
           :pakollinen? true
-          :vaihtoehto-nayta #(turpo-vakavuusasteet %)
+          :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
-          :vaihtoehdot (keys turpo-vakavuusasteet)}
+          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)}
          (lomake/ryhma {:rivi? true}
                        {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
@@ -139,7 +129,7 @@
     (reset! tiedot/valittu-turvallisuuspoikkeama
             (<! (tiedot/hae-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))))
 
-(defc turvallisuuspoikkeamalistaus
+(defn turvallisuuspoikkeamalistaus
   []
   (let [urakka @nav/valittu-urakka]
     [:div.sanktiot
