@@ -26,7 +26,7 @@
       (fn [viesti]
         (ilmoitukset/vastaanota-ilmoitus
           (:sonja this)
-          (tee-lokittaja this "ilmoituksen-vastaanotto")
+          (tee-lokittaja this "ilmoituksen-kirjaus")
           (:labyrintti this)
           (:klusterin-tapahtumat this)
           (:db this)
