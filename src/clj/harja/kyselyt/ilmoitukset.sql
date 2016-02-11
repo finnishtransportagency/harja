@@ -228,6 +228,7 @@ WHERE id = :id;
 -- name: hae-ilmoitustoimenpide
 SELECT
   id                               AS id,
+  ilmoitus                         AS ilmoitus,
   ilmoitusid                       AS ilmoitusid,
   kuitattu                         AS kuitattu,
   vapaateksti                      AS vapaateksti,
@@ -306,4 +307,7 @@ VALUES
    :kasittelija_organisaatio_nimi,
    :kasittelija_organisaatio_ytunnus);
 
-
+-- name: merkitse-ilmoitustoimenpide-suljetuksi!
+UPDATE ilmoitus
+SET suljettu = TRUE
+WHERE id = :id;

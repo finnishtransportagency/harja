@@ -70,6 +70,7 @@
   Todennus
   (todenna-pyynto [{db :db :as this} req]
     (let [headerit (:headers req)
+          _ (log/info "TODENNA PYYNTÖ, HEADERIT: " (pr-str headerit))
           kayttaja-id (headerit "oam_remote_user")]
       
       ;;(log/info "KOKA: " kayttaja-id)

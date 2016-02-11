@@ -5,7 +5,8 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
             [harja.kyselyt.integraatiot :as q]
             [harja.tyokalut.xml :as xml]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (java.util UUID)))
 
 (defprotocol Sahkoposti
   (rekisteroi-kuuntelija! [this kuuntelija-fn]
@@ -54,7 +55,7 @@
     #(swap! kuuntelijat disj kuuntelija-fn))
 
   (laheta-viesti! [{jms-lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
-    (let [viesti-id (str (java.util.UUID/randomUUID))
+    (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
       (jms-lahettaja viesti viesti-id))))

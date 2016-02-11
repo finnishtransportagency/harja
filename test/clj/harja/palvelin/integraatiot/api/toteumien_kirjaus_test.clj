@@ -31,7 +31,7 @@
 (deftest tallenna-pistetoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                                (-> "test/resurssit/api/pistetoteuma.json"
+                                                (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -45,7 +45,7 @@
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                                      (-> "test/resurssit/api/pistetoteuma.json"
+                                                      (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__ID__" (str ulkoinen-id))
                                                           (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
@@ -63,7 +63,7 @@
 (deftest tallenna-reittitoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                (-> "test/resurssit/api/reittitoteuma.json"
+                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
@@ -73,7 +73,7 @@
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                      (-> "test/resurssit/api/reittitoteuma.json"
+                                                      (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__ID__" (str ulkoinen-id))
                                                           (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "toteuma": {
+      "id": "urn:harja/reittitoteuma/toteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
+    },
+    "reitti": {
+      "id": "urn:harja/reittitoteuma/reitti",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
+    }
+  }
+}
