@@ -42,18 +42,19 @@
       (fn [_ viesti-id onnistunut]
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
-(defn rekisteroi-kuittauskuuntelijat [this]
+(defn rekisteroi-kuittauskuuntelijat [this jonot]
   (when-let [labyrintti (:labyrintti this)]
-    (sms/rekisteroi-kuuntelija!
-      labyrintti
-      (fn [numero viesti] (ilmoitustoimenpiteet/vastaanota-tekstiviestikuittaus (:db this) numero viesti))))
-  (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
-    (email/rekisteroi-kuuntelija! sonja-sahkoposti #(ilmoitustoimenpiteet/vastaanota-sahkopostikuittaus (:db this) %))))
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpidejono jonot))]
+      (sms/rekisteroi-kuuntelija!
+        labyrintti
+        (fn [numero viesti] (ilmoitustoimenpiteet/vastaanota-tekstiviestikuittaus jms-lahettaja (:sms this) (:db this) numero viesti))))
+    (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
+      (email/rekisteroi-kuuntelija! sonja-sahkoposti #(ilmoitustoimenpiteet/vastaanota-sahkopostikuittaus (:db this) %)))))
 
 (defrecord Tloik [jonot]
   component/Lifecycle
   (start [this]
-    (rekisteroi-kuittauskuuntelijat this)
+    (rekisteroi-kuittauskuuntelijat this jonot)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono]} jonot]
       (assoc this
         :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)

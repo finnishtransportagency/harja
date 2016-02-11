@@ -5,3 +5,9 @@ INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUE
     FROM ilmoitus
     WHERE ilmoitusid = :ilmoitusid),
    :yhteyshenkiloid);
+
+-- name: hae-ilmoitus-id
+SELECT ilmoitus
+FROM paivystajatekstiviesti
+WHERE yhteyshenkilo = :yhteyshenkilo AND
+      viestinumero = :viestinumero;

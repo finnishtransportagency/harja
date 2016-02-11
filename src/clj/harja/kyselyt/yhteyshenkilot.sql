@@ -235,3 +235,12 @@ WHERE
   urakka = :urakkaid AND
   ((now() BETWEEN p.alku AND p.loppu) OR
    (now() <= p.alku AND loppu IS NULL));
+
+-- name: hae-paivystaja-puhelinnumerolla
+SELECT y.id, y.etunimi, y.sukunimi, y.matkapuhelin, y.tyopuhelin, y.sahkoposti
+FROM yhteyshenkilo y
+WHERE (matkapuhelin = :puhelinnumero OR tyopuhelin = :puhelinnumero) AND
+      (SELECT exists(SELECT id
+                     FROM paivystys p
+                     WHERE p.yhteyshenkilo = y.id))
+LIMIT 1;
