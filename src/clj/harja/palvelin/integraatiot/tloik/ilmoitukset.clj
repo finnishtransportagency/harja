@@ -16,11 +16,6 @@
 
 (def +xsd-polku+ "xsd/tloik/")
 
-(defn laheta-paivystajalle [sms db ilmoitus urakka-id]
-  (when-let [paivystaja (yhteyshenkilot/hae-urakan-tamanhetkinen-paivystaja db urakka-id)]
-    (paivystajaviestit/laheta sms db ilmoitus paivystaja)
-    paivystaja))
-
 (defn laheta-kuittaus [sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id onnistunut lisatietoja]
   (lokittaja :lahteva-jms-kuittaus kuittaus tapahtuma-id onnistunut lisatietoja)
   (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
@@ -39,17 +34,13 @@
 
 (defn kasittele-ilmoitus [sonja sms lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id]
   (let [urakka-id (:id urakka)
-        ilmoitus-id (:ilmoitus-id ilmoitus)]
+        ilmoitus-id (:ilmoitus-id ilmoitus)
+        paivystaja (yhteyshenkilot/hae-urakan-tamanhetkinen-paivystaja db urakka-id)
+        kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka paivystaja nil)]
     (ilmoitus/tallenna-ilmoitus db ilmoitus)
-    (let [paivystaja (laheta-paivystajalle sms db ilmoitus urakka-id)]
-      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
-      ;; todo: ack pitäisi varmaan lähettää suoraan samantien eikä odottaa, että ilmoitus on välitetty api:n kautta?
-      (notifikaatiot/kun-ilmoitus-lahetetty
-        tapahtumat ilmoitus-id
-        (fn [valitystapa]
-          (let [kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka paivystaja nil)
-                lisatietoja (str "Välitystapa: " valitystapa)]
-            (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja)))))))
+    (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
+    (when paivystaja (paivystajaviestit/laheta sms db ilmoitus paivystaja))
+    (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id korrelaatio-id tapahtuma-id]
   (let [virhe (format "Urakkaa ei voitu päätellä T-LOIK:n ilmoitukselle (id: %s, viesti id: %s)" ilmoitus-id viesti-id)

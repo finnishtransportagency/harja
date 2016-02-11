@@ -78,4 +78,5 @@
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
 
 (defn poista-ilmoitus []
+  (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
   (u "delete from ilmoitus where ilmoitusid = 123456789;"))
