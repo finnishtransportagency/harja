@@ -57,4 +57,4 @@
     (let [idt (hae-usea-vapaa-toteuma-ulkoinen-id 10)]
       (is (= (distinct idt) idt)))
     (when (< index 10)
-      (recur inc))))
+      (recur (inc index)))))
