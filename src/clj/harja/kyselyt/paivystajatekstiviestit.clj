@@ -7,4 +7,4 @@
   (:viestinumero (harja.kyselyt.paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db yhteyshenkilo-id ilmoitus-id)))
 
 (defn hae-ilmoitus [db yhteyshenkilo-id viestinumero]
-  (:ilmoitus (first (harja.kyselyt.paivystajatekstiviestit/hae-ilmoitus-id db yhteyshenkilo-id viestinumero))))
+  (first (harja.kyselyt.paivystajatekstiviestit/hae-ilmoitus-idt db yhteyshenkilo-id viestinumero)))

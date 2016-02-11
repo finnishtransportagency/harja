@@ -80,12 +80,32 @@
    :viestinumero (parsi-viestinumero (str (nth viesti 1)))})
 
 (defn hae-ilmoitus-id [db viestinumero paivystaja]
-  (if-let [id (paivystajatekstiviestit/hae-ilmoitus db viestinumero (:id paivystaja))]
-    id
+  (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db viestinumero (:id paivystaja))]
+    ilmoitus
     (throw+ {:type :tuntematon-ilmoitus})))
 
-(defn tallenna-ilmoitustoimenpide [db ilmoitus-id toimenpide paivystaja]
-  )
+(defn tallenna-ilmoitustoimenpide [db ilmoitus toimenpide paivystaja]
+  (:id (ilmoitukset/luo-ilmoitustoimenpide<!
+         db
+         (:id ilmoitus)
+         (:ilmoitus-id ilmoitus)
+         (harja.pvm/nyt)
+         nil
+         (name toimenpide)
+         (:etunimi paivystaja)
+         (:sukunimi paivystaja)
+         (:tyopuhelin paivystaja)
+         (:matkapuhelin paivystaja)
+         (:sahkoposti paivystaja)
+         (:nimi paivystaja)
+         (:ytunnus paivystaja)
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil)))
 
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja sms db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
@@ -97,7 +117,9 @@
           ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus-id (:toimepide data) paivystaja)]
 
       (laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
-      (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!"))
+      (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!")
+      ;; todo: mieti miten lähetetään t-loik:n ilman circular dependencyn syntymistä
+      )
 
     (catch [:type :tuntematon-kayttaja] {}
       (log/error (format "Numerosta: %s vastaanotettua viestiä: %s ei voida käsitellä, sillä puhelinnumerolla ei löydy käyttäjää." puhelinnumero viesti))

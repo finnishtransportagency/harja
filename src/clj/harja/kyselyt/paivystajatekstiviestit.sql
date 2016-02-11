@@ -6,8 +6,11 @@ INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUE
     WHERE ilmoitusid = :ilmoitusid),
    :yhteyshenkiloid);
 
--- name: hae-ilmoitus-id
-SELECT ilmoitus
-FROM paivystajatekstiviesti
-WHERE yhteyshenkilo = :yhteyshenkilo AND
-      viestinumero = :viestinumero;
+-- name: hae-ilmoitus-idt
+SELECT
+  i.id,
+  i.ilmoitusid
+FROM paivystajatekstiviesti p
+  INNER JOIN ilmoitus i on i.id = p.ilmoitus
+  WHERE p.yhteyshenkilo = :yhteyshenkilo AND
+p.viestinumero = :viestinumero;

@@ -237,8 +237,17 @@ WHERE
    (now() <= p.alku AND loppu IS NULL));
 
 -- name: hae-paivystaja-puhelinnumerolla
-SELECT y.id, y.etunimi, y.sukunimi, y.matkapuhelin, y.tyopuhelin, y.sahkoposti
+SELECT
+  y.id,
+  y.etunimi,
+  y.sukunimi,
+  y.matkapuhelin,
+  y.tyopuhelin,
+  y.sahkoposti,
+  o.ytunnus,
+  o.nimi
 FROM yhteyshenkilo y
+  LEFT JOIN organisaatio o ON o.id = y.organisaatio
 WHERE (matkapuhelin = :puhelinnumero OR tyopuhelin = :puhelinnumero) AND
       (SELECT exists(SELECT id
                      FROM paivystys p
