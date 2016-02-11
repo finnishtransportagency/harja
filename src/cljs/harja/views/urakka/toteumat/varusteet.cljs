@@ -20,6 +20,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def nayta-max-toteumaa 500)
+
 (defn varustetoteuman-tehtavat [toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
     [grid/grid
@@ -63,9 +65,9 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}]
-      (take 500 toteumat)]
-     (when (> (count toteumat) 500)
-       [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
+      (take nayta-max-toteumaa toteumat)]
+     (when (> (count toteumat) nayta-max-toteumaa)
+       [:div.alert-warning (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])]))
 
 (defn valinnat []
   [:span

@@ -40,7 +40,8 @@
 
 (def varuste-toimenpide->string {:lisatty    "Lisätty"
                                  :paivitetty "Päivitetty"
-                                 :poistettu  "Poistettu"})
+                                 :poistettu  "Poistettu"
+                                 :tarkastus "Tarkastus"})
 
 (def tietolaji->selitys
   {"tl523" "Tekninen piste"
