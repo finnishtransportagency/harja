@@ -38,12 +38,20 @@
                              (ikonit/eye-open) " Toteuma"])})]
      toteumatehtavat]))
 
+(def valittu-varustetoteuman-tyyppi (atom nil))
+
 (defn toteumataulukko []
-  (let [toteumat @varustetiedot/haetut-toteumat]
+  (let [toteumat @varustetiedot/haetut-toteumat
+        valittu-tyyppi (first @valittu-varustetoteuman-tyyppi)
+        valitut-toteumat (filter
+                           #(if-not valittu-tyyppi
+                             toteumat
+                             (= (:toimenpide %) valittu-tyyppi))
+                           toteumat)]
     [:span
      [grid/grid
       {:otsikko      "Varustetoteumat"
-       :tyhja        (if (nil? @varustetiedot/haetut-toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
+       :tyhja        (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
        :tunniste     :id
        :vetolaatikot (zipmap
                        (range)
@@ -53,7 +61,12 @@
                              [varustetoteuman-tehtavat toteuma]))
                          toteumat))}
       [{:tyyppi :vetolaatikon-tila :leveys 5}
-       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm
+        :nimi    :alkupvm :leveys 10
+        :hae     (fn [rivi]
+                   (if (= :tarkastus (:toimenpide rivi))
+                     (:tarkastusaika rivi)
+                     (:alkupvm rivi)))}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15 :hae (fn [rivi]
                                                                      (or (varustetiedot/tietolaji->selitys (:tietolaji rivi))
@@ -65,15 +78,18 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}]
-      (take nayta-max-toteumaa toteumat)]
-     (when (> (count toteumat) nayta-max-toteumaa)
+      (take nayta-max-toteumaa valitut-toteumat)]
+     (when (> (count valitut-toteumat) nayta-max-toteumaa)
        [:div.alert-warning (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])]))
+
 
 (defn valinnat []
   [:span
    [urakka-valinnat/urakan-sopimus]
    [urakka-valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
-   [urakka-valinnat/tienumero varustetiedot/tienumero]])
+   [urakka-valinnat/tienumero varustetiedot/tienumero]
+   [harja.ui.valinnat/varustetoteuman-tyyppi
+    valittu-varustetoteuman-tyyppi]])
 
 (defn varusteet []
   (komp/luo

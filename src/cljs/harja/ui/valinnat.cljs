@@ -7,6 +7,7 @@
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
+            [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [cljs-time.core :as t]))
@@ -254,3 +255,13 @@
                           :format-fn #(if % (str %) "Valitse")
                           :class "alasveto-vuosi"}
     (range ensimmainen-vuosi (inc viimeinen-vuosi))]]))
+
+(defn varustetoteuman-tyyppi
+  [valittu-varustetoteumatyyppi-atom]
+  [:span
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Toimenpide"]
+    [livi-pudotusvalikko {:valinta    @valittu-varustetoteumatyyppi-atom
+                          :format-fn  #(if % (second %) "Kaikki")
+                          :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
+     varusteet/varustetoteumatyypit]]])
