@@ -33,7 +33,7 @@
                  [org.clojure/core.cache "0.6.4"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "9.4.1207"]
+                 [org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5"]
@@ -139,12 +139,16 @@
             [lein-less "1.7.5"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.5.0-2"]
-            [cider/cider-nrepl "0.10.0"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             ;;[mvxcvi/whidbey "0.5.1"]
+
+            ;; CIDER kehitykseen
+            [cider/cider-nrepl "0.10.2"]
+            [refactor-nrepl "2.0.0"]
+
             ]                                               ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
               :builds [{:id           "dev"
