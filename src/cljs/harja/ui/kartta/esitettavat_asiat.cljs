@@ -286,6 +286,8 @@
                :img    ikoni}
       :alue (maarittele-feature varustetoteuma (valittu-fn? varustetoteuma) ikoni))))
 
+;; TODO Vaihda käyttöön harja.ui.kartta.varit.core
+;; Tehdään samalla kun saadaan esim uudet nuoli-ikonit?
 (def toteuma-varit-ja-nuolet
   [["rgb(255,0,0)" "punainen"]
    ["rgb(255,128,0)" "oranssi"]
