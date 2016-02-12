@@ -609,19 +609,6 @@
                          :on-change   (muuta! key)
                          :on-blur     blur}]])
 
-(defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
-  {:alue (assoc arvo
-                :type tyyppi
-                :img (dom/karttakuva "tr-piste-tack-harmaa")
-                :zindex 6
-                :color vari)
-   :type :tr-valittu-osoite})
-
-(defn viivatyyppinen? [arvo]
-  (let [t (:type arvo)]
-   (or (= :multiline t)
-       (= :line t))))
-
 (defn piste-tai-eka [arvo]
   (if (vector? (:geometria arvo))
     (first (:geometria arvo))
