@@ -157,15 +157,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [teksti]
   [:div.lomake-yleinen-huomautus (harja.ui.ikonit/info-sign) (str " " teksti)])
 
-(defn lomake-lukittu-huomautus
-  ;; FIXME: siirrä jonnekin muualle, ei liity lomakkeeseen mitenkään
-  [nykyinen-lukko]
-  [:div.lomake-lukittu-huomautus (harja.ui.ikonit/info-sign) (str " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä"
-   (when (and (:etunimi nykyinen-lukko)
-              (:sukunimi nykyinen-lukko))
-     (str " (" (:etunimi nykyinen-lukko) " " (:sukunimi nykyinen-lukko) ")"))
-    " muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen.")])
-
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 
 (defn kentta
