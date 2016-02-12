@@ -127,6 +127,17 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (reset! max-korkeus-atom (- etaisyys-alareunaan 5))
       (reset! max-korkeus-atom etaisyys-ylareunaan))))
 
+
+(defn avautumissuunta-ja-korkeus-tyylit
+  [max-korkeus avautumissuunta]
+  (merge {:max-height (fmt/pikseleina max-korkeus)}
+         (when (= avautumissuunta :alas)
+           {:top    "calc(100% - 1px)"
+            :bottom "auto"})
+         (when (= avautumissuunta :ylos)
+           {:bottom "calc(100% - 1px)"
+            :top    "auto"})))
+
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (let [auki (atom false)
         avautumissuunta (atom :alas)
@@ -139,7 +150,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL (fn [this _]
                                               (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
-      #_(komp/dom-kuuntelija js/window ; FIXME Kaatuu jostain syystä
+      #_(komp/dom-kuuntelija js/window ; FIXME Kaatuu jostain syystä, jos ehtii niin voi tutkia ja korjata
                            EventType/RESIZE (fn [this _]
                                               (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
       (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
@@ -199,13 +210,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-           [:ul.dropdown-menu.livi-alasvetolista {:style (merge {:max-height (fmt/pikseleina @max-korkeus)}
-                                                                (when (= @avautumissuunta :alas)
-                                                                  {:top "calc(100% - 1px)"
-                                                                   :bottom "auto"})
-                                                                (when (= @avautumissuunta :ylos)
-                                                                  {:bottom "calc(100% - 1px)"
-                                                                   :top "auto"}))}
+           [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
+                                                           @max-korkeus @avautumissuunta)}
             (doall
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
@@ -213,6 +219,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                  (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                      (reset! auki false)
                                                      nil))]))]])))))
+
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
