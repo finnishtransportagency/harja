@@ -17,6 +17,7 @@
     [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
+    [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -120,8 +121,12 @@
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (sonja/luo-sonja (:sonja asetukset))
-      :sonja-sahkoposti (component/using (sonja-sahkoposti/luo-sahkoposti (:sonja-sahkoposti asetukset))
-                                         [:sonja :integraatioloki :db])
+      :sonja-sahkoposti (component/using
+                         (let [{:keys [vastausosoite jonot suora? palvelin]} (:sonja-sahkoposti asetukset)]
+                           (if suora?
+                             (sahkoposti/luo-vain-lahetys palvelin vastausosoite)
+                             (sonja-sahkoposti/luo-sahkoposti vastausosoite jonot)))
+                         [:sonja :integraatioloki :db])
 
       ;; FIM REST rajapinta
       :fim (fim/->FIM (:url (:fim asetukset)))

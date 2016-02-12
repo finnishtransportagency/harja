@@ -4,13 +4,9 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
             [harja.kyselyt.integraatiot :as q]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]])
   (:import (java.util UUID)))
-
-(defprotocol Sahkoposti
-  (rekisteroi-kuuntelija! [this kuuntelija-fn]
-                          "Rekisteröi funktion, joka vastaanottaa sähköpostiviestit.")
-  (laheta-viesti! [this lahettaja vastaanottaja otsikko sisalto]))
 
 (defn- lokittaja [{il :integraatioloki db :db} nimi]
   (integraatioloki/lokittaja il db "sonja" nimi))
@@ -33,7 +29,7 @@
                                 (fn [viesti viesti-id onnistunut]
                                   (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id)))))
 
-(defrecord SonjaSahkoposti [jonot kuuntelijat]
+(defrecord SonjaSahkoposti [vastausosoite jonot kuuntelijat]
   component/Lifecycle
   (start [{sonja :sonja :as this}]
     (assoc this
@@ -57,10 +53,13 @@
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
-      (jms-lahettaja viesti viesti-id))))
+      (jms-lahettaja viesti viesti-id)))
 
-(defn luo-sahkoposti [jonot]
-  (->SonjaSahkoposti jonot (atom #{})))
+  (vastausosoite [this]
+    vastausosoite))
+
+(defn luo-sahkoposti [vastausosoite jonot]
+  (->SonjaSahkoposti vastausosoite jonot (atom #{})))
 
 
 
