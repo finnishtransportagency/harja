@@ -54,7 +54,8 @@ SELECT
   thm.lumimaara        AS talvihoitomittaus_lumimaara,
   thm.tasaisuus        AS talvihoitomittaus_tasaisuus,
   thm.kitka            AS talvihoitomittaus_kitka,
-  thm.lampotila        AS talvihoitomittaus_lampotila,
+  thm.lampotila_tie    AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma   AS talvihoitomittaus_lampotila_ilma,
   thm.ajosuunta        AS talvihoitomittaus_ajosuunta
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
@@ -107,8 +108,8 @@ WHERE urakka = :urakka AND id = :id;
 -- Luo uuden talvihoitomittauksen annetulle tarkastukselle.
 INSERT
 INTO talvihoitomittaus
-(talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila, ajosuunta, tarkastus)
-VALUES (:talvihoitoluokka, :lumimaara, :tasaisuus, :kitka, :lampotila, :ajosuunta, :tarkastus)
+(talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta, tarkastus)
+VALUES (:talvihoitoluokka, :lumimaara, :tasaisuus, :kitka, :lampotila_ilma, :lampotila_tie, :ajosuunta, :tarkastus)
 
 -- name: paivita-talvihoitomittaus!
 -- Päivittää tarkastuksen aiemmin luodun talvihoitomittauksen.
@@ -117,7 +118,8 @@ SET talvihoitoluokka = :talvihoitoluokka,
   lumimaara          = :lumimaara,
   tasaisuus          = :tasaisuus,
   kitka              = :kitka,
-  lampotila          = :lampotila,
+  lampotila_ilma     = :lampotila_ilma,
+  lampotila_tie      = :lampotila_tie,
   ajosuunta          = :ajosuunta
 WHERE tarkastus = :tarkastus
 
@@ -245,7 +247,8 @@ SELECT
   thm.lumimaara,
   thm.tasaisuus,
   thm.kitka,
-  thm.lampotila,
+  thm.lampotila_ilma,
+  thm.lampotila_tie,
   thm.ajosuunta,
   liite.id   as liite_id,
   liite.nimi as liite_nimi
@@ -276,7 +279,8 @@ SELECT
   thm.lumimaara,
   thm.tasaisuus,
   thm.kitka,
-  thm.lampotila,
+  thm.lampotila_ilma,
+  thm.lampotila_tie,
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
@@ -310,7 +314,8 @@ SELECT
   thm.lumimaara,
   thm.tasaisuus,
   thm.kitka,
-  thm.lampotila,
+  thm.lampotila_ilma,
+  thm.lampotila_tie,
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
