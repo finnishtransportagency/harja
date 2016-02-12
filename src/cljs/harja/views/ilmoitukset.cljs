@@ -145,7 +145,7 @@
                                                         selitteet
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
-                                           (vec itemit)))))}
+                                           (vec (sort itemit))))))}
 
          (lomake/ryhma {:ulkoasu :rivi}
                        {:nimi        :tilat :otsikko "Tila"
@@ -179,7 +179,7 @@
   (komp/luo
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :L))
+                        (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
     (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus! %2))
