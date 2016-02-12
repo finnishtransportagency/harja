@@ -10,25 +10,11 @@
 
 (defn hakuehto-annettu? [p]
   ;; todo: pitäisi yksinkertaistaa
-  (if (nil? p)
-    false
-    (do
-      (if (string? p)
-        (not (empty? p))
-
-        (if (vector? p)
-          (do
-            (if (empty? p)
-              false
-              (some true? (map hakuehto-annettu? p))))
-
-          (if (map? p)
-            (do
-              (if (empty? p)
-                false
-                (some true? (map #(hakuehto-annettu? (val %)) p))))
-
-            true))))))
+  (cond
+    (number? p) true
+    (map? p) (some true? (map #(hakuehto-annettu? (val %)) p))
+    (empty? p) false
+    :else true))
 
 (defn- viesti [mille mista ilman]
   (str ", "
