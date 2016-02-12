@@ -120,8 +120,11 @@
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (sonja/luo-sonja (:sonja asetukset))
-      :sonja-sahkoposti (component/using (sonja-sahkoposti/luo-sahkoposti (:sonja-sahkoposti asetukset))
-                                         [:sonja :integraatioloki :db])
+      :sonja-sahkoposti (component/using
+                         (let [sonja-sahkoposti (:sonja-sahkoposti asetukset)]
+                           (sonja-sahkoposti/luo-sahkoposti (:vastausosoite sonja-sahkoposti)
+                                                            (:jonot sonja-sahkoposti)))
+                         [:sonja :integraatioloki :db])
 
       ;; FIM REST rajapinta
       :fim (fim/->FIM (:url (:fim asetukset)))
