@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as toimenpide-sanoma]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [harja.tyokalut.merkkijono :as merkkijono]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms])
+            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util UUID)))
 
@@ -89,7 +90,7 @@
          db
          (:id ilmoitus)
          (:ilmoitusid ilmoitus)
-         (harja.pvm/nyt)
+         (pvm/nyt)
          nil
          toimenpide
          (:etunimi paivystaja)
@@ -117,9 +118,7 @@
           ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus (:toimenpide data) paivystaja)]
 
       (laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
-      (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!")
-      ;; todo: mieti miten lähetetään t-loik:n ilman circular dependencyn syntymistä
-      )
+      (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!"))
 
     (catch [:type :tuntematon-kayttaja] {}
       (log/error (format "Numerosta: %s vastaanotettua viestiä: %s ei voida käsitellä, sillä puhelinnumerolla ei löydy käyttäjää." puhelinnumero viesti))

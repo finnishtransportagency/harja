@@ -44,7 +44,7 @@
 
 (defn rekisteroi-kuittauskuuntelijat [this jonot]
   (when-let [labyrintti (:labyrintti this)]
-    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpidejono jonot))]
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono jonot))]
       (sms/rekisteroi-kuuntelija!
         labyrintti
         (fn [numero viesti] (ilmoitustoimenpiteet/vastaanota-tekstiviestikuittaus jms-lahettaja labyrintti (:db this) numero viesti))))
@@ -69,5 +69,5 @@
 
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
-    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpidejono jonot))]
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono jonot))]
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id))))
