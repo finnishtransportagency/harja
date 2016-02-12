@@ -21,16 +21,15 @@
      [:nimi (:urakoitsija_nimi urakka)]
      [:ytunnus (:urakoitsija_ytunnus urakka)]]))
 
-(defn rakenna-vastaanottaja [vastaanottaja]
-  ;; todo: täytä päivystäjätiedot sitten, kun viestit voidaan lähettää tekstiviestillä tai sähköpostilla
-  (when vastaanottaja
+(defn rakenna-paivystaja [paivystaja]
+  (when paivystaja
     [:paivystaja
-     [:etunimi "Päivi"]
-     [:sukunimi "Päivystäjä"]
-     [:matkapuhelin "0986578749309"]
-     [:sahkoposti "paivi.paivystaja@puulaaki.fi"]]))
+     [:etunimi (:etunimi paivystaja)]
+     [:sukunimi (:sukunimi paivystaja)]
+     [:matkapuhelin (:matkapuhelin paivystaja)]
+     [:sahkoposti (:sahkoposti paivystaja)]]))
 
-(defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe]
+(defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystaja virhe]
   [:harja:harja-kuittaus
    {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
    [:aika aika]
@@ -43,10 +42,10 @@
       [:ilmoitusId ilmoitus-id]
       (rakenna-urakka urakka)
       (rakenna-urakoitsija urakka)
-      (when vastaanottaja (rakenna-vastaanottaja vastaanottaja))])])
+      (when paivystaja (rakenna-paivystaja paivystaja))])])
 
-(defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe]
-  (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka vastaanottaja virhe)
+(defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystaja virhe]
+  (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystaja virhe)
         xml (tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
       xml
