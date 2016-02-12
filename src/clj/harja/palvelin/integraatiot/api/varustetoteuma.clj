@@ -57,7 +57,9 @@
     (case (get-in data [:varustetoteuma :varuste :toimenpide])
       "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
       "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
-      "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data))))
+      "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
+      ;; toistaiseksi tarkastuksia ei viedä Tierekisteriin
+      "tarkastus" :default)))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -66,28 +68,34 @@
     toteuma-id))
 
 (defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                            kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
-  (toteumat/luo-varustetoteuma<!
-    db
-    tunniste
-    toteuma-id
-    toimenpide
-    tietolaji
-    arvot
-    (aika-string->java-sql-date karttapvm)
-    (get-in sijainti [:tie :numero])
-    (get-in sijainti [:tie :aosa])
-    (get-in sijainti [:tie :losa])
-    (get-in sijainti [:tie :let])
-    (get-in sijainti [:tie :aet])
-    (get-in sijainti [:tie :puoli])
-    (get-in sijainti [:tie :ajorata])
-    alkupvm
-    loppupvm
-    piiri
-    kuntoluokitus
-    tierekisteriurakkakoodi
-    (:id kirjaaja)))
+                                            kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm
+                                            tarkastusaika]} toteuma-id]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [tr (:tie sijainti)
+          ;; yesql 20 parametrin rajoituksen vuoksi luonti kahdessa erässä
+          id (:id (toteumat/luo-varustetoteuma<!
+                    db
+                    tunniste
+                    toteuma-id
+                    toimenpide
+                    tietolaji
+                    arvot
+                    (aika-string->java-sql-date karttapvm)
+                    alkupvm
+                    loppupvm
+                    piiri
+                    kuntoluokitus
+                    tierekisteriurakkakoodi
+                    (aika-string->java-sql-date tarkastusaika)
+                    (:id kirjaaja)))]
+      (toteumat/paivita-varustetoteuman-tr-osoite! db
+                                                   (:numero tr)
+                                                   (:aosa tr) (:aet tr)
+                                                   (:losa tr) (:let tr)
+                                                   (:puoli tr)
+                                                   (:ajr tr)
+                                                   id))))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [transaktio db]
