@@ -1,5 +1,24 @@
-<harja:tloik-kuittaus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
-    <aika>2015-09-29T15:49:45</aika>
-    <kuittaustyyppi>vastaanotettu</kuittaustyyppi>
-    <viestiId>14324234</viestiId>
-</harja:tloik-kuittaus>
+<?xml version="1.0" encoding="UTF-8"?>
+<harja:harja-kuittaus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
+    <aika>2016-02-11T08:59:30.035Z</aika>
+    <kuittaustyyppi>valitetty</kuittaustyyppi>
+    <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+    <valitystiedot>
+        <ilmoitusId>123456789</ilmoitusId>
+        <urakka>
+            <id>4</id>
+            <nimi>Oulun alueurakka 2014-2019</nimi>
+            <tyyppi>hoito</tyyppi>
+        </urakka>
+        <urakoitsija>
+            <nimi>YIT Rakennus Oy</nimi>
+            <ytunnus>1565583-5</ytunnus>
+        </urakoitsija>
+        <paivystaja>
+            <etunimi>Mikko</etunimi>
+            <sukunimi>Rönkkömäki</sukunimi>
+            <matkapuhelin>0415442083</matkapuhelin>
+            <sahkoposti>mikko.ronkkomaki@solita.fi</sahkoposti>
+        </paivystaja>
+    </valitystiedot>
+</harja:harja-kuittaus>

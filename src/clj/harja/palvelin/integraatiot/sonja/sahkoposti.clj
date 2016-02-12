@@ -4,8 +4,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
             [harja.kyselyt.integraatiot :as q]
-            [harja.tyokalut.xml :as xml]
-            [taoensso.timbre :as log])
+            [harja.tyokalut.xml :as xml])
   (:import (java.util UUID)))
 
 (defprotocol Sahkoposti
