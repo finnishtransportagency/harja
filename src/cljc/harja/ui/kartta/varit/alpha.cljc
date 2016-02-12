@@ -1,5 +1,5 @@
 (ns harja.ui.kartta.varit.alpha
-  (:require [harja.ui.kartta.varit.core :as core]))
+  (:require [harja.ui.kartta.varit.puhtaat :as core]))
 
 (def punainen "rgba(255, 0, 0, 0.7)")
 (def oranssi "rgba(255, 128, 0, 0.7)")
@@ -15,10 +15,10 @@
 (def lime "rgba(128, 255, 0, 0.7)")
 
 (def kaikki
-  ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
+  ^{:doc   "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
-  [punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
-   tummansininen violetti lime pinkki])
+  #{punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
+    tummansininen violetti lime pinkki})
 
 #?(:clj (core/varmenna-sisalto 'harja.ui.kartta.varit.alpha))

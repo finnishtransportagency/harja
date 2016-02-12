@@ -1,4 +1,4 @@
-(ns harja.ui.kartta.varit.core
+(ns harja.ui.kartta.varit.puhtaat
   (:require [clojure.set :as set]))
 
 (def punainen "rgb(255,0,0)")
@@ -41,7 +41,7 @@
    (defn varmenna-sisalto [ns]
      (varmenna-kaikki-vektori ns)
      (let [core (->
-                  (into #{} (keys (ns-publics 'harja.ui.kartta.varit.core)))
+                  (into #{} (keys (ns-publics 'harja.ui.kartta.varit.puhtaat)))
                   (poista-testit))
            verrokki (into #{} (keys (ns-publics ns)))
            puuttuvat (set/difference core verrokki)
@@ -56,4 +56,4 @@
            (when-not (empty? ylimaaraiset)
              (str "\nNamespacessa " ns " on määritelty värejä jotka tulee lisätä coreen: " (pr-str ylimaaraiset))))))))
 
-#?(:clj (varmenna-kaikki-vektori 'harja.ui.kartta.varit.core))
+#?(:clj (varmenna-kaikki-vektori 'harja.ui.kartta.varit.puhtaat))
