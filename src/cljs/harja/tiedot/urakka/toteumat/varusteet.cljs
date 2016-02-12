@@ -38,9 +38,15 @@
 
 (tarkkaile! "Varustetoteumat: " haetut-toteumat)
 
-(def varuste-toimenpide->string {:lisatty    "Lisätty"
+
+(def varuste-toimenpide->string {nil         "Kaikki"
+                                 :lisatty    "Lisätty"
                                  :paivitetty "Päivitetty"
-                                 :poistettu  "Poistettu"})
+                                 :poistettu  "Poistettu"
+                                 :tarkastus  "Tarkastus"})
+
+(def varustetoteumatyypit
+  (vec varuste-toimenpide->string))
 
 (def tietolaji->selitys
   {"tl523" "Tekninen piste"
