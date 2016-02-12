@@ -89,7 +89,7 @@
    :clj
    (defn ennen? [eka toka]
      (if (and eka toka)
-       (t/before? eka toka)
+       (.before eka toka)
        false)))
 
 (defn sama-tai-ennen?
