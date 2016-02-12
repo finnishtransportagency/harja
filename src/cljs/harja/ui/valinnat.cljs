@@ -100,14 +100,9 @@
                (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)]
                  (if-not aikavalin-rajoitus
                    ;; Varmista että alku ei ole lopun jälkeen
-                   (reset! valittu-aikavali-atom (pvm/varmista-aikavali
-                                                   [uusi-arvo (second @valittu-aikavali-atom)]
-                                                   :alku))
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [uusi-arvo (second %)] :alku))
 
-                   (reset! valittu-aikavali-atom (pvm/varmista-aikavali
-                                                   [uusi-arvo (second @valittu-aikavali-atom)]
-                                                   aikavalin-rajoitus
-                                                   :alku))))
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
     [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
@@ -115,14 +110,9 @@
              (fn [uusi-arvo]
                (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)]
                  (if-not aikavalin-rajoitus
-                   (reset! valittu-aikavali-atom (pvm/varmista-aikavali
-                                                   [(first @valittu-aikavali-atom) uusi-arvo]
-                                                   :loppu))
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [(first %) uusi-arvo] :loppu))
 
-                   (reset! valittu-aikavali-atom (pvm/varmista-aikavali
-                                                   [(first @valittu-aikavali-atom) uusi-arvo]
-                                                   aikavalin-rajoitus
-                                                   :loppu))))
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
 (defn urakan-toimenpide
