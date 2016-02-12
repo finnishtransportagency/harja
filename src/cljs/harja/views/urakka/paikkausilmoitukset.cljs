@@ -299,7 +299,7 @@
       [:div
        [:h3 "Paikkausilmoitukset"]
        [grid/grid
-        {:otsikko
+        {:otsikko ""
          :tyhja    (if (nil? @paikkaus/paikkaustoteumat) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
          :tunniste :kohdenumero}
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
