@@ -106,8 +106,7 @@ WHERE t4.taso = 4 AND
                     WHERE urakka = :urakka AND yksikkohinta IS NOT NULL AND poistettu IS FALSE) AND
       t3.id IN (SELECT toimenpide
                 FROM toimenpideinstanssi
-                WHERE urakka = :urakka) AND
-      t4.poistettu = FALSE;
+                WHERE urakka = :urakka);
 
 -- name: hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
 -- Hakee kaikki urakan 3. ja 4. tason toimenpiteet jotka eivät ole kokonaishintaisia

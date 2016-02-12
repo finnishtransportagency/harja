@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "enum": [
-    "tyotapaturma",
-    "vaaratilanne",
-    "turvallisuushavainto"
+    "henkilovahinko",
+    "omaisuusvahinko",
+    "ymparistovahinko"
   ]
 }

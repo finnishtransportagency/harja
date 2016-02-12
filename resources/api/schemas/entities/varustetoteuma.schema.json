@@ -18,7 +18,8 @@
       "enum": [
         "lisatty",
         "paivitetty",
-        "poistettu"
+        "poistettu",
+        "tarkastus"
       ],
       "required": true
     },
@@ -74,6 +75,12 @@
         6002,
         9001
       ]
+    },
+    "tarkastusaika": {
+      "id": "urn:harja/tarkastusaika",
+      "type": "string",
+      "format": "date-time",
+      "required": false
     }
   }
 }

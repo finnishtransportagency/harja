@@ -60,9 +60,9 @@
 
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
-   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
-                                                        :salli-pitka-aikavali? true
-                                                        :aloitusaika-pakota-suunta :alas-oikea
+   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko?              false
+                                                        :aikavalin-rajoitus          [12 :kuukausi]
+                                                        :aloitusaika-pakota-suunta   :alas-oikea
                                                         :paattymisaika-pakota-suunta :alas-vasen}]])
 
 (defn yksittainen-suodatincheckbox
