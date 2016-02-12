@@ -18,7 +18,7 @@
   ^{:doc   "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
-  #{punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
-    tummansininen violetti lime pinkki})
+  [punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
+    tummansininen violetti lime pinkki])
 
 #?(:clj (core/varmenna-sisalto 'harja.ui.kartta.varit.alpha))
