@@ -17,6 +17,7 @@
             [harja.ui.dom :as dom]
 
             [harja.views.kartta :as kartta]
+            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
 
@@ -645,9 +646,13 @@
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do
                                (tasot/nayta-geometria! :tr-valittu-osoite
-                                                         (if (viivatyyppinen? arvo)
-                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon-line "gray")
-                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon nil)))
+                                                       {:alue (maarittele-feature arvo
+                                                                            false
+                                                                            {:img    (dom/karttakuva "tr-piste-tack-harmaa")
+                                                                             :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
+                                                                            {:color  "gray" ;; muun alle
+                                                                             :zindex 20})
+                                                        :type :tr-valittu-osoite})
                                (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
