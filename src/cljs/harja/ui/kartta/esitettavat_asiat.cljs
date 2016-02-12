@@ -108,7 +108,7 @@
                               :img    (karttakuva +oletusikoni+)}
                              i)) merkit)}))
 
-(defn- maarittele-feature
+(defn maarittele-feature
   "Funktio palauttaa mäpin, joka määrittelee featuren openlayersin haluamassa muodossa.
   Pakolliset parametrit:
   * Asia: kannasta haettu, piirrettävä asia. Tai pelkästään juttu joka sisältää geometriatiedot.
@@ -160,7 +160,6 @@
   ([asia valittu? merkit viivat pisteen-ikoni]
    (let [geo (or (:sijainti asia) asia)
          tyyppi (:type geo)
-
          koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
      (cond
        ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
@@ -433,25 +432,25 @@
      (* (/ Math/PI 180)
         kulma)))
 
+;; TODO Muunna työkone värilliseksi nuoliviivaksi, kuten toteumat.
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [[img selite-img selite-teksti] (paattele-tyokoneen-ikoni
                                          (:tehtavat tyokone)
                                          (or (:lahetysaika tyokone) (:vastaanotettu tyokone))
-                                         (valittu-fn? tyokone))]
+                                         (valittu-fn? tyokone))
+        paikka {:sijainti {:type (if (:reitti tyokone) :line :point)}}
+        paikka (if (:reitti tyokone)
+                 (assoc-in paikka [:sijainti :points] (:reitti tyokone))
+                 (assoc-in paikka [:sijainti :coordinates] (:sijainti tyokone)))]
     (assoc tyokone
       :type :tyokone
       :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
       :selite {:teksti selite-teksti
                :img    [(karttakuva "sticker-sininen") selite-img]}
-      :alue (if-let [reitti (:reitti tyokone)]
-              {:type      :sticker-icon-line
-               :points    reitti
-               :direction (muunna-tyokoneen-suunta (:suunta tyokone))
-               :img       img}
-              {:type        :sticker-icon
-               :coordinates (:sijainti tyokone)
-               :direction   (muunna-tyokoneen-suunta (:suunta tyokone))
-               :img         img}))))
+      :alue (maarittele-feature paikka (valittu-fn? tyokone) {:paikka :loppu
+                                                              :tyyppi :nuoli
+                                                              :img (karttakuva (str "nuoli-punainen")) ;; TODO
+                                                              :rotation (muunna-tyokoneen-suunta (:suunta tyokone))}))))
 
 (defmethod asia-kartalle :default [asia _]
   (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, sain: " (pr-str asia))

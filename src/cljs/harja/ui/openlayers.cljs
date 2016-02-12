@@ -475,14 +475,14 @@ nuolten-valimatka 3000)
                       :zIndex (or zindex 0)}))))
 
 (defn- tee-nuoli
-  [kasvava-zindex {:keys [img scale zindex anchor]} [piste rotaatio]]
+  [kasvava-zindex {:keys [img scale zindex anchor rotation]} [piste rotaatio]]
   (ol.style.Style.
     #js {:geometry piste
          :zIndex   (or zindex (swap! kasvava-zindex inc))
          :image    (ol.style.Icon.
                      #js {:src            (str +karttaikonipolku+ img)
                           :scale          (or scale 1)
-                          :rotation       rotaatio
+                          :rotation       (or rotation rotaatio) ;; Rotaatio on laskettu, rotation annettu.
                           :anchor         (or (clj->js anchor) #js [0.5 0.5])
                           :rotateWithView false})}))
 
