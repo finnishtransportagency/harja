@@ -133,7 +133,7 @@
          {:nimi                  :selite
           :palstoja              1
           :otsikko               "Selite"
-          :placeholder           "Kirjoita selite"
+          :placeholder           "Hae ja valitse selite"
           :tyyppi                :haku
           :hae-kun-yli-n-merkkia 0
           :nayta                 second :fmt second

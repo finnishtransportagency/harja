@@ -67,7 +67,7 @@
         valittu-idx (atom nil)
         hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)]
     (fn [_ data]
-      [:div.dropdown {:class (when-not (nil? @tulokset) "open")}
+      [:div.hakukentta.dropdown {:class (when-not (nil? @tulokset) "open")}
 
        [:input {:class       (when lomake? "form-control")
                 :value       @teksti
@@ -110,7 +110,7 @@
                                                  (reset! data v)
                                                  (reset! teksti ((or nayta str) v))
                                                  (reset! tulokset nil)))))}]
-       [:ul.dropdown-menu {:role "menu"}
+       [:ul.hakukentan-lista.dropdown-menu {:role "menu"}
         (let [nykyiset-tulokset @tulokset
               idx @valittu-idx]
           (if (= :haetaan nykyiset-tulokset)
