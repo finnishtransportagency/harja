@@ -6,10 +6,10 @@
   (:use [slingshot.slingshot :only [try+]]))
 
 (def +ilmoitustekstiviesti+
-  (str "Uusi toimenpidepyyntö: %s (id: %s).\n\n"
+  (str "Uusi toimenpidepyyntö: %s (id: %s, viestinumero: %s).\n\n"
        "%s\n\n"
        "Selitteet: %s.\n\n"
-       "Vastaa viestiin toimenpiteellä ja viestinumerolla:\n"
+       "Voit kirjata uuden toimenpiteen, antamalla toimenpiteen lyhenteen ja viestinumeron:\n"
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
        "L%s = lopetettu"))
@@ -28,6 +28,7 @@
               viesti (format +ilmoitustekstiviesti+
                              otsikko
                              ilmoitus-id
+                             viestinumero
                              lyhytselite
                              selitteet
                              viestinumero
