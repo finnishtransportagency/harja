@@ -55,6 +55,8 @@
                         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
+                    :suora? true
+                    :palvelin "solita-service-1.solita.fi"
                     :jonot {:sahkoposti-sisaan-jono "Harja.EmailToHarja.Msg"
                             :sahkoposti-sisaan-kuittausjono "Harja.EmailToHarja.Ack"
                             :sahkoposti-ulos-jono "Harja.HarjaToEmail.Msg"

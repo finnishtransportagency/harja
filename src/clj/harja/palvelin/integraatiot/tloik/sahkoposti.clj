@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.tloik.sahkoposti
   "Ilmoitusten lähettäminen urakoitsijalle ja kuittausten vastaanottaminen"
-  (:require [hiccup.core :refer [html]]))
+  (:require [hiccup.core :refer [html]]
+            [harja.domain.ilmoitusapurit :as apurit]
+            [harja.pvm :as pvm]))
 
 
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan"
@@ -8,9 +10,8 @@
   otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 
 
-(defn- muodosta-otsikko [urakka-id {id :id :as ilmoitus}]
-  (str "#[" urakka-id "/" id " "
-       "FIXME: tähän kuvaus ilmoituksesta"))
+(defn- muodosta-otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi]}]
+  (str "#[" urakka-id "/" ilmoitus-id "] " (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))))
 
 (defn- luo-html-nappi
   "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
@@ -30,15 +31,25 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html
    [:div
     [:table
-     (for [[kentta arvo] [["Aika" "2012-23-55 65:33"]
-                          ["Tyyppi" "Toimenpidepyyntö"
-                           "Kuvaus" "jotainhan siellä tapahtui, jospa viittisitte mennä katsomaan"]]]
+     (for [[kentta arvo] [["Ilmoitettu" (pvm/pvm-aika (:ilmoitettu ilmoitus))]
+                          ["Otsikko" (:otsikko ilmoitus)]
+                          ["Lyhyt selite" (:lyhytselite ilmoitus)]
+                          ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
+                          ["Ilmoittaja" (apurit/nayta-henkilo (:ilmoittaja ilmoitus))]]]
        [:tr
-        [:td kentta]
+        [:td [:b kentta]]
         [:td arvo]])]
+    [:blockquote (:pitkaselite ilmoitus)]
     (for [n ["Vastaanotettu" "Aloitettu" "Lopetettu"]]
       [:div {:style "padding-top: 10px;"}
        (luo-html-nappi vastausosoite "Vastaanotettu" otsikko "Vastaanotettu")])]))
 
+(defn otsikko-ja-viesti [vastausosoite ilmoitus]
+  (let [otsikko (muodosta-otsikko ilmoitus)
+        viesti (muodosta-viesti
+                vastausosoite
+                otsikko
+                ilmoitus)]
+    [otsikko viesti]))
 
 

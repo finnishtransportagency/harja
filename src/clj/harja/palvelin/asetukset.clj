@@ -38,6 +38,8 @@
                                            :salasana                s/Str
                                            (s/optional-key :tyyppi) s/Keyword}
    (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
+                                       (s/optional-key :suora?) s/Bool
+                                       (s/optional-key :palvelin) s/Str
                                        :jonot {:sahkoposti-sisaan-jono s/Str
                                                :sahkoposti-sisaan-kuittausjono s/Str
                                                :sahkoposti-ulos-jono s/Str
