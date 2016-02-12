@@ -20,32 +20,15 @@
             [harja.ui.kommentit :as kommentit]
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.kartta :as kartta]
+            [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
+            [harja.tiedot.urakka.paallystys-ja-paikkaus-yhteiset :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
-                                               (lukko/nykyinen-nakyma-lukittu?))))
 
-(defn kuvaile-paatostyyppi [paatos]
-  (case paatos
-    :hyvaksytty "Hyväksytty"
-    :hylatty "Hylätty"))
-
-(defn nayta-tila [tila]
-  (case tila
-    :aloitettu "Aloitettu"
-    :valmis "Valmis"
-    :lukittu "Lukittu"
-    "-"))
-
-(defn nayta-paatos [tila]
-  (case tila
-    :hyvaksytty [:span.paikkausilmoitus-hyvaksytty "Hyväksytty"]
-    :hylatty [:span.paikkausilmoitus-hylatty "Hylätty"]
-    ""))
 
 (defn lisaa-suoritteet-tyhjaan-toteumaan [toteumat]
   (if (or (nil? toteumat) (empty? toteumat))
@@ -105,7 +88,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (yhteiset-cljc/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :palstoja 1}
 
          (when (:paatos @paatostiedot)
@@ -203,7 +186,7 @@
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paikkaus/paikkausilmoitus-lomakedata nil)]
 
            (when @lomake-lukittu-muokkaukselta?
-             (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
+             (yhteiset-cljs/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
 
            [:h2 "Paikkausilmoitus"]
 
@@ -321,9 +304,9 @@
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
          {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                           (nayta-tila (:tila rivi)))}
+                                                                                                           (yhteiset-cljc/nayta-tila (:tila rivi)))}
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
-                                                                                                                            (nayta-paatos (:paatos rivi)))}
+                                                                                                                            (yhteiset-cljs/nayta-paatos (:paatos rivi)))}
          {:otsikko     "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
           :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]
@@ -347,7 +330,7 @@
     (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
 
     (fn []
-      [:span
+      [:span.paikkausilmoitukset
        [kartta/kartan-paikka]
        (if @paikkaus/paikkausilmoitus-lomakedata
          [paikkausilmoituslomake]
