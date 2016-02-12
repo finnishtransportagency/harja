@@ -121,11 +121,16 @@
                 {:otsikko "Kitkakerroin" :tyyppi :numero
                  :nimi :kitka
                  :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
-                {:otsikko "Lämpötila" :tyyppi :numero :yksikko "\u2103"
+                {:otsikko "Ilman lämpötila" :tyyppi :numero :yksikko "\u2103"
                  :validoi [#(when-not (<= -55 %1 55)
                               "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
-                 :nimi :lampotila
-                 :hae (comp :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila] %2)}))
+                 :nimi :lampotila_ilma
+                 :hae (comp :ilma :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :ilma] %2)}
+                {:otsikko "Tien lämpötila" :tyyppi :numero :yksikko "\u2103"
+                 :validoi [#(when-not (<= -55 %1 55)
+                             "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
+                 :nimi :lampotila_tie
+                 :hae (comp :tie :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :tie] %2)}))
 
 (defn soratiemittaus []
   (let [kuntoluokka (fn [arvo _]
