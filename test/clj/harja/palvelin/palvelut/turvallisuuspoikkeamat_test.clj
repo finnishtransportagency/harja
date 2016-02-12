@@ -57,15 +57,18 @@
             :vammat "Lähinnä tympäsee"
             :sairauspoissaolopaivat 0
             :sairaalavuorokaudet 0
+            :vakavuusaste :lieva
+            :tyyppi #{:tyotapaturma}
+            :vahinkoluokittelu #{:ymparistovahinko}
             :sijainti {:type :point :coordinates [0 0]}
-            :tr {:numero 6 :alkuetaisyys 6 :loppuetaisyys 6 :alkuosa 6 :loppuosa 6} :tyyppi [:turvallisuuspoikkeama]}
+            :tr {:numero 6 :alkuetaisyys 6 :loppuetaisyys 6 :alkuosa 6 :loppuosa 6}}
         korjaavattoimenpiteet [{:kuvaus "Ei ressata liikaa" :suoritettu nil :vastaavahenkilo "Kaikki yhdessä"}]
         uusi-kommentti {:tekija "Teemu" :kommentti "Näin on!" :liite nil}
         hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
         hae-tp-maara (fn[] (ffirst (q "SELECT count(*) FROM turvallisuuspoikkeama;")))
         vanha-maara (hae-tp-maara)]
 
-    (is (oikeat-sarakkeet-palvelussa?
+   (is (oikeat-sarakkeet-palvelussa?
           [:id :urakka :tapahtunut :paattynyt :kasitelty :tyontekijanammatti :tyotehtava :kuvaus
            :vammat :sairauspoissaolopaivat :sairaalavuorokaudet :sijainti :tyyppi
            [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]]

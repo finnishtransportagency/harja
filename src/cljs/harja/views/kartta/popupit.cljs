@@ -11,6 +11,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.paallystys.pot :as paallystys-pot]))
 
 (def klikattu-tyokone (atom nil))
@@ -165,6 +166,7 @@
                                                  ["Vammat" (:vammat tapahtuma)]
                                                  ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
                                                  ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
+                                                 ["Vakavuus\u00ADaste" (turpodomain/turpo-vakavuusasteet (:vakavuusaste tapahtuma))]
                                                  ["Kuvaus" (:kuvaus tapahtuma)]
                                                  ["Korjaavat toimen\u00ADpiteet" (count (filter :suoritettu (:korjaavattoimenpiteet tapahtuma)))
                                                   "/" (count (:korjaavattoimenpiteet tapahtuma))]]))))

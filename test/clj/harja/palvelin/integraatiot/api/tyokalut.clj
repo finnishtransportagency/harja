@@ -41,3 +41,13 @@
   (let [id (rand-int 10000)
         vastaus (q (str "SELECT * FROM toteuma WHERE ulkoinen_id = '" id "';"))]
     (if (empty? vastaus) id (recur))))
+
+(defn hae-usea-vapaa-toteuma-ulkoinen-id [maara]
+  (reduce
+    (fn [edellinen index]
+      (let [id (hae-vapaa-toteuma-ulkoinen-id)]
+        (if (some #(= % id) edellinen)
+          (recur edellinen index)
+          (conj edellinen id))))
+    []
+    (range maara)))

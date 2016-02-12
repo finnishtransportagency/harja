@@ -15,23 +15,15 @@
       "id": "urn:harja/reittitoteuma",
       "type": "object",
       "additionalProperties": false,
-      "required":true,
-      "properties": {
-        "toteuma": {
-          "id": "urn:harja/reittitoteuma/toteuma",
-          "type": "object",
-          "additionalProperties": false,
-          "required": true,
-          "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
-        },
-        "reitti": {
-          "id": "urn:harja/reittitoteuma/reitti",
-          "type": "object",
-          "additionalProperties": false,
-          "required": true,
-          "$ref": "file:resources/api/schemas/entities/reitti.schema.json"
-        }
-      }
+      "required": false,
+      "$ref": "file:resources/api/schemas/entities/reittitoteuma.schema.json"
+    },
+    "reittitoteumat": {
+      "id": "urn:harja/reittitoteumat/0/reittitoteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required": false,
+      "$ref": "file:resources/api/schemas/entities/reittitoteumat.schema.json"
     }
   }
 }

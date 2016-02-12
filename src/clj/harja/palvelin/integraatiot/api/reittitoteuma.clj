@@ -99,31 +99,45 @@
     (log/debug "Poistetaan reittipisteet")
     (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)))
 
-(defn tallenna-toteuma-ja-reitti [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [transaktio db]
-    (let [reitti (get-in data [:reittitoteuma :reitti])
-          toteuma (get-in data [:reittitoteuma :toteuma])
-          toteuma (assoc toteuma :reitti (luo-reitti-geometria db reitti))
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)]
-      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-      (log/debug "Aloitetaan toteuman tehtävien tallennus")
-      (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
-      (log/debug "Aloitetaan toteuman materiaalien tallennus")
-      (api-toteuma/tallenna-materiaalit transaktio kirjaaja toteuma toteuma-id)
-      (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
-      (poista-toteuman-reitti transaktio toteuma-id)
-      (log/debug "Aloitetaan reitin tallennus")
-      (luo-reitti transaktio reitti toteuma-id))))
+(defn tallenna-yksittainen-reittitoteuma [db urakka-id kirjaaja reittitoteuma]
+  (let [reitti (:reitti reittitoteuma)
+        toteuma (:toteuma reittitoteuma)
+        toteuma (assoc toteuma :reitti (luo-reitti-geometria db reitti))
+        toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+    (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+    (log/debug "Aloitetaan toteuman tehtävien tallennus")
+    (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+    (log/debug "Aloitetaan toteuman materiaalien tallennus")
+    (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id)
+    (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
+    (poista-toteuman-reitti db toteuma-id)
+    (log/debug "Aloitetaan reitin tallennus")
+    (luo-reitti db reitti toteuma-id)))
 
-(defn kirjaa-toteuma [db {id :id} data kirjaaja]
-  (let [urakka-id (Integer/parseInt id)
-        sopimus-id  (get-in data [:reittitoteuma :toteuma :sopimusId])]
-    (log/debug "Kirjataan reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
-               " (id:" (:id kirjaaja) " tekemänä.")
-    (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)
+(defn tallenna-kaikki-pyynnon-reittitoteumat [db urakka-id kirjaaja data]
+  (jdbc/with-db-transaction [transaktio db]
+    (when (:reittitoteuma data)
+      (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma data)))
+    (doseq [pistetoteuma (:reittitoteumat data)]
+      (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma pistetoteuma)))))
+
+(defn tarkista-pyynto [db urakka-id kirjaaja data]
+  (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
+    (doseq [sopimus-id sopimus-idt]
+      (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
+  (when (:reittitoteuma data)
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:reittitoteuma :toteuma :tehtavat]))
-    (tallenna-toteuma-ja-reitti db urakka-id kirjaaja data)
+    (doseq [reittitoteuma (:reittitoteumat data)]
+      (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
+      (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat])))))
+
+(defn kirjaa-toteuma [db {id :id} data kirjaaja]
+  (let [urakka-id (Integer/parseInt id)]
+    (log/debug "Kirjataan uusi reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
+               " (id:" (:id kirjaaja) " tekemänä.")
+    (tarkista-pyynto db urakka-id kirjaaja data)
+    (tallenna-kaikki-pyynnon-reittitoteumat db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
 (defrecord Reittitoteuma []

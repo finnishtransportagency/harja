@@ -149,11 +149,11 @@
 
          (lomake/ryhma {:ulkoasu :rivi}
                        {:nimi        :tilat :otsikko "Tila"
-                        :tyyppi      :boolean-group
+                        :tyyppi      :checkbox-group
                         :vaihtoehdot [:suljetut :avoimet]}
 
                        {:nimi             :tyypit :otsikko "Tyyppi"
-                        :tyyppi           :boolean-group
+                        :tyyppi           :checkbox-group
                         :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
                         :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi})]
 
