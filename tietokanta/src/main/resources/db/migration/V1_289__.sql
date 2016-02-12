@@ -1,6 +1,15 @@
--- Talvihoitomittauksen muutospyynnöt (HAR-1709)
+-- Turvallisuuspoikkeaman muutokset (HAR-1743)
+-- Vanhoja turpo-tyyppejä ei voi mäpätä suoraan uusiin. Mäpätään Mikon toiveesta kaikki työtapaturmiksi.
 
-ALTER TABLE talvihoitomittaus ADD COLUMN lampotila_tie NUMERIC(6, 2);
-ALTER TABLE talvihoitomittaus ADD COLUMN lampotila_ilma NUMERIC(6, 2);
-UPDATE talvihoitomittaus SET lampotila_ilma = lampotila;
-ALTER TABLE talvihoitomittaus DROP COLUMN lampotila;
+CREATE TYPE turvallisuuspoikkeama_luokittelu AS ENUM ('tyotapaturma', 'vaaratilanne', 'turvallisuushavainto');
+CREATE TYPE turvallisuuspoikkeama_vahinkoluokittelu AS ENUM ('henkilovahinko','omaisuusvahinko', 'ymparistovahinko');
+CREATE TYPE turvallisuuspoikkeama_vakavuusaste AS ENUM ('vakava','lieva');
+
+ALTER TABLE turvallisuuspoikkeama RENAME COLUMN tyyppi TO tyyppi_;
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN tyyppi turvallisuuspoikkeama_luokittelu[];
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahinkoluokittelu turvallisuuspoikkeama_vahinkoluokittelu[];
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vakavuusaste turvallisuuspoikkeama_vakavuusaste;
+UPDATE turvallisuuspoikkeama SET tyyppi = ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[];
+ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyyppi_;
+
+DROP TYPE turvallisuuspoikkeamatyyppi;
