@@ -638,56 +638,6 @@ nuolten-valimatka 3000)
                            viimeisin-nuolen-sijainti
                            nuolet)))))))))))
 
-
-(defn- tee-kaksiosainen-ikoni [coordinates pohja img rotation anchor]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (clj->js [(ol.style.Style.
-                           #js {:image  (ol.style.Icon.
-                                          #js {:src      (str +karttaikonipolku+ pohja)
-                                               :rotation (or rotation 0)
-                                               :opacity  1
-                                               :anchor   (if anchor
-                                                           (clj->js anchor)
-                                                           #js [0.5 0.5])})
-                                :zIndex oletus-zindex})
-
-                         (ol.style.Style.
-                           #js {:image  (ol.style.Icon.
-                                          #js {:src     (str +karttaikonipolku+ img)
-                                               :opacity 1
-                                               :anchor  (if anchor
-                                                          (clj->js anchor)
-                                                          #js [0.5 0.5])})
-                                :zIndex (inc oletus-zindex)})]))))
-
-(defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
-  (tee-kaksiosainen-ikoni coordinates "sticker-sininen.png" img direction [0.5 0.5]))
-
-(defmethod luo-feature :sticker-icon-line [{:keys [points img width zindex color direction] :as spec}]
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                                     :width (or width 2)})
-                                      :zIndex (or zindex oletus-zindex)})
-
-                (ol.style.Style.
-                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image    (ol.style.Icon.
-                                   #js {:src      (dom/karttakuva (str +karttaikonipolku+ "sticker-sininen"))
-                                        :rotation (or direction 0)
-                                        :opacity  1
-                                        :anchor   #js [0.5 0.5]})
-                       :zIndex   oletus-zindex})
-
-                (ol.style.Style.
-                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image    (ol.style.Icon.
-                                   #js {:src     (str +karttaikonipolku+ img)
-                                        :opacity 1
-                                        :anchor  #js [0.5 0.5]})
-                       :zIndex   (inc oletus-zindex)})]]
-    (doto feature
-      (.setStyle (clj->js tyylit)))))
-
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.

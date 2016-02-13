@@ -49,8 +49,6 @@
     :multipolygon (mapcat :coordinates (:polygons g))
     :point [(:coordinates g)]
     :icon [(:coordinates g)]
-    :sticker-icon [(:coordinates g)]
-    :sticker-icon-line (:points g)
     :circle [(:coordinates g)]
     :viiva (:points g)
     :merkki [(:coordinates g)]))
@@ -141,12 +139,6 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod extent :viiva [{points :points}]
   (laske-pisteiden-extent points))
 
-(defmethod extent :sticker-icon [{c :coordinates}]
-  (extent-point-circle c))
-
-(defmethod extent :sticker-icon-line [{points :points}]
-  (laske-pisteiden-extent points))
-
 (defmethod extent :multipolygon [{polygons :polygons}]
   (laske-pisteiden-extent (mapcat :coordinates polygons)))
 
@@ -175,9 +167,6 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
   (:coordinates geom))
 
 (defmethod ikonin-sijainti :icon [geom]
-  (:coordinates geom))
-
-(defmethod ikonin-sijainti :sticker-icon [geom]
   (:coordinates geom))
 
 (defmethod ikonin-sijainti :default [g]
