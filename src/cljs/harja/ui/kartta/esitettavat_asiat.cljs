@@ -22,21 +22,6 @@
            :point
            {:points [(:coordinates geometria)]})))
 
-(defn tack-icon [optiot geometria]
-  (merge optiot
-         (case (:type geometria)
-           :line
-           {:type   :tack-icon-line
-            :points (:points geometria)}
-
-           :multiline
-           {:type   :tack-icon-line
-            :points (mapcat :points (:lines geometria))}
-
-           :point
-           {:type        :tack-icon
-            :coordinates (:coordinates geometria)})))
-
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 (def +zindex+ 4)
@@ -60,18 +45,6 @@
   ([valittu? valittu-leveys] (viivan-leveys valittu? valittu-leveys +normaali-leveys+))
   ([valittu? valittu-leveys ei-valittu-leveys]
    (if valittu? valittu-leveys ei-valittu-leveys)))
-
-(defn- tack-ikoni
-  ([asia ikoni valittu-fn?] (tack-ikoni asia ikoni valittu-fn? {}))
-  ([asia ikoni valittu-fn? optiot]
-   (tack-icon
-     (merge
-       {:scale (laske-skaala (valittu-fn? asia))
-        :color (viivan-vari (valittu-fn? asia))
-        :width (viivan-leveys (valittu-fn? asia))
-        :img   ikoni}
-       optiot)
-     (:sijainti asia))))
 
 ;; Varmistaa, että merkkiasetukset ovat vähintään [{}].
 ;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]

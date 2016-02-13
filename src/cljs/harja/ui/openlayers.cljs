@@ -639,24 +639,6 @@ nuolten-valimatka 3000)
                            nuolet)))))))))))
 
 
-(defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
-  (let [feature (if (not (nil? lines))
-                  (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (map :points lines)))})
-                  (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
-        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                                     :width (or width 2)})
-                                      :zIndex (or zindex oletus-zindex)})
-
-                (ol.style.Style.
-                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image    (ol.style.Icon. #js {:src     (str +karttaikonipolku+ img)
-                                                      :anchor  #js [0.5 1]
-                                                      :opacity 1
-                                                      :scale   (or scale 1)})
-                       :zIndex   ((fnil + oletus-zindex) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
-    (doto feature
-      (.setStyle (clj->js tyylit)))))
-
 (defn- tee-kaksiosainen-ikoni [coordinates pohja img rotation anchor]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (clj->js [(ol.style.Style.
@@ -677,16 +659,6 @@ nuolten-valimatka 3000)
                                                           (clj->js anchor)
                                                           #js [0.5 0.5])})
                                 :zIndex (inc oletus-zindex)})]))))
-
-(defmethod luo-feature :tack-icon [{:keys [coordinates img scale zindex]}]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (ol.style.Style.
-                 #js {:image  (ol.style.Icon.
-                                #js {:src     (str +karttaikonipolku+ img)
-                                     :anchor  #js [0.5 1]
-                                     :opacity 1
-                                     :scale   (or scale 1)})
-                      :zIndex (or zindex oletus-zindex)}))))
 
 (defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
   (tee-kaksiosainen-ikoni coordinates "sticker-sininen.png" img direction [0.5 0.5]))
