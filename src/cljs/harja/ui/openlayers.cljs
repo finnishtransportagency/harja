@@ -583,61 +583,6 @@ nuolten-valimatka 3000)
 (defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
-(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image arrow-image-size] :as line}]
-  (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        nuolet (atom [])]
-
-    ;; Kerätään viivasegmenteille loppusijainnit ja viivan suunta
-    (.forEachSegment
-      (.getGeometry feature)
-      (fn [start end]
-        (swap! nuolet conj {:sijainti (js->clj end)
-                            :rotaatio (- (js/Math.atan2
-                                           (- (second end) (second start))
-                                           (- (first end) (first start))))})
-        ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
-        false))
-    (doto feature
-      (.setStyle
-        (clj->js
-          (concat
-            [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                                  :width (or width 2)})
-                                   :zIndex oletus-zindex})]
-            (loop [nuolityylit []
-                   viimeisin-nuolen-sijainti [0 0]
-                   [{:keys [sijainti rotaatio]} & nuolet] @nuolet]
-              (if-not sijainti
-                ;; Kaikki käsitelty, palauta nuolet
-                nuolityylit
-
-                ;; Tee uusi nuoli, jos aiempaan on matkaa yli 3000 yksikköä
-                ;; tai jos tämä on viimeinen
-                (let [[x1 y1] viimeisin-nuolen-sijainti
-                      [x2 y2] sijainti
-                      dx (- x1 x2)
-                      dy (- y1 y2)
-                      dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
-
-                  (if (or (> dist 3000)
-                          (empty? nuolet))
-                    (recur (conj nuolityylit
-                                 (ol.style.Style.
-                                   #js {:geometry (ol.geom.Point. (clj->js sijainti))
-                                        :image    (ol.style.Icon. #js {:src            (or arrow-image
-                                                                                           "images/nuoli-punainen.png")
-                                                                       :opacity        1
-                                                                       :scale          (or scale 2.5)
-                                                                       :zIndex         6
-                                                                       :rotateWithView false
-                                                                       :rotation       rotaatio})}))
-                           sijainti
-                           nuolet)
-                    (recur nuolityylit
-                           viimeisin-nuolen-sijainti
-                           nuolet)))))))))))
-
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.

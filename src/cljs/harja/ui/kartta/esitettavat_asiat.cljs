@@ -9,23 +9,10 @@
             [harja.geo :as geo]
             [harja.ui.kartta.varit.puhtaat :as varit]))
 
-(defn arrow-line [optiot geometria]
-  (merge optiot
-         {:type :arrow-line}
-         (case (:type geometria)
-           :line
-           {:points (:points geometria)}
-
-           :multiline
-           {:points (mapcat :points (:lines geometria))}
-
-           :point
-           {:points [(:coordinates geometria)]})))
-
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 (def +zindex+ 4)
-(def +oletusikoni+ "turvallisuuspoikkeama-tack-vihrea")
+(def +oletusikoni+ "turvallisuuspoikkeama-tack-vihrea") ;; TODO vaihda
 (def +normaali-leveys+ nil) ;;Openlayers default
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
