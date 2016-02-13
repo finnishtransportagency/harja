@@ -13,6 +13,7 @@
 (def violetti "rgba(128, 0, 255, 0.7)")
 (def pinkki "rgba(255, 0, 128, 0.7)")
 (def lime "rgba(128, 255, 0, 0.7)")
+(def musta "rgb(0, 0, 0, 0.7)")
 
 (def kaikki
   ^{:doc   "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan

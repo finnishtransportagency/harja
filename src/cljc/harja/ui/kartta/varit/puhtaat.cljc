@@ -13,6 +13,7 @@
 (def violetti "rgb(128,0,255)")
 (def lime "rgb(128,255,0)")
 (def pinkki "rgb(255,0,128)")
+(def musta "rgb(0,0,0)")
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
@@ -31,6 +32,9 @@
      (let [varit (->
                        (into #{} (keys (ns-publics ns)))
                        (poista-testit)
+                       ;; Musta on "erikoinen" väri, eikä sitä aina haluta käyttää kun vaan
+                       ;; iteroidaan värejä :)
+                       (disj 'musta)
                        (disj 'kaikki))
            kaikki (count kaikki)]
        (assert
