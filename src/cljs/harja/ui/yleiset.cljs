@@ -141,18 +141,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (let [auki (atom false)
         avautumissuunta (atom :alas)
-        max-korkeus (atom 0)]
+        max-korkeus (atom 0)
+        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
+                                                  (maarita-pudotusvalikon-max-korkeus
+                                                    this max-korkeus avautumissuunta))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
+                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
       {:component-did-mount
        (fn [this]
-         (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta))}
-      (komp/dom-kuuntelija js/window
-                           EventType/SCROLL (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
-      #_(komp/dom-kuuntelija js/window ; FIXME Kaatuu jostain syystä, jos ehtii niin voi tutkia ja korjata
-                           EventType/RESIZE (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
+         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
+
       (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)]

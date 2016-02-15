@@ -69,19 +69,18 @@
         valittu-idx (atom nil)
         hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)
         avautumissuunta (atom :alas)
-        max-korkeus (atom 0)]
+        max-korkeus (atom 0)
+        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
+                                                  (maarita-pudotusvalikon-max-korkeus
+                                                    this max-korkeus avautumissuunta))]
     (komp/luo
       (komp/dom-kuuntelija js/window
-                           EventType/SCROLL (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
-      (komp/dom-kuuntelija js/window                        ; Tämä sama koodi kaatuu jostain syystä livi-pudotusvalikossa (siellä kommentoituna)
-                           EventType/RESIZE (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
+                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
+                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
       {:component-did-mount
        (fn [this]
-         (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta))}
-
+         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
       (fn [_ data]
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
