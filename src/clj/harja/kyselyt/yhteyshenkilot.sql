@@ -75,7 +75,7 @@ SELECT
   u.tyyppi    AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
-  LEFT JOIN urakka u ON p.urakka = :urakka
+  LEFT JOIN urakka u ON p.urakka = u.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
