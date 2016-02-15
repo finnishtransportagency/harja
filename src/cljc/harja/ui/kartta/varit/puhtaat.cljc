@@ -1,19 +1,23 @@
 (ns harja.ui.kartta.varit.puhtaat
   (:require [clojure.set :as set]))
 
-(def punainen "rgb(255,0,0)")
-(def oranssi "rgb(255,128,0)")
-(def keltainen "rgb(255,255,0)")
-(def magenta "rgb(255,0,255)")
-(def vihrea "rgb(0,255,0)")
-(def turkoosi "rgb(0,255,128)")
-(def syaani "rgb(0,255,255)")
-(def sininen "rgb(0,128,255)")
-(def tummansininen "rgb(0,0,255)")
-(def violetti "rgb(128,0,255)")
-(def lime "rgb(128,255,0)")
-(def pinkki "rgb(255,0,128)")
-(def musta "rgb(0,0,0)")
+(def punainen "rgb(255, 0, 0)")
+(def oranssi "rgb(255, 128, 0)")
+(def keltainen "rgb(255, 255, 0)")
+(def magenta "rgb(255, 0, 255)")
+(def vihrea "rgb(0, 255, 0)")
+(def turkoosi "rgb(0, 255, 128)")
+(def syaani "rgb(0, 255, 255)")
+(def sininen "rgb(0, 128, 255)")
+(def tummansininen "rgb(0, 0, 255)")
+(def violetti "rgb(128, 0, 255)")
+(def lime "rgb(128, 255, 0)")
+(def pinkki "rgb(255, 0, 128)")
+
+(def musta "rgb(0, 0, 0)")
+(def vaaleanharmaa "rgb(242, 242, 242)")
+(def harmaa "rgb(140, 140, 140)")
+(def tummanharmaa "rgb(77, 77, 77)")
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
@@ -27,14 +31,16 @@
      (disj setti 'varmenna-sisalto 'varmenna-kaikki-vektori)))
 
 #?(:clj
+   (defn- poista-epavarit [setti]
+     (disj setti 'musta 'harmaa 'tummanharmaa 'vaaleanharmaa)))
+
+#?(:clj
    (defn varmenna-kaikki-vektori [ns]
      (refer ns :only '[kaikki])
      (let [varit (->
                        (into #{} (keys (ns-publics ns)))
                        (poista-testit)
-                       ;; Musta on "erikoinen" väri, eikä sitä aina haluta käyttää kun vaan
-                       ;; iteroidaan värejä :)
-                       (disj 'musta)
+                       (poista-epavarit)
                        (disj 'kaikki))
            kaikki (count kaikki)]
        (assert
