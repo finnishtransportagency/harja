@@ -120,9 +120,10 @@
                hoitokausi @urakka/valittu-hoitokausi
                toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
                tehtava (:id @u/valittu-yksikkohintainen-tehtava)
-               nakymassa? @yksikkohintaiset-tyot-nakymassa?]
+               nakymassa? @yksikkohintaiset-tyot-nakymassa?
+               kartta-nakyvissa? @nav/kartta-nakyvissa?]
               {:nil-kun-haku-kaynnissa? true}
-              (when nakymassa?
+              (when (and nakymassa? kartta-nakyvissa?)
                 (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
