@@ -100,7 +100,6 @@
                                       (go
                                         (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
                                         (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
-                                          (log "SIJAINTI: " (pr-str sijainti))
                                           (when (= (get (grid/hae-muokkaustila g) id) rivi) ;; ettei rivi ole uudestaan muuttunut
                                             (if-let [virhe (when-not (vkm/loytyi? sijainti)
                                                              "Virheellinen TR-osoite")]
