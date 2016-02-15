@@ -686,7 +686,7 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
-ORDER BY t.alkanut
+ORDER BY t.alkanut DESC
 LIMIT 501;
 
 
