@@ -3,7 +3,6 @@
   "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
-  "additionalProperties": false,
   "properties": {
     "id": {
       "id": "urn:harja/id",
