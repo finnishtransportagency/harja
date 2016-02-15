@@ -80,6 +80,9 @@ WHERE
   -- Tarkasta vapaatekstihakuehto
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
 
+  -- Tarkasta selitehakuehto
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY[:selite ::ilmoituksenselite])) AND
+
   -- Tarkasta ilmoituksen tilat
   (
     (:suljetut IS TRUE AND :avoimet IS TRUE) OR

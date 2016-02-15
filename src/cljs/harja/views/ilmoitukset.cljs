@@ -5,7 +5,8 @@
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
-                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero parsi-selitteet]]
+                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
+                                                 +ilmoitusten-selitteet+ parsi-selitteet]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -14,6 +15,7 @@
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
+            [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
             [harja.ui.bootstrap :as bs]
@@ -21,7 +23,8 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn pollauksen-merkki []
   [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
@@ -126,7 +129,23 @@
           :placeholder "Hae tekstillä..."
           :tyyppi      :string
           :pituus-max  64
-          :palstoja    2}
+          :palstoja    1}
+         {:nimi                  :selite
+          :palstoja              1
+          :otsikko               "Selite"
+          :placeholder           "Hae ja valitse selite"
+          :tyyppi                :haku
+          :hae-kun-yli-n-merkkia 0
+          :nayta                 second :fmt second
+          :lahde                 (reify protokollat/Haku
+                                   (hae [_ teksti]
+                                     (go (let [haku second
+                                               selitteet +ilmoitusten-selitteet+
+                                               itemit (if (< (count teksti) 1)
+                                                        selitteet
+                                                        (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
+                                                                selitteet))]
+                                           (vec (sort itemit))))))}
 
          (lomake/ryhma {:ulkoasu :rivi}
                        {:nimi        :tilat :otsikko "Tila"
@@ -160,7 +179,7 @@
   (komp/luo
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :L))
+                        (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
     (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus! %2))

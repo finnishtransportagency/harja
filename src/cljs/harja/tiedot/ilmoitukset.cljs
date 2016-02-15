@@ -27,7 +27,8 @@
                              :aikavali        (or @u/valittu-hoitokausi [nil nil])
                              :tyypit          +ilmoitustyypit+
                              :tilat           +ilmoitustilat+
-                             :hakuehto        ""}))
+                             :hakuehto        ""
+                             :selite          [nil ""]}))
 
 (defonce ilmoitushaku (atom 0))
 
