@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.sonja.sahkoposti-test
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.testi :refer :all]
@@ -17,10 +18,11 @@
    "jvh"
    :sonja (feikki-sonja)
    :sonja-sahkoposti (component/using
-                      (sahkoposti/luo-sahkoposti {:sahkoposti-sisaan-jono "email-to-harja"
-                                                  :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                  :sahkoposti-ulos-jono "harja-to-email"
-                                                  :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                      (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
+                                                       {:sahkoposti-sisaan-jono "email-to-harja"
+                                                        :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                        :sahkoposti-ulos-jono "harja-to-email"
+                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                       [:sonja :db :integraatioloki])
    ))
 

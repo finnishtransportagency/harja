@@ -52,7 +52,7 @@ server {
     }
 
     location / {
-      proxy_pass_header OAM_REMOTE_USER;
+      proxy_set_header OAM_REMOTE_USER jvh;
       proxy_pass   http://backend;
     }
 
@@ -64,6 +64,7 @@ server {
     location ~ /harja/api/(?<path>.*)$ {
       # buffering off tarvitaan kun halutaan striimata chunked responseja
       proxy_buffering off;
+      proxy_set_header OAM_REMOTE_USER jvh;
       proxy_pass http://backend/api/$path$is_args$args;
     }
     
@@ -90,7 +91,7 @@ server {
 
     location ~ /harja/(?<path>.*)$ {
       proxy_pass_request_headers on;
-      proxy_pass_header OAM_REMOTE_USER;
+      proxy_set_header OAM_REMOTE_USER jvh;
       proxy_pass http://backend/$path$is_args$args;
     }
     
