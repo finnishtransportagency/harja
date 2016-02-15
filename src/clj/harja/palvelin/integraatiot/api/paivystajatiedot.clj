@@ -98,7 +98,7 @@
     (do
       (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
       (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email
-                                                                    urakoitsija-id (str id))))
+                                                                    (str id))))
     (do
       (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
       (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email

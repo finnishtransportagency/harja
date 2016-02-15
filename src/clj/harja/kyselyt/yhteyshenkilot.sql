@@ -125,7 +125,7 @@ WHERE id = :id;
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
 SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :matkapuh,
-  sahkoposti = :email, organisaatio = :org
+  sahkoposti = :email
 WHERE ulkoinen_id = :id;
 
 -- name: hae-urakan-yhteyshenkilo-idt
