@@ -56,7 +56,6 @@
   nil)
 
 (defn hae-paivystaja [db puhelinnumero]
-  ;; todo: tämä on naivi toteutus. jatkossa pitää käyttää jarin tekemää puhelinnumeron parsintaa, jotta tuetaan useita eri puhelinnumeron muotoja.
   (if-let [paivystaja (first (yhteyshenkilot/hae-paivystaja-puhelinnumerolla db puhelinnumero))]
     paivystaja
     (throw+ {:type :tuntematon-kayttaja})))
@@ -111,10 +110,9 @@
          nil
          nil)))
 
-(defn vastaanota-tekstiviestikuittaus [jms-lahettaja sms db puhelinnumero viesti]
+(defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   ;; palauta responsessa suoraan text elementissä paluuviesti!
-  ;; parsi vapaateksti lopusta!!!
   (try+
     (let [paivystaja (hae-paivystaja db puhelinnumero)
           data (parsi-tekstiviesti viesti)
@@ -122,26 +120,24 @@
           ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus (:vapaateksti data) (:toimenpide data) paivystaja)]
 
       (laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
-      (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!"))
+      "Viestisi käsiteltiin onnistuneesti. Kiitos!")
 
     (catch [:type :tuntematon-kayttaja] {}
       (log/error (format "Numerosta: %s vastaanotettua viestiä: %s ei voida käsitellä, sillä puhelinnumerolla ei löydy käyttäjää." puhelinnumero viesti))
-      (sms/laheta sms puhelinnumero "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla."))
+      "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla.")
 
     (catch [:type :tuntematon-ilmoitustoimenpide] {}
       (log/error (format "Numerosta: %s vastaanotetussa viestissä: %s toimenpide ei ole validi." puhelinnumero viesti))
-      (sms/laheta sms puhelinnumero "Viestiäsi ei voitu käsitellä. Antamasi toimenpide ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla."))
+      "Viestiäsi ei voitu käsitellä. Antamasi toimenpide ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla.")
 
     (catch [:type :tuntematon-viestinumero] {}
       (log/error (format "Numerosta: %s vastaanotetussa viestissä: %s viestinumero ei ole validi." puhelinnumero viesti))
-      (sms/laheta sms puhelinnumero "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla."))
+      "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla.")
 
     (catch [:type :tuntematon-ilmoitus] {}
       (log/error (format "Numerosta: %s vastaanotetulla viestillä: %s ei löydetty ilmoitusta." puhelinnumero viesti))
-      (sms/laheta sms puhelinnumero "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy ilmoitusta. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla."))
+      "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy ilmoitusta. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla.")
 
     (catch Exception e
       (log/error e (format "Numerosta: %s vastaanotetun viestin: %s käsittelyssä tapahtui poikkeus." puhelinnumero viesti))
-      (sms/laheta sms puhelinnumero "Pahoittelemme mutta lähettämäsi viestin käsittelyssä tapahtui virhe."))))
-
-
+      "Pahoittelemme mutta lähettämäsi viestin käsittelyssä tapahtui virhe.")))
