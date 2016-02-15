@@ -24,7 +24,7 @@
          (str ilman))))
 
 (defn hae-ilmoitukset
-  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto]
+  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -33,17 +33,20 @@
                                                     urakka urakoitsija urakkatyyppi hallintayksikko
                                                     (first aikavali) (second aikavali))
         tyypit (mapv name tyypit)
-        viesti (str "Haetaan ilmoituksia: "
+        selite-annettu? (boolean (and selite (first selite)))
+        selite (if selite-annettu? (name (first selite)) "")
+        debug-viesti (str "Haetaan ilmoituksia: "
                     (viesti urakat "urakoista" "ilman urakoita")
                     (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                     (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
                     (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                    (viesti selite "selitteellä:" "ilman selitettä")
                     (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                     (cond
                       (:avoimet tilat) ", mutta vain avoimet."
                       (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
                       (:suljetut tilat) ", ainoastaan suljetut."))
-        _ (log/debug viesti)
+        _ (log/debug debug-viesti)
         tulos (when-not (empty? urakat)
                 (mapv
                   #(assoc % :uusinkuittaus
@@ -66,6 +69,7 @@
                                              aikavali-alku aikavali-loppu
                                              (hakuehto-annettu? tyypit) tyypit
                                              (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
+                                             selite-annettu? selite
                                              (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
                                              (if (:avoimet tilat) true false) ;; falseksi
                                              ))
@@ -130,7 +134,7 @@
                         (hae-ilmoitukset (:db this) user (:hallintayksikko tiedot)
                                          (:urakka tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                          (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
-                                         (:hakuehto tiedot))))
+                                         (:hakuehto tiedot) (:selite tiedot))))
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]
