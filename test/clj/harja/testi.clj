@@ -37,7 +37,7 @@
                        :kayttaja "harjatest"
                        :salasana nil})
 
-(defn odota [ehto-fn viesti max-aika]
+(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika]
   (loop [max-ts (+ max-aika (System/currentTimeMillis))]
     (if (> (System/currentTimeMillis) max-ts)
       (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika " kuluessa"))

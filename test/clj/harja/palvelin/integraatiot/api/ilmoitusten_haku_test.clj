@@ -63,7 +63,7 @@
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
 
-    (odota #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
+    (odota-ehdon-tayttymista #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
     (is (= 200 (:status @vastaus)))
 
     (let [vastausdata (cheshire/decode (:body @vastaus))
@@ -71,7 +71,7 @@
       (is (= 1 (count (get vastausdata "ilmoitukset"))))
       (is (= odotettu-ilmoitus ilmoitus)))
 
-    (odota #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 10000)
+    (odota-ehdon-tayttymista #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 10000)
 
     (let [xml (first @tloik-kuittaukset)
           data (xml/lue xml)]
