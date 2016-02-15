@@ -5,13 +5,13 @@
 (defqueries "harja/kyselyt/yhteyshenkilot.sql")
 
 (defn onko-olemassa-yhteyshenkilo-ulkoisella-idlla? [db ulkoinen-id]
-  (:exists (first (onko-olemassa-yhteyshenkilo-ulkoisella-idlla db ulkoinen-id))))
+  (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla db ulkoinen-id))))
 
 (defn onko-olemassa-paivystys-jossa-yhteyshenkilona-id? [db paivystaja-id]
-  (:exists (first (onko-olemassa-paivystys-jossa-yhteyshenkilona-id db paivystaja-id))))
+  (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id db paivystaja-id))))
 
 (defn hae-urakan-tamanhetkinen-paivystaja [db urakkaid]
-  (let [paivystajat (hae-urakan-taman-hetkiset-paivystajat db urakkaid)]
+  (let [paivystajat (harja.kyselyt.yhteyshenkilot/hae-urakan-taman-hetkiset-paivystajat db urakkaid)]
     (if (= 1 (count paivystajat))
       (first paivystajat)
       (when (< 0 (count paivystajat))
@@ -20,7 +20,7 @@
           (first paivystajat))))))
 
 (defn luo-yhteyshenkilo [db etu suku tyopuhelin matkapuhelin email org sampoid kayttajatunnus ulkoinen_id]
-  (luo-yhteyshenkilo<!
+  (harja.kyselyt.yhteyshenkilot/luo-yhteyshenkilo<!
     db
     db
     etu
@@ -34,7 +34,7 @@
     ulkoinen_id))
 
 (defn paivita-yhteyshenkilo [db etunimi sukunimi tyopuhelin matkapuhelin sahkoposti organisaatio id]
-  (paivita-yhteyshenkilo<! db
+  (harja.kyselyt.yhteyshenkilot/paivita-yhteyshenkilo<! db
                            etunimi
                            sukunimi
                            (puhelinnumero/kanonisoi tyopuhelin)
@@ -44,7 +44,7 @@
                            id))
 
 (defn paivita-yhteyshenkilo-ulkoisella-idlla [db etunimi sukunimi tyopuhelin matkapuhelin sahkoposti organisaatio ulkoinen_id]
-  (paivita-yhteyshenkilo-ulkoisella-idlla<! db
+  (harja.kyselyt.yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db
                                             etunimi
                                             sukunimi
                                             (puhelinnumero/kanonisoi tyopuhelin)

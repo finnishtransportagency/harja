@@ -124,7 +124,7 @@
                                                nil
                                                nil
                                                nil))]
-            (q/liita-yhteyshenkilo-urakkaan c (:rooli yht) id urakka-id))))
+            (q/liita-yhteyshenkilo-urakkaan<! c (:rooli yht) id urakka-id))))
 
       ;; kaikki ok
       (hae-urakan-yhteyshenkilot c user urakka-id))))
