@@ -33,10 +33,10 @@ SELECT
   y.tyopuhelin,
   y.matkapuhelin,
   y.organisaatio,
-  org.id      AS organisaatio_id,
-  org.nimi    AS organisaatio_nimi,
-  org.tyyppi  AS organisaatio_tyyppi,
-  org.ytunnus AS organisaatio_ytunnus,
+  org.id      AS urakoitsija_id,
+  org.nimi    AS urakoitsija_nimi,
+  org.tyyppi  AS urakoitsija_tyyppi,
+  org.ytunnus AS urakoitsija_ytunnus,
   u.id        AS urakka_id,
   u.nimi      AS urakka_nimi,
   u.alkupvm   AS urakka_alkupvm,
@@ -44,8 +44,8 @@ SELECT
   u.tyyppi    AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
-  LEFT JOIN organisaatio org ON y.organisaatio = org.id
-  LEFT JOIN urakka u ON p.urakka = u.id
+  LEFT JOIN urakka u ON p.urakka = :urakka
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE p.urakka = :urakka AND
       (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
@@ -64,10 +64,10 @@ SELECT
   y.tyopuhelin,
   y.matkapuhelin,
   y.organisaatio,
-  org.id      AS organisaatio_id,
-  org.nimi    AS organisaatio_nimi,
-  org.tyyppi  AS organisaatio_tyyppi,
-  org.ytunnus AS organisaatio_ytunnus,
+  org.id      AS urakoitsija_id,
+  org.nimi    AS urakoitsija_nimi,
+  org.tyyppi  AS urakoitsija_tyyppi,
+  org.ytunnus AS urakoitsija_ytunnus,
   u.id        AS urakka_id,
   u.nimi      AS urakka_nimi,
   u.alkupvm   AS urakka_alkupvm,
@@ -75,7 +75,7 @@ SELECT
   u.tyyppi    AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
-  LEFT JOIN urakka u ON p.urakka = u.id
+  LEFT JOIN urakka u ON p.urakka = :urakka
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
