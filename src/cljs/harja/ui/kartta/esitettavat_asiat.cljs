@@ -7,7 +7,8 @@
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.ui.dom :refer [karttakuva]]
             [harja.geo :as geo]
-            [harja.ui.kartta.varit.puhtaat :as varit]))
+            [harja.ui.kartta.varit.puhtaat :as varit]
+            [harja.ui.kartta.varit.alpha :as alpha]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -69,8 +70,7 @@
                              ;; Oletusasetukset
                              {:tyyppi :merkki
                               :paikka :loppu
-                              :scale  (laske-skaala valittu?)
-                              :img    (karttakuva +oletusikoni+)}
+                              :scale  (laske-skaala valittu?)}
                              i)) merkit)}))
 
 (defn maarittele-feature
@@ -130,10 +130,11 @@
        ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
        ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
        (or (= :point tyyppi) (= 1 (count koordinaatit)))
-       (merge
-         (maarittele-piste valittu? (or pisteen-ikoni merkit))
-         {:type        :merkki
-          :coordinates (flatten koordinaatit)}) ;; [x y] -> [x y] && [[x y]] -> [x y]
+       (when merkit
+         (merge
+          (maarittele-piste valittu? (or pisteen-ikoni merkit))
+          {:type        :merkki
+           :coordinates (flatten koordinaatit)}))           ;; [x y] -> [x y] && [[x y]] -> [x y]
 
        (= :line tyyppi)
        (merge
@@ -244,7 +245,9 @@
                 (otsikko-tekijalla (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tarkastus))
       :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
                :img    ikoni}
-      :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni))))
+      :alue (if (:ok? tarkastus)
+              (maarittele-feature tarkastus (valittu-fn? tarkastus) nil {:color alpha/vaaleanharmaa})
+              (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni)))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
   (let [ikoni (karttakuva "varusteet-ja-laitteet-tack-violetti")]
