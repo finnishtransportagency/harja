@@ -28,10 +28,11 @@
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
-                        (sahkoposti/luo-sahkoposti {:sahkoposti-sisaan-jono         "email-to-harja"
-                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                    :sahkoposti-ulos-jono           "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                       (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                  {:sahkoposti-sisaan-jono         "email-to-harja"
+                                                   :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                   :sahkoposti-ulos-jono           "harja-to-email"
+                                                   :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
