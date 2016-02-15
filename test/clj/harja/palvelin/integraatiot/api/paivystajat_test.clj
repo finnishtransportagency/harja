@@ -27,6 +27,7 @@
 
 (deftest tallenna-paivystajatiedot
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+        urakoitsija-id (hae-oulun-alueurakan-2005-2010-urakoitsija)
         ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti
                                                 (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
@@ -43,7 +44,7 @@
           urakoitsija (ffirst (q (str "SELECT organisaatio FROM yhteyshenkilo WHERE ulkoinen_id = '" (str ulkoinen-id) "';")))
           paivystys (first (q (str "SELECT yhteyshenkilo, vastuuhenkilo, varahenkilo FROM paivystys WHERE yhteyshenkilo = " paivystaja-id)))]
       (is (= paivystaja [(str ulkoinen-id) "Päivi" "Päivystäjä" "paivi.paivystaja@sahkoposti.com" "04001234567" "04005555555"]))
-      (is (= (not (nil? urakoitsija))))
+      (is (= urakoitsija-id urakoitsija))
       (is (= paivystys [paivystaja-id true false]))
 
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti
