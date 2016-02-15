@@ -285,7 +285,8 @@
                                        (or tr_alkuetaisyys 0)
                                        (or tr_loppuosa 0)
                                        (or tr_loppuetaisyys 0)
-                                       (geo/geometry (geo/clj->pg sijainti))
+                                       (when-not (empty? sijainti)
+                                         (geo/geometry (geo/clj->pg sijainti)))
                                        (or kvl 0)
                                        nykyinen_paallyste
                                        toimenpide

@@ -48,22 +48,4 @@
                FROM ilmoitus
                WHERE ilmoitusid = 987654321);")))
 
-(deftest tarkista-ilmoitustoimenpiteen-kirjaus
-  (let [viestit (atom [])]
-    (luo-testi-ilmoitus)
-    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(swap! viestit conj (.getText %)))
 
-    (let [vastaus (api-tyokalut/put-kutsu ["/api/ilmoitukset/987654321/"] kayttaja portti (slurp "test/resurssit/api/ilmoitustoimenpide.json"))]
-      (is (= 200 (:status vastaus))) "Viestin lähetys API:n onnistui.")
-
-    (is (= 1 (hae-testi-ilmoituksen-toimenpiteiden-maara)) "Ilmoitustoimenpide löytyy tietokannasta.")
-
-    (odota #(= 1 (count @viestit)) "Ilmoitustoimenpideviesti lähetettiin Sonjan jonoon." 10000)
-
-    (is (xml/validoi "xsd/tloik/" "harja-tloik.xsd" (first @viestit)) "Lähetetty ilmoitustoimenpide XML on validi")
-    (let [data (xml/lue (first @viestit))]
-      (is (= "987654321" (xml-zip/xml1-> data :ilmoitusId xml-zip/text)) "Toimenpide tehtiin oikeaan ilmoitukseen")
-      (is (= "vastaanotto" (xml-zip/xml1-> data :tyyppi xml-zip/text)) "Toimenpide tyyppi on oikea"))
-
-    (poista-testi-ilmoitustoimenpide)
-    (poista-testi-ilmoitus)))

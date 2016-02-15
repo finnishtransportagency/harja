@@ -111,7 +111,14 @@ Palautettavassa datassa:
   "Tarkistaa epäonnistuiko VKM kutsu"
   [tulos]
   (contains? tulos :virhe))
-       
+
+(defn loytyi?
+  "Tarkista että tulos ei ole virhe eikä tyhjä tai pelkkä nil reitti"
+  [tulos]
+  (and (not (virhe? tulos))
+       (not (empty? tulos))
+       (not= [nil] tulos)))
+
 (def pisteelle-ei-loydy-tieta "Pisteelle ei löydy tietä.")
 (def vihje-zoomaa-lahemmas "Yritä zoomata lähemmäs.")
   

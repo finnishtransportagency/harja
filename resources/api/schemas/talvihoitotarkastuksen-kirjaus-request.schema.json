@@ -49,8 +49,12 @@
                 "id": "urn:harja/mittaustulokset/talvihoito/kitka",
                 "type": "number"
               },
-              "lampotila": {
-                "id": "urn:harja/mittaustulokset/talvihoito/lampotila",
+              "lampotilaIlma": {
+                "id": "urn:harja/mittaustulokset/talvihoito/lampotilaIlma",
+                "type": "number"
+              },
+              "lampotilaTie": {
+                "id": "urn:harja/mittaustulokset/talvihoito/lampotilaTie",
                 "type": "number"
               }
             }
