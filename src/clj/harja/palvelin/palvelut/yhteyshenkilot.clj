@@ -43,7 +43,7 @@
                         (fn [user urakka-id]
                           (hae-urakan-kayttajat (:db this) user urakka-id))))
 
-    
+
     this)
 
   (stop [this]
@@ -67,7 +67,7 @@
   (into #{}
         (map :rooli)
         (q/hae-yhteyshenkilotyypit db)))
-                               
+
 (defn hae-urakan-yhteyshenkilot [db user urakka-id]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (let [tulokset (q/hae-urakan-yhteyshenkilot db urakka-id)
@@ -95,11 +95,11 @@
     (doseq [id poistettu]
       (log/info "POISTAN yhteyshenkilön " id " urakasta " urakka-id)
       (q/poista-yhteyshenkilo! c id urakka-id))
-    
+
     ;; ketä yhteyshenkilöitä tässä urakassa on
     (let [nykyiset-yhteyshenkilot (into #{} (map :yhteyshenkilo)
                                         (q/hae-urakan-yhteyshenkilo-idt db urakka-id))]
-      
+
       ;; tallenna jokainen yhteyshenkilö
       (doseq [{:keys [id rooli] :as yht} yhteyshenkilot]
         (log/info "Tallennetaan yhteyshenkilö " yht " urakkaan " urakka-id)
@@ -107,16 +107,16 @@
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
             (log/warn "Yritettiin päivittää urakan " urakka-id " yhteyshenkilöä " id", joka ei ole liitetty urakkaan!")
-            (do (q/paivita-yhteyshenkilo<! c
+            (do (q/paivita-yhteyshenkilo c
                                           (:etunimi yht) (:sukunimi yht)
                                           (:tyopuhelin yht) (:matkapuhelin yht)
                                           (:sahkoposti yht)
                                           (:id (:organisaatio yht))
                                           id)
                 (q/aseta-yhteyshenkilon-rooli! c (:rooli yht) id urakka-id)))
-          
+
           ;; Uusi yhteyshenkilö, luodaan rivi
-          (let [id (:id (q/luo-yhteyshenkilo<! c
+          (let [id (:id (q/luo-yhteyshenkilo c
                                                (:etunimi yht) (:sukunimi yht)
                                                (:tyopuhelin yht) (:matkapuhelin yht)
                                                (:sahkoposti yht)
@@ -124,7 +124,7 @@
                                                nil
                                                nil
                                                nil))]
-            (q/liita-yhteyshenkilo-urakkaan<! c (:rooli yht) id urakka-id))))
+            (q/liita-yhteyshenkilo-urakkaan c (:rooli yht) id urakka-id))))
 
       ;; kaikki ok
       (hae-urakan-yhteyshenkilot c user urakka-id))))
@@ -141,7 +141,7 @@
                                         :nimi (:organisaatio_nimi %)})
                 %))
         (q/hae-urakan-paivystajat db urakka-id nil nil)))
-                               
+
 
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]
   (jdbc/with-db-transaction [c db]
@@ -153,13 +153,13 @@
     (doseq [p paivystajat]
       (if (< (:id p) 0)
         ;; Luodaan uusi yhteyshenkilö
-        (let [yht (q/luo-yhteyshenkilo<! c
-                                         (:etunimi p) (:sukunimi p)
-                                         (:tyopuhelin p) (:matkapuhelin p)
-                                         (:sahkoposti p) (:id (:organisaatio p))
-                                         nil
-                                         nil
-                                         nil)]
+        (let [yht (q/luo-yhteyshenkilo c
+                                       (:etunimi p) (:sukunimi p)
+                                       (:tyopuhelin p) (:matkapuhelin p)
+                                       (:sahkoposti p) (:id (:organisaatio p))
+                                       nil
+                                       nil
+                                       nil)]
           (q/luo-paivystys<! c
                              (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
                              urakka-id (:id yht) true false))
@@ -167,15 +167,15 @@
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
         (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p) urakka-id)))]
           (log/debug "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
-          (q/paivita-yhteyshenkilo<! c
-                                    (:etunimi p) (:sukunimi p)
-                                    (:tyopuhelin p) (:matkapuhelin p)
-                                    (:sahkoposti p) (:id (:organisaatio p))
-                                    yht-id)
+          (q/paivita-yhteyshenkilo c
+                                   (:etunimi p) (:sukunimi p)
+                                   (:tyopuhelin p) (:matkapuhelin p)
+                                   (:sahkoposti p) (:id (:organisaatio p))
+                                   yht-id)
           (q/paivita-paivystys! c
                                 (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
                                 (:id p) urakka-id))))
-                                
+
     ;; Haetaan lopuksi uuden päivystäjät
     (hae-urakan-paivystajat c user urakka-id)))
 
