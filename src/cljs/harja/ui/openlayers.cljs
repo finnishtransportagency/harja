@@ -399,7 +399,8 @@ oletus-zindex 4)
     (.setView ol3 (ol.View. #js {:center     (clj->js (geo/extent-keskipiste extent))
                                  :resolution initial-resolution
                                  :maxZoom    max-zoom
-                                 :minZoom    min-zoom}))
+                                 :minZoom    min-zoom
+                                 :projection projektio}))
 
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3             ol3
