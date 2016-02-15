@@ -110,7 +110,8 @@
 
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja sms db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
-
+  ;; palauta responsessa suoraan text elementissä paluuviesti!
+  ;; parsi vapaateksti lopusta!!!
   (try+
     (let [paivystaja (hae-paivystaja db puhelinnumero)
           data (parsi-tekstiviesti viesti)

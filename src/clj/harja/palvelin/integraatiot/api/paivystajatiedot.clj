@@ -96,10 +96,10 @@
   (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
     (do
       (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
-      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email nil (str id))))
+      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla db etunimi sukunimi tyopuhelin matkapuhelin email nil (str id))))
     (do
       (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
-      (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email nil nil liviTunnus (str id))))))
+      (:id (yhteyshenkilot/luo-yhteyshenkilo db etunimi sukunimi tyopuhelin matkapuhelin email nil nil liviTunnus (str id))))))
 
 (defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
