@@ -91,7 +91,8 @@
        {:leveys 5 :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
        {:leveys 5 :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
        {:leveys 5 :otsikko "Kit\u00ADka"}
-       {:leveys 5 :otsikko "Läm\u00ADpö\u00ADti\u00ADla"}
+       {:leveys 5 :otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla"}
+       {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}
        {:leveys 5 :otsikko "Tar\u00ADkas\u00ADtaja"}
        {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}
        {:leveys 5 :otsikko "Liit\u00ADtei\u00ADtä"}]
@@ -113,7 +114,8 @@
            (:lumimaara rivi)
            (:tasaisuus rivi)
            (:kitka rivi)
-           (:lampotila rivi)
+           (get-in rivi [:lampotila :ilma])
+           (get-in rivi [:lampotila :tie])
            (:tarkastaja rivi)
            (:havainnot rivi)
            (count (:liitteet rivi))]))]]))

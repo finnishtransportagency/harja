@@ -26,27 +26,13 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.views.kartta :as kartta]
+            [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
+            [harja.tiedot.urakka.paallystys-ja-paikkaus-yhteiset :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
-
-(def lomake-lukittu-muokkaukselta? (reaction (let [_ @lukko/nykyinen-lukko]
-                                               (lukko/nykyinen-nakyma-lukittu?))))
-
-(defn nayta-tila [tila]
-  (case tila
-    :aloitettu "Aloitettu"
-    :valmis "Valmis"
-    :lukittu "Lukittu"
-    "-"))
-
-(defn nayta-paatos [tila]
-  (case tila
-    :hyvaksytty [:span.paallystysilmoitus-hyvaksytty "Hyväksytty"]
-    :hylatty [:span.paallystysilmoitus-hylatty "Hylätty"]
-    ""))
 
 
 
@@ -68,12 +54,6 @@
      "Urakkasopimuksen mukainen kokonaishinta: " (fmt/euro-opt (or @urakkasopimuksen-mukainen-kokonaishinta 0))
      "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or @muutokset-kokonaishintaan 0))
      "Yhteensä: " (fmt/euro-opt @toteuman-kokonaishinta)]))
-
-(defn kuvaile-paatostyyppi [paatos]
-  (case paatos
-    :hyvaksytty "Hyväksytty"
-    :hylatty "Hylätty"))
-
 
 
 (defn kasittely
@@ -122,7 +102,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (yhteiset-cljc/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :palstoja 1}
 
          (when (:paatos-tekninen @paatostiedot-tekninen-osa)
@@ -152,7 +132,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (yhteiset-cljc/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :palstoja 1}
 
          (when (:paatos-taloudellinen @paatostiedot-taloudellinen-osa)
@@ -282,7 +262,7 @@
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paallystysilmoitus-lomakedata nil)]
 
            (when @lomake-lukittu-muokkaukselta?
-             (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
+             (yhteiset-cljs/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
 
            [:h2 "Päällystysilmoitus"]
 
@@ -479,7 +459,7 @@
              alustalle-tehdyt-toimet]]
 
            [:fieldset.lomake-osa
-            [:legend "Taloudellinen osa"]
+            [:h3 "Taloudellinen osa"]
 
             [grid/muokkaus-grid
              {:otsikko "Toteutuneet määrät"
@@ -528,21 +508,22 @@
                       
     (fn []
       [:div
+       [:h3 "Päällystysilmoitukset"]
        [grid/grid
-        {:otsikko  "Päällystysilmoitukset"
+        {:otsikko  ""
          :tyhja    (if (nil? @paallystystoteumat) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
          :tunniste :kohdenumero}
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
          {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"
           :hae (fn [rivi]
-                 (nayta-tila (:tila rivi)))}
+                 (yhteiset-cljc/nayta-tila (:tila rivi)))}
          {:otsikko "Päätös, tekninen" :nimi :paatos_tekninen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi]
-                         (nayta-paatos (:paatos_tekninen_osa rivi)))}
+                         (yhteiset-cljs/nayta-paatos (:paatos_tekninen_osa rivi)))}
          {:otsikko "Päätös, taloudel\u00ADlinen" :nimi :paatos_taloudellinen_osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
           :komponentti (fn [rivi]
-                         (nayta-paatos (:paatos_taloudellinen_osa rivi)))}
+                         (yhteiset-cljs/nayta-paatos (:paatos_taloudellinen_osa rivi)))}
          {:otsikko     "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
           :komponentti (fn [rivi]
                          (if (:tila rivi)
@@ -573,7 +554,7 @@
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
     (fn []
-      [:span
+      [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        (if @paallystysilmoitus-lomakedata
          [paallystysilmoituslomake]

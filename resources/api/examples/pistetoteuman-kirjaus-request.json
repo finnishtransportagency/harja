@@ -39,5 +39,37 @@
         "y": 7209885
       }
     }
-  }
+  },
+  "pistetoteumat": [
+    {
+      "pistetoteuma": {
+        "toteuma": {
+          "tunniste": {
+            "id": 753724
+          },
+          "sopimusId": 1,
+          "suorittaja": {
+            "nimi": "Tehotekijät Oy",
+            "ytunnus": "8765432-1"
+          },
+          "alkanut": "2016-01-30T12:00:00Z",
+          "paattynyt": "2016-01-30T12:00:00Z",
+          "toteumatyyppi": "yksikkohintainen",
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1359
+              }
+            }
+          ]
+        },
+        "sijainti": {
+          "koordinaatit": {
+            "x": 440820,
+            "y": 7209885
+          }
+        }
+      }
+    }
+  ]
 }

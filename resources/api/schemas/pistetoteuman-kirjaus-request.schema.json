@@ -15,23 +15,15 @@
       "id": "urn:harja/pistetoteuma",
       "type": "object",
       "additionalProperties": false,
-      "required":true,
-      "properties": {
-        "toteuma": {
-          "id": "urn:harja/pistetoteuma/toteuma",
-          "type": "object",
-          "additionalProperties": false,
-          "required": true,
-          "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
-        },
-        "sijainti": {
-          "id": "urn:harja/pistetoteuma/sijainti",
-          "type": "object",
-          "additionalProperties": false,
-          "required": true,
-          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
-        }
-      }
+      "required": false,
+      "$ref": "file:resources/api/schemas/entities/pistetoteuma.schema.json"
+    },
+    "pistetoteumat": {
+      "id": "urn:harja/pistetoteumat/0/pistetoteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required": false,
+      "$ref": "file:resources/api/schemas/entities/pistetoteumat.schema.json"
     }
   }
 }

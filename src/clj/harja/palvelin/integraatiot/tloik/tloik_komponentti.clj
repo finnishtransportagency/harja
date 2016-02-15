@@ -7,53 +7,52 @@
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as email]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik
              [ilmoitukset :as ilmoitukset]
-             [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
-             [kuittaukset :as kuittaukset]]))
+             [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
 
-(defn tee-lokittaja [this]
-  (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" "toimenpiteen-lahetys"))
+(defn tee-lokittaja [this integraatio]
+  (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" integraatio))
 
-(defn tee-ilmoitusviestikuuntelija [this ilmoitusviestijono ilmoituskuittausjono]
+(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja labyrintti sonja-sahkoposti klusterin-tapahtumat] :as this}
+                                    ilmoitusviestijono ilmoituskuittausjono]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
     (sonja/kuuntele
-      (:sonja this) ilmoitusviestijono
-      (fn [viesti]
-        (ilmoitukset/vastaanota-ilmoitus
-          (:sonja this)
-          (tee-lokittaja this)
-          (:klusterin-tapahtumat this)
-          (:db this)
-          ilmoituskuittausjono viesti)))))
+     sonja ilmoitusviestijono
+     (partial ilmoitukset/vastaanota-ilmoitus
+              sonja (tee-lokittaja this "ilmoituksen-kirjaus")
+              labyrintti sonja-sahkoposti
+              klusterin-tapahtumat db
+              ilmoituskuittausjono))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
     (jms/kuittausjonokuuntelija
-      (tee-lokittaja this) (:sonja this) toimenpidekuittausjono
+      (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) toimenpidekuittausjono
       (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
       :viesti-id
       (comp not :virhe)
       (fn [_ viesti-id onnistunut]
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
-(defn rekisteroi-kuittauskuuntelijat [this]
+(defn rekisteroi-kuittauskuuntelijat [this jonot]
   (when-let [labyrintti (:labyrintti this)]
-    (sms/rekisteroi-kuuntelija!
-      labyrintti
-      (fn [numero viesti] (kuittaukset/vastaanota-tekstiviestikuittaus (:db this) numero viesti))))
-  (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
-    (email/rekisteroi-kuuntelija! sonja-sahkoposti #(kuittaukset/vastaanota-sahkopostikuittaus (:db this) %))))
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono jonot))]
+      (sms/rekisteroi-kuuntelija!
+        labyrintti
+        (fn [numero viesti] (ilmoitustoimenpiteet/vastaanota-tekstiviestikuittaus jms-lahettaja labyrintti (:db this) numero viesti))))
+    (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
+      (sahkoposti/rekisteroi-kuuntelija! sonja-sahkoposti #(ilmoitustoimenpiteet/vastaanota-sahkopostikuittaus (:db this) %)))))
 
 (defrecord Tloik [jonot]
   component/Lifecycle
   (start [this]
-    (rekisteroi-kuittauskuuntelijat this)
+    (rekisteroi-kuittauskuuntelijat this jonot)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono]} jonot]
       (assoc this
         :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)
@@ -68,5 +67,5 @@
 
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
-    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this) (:sonja this) (:toimenpidejono jonot))]
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono jonot))]
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id))))
