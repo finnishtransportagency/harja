@@ -224,7 +224,9 @@
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
         (condp = (:tyyppi tarkastus)
-          :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (:talvihoitomittaus tarkastus))
+          :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (-> (:talvihoitomittaus tarkastus)
+                                                                                     (assoc :lampotila-tie (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
+                                                                                     (assoc :lampotila-ilma (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))))
           :soratie (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
           nil)
 

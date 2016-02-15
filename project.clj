@@ -8,7 +8,7 @@
                  [prismatic/schema "1.0.4"]
                  [org.clojure/core.async "0.2.374"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.232"]
+                 [com.cognitect/transit-cljs "0.8.237"]
                  [com.cognitect/transit-clj "0.8.285"]
 
                  ;;;;;;; Palvelin ;;;;;;;
@@ -63,8 +63,8 @@
                  [spyscope "0.1.5"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
-                 [cljs-ajax "0.5.2"]
-                 [figwheel "0.5.0-2"]
+                 [cljs-ajax "0.5.3"]
+                 [figwheel "0.5.0-6"]
 
                  [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
@@ -74,7 +74,7 @@
                  [clj-time "0.11.0"]
                  [com.andrewmcveigh/cljs-time "0.3.14"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
 
-                 [cljsjs/openlayers "3.10.1"]
+                 [cljsjs/openlayers "3.13.0"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.13"]                ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
@@ -83,7 +83,7 @@
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjastoe
-                 [jarohen/chime "0.1.7"]
+                 [jarohen/chime "0.1.9"]
 
                  ;; Pikkukuvien muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
@@ -101,7 +101,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.0"]
+                 [org.apache.xmlgraphics/fop "2.1"]
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.2"]
@@ -131,20 +131,23 @@
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/repository/solita/"]
-                 ;["harja-data" "http://185.26.50.104/mvn/"]
-                 ]
+                 ["harja-data" "http://185.26.50.104/mvn/"]]
 
 
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-less "1.7.5"]
             [lein-ancient "0.5.5"]
             [lein-figwheel "0.5.0-2"]
-            [cider/cider-nrepl "0.10.0"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             ;;[mvxcvi/whidbey "0.5.1"]
+
+            ;; CIDER kehitykseen
+            [cider/cider-nrepl "0.10.2"]
+            [refactor-nrepl "2.0.0"]
+
             ]                                               ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {
               :builds [{:id           "dev"

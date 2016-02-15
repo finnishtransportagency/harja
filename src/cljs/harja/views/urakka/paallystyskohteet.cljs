@@ -181,8 +181,9 @@
               kaasuindeksi-leveys 10
               yhteensa-leveys 15
               paallystysnakyma? (= :paallystys (:tyyppi @nav/valittu-urakka))]
-          [:div
+          [:div.paallystyskohteet
            [kartta/kartan-paikka]
+           [:h3 "Päällystyskohteet"]
            [grid/grid
             {:otsikko                  "Kohteet"
              :tyhja                    (if (nil? @paallystyskohderivit) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")

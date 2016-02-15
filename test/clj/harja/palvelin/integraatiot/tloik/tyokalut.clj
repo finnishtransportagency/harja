@@ -24,6 +24,7 @@
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
   <otsikko>Korkeat vallit</otsikko>
+  <lyhytSelite>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lyhytSelite>
   <pitkaSelite>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</pitkaSelite>
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>
@@ -64,17 +65,18 @@
 
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma+)]
-    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma+
                                        "<urakkatyyppi>hoito</urakkatyyppi>"
                                        "<urakkatyyppi>paallystys</urakkatyyppi>")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
-    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
 
 (defn poista-ilmoitus []
+  (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
   (u "delete from ilmoitus where ilmoitusid = 123456789;"))

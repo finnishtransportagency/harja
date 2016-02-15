@@ -95,7 +95,6 @@ FROM kayttaja_urakka_rooli kur
 WHERE kur.urakka = :urakka
       AND kur.poistettu = FALSE AND k.poistettu = FALSE;
 
-
 -- name: hae-yhteyshenkilotyypit
 -- Hakee käytetyt yhteyshenkilötyypit
 SELECT DISTINCT (rooli)
@@ -141,7 +140,6 @@ DELETE FROM yhteyshenkilo
 WHERE id = :id AND id IN (SELECT yhteyshenkilo
                           FROM yhteyshenkilo_urakka
                           WHERE urakka = :urakka);
-
 
 -- name: poista-paivystaja!
 -- Poista päivystäjän annetusta urakasta.,
@@ -218,3 +216,40 @@ SELECT exists(
     SELECT id
     FROM paivystys
     WHERE yhteyshenkilo = :yhteyshenkilo);
+
+-- name: hae-urakan-taman-hetkiset-paivystajat
+SELECT
+  yh.id,
+  yh.etunimi,
+  yh.sukunimi,
+  yh.matkapuhelin,
+  yh.tyopuhelin,
+  yh.sahkoposti,
+  p.alku,
+  p.loppu,
+  p.vastuuhenkilo,
+  p.varahenkilo
+FROM paivystys p
+  INNER JOIN yhteyshenkilo yh ON p.yhteyshenkilo = yh.id
+WHERE
+  urakka = :urakkaid AND
+  ((now() BETWEEN p.alku AND p.loppu) OR
+   (now() <= p.alku AND loppu IS NULL));
+
+-- name: hae-paivystaja-puhelinnumerolla
+SELECT
+  y.id,
+  y.etunimi,
+  y.sukunimi,
+  y.matkapuhelin,
+  y.tyopuhelin,
+  y.sahkoposti,
+  o.ytunnus,
+  o.nimi
+FROM yhteyshenkilo y
+  LEFT JOIN organisaatio o ON o.id = y.organisaatio
+WHERE (matkapuhelin = :puhelinnumero OR tyopuhelin = :puhelinnumero) AND
+      (SELECT exists(SELECT id
+                     FROM paivystys p
+                     WHERE p.yhteyshenkilo = y.id))
+LIMIT 1;

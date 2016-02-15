@@ -7,6 +7,7 @@
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
+            [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [cljs-time.core :as t]))
@@ -89,7 +90,7 @@
 
 (defn aikavali
   ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
-  ([valittu-aikavali-atom {:keys [nayta-otsikko? salli-pitka-aikavali? aloitusaika-pakota-suunta paattymisaika-pakota-suunta]}]
+  ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus aloitusaika-pakota-suunta paattymisaika-pakota-suunta]}]
   [:span.label-ja-aikavali
    (when (or (nil? nayta-otsikko?)
              (true? nayta-otsikko?)) [:span.alasvedon-otsikko "Aikaväli"])
@@ -98,26 +99,21 @@
      (r/wrap (first @valittu-aikavali-atom)
              (fn [uusi-arvo]
                (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)]
-                 (if salli-pitka-aikavali?
-                   (reset! valittu-aikavali-atom [uusi-arvo (second @valittu-aikavali-atom)])
-                   (reset! valittu-aikavali-atom [uusi-arvo ; Pakotetaan aikaväliksi aina korkeintaan kuukausi
-                                                  (if-not (or
-                                                            (and (string? uusi-arvo) (empty? uusi-arvo))
-                                                            (nil? uusi-arvo))
-                                                    (second (pvm/kuukauden-aikavali-opt uusi-arvo))
-                                                    (second @valittu-aikavali-atom))])))
+                 (if-not aikavalin-rajoitus
+                   ;; Varmista että alku ei ole lopun jälkeen
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [uusi-arvo (second %)] :alku))
+
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
     [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
      (r/wrap (second @valittu-aikavali-atom)
              (fn [uusi-arvo]
                (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)]
-                 ;; Estetään käänteinen aikaväli
-                 (if (and uusi-arvo
-                          (first @valittu-aikavali-atom)
-                          (t/before? uusi-arvo (first @valittu-aikavali-atom)))
-                   (reset! valittu-aikavali-atom (pvm/kuukauden-aikavali-opt uusi-arvo))
-                   (swap! valittu-aikavali-atom (fn [[alku _]] [alku uusi-arvo]))))
+                 (if-not aikavalin-rajoitus
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [(first %) uusi-arvo] :loppu))
+
+                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
 (defn urakan-toimenpide
@@ -254,3 +250,13 @@
                           :format-fn #(if % (str %) "Valitse")
                           :class "alasveto-vuosi"}
     (range ensimmainen-vuosi (inc viimeinen-vuosi))]]))
+
+(defn varustetoteuman-tyyppi
+  [valittu-varustetoteumatyyppi-atom]
+  [:span
+   [:div.label-ja-alasveto
+    [:span.alasvedon-otsikko "Toimenpide"]
+    [livi-pudotusvalikko {:valinta    @valittu-varustetoteumatyyppi-atom
+                          :format-fn  #(if % (second %) "Kaikki")
+                          :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
+     varusteet/varustetoteumatyypit]]])

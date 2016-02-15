@@ -54,7 +54,7 @@
    "selitteet"
                         [{"selite" "auraustarve"} {"selite" "aurausvallitNakemaesteena"}],
    "tienumero"          4,
-   "lyhytselite"        nil,
+   "lyhytselite"        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.",
    "pitkaselite"        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
 
 (deftest kuuntele-urakan-ilmoituksia

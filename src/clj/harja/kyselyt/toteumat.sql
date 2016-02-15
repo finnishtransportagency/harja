@@ -451,6 +451,19 @@ SELECT *
 FROM reittipiste
 WHERE toteuma = :id;
 
+-- name: paivita-varustetoteuman-tr-osoite!
+-- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
+UPDATE varustetoteuma
+SET
+  tr_numero        = :tr_numero,
+  tr_alkuosa       = :tr_alkuosa,
+  tr_alkuetaisyys  = :tr_alkuetaisyys,
+  tr_loppuosa      = :tr_loppuosa,
+  tr_loppuetaisyys = :tr_loppuetaisyys,
+  tr_puoli         = :tr_puoli,
+  tr_ajorata       = :tr_ajorata
+WHERE id = :id;
+
 -- name: luo-varustetoteuma<!
 -- Luo uuden varustetoteuman
 INSERT INTO varustetoteuma (tunniste,
@@ -459,18 +472,12 @@ INSERT INTO varustetoteuma (tunniste,
                             tietolaji,
                             arvot,
                             karttapvm,
-                            tr_numero,
-                            tr_alkuosa,
-                            tr_loppuosa,
-                            tr_loppuetaisyys,
-                            tr_alkuetaisyys,
-                            tr_puoli,
-                            tr_ajorata,
                             alkupvm,
                             loppupvm,
                             piiri,
                             kuntoluokka,
                             tierekisteriurakkakoodi,
+                            tarkastusaika,
                             luoja,
                             luotu)
 VALUES (
@@ -480,18 +487,12 @@ VALUES (
   :tietolaji,
   :arvot,
   :karttapvm,
-  :tr_numero,
-  :tr_alkuosa,
-  :tr_loppuosa,
-  :tr_loppuetaisyys,
-  :tr_alkuetaisyys,
-  :tr_puoli,
-  :tr_ajorata,
   :alkupvm,
   :loppupvm,
   :piiri,
   :kuntoluokka,
   :tierekisteriurakkakoodi,
+  :tarkastusaika,
   :luoja,
   NOW());
 
@@ -661,6 +662,7 @@ SELECT
   karttapvm,
   tr_puoli,
   tr_ajorata,
+  tarkastusaika,
   t.id                    AS toteumaid,
   t.alkanut               AS alkupvm,
   t.paattynyt             AS loppupvm,

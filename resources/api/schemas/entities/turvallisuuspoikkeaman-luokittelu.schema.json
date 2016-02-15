@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "enum": [
-    "turvallisuuspoikkeama",
-    "prosessipoikkeama",
-    "tyoturvallisuuspoikkeama"
+    "tyotapaturma",
+    "vaaratilanne",
+    "turvallisuushavainto"
   ]
 }
