@@ -34,21 +34,21 @@
 
 (def odotettu-ilmoitus
   {"ilmoittaja"
-                        {"sukunimi"           "Meikäläinen",
-                         "etunimi"            "Matti",
-                         "matkapuhelinnumero" "08023394852",
-                         "tyopuhelinnumero"   nil,
-                         "email"              "matti.meikalainen@palvelu.fi"},
+                        {"sukunimi"     "Meikäläinen",
+                         "etunimi"      "Matti",
+                         "matkapuhelin" "08023394852",
+                         "tyopuhelin"   nil,
+                         "email"        "matti.meikalainen@palvelu.fi"},
    "ilmoitustyyppi"     "toimenpidepyynto",
    "otsikko"            "Korkeat vallit",
    "yhteydenottopyynto" false,
    "sijainti"           {"koordinaatit" {"x" 452935.0, "y" 7186873.0}},
    "lahettaja"
-                        {"etunimi"            "Pekka",
-                         "sukunimi"           "Päivystäjä",
-                         "matkapuhelinnumero" nil,
-                         "tyopuhelinnumero"   nil,
-                         "email"              "pekka.paivystaja@livi.fi"},
+                        {"etunimi"      "Pekka",
+                         "sukunimi"     "Päivystäjä",
+                         "matkapuhelin" nil,
+                         "tyopuhelin"   nil,
+                         "email"        "pekka.paivystaja@livi.fi"},
    "ilmoitettu"         "2015-09-29T11:49:45Z",
    "ilmoitusid"         123456789,
    "selitteet"
