@@ -8,7 +8,8 @@
             [harja.palvelin.tyokalut.lukot :as lukko]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.string :as string])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util UUID)))
 
@@ -77,21 +78,23 @@
                         :viesti (format "Tuntematon viestinumero: %s" numero)}]})))
 
 (defn parsi-tekstiviesti [viesti]
-  {:toimenpide   (parsi-toimenpide (str (nth viesti 0)))
-   :viestinumero (parsi-viestinumero (str (nth viesti 1)))})
+  (let [viesti (string/trim viesti)]
+    {:toimenpide   (parsi-toimenpide (str (nth viesti 0)))
+     :viestinumero (parsi-viestinumero (str (nth viesti 1)))
+     :vapaateksti  (.substring viesti 2 (count viesti))}))
 
 (defn hae-ilmoitus [db viestinumero paivystaja]
   (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db (:id paivystaja) viestinumero)]
     ilmoitus
     (throw+ {:type :tuntematon-ilmoitus})))
 
-(defn tallenna-ilmoitustoimenpide [db ilmoitus toimenpide paivystaja]
+(defn tallenna-ilmoitustoimenpide [db ilmoitus vapaateksti toimenpide paivystaja]
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
          (:id ilmoitus)
          (:ilmoitusid ilmoitus)
          (pvm/nyt)
-         nil
+         vapaateksti
          toimenpide
          (:etunimi paivystaja)
          (:sukunimi paivystaja)
@@ -116,7 +119,7 @@
     (let [paivystaja (hae-paivystaja db puhelinnumero)
           data (parsi-tekstiviesti viesti)
           ilmoitus (hae-ilmoitus db (:viestinumero data) paivystaja)
-          ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus (:toimenpide data) paivystaja)]
+          ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus (:vapaateksti data) (:toimenpide data) paivystaja)]
 
       (laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
       (sms/laheta sms puhelinnumero "Viestisi käsiteltiin onnistuneesti. Kiitos!"))

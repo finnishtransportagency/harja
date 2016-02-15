@@ -11,7 +11,7 @@
   (str "Uusi toimenpidepyyntö: %s (id: %s, viestinumero: %s).\n\n"
        "%s\n\n"
        "Selitteet: %s.\n\n"
-       "Voit kirjata uuden toimenpiteen, antamalla toimenpiteen lyhenteen ja viestinumeron:\n"
+       "Voit kirjata uuden toimenpiteen, antamalla toimenpiteen lyhenteen, viestinumeron ja kommentin:\n"
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
        "L%s = lopetettu"))
