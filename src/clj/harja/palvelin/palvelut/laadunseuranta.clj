@@ -17,7 +17,8 @@
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [harja.domain.laadunseuranta :as laadunseuranta]))
 
 (def laatupoikkeama-xf
   (comp
@@ -39,6 +40,7 @@
 (def tarkastus-xf
   (comp
     (geo/muunna-pg-tulokset :sijainti)
+    (map laadunseuranta/tarkastus-tiedolla-onko-ok)
     (map konv/alaviiva->rakenne)
     (map #(konv/string->keyword % :tyyppi :tekija)) ;FIXME: tekijä kyselyyn
     (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
