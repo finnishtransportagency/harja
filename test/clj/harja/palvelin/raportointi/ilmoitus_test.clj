@@ -46,7 +46,7 @@
           ilmoitukset (ilmoitusraportti/hae-ilmoitukset-raportille
                   db +kayttaja-jvh+ nil nil nil nil
                   +ilmoitustilat+ +ilmoitustyypit+
-                  [alkupvm loppupvm] "")
+                  [alkupvm loppupvm] "" nil)
           ristisuon-ilmoitus (first (filter #(= (:lyhytselite %) "Voimakas lumipyry nelostiellä Ristisuon kohdalla ja tiet auraamatta.")
                                       ilmoitukset))]
       (is (= (pvm/pvm (:ilmoitettu ristisuon-ilmoitus)) "26.01.2015"))

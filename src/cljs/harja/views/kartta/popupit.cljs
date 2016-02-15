@@ -99,7 +99,9 @@
    (tee-arvolistaus-popup
     (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
       "Toimenpidepyyntö"
-      (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
+      (if (= :tiedoitus (:ilmoitustyyppi tapahtuma))
+        "Tiedotus"
+        (str/capitalize (name (:ilmoitustyyppi tapahtuma)))))
     [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
      ["Selite" (:lyhytselite tapahtuma)]
      ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
