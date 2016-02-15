@@ -2,18 +2,25 @@
   "Ilmoitusten lähettäminen urakoitsijalle ja kuittausten vastaanottaminen"
   (:require [hiccup.core :refer [html]]
             [harja.domain.ilmoitusapurit :as apurit]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clojure.string :as str]))
 
 
-(def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan"
-       :const true :private true}
+(def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
   otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 
+(def ^{:doc "Kuittaustyypit, joita sähköpostilla voi ilmoittaa" :const true :private true}
+  kuittaustyypit [["Vastaanotettu" :vastaanotettu]
+                  ["Aloitettu" :aloitettu]
+                  ["Lopetettu" :lopetettu]])
 
-(defn- muodosta-otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi]}]
+(def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
+  kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
+
+(defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi]}]
   (str "#[" urakka-id "/" ilmoitus-id "] " (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))))
 
-(defn- luo-html-nappi
+(defn- html-nappi
   "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
 resursseja liitää sähköpostiin mukaan luotettavasti."
   [vastausosoite napin-teksti subject body]
@@ -27,11 +34,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
              :style "font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;"}
          napin-teksti]]]]]]])
 
-(defn- muodosta-viesti [vastausosoite otsikko ilmoitus]
+(defn- viesti [vastausosoite otsikko ilmoitus]
   (html
    [:div
     [:table
-     (for [[kentta arvo] [["Ilmoitettu" (pvm/pvm-aika (:ilmoitettu ilmoitus))]
+     (for [[kentta arvo] [["Ilmoitettu" (:ilmoitettu ilmoitus)]
                           ["Otsikko" (:otsikko ilmoitus)]
                           ["Lyhyt selite" (:lyhytselite ilmoitus)]
                           ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
@@ -40,16 +47,37 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
         [:td [:b kentta]]
         [:td arvo]])]
     [:blockquote (:pitkaselite ilmoitus)]
-    (for [n ["Vastaanotettu" "Aloitettu" "Lopetettu"]]
+    (for [teksti (map first kuittaustyypit)]
       [:div {:style "padding-top: 10px;"}
-       (luo-html-nappi vastausosoite "Vastaanotettu" otsikko "Vastaanotettu")])]))
+       (html-nappi vastausosoite teksti otsikko (str "[" teksti "]"))])]))
 
 (defn otsikko-ja-viesti [vastausosoite ilmoitus]
-  (let [otsikko (muodosta-otsikko ilmoitus)
-        viesti (muodosta-viesti
+  (let [otsikko (otsikko ilmoitus)
+        viesti (viesti
                 vastausosoite
                 otsikko
                 ilmoitus)]
     [otsikko viesti]))
 
+(defn viestin-kuittaustyyppi [sisalto]
+  (when-let [nimi (some->> sisalto
+                           (re-find kuittaustyyppi-pattern)
+                           second)]
+    (second (first (filter #(= (first %) nimi) kuittaustyypit)))))
 
+(defn viesti-ilman-kuittaustyyppia [sisalto]
+  (str/replace sisalto kuittaustyyppi-pattern ""))
+
+(defn lue-kuittausviesti
+  "Lukee annetun kuittausviestin otsikosta ja sisällöstä kuittauksen tiedot mäpiksi"
+  [otsikko sisalto]
+  (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
+        kuittaustyyppi (viestin-kuittaustyyppi sisalto)
+        kommentti (str/trim (viesti-ilman-kuittaustyyppia sisalto))]
+    (if (and urakka-id ilmoitus-id kuittaustyyppi)
+      {:urakka-id (Long/parseLong urakka-id)
+       :ilmoitus-id (Long/parseLong ilmoitus-id)
+       :kuittaustyyppi kuittaustyyppi
+       :kommentti (when-not (str/blank? kommentti)
+                    kommentti)}
+      {:virhe "Viestistä ei löytynyt kuittauksen tietoja"})))
