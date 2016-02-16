@@ -286,11 +286,11 @@
                  (if (vector? img)
                    [:td.kartan-ikonien-selitykset-ikoni-sarake
                     [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
-                     {:src (str openlayers/+karttaikonipolku+ (first img))}]
-                    [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second img))}]]
+                     {:src (first img)}]
+                    [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (first img)}]]
 
                    [:td.kartan-ikonien-selitykset-ikoni-sarake
-                    [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ img)}]]))
+                    [:img.kartan-ikonien-selitykset-ikoni {:src img}]]))
                [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]])]]
           [:div.kartan-ikonien-selitykset-sulje.klikattava
            {:on-click (fn [event]

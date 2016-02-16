@@ -83,8 +83,6 @@ nuolten-valimatka 3000)
 (defn poista-hover-kasittelija! []
   (aseta-hover-kasittelija! nil))
 
-(def +karttaikonipolku+ "images/karttaikonit/")
-
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
 
@@ -481,7 +479,7 @@ nuolten-valimatka 3000)
     #js {:geometry piste
          :zIndex   (or zindex (swap! kasvava-zindex inc))
          :image    (ol.style.Icon.
-                     #js {:src            (str +karttaikonipolku+ img)
+                     #js {:src            (str img)
                           :scale          (or scale 1)
                           :rotation       (or rotation rotaatio) ;; Rotaatio on laskettu, rotation annettu.
                           :anchor         (or (clj->js anchor) #js [0.5 0.5])
@@ -580,7 +578,7 @@ nuolten-valimatka 3000)
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
-                                #js {:src    (str +karttaikonipolku+ img)
+                                #js {:src    (str img)
                                      :anchor (or (clj->js anchor) #js [0.5 1])
                                      :scale  (or scale 1)})
                       :zIndex (or zindex oletus-zindex)}))))
