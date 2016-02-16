@@ -11,7 +11,8 @@
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
             [clj-time.format :as tf]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c]))
 
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
 
@@ -113,7 +114,8 @@
                                (or (:sairaalavuorokaudet %) "")
                                (or (:sairauspoissaolopaivat %) ""))
 
-                        (sort #(t/after? (:tapahtunut %1) (:tapahtunut %2)) turpot))
+                        (sort #(t/after? (c/from-sql-time  (:tapahtunut %1))
+                                         (c/from-sql-time (:tapahtunut %2))) turpot))
                   (when (not (empty? turpot))
                     (if urakoittain?
                       (rivi "Yhteensä" "" "" "" "" ""
