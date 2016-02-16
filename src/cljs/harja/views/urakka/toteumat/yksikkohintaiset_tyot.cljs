@@ -315,10 +315,10 @@
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
         (when @toteutuneet-tehtavat
-          (sort-by :alkanut >
-                   (filter
-                     (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi)))
-                     @toteutuneet-tehtavat)))]])))
+          (reverse (sort-by :alkanut
+                    (filter
+                      (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi)))
+                      @toteutuneet-tehtavat))))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"
