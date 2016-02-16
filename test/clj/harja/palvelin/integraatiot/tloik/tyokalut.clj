@@ -77,8 +77,11 @@
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
 
+(defn hae-paivystaja []
+  (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;")))
+
 (defn tee-testipaivystys []
-  (let [yhteyshenkilo (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;"))]
+  (let [yhteyshenkilo (hae-paivystaja)]
     (u (format "INSERT INTO paivystys (alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
                 VALUES (now() + interval '1' day, now() - interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
     yhteyshenkilo))

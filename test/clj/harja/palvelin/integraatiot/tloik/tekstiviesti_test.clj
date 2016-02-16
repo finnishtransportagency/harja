@@ -1,7 +1,9 @@
 (ns harja.palvelin.integraatiot.tloik.tekstiviesti-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [clojure.data.zip.xml :as z]
+            [org.httpkit.fake :refer [with-fake-http]]
+            [harja.testi :refer :all]
             [harja.jms :refer [feikki-sonja]]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
@@ -15,10 +17,10 @@
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tekstiviestit]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.tyokalut.xml :as xml]
-            [clojure.data.zip.xml :as z]))
+            [harja.tyokalut.xml :as xml]))
 
 (def kayttaja "jvh")
+(def +labyrintti-url+ "http://localhost:28080/sendsms")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -36,7 +38,7 @@
                         [:sonja :db :integraatioloki])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
-                    {:url            "http://localhost:28080/sendsms"
+                    {:url            +labyrintti-url+
                      :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
@@ -45,7 +47,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest tarkista-tekstiviestin-vastaanotto
+(deftest tarkista-kuittauksen-vastaanotto-tekstiviestilla
   (tuo-ilmoitus)
   (let [integraatioloki (:integraatioloki jarjestelma)
         db (:db jarjestelma)
@@ -87,3 +89,24 @@
 
     (poista-paivystajatekstiviestit)
     (poista-ilmoitus)))
+
+(deftest tarkista-ilmoituksen-lahettaminen-tekstiviestilla
+  (tuo-ilmoitus)
+  (let [fake-vastaus [{:url +labyrintti-url+ :method :post} {:status 200}]
+        paivystaja (hae-paivystaja)
+        paivystaja {:id (first paivystaja) :matkapuhelin (second paivystaja)}
+        ilmoitus (first (hae-ilmoitus))
+        ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}]
+    (with-fake-http
+      [{:url +labyrintti-url+ :method :post} fake-vastaus]
+
+      (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:sms jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
+
+      (let [paivystajaviestit (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
+                                         (:id paivystaja)
+                                         (:id ilmoitus)))]
+        (is (= 1 (count paivystajaviestit)))
+        (println paivystajaviestit))
+
+      (poista-paivystajatekstiviestit)
+      (poista-ilmoitus))))

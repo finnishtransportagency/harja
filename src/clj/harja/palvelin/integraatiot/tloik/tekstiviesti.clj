@@ -67,31 +67,6 @@
     ilmoitus
     (throw+ {:type :tuntematon-ilmoitus})))
 
-(defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
-  (try
-    (if-let [puhelinnumero (or (:matkapuhelin paivystaja) (:tyopuhelin paivystaja))]
-      (do
-        (log/debug (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s" (:ilmoitus-id ilmoitus) puhelinnumero))
-        (let [paivystaja-id (:id paivystaja)
-              ilmoitus-id (:ilmoitus-id ilmoitus)
-              otsikko (:otsikko ilmoitus)
-              lyhytselite (:lyhytselite ilmoitus)
-              selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
-              viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ilmoitus-id)
-              viesti (format +ilmoitusviesti+
-                             otsikko
-                             ilmoitus-id
-                             viestinumero
-                             lyhytselite
-                             selitteet
-                             viestinumero
-                             viestinumero
-                             viestinumero)]
-          (sms/laheta sms puhelinnumero viesti)))
-      (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
-    (catch Exception e
-      (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))
-
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
@@ -126,4 +101,29 @@
     (catch Exception e
       (log/error e (format "Numerosta: %s vastaanotetun viestin: %s käsittelyssä tapahtui poikkeus." puhelinnumero viesti))
       +virhe-viesti+)))
+
+(defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
+  (try
+    (if-let [puhelinnumero (or (:matkapuhelin paivystaja) (:tyopuhelin paivystaja))]
+      (do
+        (log/debug (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s" (:ilmoitus-id ilmoitus) puhelinnumero))
+        (let [paivystaja-id (:id paivystaja)
+              ilmoitus-id (:ilmoitus-id ilmoitus)
+              otsikko (:otsikko ilmoitus)
+              lyhytselite (:lyhytselite ilmoitus)
+              selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
+              viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ilmoitus-id)
+              viesti (format +ilmoitusviesti+
+                             otsikko
+                             ilmoitus-id
+                             viestinumero
+                             lyhytselite
+                             selitteet
+                             viestinumero
+                             viestinumero
+                             viestinumero)]
+          (sms/laheta sms puhelinnumero viesti)))
+      (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
+    (catch Exception e
+      (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))
 
