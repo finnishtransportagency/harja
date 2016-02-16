@@ -186,7 +186,8 @@ FROM toteuma t
        AND mk.poistettu IS NOT TRUE
 
   LEFT JOIN pohjavesialue pa
-    ON mk.pohjavesialue = pa.id;
+    ON mk.pohjavesialue = pa.id
+    ORDER BY t.alkanut DESC;
 
 -- name: hae-toteuman-materiaalitiedot
 SELECT
