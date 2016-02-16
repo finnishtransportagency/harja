@@ -1,15 +1,10 @@
 (ns harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
-            [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as toimenpide-sanoma]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [harja.tyokalut.merkkijono :as merkkijono]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
-            [harja.pvm :as pvm]
-            [clojure.string :as string])
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util UUID)))
 
@@ -47,46 +42,6 @@
       (log/error (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db viesti-id))))
 
-(defn vastaanota-sahkopostikuittaus [db viesti]
-  ;; PENDING: viestien käsittely toteutettava,
-  ;; ks. otsikosta esim. pattern #ur/ilm, jossa urakan ja ilmoituksen id
-  ;; bodysta haetaan onko kyseessä minkä tyyppinen kuittaus
-
-  (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
-  nil)
-
-(defn hae-paivystaja [db puhelinnumero]
-  (if-let [paivystaja (first (yhteyshenkilot/hae-paivystaja-puhelinnumerolla db puhelinnumero))]
-    paivystaja
-    (throw+ {:type :tuntematon-kayttaja})))
-
-(defn parsi-toimenpide [toimenpide]
-  (case toimenpide
-    "V" "vastaanotto"
-    "A" "aloitus"
-    "L" "lopetus"
-    (throw+ {:type    :tuntematon-ilmoitustoimenpide
-             :virheet [{:koodi  :tuntematon-ilmoitustoimenpide
-                        :viesti (format "Tuntematon ilmoitustoimenpide: %s" toimenpide)}]})))
-
-(defn parsi-viestinumero [numero]
-  (if (merkkijono/onko-kokonaisluku? numero)
-    (Integer/parseInt numero)
-    (throw+ {:type    :tuntematon-viestinumero
-             :virheet [{:koodi  :tuntematon-viestinumero
-                        :viesti (format "Tuntematon viestinumero: %s" numero)}]})))
-
-(defn parsi-tekstiviesti [viesti]
-  (let [viesti (string/trim viesti)]
-    {:toimenpide   (parsi-toimenpide (str (nth viesti 0)))
-     :viestinumero (parsi-viestinumero (str (nth viesti 1)))
-     :vapaateksti  (.substring viesti 2 (count viesti))}))
-
-(defn hae-ilmoitus [db viestinumero paivystaja]
-  (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db (:id paivystaja) viestinumero)]
-    ilmoitus
-    (throw+ {:type :tuntematon-ilmoitus})))
-
 (defn tallenna-ilmoitustoimenpide [db ilmoitus vapaateksti toimenpide paivystaja]
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
@@ -110,34 +65,10 @@
          nil
          nil)))
 
-(defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
-  (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
-  ;; palauta responsessa suoraan text elementissä paluuviesti!
-  (try+
-    (let [paivystaja (hae-paivystaja db puhelinnumero)
-          data (parsi-tekstiviesti viesti)
-          ilmoitus (hae-ilmoitus db (:viestinumero data) paivystaja)
-          ilmoitustoimenpide-id (tallenna-ilmoitustoimenpide db ilmoitus (:vapaateksti data) (:toimenpide data) paivystaja)]
+(defn vastaanota-sahkopostikuittaus [db viesti]
+  ;; PENDING: viestien käsittely toteutettava,
+  ;; ks. otsikosta esim. pattern #ur/ilm, jossa urakan ja ilmoituksen id
+  ;; bodysta haetaan onko kyseessä minkä tyyppinen kuittaus
 
-      (laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
-      "Viestisi käsiteltiin onnistuneesti. Kiitos!")
-
-    (catch [:type :tuntematon-kayttaja] {}
-      (log/error (format "Numerosta: %s vastaanotettua viestiä: %s ei voida käsitellä, sillä puhelinnumerolla ei löydy käyttäjää." puhelinnumero viesti))
-      "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla.")
-
-    (catch [:type :tuntematon-ilmoitustoimenpide] {}
-      (log/error (format "Numerosta: %s vastaanotetussa viestissä: %s toimenpide ei ole validi." puhelinnumero viesti))
-      "Viestiäsi ei voitu käsitellä. Antamasi toimenpide ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla.")
-
-    (catch [:type :tuntematon-viestinumero] {}
-      (log/error (format "Numerosta: %s vastaanotetussa viestissä: %s viestinumero ei ole validi." puhelinnumero viesti))
-      "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla.")
-
-    (catch [:type :tuntematon-ilmoitus] {}
-      (log/error (format "Numerosta: %s vastaanotetulla viestillä: %s ei löydetty ilmoitusta." puhelinnumero viesti))
-      "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy ilmoitusta. Vastaa viestiin toimenpiteen lyhenteellä ja viestinumerolla.")
-
-    (catch Exception e
-      (log/error e (format "Numerosta: %s vastaanotetun viestin: %s käsittelyssä tapahtui poikkeus." puhelinnumero viesti))
-      "Pahoittelemme mutta lähettämäsi viestin käsittelyssä tapahtui virhe.")))
+  (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
+  nil)
