@@ -28,10 +28,11 @@
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
-                        (sahkoposti/luo-sahkoposti {:sahkoposti-sisaan-jono         "email-to-harja"
-                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                    :sahkoposti-ulos-jono           "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                       (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                  {:sahkoposti-sisaan-jono         "email-to-harja"
+                                                   :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                   :sahkoposti-ulos-jono           "harja-to-email"
+                                                   :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
@@ -77,7 +78,7 @@
     (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
-    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
@@ -95,7 +96,7 @@
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
-    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (let [xml (first @viestit)
           data (xml/lue xml)]

@@ -39,8 +39,8 @@
         (update-in [henkiloavain] dissoc :matkapuhelin)
         (update-in [henkiloavain] dissoc :tyopuhelin)
         (update-in [henkiloavain] dissoc :sahkoposti)
-        (assoc-in [henkiloavain :matkapuhelinnumero] (:matkapuhelin henkilo))
-        (assoc-in [henkiloavain :tyopuhelinnumero] (:tyopuhelin henkilo))
+        (assoc-in [henkiloavain :matkapuhelin] (:matkapuhelin henkilo))
+        (assoc-in [henkiloavain :tyopuhelin] (:tyopuhelin henkilo))
         (assoc-in [henkiloavain :email] (:sahkoposti henkilo)))))
 
 (defn rakenna-ilmoitus [ilmoitus]
