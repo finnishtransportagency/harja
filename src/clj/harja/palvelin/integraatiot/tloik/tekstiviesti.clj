@@ -21,6 +21,7 @@
        "Esim. A1 Työt aloitettu."))
 
 (def +onnistunut-viesti+ "Viestisi käsiteltiin onnistuneesti. Kiitos!")
+(def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Viestinumero tai toimenpide puuttuu.")
 (def +tuntematon-kayttaja-viesti+ "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla.")
 (def +virheellinen-toimenpide-viesti+ "Viestiäsi ei voitu käsitellä. Antamasi toimenpide ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä, viestinumerolla ja kommentilla.")
 (def +virheellinen-viestinumero-viesti+ "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä, viestinumerolla ja kommentilla.")
@@ -48,11 +49,18 @@
              :virheet [{:koodi  :tuntematon-viestinumero
                         :viesti (format "Tuntematon viestinumero: %s" numero)}]})))
 
+(defn parsi-vapaateksti [viesti]
+  (when (< 2 (count viesti)) (string/trim (.substring viesti 2 (count viesti)))))
+
 (defn parsi-tekstiviesti [viesti]
-  (let [viesti (string/trim viesti)]
-    {:toimenpide   (parsi-toimenpide (str (nth viesti 0)))
-     :viestinumero (parsi-viestinumero (str (nth viesti 1)))
-     :vapaateksti  (.substring viesti 2 (count viesti))}))
+  (when (> 2 (count viesti))
+    (throw+ {:type :viestinumero-tai-toimenpide-puuttuu}))
+  (let [toimenpide (parsi-toimenpide (str (nth viesti 0)))
+        viestinumero (parsi-viestinumero (str (nth viesti 1)))
+        vapaateksti (parsi-vapaateksti viesti)]
+    {:toimenpide   toimenpide
+     :viestinumero viestinumero
+     :vapaateksti  vapaateksti}))
 
 (defn hae-ilmoitus [db viestinumero paivystaja]
   (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db (:id paivystaja) viestinumero)]
@@ -94,6 +102,10 @@
 
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
       +onnistunut-viesti+)
+
+    (catch [:type :viestinumero-tai-toimenpide-puuttuu] {}
+      (log/error (format "Numerosta: %s vastaanotettua viestiä: %s ei voida käsitellä, toimenpide tai viestinumero puuttuu." puhelinnumero viesti))
+      +viestinumero-tai-toimenpide-puuttuuviesti+)
 
     (catch [:type :tuntematon-kayttaja] {}
       (log/error (format "Numerosta: %s vastaanotettua viestiä: %s ei voida käsitellä, sillä puhelinnumerolla ei löydy käyttäjää." puhelinnumero viesti))

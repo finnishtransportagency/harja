@@ -53,9 +53,9 @@
 ")
 
 (defn luo-tloik-komponentti []
-  (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
-            :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
-            :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
+  (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
+            :ilmoituskuittausjono   +tloik-ilmoituskuittausjono+
+            :toimenpidejono         +tloik-ilmoitustoimenpideviestijono+
             :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
 
 (def +ilmoitus-ruotsissa+
@@ -77,6 +77,16 @@
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
 
+(defn tee-testipaivystys []
+  (let [yhteyshenkilo (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;"))]
+    (u (format "INSERT INTO paivystys (alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
+                VALUES (now() + interval '1' day, now() - interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
+    yhteyshenkilo))
+
 (defn poista-ilmoitus []
   (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
+  (u "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
   (u "delete from ilmoitus where ilmoitusid = 123456789;"))
+
+(defn poista-paivystajatekstiviestit []
+  (u "delete from paivystajatekstiviesti"))
