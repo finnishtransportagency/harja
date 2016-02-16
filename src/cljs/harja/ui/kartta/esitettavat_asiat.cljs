@@ -246,7 +246,9 @@
       :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
                :img    ikoni}
       :alue (if (:ok? tarkastus)
-              (maarittele-feature tarkastus (valittu-fn? tarkastus) nil {:color alpha/vaaleanharmaa})
+              (maarittele-feature tarkastus (valittu-fn? tarkastus)
+                                  (when (valittu-fn? tarkastus) ikoni)
+                                  {:color alpha/vaaleanharmaa})
               (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni)))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
