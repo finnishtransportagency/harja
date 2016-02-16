@@ -316,7 +316,7 @@
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
         (when @toteutuneet-tehtavat
-          (sort #(t/after? (:alkanut %1) (:alkanut %2))
+          (sort-by :alkanut t/after?
                    (filter
                      (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi)))
                      @toteutuneet-tehtavat)))]])))

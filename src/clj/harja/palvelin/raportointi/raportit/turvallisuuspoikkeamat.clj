@@ -114,8 +114,8 @@
                                (or (:sairaalavuorokaudet %) "")
                                (or (:sairauspoissaolopaivat %) ""))
 
-                        (sort #(t/after? (c/from-sql-time  (:tapahtunut %1))
-                                         (c/from-sql-time (:tapahtunut %2))) turpot))
+                        (sort-by :tapahtunut #(t/after? (c/from-sql-time %1)
+                                                        (c/from-sql-time %2)) turpot))
                   (when (not (empty? turpot))
                     (if urakoittain?
                       (rivi "Yhteensä" "" "" "" "" ""
