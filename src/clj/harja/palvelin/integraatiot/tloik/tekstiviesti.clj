@@ -18,7 +18,7 @@
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
        "L%s = lopetettu\n"
-       "Esim. A1 Työt aloitettu."))
+       "Esim. A%s Työt aloitettu."))
 
 (def +onnistunut-viesti+ "Viestisi käsiteltiin onnistuneesti. Kiitos!")
 (def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Viestinumero tai toimenpide puuttuu.")
@@ -119,6 +119,7 @@
                              viestinumero
                              lyhytselite
                              selitteet
+                             viestinumero
                              viestinumero
                              viestinumero
                              viestinumero)]
