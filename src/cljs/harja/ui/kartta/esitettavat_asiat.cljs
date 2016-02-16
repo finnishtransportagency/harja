@@ -468,7 +468,8 @@
                                   {:paikka [:taitokset :loppu]
                                    :tyyppi :nuoli
                                    :img    nuolen-kuva}
-                                  viivat)))))
+                                  viivat
+                                  (karttakuva "tuntematon-toimenpideinstanssi-tack-violetti"))))))
 
 (defn muunna-tyokoneen-suunta [kulma]
   (+ (- Math/PI)
