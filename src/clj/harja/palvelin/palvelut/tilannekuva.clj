@@ -9,6 +9,7 @@
             [harja.kyselyt.tilannekuva :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
 
+            [harja.domain.laadunseuranta :as laadunseuranta]
             [harja.geo :as geo]
             [harja.pvm :as pvm]))
 
@@ -151,6 +152,7 @@
       (try
         (into []
               (comp
+                (map laadunseuranta/tarkastus-tiedolla-onko-ok)
                 (geo/muunna-pg-tulokset :sijainti)
                 (map konv/alaviiva->rakenne)
                 (map #(konv/string->keyword % :tyyppi))

@@ -535,6 +535,7 @@ LIMIT 501;
 
 -- name: hae-yksikkohintaisten-toiden-reittipisteet
 SELECT
+  t.reitti,
   rp.id            AS reittipiste_id,
   rp.aika          AS reittipiste_aika,
   rp.sijainti      AS reittipiste_sijainti,
