@@ -113,7 +113,7 @@
                                (or (:sairaalavuorokaudet %) "")
                                (or (:sairauspoissaolopaivat %) ""))
 
-                        (reverse (sort-by :tapahtunut turpot)))
+                        (sort-by :tapahtunut > turpot))
                   (when (not (empty? turpot))
                     (if urakoittain?
                       (rivi "Yhteensä" "" "" "" "" ""
