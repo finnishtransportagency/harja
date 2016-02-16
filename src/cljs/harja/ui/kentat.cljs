@@ -679,7 +679,7 @@
                                (tasot/nayta-geometria! :tr-valittu-osoite
                                                        {:alue (maarittele-feature arvo
                                                                             false
-                                                                            {:img    (dom/karttakuva "tr-piste-tack-harmaa")
+                                                                            {:img    (dom/pinni-ikoni "musta")
                                                                              :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
                                                                             {:color  "gray" ;; muun alle
                                                                              :zindex 20})

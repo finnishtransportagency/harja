@@ -5,19 +5,30 @@
             [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.ui.dom :refer [karttakuva]]
             [harja.geo :as geo]
             [harja.ui.kartta.varit.puhtaat :as varit]
-            [harja.ui.kartta.varit.alpha :as alpha]))
+            [harja.ui.kartta.varit.alpha :as alpha]
+            [harja.ui.dom :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 (def +zindex+ 4)
-(def +oletusikoni+ "turvallisuuspoikkeama-tack-vihrea") ;; TODO vaihda
 (def +normaali-leveys+ nil) ;;Openlayers default
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
+
+(def ikonien-varit
+  {;; Isommat, "tilalliset" sijainti-ikonit
+   :tiedotus "vihrea"
+   :kysely "keltainen"
+   :toimenpidepyynto "violetti"
+   :turvallisuuspoikkeama "punainen"
+
+   ;; Pienemmät ikonit
+   :laatupoikkeama "turkoosi"
+   :tarkastus "pinkki"
+   :varustetoteuma "syaani"})
 
 (defn- laske-skaala [valittu?]
   (if valittu? +valitun-skaala+ +normaali-skaala+))
@@ -53,8 +64,7 @@
   [valittu? merkki]
   (let [merkki (first (validoi-merkkiasetukset merkki))]
     (merge
-      {:img (karttakuva +oletusikoni+)
-       :scale (laske-skaala valittu?)}
+      {:scale (laske-skaala valittu?)}
       merkki)))
 
 (defn- maarittele-viiva
@@ -172,17 +182,17 @@
     :type :ilmoitus
     :nimi (ilmoituksen-tooltip ilmoitus "Tiedotus")
     :selite {:teksti "Tiedotus"
-             :img    (karttakuva "tiedotus-tack-violetti")}
-    :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) (karttakuva "tiedotus-tack-violetti"))))
+             :img    (sijainti-ikoni (:tiedotus ikonien-varit))}
+    :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) (sijainti-ikoni (:tiedotus ikonien-varit)))))
 
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu-fn?]
   (let [aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
-        ikoni (karttakuva (cond
-                            lopetettu? "kysely-tack-harmaa"
-                            aloitettu? "kysely-tack-violetti"
-                            :else "kysely-tack-punainen"))]
+        ikoni (cond
+                lopetettu? (sijainti-ikoni "harmaa" (:kysely ikonien-varit))
+                aloitettu? (sijainti-ikoni (:kysely ikonien-varit))
+                :else (sijainti-ikoni "punainen" (:kysely ikonien-varit)))]
     (assoc ilmoitus
       :type :ilmoitus
       :nimi (ilmoituksen-tooltip ilmoitus "Kysely")
@@ -196,10 +206,10 @@
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu-fn?]
   (let [vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
-        ikoni (karttakuva (cond
-                            lopetettu? "toimenpidepyynto-tack-harmaa"
-                            vastaanotettu? "toimenpidepyynto-tack-violetti"
-                            :else "toimenpidepyynto-tack-punainen"))]
+        ikoni (cond
+                lopetettu? (sijainti-ikoni "harmaa" (:toimenpidepyynto ikonien-varit))
+                vastaanotettu? (sijainti-ikoni (:toimenpidepyynto ikonien-varit))
+                :else (sijainti-ikoni "punainen" (:toimenpidepyynto ikonien-varit)))]
     (assoc ilmoitus
       :type :ilmoitus
       :nimi (ilmoituksen-tooltip ilmoitus "Toimenpidepyyntö")
@@ -210,25 +220,11 @@
                :img    ikoni}
       :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
-(defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
-  (karttakuva
-    (case tekija
-      :urakoitsija (str ikonityyppi "-urakoitsija-tack-violetti")
-      :tilaaja (str ikonityyppi "-tilaaja-tack-violetti")
-      :konsultti (str ikonityyppi "-konsultti-tack-violetti")
-      (str ikonityyppi "-tack-violetti"))))
-
-(defn selvita-tarkastuksen-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "tarkastus" tekija))
-
-(defn selvita-laatupoikkeaman-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
-
 (defn otsikko-tekijalla [etuliite laatupoikkeama]
   (str etuliite " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
-  (let [ikoni (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+  (let [ikoni (pinni-ikoni (:laatupoikkeama ikonien-varit))
         otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
     (assoc laatupoikkeama
       :type :laatupoikkeama
@@ -238,7 +234,7 @@
       :alue (maarittele-feature laatupoikkeama (valittu-fn? laatupoikkeama) ikoni))))
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
-  (let [ikoni (selvita-tarkastuksen-ikoni (:tekija tarkastus))]
+  (let [ikoni (pinni-ikoni (:tarkastus ikonien-varit))]
     (assoc tarkastus
       :type :tarkastus
       :nimi (or (:nimi tarkastus)
@@ -252,7 +248,7 @@
               (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni)))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
-  (let [ikoni (karttakuva "varusteet-ja-laitteet-tack-violetti")]
+  (let [ikoni (pinni-ikoni (:varustetoteuma ikonien-varit))]
     (assoc varustetoteuma
       :type :varustetoteuma
       :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
@@ -261,14 +257,15 @@
       :alue (maarittele-feature varustetoteuma (valittu-fn? varustetoteuma) ikoni))))
 
 (defn paattele-turpon-ikoni [turpo]
-  (let [kt (:korjaavattoimenpiteet turpo)]
+  (let [kt (:korjaavattoimenpiteet turpo)
+        vari (:turvallisuuspoikkeama ikonien-varit)]
     (if (empty? kt)
-      [(karttakuva "turvallisuuspoikkeama-tack-oranssi") "Turvallisuuspoikkeama, avoin"]
+      [(sijainti-ikoni "oranssi" vari) "Turvallisuuspoikkeama, avoin"]
 
       (if (some (comp nil? :suoritettu) kt)
-        [(karttakuva "turvallisuuspoikkeama-tack-punainen") "Turvallisuuspoikkeama, ei korjauksia"]
+        [(sijainti-ikoni "punainen" vari) "Turvallisuuspoikkeama, ei korjauksia"]
 
-        [(karttakuva "turvallisuuspoikkeama-tack-vihrea") "Turvallisuuspoikkeama, kaikki korjattu"]))))
+        [(sijainti-ikoni "vihrea" vari) "Turvallisuuspoikkeama, kaikki korjattu"]))))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu-fn?]
   (let [[ikoni selite] (paattele-turpon-ikoni tp)]
@@ -281,49 +278,52 @@
         :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
 (defn- paattele-yllapidon-ikoni-ja-viivan-vari
-  [teksti asia]
-  (let [[ikonin-vari viivan-vari] (if (:tila asia)
+  [asia]
+  (let [[nuolen-vari viivan-vari] (if (:tila asia)
                                     (case (name (:tila asia))
-                                      "aloitettu" ["keltainen" "rgb(255,255,0)"]
-                                      "valmis" ["vihrea" "rgb(0,255,0)"]
-                                      ["sininen" "rgb(0,128,255)"])
+                                      "aloitettu" ["keltainen" varit/keltainen]
+                                      "valmis" ["vihrea" varit/vihrea]
+                                      ["sininen" varit/sininen])
 
-                                    ["sininen" "rgb(0,128,255)"])] ;; tila on nil jos vasta suunnitteilla
-    [(karttakuva
-       (str teksti "-tack-" ikonin-vari)) viivan-vari]))
+                                    ["sininen" varit/sininen])] ;; tila on nil jos vasta suunnitteilla
+    [(nuoli-ikoni nuolen-vari) viivan-vari]))
 
-(defn- paikkaus-paallystys [pt valittu-fn? tyo teksti]
-  (let [[ikoni viiva] (paattele-yllapidon-ikoni-ja-viivan-vari tyo pt)]
+(defn- paikkaus-paallystys [pt valittu-fn? teksti]
+  (let [[ikoni viiva] (paattele-yllapidon-ikoni-ja-viivan-vari pt)]
     (assoc pt
       :nimi (or (:nimi pt) teksti)
       :selite {:teksti teksti
                :img    ikoni}
-      :alue (maarittele-feature pt (valittu-fn? pt) ikoni {:color viiva
-                                                      :width (if (:avoin? pt)
-                                                               (if (valittu-fn? pt) 8 5)
-                                                               (if (valittu-fn? pt) 8 nil))})))) ;; nil on default
+      :alue (maarittele-feature pt (valittu-fn? pt)
+                                {:img    ikoni
+                                 :paikka :loppu
+                                 :tyyppi :nuoli}
+                                {:color viiva
+                                 :width (if (:avoin? pt)
+                                          (if (valittu-fn? pt) 8 5)
+                                          (if (valittu-fn? pt) 8 nil))})))) ;; nil on default
 
 (defmethod asia-kartalle :paallystys [pt valittu-fn?]
-  (assoc (paikkaus-paallystys pt valittu-fn? "paallystystyo" "Päällystys")
+  (assoc (paikkaus-paallystys pt valittu-fn? "Päällystys")
     :type :paallystys))
 
 (defmethod asia-kartalle :paikkaus [pt valittu-fn?]
-  (assoc (paikkaus-paallystys pt valittu-fn? "paikkaustyo" "Paikkaus")
+  (assoc (paikkaus-paallystys pt valittu-fn? "Paikkaus")
     :type :paikkaus))
 
 (def toteuma-varit-ja-nuolet
-  [[{:color varit/punainen} "nuoli-punainen"]
-   [{:color varit/oranssi} "nuoli-oranssi"]
-   [{:color varit/keltainen} "nuoli-keltainen"]
-   [{:color varit/magenta} "nuoli-magenta"]
-   [{:color varit/vihrea} "nuoli-vihrea"]
-   [{:color varit/turkoosi} "nuoli-turkoosi"]
-   [{:color varit/syaani} "nuoli-syaani"]
-   [{:color varit/sininen} "nuoli-sininen"]
-   [{:color varit/tummansininen} "nuoli-tummansininen"]
-   [{:color varit/violetti} "nuoli-violetti"]
-   [{:color varit/lime} "nuoli-lime"]
-   [{:color varit/pinkki} "nuoli-pinkki"]])
+  [[{:color varit/punainen} "punainen"]
+   [{:color varit/oranssi} "oranssi"]
+   [{:color varit/keltainen} "keltainen"]
+   [{:color varit/magenta} "magenta"]
+   [{:color varit/vihrea} "vihrea"]
+   [{:color varit/turkoosi} "turkoosi"]
+   [{:color varit/syaani} "syaani"]
+   [{:color varit/sininen} "sininen"]
+   [{:color varit/tummansininen} "tummansininen"]
+   [{:color varit/violetti} "violetti"]
+   [{:color varit/lime} "lime"]
+   [{:color varit/pinkki} "pinkki"]])
 
 (let [varien-lkm (count toteuma-varit-ja-nuolet)]
   (defn generoitu-tyyli [tehtavan-nimi]
@@ -363,7 +363,7 @@
 (defn tehtavan-nimi [tehtavat]
   (str/join ", " (map #(or (get tehtavien-nimet (str/upper-case %)) %) tehtavat)))
 
-(def auraus-tasaus-ja-kolmas [[{:color varit/punainen :width 10} {:color varit/sininen :width 6}] "nuoli-punainen"])
+(def auraus-tasaus-ja-kolmas [[{:color varit/punainen :width 10} {:color varit/sininen :width 6}] "punainen"])
 (def auraus-ja-hiekoitus [])
 (def auraus-ja-suolaus [])
 (defn viiva-mustalla-rajalla [vari]
@@ -385,12 +385,12 @@
    #{"AURAUS JA SOHJONPOISTO" "SUOLAUS"}                        auraus-ja-suolaus
    #{"AURAUS JA SOHJONPOISTO" "LIUOSSUOLAUS"}                   auraus-ja-suolaus
    ;; tilannekuva/talvihoito
-   #{"AURAUS JA SOHJONPOISTO"}                                  [(viiva-mustalla-rajalla varit/oranssi) "nuoli-oranssi"]
-   #{"SUOLAUS"}                                                 [(viiva-mustalla-rajalla varit/sininen) "nuoli-sininen"]
-   #{"LIUOSSUOLAUS"}                                            [(viiva-mustalla-rajalla varit/tummansininen) "nuoli-tummansininen"]
-   #{"PISTEHIEKOITUS"}                                          [(viiva-mustalla-rajalla varit/pinkki) "nuoli-pinkki"]
-   #{"LINJAHIEKOITUS"}                                          [(viiva-mustalla-rajalla varit/magenta) "nuoli-magenta"]
-   #{"PINNAN TASAUS"}                                           [(viiva-mustalla-rajalla varit/violetti) "nuoli-violetti"]
+   #{"AURAUS JA SOHJONPOISTO"}                                  [(viiva-mustalla-rajalla varit/oranssi) "oranssi"]
+   #{"SUOLAUS"}                                                 [(viiva-mustalla-rajalla varit/sininen) "sininen"]
+   #{"LIUOSSUOLAUS"}                                            [(viiva-mustalla-rajalla varit/tummansininen) "tummansininen"]
+   #{"PISTEHIEKOITUS"}                                          [(viiva-mustalla-rajalla varit/pinkki) "pinkki"]
+   #{"LINJAHIEKOITUS"}                                          [(viiva-mustalla-rajalla varit/magenta) "magenta"]
+   #{"PINNAN TASAUS"}                                           [(viiva-mustalla-rajalla varit/violetti) "violetti"]
    #{"LUMIVALLIEN MADALTAMINEN"}                                []
    #{"SULAMISVEDEN HAITTOJEN TORJUNTA"}                         []
    #{"AURAUSVIITOITUS JA KINOSTIMET"}                           []
@@ -429,7 +429,7 @@
                                     ;; valinnan jo huomioon.
                                     #(if (and (:width %) valittu?) (assoc % :width (+ 2 (:width %))) %)
                                     viivat)
-                                  (karttakuva nuoli)])
+                                  nuoli])
         validoi-viiva (fn [[viivat nuoli :as asetukset]]
                         (cond
                           (string? viivat) [[{:color viivat}] nuoli]
@@ -458,7 +458,7 @@
                  (:nimi toteuma)
                  ;; tai nimi muodostetaan yhdistämällä tehtävien toimenpiteet
                  (tehtavan-nimi toimenpiteet))
-          [viivat nuolen-kuva] (tehtavan-viivat-ja-nuolitiedosto toimenpiteet (valittu-fn? toteuma))]
+          [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto toimenpiteet (valittu-fn? toteuma))]
       (assoc toteuma
         :type :toteuma
         :nimi nimi
@@ -467,9 +467,9 @@
         :alue (maarittele-feature reitti (valittu-fn? toteuma)
                                   {:paikka [:taitokset :loppu]
                                    :tyyppi :nuoli
-                                   :img    nuolen-kuva}
+                                   :img    (nuoli-ikoni nuolen-vari)}
                                   viivat
-                                  (karttakuva "tuntematon-toimenpideinstanssi-tack-violetti"))))))
+                                  (pinni-ikoni nuolen-vari))))))
 
 (defn muunna-tyokoneen-suunta [kulma]
   (+ (- Math/PI)
@@ -478,7 +478,7 @@
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
-        [viivat nuolen-kuva] (tehtavan-viivat-ja-nuolitiedosto (:tehtavat tyokone) (valittu-fn? tyokone))
+        [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto (:tehtavat tyokone) (valittu-fn? tyokone))
         paikka {:sijainti {:type (if (:reitti tyokone) :line :point)}}
         paikka (if (:reitti tyokone)
                  (assoc-in paikka [:sijainti :points] (:reitti tyokone))
@@ -491,7 +491,7 @@
       :alue (maarittele-feature paikka (valittu-fn? tyokone)
                                 {:paikka   :loppu
                                  :tyyppi   :nuoli
-                                 :img      nuolen-kuva
+                                 :img      (nuoli-ikoni nuolen-vari)
                                  :rotation (muunna-tyokoneen-suunta (:suunta tyokone))}
                                 viivat))))
 
