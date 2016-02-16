@@ -131,27 +131,11 @@ Mene vagrant koneelle:
 
 > cd vagrant
 > vagrant ssh
-> sudo bash
-> su postgres
-> psql
+> sudo -u postgres psql
 > drop database harja;
 > create database harja;
 > poistu <ctrl-d>
-> psql harja -f /harja-tietokanta/harja-stg-dump.sql
+> sudo -u postgres psql harja -f /harja-tietokanta/harja-stg-dump.sql
 
 Valmis!
 
-
-
-
-
-laitat sen harja/tietokanta hakemistoon ja purat
-koska tuo hakemisto on vagrantille näkyvä
-sitten: vagrant ssh
-sudo bash
-su postgres
-psql
-drop database harja
-create database harja
-ctrl-d
-psql harja -f /harja-tietokanta/sql-tiedosto.sql
