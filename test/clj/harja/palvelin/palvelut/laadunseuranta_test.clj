@@ -138,7 +138,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
-      (is (= #{:jarjestelma :havainnot :sijainti :aika :tr :tekija :id :tyyppi :tarkastaja}
+      (is (= #{:ok? :jarjestelma :havainnot :sijainti :aika :tr :tekija :id :tyyppi :tarkastaja}
              (into #{} (keys tarkastus)))))))
 
 (deftest hae-tarkastus 
