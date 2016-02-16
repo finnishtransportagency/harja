@@ -15,10 +15,11 @@
 
 (defn indeksi-grid [indeksin-nimi]
   (let [indeksit @i/indeksit
-        rivit (map #(assoc (second %) :kannassa? true)
-                   (filter (fn [[[nimi _] _]]
-                             (= nimi indeksin-nimi)
-                             ) indeksit))
+        rivit (reverse (sort-by :vuosi
+                                (map #(assoc (second %) :kannassa? true)
+                                     (filter (fn [[[nimi _] _]]
+                                               (= nimi indeksin-nimi)
+                                               ) indeksit))))
         varatut-vuodet (into #{} (map :vuosi rivit))
         formatter #(fmt/desimaaliluku-opt % 1)]
     [grid/grid

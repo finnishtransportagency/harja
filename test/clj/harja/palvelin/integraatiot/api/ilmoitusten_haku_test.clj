@@ -34,21 +34,21 @@
 
 (def odotettu-ilmoitus
   {"ilmoittaja"
-                        {"sukunimi"           "Meikäläinen",
-                         "etunimi"            "Matti",
-                         "matkapuhelinnumero" "08023394852",
-                         "tyopuhelinnumero"   nil,
-                         "email"              "matti.meikalainen@palvelu.fi"},
+                        {"sukunimi"     "Meikäläinen",
+                         "etunimi"      "Matti",
+                         "matkapuhelin" "08023394852",
+                         "tyopuhelin"   nil,
+                         "email"        "matti.meikalainen@palvelu.fi"},
    "ilmoitustyyppi"     "toimenpidepyynto",
    "otsikko"            "Korkeat vallit",
    "yhteydenottopyynto" false,
    "sijainti"           {"koordinaatit" {"x" 452935.0, "y" 7186873.0}},
    "lahettaja"
-                        {"etunimi"            "Pekka",
-                         "sukunimi"           "Päivystäjä",
-                         "matkapuhelinnumero" nil,
-                         "tyopuhelinnumero"   nil,
-                         "email"              "pekka.paivystaja@livi.fi"},
+                        {"etunimi"      "Pekka",
+                         "sukunimi"     "Päivystäjä",
+                         "matkapuhelin" nil,
+                         "tyopuhelin"   nil,
+                         "email"        "pekka.paivystaja@livi.fi"},
    "ilmoitettu"         "2015-09-29T11:49:45Z",
    "ilmoitusid"         123456789,
    "selitteet"
@@ -63,7 +63,7 @@
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
 
-    (odota #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
+    (odota-ehdon-tayttymista #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
     (is (= 200 (:status @vastaus)))
 
     (let [vastausdata (cheshire/decode (:body @vastaus))
@@ -71,7 +71,7 @@
       (is (= 1 (count (get vastausdata "ilmoitukset"))))
       (is (= odotettu-ilmoitus ilmoitus)))
 
-    (odota #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 10000)
+    (odota-ehdon-tayttymista #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 10000)
 
     (let [xml (first @tloik-kuittaukset)
           data (xml/lue xml)]

@@ -8,7 +8,7 @@
       "id": "urn:harja/paivystys/paivystaja",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+      "$ref": "file:resources/api/schemas/entities/paivystajahenkilo.schema.json",
       "required": true
     },
     "alku": {

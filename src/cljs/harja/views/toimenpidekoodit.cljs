@@ -44,7 +44,7 @@
             muokattavat (into []
                               (filter (fn [t]
                                         ;; vain muuttuneet "vanhat" rivit
-                                        (not (some #(= % t) tehtavat)))
+                                        (not= true (:koskematon t)))
                                       (into []
                                             (comp (filter
                                                     #(and
