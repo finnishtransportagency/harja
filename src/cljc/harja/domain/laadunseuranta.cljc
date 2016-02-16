@@ -3,7 +3,8 @@
   (:require [schema.core :as s]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
-    #?(:cljs [harja.loki :refer [log]])))
+    #?(:cljs [harja.loki :refer [log]]
+       :clj [taoensso.timbre :as log])))
 
 (def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
 (def Paatostyyppi (s/enum :sanktio :ei_sanktiota :hylatty))
@@ -44,17 +45,17 @@
    (s/optional-key :kommentit)         s/Any                ;; FIXME: kommentit skeema
    (s/optional-key :uusi-liite)        s/Any
    (s/optional-key :selvitys-pyydetty) (s/maybe s/Bool)
-   (s/optional-key :id) s/Int
-   (s/optional-key :paatos) Paatos
-   (s/optional-key :sanktiot) {s/Num Sanktio}
-   (s/optional-key :uusi-kommentti) s/Any
-   (s/optional-key :liitteet) s/Any})
+   (s/optional-key :id)                s/Int
+   (s/optional-key :paatos)            Paatos
+   (s/optional-key :sanktiot)          {s/Num Sanktio}
+   (s/optional-key :uusi-kommentti)    s/Any
+   (s/optional-key :liitteet)          s/Any})
 
 (def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie :laatu :pistokoe))
 
 (def Talvihoitomittaus
   {:lampotila                    s/Num
-   :tasaisuus                 s/Num
+   :tasaisuus                    s/Num
    :kitka                        s/Num
    :lumimaara                    s/Num
    (s/optional-key :hoitoluokka) (s/maybe s/Str)
@@ -102,7 +103,7 @@
     (let [havainnot (:havainnot tarkastus)
           ;; Tarkastus on OK jos ei havaintoja, tai tekstinä on "Ok", "OK" tai "ok"
           ;; Muita inhottavia taikasanoja pitänee tänne lisäillä kun tulee vastaan.
-          ok? (if (or (nil? havainnot) (#{"OK"} (clojure.string/upper-case havainnot)))
+          ok? (if (or (empty? havainnot) (#{"OK"} (clojure.string/upper-case havainnot)))
                 true
                 false)]
       (assoc tarkastus :ok? ok?))
