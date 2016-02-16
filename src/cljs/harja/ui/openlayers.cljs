@@ -54,10 +54,10 @@ animaation-odotusaika 200)
 (def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
 initial-resolution 1200)
 
-(def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään" :const true}
-min-zoom 5)
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos" :const true}
-max-zoom 20)
+min-zoom 2)
+(def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään" :const true}
+max-zoom 16)
 
 (def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
 oletus-zindex 4)
@@ -403,7 +403,8 @@ nuolten-valimatka 3000)
     (.setView ol3 (ol.View. #js {:center     (clj->js (geo/extent-keskipiste extent))
                                  :resolution initial-resolution
                                  :maxZoom    max-zoom
-                                 :minZoom    min-zoom}))
+                                 :minZoom    min-zoom
+                                 :projection projektio}))
 
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3             ol3
