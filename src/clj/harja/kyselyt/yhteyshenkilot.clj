@@ -22,7 +22,6 @@
 (defn luo-yhteyshenkilo [db etu suku tyopuhelin matkapuhelin email org sampoid kayttajatunnus ulkoinen_id]
   (harja.kyselyt.yhteyshenkilot/luo-yhteyshenkilo<!
     db
-    db
     etu
     suku
     (puhelinnumero/kanonisoi tyopuhelin)
