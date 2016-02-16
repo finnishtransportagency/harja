@@ -33,13 +33,13 @@
 (defn sijainti-ikoni
   "Oletukena palautetaan <vari-str> värinen sijainti-ikoni, jolla on musta reuna."
   ([vari-str] (sijainti-ikoni "musta" vari-str))
-  ([tila-str vari-str] (karttakuva (str "sijainnit/sijainti-"tila-str"-"vari-str))))
+  ([tila-str vari-str] (karttakuva (str "images/sijainnit/sijainti-"tila-str"-"vari-str))))
 
 (defn nuoli-ikoni [vari-str]
-  (karttakuva (str "nuolet/nuoli-"vari-str)))
+  (karttakuva (str "images/nuolet/nuoli-"vari-str)))
 
 (defn pinni-ikoni [vari-str]
-  (karttakuva (str "pinnit/pinni-"vari-str)))
+  (karttakuva (str "images/pinnit/pinni-"vari-str)))
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
