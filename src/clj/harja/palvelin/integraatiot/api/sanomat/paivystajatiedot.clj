@@ -16,24 +16,25 @@
         paivystykset))
 
 (defn muodosta-hakusanoma [urakkaryhmat paivystajatiedot]
-  {:paivystajatiedot (mapv
-             (fn [urakka-id]
-               (let [urakan-paivystykset (filter
-                                           #(= (:urakka_id %) urakka-id)
-                                           paivystajatiedot)
-                     {:keys [urakka_id urakka_nimi urakka_alkupvm
-                             urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
-                     {:keys [organisaatio_nimi organisaatio_ytunnus]} (first urakan-paivystykset)]
-                 {:urakka {:tiedot       {:id          urakka_id
-                                          :nimi        urakka_nimi
-                                          :urakoitsija {:ytunnus organisaatio_ytunnus
-                                                        :nimi    organisaatio_nimi}
-                                          :vaylamuoto  "tie"
-                                          :tyyppi      urakka_tyyppi
-                                          :alkupvm     urakka_alkupvm
-                                          :loppupvm    urakka_loppupvm}
-                           :paivystykset (muodosta-paivystykset urakan-paivystykset)}}))
-             urakkaryhmat)})
+  {:paivystajatiedot
+   (mapv
+     (fn [urakka-id]
+       (let [urakan-paivystykset (filter
+                                   #(= (:urakka_id %) urakka-id)
+                                   paivystajatiedot)
+             {:keys [urakka_id urakka_nimi urakka_alkupvm
+                     urakka_loppupvm urakka_tyyppi]} (first urakan-paivystykset)
+             {:keys [urakoitsija_nimi urakoitsija_ytunnus]} (first urakan-paivystykset)]
+         {:urakka {:tiedot       {:id          urakka_id
+                                  :nimi        urakka_nimi
+                                  :urakoitsija {:ytunnus urakoitsija_ytunnus
+                                                :nimi    urakoitsija_nimi}
+                                  :vaylamuoto  "tie"
+                                  :tyyppi      urakka_tyyppi
+                                  :alkupvm     urakka_alkupvm
+                                  :loppupvm    urakka_loppupvm}
+                   :paivystykset (muodosta-paivystykset urakan-paivystykset)}}))
+     urakkaryhmat)})
 
 (defn muodosta-vastaus-paivystajatietojen-haulle [paivystajatiedot]
   (if (empty? paivystajatiedot)

@@ -37,7 +37,7 @@
                        :kayttaja "harjatest"
                        :salasana nil})
 
-(defn odota [ehto-fn viesti max-aika]
+(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika]
   (loop [max-ts (+ max-aika (System/currentTimeMillis))]
     (if (> (System/currentTimeMillis) max-ts)
       (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika " kuluessa"))
@@ -184,24 +184,29 @@
 
 (defn hae-oulun-alueurakan-2005-2010-id []
   (ffirst (q (str "SELECT id
-                               FROM   urakka
-                               WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
+
+(defn hae-oulun-alueurakan-2005-2010-urakoitsija []
+  (ffirst (q (str "SELECT urakoitsija
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
 
 (defn hae-oulun-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
-                               FROM   urakka
-                               WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
   (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
-                               FROM   lampotilat
-                               WHERE  urakka = " @oulun-alueurakan-2014-2019-id "
-                               AND alkupvm = '2014-10-01' AND loppupvm = '2015-09-30'"))))
+                   FROM   lampotilat
+                   WHERE  urakka = " @oulun-alueurakan-2014-2019-id "
+                   AND alkupvm = '2014-10-01' AND loppupvm = '2015-09-30'"))))
 
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
-                               FROM   organisaatio
-                               WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   FROM   organisaatio
+                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -211,18 +216,18 @@
 
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
-                               FROM   urakka
-                               WHERE  nimi = 'Muhoksen päällystysurakka'"))))
+                   FROM   urakka
+                   WHERE  nimi = 'Muhoksen päällystysurakka'"))))
 
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id
-                               FROM   urakka
-                               WHERE  nimi = 'Muhoksen paikkausurakka'"))))
+                   FROM   urakka
+                   WHERE  nimi = 'Muhoksen paikkausurakka'"))))
 
 (defn hae-pudasjarven-alueurakan-id []
   (ffirst (q (str "SELECT id        x
-                               FROM   urakka
-                               WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
+                   FROM   urakka
+                   WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
 
 (defn hae-oulun-alueurakan-2005-2010-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =

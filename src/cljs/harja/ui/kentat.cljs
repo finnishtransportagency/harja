@@ -19,6 +19,7 @@
             [harja.ui.dom :as dom]
 
             [harja.views.kartta :as kartta]
+            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
 
@@ -652,19 +653,6 @@
                          :on-change   (muuta! key)
                          :on-blur     blur}]])
 
-(defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
-  {:alue (assoc arvo
-                :type tyyppi
-                :img (dom/karttakuva "tr-piste-tack-harmaa")
-                :zindex 6
-                :color vari)
-   :type :tr-valittu-osoite})
-
-(defn viivatyyppinen? [arvo]
-  (let [t (:type arvo)]
-   (or (= :multiline t)
-       (= :line t))))
-
 (defn piste-tai-eka [arvo]
   (if (vector? (:geometria arvo))
     (first (:geometria arvo))
@@ -689,9 +677,13 @@
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do
                                (tasot/nayta-geometria! :tr-valittu-osoite
-                                                         (if (viivatyyppinen? arvo)
-                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon-line "gray")
-                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon nil)))
+                                                       {:alue (maarittele-feature arvo
+                                                                            false
+                                                                            {:img    (dom/pinni-ikoni "musta")
+                                                                             :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
+                                                                            {:color  "gray" ;; muun alle
+                                                                             :zindex 20})
+                                                        :type :tr-valittu-osoite})
                                (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)

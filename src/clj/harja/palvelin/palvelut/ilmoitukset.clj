@@ -6,29 +6,16 @@
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]))
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
+  (:import (java.util Date)))
 
 (defn hakuehto-annettu? [p]
-  ;; todo: pitäisi yksinkertaistaa
-  (if (nil? p)
-    false
-    (do
-      (if (string? p)
-        (not (empty? p))
-
-        (if (vector? p)
-          (do
-            (if (empty? p)
-              false
-              (some true? (map hakuehto-annettu? p))))
-
-          (if (map? p)
-            (do
-              (if (empty? p)
-                false
-                (some true? (map #(hakuehto-annettu? (val %)) p))))
-
-            true))))))
+  (cond
+    (number? p) true
+    (instance? Date p) true
+    (map? p) (some true? (map #(hakuehto-annettu? (val %)) p))
+    (empty? p) false
+    :else true))
 
 (defn- viesti [mille mista ilman]
   (str ", "

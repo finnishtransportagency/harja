@@ -73,15 +73,15 @@
   (let [tulokset (q/hae-urakan-yhteyshenkilot db urakka-id)
         yhteyshenkilot (into []
                              (comp
-                              ;; Muodostetaan organisaatiosta parempi
-                              (map #(if-let [org-id (:organisaatio_id %)]
+                               ;; Muodostetaan organisaatiosta parempi
+                               (map #(if-let [org-id (:organisaatio_id %)]
                                       (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
                                                               :id org-id
-                                                              :nimi (:organisaatio_nimi %)
+                                                              :nimi (:urakoitsija_nimi %)
                                                               :lyhenne (:organisaatio_lyhenne %)})
                                       %))
-                              ;; Poistetaan kenttiä, joita emme halua frontille välittää
-                              (map #(dissoc % :yu :organisaatio_id :organisaatio_nimi :organisaatio_tyyppi :organisaatio_lyhenne)))
+                               ;; Poistetaan kenttiä, joita emme halua frontille välittää
+                               (map #(dissoc % :yu :organisaatio_id :urakoitsija_nimi :organisaatio_tyyppi :organisaatio_lyhenne)))
                              tulokset)]
     ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
@@ -138,7 +138,7 @@
         (map #(if-let [org-id (:organisaatio_id %)]
                 (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
                                         :id org-id
-                                        :nimi (:organisaatio_nimi %)})
+                                        :nimi (:urakoitsija_nimi %)})
                 %))
         (q/hae-urakan-paivystajat db urakka-id nil nil)))
 
