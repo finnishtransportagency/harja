@@ -44,7 +44,6 @@
              [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
 (use-fixtures :once jarjestelma-fixture)
-(use-fixtures :once jarjestelma-fixture)
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
