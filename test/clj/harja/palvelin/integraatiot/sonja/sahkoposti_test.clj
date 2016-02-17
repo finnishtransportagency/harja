@@ -49,7 +49,7 @@
     ;; Lähetetään sähköpostiviesti Harjaan
     (sonja/laheta (:sonja jarjestelma) "email-to-harja" viesti-xml)
 
-    (odota #(and @saapunut @kuittaus) "Odotetaan, että sähköposti on vastaanotettu ja kuitattu" 500)
+    (odota-ehdon-tayttymista #(and @saapunut @kuittaus) "Odotetaan, että sähköposti on vastaanotettu ja kuitattu" 500)
 
     ;; Varmistetaan, että viesti on saapunut oikein kuuntelijalle ja, että kuittaus
     ;; on lähetetty takaisin kuittausjonoon
@@ -71,7 +71,7 @@
                                "ville.vastaanottaja@example.com"
                                "Otsikoidaan"
                                "Leipäteksti")
-    (odota #(not (nil? @lahetetty)) "Odotetaan, että viesti on lähetetty" 500)
+    (odota-ehdon-tayttymista #(not (nil? @lahetetty)) "Odotetaan, että viesti on lähetetty" 500)
     (is (= (:vastaanottaja @lahetetty) "ville.vastaanottaja@example.com"))
     (is (= (:lahettaja @lahetetty) "lasse.lahettaja@example.com"))
 
@@ -86,6 +86,6 @@
       (sonja/laheta (:sonja jarjestelma) "harja-to-email-ack"
                     (xml/tee-xml-sanoma (sanomat/kuittaus @lahetetty nil)))
       
-      (odota #(integraatiot/integraatiotapahtuma-paattynyt?
+      (odota-ehdon-tayttymista #(integraatiot/integraatiotapahtuma-paattynyt?
                db integraatio (:viesti-id @lahetetty))
-             "Odota, että integraatiotapahtuma päätetään" 500))))
+                               "Odota, että integraatiotapahtuma päätetään" 500))))

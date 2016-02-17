@@ -43,17 +43,14 @@
   [{type :type :as g}]
   (case type
     :line (:points g)
-    :arrow-line (:points g)
     :multiline (mapcat :points (:lines g))
     :polygon (:coordinates g)
     :multipolygon (mapcat :coordinates (:polygons g))
     :point [(:coordinates g)]
     :icon [(:coordinates g)]
-    :tack-icon [(:coordinates g)]
-    :tack-icon-line (:points g)
-    :sticker-icon [(:coordinates g)]
-    :sticker-icon-line (:points g)
-    :circle [(:coordinates g)]))
+    :circle [(:coordinates g)]
+    :viiva (:points g)
+    :merkki [(:coordinates g)]))
 
 (defn laske-extent-xf
   "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja 
@@ -135,16 +132,10 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod extent :icon [{c :coordinates}]
   (extent-point-circle c))
 
-(defmethod extent :tack-icon [{c :coordinates}]
+(defmethod extent :merkki [{c :coordinates}]
   (extent-point-circle c))
 
-(defmethod extent :tack-icon-line [{points :points}]
-  (laske-pisteiden-extent points))
-
-(defmethod extent :sticker-icon [{c :coordinates}]
-  (extent-point-circle c))
-
-(defmethod extent :sticker-icon-line [{points :points}]
+(defmethod extent :viiva [{points :points}]
   (laske-pisteiden-extent points))
 
 (defmethod extent :multipolygon [{polygons :polygons}]
@@ -152,9 +143,6 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmethod extent :polygon [{coordinates :coordinates}]
   (laske-pisteiden-extent coordinates))
-
-(defmethod extent :arrow-line [{points :points}]
-  (laske-pisteiden-extent points))
   
 (defn extent-monelle [geometriat]
   (laske-pisteiden-extent (mapcat pisteet geometriat)))
@@ -171,13 +159,10 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod ikonin-sijainti :circle [geom]
   (:coordinates geom))
 
+(defmethod ikonin-sijainti :merkki [geom]
+  (:coordinates geom))
+
 (defmethod ikonin-sijainti :icon [geom]
-  (:coordinates geom))
-
-(defmethod ikonin-sijainti :tack-icon [geom]
-  (:coordinates geom))
-
-(defmethod ikonin-sijainti :sticker-icon [geom]
   (:coordinates geom))
 
 (defmethod ikonin-sijainti :default [g]
