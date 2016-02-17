@@ -80,21 +80,25 @@
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
     [ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
-(def pisteanimaation-pisteet (atom ""))
-
-(defn yhteys-katkennut-varoitus []
-  (komp/luo
-   (komp/ulos (let [pisteanimaatio-kaynnissa (atom true)]
-                (go-loop [[teksti & tekstit] (cycle [""  "." ".." "..."])]
-                  (when @pisteanimaatio-kaynnissa
-                    (<! (timeout 1000))
-                    (reset! pisteanimaation-pisteet teksti)
-                    (recur tekstit)))
-                #(reset! pisteanimaatio-kaynnissa false)))
-    (fn []
-      [:div.yhteysilmoitin.yhteys-katkennut-varoitus
-       [:div.yhteysilmoitin-viesti "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
-        [:div.yhteysilmoitin-pisteet @pisteanimaation-pisteet]]])))
+(defn yhteysongelma-varoitus
+  ([varoitusteksti] (yhteysongelma-varoitus varoitusteksti {}))
+  ([varoitusteksti opts]
+   (assert varoitusteksti "Varoitusteksti on pakollinen!")
+   (let [pisteanimaation-pisteet (atom "")
+         nayta-pisteanimaatio? (:nayta-pisteanimaatio? opts)]
+     (komp/luo
+       (komp/ulos (let [pisteanimaatio-kaynnissa (atom true)]
+                    (go-loop [[teksti & tekstit] (cycle ["" "." ".." "..."])]
+                             (when @pisteanimaatio-kaynnissa
+                               (<! (timeout 1000))
+                               (reset! pisteanimaation-pisteet teksti)
+                               (recur tekstit)))
+                    #(reset! pisteanimaatio-kaynnissa false)))
+       (fn []
+         [:div.yhteysilmoitin.yhteys-katkennut-varoitus
+          [:div.yhteysilmoitin-viesti varoitusteksti
+           (when nayta-pisteanimaatio?
+             [:div.yhteysilmoitin-pisteet @pisteanimaation-pisteet])]])))))
 
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
@@ -120,7 +124,7 @@
                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                [:div
                 (when @k/yhteys-katkennut?
-                  [yhteys-katkennut-varoitus])
+                  [yhteysongelma-varoitus "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen" {:nayta-pisteanimaatio? true}])
                 (when (and (not @k/yhteys-katkennut?)
                            @k/yhteys-palautui-hetki-sitten)
                   [yhteys-palautunut-ilmoitus])
