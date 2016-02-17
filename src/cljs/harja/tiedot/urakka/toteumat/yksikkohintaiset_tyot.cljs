@@ -91,18 +91,6 @@
                  (> (:hoitokauden-toteutunut-maara rivi) 0))
                @tehtavarivit))))
 
-(def yksikkohintainen-toteuma-kartalla-xf
-  (map #(do
-         (assoc %
-           :type :yksikkohintainen-toteuma
-           :alue {:type   :arrow-line
-                  :points (mapv (comp :coordinates :sijainti)
-                                (sort-by
-                                  :aika
-                                  pvm/ennen?
-                                  (:reittipisteet %)))}))))
-
-
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
 (defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
@@ -129,12 +117,9 @@
 
 (defonce yksikkohintainen-toteuma-kartalla
          (reaction
-           @valittu-yksikkohintainen-toteuma
-           @haetut-reitit
            (when @karttataso-yksikkohintainen-toteuma
-             (if @valittu-yksikkohintainen-toteuma
-               (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]) ; FIXME Ei tarvita enää
-               (kartalla-esitettavaan-muotoon
-                 (map
-                   #(assoc % :tyyppi-kartalla :toteuma)
-                   @haetut-reitit))))))
+             (kartalla-esitettavaan-muotoon
+               @haetut-reitit
+               @valittu-yksikkohintainen-toteuma
+               nil
+               (map #(assoc % :tyyppi-kartalla :toteuma))))))

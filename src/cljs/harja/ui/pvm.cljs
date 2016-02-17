@@ -30,7 +30,6 @@
     (reset! sijainti-atom uusi-suunta)))
 
 (defn- pilko-viikoiksi [vuosi kk]
-  ;;(.log js/console "vuosi: " vuosi ", kk: " kk)
   (let [kk (inc kk) ;; cljs-time käyttää luonnollisia kk numeroita
         kk-alku (t/date-time vuosi kk 1)
         ;;_ (log "kk-alku on: " kk-alku)
