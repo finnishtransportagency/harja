@@ -346,7 +346,7 @@
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
-           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
+           {:otsikko "Toteutunut määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
             :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
