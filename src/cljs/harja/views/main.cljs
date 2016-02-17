@@ -80,8 +80,8 @@
    [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
     [ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
-(defn yhteysongelma-varoitus
-  ([varoitusteksti] (yhteysongelma-varoitus varoitusteksti {}))
+(defn yleinen-varoituspalkki
+  ([varoitusteksti] (yleinen-varoituspalkki varoitusteksti {}))
   ([varoitusteksti opts]
    (assert varoitusteksti "Varoitusteksti on pakollinen!")
    (let [pisteanimaation-pisteet (atom "")
@@ -123,11 +123,14 @@
                      (empty? (:roolit kayttaja)))
                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                [:div
-                (when @k/yhteys-katkennut?
-                  [yhteysongelma-varoitus "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen" {:nayta-pisteanimaatio? true}])
-                (when (and (not @k/yhteys-katkennut?)
-                           @k/yhteys-palautui-hetki-sitten)
-                  [yhteys-palautunut-ilmoitus])
+                (cond
+                  @k/yhteys-katkennut? [yleinen-varoituspalkki
+                                        "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
+                                        {:nayta-pisteanimaatio? true}]
+                  @k/istunto-vanhennut? [yleinen-varoituspalkki
+                                         "Istunto on vanhentunut. Lataa sivu uudelleen."]
+                  (and (not @k/yhteys-katkennut?)
+                       @k/yhteys-palautui-hetki-sitten) [yhteys-palautunut-ilmoitus])
                 [:div.container
                  [header sivu]]
 
