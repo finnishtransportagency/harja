@@ -3,7 +3,11 @@
   (:require [hiccup.core :refer [html]]
             [harja.domain.ilmoitusapurit :as apurit]
             [harja.pvm :as pvm]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [taoensso.timbre :as log]))
 
 
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
@@ -16,6 +20,21 @@
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
   kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
+
+(def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
+  +virheellinen-toimenpide-viesti+
+  {:otsikko "Virheellinen toimenpideviesti"
+   :sisalto "Lähettämäsi viestistä ei voitu päätellä toimenpidetietoja."})
+
+(def ^{:doc "Viesti, joka lähetetään jos päivystäjätietoja tai ilmoitustietoja ei voida päätellä" :private true}
+  +ilmoitustoimenpiteen-tallennus-epaonnistui+
+  {:otsikko "Ilmoitustoimenpidettä ei voitu tallentaa"
+   :sisalto "Varmista, että vastaat samalla sähköpostiosoitteella, johon ilmoitustiedot toimitettiin."})
+
+(def ^{:doc "Viesti, joka lähetetään onnistuneen ilmoitustoimenpiteen tallennuksen jälkeen." :private true}
+  +onnistunut-viesti+
+  {:otsikko nil ;; tämä täydennetään ilmoituksen otsikolla
+   :sisalto "Ilmoitustoimenpide tallennettu onnistuneeti."})
 
 (defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi]}]
   (str "#[" urakka-id "/" ilmoitus-id "] " (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))))
@@ -81,3 +100,37 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        :kommentti (when-not (str/blank? kommentti)
                     kommentti)}
       {:virhe "Viestistä ei löytynyt kuittauksen tietoja"})))
+
+(def ^{:doc "Vastaanotetun kuittauksen mäppäys kuittaustyyppi tietokantaenumiksi" :private true}
+  kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
+                        :aloitettu "aloitus"
+                        :lopetettu "lopetus"})
+
+(defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id ilmoitus-id kuittaustyyppi kommentti]}]
+  (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
+        ilmoitus (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
+    (if-not paivystaja
+      +ilmoitustoimenpiteen-tallennus-epaonnistui+
+      (let [ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+                                   db ilmoitus kommentti
+                                   (kuittaustyyppi->enum kuittaustyyppi) paivystaja)]
+        (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
+        (assoc +onnistunut-viesti+
+               :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
+                                  :urakka-id (:urakka ilmoitus)
+                                  :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
+
+(defn- virheellinen-viesti-vastaus [viesti]
+  {:otsikko "Kuittauksen käsittely epäonnistui"
+   :sisalto (str "Lähettämäsi kuittausviestin otsikosta ei voitu päätellä kuittaustietoja. Otsikko oli:\n"
+                 (:otsikko viesti))})
+
+(defn vastaanota-sahkopostikuittaus
+  "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään 
+kuittauksen lähettäjälle."
+  [jms-lahettaja db {:keys [lahettaja otsikko sisalto]}]
+  (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
+  (let [v (lue-kuittausviesti otsikko sisalto)]
+    (if (:ilmoitus-id v)
+      (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v)
+      +virheellinen-toimenpide-viesti+)))

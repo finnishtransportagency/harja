@@ -314,3 +314,9 @@ VALUES
 UPDATE ilmoitus
 SET suljettu = TRUE
 WHERE id = :id;
+
+-- name: hae-ilmoitus-ilmoitus-idlla
+-- Hakee ilmoituksen T-LOIK ilmoitus id:n perusteella
+SELECT id,ilmoitusid,ilmoitustyyppi,urakka
+  FROM ilmoitus
+ WHERE ilmoitusid = :ilmoitusid

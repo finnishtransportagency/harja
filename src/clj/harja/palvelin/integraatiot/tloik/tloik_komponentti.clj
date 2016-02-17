@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.tloik
              [ilmoitukset :as ilmoitukset]
              [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
-             [tekstiviesti :as tekstiviesti]]))
+             [tekstiviesti :as tekstiviesti]
+             [sahkoposti :as sahkopostiviesti]]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -41,14 +42,21 @@
       (fn [_ viesti-id onnistunut]
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
-(defn rekisteroi-kuittauskuuntelijat [this jonot]
-  (when-let [labyrintti (:labyrintti this)]
-    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono jonot))]
-      (sms/rekisteroi-kuuntelija!
-        labyrintti
-        (fn [numero viesti] (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja (:db this) numero viesti))))
-    (when-let [sonja-sahkoposti (:sonja-sahkoposti this)]
-      (sahkoposti/rekisteroi-kuuntelija! sonja-sahkoposti #(ilmoitustoimenpiteet/vastaanota-sahkopostikuittaus (:db this) %)))))
+(defn rekisteroi-kuittauskuuntelijat [{:keys [sonja labyrintti db sonja-sahkoposti] :as this} jonot]
+  (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
+                                         sonja (:toimenpideviestijono jonot))]
+    (when-let [labyrintti labyrintti]
+      (sms/rekisteroi-kuuntelija! labyrintti
+                                  (fn [numero viesti]
+                                    (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))
+    (when-let [sonja-sahkoposti sonja-sahkoposti]
+      (sahkoposti/rekisteroi-kuuntelija!
+       sonja-sahkoposti
+       (fn [viesti]
+         (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
+           (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
+                                      (:lahettaja viesti)
+                                      (:otsikko vastaus) (:sisalto vastaus))))))))
 
 (defrecord Tloik [jonot]
   component/Lifecycle
@@ -65,7 +73,6 @@
               :let [poista-kuuntelija-fn (get this kuuntelija)]]
         (poista-kuuntelija-fn))
       (apply dissoc this kuuntelijat)))
-
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
     (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono jonot))]

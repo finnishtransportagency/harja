@@ -65,10 +65,3 @@
          nil
          nil)))
 
-(defn vastaanota-sahkopostikuittaus [db viesti]
-  ;; PENDING: viestien käsittely toteutettava,
-  ;; ks. otsikosta esim. pattern #ur/ilm, jossa urakan ja ilmoituksen id
-  ;; bodysta haetaan onko kyseessä minkä tyyppinen kuittaus
-
-  (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
-  nil)
