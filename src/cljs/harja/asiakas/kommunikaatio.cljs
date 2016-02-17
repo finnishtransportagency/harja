@@ -65,10 +65,10 @@
         cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
                (cond
-                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (kasittele-palvelinvirhe palvelu vastaus)
                  (= (:status vastaus) 302)
                  (kasittele-istunto-vanhentunut)
+                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
+                 (kasittele-palvelinvirhe palvelu vastaus)
                  :default
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
