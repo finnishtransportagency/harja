@@ -104,6 +104,7 @@
       (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email
                                                urakoitsija-id nil liviTunnus (str id))))))
 
+
 (defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
