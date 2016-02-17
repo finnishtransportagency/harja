@@ -64,11 +64,11 @@
     (is (= "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla."
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db "0834" "TESTI"))
         "Tuntematon käyttäjä käsitellään oikein")
-    (is (= "Viestiä ei voida käsitellä. Viestinumero tai toimenpide puuttuu."
+    (is (= "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu."
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero ""))
         "Puuttuva toimenpide tai viestinumero käsitellään oikein.")
 
-    (is (= "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy ilmoitusta. Vastaa viestiin toimenpiteen lyhenteellä, viestinumerolla ja kommentilla."
+    (is (= "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy avointa ilmoitusta. Vastaa viestiin kuittauskoodilla ja kommentilla."
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V2"))
         "Tuntematon viestinumero käsitellään oikein.")
 

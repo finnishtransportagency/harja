@@ -14,18 +14,18 @@
   (str "Uusi toimenpidepyyntö: %s (id: %s, viestinumero: %s).\n\n"
        "%s\n\n"
        "Selitteet: %s.\n\n"
-       "Voit kirjata uuden toimenpiteen antamalla toimenpiteen lyhenteen, viestinumeron ja kommentin:\n"
+       "Kuittauskoodit:\n"
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
-       "L%s = lopetettu\n"
-       "Esim. A%s Työt aloitettu."))
+       "L%s = lopetettu\n\n"
+       "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
 
 (def +onnistunut-viesti+ "Viestisi käsiteltiin onnistuneesti. Kiitos!")
-(def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Viestinumero tai toimenpide puuttuu.")
+(def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu.")
 (def +tuntematon-kayttaja-viesti+ "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla.")
-(def +virheellinen-toimenpide-viesti+ "Viestiäsi ei voitu käsitellä. Antamasi toimenpide ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä, viestinumerolla ja kommentilla.")
-(def +virheellinen-viestinumero-viesti+ "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin toimenpiteen lyhenteellä, viestinumerolla ja kommentilla.")
-(def +tuntematon-viestinumero-viesti+ "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy ilmoitusta. Vastaa viestiin toimenpiteen lyhenteellä, viestinumerolla ja kommentilla.")
+(def +virheellinen-toimenpide-viesti+ "Viestiäsi ei voitu käsitellä. Antamasi kuittaus ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla.")
+(def +virheellinen-viestinumero-viesti+ "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla.")
+(def +tuntematon-viestinumero-viesti+ "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy avointa ilmoitusta. Vastaa viestiin kuittauskoodilla ja kommentilla.")
 (def +virhe-viesti+ "Pahoittelemme mutta lähettämäsi viestin käsittelyssä tapahtui virhe.")
 
 (defn hae-paivystaja [db puhelinnumero]
