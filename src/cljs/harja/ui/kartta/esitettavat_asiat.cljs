@@ -293,7 +293,7 @@
     (assoc pt
       :nimi (or (:nimi pt) teksti)
       :selite {:teksti teksti
-               :img    ikoni}
+               :vari    viiva}
       :alue (maarittele-feature pt (valittu-fn? pt)
                                 {:img    ikoni
                                  :paikka :loppu
@@ -463,7 +463,7 @@
         :type :toteuma
         :nimi nimi
         :selite {:teksti nimi
-                 :vari   (last (viivojen-varit-leveimmasta-kapeimpaan viivat))} ; TODO selitteiden värilaatikko tukemaan montaa väriä
+                 :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
         :alue (maarittele-feature reitti (valittu-fn? toteuma)
                                   {:paikka [:taitokset :loppu]
                                    :tyyppi :nuoli
@@ -487,7 +487,7 @@
       :type :tyokone
       :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
       :selite {:teksti selite-teksti
-               :vari   (last (viivojen-varit-leveimmasta-kapeimpaan viivat))} ; TODO selitteiden värilaatikko tukemaan montaa väriä
+               :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
       :alue (maarittele-feature paikka (valittu-fn? tyokone)
                                 {:paikka   :loppu
                                  :tyyppi   :nuoli
