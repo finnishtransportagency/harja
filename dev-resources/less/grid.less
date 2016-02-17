@@ -15,7 +15,10 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   width: 100%;
 }
 
-@livi-taulukon-padding: 1px;
+@livitaulukon-input-korkeus: 23px;
+@livi-taulukon-padding: 3px;
+@livi-taulukon-padding-muokatessa: 0;
+
 .livi-taulukon-reunat {
   border: 1px solid @harmaa7;
 }
@@ -52,7 +55,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       input:not([type="checkbox"]), select {
         width: 100%;
         z-index: 10;
-	height: @input-korkeus;
+        height: @livitaulukon-input-korkeus;
       }
       .kombo {
         width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
@@ -159,7 +162,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   td.toiminnot span {
     display: inline-block;
     .livicon-trash {
-      line-height: @input-korkeus;
+      line-height: @livitaulukon-input-korkeus;
     }
   }
 
@@ -193,8 +196,21 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     color: @varoitus;
   }
 
-  tr.muokataan td {
-    vertical-align: middle;
+  tr.muokataan {
+    padding: @livi-taulukon-padding-muokatessa;
+    td {
+      padding: @livi-taulukon-padding-muokatessa;
+      .livi-taulukon-reunat;
+      > input {
+        border: none;
+      }
+      .nappi-alasveto {
+        border: none;
+      }
+      .pvm-aika-kentta td {
+        padding: 0;
+      }
+    }
   }
 }
 
@@ -206,7 +222,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 .nappi-toissijainen.nappi-tayta {
-  height: @input-korkeus;
+  height: @livitaulukon-input-korkeus;
   margin: 0;
   padding: 1px 4px;
   z-index: 1;
@@ -247,4 +263,10 @@ tr.otsikko {
   word-break: break-word;
 }
 
+.alasveto-gridin-kentta {
+  .livi-alasveto(100%, auto, @livitaulukon-input-korkeus);
+  .valittu {
+    max-height: 100%; //vähän häkki
+  }
+}
 
