@@ -265,7 +265,7 @@
         toteutuneet-tehtavat (atom nil)]
     (go (reset! toteutuneet-tehtavat
                 (<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali
-                                                                                 :yksikkohintainen (:id rivi)))))
+                                                                                 :yksikkohintainen (:tpk_id rivi)))))
 
     (fn [toteuma-rivi]
       [:div
@@ -316,8 +316,8 @@
                           (ikonit/eye-open) " Toteuma"])}]
         (when @toteutuneet-tehtavat
           (sort
-            (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
-           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat)))]])))
+            (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka))) 
+            @toteutuneet-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"
@@ -334,12 +334,11 @@
 
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat")
+           :tunniste     :tpk_id
            :tyhja        (if (nil? @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
            :luokat       ["toteumat-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
-                                       (filter (fn [rivi]
-                                                 (> (:hoitokauden-toteutunut-maara rivi) 0))
-                                               @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain)))}
+           :vetolaatikot (into {} (map (juxt :tpk_id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
+                                       @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain))}
           [{:tyyppi :vetolaatikon-tila :leveys 5}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys 10}
