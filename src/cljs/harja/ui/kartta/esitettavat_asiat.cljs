@@ -112,23 +112,23 @@
 
   Esimerkkejä:
 
-  (maarittele-feature juttu val? (karttakuva 'mun-ikoni'))
-    Juttu on todennäköisesti pistemäinen asia. Käytetään ikonia mun-ikoni. Jos juttu
+  (maarittele-feature juttu val? (pinni-ikoni 'vihrea'))
+    Juttu on todennäköisesti pistemäinen asia. Käytetään vihrää pinniä. Jos juttu
     onkin reitillinen, käytetään reitin piirtämiseen puhtaasti oletusasetuksia.
 
-  (maarittele-feature homma val? (karttakuva 'mun-homma) {:color (if (val? homma) 'green' 'yellow')})
+  (maarittele-feature homma val? (sijainti-ikoni 'magenta') {:color (if (val? homma) varit/vihrea varit/keltainen)})
     Samanlainen kuin edellinen, mutta on määritelty millä värillä halutaan piirtää reitti
 
-  (maarittele-feature foo val? [{:paikka :loppu :img (karttakuva 'mun-foo')}
-                                {:paikka :taitokset :img (karttakuva 'nuoli-foo')}]
-                                [{:width 12 :color 'black'} {:width 6 :color 'red'}])
-    Jos foo on pistemäinen, käytetään ikonia 'mun-foo'. Reitilliselle foolle piirretään
-    kaksivärinen viiva, jonka taitoksissa on nuoli, ja loppupäässä 'mun-foo' ikoni.
+  (maarittele-feature foo val? [{:paikka :loppu :img (pinni-ikoni 'sininen)}
+                                {:paikka :taitokset :img (nuoli-ikoni 'sininen')}]
+                                [{:width 12 :color varit/musta} {:width 6 :color varit/sininen}])
+    Jos foo on pistemäinen, käytetään sinistä pinniä. Reitilliselle foolle piirretään
+    kaksivärinen viiva, jonka taitoksissa on nuoli, ja loppupäässä sininen pinni.
 
-  (maarittele-feature bar val? {:paikka [:alku :loppu :taitokset] :img (karttakuva 'nuoli-bar')}
-                      nil (karttakuva 'mun-bar')
+  (maarittele-feature bar val? {:paikka [:alku :loppu :taitokset] :img (nuoli-ikoni 'lime')}
+                      nil (pinn-ikoni 'lime')
     Reitillinen bar piirretään käyttäen viivojen oletusasetuksia. Alku- ja loppupäähän sekä
-    jokaiseen taitokseen piirretään nuoli. Jos bar onkin piste, käytetään vaan 'mun-bar' ikonia."
+    jokaiseen taitokseen piirretään nuoli. Jos bar onkin piste, käytetään vaan limeä pinniä."
   ([asia valittu?] (maarittele-feature asia valittu? [{}] [{}]))
   ([asia valittu? merkit] (maarittele-feature asia valittu? merkit [{}]))
   ([asia valittu? merkit viivat] (maarittele-feature asia valittu? merkit viivat nil))
