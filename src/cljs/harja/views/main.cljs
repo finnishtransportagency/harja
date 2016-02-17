@@ -124,13 +124,12 @@
                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                [:div
                 (cond
+                  @k/istunto-vanhentunut? [yleinen-varoituspalkki
+                                         "Istunto on vanhentunut. Lataa sivu uudelleen."] ;; TODO Lisää linkki / nappi joka lataa uudelleen
                   @k/yhteys-katkennut? [yleinen-varoituspalkki
                                         "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
                                         {:nayta-pisteanimaatio? true}]
-                  @k/istunto-vanhennut? [yleinen-varoituspalkki
-                                         "Istunto on vanhentunut. Lataa sivu uudelleen."]
-                  (and (not @k/yhteys-katkennut?)
-                       @k/yhteys-palautui-hetki-sitten) [yhteys-palautunut-ilmoitus])
+                  (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten) [yhteys-palautunut-ilmoitus])
                 [:div.container
                  [header sivu]]
 
@@ -148,7 +147,6 @@
                      :hallinta [hallinta/hallinta]
                      :tilannekuva [tilannekuva/tilannekuva]
                      :about [about/about])]]]
-
                 [modal-container]
                 [viesti-container]
 
