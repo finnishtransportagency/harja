@@ -81,11 +81,19 @@
     [ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
 
 (defn yleinen-varoituspalkki
+  "Näyttää yleisluontoisen varoituspalkin selaimen ylänurkassa.
+  Ottaa varoitustekstin ja mahdollisia optioita:
+
+  nayta-pisteanimaatio?     Näytetäänkö kolmen pisteen animaatio varoitustekstin perässä? Oletuksena false.
+  linkki                    Varoitustekstin perässä olevan linkin teksti
+  linkki-fn                 Linkin suoritusfunktio"
   ([varoitusteksti] (yleinen-varoituspalkki varoitusteksti {}))
   ([varoitusteksti opts]
    (assert varoitusteksti "Varoitusteksti on pakollinen!")
    (let [pisteanimaation-pisteet (atom "")
-         nayta-pisteanimaatio? (:nayta-pisteanimaatio? opts)]
+         nayta-pisteanimaatio? (:nayta-pisteanimaatio? opts)
+         linkki-fn (:linkki-fn opts)
+         linkki (:linkki opts)]
      (komp/luo
        (komp/ulos (let [pisteanimaatio-kaynnissa (atom true)]
                     (go-loop [[teksti & tekstit] (cycle ["" "." ".." "..."])]
@@ -98,62 +106,68 @@
          [:div.yhteysilmoitin.yhteys-katkennut-varoitus
           [:div.yhteysilmoitin-viesti varoitusteksti
            (when nayta-pisteanimaatio?
-             [:div.yhteysilmoitin-pisteet @pisteanimaation-pisteet])]])))))
+             [:div.yhteysilmoitin-pisteet @pisteanimaation-pisteet])
+           (when linkki
+             [:span " "
+              [:a.klikattava {:on-click linkki-fn} linkki]])]])))))
 
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
+
+(defn paasisalto [sivu]
+  [:div
+   (cond
+     @k/istunto-vanhentunut? [yleinen-varoituspalkki
+                              "Istunto on vanhentunut."
+                              {:linkki "Lataa sivu uudelleen"
+                               :linkki-fn #(.reload js/location)}]
+     @k/yhteys-katkennut? [yleinen-varoituspalkki
+                           "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
+                           {:nayta-pisteanimaatio? true}]
+     (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten) [yhteys-palautunut-ilmoitus])
+   [:div.container
+    [header sivu]]
+
+   (when @nav/murupolku-nakyvissa?
+     [:div.container
+      [murupolku/murupolku]])
+
+   [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+    [:div.row.row-sisalto
+     [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
+      (case sivu
+        :urakat [urakat/urakat]
+        :raportit [raportit/raportit]
+        :ilmoitukset [ilmoitukset/ilmoitukset]
+        :hallinta [hallinta/hallinta]
+        :tilannekuva [tilannekuva/tilannekuva]
+        :about [about/about])]]]
+   [modal-container]
+   [viesti-container]
+
+   ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
+   ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
+   ;; se asemoidaan mountin jälkeen
+   [:div#kartta-container {:style {:position "absolute" :top (- @dom/korkeus)}}
+    [kartta/kartta]]])
 
 (defn main
   "Harjan UI:n pääkomponentti"
   []
   (komp/luo
-
-   (fn []
-     (if @nav/render-lupa?
-       (let [sivu (nav/sivu)
-             aikakatkaistu? @istunto/istunto-aikakatkaistu
-             korkeus @dom/korkeus
-             kayttaja @istunto/kayttaja]
-
-         (if aikakatkaistu?
-           [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
-           (if (nil? kayttaja)
-             [ladataan]
-             (if (or (:poistettu kayttaja)
-                     (empty? (:roolit kayttaja)))
-               [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
-               [:div
-                (cond
-                  @k/istunto-vanhentunut? [yleinen-varoituspalkki
-                                         "Istunto on vanhentunut. Lataa sivu uudelleen."] ;; TODO Lisää linkki / nappi joka lataa uudelleen
-                  @k/yhteys-katkennut? [yleinen-varoituspalkki
-                                        "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
-                                        {:nayta-pisteanimaatio? true}]
-                  (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten) [yhteys-palautunut-ilmoitus])
-                [:div.container
-                 [header sivu]]
-
-                (when @nav/murupolku-nakyvissa?
-                  [:div.container
-                   [murupolku/murupolku]])
-
-                [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-                 [:div.row.row-sisalto
-                  [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
-                   (case sivu
-                     :urakat [urakat/urakat]
-                     :raportit [raportit/raportit]
-                     :ilmoitukset [ilmoitukset/ilmoitukset]
-                     :hallinta [hallinta/hallinta]
-                     :tilannekuva [tilannekuva/tilannekuva]
-                     :about [about/about])]]]
-                [modal-container]
-                [viesti-container]
-
-                ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-                ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
-                ;; se asemoidaan mountin jälkeen
-                [:div#kartta-container {:style {:position "absolute" :top (- @dom/korkeus)}}
-                 [kartta/kartta]]]))))
-       [ladataan]))))
+    (fn []
+      (if @nav/render-lupa?
+        (let [sivu (nav/sivu)
+              aikakatkaistu? @istunto/istunto-aikakatkaistu
+              korkeus @dom/korkeus
+              kayttaja @istunto/kayttaja]
+          (if aikakatkaistu?
+            [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
+            (if (nil? kayttaja)
+              [ladataan]
+              (if (or (:poistettu kayttaja)
+                      (empty? (:roolit kayttaja)))
+                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+                [paasisalto sivu]))))
+        [ladataan]))))
 

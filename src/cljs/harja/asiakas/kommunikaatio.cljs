@@ -58,7 +58,7 @@
     (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus)))
   (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
 
-(declare kasittele-istunto-katkennut)
+(declare kasittele-istunto-vanhentunut)
 
 (defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi?]
   (let [chan (chan)
@@ -68,7 +68,7 @@
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (kasittele-palvelinvirhe palvelu vastaus)
                  (= (:status vastaus) 302)
-                 (kasittele-istunto-katkennut)
+                 (kasittele-istunto-vanhentunut)
                  :default
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
@@ -186,7 +186,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
           yhteys-katkennut-pingausvali-millisekunteina)
   (reset! yhteys-palautui-hetki-sitten false))
 
-(defn- kasittele-istunto-katkennut []
+(defn- kasittele-istunto-vanhentunut []
   (reset! istunto-vanhentunut? true))
 
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
