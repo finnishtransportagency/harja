@@ -15,7 +15,7 @@
                              (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
                                [{:alue (maarittele-feature @valittu-alkupiste
                                                            false
-                                                           {:img    (dom/karttakuva "tr-piste-tack-harmaa")
+                                                           {:img    (dom/pinni-ikoni "musta")
                                                             :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
                                                            {:color  "gray" ;; muun alle
                                                             :zindex 20})}])))
