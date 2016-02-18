@@ -15,7 +15,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   width: 100%;
 }
 
-@livitaulukon-input-korkeus: 23px;
+@livitaulukon-input-korkeus: 22px;
 @livi-taulukon-padding: 3px;
 @livi-taulukon-padding-muokatessa: 0;
 
@@ -40,7 +40,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     .nappi-ensisijainen span,
     .nappi-toissijainen span,
     .nappi-myonteinen span,
-    .nappi-kielteinen span, {
+    .nappi-kielteinen span {
       font-size: @fontin-koko-leipateksti;
     }
   }
@@ -199,6 +199,12 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   tr.muokataan {
     padding: @livi-taulukon-padding-muokatessa;
     td {
+      &.ei-muokattava {
+        padding-left: @livi-taulukon-padding;
+      }
+      &.muokattava > input {
+        padding: 0 0 0 @livi-taulukon-padding;
+      }
       padding: @livi-taulukon-padding-muokatessa;
       .livi-taulukon-reunat;
       > input {
