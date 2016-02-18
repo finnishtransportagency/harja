@@ -3,7 +3,6 @@
   "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
-  "additionalProperties": false,
   "properties": {
     "id": {
       "id": "urn:harja/id",
@@ -29,14 +28,6 @@
     },
     "tyopuhelin": {
       "id": "urn:harja/paivystykset/0/paivystys/tyopuhelin",
-      "type": "string"
-    },
-    "matkapuhelinnumero": {
-      "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
-      "type": "string"
-    },
-    "tyopuhelinnumero": {
-      "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
       "type": "string"
     },
     "liviTunnus": {

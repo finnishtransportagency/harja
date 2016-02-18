@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
@@ -92,21 +93,25 @@
                                       varahenkilo
                                       vastuuhenkilo))))
 
-(defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]}]
+(defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]} urakoitsija-id]
   (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
     (do
       (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
-      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email nil (str id))))
+      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email
+                                                                    (str id))))
     (do
       (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
-      (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email nil nil liviTunnus (str id))))))
+      (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email
+                                               urakoitsija-id nil liviTunnus (str id))))))
+
 
 (defn tallenna-paivystajatiedot [db urakka-id data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
-    (doseq [paivystys (:paivystykset data)]
-      (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]))]
-        (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id)))))
+    (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija transaktio urakka-id)))]
+      (doseq [paivystys (:paivystykset data)]
+       (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]) urakoitsija)]
+         (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id))))))
 
 (defn kirjaa-paivystajatiedot
   "Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja

@@ -106,7 +106,7 @@
            :fmt #(if (> (count %) 50)
                    (str (.substring % 0 50) "...")
                    %)}]
-         @tarkastukset/urakan-tarkastukset]])))
+         tarkastukset]])))
 
 
 (defn talvihoitomittaus []

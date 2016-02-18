@@ -20,7 +20,8 @@
             [harja.ui.dom :as dom]
             [harja.views.kartta.tasot :as tasot]
             [reagent.core :refer [atom] :as reagent]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.kartta.varit.alpha :as varit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -195,7 +196,11 @@
   [& args]
   (let [koko @nav/kartan-koko]
     (if-not (= :hidden koko)
-      [kartan-paikkavaraus koko args]
+      (if (= :S koko)
+        [:span
+         [kartan-paikkavaraus koko args]
+         [:div.pystyvali-karttanapille]]
+        [kartan-paikkavaraus koko args])
       [:span.ei-karttaa])))
 
 
@@ -208,13 +213,6 @@
 (defonce urakka-kuuntelija
          (t/kuuntele! :urakka-valittu
                       #(openlayers/hide-popup!)))
-
-;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
-(def +varit+ ["rgba(102, 204, 255, 0.7)" "rgba(0, 255, 204, 0.7)" "rgba(0, 102, 0, 0.7)" "rgba(255, 153, 0, 0.7)"
-              "rgba(204, 0, 102, 0.7)" "rgba(255, 204, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 51, 204, 0.7)"
-              "rgba(0, 51, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 204, 51, 0.7)" "rgba(0, 0, 255, 0.7)"
-              "rgba(0, 102, 102, 0.7)" "rgba(51, 153, 102, 0.7)" "rgba(51, 102, 0, 0.7)" "rgba(153, 102, 51, 0.7)"
-              "rgba(153, 0, 51, 0.7)"])
 
 (defonce kartan-koon-paivitys
          (run! (do @dom/ikkunan-koko
@@ -292,11 +290,11 @@
                  (if (vector? img)
                    [:td.kartan-ikonien-selitykset-ikoni-sarake
                     [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
-                     {:src (str openlayers/+karttaikonipolku+ (first img))}]
-                    [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second img))}]]
+                     {:src (first img)}]
+                    [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (first img)}]]
 
                    [:td.kartan-ikonien-selitykset-ikoni-sarake
-                    [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ img)}]]))
+                    [:img.kartan-ikonien-selitykset-ikoni {:src img}]]))
                [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]])]]
           [:div.kartan-ikonien-selitykset-sulje.klikattava
            {:on-click (fn [event]
@@ -597,7 +595,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                                   {:width 3}))
                                       ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                                       :color (or (:color alue)
-                                                 (nth +varit+ (mod (:id piirrettava) (count +varit+))))
+                                                 (nth varit/kaikki (mod (:id piirrettava) (count varit/kaikki))))
                                       :zindex (or (:zindex alue) (case (:type piirrettava)
                                                                    :hy 0
                                                                    :ur 1

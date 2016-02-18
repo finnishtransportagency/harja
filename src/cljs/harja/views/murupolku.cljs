@@ -161,15 +161,20 @@
                             [:div.col-sm-4.murupolku-oikea
                              [urakoitsija]])]
             ;; Perusversio
-            [:ol.murupolku
-             [:div.col-sm-6.murupolku-vasen
-              [koko-maa]
-              [hallintayksikko valinta-auki]
-              [urakka valinta-auki]]
-             (when ei-urakkaa?
+            (if ei-urakkaa?
+              [:ol.murupolku
+               [:div.col-sm-6.murupolku-vasen
+                [koko-maa]
+                [hallintayksikko valinta-auki]
+                [urakka valinta-auki]]
                [:div.col-sm-6.murupolku-oikea
                 [urakoitsija]
-                [urakkatyyppi]])])])))))
+                [urakkatyyppi]]]
+              [:ol.murupolku
+               [:div.col-sm-12.murupolku-vasen
+                [koko-maa]
+                [hallintayksikko valinta-auki]
+                [urakka valinta-auki]]]))])))))
 
 
 

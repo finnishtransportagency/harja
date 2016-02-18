@@ -25,7 +25,8 @@
             [harja.views.kartta :as kartta]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -316,10 +317,8 @@
                          [:button.nappi-toissijainen.nappi-grid
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
-        (let [toteutuneet-tehtavat @toteutuneet-tehtavat]
-          (sort
-           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka))) 
-           toteutuneet-tehtavat))]])))
+        (when-let [toteutuneet-tehtavat @toteutuneet-tehtavat]
+          (sort-by :alkanut t/after? toteutuneet-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"

@@ -7,16 +7,19 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
-            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta]]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta
+                                      maarita-pudotusvalikon-max-korkeus avautumissuunta-ja-korkeus-tyylit]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
             [goog.string :as gstr]
+            [goog.events.EventType :as EventType]
             [cljs.core.async :refer [<! >! chan] :as async]
 
             [harja.ui.dom :as dom]
 
             [harja.views.kartta :as kartta]
+            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
 
@@ -59,70 +62,88 @@
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake?]} data]
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
         tulokset (atom nil)
-        valittu-idx (atom nil)]
-    (fn [_ data]
-      [:div.dropdown {:class (when-not (nil? @tulokset) "open")}
+        valittu-idx (atom nil)
+        hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)
+        avautumissuunta (atom :alas)
+        max-korkeus (atom 0)
+        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
+                                                  (maarita-pudotusvalikon-max-korkeus
+                                                    this max-korkeus avautumissuunta))]
+    (komp/luo
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
+                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
+      (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
+      {:component-did-mount
+       (fn [this]
+         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
-       [:input {:class       (when lomake? "form-control")
-                :value       @teksti
-                :placeholder placeholder
-                :size        pituus
-                :on-change   #(when (= (.-activeElement js/document) (.-target %))
-                               ;; tehdään haku vain jos elementti on fokusoitu
-                               ;; IE triggeröi on-change myös ohjelmallisista muutoksista
-                               (let [v (-> % .-target .-value)]
-                                 (reset! data nil)
-                                 (reset! teksti v)
-                                 (if (> (count v) 2)
-                                   (do (reset! tulokset :haetaan)
-                                       (go (let [tul (<! (hae lahde v))]
-                                             (reset! tulokset tul)
-                                             (reset! valittu-idx nil))))
-                                   (reset! tulokset nil))))
-                :on-key-down (nuolivalinta #(let [t @tulokset]
-                                             (log "YLÖS " @valittu-idx)
-                                             (when (vector? t)
-                                               (swap! valittu-idx
-                                                      (fn [idx]
-                                                        (if (or (= 0 idx) (nil? idx))
-                                                          (dec (count t))
-                                                          (dec idx))))))
-                                           #(let [t @tulokset]
-                                             (log "ALAS " @valittu-idx)
-                                             (when (vector? t)
-                                               (swap! valittu-idx
-                                                      (fn [idx]
-                                                        (if (and (nil? idx) (not (empty? t)))
-                                                          0
-                                                          (if (< idx (dec (count t)))
-                                                            (inc idx)
-                                                            0))))))
-                                           #(let [t @tulokset
-                                                  idx @valittu-idx]
-                                             (when (number? idx)
-                                               (let [v (nth t idx)]
-                                                 (reset! data v)
-                                                 (reset! teksti ((or nayta str) v))
-                                                 (reset! tulokset nil)))))}]
-       [:ul.dropdown-menu {:role "menu"}
-        (let [nykyiset-tulokset @tulokset
-              idx @valittu-idx]
-          (if (= :haetaan nykyiset-tulokset)
-            [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
-            (if (empty? nykyiset-tulokset)
-              [:span.ei-hakutuloksia "Ei tuloksia"]
-              (doall (map-indexed (fn [i t]
-                                    ^{:key (hash t)}
-                                    [:li {:class (when (= i idx) "korostettu") :role "presentation"}
-                                     [linkki ((or nayta str) t) #(do (reset! data t)
-                                                                     (reset! teksti ((or nayta str) t))
-                                                                     (reset! tulokset nil))]])
-                                  nykyiset-tulokset)))))]])))
+      (fn [_ data]
+        [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
+
+         [:input {:class       (when lomake? "form-control")
+                  :value       @teksti
+                  :placeholder placeholder
+                  :size        pituus
+                  :on-change   #(when (= (.-activeElement js/document) (.-target %))
+                                 ;; tehdään haku vain jos elementti on fokusoitu
+                                 ;; IE triggeröi on-change myös ohjelmallisista muutoksista
+                                 (let [v (-> % .-target .-value str/triml)]
+                                   (reset! data nil)
+                                   (reset! teksti v)
+                                   (if (> (count v) hae-kun-yli-n-merkkia)
+                                     (do (reset! tulokset :haetaan)
+                                         (go (let [tul (<! (hae lahde v))]
+                                               (reset! tulokset tul)
+                                               (reset! valittu-idx nil))))
+                                     (reset! tulokset nil))))
+                  :on-key-down (nuolivalinta #(let [t @tulokset]
+                                               (log "YLÖS " @valittu-idx)
+                                               (when (vector? t)
+                                                 (swap! valittu-idx
+                                                        (fn [idx]
+                                                          (if (or (= 0 idx) (nil? idx))
+                                                            (dec (count t))
+                                                            (dec idx))))))
+                                             #(let [t @tulokset]
+                                               (log "ALAS " @valittu-idx)
+                                               (when (vector? t)
+                                                 (swap! valittu-idx
+                                                        (fn [idx]
+                                                          (if (and (nil? idx) (not (empty? t)))
+                                                            0
+                                                            (if (< idx (dec (count t)))
+                                                              (inc idx)
+                                                              0))))))
+                                             #(let [t @tulokset
+                                                    idx @valittu-idx]
+                                               (when (number? idx)
+                                                 (let [v (nth t idx)]
+                                                   (reset! data v)
+                                                   (reset! teksti ((or nayta str) v))
+                                                   (reset! tulokset nil)))))}]
+         [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
+                                              :style (avautumissuunta-ja-korkeus-tyylit
+                                                       @max-korkeus @avautumissuunta)}
+          (let [nykyiset-tulokset @tulokset
+                idx @valittu-idx]
+            (if (= :haetaan nykyiset-tulokset)
+              [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
+              (if (empty? nykyiset-tulokset)
+                [:span.ei-hakutuloksia "Ei tuloksia"]
+                (doall (map-indexed (fn [i t]
+                                      ^{:key (hash t)}
+                                      [:li {:class (when (= i idx) "korostettu") :role "presentation"}
+                                       [linkki ((or nayta str) t) #(do
+                                                                    (reset! data t)
+                                                                    (reset! teksti ((or nayta str) t))
+                                                                    (reset! tulokset nil))]])
+                                    nykyiset-tulokset)))))]]))))
 
 
 
@@ -632,19 +653,6 @@
                          :on-change   (muuta! key)
                          :on-blur     blur}]])
 
-(defn valitun-tr-osoitteen-esitys [arvo tyyppi vari]
-  {:alue (assoc arvo
-                :type tyyppi
-                :img (dom/karttakuva "tr-piste-tack-harmaa")
-                :zindex 6
-                :color vari)
-   :type :tr-valittu-osoite})
-
-(defn viivatyyppinen? [arvo]
-  (let [t (:type arvo)]
-   (or (= :multiline t)
-       (= :line t))))
-
 (defn piste-tai-eka [arvo]
   (if (vector? (:geometria arvo))
     (first (:geometria arvo))
@@ -669,9 +677,13 @@
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do
                                (tasot/nayta-geometria! :tr-valittu-osoite
-                                                         (if (viivatyyppinen? arvo)
-                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon-line "gray")
-                                                           (valitun-tr-osoitteen-esitys arvo :tack-icon nil)))
+                                                       {:alue (maarittele-feature arvo
+                                                                            false
+                                                                            {:img    (dom/pinni-ikoni "musta")
+                                                                             :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
+                                                                            {:color  "gray" ;; muun alle
+                                                                             :zindex 20})
+                                                        :type :tr-valittu-osoite})
                                (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)

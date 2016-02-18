@@ -482,15 +482,16 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (let [reitit (into []
                      (comp
+                       (harja.geo/muunna-pg-tulokset :reitti)
                        (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                        (map konv/alaviiva->rakenne))
                      (q/hae-yksikkohintaisten-toiden-reittipisteet db
-                                                              urakka-id
-                                                              sopimus-id
-                                                              (konv/sql-date alkupvm)
-                                                              (konv/sql-date loppupvm)
-                                                              toimenpide
-                                                              tehtava))
+                                                                   urakka-id
+                                                                   sopimus-id
+                                                                   (konv/sql-date alkupvm)
+                                                                   (konv/sql-date loppupvm)
+                                                                   toimenpide
+                                                                   tehtava))
         kasitellyt-reitit (konv/sarakkeet-vektoriin
                             reitit
                             {:reittipiste :reittipisteet}

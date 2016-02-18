@@ -30,7 +30,7 @@
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testiurakka-sanoma+)
-    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
@@ -59,7 +59,7 @@
     (doseq [testidata testidatapatteri]
       (println "Lähetetään: " testidata)
       (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ testidata))
-    (odota #(= siirtoja (count @viestit)) "Kuittaukset on vastaanotettu." 1200000)
+    (odota-ehdon-tayttymista #(= siirtoja (count @viestit)) "Kuittaukset on vastaanotettu." 1200000)
     (let [epaonnistuneet (q "SELECT v.sisalto, t.lisatietoja FROM integraatioviesti  v  RIGHT JOIN integraatiotapahtuma t ON v.integraatiotapahtuma = t.id  RIGHT JOIN integraatio i ON t.integraatio = i.id WHERE NOT t.onnistunut AND v.suunta = 'sisään' AND i.jarjestelma = 'sampo' and nimi = 'sisaanluku'")]
       (println "Epäonnistuneet:" epaonnistuneet)
       (println "Ajettiin yhteensä:" siirtoja "siirtoa"))))

@@ -263,7 +263,7 @@ table.table-striped {
         border: 1px solid @sininen4;
     }
 }
-.livi-alasveto (@leveys: 200px, @min-leveys: 160px) {
+.livi-alasveto (@leveys: 200px, @min-leveys: 160px, @input-korkeus: @input-korkeus) {
     min-width: @min-leveys; // 160px on bs:n dropdown-menun minimiarvo
     max-width: 100%;
     width: @leveys;
@@ -314,7 +314,6 @@ table.table-striped {
     background-color: @valkoinen;
     border-color: @harmaa7;
     color: @sininen4;
-    overflow-x: auto;
     padding: 3px 6px;
     &:hover,
     &:focus,

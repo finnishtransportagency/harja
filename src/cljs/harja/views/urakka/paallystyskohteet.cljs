@@ -100,10 +100,9 @@
                                       (go
                                         (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
                                         (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
-                                          (log "SIJAINTI: " (pr-str sijainti))
                                           (when (= (get (grid/hae-muokkaustila g) id) rivi) ;; ettei rivi ole uudestaan muuttunut
-                                            (if-let [virhe (and (vkm/virhe? sijainti)
-                                                                "Virheellinen TR-osoite")]
+                                            (if-let [virhe (when-not (vkm/loytyi? sijainti)
+                                                             "Virheellinen TR-osoite")]
                                               (do (swap! tr-virheet assoc id virhe)
                                                   (doseq [kentta [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys]]
                                                     (grid/aseta-virhe! g id kentta "Tarkista tie")))

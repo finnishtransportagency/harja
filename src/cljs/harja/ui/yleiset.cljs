@@ -127,21 +127,33 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       (reset! max-korkeus-atom (- etaisyys-alareunaan 5))
       (reset! max-korkeus-atom etaisyys-ylareunaan))))
 
+
+(defn avautumissuunta-ja-korkeus-tyylit
+  [max-korkeus avautumissuunta]
+  (merge {:max-height (fmt/pikseleina max-korkeus)}
+         (when (= avautumissuunta :alas)
+           {:top    "calc(100% - 1px)"
+            :bottom "auto"})
+         (when (= avautumissuunta :ylos)
+           {:bottom "calc(100% - 1px)"
+            :top    "auto"})))
+
 (defn livi-pudotusvalikko [_ vaihtoehdot]
   (let [auki (atom false)
         avautumissuunta (atom :alas)
-        max-korkeus (atom 0)]
+        max-korkeus (atom 0)
+        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
+                                                  (maarita-pudotusvalikon-max-korkeus
+                                                    this max-korkeus avautumissuunta))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
+                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
       {:component-did-mount
        (fn [this]
-         (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta))}
-      (komp/dom-kuuntelija js/window
-                           EventType/SCROLL (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
-      #_(komp/dom-kuuntelija js/window ; FIXME Kaatuu jostain syystä
-                           EventType/RESIZE (fn [this _]
-                                              (maarita-pudotusvalikon-max-korkeus this max-korkeus avautumissuunta)))
+         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
+
       (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)]
@@ -199,13 +211,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-           [:ul.dropdown-menu.livi-alasvetolista {:style (merge {:max-height (fmt/pikseleina @max-korkeus)}
-                                                                (when (= @avautumissuunta :alas)
-                                                                  {:top "calc(100% - 1px)"
-                                                                   :bottom "auto"})
-                                                                (when (= @avautumissuunta :ylos)
-                                                                  {:bottom "calc(100% - 1px)"
-                                                                   :top "auto"}))}
+           [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
+                                                           @max-korkeus @avautumissuunta)}
             (doall
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
@@ -213,6 +220,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                  (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                      (reset! auki false)
                                                      nil))]))]])))))
+
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto

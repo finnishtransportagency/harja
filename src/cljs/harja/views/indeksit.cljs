@@ -15,10 +15,11 @@
 
 (defn indeksi-grid [indeksin-nimi]
   (let [indeksit @i/indeksit
-        rivit (map #(assoc (second %) :kannassa? true)
-                   (filter (fn [[[nimi _] _]]
-                             (= nimi indeksin-nimi)
-                             ) indeksit))
+        rivit (reverse (sort-by :vuosi
+                                (map #(assoc (second %) :kannassa? true)
+                                     (filter (fn [[[nimi _] _]]
+                                               (= nimi indeksin-nimi)
+                                               ) indeksit))))
         varatut-vuodet (into #{} (map :vuosi rivit))
         formatter #(fmt/desimaaliluku-opt % 1)]
     [grid/grid
@@ -26,6 +27,7 @@
       :tyhja        (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
       :tallenna     #(tallenna-indeksi indeksin-nimi rivit %)
       :tunniste     :vuosi
+      :piilota-toiminnot? true
       :voi-poistaa? #(not (:kannassa? %))}
      [{:otsikko       "Vuosi" :nimi :vuosi :tyyppi :valinta :leveys "17%"
        :valinta-arvo  identity

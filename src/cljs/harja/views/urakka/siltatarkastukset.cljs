@@ -86,6 +86,16 @@
         ": "
         tulos (when vika-korjattu " \u2192 A"))])])
 
+(defn jarjesta-sillat [sillat]
+  (sort-by
+    (fn [silta]
+      (let [siltatunnus (:siltatunnus silta)
+            siltatunnus-numerona (js/parseInt
+                                   (apply str
+                                          (filter #(#{\0,\1,\2,\3,\4,\5,\6,\7,\8,\9} %) siltatunnus)))]
+        siltatunnus-numerona))
+    sillat))
+
 (defn sillat []
   (let [urakan-sillat sillat/sillat]
     (komp/luo
@@ -130,8 +140,7 @@
                      (case listaus
                        :urakassa-korjatut [kohdesarake kohteet true]
                        [kohdesarake kohteet]))})]
-
-          @urakan-sillat]]))))
+          (jarjesta-sillat @urakan-sillat)]]))))
 
 
 
