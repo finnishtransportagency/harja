@@ -28,6 +28,15 @@
                                            :error body}))
                                 {:sisalto body :otsikot headers})))))
 
+(defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
+  (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))
+  (integraatioloki/kirjaa-epaonnistunut-integraatio
+    integraatioloki
+    "Tekstiviestin vastaanotossa tapahtui poikkeus"
+    (.toString poikkeus)
+    tapahtuma-id
+    nil))
+
 (defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
   (log/debug (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
   (let [url (:remote-addr kutsu)
@@ -38,19 +47,17 @@
         numero (get parametrit "source")
         viesti (get parametrit "text")]
     (try
-      (doseq [kuuntelija @kuuntelijat]
-        (kuuntelija numero viesti))
-      (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki nil nil tapahtuma-id nil)
-      {:status 200}
+      (let [vastaukset (mapv #(% numero viesti) @kuuntelijat)
+            vastausdata (if (empty? vastaukset) "" (str "text=" (string/join ", " vastaukset) ))
+            vastausviesti (integraatioloki/tee-rest-lokiviesti "ulos" url nil vastausdata nil nil)]
+        (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki vastausviesti nil tapahtuma-id nil)
+        {:status 200
+         :body   vastausdata
+         :headers {"Content-Type" "application/x-www-form-urlencoded"
+                   "Content-Length" (count vastausdata)}})
       (catch Exception e
-        (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." e))
-        (integraatioloki/kirjaa-epaonnistunut-integraatio
-          integraatioloki
-          "Tekstiviestin vastaanotossa tapahtui poikkeus"
-          (.toString e)
-          tapahtuma-id
-          nil)
-        {:status 500}))))
+          (kasittele-epaonnistunut-viestin-kasittely integraatioloki tapahtuma-id e)
+          {:status 500}))))
 
 (defrecord Labyrintti [url kayttajatunnus salasana kuuntelijat]
   component/Lifecycle

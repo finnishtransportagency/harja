@@ -21,8 +21,8 @@
             [ol.proj :as ol-proj]
 
             [ol.source.Vector] ;; Käytä ol.source.VectorTile kun ol päivittyy uudempaan kuin 3.10.0
-            
-            
+
+
             [ol.layer.Vector]
             [ol.Feature]
             [ol.geom.Polygon]
@@ -62,6 +62,10 @@ max-zoom 16)
 (def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
 oletus-zindex 4)
 
+(def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä turhaan liikaa"
+       :const true}
+nuolten-valimatka 3000)
+
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
@@ -78,8 +82,6 @@ oletus-zindex 4)
   (reset! hover-kasittelija funktio))
 (defn poista-hover-kasittelija! []
   (aseta-hover-kasittelija! nil))
-
-(def +karttaikonipolku+ "images/karttaikonit/")
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -471,142 +473,119 @@ oletus-zindex 4)
                       ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
                       :zIndex (or zindex 0)}))))
 
+(defn- tee-nuoli
+  [kasvava-zindex {:keys [img scale zindex anchor rotation]} [piste rotaatio]]
+  (ol.style.Style.
+    #js {:geometry piste
+         :zIndex   (or zindex (swap! kasvava-zindex inc))
+         :image    (ol.style.Icon.
+                     #js {:src            (str img)
+                          :scale          (or scale 1)
+                          :rotation       (or rotation rotaatio) ;; Rotaatio on laskettu, rotation annettu.
+                          :anchor         (or (clj->js anchor) #js [0.5 0.5])
+                          :rotateWithView false})}))
 
-(defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
-  (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
+;; Käytetään sisäisesti :viiva featurea rakentaessa
+(defn- tee-merkki
+  [kasvava-zindex tiedot [piste _]]
+  (tee-nuoli kasvava-zindex (merge {:anchor [0.5 1]} tiedot) [piste 0]))
 
-(defmethod luo-feature :arrow-line [{:keys [points width scale color arrow-image arrow-image-size] :as line}]
-  (assert (not (nil? points)) "Viivalla pitää olla pisteitä.")
+(defn taitokset-valimatkoin [valimatka taitokset]
+  (loop [pisteet-ja-rotaatiot []
+         viimeisin-sijanti [0 0]
+         [{:keys [sijainti rotaatio]} & taitokset] taitokset]
+    (if-not sijainti
+      ;; Kaikki käsitelty
+      pisteet-ja-rotaatiot
+
+      (let [[x1 y1] viimeisin-sijanti
+            [x2 y2] sijainti
+            dx (- x1 x2)
+            dy (- y1 y2)
+            dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
+
+        (if (or (> dist valimatka)
+                (empty? taitokset))
+          (recur (conj pisteet-ja-rotaatiot
+                       [(-> sijainti second clj->js ol.geom.Point.) rotaatio])
+                 sijainti
+                 taitokset)
+
+          (recur pisteet-ja-rotaatiot sijainti taitokset))))))
+
+;; Käytetään sisäisesti :viiva featurea rakentaessa
+(defn- tee-ikonille-tyyli
+  [zindex laske-taitokset-fn {:keys [tyyppi paikka img] :as ikoni}]
+  ;; Kokonaisuus koodattiin alunperin sillä oletuksella, että :viivalle piirrettäisiin aina jokin ikoni.
+  ;; Oletuksena pieni merkki reitin loppuun. Tuli kuitenkin todettua, että esim tarkastukset joissa ei ilmennyt
+  ;; mitään halutaan todnäk vaan piirtää hyvin haalealla harmaalla tms. Tällaisissa tapauksissa :img arvoa
+  ;; ei ole määritelty, eikä siis haluta piirtää mitään.
+  (when img
+    (assert (#{:nuoli :merkki} tyyppi) "Merkin tyypin pitää olla joko :nuoli tai :merkki")
+    (let [palauta-paikat (fn [paikka]
+                           (assert (#{:alku :loppu :taitokset} paikka)
+                                   "Merkin paikan pitää olla :alku, :loppu, :taitokset")
+                           (condp = paikka
+                             :alku
+                             [[(-> (laske-taitokset-fn) first :sijainti first clj->js ol.geom.Point.)
+                               (-> (laske-taitokset-fn) first :rotaatio)]]
+                             :loppu
+                             [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol.geom.Point.)
+                               (-> (laske-taitokset-fn) last :rotaatio)]]
+                             :taitokset
+                             (taitokset-valimatkoin nuolten-valimatka (butlast (laske-taitokset-fn)))))
+          pisteet-ja-rotaatiot (mapcat palauta-paikat (if (coll? paikka) paikka [paikka]))]
+      (condp = tyyppi
+        :nuoli (map #(tee-nuoli zindex ikoni %) pisteet-ja-rotaatiot)
+        :merkki (map #(tee-merkki zindex ikoni %) pisteet-ja-rotaatiot)))))
+
+;; Käytetään sisäisesti :viiva featurea rakentaessa
+(defn- tee-viivalle-tyyli
+  [kasvava-zindex {:keys [color width zindex dash cap join miter]}]
+  (ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color      (or color "black")
+                                                       :width      (or width 2)
+                                                       :lineDash   (or (clj->js dash) nil)
+                                                       :lineCap    (or cap "round")
+                                                       :lineJoin   (or join "round")
+                                                       :miterLimit (or miter 10)})
+                        :zindex (or zindex (swap! kasvava-zindex inc))}))
+
+(defmethod luo-feature :viiva
+  [{:keys [viivat points ikonit]}]
   (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        nuolet (atom [])]
+        kasvava-zindex (atom oletus-zindex)
+        taitokset (atom [])
+        laske-taitokset (fn []
+                          (if-not (empty? @taitokset)
+                            @taitokset
 
-    ;; Kerätään viivasegmenteille loppusijainnit ja viivan suunta
-    (.forEachSegment
-      (.getGeometry feature)
-      (fn [start end]
-        (swap! nuolet conj {:sijainti (js->clj end)
-                            :rotaatio (- (js/Math.atan2
-                                           (- (second end) (second start))
-                                           (- (first end) (first start))))})
-        ;; forEachSegmentin ajo lopetetaan jos palautetaan tosi arvo
-        false))
-    (doto feature
-      (.setStyle
-        (clj->js
-          (concat
-            [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                                  :width (or width 2)})
-                                   :zIndex oletus-zindex})]
-            (loop [nuolityylit []
-                   viimeisin-nuolen-sijainti [0 0]
-                   [{:keys [sijainti rotaatio]} & nuolet] @nuolet]
-              (if-not sijainti
-                ;; Kaikki käsitelty, palauta nuolet
-                nuolityylit
+                            (do
+                              (.forEachSegment
+                                (.getGeometry feature)
+                                (fn [start end]
+                                  (swap! taitokset conj {:sijainti [(js->clj start) (js->clj end)]
+                                                         :rotaatio (- (js/Math.atan2
+                                                                        (- (second end) (second start))
+                                                                        (- (first end) (first start))))})
+                                  false))
+                              @taitokset)))
+        tee-ikoni (partial tee-ikonille-tyyli kasvava-zindex laske-taitokset)
+        tee-viiva (partial tee-viivalle-tyyli kasvava-zindex)
+        tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
+    (doto feature (.setStyle (clj->js tyylit)))))
 
-                ;; Tee uusi nuoli, jos aiempaan on matkaa yli 3000 yksikköä
-                ;; tai jos tämä on viimeinen
-                (let [[x1 y1] viimeisin-nuolen-sijainti
-                      [x2 y2] sijainti
-                      dx (- x1 x2)
-                      dy (- y1 y2)
-                      dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
-
-                  (if (or (> dist 3000)
-                          (empty? nuolet))
-                    (recur (conj nuolityylit
-                                 (ol.style.Style.
-                                   #js {:geometry (ol.geom.Point. (clj->js sijainti))
-                                        :image    (ol.style.Icon. #js {:src            (or arrow-image
-                                                                                           "images/nuoli-punainen.png")
-                                                                       :opacity        1
-                                                                       :scale          (or scale 2.5)
-                                                                       :zIndex         6
-                                                                       :rotateWithView false
-                                                                       :rotation       rotaatio})}))
-                           sijainti
-                           nuolet)
-                    (recur nuolityylit
-                           viimeisin-nuolen-sijainti
-                           nuolet)))))))))))
-
-
-(defmethod luo-feature :tack-icon-line [{:keys [lines points img scale width zindex color] :as spec}]
-  (let [feature (if (not (nil? lines))
-                  (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (map :points lines)))})
-                  (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
-        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                                     :width (or width 2)})
-                                      :zIndex (or zindex oletus-zindex)})
-
-                (ol.style.Style.
-                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image    (ol.style.Icon. #js {:src     (str +karttaikonipolku+ img)
-                                                      :anchor  #js [0.5 1]
-                                                      :opacity 1
-                                                      :scale   (or scale 1)})
-                       :zIndex   ((fnil + oletus-zindex) zindex 1)})]] ;; Lisätään zindexiin 1, jos zindez=nil -> 4+1
-    (doto feature
-      (.setStyle (clj->js tyylit)))))
-
-(defn- tee-kaksiosainen-ikoni [coordinates pohja img rotation anchor]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-    (.setStyle (clj->js [(ol.style.Style.
-                           #js {:image  (ol.style.Icon.
-                                          #js {:src      (str +karttaikonipolku+ pohja)
-                                               :rotation (or rotation 0)
-                                               :opacity  1
-                                               :anchor   (if anchor
-                                                           (clj->js anchor)
-                                                           #js [0.5 0.5])})
-                                :zIndex oletus-zindex})
-
-                         (ol.style.Style.
-                           #js {:image  (ol.style.Icon.
-                                          #js {:src     (str +karttaikonipolku+ img)
-                                               :opacity 1
-                                               :anchor  (if anchor
-                                                          (clj->js anchor)
-                                                          #js [0.5 0.5])})
-                                :zIndex (inc oletus-zindex)})]))))
-
-(defmethod luo-feature :tack-icon [{:keys [coordinates img scale zindex]}]
+(defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
-                                #js {:src     (str +karttaikonipolku+ img)
-                                     :anchor  #js [0.5 1]
-                                     :opacity 1
-                                     :scale   (or scale 1)})
+                                #js {:src    (str img)
+                                     :anchor (or (clj->js anchor) #js [0.5 1])
+                                     :scale  (or scale 1)})
                       :zIndex (or zindex oletus-zindex)}))))
 
-(defmethod luo-feature :sticker-icon [{:keys [coordinates direction img]}]
-  (tee-kaksiosainen-ikoni coordinates "sticker-sininen.png" img direction [0.5 0.5]))
 
-(defmethod luo-feature :sticker-icon-line [{:keys [points img width zindex color direction] :as spec}]
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
-        tyylit [(ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                                     :width (or width 2)})
-                                      :zIndex (or zindex oletus-zindex)})
-
-                (ol.style.Style.
-                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image    (ol.style.Icon.
-                                   #js {:src      (dom/karttakuva (str +karttaikonipolku+ "sticker-sininen"))
-                                        :rotation (or direction 0)
-                                        :opacity  1
-                                        :anchor   #js [0.5 0.5]})
-                       :zIndex   oletus-zindex})
-
-                (ol.style.Style.
-                  #js {:geometry (ol.geom.Point. (clj->js (.getLastCoordinate (.getGeometry feature))))
-                       :image    (ol.style.Icon.
-                                   #js {:src     (str +karttaikonipolku+ img)
-                                        :opacity 1
-                                        :anchor  #js [0.5 0.5]})
-                       :zIndex   (inc oletus-zindex)})]]
-    (doto feature
-      (.setStyle (clj->js tyylit)))))
+(defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
+  (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
@@ -681,12 +660,14 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
                                                  (when-let [new-shape (try
                                                                         (luo-feature geom)
                                                                         (catch js/Error e
+                                                                          (log (pr-str e))
                                                                           (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
                                                                           nil))]
                                                    (aseta-feature-geometria! new-shape item)
                                                    (try
                                                      (.addFeature features new-shape)
                                                      (catch js/Error e
+                                                       (log (pr-str e))
                                                        (log (pr-str "problem in addFeature, avain: " avain "\ngeom: " geom "\nnew-shape: " new-shape))))
 
                                                    ;; Aseta geneerinen tyyli tyypeille, joiden luo-feature ei sitä tee

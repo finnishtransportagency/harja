@@ -44,6 +44,9 @@
       (when-not (ehto-fn)
         (recur max-ts)))))
 
+(defn odota [ehto-fn viesti max-aika]
+  (odota-ehdon-tayttymista ehto-fn viesti max-aika))
+
 (defn luo-testitietokanta []
   (tietokanta/luo-tietokanta testitietokanta))
 
