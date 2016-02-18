@@ -78,13 +78,13 @@
 ;;;;;;;;;;
 
 (def ikonien-varit
-  {;; Isommat, "tilalliset" sijainti-ikonit
+  {;; Tilallisten sijainti-ikonien sisempi väri
    :tiedotus              "syaani"
    :kysely                "magenta"
    :toimenpidepyynto      "oranssi"
    :turvallisuuspoikkeama "punainen"
 
-   ;; tilaa osoittavat värit (sijaint-ikonit)
+   ;; tilaa osoittavat värit (sijaint-ikonin ulompi väri)
    :ilmoitus-lopetettu "harmaa"
    :ilmoitus-kaynnissa "musta"
    :ilmoitus-auki "punainen"
@@ -93,7 +93,7 @@
    :kt-avoimia "punainen"
    :kt-valmis "vihrea"
 
-   ;; Pienemmät ikonit
+   ;; Pienemmät ikonit (pinnit)
    :laatupoikkeama        "tummansininen"
    :tarkastus             "keltainen"
    :varustetoteuma        "violetti"
