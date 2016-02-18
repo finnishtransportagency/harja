@@ -58,14 +58,18 @@
     (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus)))
   (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
 
+(declare kasittele-istunto-vanhentunut)
 
 (defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi?]
   (let [chan (chan)
         cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
-               (if (and (virhe? vastaus) (not paasta-virhe-lapi?))
+               (cond
+                 (= (:status vastaus) 302)
+                 (kasittele-istunto-vanhentunut)
+                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (kasittele-palvelinvirhe palvelu vastaus)
-
+                 :default
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
     (go
@@ -91,8 +95,6 @@ Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori mu
   ([service payload transducer] (post! service payload transducer false))
   ([service payload transducer paasta-virhe-lapi?]
    (kysely service :post payload transducer paasta-virhe-lapi?)))
-
-
 
 (defn get!
   "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
@@ -163,12 +165,14 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (def yhteys-palautui-hetki-sitten (atom false))
 (def yhteys-katkennut? (atom false))
+(def istunto-vanhentunut? (atom false))
 (def pingaus-kaynnissa? (atom false))
 (def normaali-pingausvali-millisekunteina (* 1000 20))
 (def yhteys-katkennut-pingausvali-millisekunteina 2000)
 (def nykyinen-pingausvali-millisekunteina (atom normaali-pingausvali-millisekunteina))
 
 (defn- kasittele-onnistunut-pingaus []
+  (reset! istunto-vanhentunut? false)
   (when (true? @yhteys-katkennut?)
     (reset! yhteys-palautui-hetki-sitten true)
     (reset! nykyinen-pingausvali-millisekunteina
@@ -182,6 +186,9 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
           yhteys-katkennut-pingausvali-millisekunteina)
   (reset! yhteys-palautui-hetki-sitten false))
 
+(defn- kasittele-istunto-vanhentunut []
+  (reset! istunto-vanhentunut? true))
+
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
   (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil)))
 
@@ -191,15 +198,15 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (lisaa-kuuntelija-selaimen-verkkotilalle)
     (reset! pingaus-kaynnissa? true)
     (go-loop []
-       (when @yhteys-palautui-hetki-sitten
-         (<! (timeout 5000))
-         (reset! yhteys-palautui-hetki-sitten false))
-       (<! (timeout @nykyinen-pingausvali-millisekunteina))
-       (let [pingauskanava (pingaa-palvelinta)
-             sallittu-viive (timeout 10000)]
-         (alt!
-           pingauskanava ([vastaus] (when (= vastaus :pong)
-                                      (kasittele-onnistunut-pingaus)))
-           sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
-         (recur)))))
+             (when @yhteys-palautui-hetki-sitten
+               (<! (timeout 5000))
+               (reset! yhteys-palautui-hetki-sitten false))
+      (<! (timeout @nykyinen-pingausvali-millisekunteina))
+      (let [pingauskanava (pingaa-palvelinta)
+            sallittu-viive (timeout 10000)]
+        (alt!
+          pingauskanava ([vastaus] (when (= vastaus :pong)
+                                     (kasittele-onnistunut-pingaus)))
+          sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
+        (recur)))))
 
