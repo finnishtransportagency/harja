@@ -4,7 +4,8 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.pvm :as pvm]
             [cljs-time.coerce :as tc]
-            [harja.ui.grid :as grid])
+            [harja.ui.grid :as grid]
+            [harja.ui.kartta.varit.puhtaat :as puhtaat])
   (:require-macros [harja.views.about :refer [lue-gitlog]]))
 
 (defn harja-info []
@@ -111,6 +112,15 @@
    [:div.livicon-wifi " livicon-wifi"]
    [:div.livicon-wrench " livicon-wrench"]])
 
+(defn varit [varit]
+  [:div
+   (for [v varit]
+     ^{:key (str "varilaatikko_" v)}
+     [:div.kartan-ikoni-vari {:style {:background-color v
+                                      :width            "20px"
+                                      :height           "20px"
+                                      :display "inline-block"}}])])
+
 (defn about []
   [:span
    [:div.section [:label "Yleistä"]
@@ -123,4 +133,6 @@
      [:li [:a {:href "https://reagent-project.github.io/"} "Reagent"]]]]
    [:div.section [:label "Harjan ikonit"]
     [ikonit]]
+   [:div.section [:label "Harjan värit (puhtaat)"]
+    [varit puhtaat/kaikki]]
    [gitlog]])
