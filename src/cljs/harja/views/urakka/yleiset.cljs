@@ -145,15 +145,13 @@
 
      [grid/grid
       {:otsikko "Urakkaan liitetyt käyttäjät"
-       :tyhja "Ei urakkaan liitettyjä käyttäjiä."
-       :tunniste (or :sahkoposti #((juxt :etunimi :sukunimi) %))}
+       :tyhja "Ei urakkaan liitettyjä käyttäjiä."}
       
       [{:otsikko "Rooli" :nimi :rooli :fmt roolit/rooli->kuvaus :tyyppi :string :leveys "15%"}
        {:otsikko "Organisaatio" :nimi :org :hae (comp :nimi :organisaatio) :tyyppi :string :leveys "15%"}
        {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string :leveys "25%"}
        {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
-
       @kayttajat]
        
      [grid/grid 
