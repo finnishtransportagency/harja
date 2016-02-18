@@ -6,7 +6,7 @@
             [harja.asiakas.test-runner :as test-runner]))
 
 (defn alusta
-  "Alusta tämän ympäristön vaatimat asiat, Lively reload."
+  "Alusta tämän ympäristön vaatimat asiat, figwheel reload."
   [options]
   (.log js/console "Alustetaan koodin uudelleenlataus")
   (when (.-harja_testmode js/window)
