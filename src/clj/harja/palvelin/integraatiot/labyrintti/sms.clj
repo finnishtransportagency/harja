@@ -23,7 +23,7 @@
       (http/laheta-post-kutsu integraatioloki "laheta" "labyrintti" url otsikot parametrit kayttajatunnus salasana nil
                               (fn [body headers]
                                 (log/debug (format "Labyrintin SMS Gateway vastasi: sisältö: %s, otsikot: %s" body headers))
-                                (when (.contains (string/lower-case body) "error")
+                                (when (and body (.contains (string/lower-case body) "error"))
                                   (throw+ {:type  :sms-lahetys-epaonnistui
                                            :error body}))
                                 {:sisalto body :otsikot headers})))))

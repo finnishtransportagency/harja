@@ -45,7 +45,7 @@
              (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-kuittauksen-vastaanotto-tekstiviestilla
   (tuo-ilmoitus)
@@ -96,16 +96,20 @@
         paivystaja (hae-paivystaja)
         paivystaja {:id (first paivystaja) :matkapuhelin (second paivystaja)}
         ilmoitus (first (hae-ilmoitus))
-        ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}]
+        ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}
+        paivystajaviestien-maara (fn []
+                                   (count
+                                    (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
+                                               (:id paivystaja)
+                                               (:id ilmoitus)))))]
     (with-fake-http
       [{:url +labyrintti-url+ :method :post} fake-vastaus]
 
-      (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
-
-      (let [paivystajaviestit (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
-                                         (:id paivystaja)
-                                         (:id ilmoitus)))]
-        (is (= 1 (count paivystajaviestit))))
+      (let [viestien-maara-ennen  (paivystajaviestien-maara)]
+        
+        (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
+        
+        (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
 
       (poista-paivystajatekstiviestit)
       (poista-ilmoitus))))
