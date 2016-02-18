@@ -53,6 +53,8 @@
                                     (reset! tiedot/valittu-paivakohtainen-tehtava %))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
        :mahdollista-rivin-valinta true
+       :max-rivimaara 500
+       :max-rivimaaran-ylitys-viesti "Toteumia löytyi yli 500. Tarkenna hakurajausta."
        :tunniste (juxt :pvm :toimenpidekoodi)
        :vetolaatikot (into {}
                            (map (juxt
@@ -66,9 +68,7 @@
        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
-      (take 500 toteumat)]
-     (when (> (count toteumat) 500)
-       [:div.alert-warning "Toteumia löytyi yli 500. Tarkenna hakurajausta."])]))
+      toteumat]]))
 
 (defn tee-valinnat []
   [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @navigaatio/valittu-urakka]

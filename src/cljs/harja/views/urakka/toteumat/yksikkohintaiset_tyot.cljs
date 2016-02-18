@@ -283,6 +283,8 @@
                              (reset! toteutuneet-tehtavat (:tehtavat vastaus))
                              (reset! tehtavien-summat (:tehtavien-summat vastaus))))
          :voi-lisata? false
+         :max-rivimaara 300
+         :max-rivimaaran-ylitys-viesti "Liikaa hakutuloksia, rajaa hakua"
          :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä"
           :nimi :alkanut
@@ -314,10 +316,10 @@
                          [:button.nappi-toissijainen.nappi-grid
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
-        (when @toteutuneet-tehtavat
+        (let [toteutuneet-tehtavat @toteutuneet-tehtavat]
           (sort
-            (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka))) 
-            @toteutuneet-tehtavat))]])))
+           (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka))) 
+           toteutuneet-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"
