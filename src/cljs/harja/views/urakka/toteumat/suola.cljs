@@ -11,7 +11,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.loki :refer [log logt]]
             [harja.atom :refer [paivita!]]
-            [cljs.core.async :refer [<! >!]])
+            [cljs.core.async :refer [<! >!]]
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -50,7 +51,7 @@
            muokattava? (comp not :koneellinen)
            listaus  (reverse (sort-by :alkanut @toteumat))]
        [:div.suolatoteumat
-
+        [kartta/kartan-paikka]
         [:span.valinnat
          [urakka-valinnat/urakan-sopimus ur]
          [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
