@@ -52,7 +52,8 @@
  :tloik                {:ilmoitusviestijono     "Harja.T-LOIKToHarja.Msg"
                         :ilmoituskuittausjono   "Harja.T-LOIKToHarja.Ack"
                         :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
-                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}
+                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+                        :google-static-maps-key "AIzaSyAHMEbpTzPW-H-qxvlUCH1rh8iKZCI6SBM"}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
                     :suora? true

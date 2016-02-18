@@ -55,5 +55,5 @@
       ;; Tarkista että viesti lähtee päivystäjälle
       (is (= (:otsikko saapunut) "#[4/123456789] Toimenpide­pyyntö"))
 
-      
+      ;; Lähetä 
       )))

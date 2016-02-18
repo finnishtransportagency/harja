@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.geo :as geo]))
 
 
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
@@ -39,19 +40,23 @@
 (defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi]}]
   (str "#[" urakka-id "/" ilmoitus-id "] " (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))))
 
-(defn- html-nappi
-  "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
-resursseja liitää sähköpostiin mukaan luotettavasti."
-  [vastausosoite napin-teksti subject body]
+(defn- html-nappi [napin-teksti linkki]
   [:table {:width "100%" :border "0" :cellspacing "0" :cellpadding "0"}
    [:tr
     [:td
      [:table {:border "0" :cellspacing "0" :cellpadding "0"}
       [:tr
        [:td {:bgcolor "#EB7035" :style "padding: 12px; border-radius: 3px;" :align "center"}
-        [:a {:href (str "mailto:" vastausosoite "?subject=" subject "&body=" body)
+        [:a {:href linkki
              :style "font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;"}
          napin-teksti]]]]]]])
+
+(defn- html-mailto-nappi
+  "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
+resursseja liitää sähköpostiin mukaan luotettavasti."
+  [vastausosoite napin-teksti subject body]
+  (html-nappi napin-teksti
+              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
 (defn- viesti [vastausosoite otsikko ilmoitus]
   (html
@@ -66,9 +71,14 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
         [:td [:b kentta]]
         [:td arvo]])]
     [:blockquote (:pitkaselite ilmoitus)]
+    (when-let [sijainti (:sijainti ilmoitus)]
+      (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
+        [:img {:src (format "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s"
+                            lat lon
+                            "AIzaSyAHMEbpTzPW-H-qxvlUCH1rh8iKZCI6SBM")}]))
     (for [teksti (map first kuittaustyypit)]
       [:div {:style "padding-top: 10px;"}
-       (html-nappi vastausosoite teksti otsikko (str "[" teksti "]"))])]))
+       (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "]"))])]))
 
 (defn otsikko-ja-viesti [vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)
