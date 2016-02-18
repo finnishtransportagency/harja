@@ -261,7 +261,7 @@
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
-        aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
+        aikavali [(first @u/valittu-aikavali) (second @u/valittu-aikavali)]
         toteutuneet-tehtavat (atom nil)]
     (go (reset! toteutuneet-tehtavat
                 (<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali
@@ -325,7 +325,7 @@
   (komp/luo
       (fn []
         [:div
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+         [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
          [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
          [:button.nappi-ensisijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
