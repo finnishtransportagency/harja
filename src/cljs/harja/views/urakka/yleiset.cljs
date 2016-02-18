@@ -207,7 +207,7 @@
         :tyyppi :string :leveys "20%"
         :validoi [[:ei-tyhja  "Anna päivystäjän nimi"]]}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
-        :tyyppi :valinta
+        :tyyppi :valinta :muokattava? (constantly false)
         :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
        
