@@ -100,13 +100,12 @@
     (with-fake-http
       [{:url +labyrintti-url+ :method :post} fake-vastaus]
 
-      (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:sms jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
+      (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
 
       (let [paivystajaviestit (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
                                          (:id paivystaja)
                                          (:id ilmoitus)))]
-        (is (= 1 (count paivystajaviestit)))
-        (println paivystajaviestit))
+        (is (= 1 (count paivystajaviestit))))
 
       (poista-paivystajatekstiviestit)
       (poista-ilmoitus))))
