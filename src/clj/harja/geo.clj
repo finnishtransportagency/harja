@@ -118,10 +118,10 @@
 
 (def wgs84 org.geotools.referencing.crs.DefaultGeographicCRS/WGS84) ; (org.geotools.referencing.CRS/parseWKT osm-wkt))
 (def euref (org.geotools.referencing.CRS/parseWKT euref-wkt))
-(def euref->wgs84-transform (org.geotools.referencing.CRS/findMathTransform euref osm true))
+(def euref->wgs84-transform (org.geotools.referencing.CRS/findMathTransform euref wgs84 true))
 
 (defn euref->wgs84
-  "Muunnetaan WGS84 koordinaatistoon, tätä ei tarvita enää kun meillä on MML kartat"
+  "Muunnetaan WGS84 (GPS) koordinaatistoon"
   [coordinate]
   (if (vector? coordinate)
     (let [c (org.geotools.geometry.jts.JTS/transform

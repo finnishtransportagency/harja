@@ -20,17 +20,15 @@
 (defn tee-lokittaja [this integraatio]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" integraatio))
 
-(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja labyrintti sonja-sahkoposti klusterin-tapahtumat] :as this}
-                                    ilmoitusviestijono ilmoituskuittausjono]
+(defn tee-ilmoitusviestikuuntelija [{:keys [db sonja klusterin-tapahtumat] :as this}
+                                    ilmoitusviestijono ilmoituskuittausjono ilmoitusasetukset]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
     (sonja/kuuntele
      sonja ilmoitusviestijono
      (partial ilmoitukset/vastaanota-ilmoitus
               sonja (tee-lokittaja this "ilmoituksen-kirjaus")
-              labyrintti sonja-sahkoposti
-              klusterin-tapahtumat db
-              ilmoituskuittausjono))))
+              ilmoitusasetukset klusterin-tapahtumat db ilmoituskuittausjono))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
@@ -58,13 +56,16 @@
                                       (:lahettaja viesti)
                                       (:otsikko vastaus) (:sisalto vastaus))))))))
 
-(defrecord Tloik [jonot]
+(defrecord Tloik [asetukset]
   component/Lifecycle
-  (start [this]
-    (rekisteroi-kuittauskuuntelijat this jonot)
-    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono]} jonot]
+  (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
+    (rekisteroi-kuittauskuuntelijat this asetukset)
+    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono]} asetukset
+          ilmoitusasetukset (merge (:ilmoitukset asetukset)
+                                   {:sms labyrintti
+                                    :email sonja-sahkoposti})]
       (assoc this
-        :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono)
+        :sonja-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija this ilmoitusviestijono ilmoituskuittausjono ilmoitusasetukset)
         :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija this toimenpidekuittausjono))))
   (stop [this]
     (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
@@ -75,5 +76,5 @@
       (apply dissoc this kuuntelijat)))
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
-    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono jonot))]
+    (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset))]
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id))))
