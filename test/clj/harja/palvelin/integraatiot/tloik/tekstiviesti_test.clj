@@ -72,16 +72,14 @@
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V2"))
         "Tuntematon viestinumero käsitellään oikein.")
 
-    (let [viestit (atom [])]
-      (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(swap! viestit conj (.getText %)))
+    (let [viesti (atom nil)]
+      (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
 
       (is (= "Viestisi käsiteltiin onnistuneesti. Kiitos!"
              (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V1 Asia selvä."))
           "Onnistunut viestin käsittely")
-
-      (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
-
-      (let [xml (first @viestit)
+      
+      (let [xml (odota-arvo viesti)
             data (xml/lue xml)]
         (is (= "123456789" (z/xml1-> data :ilmoitusId z/text)) "Kuittaus on tehty oikeaan viestiin.")
         (is (= "vastaanotto" (z/xml1-> data :tyyppi z/text)) "Kuittaus on tehty oikeaan viestiin.")
