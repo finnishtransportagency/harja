@@ -374,6 +374,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
   [kayttaja & omat]
   `(fn [testit#]
+     (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (alter-var-root #'jarjestelma
                      (fn [_#]
