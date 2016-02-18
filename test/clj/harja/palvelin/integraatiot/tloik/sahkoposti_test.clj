@@ -42,6 +42,15 @@
 (deftest virheellisen-viestin-lukeminen
   (is (= '(:virhe) (keys (sut/lue-kuittausviesti "#[12/3333 asdasd" "eipä mitään")))))
 
+(defn sahkoposti-viesti [id lahettaja vastaanottaja otsikko sisalto]
+  (-> "resources/xsd/sahkoposti/esimerkit/sahkoposti_template.xml"
+      slurp
+      (.replace "__ID__" id)
+      (.replace "__LAHETTAJA__" lahettaja)
+      (.replace "__VASTAANOTTAJA__" vastaanottaja)
+      (.replace "__OTSIKKO__" otsikko)
+      (.replace "__SISALTO__" sisalto)))
+
 (deftest tarkista-kuisttauksen-vastaanotto-sahkopostilla
   (let [{:keys [db sonja]} jarjestelma
         ilmoitusviesti (atom nil)]
@@ -51,9 +60,17 @@
     (let [saapunut (-> (odota-arvo ilmoitusviesti)
                        .getText
                        sahkoposti-sanomat/lue-sahkoposti)
-          vastaanottaja (:vastaanottaja saapunut)]
+          vastaanottaja (:vastaanottaja saapunut)
+          viesti (str (java.util.UUID/randomUUID))]
       ;; Tarkista että viesti lähtee päivystäjälle
       (is (= (:otsikko saapunut) "#[4/123456789] Toimenpide­pyyntö"))
 
-      ;; Lähetä 
-      )))
+      ;; Lähetä aloitettu kuittaus
+      (sonja/laheta (:sonja jarjestelma) "email-to-harja"
+                    (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@liikennevirasto.fi"
+                                       (:otsikko saapunut)
+                                       (str  "[Vastaanotettu] " viesti)))
+
+      ;; Odotetaan, että kuittaus on tallentunut
+      (odota #(= 1 (ffirst (q (str "SELECT COUNT(*) FROM ilmoitustoimenpide WHERE vapaateksti LIKE '%" viesti "%'"))))
+             "Kuittaus on tallentunut" 2000))))
