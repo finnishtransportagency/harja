@@ -72,6 +72,38 @@
   [& varit]
   (apply monivarinen-viiva-leveyksilla (interleave varit (range 0 100 2))))
 
+;;;;;;;;;;
+;;; VÄRIMÄÄRITTELYT
+;;; Kaikki värit pitäisi olla määriteltynä näillä muutamilla riveillä.
+;;;;;;;;;;
+
+(def ikonien-varit
+  {;; Isommat, "tilalliset" sijainti-ikonit
+   :tiedotus              "syaani"
+   :kysely                "magenta"
+   :toimenpidepyynto      "oranssi"
+   :turvallisuuspoikkeama "punainen"
+
+   ;; tilaa osoittavat värit (sijaint-ikonit)
+   :ilmoitus-lopetettu "harmaa"
+   :ilmoitus-kaynnissa "musta"
+   :ilmoitus-auki "punainen"
+
+   :kt-tyhja "oranssi"
+   :kt-avoimia "punainen"
+   :kt-valmis "vihrea"
+
+   ;; Pienemmät ikonit
+   :laatupoikkeama        "tummansininen"
+   :tarkastus             "keltainen"
+   :varustetoteuma        "violetti"
+   :yllapito              "vihrea"})
+
+(def viivojen-varit
+  {:yllapito-aloitettu puhtaat/keltainen
+   :yllapito-valmis puhtaat/vihrea
+   :yllapito-muu puhtaat/sininen})
+
 
 (def auraus-tasaus-ja-kolmas [(monivarinen-viiva puhtaat/sininen puhtaat/oranssi puhtaat/violetti) "oranssi"])
 (def auraus-ja-hiekoitus [])
@@ -119,6 +151,9 @@
    #{"LIIKENNEMERKKIEN PUHDISTUS"}                              []
    #{"L- JA P-ALUEIDEN PUHDISTUS"}                              []
    #{"SILTOJEN PUHDISTUS"}                                      []})
+;;;;;;;;;;
+;;; Värimäärittelyt loppuu
+;;;;;;;;;;
 
 ;; Toteuman ja työkoneen käyttämät värit määritellään tehtavien-varit mäpissä.
 (defn toteuman-ikoni [vari]
@@ -135,21 +170,6 @@
    :img      (nuoli-ikoni nuolen-vari)
    :rotation rotaatio})
 
-;; Olisi kiva määritellä tässä suoraan esim (pinni-ikoni "tummansininen), mutta tilallisten sijainti-ikonien
-;; rakentamiseen tarvii logiikkaa, jota tässä ei ole saatavilla
-(def ikonien-varit
-  {;; Isommat, "tilalliset" sijainti-ikonit
-   :tiedotus              "syaani"
-   :kysely                "magenta"
-   :toimenpidepyynto      "oranssi"
-   :turvallisuuspoikkeama "punainen"
-
-   ;; Pienemmät ikonit
-   :laatupoikkeama        "tummansininen"
-   :tarkastus             "keltainen"
-   :varustetoteuma        "violetti"
-   :yllapito              "vihrea"})
-
 (defn yllapidon-ikoni []
   {:paikka :loppu
    :tyyppi :merkki
@@ -157,18 +177,18 @@
 
 (defn yllapidon-viiva [valittu? avoin? tila]
   {:color (case (keyword (clojure.string/lower-case tila))
-            :aloitettu puhtaat/keltainen
-            :valmis puhtaat/vihrea
-            puhtaat/sininen)
+            :aloitettu (:yllapito-aloitettu viivojen-varit)
+            :valmis (:yllapito-valmis viivojen-varit)
+            (:yllapito-muu viivojen-varit))
    :width (if avoin?
             (if valittu? (+ 2 +valitun-leveys+) (+ 2 +normaali-leveys+))
             (if valittu? +valitun-leveys+ +normaali-leveys+))})
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
   (sijainti-ikoni (case kt-tila
-                    :tyhja "oranssi"
-                    :avoimia "punainen"
-                    :valmis "vihrea") (:turvallisuuspoikkeama ikonien-varit)))
+                    :tyhja (:kt-tyhja ikonien-varit)
+                    :avoimia (:kt-avoimia ikonien-varit)
+                    :valmis (:kt-valmis ikonien-varit)) (:turvallisuuspoikkeama ikonien-varit)))
 
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
@@ -186,15 +206,15 @@
 
 (defn toimenpidepyynnon-ikoni [lopetettu? vastaanotettu?]
   (cond
-    lopetettu? (sijainti-ikoni "harmaa" (:toimenpidepyynto ikonien-varit))
+    lopetettu? (sijainti-ikoni (:ilmoitus-lopetettu ikonien-varit) (:toimenpidepyynto ikonien-varit))
     vastaanotettu? (sijainti-ikoni (:toimenpidepyynto ikonien-varit))
-    :else (sijainti-ikoni "punainen" (:toimenpidepyynto ikonien-varit))))
+    :else (sijainti-ikoni (:ilmoitus-auki ikonien-varit) (:toimenpidepyynto ikonien-varit))))
 
 (defn kyselyn-ikoni [lopetettu? aloitettu?]
   (cond
-    lopetettu? (sijainti-ikoni "harmaa" (:kysely ikonien-varit))
-    aloitettu? (sijainti-ikoni (:kysely ikonien-varit))
-    :else (sijainti-ikoni "punainen" (:kysely ikonien-varit))))
+    lopetettu? (sijainti-ikoni (:ilmoitus-lopetettu ikonien-varit) (:kysely ikonien-varit))
+    aloitettu? (sijainti-ikoni (:ilmoitus-kaynnissa ikonien-varit) (:kysely ikonien-varit))
+    :else (sijainti-ikoni (:ilmoitus-auki ikonien-varit) (:kysely ikonien-varit))))
 
 (defn tiedotuksen-ikoni []
   (sijainti-ikoni (:tiedotus ikonien-varit)))
