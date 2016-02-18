@@ -857,7 +857,8 @@ Optiot on mappi optioita:
              (aseta-grid ohj ohjaus))
 
            [:div.panel.panel-default.livi-grid.livi-muokkaus-grid
-            {:class (clojure.string/join " " luokat)}
+            {:class (str (str/join " " luokat)
+                         (if voi-muokata? " nappeja"))}
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])
              (when (not= false voi-muokata?)
