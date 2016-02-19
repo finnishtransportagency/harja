@@ -35,6 +35,7 @@
   (cond
     (empty? viivat) [{}]
     (map? viivat) [viivat]
+    (string? viivat) [{:color viivat}]
     :else viivat))
 
 (defn- maarittele-piste
