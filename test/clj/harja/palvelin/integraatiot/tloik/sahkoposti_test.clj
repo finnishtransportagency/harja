@@ -1,7 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.sahkoposti-test
-  (:require [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.tloik.sahkoposti :as sut]
-            [clojure.test :as t :refer [deftest is use-fixtures]]
+  (:require [harja.palvelin.integraatiot.tloik.sahkoposti :as sut]
+            [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.sms :refer [feikki-labyrintti]]
             [harja.jms :refer [feikki-sonja]]
@@ -9,25 +8,25 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer [luo-tloik-komponentti tuo-ilmoitus] :as tloik-apurit]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sahkoposti-sanomat]
-            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]))
+            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sahkoposti-sanomat])
+  (:import (java.util UUID)))
 
 (def kayttaja "jvh")
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
-   kayttaja
-   :sonja (feikki-sonja)
-   :sonja-sahkoposti (component/using
-                      (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                 {:sahkoposti-sisaan-jono "email-to-harja"
-                                                  :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                  :sahkoposti-ulos-jono "harja-to-email"
-                                                  :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                      [:sonja :db :integraatioloki])
-   :labyrintti (feikki-labyrintti)
-   :tloik (component/using
-           (luo-tloik-komponentti)
-           [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])))
+    kayttaja
+    :sonja (feikki-sonja)
+    :sonja-sahkoposti (component/using
+                        (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                   {:sahkoposti-sisaan-jono         "email-to-harja"
+                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                    :sahkoposti-ulos-jono           "harja-to-email"
+                                                    :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                        [:sonja :db :integraatioloki])
+    :labyrintti (feikki-labyrintti)
+    :tloik (component/using
+             (luo-tloik-komponentti)
+             [:db :sonja :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -61,7 +60,7 @@
                        .getText
                        sahkoposti-sanomat/lue-sahkoposti)
           vastaanottaja (:vastaanottaja saapunut)
-          viesti (str (java.util.UUID/randomUUID))]
+          viesti (str (UUID/randomUUID))]
       ;; Tarkista että viesti lähtee päivystäjälle
       (is (= (:otsikko saapunut) "#[4/123456789] Toimenpide­pyyntö"))
 
@@ -69,7 +68,7 @@
       (sonja/laheta (:sonja jarjestelma) "email-to-harja"
                     (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@liikennevirasto.fi"
                                        (:otsikko saapunut)
-                                       (str  "[Vastaanotettu] " viesti)))
+                                       (str "[Vastaanotettu] " viesti)))
 
       ;; Odotetaan, että kuittaus on tallentunut
       (odota #(= 1 (ffirst (q (str "SELECT COUNT(*) FROM ilmoitustoimenpide WHERE vapaateksti LIKE '%" viesti "%'"))))
