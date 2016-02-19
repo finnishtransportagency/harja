@@ -35,8 +35,6 @@
                                                 ]}
                         }
 
- ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
- ;; tarvii SSH-tunnelin testi-Sonjaan!!
  :sonja
                        {:url      "tcp://localhost:61616"
                         :kayttaja "harja"
@@ -52,7 +50,8 @@
  :tloik                {:ilmoitusviestijono     "Harja.T-LOIKToHarja.Msg"
                         :ilmoituskuittausjono   "Harja.T-LOIKToHarja.Ack"
                         :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
-                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}
+                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+                        :ilmoitukset {:google-static-maps-key "AIzaSyAHMEbpTzPW-H-qxvlUCH1rh8iKZCI6SBM"}}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
                     :suora? true
@@ -61,7 +60,7 @@
                             :sahkoposti-sisaan-kuittausjono "Harja.EmailToHarja.Ack"
                             :sahkoposti-ulos-jono "Harja.HarjaToEmail.Msg"
                             :sahkoposti-ulos-kuittausjono "Harja.HarjaToEmail.Ack"}}
- 
+
  :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
 
  :integraatiot         {:paivittainen-lokin-puhdistusaika nil}
@@ -86,7 +85,7 @@
                         :soratien-hoitoluokkien-alk-osoite         "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_TIIRA_KP_SORATIELUOKKA.shz"
                         :soratien-hoitoluokkien-alk-tuontikohde    "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
 
-                        :siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
+                        :siltojen-shapefile                        "file://shp/Sillat/PTV_silta.shp"
                         :siltojen-alk-osoite                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
                         :siltojen-alk-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
 
@@ -98,8 +97,10 @@
                         :ely-alueiden-alk-osoite                   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
                         :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
                         }
- :labyrintti           {:url            "http://localhost:28080/sendsms"
-                        :kayttajatunnus "solita-2"
-                        :salasana       "ne8aCrasesev"}
- 
+
+ ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
+ ;; :labyrintti           {:url            "http://localhost:28080/sendsms"
+ ;;                       :kayttajatunnus "solita-2"
+ ;;                       :salasana       "ne8aCrasesev"}
+
  }

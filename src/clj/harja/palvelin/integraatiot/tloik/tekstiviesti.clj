@@ -20,7 +20,7 @@
        "L%s = lopetettu\n\n"
        "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
 
-(def +onnistunut-viesti+ "Viestisi käsiteltiin onnistuneesti. Kiitos!")
+(def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
 (def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu.")
 (def +tuntematon-kayttaja-viesti+ "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla.")
 (def +virheellinen-toimenpide-viesti+ "Viestiäsi ei voitu käsitellä. Antamasi kuittaus ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla.")

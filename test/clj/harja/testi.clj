@@ -47,6 +47,14 @@
 (defn odota [ehto-fn viesti max-aika]
   (odota-ehdon-tayttymista ehto-fn viesti max-aika))
 
+(defn odota-arvo
+  "Odottaa, että annetuun atomiin on tullut arvo. Palauttaa arvon.
+Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
+  ([atom] (odota-arvo atom 5000))
+  ([atom max-aika]
+   (odota #(not (nil? @atom)) "Atomiin on tullut ei-nil arvo" max-aika)
+   @atom))
+
 (defn luo-testitietokanta []
   (tietokanta/luo-tietokanta testitietokanta))
 
@@ -379,6 +387,7 @@
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
   [kayttaja & omat]
   `(fn [testit#]
+     (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (alter-var-root #'jarjestelma
                      (fn [_#]

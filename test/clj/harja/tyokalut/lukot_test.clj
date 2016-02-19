@@ -17,7 +17,7 @@
   (let [db (luo-testitietokanta)
         muuttuja (atom nil)
         toiminto-fn (fn [] (reset! muuttuja true))]
-    (is (lukot/aja-lukon-kanssa db +testilukko+ toiminto-fn) "Lukko saatiin asetettua oikein")
+    (is (lukot/yrita-ajaa-lukon-kanssa db +testilukko+ toiminto-fn) "Lukko saatiin asetettua oikein")
     (is @muuttuja "Toiminto ajettiin oikein")
     (tarkista-lukon-avaus)))
 
@@ -26,7 +26,7 @@
         muuttuja (atom nil)
         toiminto-fn (fn [] (reset! muuttuja true))]
     (is (qk/aseta-lukko? db +testilukko+ nil) "Lukon asettaminen onnistui")
-    (is (false? (lukot/aja-lukon-kanssa db +testilukko+ toiminto-fn)) "Lukkoa ei saatu asetettua")
+    (is (false? (lukot/yrita-ajaa-lukon-kanssa db +testilukko+ toiminto-fn)) "Lukkoa ei saatu asetettua")
     (is (nil? @muuttuja) "Toimintoa ei ajettu")
     (is (qk/avaa-lukko? db +testilukko+) "Lukon avaaminen onnistui")))
 

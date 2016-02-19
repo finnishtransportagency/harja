@@ -1,0 +1,9 @@
+<sahkoposti:sahkoposti xmlns:sahkoposti="http://www.liikennevirasto.fi/xsd/harja/sahkoposti">
+  <viestiId>__ID__</viestiId>
+  <vastaanottajat>
+    <vastaanottaja>__VASTAANOTTAJA__</vastaanottaja>
+  </vastaanottajat>
+  <lahettaja>__LAHETTAJA__</lahettaja>
+  <otsikko>__OTSIKKO__</otsikko>
+  <sisalto>__SISALTO__</sisalto>
+</sahkoposti:sahkoposti>
