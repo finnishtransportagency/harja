@@ -75,7 +75,7 @@
     (let [viesti (atom nil)]
       (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
 
-      (is (= "Viestisi käsiteltiin onnistuneesti. Kiitos!"
+      (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
              (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V1 Asia selvä."))
           "Onnistunut viestin käsittely")
       
