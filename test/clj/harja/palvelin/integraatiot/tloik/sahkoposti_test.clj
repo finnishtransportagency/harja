@@ -51,8 +51,7 @@
       (.replace "__SISALTO__" sisalto)))
 
 (deftest tarkista-kuisttauksen-vastaanotto-sahkopostilla
-  (let [{:keys [db sonja]} jarjestelma
-        ilmoitusviesti (atom nil)]
+  (let [ilmoitusviesti (atom nil)]
     (tloik-apurit/tee-testipaivystys)
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))
     (sonja/laheta (:sonja jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ tloik-apurit/+testi-ilmoitus-sanoma+)
