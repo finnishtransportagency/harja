@@ -260,7 +260,7 @@ SELECT y.id, y.etunimi, y.sukunimi,
        o.ytunnus, o.nimi
   FROM yhteyshenkilo y
        JOIN paivystys p ON p.yhteyshenkilo = y.id
-       JOIN organisaatio o ON o.id = y.organisaatio
+       LEFT JOIN organisaatio o ON o.id = y.organisaatio
  WHERE p.urakka = :urakka AND
        LOWER(sahkoposti) = LOWER(:sahkoposti)
       
