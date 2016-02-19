@@ -282,7 +282,7 @@
          [:div
           [:table
            [:tbody
-            (for [{:keys [img nimi vari teksti]} selitteet]
+            (for [{:keys [img nimi vari teksti]} (sort-by :nimi selitteet)]
               (when
                 (or (not-empty vari) (not-empty img))
                 ^{:key (str (or vari img) "_" nimi)}
