@@ -28,13 +28,13 @@
 
 (def ^{:doc "Viesti, joka lähetetään jos päivystäjätietoja tai ilmoitustietoja ei voida päätellä" :private true}
   +ilmoitustoimenpiteen-tallennus-epaonnistui+
-  {:otsikko "Kuittausta ei voitu tallentaa"
+  {:otsikko "Kuittausta ei voitu käsitellä"
    :sisalto "Varmista, että vastaat samalla sähköpostiosoitteella, johon ilmoitustiedot toimitettiin."})
 
 (def ^{:doc "Viesti, joka lähetetään onnistuneen ilmoitustoimenpiteen tallennuksen jälkeen." :private true}
   +onnistunut-viesti+
   {:otsikko nil ;; tämä täydennetään ilmoituksen otsikolla
-   :sisalto "Kuittaus tallennettu onnistuneesti."})
+   :sisalto "Kuittaus käsiteltiin onnistuneesti. Kiitos!"})
 
 (def ^{:doc "Template, jolla muodostetaan URL Google static map kuvalle" :private true :const true}
   goole-static-map-url-template
