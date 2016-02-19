@@ -595,7 +595,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                                   {:width 3}))
                                       ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                                       :color (or (:color alue)
-                                                 (nth varit/kaikki (mod (:id piirrettava) (count varit/kaikki))))
+                                                 (nth varit/kaikki (mod (hash (:id piirrettava)) (count varit/kaikki))))
                                       :zindex (or (:zindex alue) (case (:type piirrettava)
                                                                    :hy 0
                                                                    :ur 1
