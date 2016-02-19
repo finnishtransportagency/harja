@@ -96,11 +96,11 @@
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
-(defonce yksikkohintainen-toteuma-kartalla
-         (reaction
-           (when @karttataso-yksikkohintainen-toteuma
-             (kartalla-esitettavaan-muotoon
-               @haetut-reitit
-               @valittu-yksikkohintainen-toteuma
-               nil
-               (map #(assoc % :tyyppi-kartalla :toteuma))))))
+(def yksikkohintainen-toteuma-kartalla
+  (reaction
+   (when @karttataso-yksikkohintainen-toteuma
+     (kartalla-esitettavaan-muotoon
+      @haetut-reitit
+      @valittu-yksikkohintainen-toteuma
+      nil
+      (map #(assoc % :tyyppi-kartalla :toteuma))))))
