@@ -2,7 +2,6 @@
   "Ilmoitusten lähettäminen urakoitsijalle ja kuittausten vastaanottaminen"
   (:require [hiccup.core :refer [html]]
             [harja.domain.ilmoitusapurit :as apurit]
-            [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
@@ -130,11 +129,6 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
                                   :urakka-id (:urakka ilmoitus)
                                   :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
-
-(defn- virheellinen-viesti-vastaus [viesti]
-  {:otsikko "Kuittauksen käsittely epäonnistui"
-   :sisalto (str "Lähettämäsi kuittausviestin otsikosta ei voitu päätellä kuittaustietoja. Otsikko oli:\n"
-                 (:otsikko viesti))})
 
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään 
