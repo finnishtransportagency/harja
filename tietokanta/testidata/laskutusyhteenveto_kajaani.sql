@@ -14,7 +14,7 @@ VALUES
   ('Kajaanin alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisa26339/06', (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null));
 
-INSERT INTO hanke (nimi,alkupvm,loppupvm,alueurakkanro, sampoid) values ('Kajaanin alueurakka','2014-10-01', '2019-09-30', '1238', 'kaj1');
+INSERT INTO hanke (nimi,alkupvm,loppupvm,alueurakkanro, sampoid) values ('Kajaanin alueurakka','2014-10-01', '2019-09-30', '1236', 'kaj1');
 UPDATE urakka SET hanke=(SELECT id FROM hanke WHERE sampoid='kaj1') WHERE tyyppi='hoito' AND nimi LIKE 'Kajaanin%2014%';
 
 -- Luodaan Kajaanin urakalle tärkeimmät toimenpideinstanssit
