@@ -6,7 +6,21 @@
             [ol.source.Image]
             [ol.source.ImageStatic]
             [harja.loki :refer [log]]
-            [harja.asiakas.kommunikaatio :refer [karttakuva-url]]))
+            [harja.asiakas.kommunikaatio :refer [karttakuva-url]]
+            [harja.ui.openlayers.tasot :refer [Taso]]))
+
+(defrecord Kuvataso [z-index extent selitteet source]
+  Taso
+  (aseta-z-index [this z-index]
+    (assoc this :z-index z-index))
+  (extent [this]
+    extent)
+  (selitteet [this]
+    selitteet))
+
+(defn- ol-kuva [extent resolution url]
+  (ol.Image. extent resolution 1 nil url ""
+             ol.source.Image/defaultImageLoadFunction))
 
 (defn hae-fn [parametrit]
   (let [kuva (atom nil)]
@@ -23,15 +37,15 @@
                     [url image]
                     (do (log "UUSI KUVA URL: " uusi-url)
                         [uusi-url
-                         (ol.Image. extent resolution 1 nil
-                                    uusi-url ""
-                                    ol.source.Image/defaultImageLoadFunction)])))))))))
+                         (ol-kuva extent resolution uusi-url)])))))))))
 
 
 (defn luo-kuvataso [projection extent parametrit]
-  (doto (ol.layer.Image.
-         (clj->js {:source (kuvataso.Lahde. (hae-fn parametrit)
-                                            #js {:projection projection
-                                                 :imageExtent extent})
-                   :wrapX true}))
-    (.setZIndex 99)))
+  (->Kuvataso nil nil nil
+              (kuvataso.Lahde. (hae-fn parametrit)
+                               #js {:projection projection
+                                    :imageExtent extent})))
+#_(doto (ol.layer.Image.
+       (clj->js {:source source
+                 :wrapX true}))
+  (.setZIndex 99))

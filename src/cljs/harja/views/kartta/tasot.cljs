@@ -23,7 +23,8 @@
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
-            [harja.ui.openlayers.tasot :as tasot])
+            [harja.ui.openlayers.tasot :as tasot]
+            [harja.ui.kartta.varit.alpha :as varit])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 
@@ -37,39 +38,66 @@
   piirretään pienemmällä zindexillä." :const true}
   oletus-zindex 4)
 
+(defn- organisaation-geometria [piirrettava]
+  (let [{:keys [stroke] :as alue} (:alue piirrettava)]
+    (when (map? alue)
+      (update-in piirrettava
+                 [:alue]
+                 assoc
+                 :fill (if (:valittu piirrettava) false true)
+                 :stroke (if stroke
+                           stroke
+                           (when (or (:valittu piirrettava)
+                                     (= :silta (:type piirrettava)))
+                             {:width 3}))
+                 :color (or (:color alue)
+                            (nth varit/kaikki (mod (:id piirrettava)
+                                                   (count varit/kaikki))))
+                 :zindex (or (:zindex alue)
+                             (case (:type piirrettava)
+                               :hy 0
+                               :ur 1
+                               :pohjavesialueet 2
+                               :sillat 3
+                               oletus-zindex))))))
 (def organisaatio
   ;; Kartalla näytettävät organisaatiot / urakat
   (reaction
-    (let [hals @hal/hallintayksikot
-          v-hal @nav/valittu-hallintayksikko
-          v-ur @nav/valittu-urakka
-          sivu (nav/sivu)]
-      (cond
-        ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin
-        ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
-        ;; valittu, voidaan näyttää sen rajat.
-        (and (#{:tilannekuva :ilmoitukset} sivu) (nil? v-hal))
-        nil
+   (into []
+         (keep organisaation-geometria)
+         (let [hals @hal/hallintayksikot
+               v-hal @nav/valittu-hallintayksikko
+               v-ur @nav/valittu-urakka
+               sivu (nav/sivu)]
+           (cond
+             ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin
+             ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
+             ;; valittu, voidaan näyttää sen rajat.
+             (and (#{:tilannekuva :ilmoitukset} sivu) (nil? v-hal))
+             nil
 
-        (and (#{:tilannekuva :ilmoitukset} sivu) (nil? @nav/valittu-urakka))
-        [(assoc v-hal :valittu true)]
+             (and (#{:tilannekuva :ilmoitukset} sivu)
+                  (nil? @nav/valittu-urakka))
+             [(assoc v-hal :valittu true)]
 
-        (and (#{:tilannekuva :ilmoitukset} sivu) @nav/valittu-urakka)
-        [(assoc v-ur :valittu true)]
+             (and (#{:tilannekuva :ilmoitukset} sivu) @nav/valittu-urakka)
+             [(assoc v-ur :valittu true)]
 
-        ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-        (nil? v-hal)
-        hals
+             ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+             (nil? v-hal)
+             hals
 
-        ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö ja sen urakat
-        (nil? v-ur)
-        (vec (concat [(assoc v-hal
-                        :valittu true)]
-                     @nav/urakat-kartalla))
+             ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö
+             ;; ja sen urakat
+             (nil? v-ur)
+             (vec (concat [(assoc v-hal
+                                  :valittu true)]
+                          @nav/urakat-kartalla))
 
-        ;; Valittu urakka, mitä näytetään?
-        :default [(assoc v-ur
-                    :valittu true)]))))
+             ;; Valittu urakka, mitä näytetään?
+             :default [(assoc v-ur
+                              :valittu true)])))))
+
 
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
@@ -85,57 +113,69 @@
 (defn poista-geometria! [avain]
   (swap! nakyman-geometriat dissoc avain))
 
+;; PENDING: Tasot, niiden lippu atomit ja keyword nimet ja z-indexit,
+;; olisi hyvä saada määriteltyä tiivisti, kerran ja yhdessä paikassa.
+;;
+;; esim. (def tasot [[:mun-taso mun-taso/taso-lippu mun-taso/geometriat 4] ...])
+;; sitä samaa tietoa voisi sitten käyttää kaikkialla alla.
+
+(defn- aseta-z-index
+  ([taso] (aseta-z-index taso oletus-zindex))
+  ([taso z-index]
+   (when taso
+     (tasot/aseta-z-index taso z-index))))
+
 (def geometriat
   (reaction
    (merge
     {:organisaatio
-     (tasot/aseta-z-index @organisaatio 0)
+     (aseta-z-index @organisaatio 0)
 
      :pohjavesi
-     (tasot/aseta-z-index @pohjavesialueet/pohjavesialueet 1)
+     (aseta-z-index @pohjavesialueet/pohjavesialueet 1)
 
      :sillat
-     (tasot/aseta-z-index @sillat/sillat 2)
+     (aseta-z-index @sillat/sillat 2)
 
      :tarkastukset
-     (tasot/aseta-z-index @tarkastukset/tarkastukset-kartalla)
+     (aseta-z-index @tarkastukset/tarkastukset-kartalla)
 
      :turvallisuus
-     (tasot/aseta-z-index
+     (aseta-z-index
       @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla)
 
      :ilmoitukset
-     (tasot/aseta-z-index @ilmoitukset/ilmoitukset-kartalla)
+     (aseta-z-index @ilmoitukset/ilmoitukset-kartalla)
 
      :yks-hint-toteumat
-     (tasot/aseta-z-index
+     (aseta-z-index
       @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla)
 
      :kok-hint-toteumat
-     (tasot/aseta-z-index
+     (aseta-z-index
       @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla)
 
      :varusteet
-     (tasot/aseta-z-index @varusteet/varusteet-kartalla)
+     (aseta-z-index @varusteet/varusteet-kartalla)
 
      :muut-tyot
-     (tasot/aseta-z-index @muut-tyot/muut-tyot-kartalla)
+     (aseta-z-index @muut-tyot/muut-tyot-kartalla)
 
      :paallystyskohteet
-     (tasot/aseta-z-index @paallystys/paallystyskohteet-kartalla)
+     (aseta-z-index @paallystys/paallystyskohteet-kartalla)
 
      :paikkauskohteet
-     (tasot/aseta-z-index @paikkaus/paikkauskohteet-kartalla)
+     (aseta-z-index @paikkaus/paikkauskohteet-kartalla)
 
      :tr-valitsin
-     (tasot/aseta-z-index @tierekisteri/tr-alkupiste-kartalla
+     (aseta-z-index @tierekisteri/tr-alkupiste-kartalla
                           (inc oletus-zindex))
      :nakyman-geometriat
-     (tasot/aseta-z-index (vals @nakyman-geometriat)
+     (aseta-z-index (vals @nakyman-geometriat)
                           (inc oletus-zindex))}
     (into {}
           (map (fn [[tason-nimi tason-sisalto]]
-                 {tason-nimi (tasot/aseta-z-index tason-sisalto oletus-zindex)})
+                 {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
                @tilannekuva/tilannekuvan-asiat-kartalla)))))
 
 (defn- taso-atom [nimi]

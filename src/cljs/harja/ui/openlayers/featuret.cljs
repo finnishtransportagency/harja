@@ -11,7 +11,9 @@
             [ol.style.Style]
             [ol.style.Fill]
             [ol.style.Stroke]
-            [ol.style.Icon]))
+            [ol.style.Icon]
+
+            [harja.loki :refer [log]]))
 
 (def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä turhaan liikaa"
        :const true}
@@ -22,16 +24,18 @@
 
 (defmulti luo-feature :type)
 
-(defn- aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
+(defn aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
-                 #js {:fill   (when fill (ol.style.Fill. #js {:color (or color "red")}))
-                      :stroke (ol.style.Stroke. #js {:color (or (:color stroke) "black")
-                                                     :width (or (:width stroke) 1)})
-                      ;; Default zindex asetetaan harja.views.kartta:ssa.
-                      ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
-                      ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
-                      :zIndex (or zindex 0)}))))
+                #js {:fill (when fill
+                             (ol.style.Fill. #js {:color (or color "red")}))
+                     :stroke (ol.style.Stroke.
+                              #js {:color (or (:color stroke) "black")
+                                   :width (or (:width stroke) 1)})
+                     ;; Default zindex asetetaan harja.views.kartta:ssa.
+                     ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
+                     ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
+                     :zIndex (or zindex 0)}))))
 
 (defn- tee-nuoli
   [kasvava-zindex {:keys [img scale zindex anchor rotation]} [piste rotaatio]]

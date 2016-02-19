@@ -582,27 +582,6 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
 
           :geometries         @tasot/geometriat
-          :geometry-fn        (fn [piirrettava]
-                                (when-let [{:keys [stroke] :as alue} (:alue piirrettava)]
-                                  (when (map? alue)
-                                    (assoc alue
-                                      :fill (if (:valittu piirrettava) false true)
-                                      :stroke (if stroke
-                                                stroke
-                                                (when (or (:valittu piirrettava)
-                                                          (= :silta (:type piirrettava)))
-                                                  {:width 3}))
-                                      ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
-                                      :color (or (:color alue)
-                                                 (nth varit/kaikki (mod (:id piirrettava) (count varit/kaikki))))
-                                      :zindex (or (:zindex alue) (case (:type piirrettava)
-                                                                   :hy 0
-                                                                   :ur 1
-                                                                   :pohjavesialueet 2
-                                                                   :sillat 3
-                                                                   openlayers/oletus-zindex))
-                                      ;;:marker (= :silta (:type hy))
-                                      ))))
 
           :layers             [{:type  :mml
                                 :url   (str (k/wmts-polku) "maasto/wmts")

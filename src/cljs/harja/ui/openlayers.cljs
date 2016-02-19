@@ -6,7 +6,7 @@
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
             [harja.ui.openlayers.featuret :refer [aseta-tyylit] :as featuret]
-
+            [harja.ui.openlayers.tasot :as tasot]
             [harja.ui.dom :as dom]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -158,12 +158,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     [(+ x1 (/ (- x2 x1) 2))
      (+ y1 (/ (- y2 y1) 2))]))
 
-(defn geometria-avain
-  "Funktio, joka muuntaa geometrian tiedon avaimeksi mäppiä varten."
-  [g]
-  (identity g))
-
-
 (defn luo-tilegrid []
   (let [koko (/ (ol-extent/getWidth (.getExtent projektio)) 256)]
     (loop [resoluutiot []
@@ -197,10 +191,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn feature-geometria [feature]
   (.get feature "harja-geometria"))
 
-(defn aseta-feature-geometria! [feature geometria]
-  (.set feature "harja-geometria" geometria))
-
-
 (defn- tapahtuman-geometria
   "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen
   geometrian."
@@ -211,6 +201,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                             (fn [feature layer]
                               (vreset! geom (feature-geometria feature))
                               true))
+
     @geom))
 
 (defn- laske-kartan-alue [ol3]
@@ -249,6 +240,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                  (on-click e))
                (when on-select
                  (when-let [g (tapahtuman-geometria this e)]
+                   (log "on-select: " (pr-str  g))
                    (on-select g e))))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
@@ -333,14 +325,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn aseta-zoom [zoom]
   (some-> @the-kartta (.getView) (.setZoom zoom)))
-
-(defn- create-geometry-layer
-  "Create a new ol3 Vector layer with a vector source."
-  []
-  (ol.layer.Vector. #js {:source          (ol.source.Vector.)
-                         :rendererOptions {:zIndexing true
-                                           :yOrdering true}}))
-
 
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
@@ -470,74 +454,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
             {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
             (tooltipin-sisalto)])))]))
 
-(defn- luo-feature [geom]
-  (try
-    (featuret/luo-feature geom)
-    (catch js/Error e
-      (log (pr-str e))
-      (log (pr-str "Problem in luo-feature, geom: " geom))
-      nil)))
-
-(def ^{:doc "Tyypit, joille pitää kutsua aseta-tyylit" :private true}
-  tyyppi-tarvitsee-tyylit
-  #{:polygon :point :circle :multipolygon :multiline :line})
-
-(defn update-ol3-layer-geometries
-  "Given a vector of ol3 layer and map of current geometries and a
-  sequence of new geometries, updates (creates/removes) the geometries
-  in the layer to match the new items. Returns a new vector with the updates
-  ol3 layer and map of geometries.
-  If incoming layer & map vector is nil, a new ol3 layer will be created."
-  [ol3 geometry-fn [geometry-layer geometries-map] items]
-  (let [create? (nil? geometry-layer)
-        geometry-layer (if create?
-                         (doto (create-geometry-layer)
-                           (.setZIndex (or (:zindex (meta items)) 0)))
-                         geometry-layer)
-        geometries-map (if create? {} geometries-map)
-        geometries-set (into #{} (map geometria-avain) items)
-        features (.getSource geometry-layer)]
-
-    (when create?
-      (.addLayer ol3 geometry-layer))
-
-    ;; Remove all ol3 feature objects that are no longer in the new geometries
-    (doseq [[avain feature] (seq geometries-map)
-            :when (not (geometries-set avain))]
-      (.removeFeature features feature))
-
-    ;; Create new features for new geometries and update the geometries map
-    (loop [new-geometries-map {}
-           [item & items] items]
-      (if-not item
-        ;; When all items are processed, return layer and new geometries map
-        [geometry-layer new-geometries-map]
-
-        (let [geom (geometry-fn item)
-              avain (geometria-avain item)]
-          (if-not geom
-            (recur new-geometries-map items)
-            (recur
-             (assoc new-geometries-map avain
-                    (or (geometries-map avain)
-                        (when-let [new-shape (luo-feature geom)]
-                          (aseta-feature-geometria! new-shape item)
-                          (try
-                            (.addFeature features new-shape)
-                            (catch js/Error e
-                              (log (pr-str e))
-                              (log (pr-str "problem in addFeature, avain: "
-                                           avain "\ngeom: " geom
-                                           "\nnew-shape: " new-shape))))
-
-                          ;; Aseta geneerinen tyyli tyypeille,
-                          ;; joiden luo-feature ei sitä tee
-                          (when (tyyppi-tarvitsee-tyylit (:type geom))
-                            (aseta-tyylit new-shape geom))
-
-                          new-shape)))
-                   items)))))))
-
 (defn- update-ol3-geometries [component geometries]
   "Update the ol3 layers based on the data, mutates the ol3 map object."
   (let [{:keys [ol3 geometry-layers mapspec]} (reagent/state component)
@@ -560,28 +476,13 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                                     (name (first %)))
                               (seq new-geometry-layers))))
           (reagent/set-state component {:geometry-layers new-geometry-layers}))
-        (let [layer-geometries (get geometries layer)]
-          (cond
-            ;; Ei enää geometrioita, poistetaan tasoista
-            (nil? layer-geometries)
-            (recur new-geometry-layers layers)
-
-            ;; Jos tämä on valmis ol3 layer, lisätään se, jos ei jo ole
-            (instance? ol.layer.Layer layer-geometries)
-            (do (when-not (contains? geometry-layers layer)
-                  (.addLayer ol3 layer-geometries))
-                (recur (assoc new-geometry-layers
-                              layer layer-geometries)
-                       layers))
-
-            ;; Oletuksena päivitä geometriat
-            :default
-            (recur (assoc new-geometry-layers
-                          layer (update-ol3-layer-geometries
-                                 ol3 geometry-fn
-                                 (get geometry-layers layer)
-                                 layer-geometries))
-                   layers)))))))
+        (if-let [taso (get geometries layer)]
+          (recur (assoc new-geometry-layers
+                        layer (apply tasot/paivita-ol-taso
+                                     taso ol3
+                                     (get geometry-layers layer)))
+                 layers)
+          (recur new-geometry-layers layers))))))
 
 (defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries
                                         extent-key :extent-key}]]

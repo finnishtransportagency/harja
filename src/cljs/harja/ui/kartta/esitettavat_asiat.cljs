@@ -486,7 +486,7 @@
            :width (+ 2 leveys))
     viiva))
 
-(defn- viimeistele-asetukset [viivat nuoli valittu?]
+(defn- viimeistele-asetukset [[viivat nuoli] valittu?]
   [(if valittu?
      ;; Kasvata jokaisen viivan määriteltyä leveyttä kahdella jos toteuma on
      ;; valittu. Jos leveyttä ei ole annettu, niin mennään oletusasetuksilla,
