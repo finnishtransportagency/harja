@@ -173,11 +173,11 @@
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
-(def pulkkilan-alueurakan-2014-2019-id (atom nil))
+(def kajaanin-alueurakan-2014-2019-id (atom nil))
 (def oulun-alueurakan-lampotila-hk-2014-2015 (atom nil))
 (def oulun-alueurakan-2005-2010-paasopimuksen-id (atom nil))
 (def oulun-alueurakan-2014-2019-paasopimuksen-id (atom nil))
-(def pulkkilan-alueurakan-2014-2019-paasopimuksen-id (atom nil))
+(def kajaanin-alueurakan-2014-2019-paasopimuksen-id (atom nil))
 (def pudasjarven-alueurakan-id (atom nil))
 (def muhoksen-paallystysurakan-id (atom nil))
 (def muhoksen-paallystysurakan-paasopimuksen-id (atom nil))
@@ -202,10 +202,10 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
-(defn hae-pulkkilan-alueurakan-2014-2019-id []
+(defn hae-kajaanin-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
-                   WHERE  nimi = 'Pulkkilan alueurakka 2014-2019'"))))
+                   WHERE  nimi = 'Kajaanin alueurakka 2014-2019'"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
   (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
@@ -246,9 +246,9 @@
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)"))))
 
-(defn hae-pulkkilan-alueurakan-2014-2019-paasopimuksen-id []
+(defn hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
-                           (SELECT id FROM urakka WHERE nimi='Pulkkilan alueurakka 2014-2019') AND paasopimus IS null)"))))
+                           (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)"))))
 
 (defn hae-muhoksen-paallystysurakan-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
@@ -270,7 +270,7 @@
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2010-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
-  (reset! pulkkilan-alueurakan-2014-2019-id (hae-pulkkilan-alueurakan-2014-2019-id))
+  (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
   (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
@@ -279,7 +279,7 @@
   (reset! muhoksen-paikkausurakan-paasopimuksen-id (hae-muhoksen-paikkausurakan-paasopimuksen-id))
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id (hae-oulun-alueurakan-2005-2010-paasopimuksen-id))
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
-  (reset! pulkkilan-alueurakan-2014-2019-paasopimuksen-id (hae-pulkkilan-alueurakan-2014-2019-paasopimuksen-id))
+  (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
   (testit)
   (reset! oulun-alueurakan-2005-2010-id nil)

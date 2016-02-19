@@ -32,16 +32,16 @@
                                {:urakka-id @oulun-alueurakan-2014-2019-id
                                 :alkupvm   (pvm/->pvm "1.8.2015")
                                 :loppupvm (pvm/->pvm "31.8.2015")})
-          haetut-tiedot-pulkkila (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
-                                   (:db jarjestelma)
-                                   +kayttaja-jvh+
-                                   {:urakka-id @pulkkilan-alueurakan-2014-2019-id
-                                    :alkupvm   (pvm/->pvm "1.8.2015")
-                                    :loppupvm (pvm/->pvm "31.8.2015")})
+          haetut-tiedot-kajaani (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                                  (:db jarjestelma)
+                                  +kayttaja-jvh+
+                                  {:urakka-id @kajaanin-alueurakan-2014-2019-id
+                                   :alkupvm   (pvm/->pvm "1.8.2015")
+                                   :loppupvm  (pvm/->pvm "31.8.2015")})
           poista-tpi (fn [tiedot]
                        (map #(dissoc % :tpi) tiedot))
           haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
-          haetut-tiedot-pulkkila-ilman-tpita (poista-tpi haetut-tiedot-pulkkila)
+          haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
 
           haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))
           haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
@@ -242,7 +242,7 @@
           ]
 
 
-      (is (= haetut-tiedot-oulu-ilman-tpita haetut-tiedot-pulkkila-ilman-tpita))
+      (is (= haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita))
       (is (= odotetut-talvihoito haetut-tiedot-oulu-talvihoito) "laskutusyhteenvedon-tiedot talvihoito")
       (is (= odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto) "laskutusyhteenvedon-tiedot liikenneympäristön hoito")
       (is (= odotetut-soratiet haetut-tiedot-oulu-soratiet) "laskutusyhteenvedon-tiedot sorateiden hoito"))))
