@@ -127,7 +127,7 @@ Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 > ssh harja-db1-stg "sudo -u postgres pg_dump harja" > tietokanta/harja-stg-dump.sql
 
 Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
-Mene vagrant koneelle:
+Mene vagrant-kansioon ja aja komennot:
 
 > cd vagrant
 > vagrant ssh

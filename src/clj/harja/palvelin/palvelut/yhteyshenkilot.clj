@@ -135,7 +135,7 @@
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (into []
         ;; munklaukset tässä
-        (map #(if-let [org-id (:organisaatio_id %)]
+        (map #(if-let [org-id (:organisaatio %)]
                 (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
                                         :id org-id
                                         :nimi (:urakoitsija_nimi %)})
