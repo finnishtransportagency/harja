@@ -5,8 +5,8 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
-            [harja.ui.openlayers.featuret :refer [luo-feature aseta-tyylit] :as featuret]
-            
+            [harja.ui.openlayers.featuret :refer [aseta-tyylit] :as featuret]
+
             [harja.ui.dom :as dom]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -39,26 +39,28 @@
                    [harja.loki :refer [mittaa-aika]]
                    [harja.ui.openlayers :refer [disable-rendering]]))
 
-(def ^{:doc "Odotusaika millisekunteina, joka odotetaan että kartan animoinnit on valmistuneet." :const true}
+(def ^{:doc "Odotusaika millisekunteina, joka odotetaan että
+ kartan animoinnit on valmistuneet." :const true}
   animaation-odotusaika 200)
 
 (def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
   initial-resolution 1200)
 
-(def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos" :const true}
+(def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos"
+       :const true}
   min-zoom 2)
-(def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään" :const true}
+(def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään"
+       :const true}
   max-zoom 16)
 
 (def oletus-zindex featuret/oletus-zindex)
 
 
-
-
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
 ;; kartan normaali toiminta.
-;; Nämä ovat normaaleja cljs atomeja, eivätkä siten voi olla reagent riippuvuuksia.
+;; Nämä ovat normaaleja cljs atomeja, eivätkä siten voi olla
+;; reagent riippuvuuksia.
 (defonce klik-kasittelija (cljs.core/atom nil))
 (defonce hover-kasittelija (cljs.core/atom nil))
 
@@ -118,7 +120,8 @@
 
 (defn extent-sisaltaa-extent? [iso pieni]
   (assert (and (vector? iso) (vector? pieni)) "Alueen tulee vektori numeroita")
-  (assert (and (= 4 (count iso)) (= 4 (count pieni))) "Alueen tulee olla vektori [minx miny maxx maxy]")
+  (assert (and (= 4 (count iso)) (= 4 (count pieni)))
+          "Alueen tulee olla vektori [minx miny maxx maxy]")
 
   (ol/extent.containsExtent (clj->js iso) (clj->js pieni)))
 
@@ -141,6 +144,13 @@
 (def projektio (ol-proj/Projection. #js {:code   "EPSG:3067"
                                          :extent (clj->js suomen-extent)}))
 
+(defn luo-kuvataso
+  "Luo uuden kuvatason joka hakee serverillä renderöidyn kuvan.
+Ottaa sisään vaihtelevat parametri nimet (string) ja niiden arvot.
+Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti."
+  [& parametri-nimet-ja-arvot]
+  (kuvataso/luo-kuvataso projektio suomen-extent parametri-nimet-ja-arvot))
+
 (defn keskipiste
   "Laskee geometrian keskipisteen extent perusteella"
   [geometria]
@@ -160,9 +170,10 @@
            matrix-idt []
            i 0]
       (if (= i 16)
-        (let [optiot (clj->js {:origin      (ol-extent/getTopLeft (.getExtent projektio))
-                               :resolutions (clj->js resoluutiot)
-                               :matrixIds   (clj->js matrix-idt)})]
+        (let [optiot (clj->js
+                      {:origin (ol-extent/getTopLeft (.getExtent projektio))
+                       :resolutions (clj->js resoluutiot)
+                       :matrixIds   (clj->js matrix-idt)})]
           (ol.tilegrid.WMTS. optiot))
         (recur (conj resoluutiot (/ koko (Math/pow 2 i)))
                (conj matrix-idt i)
@@ -171,15 +182,17 @@
 
 (defn- mml-wmts-layer [url layer]
   (ol.layer.Tile.
-    #js {:source (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
-                                       :url          url    ;; Tämä pitää olla nginx proxyssa
-                                       :layer        layer
-                                       :matrixSet    "ETRS-TM35FIN"
-                                       :format       "image/png"
-                                       :projection   projektio
-                                       :tileGrid     (luo-tilegrid)
-                                       :style        "default"
-                                       :wrapX        true})}))
+   #js {:source
+        (ol.source.WMTS. #js {:attributions [(ol.Attribution.
+                                              #js {:html "MML"})]
+                              :url          url
+                              :layer        layer
+                              :matrixSet    "ETRS-TM35FIN"
+                              :format       "image/png"
+                              :projection   projektio
+                              :tileGrid     (luo-tilegrid)
+                              :style        "default"
+                              :wrapX        true})}))
 
 (defn feature-geometria [feature]
   (.get feature "harja-geometria"))
@@ -189,7 +202,8 @@
 
 
 (defn- tapahtuman-geometria
-  "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen geometrian."
+  "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen
+  geometrian."
   [this e]
   (let [geom (volatile! nil)
         {:keys [ol3 geometry-layers]} (reagent/state this)]
@@ -216,9 +230,10 @@
      :y        (aget (.-pixel e) 1)}))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
-  (.on (.getView ol3) "change:resolution" (fn [e]
-                                            (when on-zoom
-                                              (on-zoom e (laske-kartan-alue ol3))))))
+  (.on (.getView ol3) "change:resolution"
+       (fn [e]
+         (when on-zoom
+           (on-zoom e (laske-kartan-alue ol3))))))
 
 (defn- aseta-drag-kasittelija [this ol3 on-move]
   (.on ol3 "pointerdrag" (fn [e]
@@ -266,7 +281,8 @@
     (.fit view extent (.getSize ol3))))
 
 (defn- poista-openlayers-popup!
-  "Älä käytä tätä suoraan, vaan kutsu poista-popup! tai poista-popup-ilman-eventtia!"
+  "Älä käytä tätä suoraan, vaan kutsu poista-popup! tai
+  poista-popup-ilman-eventtia!"
   [this]
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
@@ -280,7 +296,8 @@
   (poista-openlayers-popup! this))
 
 (defn- poista-popup-ilman-eventtia!
-  "Poistaa kartan popupin, jos sellainen on, eikä julkaise popup-suljettu eventtiä."
+  "Poistaa kartan popupin, jos sellainen on, eikä julkaise popup-suljettu
+  eventtiä."
   [this]
   (poista-openlayers-popup! this))
 
@@ -293,18 +310,20 @@
 
 
 (defn- nayta-popup!
-  "Näyttää annetun popup sisällön annetussa koordinaatissa. Mahdollinen edellinen popup poistetaan."
+  "Näyttää annetun popup sisällön annetussa koordinaatissa.
+  Mahdollinen edellinen popup poistetaan."
   [this koordinaatti sisalto]
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
       (.removeOverlay ol3 popup))
-    (let [popup (luo-overlay koordinaatti
-                             [:div.ol-popup
-                              [:a.ol-popup-closer.klikattava {:on-click #(do
-                                                                          (.stopPropagation %)
-                                                                          (.preventDefault %)
-                                                                          (poista-popup! this))}]
-                              sisalto])]
+    (let [popup (luo-overlay
+                 koordinaatti
+                 [:div.ol-popup
+                  [:a.ol-popup-closer.klikattava
+                   {:on-click #(do (.stopPropagation %)
+                                   (.preventDefault %)
+                                   (poista-popup! this))}]
+                  sisalto])]
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
 
@@ -328,9 +347,11 @@
   (let [mapspec (:mapspec (reagent/state this))
         [mml-spec & _] (:layers mapspec)
         mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
-        interaktiot (let [oletukset (ol-interaction/defaults #js {:mouseWheelZoom true
-                                                                  :dragPan        false})]
-                      (.push oletukset (ol-interaction/DragPan. #js {})) ; ei kinetic-ominaisuutta!
+        interaktiot (let [oletukset (ol-interaction/defaults
+                                     #js {:mouseWheelZoom true
+                                          :dragPan        false})]
+                      ;; ei kinetic-ominaisuutta!
+                      (.push oletukset (ol-interaction/DragPan. #js {}))
                       oletukset)
         map-optiot (clj->js {:layers       [mml]
                              :target       (:id mapspec)
@@ -349,7 +370,8 @@
 
     ;; Lisää kartan animoinnin jälkeinen updateSize kutsu
     (when (animaatio/transition-end-tuettu?)
-      (animaatio/kasittele-transition-end (.getElementById js/document (:id mapspec))
+      (animaatio/kasittele-transition-end (.getElementById js/document
+                                                           (:id mapspec))
                                           #(.updateSize ol3)))
 
     ;; Aloitetaan komentokanavan kuuntelu
@@ -387,21 +409,24 @@
                                         {:hover {:x x :y y :tooltip teksti}}))))
                (recur (alts! [komento-ch unmount-ch]))))
 
-    (.setView ol3 (ol.View. #js {:center     (clj->js (geo/extent-keskipiste extent))
-                                 :resolution initial-resolution
-                                 :maxZoom    max-zoom
-                                 :minZoom    min-zoom
-                                 :projection projektio}))
+    (.setView
+     ol3 (ol.View. #js {:center     (clj->js (geo/extent-keskipiste extent))
+                        :resolution initial-resolution
+                        :maxZoom    max-zoom
+                        :minZoom    min-zoom
+                        :projection projektio}))
 
     ;;(.log js/console "L.map = " ol3)
     (reagent/set-state this {:ol3             ol3
-                             :geometry-layers {}            ;; key => vector layer
+                             :geometry-layers {} ; key => vector layer
                              :hover           nil
                              :unmount-ch      unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
-    (aseta-dblclick-kasittelija this ol3 (:on-dblclick mapspec) (:on-dblclick-select mapspec))
+    (aseta-dblclick-kasittelija this ol3
+                                (:on-dblclick mapspec)
+                                (:on-dblclick-select mapspec))
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
@@ -418,7 +443,8 @@
     (async/close! unmount-ch)))
 
 (defn- ol3-did-update [this _]
-  (let [uusi-leveys (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0))]
+  (let [uusi-leveys (.-offsetWidth
+                     (aget (.-childNodes (reagent/dom-node this)) 0))]
     (when-not (= uusi-leveys
                  @openlayers-kartan-leveys)
       (reset! openlayers-kartan-leveys uusi-leveys)
@@ -437,19 +463,36 @@
          (go (<! (timeout 1000))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         (when-let [tooltipin-sisalto (or (piirra-tooltip? hover) (some-> (:tooltip hover) (constantly)))]
-           [:div.kartta-tooltip {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
+         (when-let [tooltipin-sisalto
+                    (or (piirra-tooltip? hover)
+                        (some-> (:tooltip hover) (constantly)))]
+           [:div.kartta-tooltip
+            {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
             (tooltipin-sisalto)])))]))
 
+(defn- luo-feature [geom]
+  (try
+    (luo-feature geom)
+    (catch js/Error e
+      (log (pr-str e))
+      (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+      nil)))
+
+(def ^{:doc "Tyypit, joille pitää kutsua aseta-tyylit" :private true}
+  tyyppi-tarvitsee-tyylit
+  #{:polygon :point :circle :multipolygon :multiline :line})
+
 (defn update-ol3-layer-geometries
-  "Given a vector of ol3 layer and map of current geometries and a sequence of new geometries,
-updates (creates/removes) the geometries in the layer to match the new items. Returns a new
-vector with the updates ol3 layer and map of geometries.
-If incoming layer & map vector is nil, a new ol3 layer will be created."
+  "Given a vector of ol3 layer and map of current geometries and a
+  sequence of new geometries, updates (creates/removes) the geometries
+  in the layer to match the new items. Returns a new vector with the updates
+  ol3 layer and map of geometries.
+  If incoming layer & map vector is nil, a new ol3 layer will be created."
   [ol3 geometry-fn [geometry-layer geometries-map] items]
   (let [create? (nil? geometry-layer)
         geometry-layer (if create?
-                         (doto (create-geometry-layer) (.setZIndex (or (:zindex (meta items)) 0)))
+                         (doto (create-geometry-layer)
+                           (.setZIndex (or (:zindex (meta items)) 0)))
                          geometry-layer)
         geometries-map (if create? {} geometries-map)
         geometries-set (into #{} (map geometria-avain) items)
@@ -474,26 +517,25 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
               avain (geometria-avain item)]
           (if-not geom
             (recur new-geometries-map items)
-            (recur (assoc new-geometries-map avain
-                                             (or (geometries-map avain)
-                                                 (when-let [new-shape (try
-                                                                        (luo-feature geom)
-                                                                        (catch js/Error e
-                                                                          (log (pr-str e))
-                                                                          (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
-                                                                          nil))]
-                                                   (aseta-feature-geometria! new-shape item)
-                                                   (try
-                                                     (.addFeature features new-shape)
-                                                     (catch js/Error e
-                                                       (log (pr-str e))
-                                                       (log (pr-str "problem in addFeature, avain: " avain "\ngeom: " geom "\nnew-shape: " new-shape))))
+            (recur
+             (assoc new-geometries-map avain
+                    (or (geometries-map avain)
+                        (when-let [new-shape (luo-feature geom)]
+                          (aseta-feature-geometria! new-shape item)
+                          (try
+                            (.addFeature features new-shape)
+                            (catch js/Error e
+                              (log (pr-str e))
+                              (log (pr-str "problem in addFeature, avain: "
+                                           avain "\ngeom: " geom
+                                           "\nnew-shape: " new-shape))))
 
-                                                   ;; Aseta geneerinen tyyli tyypeille, joiden luo-feature ei sitä tee
-                                                   (when (#{:polygon :point :circle :multipolygon :multiline :line} (:type geom))
-                                                     (aseta-tyylit new-shape geom))
+                          ;; Aseta geneerinen tyyli tyypeille,
+                          ;; joiden luo-feature ei sitä tee
+                          (when (tyyppi-tarvitsee-tyylit (:type geom))
+                            (aseta-tyylit new-shape geom))
 
-                                                   new-shape)))
+                          new-shape)))
                    items)))))))
 
 (defn- update-ol3-geometries [component geometries]
@@ -514,7 +556,9 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
         (do
           (log "Map layer item counts: "
                (str/join ", "
-                         (map #(str (count (second (second %))) " " (name (first %))) (seq new-geometry-layers))))
+                         (map #(str (count (second (second %))) " "
+                                    (name (first %)))
+                              (seq new-geometry-layers))))
           (reagent/set-state component {:geometry-layers new-geometry-layers}))
         (let [layer-geometries (get geometries layer)]
           (cond
@@ -533,18 +577,22 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
             ;; Oletuksena päivitä geometriat
             :default
             (recur (assoc new-geometry-layers
-                     layer (update-ol3-layer-geometries ol3 geometry-fn
-                                                        (get geometry-layers layer)
-                                                        layer-geometries))
+                          layer (update-ol3-layer-geometries
+                                 ol3 geometry-fn
+                                 (get geometry-layers layer)
+                                 layer-geometries))
                    layers)))))))
 
-(defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries extent-key :extent-key}]]
-  (let [{aiempi-extent :extent aiempi-extent-key :extent-key} (reagent/state this)]
+(defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries
+                                        extent-key :extent-key}]]
+  (let [{aiempi-extent :extent aiempi-extent-key :extent-key}
+        (reagent/state this)]
     (reagent/set-state this {:extent-key extent-key
                              :extent     extent})
     (when (or (not (identical? aiempi-extent extent))
               (not= aiempi-extent-key extent-key))
-      (.setTimeout js/window #(keskita-kartta-alueeseen! extent) animaation-odotusaika)))
+      (.setTimeout js/window #(keskita-kartta-alueeseen! extent)
+                   animaation-odotusaika)))
 
   (update-ol3-geometries this geometries))
 
@@ -560,4 +608,3 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
      :component-will-unmount       ol3-will-unmount
      :component-did-update         ol3-did-update
      :component-will-receive-props ol3-will-receive-props}))
-
