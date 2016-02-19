@@ -157,7 +157,6 @@ SELECT
   m.id               AS materiaali_id,
   m.nimi             AS materiaali_nimi,
   m.yksikko          AS materiaali_yksikko,
-  tm.id              AS toteumamateriaali_id,
   tm.maara           AS toteuma_maara,
   t.alkanut          AS toteuma_alkanut,
   t.paattynyt        AS toteuma_paattynyt,
