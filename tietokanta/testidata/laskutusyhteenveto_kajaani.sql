@@ -1,0 +1,252 @@
+-- Luodaan Kajaanin urakka ja sopimus
+INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija)
+VALUES ('1245142-KAJ2', (SELECT id FROM organisaatio WHERE lyhenne='POP'), 'Kajaanin alueurakka 2014-2019', '2014-10-01', '2019-09-30', 'hoito',
+        (SELECT id FROM organisaatio WHERE ytunnus='1565583-5'));
+
+
+-- pääsopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES
+  ('Kajaanin alueurakka pääsopimus','2014-10-01','2019-09-30','7A26339/05', (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'));
+-- lisäsopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus)
+VALUES
+  ('Kajaanin alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisa26339/06', (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null));
+
+INSERT INTO hanke (nimi,alkupvm,loppupvm,alueurakkanro, sampoid) values ('Kajaanin alueurakka','2014-10-01', '2019-09-30', '1238', 'kaj1');
+UPDATE urakka SET hanke=(SELECT id FROM hanke WHERE sampoid='kaj1') WHERE tyyppi='hoito' AND nimi LIKE 'Kajaanin%2014%';
+
+-- Luodaan Kajaanin urakalle tärkeimmät toimenpideinstanssit
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+VALUES
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Kajaani Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Kajaani Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Kajaani Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+
+
+
+-- Tämä tiedosto sisältää Kajaanin alueurakka 2014-2019 testidataa, jonka avulla voidaan luoda mielekäs laskutusyhteenveto
+INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
+     VALUES (2014, 10, 3500, '2014-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2014, 11, 3500, '2014-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2014, 12, 3500, '2014-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 1, 3500, '2015-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 2, 3500, '2015-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 3, 3500, '2015-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 4, 3500, '2015-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 5, 3500, '2015-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 6, 3500, '2015-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 7, 3500, '2015-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 8, 3500, '2015-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 9, 3500, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2014, 10, 10000, '2014-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2014, 11, 10000, '2014-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2014, 12, 10000, '2014-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 1, 10000, '2015-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 2, 10000, '2015-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 3, 10000, '2015-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 4, 10000, '2015-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 5, 10000, '2015-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 6, 10000, '2015-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 7, 10000, '2015-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            (2015, 8, 10000, '2015-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+            -- Lisäsopimuksesta kokonaishintaista työtä mukaan myös
+            (2015, 9, 10, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS NOT null)),
+            (2015, 9, 10000, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null));
+
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
+    VALUES ('2014-10-01', '2014-12-31', 3, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+           ('2015-01-01', '2015-09-30', 9, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+           ('2014-10-01', '2014-12-31', 60, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+           ('2015-01-01', '2015-09-30', 180, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null));
+
+INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus)
+VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tiekm', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
+       ((SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'ha', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null));
+
+-- Suolauksen sallittu määrä
+INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali,
+                                urakka, sopimus,
+                                pohjavesialue, luotu, muokattu, luoja, muokkaaja, poistettu)
+     VALUES ('20141001', '20150930', 800, (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'),
+             (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+             (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+             null, '2004-10-19 10:23:54+02', null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, false);
+
+-- Suolauksen toteuma (materiaalitoteuma)
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+     VALUES ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+             (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+             '2015-02-19 10:23:54+02', '2015-02-18 00:00:00+02', '2015-02-18 02:00:00+02',
+             'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'KAJ-LYV-toteuma');
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
+    VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'KAJ-LYV-toteuma'), '2015-02-19 10:23:54+02',
+            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1000);
+
+INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+VALUES ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+       (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+        '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_yht_tot1'),
+       ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+        (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+        '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_yht_tot2'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_yht_tot_heinakuu'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_yht_tot_elokuu_eka'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_yht_tot_elokuu'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_yht_tot_elokuu2'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_muutostyo_tot_heinakuu'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-07-12 10:23:54+02', '2015-07-12 10:23:54+02', '2015-07-12 10:23:54+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_muutostyo_tot_heinakuu_paivanhinta'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_muutostyo_tot_elokuu_eka'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_muutostyo_tot_elokuu_eka_paivanhinta'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', 'lisatyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_lisatyo_tot_elokuu'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-10 10:23:54+02', '2015-08-10 10:23:54+02', '2015-08-10 10:23:54+02', 'lisatyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_lisatyo_tot_elokuu_paivanhinta_1'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'lisatyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_lisatyo_tot_elokuu_paivanhinta_2'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-07-22 10:23:54+02', '2015-07-20 10:23:54+02', '2015-07-20 10:23:54+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_akillinen_tot_heinakuu'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-22 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_akillinen_tot_elokuu'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-23 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_akillinen_tot_elokuu_paivanhinta'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
+   '2015-08-24 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'vahinkojen-korjaukset'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'KAJlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta');
+
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara)
+VALUES
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_yht_tot1'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_yht_tot2'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_yht_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_yht_tot_elokuu_eka'), '2015-08-02 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_yht_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_yht_tot_elokuu2'), '2015-08-20 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_muutostyo_tot_elokuu_eka'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_lisatyo_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_akillinen_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
+  ((SELECT id from toteuma where lisatieto = 'KAJlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10);
+
+INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta)
+VALUES
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'KAJlyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000);
+
+--Erilliskustannukset
+INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja)
+VALUES
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), '2015-05-15', -1000, 'MAKU 2010', 'Urakoitsija maksaa tilaajalle', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), '2015-06-15', 1000, 'MAKU 2010', 'Vahingot on nyt korjattu, lasku tulossa.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), '2015-07-15', 1000, null, 'Tilaaja maksaa urakoitsijlle.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), '2015-08-01', 1000, 'MAKU 2010', 'Muu erilliskustannus', '2015-08-01', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('asiakastyytyvaisyysbonus', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), '2015-08-15', 1000, 'MAKU 2005', 'Asiakkaat erittäin tyytyväisiä, tyytyväisyysindeksi 0,92.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Kajaani Talvihoito TP 2014-2019'), '2015-09-15', 1000, 'MAKU 2010', 'Muun erilliskustannuksen lisätieto', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh'));
+
+
+-- Sydäntalven lämpötila hoitokaudella ja pitkän ajan keskiarvo, vaikuttaa sallittuun suolamäärään
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
+     VALUES ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
+            '2014-10-01', '2015-09-30', -6.0, -8.8);
+
+-- Suolasakon suuruus ja sidottava indeksi
+INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, talvisuolaraja)
+     VALUES (30.0, 2014, 8, 'MAKU 2010', (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 800);
+
+-- Maksuerät
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'kokonaishintainen', 'Kajaani Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'yksikkohintainen', 'Kajaani Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'lisatyo', 'Kajaani Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'indeksi', 'Kajaani Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'bonus', 'Kajaani Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'sakko', 'Kajaani Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'akillinen-hoitotyo', 'Kajaani Talvihoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 'muu', 'Kajaani Talvihoito TP ME 2014-2019' );
+
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'kokonaishintainen', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'yksikkohintainen', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'lisatyo', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'indeksi', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'bonus', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'sakko', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'akillinen-hoitotyo', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 'muu', 'Kajaani Liikenneympäristön hoito TP ME 2014-2019' );
+
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'kokonaishintainen', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'yksikkohintainen', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'lisatyo', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'indeksi', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'bonus', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'sakko', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'akillinen-hoitotyo', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 'muu', 'Kajaani Sorateiden hoito TP ME 2014-2019' );
+
+-- Kustannussuunnitelmat
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'kokonaishintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'yksikkohintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'lisatyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'indeksi'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'bonus'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'sakko'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'akillinen-hoitotyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019') AND tyyppi = 'muu'));
+
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'kokonaishintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'yksikkohintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'lisatyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'indeksi'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'bonus'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'sakko'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'akillinen-hoitotyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019') AND tyyppi = 'muu'));
+
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'kokonaishintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'yksikkohintainen'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'lisatyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'indeksi'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'bonus'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'sakko'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'akillinen-hoitotyo'));
+INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019') AND tyyppi = 'muu'));
+
+-- Sanktioita
+INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
+VALUES ('A'::sanktiolaji, 100, '2015-01-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 1, true, 2),
+  ('A'::sanktiolaji, 500, '2015-05-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 1, true, 2),
+  ('A'::sanktiolaji, 700, '2015-07-12 06:06.37', null, null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 1, true, 2),
+  ('A'::sanktiolaji, 1000, '2015-08-01 00:00.00', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2),
+  ('A'::sanktiolaji, 800, '2015-08-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2),
+  ('A'::sanktiolaji, 900, '2015-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2),
+  ('A'::sanktiolaji, 20160, '2016-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2);
