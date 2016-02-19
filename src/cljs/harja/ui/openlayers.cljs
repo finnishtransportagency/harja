@@ -329,10 +329,11 @@ nuolten-valimatka 3000)
 
 (defn- create-geometry-layer
   "Create a new ol3 Vector layer with a vector source."
-  []
-  (ol.layer.Vector. #js {:source          (ol.source.Vector.)
-                         :rendererOptions {:zIndexing true
-                                           :yOrdering true}}))
+  [nimi]
+  (doto (ol.layer.Vector. #js {:source          (ol.source.Vector.)
+                             :rendererOptions {:zIndexing true
+                                               :yOrdering true}})
+    (.setProperties #js {"nimi" (name nimi)} true)))
 
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
@@ -627,10 +628,10 @@ nuolten-valimatka 3000)
 updates (creates/removes) the geometries in the layer to match the new items. Returns a new
 vector with the updates ol3 layer and map of geometries.
 If incoming layer & map vector is nil, a new ol3 layer will be created."
-  [ol3 geometry-fn [geometry-layer geometries-map] items]
+  [ol3 geometry-fn [geometry-layer geometries-map] items nimi]
   (let [create? (nil? geometry-layer)
         geometry-layer (if create?
-                         (doto (create-geometry-layer) (.setZIndex (or (:zindex (meta items)) 0)))
+                         (doto (create-geometry-layer nimi) (.setZIndex (or (:zindex (meta items)) 0)))
                          geometry-layer)
         geometries-map (if create? {} geometries-map)
         geometries-set (into #{} (map geometria-avain) items)
@@ -703,7 +704,8 @@ If incoming layer & map vector is nil, a new ol3 layer will be created."
             (recur (assoc new-geometry-layers
                      layer (update-ol3-layer-geometries ol3 geometry-fn
                                                         (get geometry-layers layer)
-                                                        layer-geometries))
+                                                        layer-geometries
+                                                        layer))
                    layers)))))))
 
 
