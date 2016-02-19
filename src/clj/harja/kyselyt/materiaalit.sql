@@ -157,6 +157,7 @@ SELECT
   m.id               AS materiaali_id,
   m.nimi             AS materiaali_nimi,
   m.yksikko          AS materiaali_yksikko,
+  tm.id              AS toteumamateriaali_id,
   tm.maara           AS toteuma_maara,
   t.alkanut          AS toteuma_alkanut,
   t.paattynyt        AS toteuma_paattynyt,
@@ -167,8 +168,8 @@ SELECT
   t.lisatieto        AS toteuma_lisatieto,
   t.suorittajan_nimi AS toteuma_suorittaja,
   t.sopimus
-FROM toteuma t
-  INNER JOIN toteuma_materiaali tm
+FROM toteuma_materiaali tm
+  INNER JOIN toteuma t
     ON tm.toteuma = t.id
        AND tm.poistettu IS NOT TRUE
        AND t.poistettu IS NOT TRUE
