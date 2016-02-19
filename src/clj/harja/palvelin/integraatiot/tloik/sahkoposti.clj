@@ -23,18 +23,18 @@
 
 (def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
   +virheellinen-toimenpide-viesti+
-  {:otsikko "Virheellinen toimenpideviesti"
-   :sisalto "Lähettämäsi viestistä ei voitu päätellä toimenpidetietoja."})
+  {:otsikko "Virheellinen kuittausviesti"
+   :sisalto "Lähettämäsi viestistä ei voitu päätellä kuittauksen tietoja."})
 
 (def ^{:doc "Viesti, joka lähetetään jos päivystäjätietoja tai ilmoitustietoja ei voida päätellä" :private true}
   +ilmoitustoimenpiteen-tallennus-epaonnistui+
-  {:otsikko "Ilmoitustoimenpidettä ei voitu tallentaa"
+  {:otsikko "Kuittausta ei voitu tallentaa"
    :sisalto "Varmista, että vastaat samalla sähköpostiosoitteella, johon ilmoitustiedot toimitettiin."})
 
 (def ^{:doc "Viesti, joka lähetetään onnistuneen ilmoitustoimenpiteen tallennuksen jälkeen." :private true}
   +onnistunut-viesti+
   {:otsikko nil ;; tämä täydennetään ilmoituksen otsikolla
-   :sisalto "Ilmoitustoimenpide tallennettu onnistuneeti."})
+   :sisalto "Kuittaus tallennettu onnistuneesti."})
 
 (def ^{:doc "Template, jolla muodostetaan URL Google static map kuvalle" :private true :const true}
   goole-static-map-url-template
