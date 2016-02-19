@@ -95,14 +95,19 @@
 
    ;; Pienemmät ikonit (pinnit)
    :laatupoikkeama        "tummansininen"
-   :tarkastus             "keltainen"
+   :tarkastus             "punainen"
    :varustetoteuma        "violetti"
-   :yllapito              "vihrea"})
+   :yllapito              "pinkki"})
 
 (def viivojen-varit
   {:yllapito-aloitettu puhtaat/keltainen
-   :yllapito-valmis puhtaat/vihrea
-   :yllapito-muu puhtaat/sininen})
+   :yllapito-valmis puhtaat/lime
+   :yllapito-muu puhtaat/syaani
+   :yllapito-pohja puhtaat/musta
+   :yllapito-katkoviiva puhtaat/tummanharmaa
+
+   :ok-tarkastus alpha/vaaleanharmaa
+   :ei-ok-tarkastus puhtaat/punainen})
 
 
 (def auraus-tasaus-ja-kolmas [(monivarinen-viiva puhtaat/sininen puhtaat/oranssi puhtaat/violetti) "oranssi"])
@@ -175,14 +180,23 @@
    :tyyppi :merkki
    :img (:yllapito ikonien-varit)})
 
-(defn yllapidon-viiva [valittu? avoin? tila]
-  {:color (case (keyword (clojure.string/lower-case tila))
-            :aloitettu (:yllapito-aloitettu viivojen-varit)
-            :valmis (:yllapito-valmis viivojen-varit)
-            (:yllapito-muu viivojen-varit))
-   :width (if avoin?
-            (if valittu? (+ 2 +valitun-leveys+) (+ 2 +normaali-leveys+))
-            (if valittu? +valitun-leveys+ +normaali-leveys+))})
+(defn yllapidon-viiva [valittu? avoin? tila tyyppi]
+  (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
+        leveydet (range (cond
+                          (and valittu? avoin?) (+ 2 +valitun-leveys+)
+                          avoin? (+ 2 +normaali-leveys+)
+                          valittu? +valitun-leveys+
+                          :else +normaali-leveys+) 0 -2)]
+    [{:color (:yllapito-pohja viivojen-varit)
+     :width (nth leveydet 0)}
+    {:color (case (keyword ((fnil clojure.string/lower-case "muu") tila))
+              :aloitettu (:yllapito-aloitettu viivojen-varit)
+              :valmis (:yllapito-valmis viivojen-varit)
+              (:yllapito-muu viivojen-varit))
+     :width (nth leveydet 1)}
+     {:color (:yllapito-katkoviiva viivojen-varit)
+      :dash (if (= tyyppi :paikkaus) [3 9] [9 3])
+      :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
   (sijainti-ikoni (case kt-tila
@@ -199,7 +213,8 @@
     (and valittu? ok?) (pinni-ikoni (:tarkastus ikonien-varit)))) ;; Ei näytetä ok-tarkastuksia jos ei ole valittu
 
 (defn tarkastuksen-reitti [ok?]
-  (when ok? {:color alpha/vaaleanharmaa})) ;; Muuten oletusasetukset
+  (if ok? (:ok-tarkastus viivojen-varit)
+          (:ei-ok-tarkastus viivojen-varit)))
 
 (defn laatupoikkeaman-ikoni []
   (pinni-ikoni (:laatupoikkeama ikonien-varit)))
