@@ -126,7 +126,8 @@
    (for [[nimi vari] (partition 2 varit-ja-nimet)]
      [:div.kartan-ikoni-vari {:style {:background-color vari
                                       :width            "20px"
-                                      :height           "20px"}}
+                                      :height           "20px"
+                                      :margin-left 0}}
       [:span
        {:style {:left "20px"
                 :position "relative"}}
