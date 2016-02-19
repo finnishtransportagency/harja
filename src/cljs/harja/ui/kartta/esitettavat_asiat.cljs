@@ -135,6 +135,18 @@
          {:type   :viiva
           :points koordinaatit})))))
 
+;;;;;;
+
+(defn- viivojen-varit-leveimmasta-kapeimpaan [viivat]
+  (let [sortattu (sort-by :width >
+                          ;; Täydennä väliaikaisesti tänne oletusarvot,
+                          ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
+                          ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
+                          (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
+                                          :color (or (:color %) ulkoasu/+normaali-vari+))
+                                viivat))]
+    (mapv :color sortattu)))
+
 (defmulti
   ^{:private true}
   asia-kartalle :tyyppi-kartalla)
@@ -252,7 +264,7 @@
     (assoc pt
       :nimi (or (:nimi pt) teksti)
       :selite {:teksti teksti
-               :vari   {:color viiva}}
+               :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature pt (valittu-fn? pt)
                                 ikoni
                                 viiva))))
@@ -331,16 +343,6 @@
     (-> (or (maaritelty-tyyli tehtava) (generoitu-tyyli (str/join ", " tehtava)))
         validoi-viiva
         viimeistele-asetukset)))
-
-(defn- viivojen-varit-leveimmasta-kapeimpaan [viivat]
-  (let [sortattu (sort-by :width >
-                          ;; Täydennä väliaikaisesti tänne oletusarvot,
-                          ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
-                          ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
-                          (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
-                                          :color (or (:color %) ulkoasu/+normaali-vari+))
-                                viivat))]
-    (mapv :color sortattu)))
 
 (defmethod asia-kartalle :toteuma [toteuma valittu-fn?]
   ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä (ei yksittäisistä reittipisteistä)

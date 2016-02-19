@@ -283,48 +283,50 @@
           [:table
            [:tbody
             (for [{:keys [img nimi vari teksti]} selitteet]
-              ^{:key (str (or vari img) "_" nimi)}
-              [:tr
-               (cond
-                 (string? vari)
-                 [:td.kartan-ikonien-selitykset-ikoni-sarake
-                  [:div.kartan-ikoni-vari {:style {:background-color vari
-                                                   :width            (str varilaatikon-koko "px")
-                                                   :height           (str varilaatikon-koko "px")}}]]
-
-                 (coll? vari)
-                 (let [vk varilaatikon-koko
-                       kaikki-koot [[vk]
-                                    [vk (- vk 10)]
-                                    [vk (- vk 6) (- vk 12)]
-                                    [vk (- vk 4) (- vk 8) (- vk 12)]]
-                       koot (nth kaikki-koot (dec (count vari)) (take (count vari) (range vk 0 -2)))
-                       solut (partition 2 (interleave koot vari))
-                       pohja (first solut)
-                       sisakkaiset (butlast (rest solut))
-                       viimeinen (last solut)]
+              (when
+                (or (not-empty vari) (not-empty img))
+                ^{:key (str (or vari img) "_" nimi)}
+                [:tr
+                 (cond
+                   (string? vari)
                    [:td.kartan-ikonien-selitykset-ikoni-sarake
-                    [:div.kartan-ikoni-vari-pohja {:style {:background-color (second pohja)
-                                                           :width            (first pohja)
-                                                           :height           (first pohja)}}]
-                    (doall
-                      (for [[koko v] sisakkaiset]
-                        ^{:key (str koko "_" v "--" nimi)}
-                        [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color v
-                                                                     :width            koko
-                                                                     :height           koko
-                                                                     :margin           (/ (- varilaatikon-koko koko) 2)}}]))
+                    [:div.kartan-ikoni-vari {:style {:background-color vari
+                                                     :width            (str varilaatikon-koko "px")
+                                                     :height           (str varilaatikon-koko "px")}}]]
 
-                    [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color (second viimeinen)
-                                                                 :width            (first viimeinen)
-                                                                 :height           (first viimeinen)
-                                                                 :position         "relative"
-                                                                 :margin           (/ (- varilaatikon-koko (first viimeinen)) 2)}}]])
+                   (coll? vari)
+                   (let [vk varilaatikon-koko
+                         kaikki-koot [[vk]
+                                      [vk (- vk 10)]
+                                      [vk (- vk 6) (- vk 12)]
+                                      [vk (- vk 4) (- vk 8) (- vk 12)]]
+                         koot (nth kaikki-koot (dec (count vari)) (take (count vari) (range vk 0 -2)))
+                         solut (partition 2 (interleave koot vari))
+                         pohja (first solut)
+                         sisakkaiset (butlast (rest solut))
+                         viimeinen (last solut)]
+                     [:td.kartan-ikonien-selitykset-ikoni-sarake
+                      [:div.kartan-ikoni-vari-pohja {:style {:background-color (second pohja)
+                                                             :width            (first pohja)
+                                                             :height           (first pohja)}}]
+                      (doall
+                        (for [[koko v] sisakkaiset]
+                          ^{:key (str koko "_" v "--" nimi)}
+                          [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color v
+                                                                       :width            koko
+                                                                       :height           koko
+                                                                       :margin           (/ (- varilaatikon-koko koko) 2)}}]))
+
+                      [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color (second viimeinen)
+                                                                   :width            (first viimeinen)
+                                                                   :height           (first viimeinen)
+                                                                   :position         "relative"
+                                                                   :margin           (/ (- varilaatikon-koko (first viimeinen)) 2)}}]])
 
 
-                 :else [:td.kartan-ikonien-selitykset-ikoni-sarake
-                        [:img.kartan-ikonien-selitykset-ikoni {:src img}]])
-               [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]])]]
+                   :else [:td.kartan-ikonien-selitykset-ikoni-sarake
+                          [:img.kartan-ikonien-selitykset-ikoni {:src img}]])
+                 [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]]))]]
           [:div.kartan-ikonien-selitykset-sulje.klikattava
            {:on-click (fn [event]
                         (reset! ikonien-selitykset-auki false)
