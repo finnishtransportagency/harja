@@ -196,7 +196,7 @@
   (str etuliite " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
-  (let [ikoni (ulkoasu/laatupoikkeaman-ikoni)
+  (let [ikoni (ulkoasu/laatupoikkeaman-ikoni (:tekija laatupoikkeama))
         otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
     (assoc laatupoikkeama
       :type :laatupoikkeama
