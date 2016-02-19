@@ -84,6 +84,9 @@ ssh -L7777:localhost:5432 harja-dfb1-stg
 
 
 ## Autogeneroi nuolikuvat SVG:nä
+Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
+Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
+puhtaat -namespacessa määriteltyihin.
 
 (def varit {"punainen" "rgb(255,0,0)"
             "oranssi" "rgb(255,128,0)"
