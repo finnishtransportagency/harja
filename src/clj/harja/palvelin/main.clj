@@ -271,10 +271,12 @@
                                                (:geometriapaivitykset asetukset))
                                              [:db :integraatioloki])
 
-<<<<<<< HEAD
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
                      [:http-palvelin :db])
+      :karttakuvat (component/using
+                   (karttakuvat/->Karttakuvat)
+                   [:http-palvelin :db])
 
       ;; Harja API
       :api-urakat (component/using
@@ -314,53 +316,6 @@
                                       [:http-palvelin :db :integraatioloki :tierekisteri])
       :api-ilmoitukset (component/using (api-ilmoitukset/->Ilmoitukset)
                                         [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik]))))
-=======
-     :tilannekuva (component/using
-                    (tilannekuva/->Tilannekuva)
-                    [:http-palvelin :db])
-     :karttakuvat (component/using
-                   (karttakuvat/->Karttakuvat)
-                   [:http-palvelin :db])
-     
-     ;; Harja API
-     :api-urakat (component/using
-                  (api-urakat/->Urakat)
-                  [:http-palvelin :db :integraatioloki])
-     :api-laatupoikkeamat (component/using
-                           (api-laatupoikkeamat/->Laatupoikkeamat)
-                           [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
-     :api-paivystajatiedot (component/using
-                            (api-paivystajatiedot/->Paivystajatiedot)
-                            [:http-palvelin :db :integraatioloki])
-     :api-pistetoteuma (component/using
-                        (api-pistetoteuma/->Pistetoteuma)
-                        [:http-palvelin :db :integraatioloki])
-     :api-reittitoteuma (component/using
-                         (api-reittitoteuma/->Reittitoteuma)
-                         [:http-palvelin :db :integraatioloki])
-     :api-varustetoteuma (component/using
-                          (api-varustetoteuma/->Varustetoteuma)
-                          [:http-palvelin :db :tierekisteri :integraatioloki])
-     :api-siltatarkastukset (component/using
-                             (api-siltatarkastukset/->Siltatarkastukset)
-                             [:http-palvelin :db :integraatioloki])
-     :api-tarkastukset (component/using
-                        (api-tarkastukset/->Tarkastukset)
-                        [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
-     :api-tyokoneenseuranta (component/using
-                             (api-tyokoneenseuranta/->Tyokoneenseuranta)
-                             [:http-palvelin :db])
-     :api-tyokoneenseuranta-puhdistus (component/using (tks-putsaus/->TyokoneenseurantaPuhdistus)
-                                                       [:db])
-     :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                                 [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
-     :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
-                                                 [:db])
-     :api-varusteet (component/using (api-varusteet/->Varusteet)
-                                     [:http-palvelin :db :integraatioloki :tierekisteri])
-     :api-ilmoitukset (component/using (api-ilmoitukset/->Ilmoitukset)
-                                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik]))))
->>>>>>> a3a4c77... Kokeile kuvatasoa
 
 (defonce harja-jarjestelma nil)
 
