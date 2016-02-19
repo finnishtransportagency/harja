@@ -109,7 +109,7 @@
    :yllapito-pohja puhtaat/musta
    :yllapito-katkoviiva puhtaat/tummanharmaa
 
-   :ok-tarkastus alpha/vaaleanharmaa
+   :ok-tarkastus puhtaat/harmaa
    :ei-ok-tarkastus puhtaat/punainen})
 
 
@@ -218,7 +218,9 @@
 
 (defn tarkastuksen-reitti [ok?]
   (if ok? (:ok-tarkastus viivojen-varit)
-          (:ei-ok-tarkastus viivojen-varit)))
+          {:color (:ei-ok-tarkastus viivojen-varit)
+           :width 2
+           :dash [2 10]}))
 
 (defn laatupoikkeaman-ikoni [tekija]
   (pinni-ikoni (case tekija
