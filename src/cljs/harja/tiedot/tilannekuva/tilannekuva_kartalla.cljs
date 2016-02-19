@@ -2,8 +2,11 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+            [harja.atom :refer-macros [reaction<!]
+             :refer [paivita-periodisesti]]
+            [harja.ui.kartta.esitettavat-asiat
+             :refer [kartalla-esitettavaan-muotoon]]
+            [harja.ui.openlayers :as openlayers])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -27,9 +30,9 @@
 
    :toteumat               #(assoc % :tyyppi-kartalla :toteuma)})
 
-(def ^{:doc "Mäpätään tilannekuvan tasojen nimet :tilannekuva- etuliitteelle, etteivät ne mene 
-päällekkäin muiden tasojen kanssa."}
-karttatason-nimi
+(def ^{:doc "Mäpätään tilannekuvan tasojen nimet :tilannekuva- etuliitteelle,
+etteivät ne mene päällekkäin muiden tasojen kanssa."}
+  karttatason-nimi
   {:ilmoitukset            :tilannekuva-ilmoitukset
    :turvallisuuspoikkeamat :tilannekuva-turvallisuuspoikkeamat
    :tarkastukset           :tilannekuva-tarkastukset
@@ -40,40 +43,49 @@ karttatason-nimi
    :toteumat               :tilannekuva-toteumat})
 
 ;; Päivittää tilannekuvan karttatasot kun niiden tiedot ovat muuttuneet.
-;; Muuntaa kartalla esitettävään muotoon ne tasot, joiden tiedot on oikeasti muuttuneet.
-(defonce paivita-tilannekuvatasot
-         (add-watch haetut-asiat
-                    :paivita-tilannekuvatasot
-                    (fn [_ _ vanha uusi]
-                      (if (nil? uusi)
-                        ;; Jos tilannekuva poistuu näkyvistä, haetut-asiat on nil
-                        (reset! tilannekuvan-asiat-kartalla {})
+;; Muuntaa kartalla esitettävään muotoon ne tasot, joiden tiedot on oikeasti
+;; muuttuneet.
+(defn paivita-tilannekuvatasot
+  "Päivittää tilannekuvan karttatasot kun niiden tiedot haetuissa asioissa
+ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
+  [vanha uusi]
+  (if (nil? uusi)
+    ;; Jos tilannekuva poistuu näkyvistä, haetut-asiat on nil
+    (reset! tilannekuvan-asiat-kartalla {})
 
-                        ;; Päivitä kaikki eri tyyppiset asiat
-                        (let [tasot (into #{} (concat (keys uusi) (keys vanha)))]
-                          (loop [uudet-tasot {}
-                                 [taso & tasot] (seq tasot)]
-                            (if-not taso
-                              (swap! tilannekuvan-asiat-kartalla merge uudet-tasot)
-                              (let [vanhat-asiat (get vanha taso)
-                                    uudet-asiat (get uusi taso)
-                                    tason-nimi (karttatason-nimi taso)]
-                                (recur (cond
-                                         ;; Jos taso on nyt tyhjä, poistetaan se (nil taso poistuu kartalta)
-                                         (empty? uudet-asiat)
-                                         (assoc uudet-tasot tason-nimi nil)
+    ;; Päivitä kaikki eri tyyppiset asiat
+    (let [tasot (into #{} (concat (keys uusi) (keys vanha)))]
+      (loop [uudet-tasot {}
+             [taso & tasot] (seq tasot)]
+        (if-not taso
+          (swap! tilannekuvan-asiat-kartalla merge uudet-tasot)
+          (let [vanhat-asiat (get vanha taso)
+                uudet-asiat (get uusi taso)
+                tason-nimi (karttatason-nimi taso)]
+            (log "TASON NIMI: " (pr-str tason-nimi))
+            (recur (cond
+                     ;; Jos taso on nyt tyhjä, poistetaan se
+                     ;; (nil taso poistuu kartalta)
+                     (empty? uudet-asiat)
+                     (assoc uudet-tasot tason-nimi nil)
 
-                                         ;; Jos tason asiat ovat muuttuneet, muodostetaan kartalla esitettävä muoto
-                                         (not= vanhat-asiat uudet-asiat)
-                                         (assoc uudet-tasot
-                                           tason-nimi (kartalla-esitettavaan-muotoon
-                                                        uudet-asiat
-                                                        nil nil
-                                                        (map (lisaa-karttatyyppi-fn taso))))
+                     ;; Jos taso on kuva
+                     (= taso :toteumat)
+                     (assoc uudet-tasot
+                            tason-nimi (openlayers/luo-kuvataso))
 
-                                         :default
-                                         uudet-tasot)
-                                       tasot)))))))))
+                     ;; Jos tason asiat ovat muuttuneet, muodostetaan
+                     ;; kartalla esitettävä muoto
+                     (not= vanhat-asiat uudet-asiat)
+                     (assoc uudet-tasot
+                            tason-nimi (kartalla-esitettavaan-muotoon
+                                        uudet-asiat
+                                        nil nil
+                                        (map (lisaa-karttatyyppi-fn taso))))
 
+                     :default
+                     uudet-tasot)
+                   tasot)))))))
 
-
+(add-watch haetut-asiat :paivita-tilannekuvatasot
+           (fn [_ _ vanha uusi] (paivita-tilannekuvatasot vanha uusi)))

@@ -9,7 +9,6 @@
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.tiedot.navigaatio :as nav])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]

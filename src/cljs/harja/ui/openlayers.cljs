@@ -472,10 +472,10 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn- luo-feature [geom]
   (try
-    (luo-feature geom)
+    (featuret/luo-feature geom)
     (catch js/Error e
       (log (pr-str e))
-      (log (pr-str "Problem in luo-feature, geom: " geom " avain: " avain))
+      (log (pr-str "Problem in luo-feature, geom: " geom))
       nil)))
 
 (def ^{:doc "Tyypit, joille pitää kutsua aseta-tyylit" :private true}
