@@ -158,7 +158,7 @@
     (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(valitse-turvallisuuspoikkeama (:id @nav/valittu-urakka) (:id %2)))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :L))
+                        (nav/vaihda-kartan-koko! :M))
                       #(do
                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))

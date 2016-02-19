@@ -196,7 +196,11 @@
   [& args]
   (let [koko @nav/kartan-koko]
     (if-not (= :hidden koko)
-      [kartan-paikkavaraus koko args]
+      (if (= :S koko)
+        [:span
+         [kartan-paikkavaraus koko args]
+         [:div.pystyvali-karttanapille]]
+        [kartan-paikkavaraus koko args])
       [:span.ei-karttaa])))
 
 

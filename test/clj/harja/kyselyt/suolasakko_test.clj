@@ -38,7 +38,9 @@
                  sallittu-maara (gen/choose 1 10000)
                  kaytetty-maara (gen/choose 1 10000)]
 
-                (let [erotus (- lampotila lampotila-pitka)
+                (let [lampotila (bigdec lampotila)
+                      lampotila-pitka (bigdec lampotila-pitka)
+                      erotus (- lampotila lampotila-pitka)
                       sal (cond
                             (>= erotus 4) (* sallittu-maara 1.30)
                             (>= erotus 3) (* sallittu-maara 1.20)

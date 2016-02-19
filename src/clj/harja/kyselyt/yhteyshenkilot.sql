@@ -83,6 +83,7 @@ WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
 SELECT
+  k.id,
   kur.rooli,
   k.etunimi,
   k.sukunimi,

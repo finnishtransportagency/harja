@@ -376,8 +376,8 @@ documentation:
          is: [secured]
          description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset palautetaan. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
          queryParameters:
-          urakoitsijaId:
-            description: Urakoitsijan id, jolle haetaan ilmoitusket
+          urakkaId:
+            description: Urakan id, jolle haetaan ilmoitukset
             type: integer
             required: true
             example: 1

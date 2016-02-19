@@ -205,10 +205,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
           (if (or (nil? muokattava?) (muokattava? rivi))
             ^{:key (str nimi)}
-            [:td {:class (str tasaus-luokka (if-not (empty? kentan-virheet)
-                                              " sisaltaa-virheen"
-                                              (when-not (empty? kentan-varoitukset)
-                                                " sisaltaa-varoituksen")))}
+            [:td {:class (str "muokattava " tasaus-luokka (if-not (empty? kentan-virheet)
+                                                            " sisaltaa-virheen"
+                                                            (when-not (empty? kentan-varoitukset)
+                                                              " sisaltaa-varoituksen")))}
              (if-not (empty? kentan-virheet)
                (virheen-ohje kentan-virheet)
                (if-not (empty? kentan-varoitukset)
@@ -249,7 +249,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                    (aseta rivi uusi)))
                     (muokkaa! id assoc nimi uusi))))]]
             ^{:key (str nimi)}
-            [:td {:class tasaus-luokka}
+            [:td {:class (str "ei-muokattava " tasaus-luokka)}
              ((or fmt str) (hae rivi))])))))
    (when-not piilota-toiminnot?
      [:td.toiminnot

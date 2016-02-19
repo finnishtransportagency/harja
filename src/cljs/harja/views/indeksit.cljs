@@ -27,6 +27,7 @@
       :tyhja        (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
       :tallenna     #(tallenna-indeksi indeksin-nimi rivit %)
       :tunniste     :vuosi
+      :piilota-toiminnot? true
       :voi-poistaa? #(not (:kannassa? %))}
      [{:otsikko       "Vuosi" :nimi :vuosi :tyyppi :valinta :leveys "17%"
        :valinta-arvo  identity
