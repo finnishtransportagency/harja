@@ -1,19 +1,8 @@
-(ns harja.ui.openlayers.tasot
-  "Määrittelee karttatason kaltaisen protokollan"
+(ns harja.ui.openlayers.geometriataso
+  "Geometriataso, joka muodostaa tason vektorista mäppejä."
   (:require [harja.ui.openlayers.featuret :as featuret]
+            [harja.ui.openlayers.taso :refer [Taso]]
             [harja.loki :refer [log]]))
-
-(defprotocol Taso
-  (aseta-z-index [this z-index]
-                 "Palauttaa uuden version tasosta, jossa zindex on asetettu")
-  (extent [this] "Palauttaa tason geometrioiden extentin [minx miny maxx maxy]")
-  (selitteet [this] "Palauttaa tällä tasolla olevien asioiden selitteet")
-  (paivita-ol-taso
-   [this ol3 ol-layer aiempi-paivitystieto]
-   "Päivitä ol-layer tai luo uusi layer. Tulee palauttaa vektori, jossa on
-ol3 Layer objekti ja tälle tasolle spesifinen päivitystieto. Palautettu
-päivitystieto annettaan seuraavalla kerralla aiempi-paivitystieto
-parametrina takaisin."))
 
 (defn- luo-feature [geom]
   (try
@@ -76,12 +65,12 @@ parametrina takaisin."))
                       (when-let [new-shape (luo-feature alue)]
                         (aseta-feature-geometria! new-shape item)
                         (.addFeature features new-shape)
-                        
+
                         ;; Aseta geneerinen tyyli tyypeille,
                         ;; joiden luo-feature ei sitä tee
                         (when (tyyppi-tarvitsee-tyylit (:type alue))
                           (featuret/aseta-tyylit new-shape alue))
-                        
+
                         new-shape)))
            items))))))
 
@@ -96,5 +85,7 @@ parametrina takaisin."))
     (-> this meta :extent))
   (selitteet [this]
     (-> this meta :selitteet))
-  (paivita-ol-taso [items ol3 ol-layer aiempi-paivitystieto]
+  (paivita [items ol3 ol-layer aiempi-paivitystieto]
     (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items)))
+
+

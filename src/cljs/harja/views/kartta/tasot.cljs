@@ -23,7 +23,7 @@
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
-            [harja.ui.openlayers.tasot :as tasot]
+            [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.alpha :as varit])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
@@ -123,7 +123,7 @@
   ([taso] (aseta-z-index taso oletus-zindex))
   ([taso z-index]
    (when taso
-     (tasot/aseta-z-index taso z-index))))
+     (taso/aseta-z-index taso z-index))))
 
 (def geometriat
   (reaction

@@ -6,7 +6,8 @@
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
             [harja.ui.openlayers.featuret :refer [aseta-tyylit] :as featuret]
-            [harja.ui.openlayers.tasot :as tasot]
+            [harja.ui.openlayers.taso :as taso]
+            [harja.ui.openlayers.geometriataso]
             [harja.ui.dom :as dom]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -478,7 +479,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
           (reagent/set-state component {:geometry-layers new-geometry-layers}))
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
-                        layer (apply tasot/paivita-ol-taso
+                        layer (apply taso/paivita
                                      taso ol3
                                      (get geometry-layers layer)))
                  layers)
