@@ -1,7 +1,8 @@
 (ns harja.palvelin.palvelut.karttakuvat
   (:require [com.stuartsierra.component :as component]
             [ring.middleware.params :refer [wrap-params]]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]])
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-palvelu poista-palvelu]])
   (:import (java.awt.image BufferedImage)
            (java.awt Color BasicStroke)
            (javax.imageio ImageIO)))
@@ -16,8 +17,9 @@
   (-> parametrit (get avain) (Double/parseDouble)))
 
 (defn- lue-parametrit [parametrit]
-  (let [[x1 y1 x2 y2 resoluutio pixel-ratio] (map (partial lue-numero parametrit)
-                                                  ["x1" "y1" "x2" "y2" "r" "pr"])
+  (let [[x1 y1 x2 y2 resoluutio pixel-ratio]
+        (map (partial lue-numero parametrit)
+             ["x1" "y1" "x2" "y2" "r" "pr"])
         dx (Math/abs (- x2 x1))
         dy (Math/abs (- y2 y1))]
     {;; tuotettavan kuvan koko
