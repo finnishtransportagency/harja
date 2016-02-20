@@ -244,6 +244,7 @@
 
 (defn hae-tilannekuvaan
   [db user tiedot]
+  (println (pr-str tiedot))
   (let [urakat (urakat/kayttajan-urakat-aikavalilta db user
                                                     (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                                     (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
