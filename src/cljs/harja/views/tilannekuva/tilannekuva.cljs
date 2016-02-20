@@ -133,9 +133,9 @@
          (when (auki?)
            [:div.tk-checkbox-ryhma-sisalto
             (doall (for [elementti (seq ryhman-elementtien-avaimet)]
-                     ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet elementti))}
+                     ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
                      [yksittainen-suodatincheckbox
-                      (get tiedot/suodattimien-nimet elementti)
+                      (:otsikko elementti)
                       suodattimet-atom
                       (conj ryhma-polku elementti)]))])]))))
 

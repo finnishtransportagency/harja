@@ -34,43 +34,14 @@
 (defn toteumat [db user]
   (:toteumat
    (harja.palvelin.palvelut.tilannekuva/hae-tilannekuvaan
-    db user {:talvi {"pinnan tasaus" true,
-                     "lumivallien madaltaminen" true,
-                     "aurausviitoitus ja kinostimet" true,
-                     "suolaus" true,
-                     "muu" true,
-                     "sulamisveden haittojen torjunta" true,
-                     "linjahiekoitus" true,
-                     "lumensiirto" true,
-                     "liuossuolaus" true,
-                     "auraus ja sohjonpoisto" true,
-                     "pistehiekoitus" true,
-                     "paannejaan poisto" true},
+    db user {:talvi #{20 24 39 21 40 41 17 23 19 38 18 42},
              :urakka-id nil,
              :turvallisuus {:turvallisuuspoikkeamat false}
              :laatupoikkeamat {:tilaaja false, :urakoitsija false, :konsultti false}
-             :kesa {"pinnan tasaus" false,
-                    "paallysteiden juotostyot" false,
-                    "sorateiden polynsidonta" false,
-                    "harjaus" false,
-                    "l- ja p-alueiden puhdistus" false,
-                    "muu" false,
-                    "koneellinen vesakonraivaus" false,
-                    "paallysteiden paikkaus" false,
-                    "koneellinen niitto" false,
-                    "siltojen puhdistus" false,
-                    "liikennemerkkien puhdistus" false,
-                    "sorastus" false,
-                    "sorateiden tasaus" false,
-                    "sorateiden muokkaushoylays" false},
+             :kesa #{},
              :alue {:xmin -906240, :ymin 6829056, :xmax 1995776, :ymax 7654400}
-             :ilmoitukset {:tyypit {:toimenpidepyynto false,
-                                    :kysely false, :tiedoitus false}
-                           :tilat #{:avoimet}}
-             :yllapito {:paallystys false, :paikkaus false}
              :hallintayksikko 9
              :urakoitsija nil
-             :tarkastukset {:tiesto false, :talvihoito false, :soratie false, :laatu false, :pistokoe false}
              :alku #inst "2016-02-13T06:55:39.000-00:00"
              :nykytilanne? true
              :loppu #inst "2016-02-20T06:55:39.000-00:00" :urakkatyyppi :hoito})))

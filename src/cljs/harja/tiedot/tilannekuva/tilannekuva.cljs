@@ -10,7 +10,8 @@
             [harja.atom :refer-macros [reaction<!] :refer [paivita-periodisesti]]
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.tilannekuva :as tk])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -33,145 +34,63 @@ hakutiheys-nykytilanne 10000)
        :const true}
 hakutiheys-historiakuva 1200000)
 
-;; Jokaiselle suodattimelle teksti, jolla se esitetään käyttöliittymässä
-(def suodattimien-nimet
-  {:laatupoikkeamat                  "Laatupoikkeamat"
-   :tilaaja                          "Tilaaja"
-   :urakoitsija                      "Urakoitsija"
-   :konsultti                        "Konsultti"
-
-   :tarkastukset                     "Tarkastukset"
-   :tiesto                           "Tiestö"
-   :talvihoito                       "Talvihoito"
-   :soratie                          "Soratie"
-   :laatu                            "Laatu"
-   :pistokoe                         "Pistokoe"
-
-   :turvallisuuspoikkeamat           "Turvallisuuspoikkeamat"
-
-   :toimenpidepyynto                 "TPP"
-   :tiedoitus                        "TUR"
-   :kysely                           "URK"
-
-   :paallystys                       "Päällystystyöt"
-   :paikkaus                         "Paikkaustyöt"
-
-   "auraus ja sohjonpoisto"          "Auraus ja sohjonpoisto"
-   "suolaus"                         "Suolaus"
-   "pistehiekoitus"                  "Pistehiekoitus"
-   "linjahiekoitus"                  "Linjahiekoitus"
-   "pinnan tasaus"                   "Pinnan tasaus"
-   "liikennemerkkien puhdistus"      "Liikennemerkkien puhdistus"
-   "lumivallien madaltaminen"        "Lumivallien madaltaminen"
-   "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"
-   "tiestotarkastus"                 "Tiestötarkastus"
-   "kelintarkastus"                  "Kelintarkastus"
-   "harjaus"                         "Harjaus"
-   "koneellinen niitto"              "Koneellinen niitto"
-   "koneellinen vesakonraivaus"      "Koneellinen vesakonraivaus"
-   "sorateiden muokkaushoylays"      "Sorateiden muokkaushöyläys"
-   "sorateiden polynsidonta"         "Sorateiden pölynsidonta"
-   "sorateiden tasaus"               "Sorateiden tasaus"
-   "sorastus"                        "Sorastus"
-   "paallysteiden paikkaus"          "Päällysteiden paikkaus"
-   "paallysteiden juotostyot"        "Päällysteiden juotostyöt"
-   "siltojen puhdistus"              "Siltojen puhdistus"
-   "l- ja p-alueiden puhdistus"      "L- ja P-alueiden puhdistus"
-   "muu"                             "Muu"
-   "liuossuolaus"                    "Liuossuolaus"
-   "aurausviitoitus ja kinostimet"   "Aurausviitoitus ja kinostimet"
-   "lumensiirto"                     "Lumensiirto"
-   "paannejaan poisto"               "Paannejään poisto"})
-
-(def jarjestys
-  {:talvi ["auraus ja sohjonpoisto"
-           "suolaus"
-           "liuossuolaus"
-           "pistehiekoitus"
-           "linjahiekoitus"
-           "pinnan tasaus"
-           "lumivallien madaltaminen"
-           "sulamisveden haittojen torjunta"
-           "aurausviitoitus ja kinostimet"
-           "lumensiirto"
-           "paannejaan poisto"
-           "muu"]
-   :kesa  ["sorateiden polynsidonta"
-           "sorastus"
-           "sorateiden tasaus"
-           "sorateiden muokkaushoylays"
-           "paallysteiden paikkaus"
-           "paallysteiden juotostyot"
-           "koneellinen niitto"
-           "koneellinen vesakonraivaus"
-           "harjaus"
-           "pinnan tasaus"
-           "liikennemerkkien puhdistus"
-           "l- ja p-alueiden puhdistus"
-           "siltojen puhdistus"
-           "muu"]})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
-  (atom {:yllapito        {:paallystys false
-                           :paikkaus   false}
-         :ilmoitukset     {:tyypit {:toimenpidepyynto false
-                                    :kysely           false
-                                    :tiedoitus        false}
+  (atom {:yllapito        {tk/paallystys false
+                           tk/paikkaus   false}
+         :ilmoitukset     {:tyypit {tk/tpp false
+                                    tk/urk false
+                                    tk/tur false}
                            :tilat  #{:avoimet}}
-         :turvallisuus    {:turvallisuuspoikkeamat false}
-         :laatupoikkeamat {:tilaaja     false
-                           :urakoitsija false
-                           :konsultti   false}
-         :tarkastukset    {:tiesto     false
-                           :talvihoito false
-                           :soratie    false
-                           :laatu      false
-                           :pistokoe   false}
+         :turvallisuus    {tk/turvallisuuspoikkeamat false}
+         :laatupoikkeamat {tk/laatupoikkeama-tilaaja     false
+                           tk/laatupoikkeama-urakoitsija false
+                           tk/laatupoikkeama-konsultti   false}
+         :tarkastukset    {tk/tarkastus-tiesto     false
+                           tk/tarkastus-talvihoito false
+                           tk/tarkastus-soratie    false
+                           tk/tarkastus-laatu      false
+                           tk/tarkastus-pistokoe   false}
          ;; Näiden pitää osua työkoneen enumeihin
          ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
          ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
          ;; tekoa halutaan seurana livenä, niin arvot on täällä valmiiksi
          ;; copypastettavissa..
-         :talvi {"auraus ja sohjonpoisto"          false
-                 "suolaus"                         false
-                 "pistehiekoitus"                  false
-                 "linjahiekoitus"                  false
-                 "lumivallien madaltaminen"        false
-                 "sulamisveden haittojen torjunta" false
-                 ;;"kelintarkastus"                  false
-                 "liuossuolaus"                    false
-                 "aurausviitoitus ja kinostimet"   false
-                 "lumensiirto"                     false
-                 "paannejaan poisto"               false
-                 "muu"                             false
+         :talvi {tk/auraus-ja-sohjonpoisto          false
+                 tk/suolaus                         false
+                 tk/pistehiekoitus                  false
+                 tk/linjahiekoitus                  false
+                 tk/lumivallien-madaltaminen        false
+                 tk/sulamisveden-haittojen-torjunta false
+                 tk/liuossuolaus                    false
+                 tk/aurausviitoitus-ja-kinostimet   false
+                 tk/lumensiirto                     false
+                 tk/paannejaan-poisto               false
+                 tk/muu                             false
 
                  ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne
                  ;; mailissaan pyysi, että pinnan tasaus tulee myös
                  ;; talvitoimenpiteisiin. Maili liittyi suodattimien
                  ;; järjestykseen. Pyysin tarkennusta, mutta
                  ;; päätin commitoida tämän talteen ettei vaan pääse unohtumaan.
-                 "pinnan tasaus"                   false}
-         :kesa {;;"tiestotarkastus"            false
-                "koneellinen niitto"         false
-                "koneellinen vesakonraivaus" false
+                 tk/pinnan-tasaus                   false}
+         :kesa {tk/koneellinen-niitto         false
+                tk/koneellinen-vesakonraivaus false
+                tk/liikennemerkkien-puhdistus false
+                tk/sorateiden-muokkaushoylays false
+                tk/sorateiden-polynsidonta    false
+                tk/sorateiden-tasaus          false
+                tk/sorastus                   false
+                tk/harjaus                    false
+                tk/pinnan-tasaus              false
+                tk/paallysteiden-paikkaus     false
+                tk/paallysteiden-juotostyot   false
+                tk/siltojen-puhdistus         false
+                tk/l-ja-p-alueiden-puhdistus  false
+                tk/muu                        false}}))
 
-                "liikennemerkkien puhdistus" false
-
-                "sorateiden muokkaushoylays" false
-                "sorateiden polynsidonta"    false
-                "sorateiden tasaus"          false
-                "sorastus"                   false
-
-                "harjaus"                    false
-                "pinnan tasaus"              false
-                "paallysteiden paikkaus"     false
-                "paallysteiden juotostyot"   false
-
-                "siltojen puhdistus"         false
-
-                "l- ja p-alueiden puhdistus" false
-                "muu"                        false}}))
+(def jarjestys tk/jarjestys)
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
@@ -200,20 +119,20 @@ hakutiheys-historiakuva 1200000)
 
 (defn kasaa-parametrit []
   (merge
-    {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-     :urakka-id       (:id @nav/valittu-urakka)
-     :urakoitsija     (:id @nav/valittu-urakoitsija)
-     :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
-     :nykytilanne?    (= :nykytilanne @valittu-tila)
-     :alue            @nav/kartalla-nakyva-alue
-     :alku            (if (= @valittu-tila :nykytilanne)
-                        (t/minus (pvm/nyt)
-                                 (t/hours @nykytilanteen-aikasuodattimen-arvo))
-                        (first @historiakuvan-aikavali))
-     :loppu           (if (= @valittu-tila :nykytilanne)
-                        (pvm/nyt)
-                        (second @historiakuvan-aikavali))}
-    @suodattimet))
+   {:hallintayksikko (:id @nav/valittu-hallintayksikko)
+    :urakka-id       (:id @nav/valittu-urakka)
+    :urakoitsija     (:id @nav/valittu-urakoitsija)
+    :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
+    :nykytilanne?    (= :nykytilanne @valittu-tila)
+    :alue            @nav/kartalla-nakyva-alue
+    :alku            (if (= @valittu-tila :nykytilanne)
+                       (t/minus (pvm/nyt)
+                                (t/hours @nykytilanteen-aikasuodattimen-arvo))
+                       (first @historiakuvan-aikavali))
+    :loppu           (if (= @valittu-tila :nykytilanne)
+                       (pvm/nyt)
+                       (second @historiakuvan-aikavali))}
+   (tk/valitut-suodattimet @suodattimet)))
 
 (defn yhdista-tyokonedata [uusi]
   (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)

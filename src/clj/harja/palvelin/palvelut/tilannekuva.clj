@@ -11,7 +11,9 @@
 
             [harja.domain.laadunseuranta :as laadunseuranta]
             [harja.geo :as geo]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.tilannekuva :as tk]
+            [clojure.set :refer [union]]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat ", mutta virhe tapahtui: " (.getMessage e))))
@@ -23,7 +25,10 @@
   tulos)
 
 (defn haettavat [s]
-  (into #{} (keep (fn [[avain arvo]] (when arvo avain)) s)))
+  (println "HAETTAVAT: " s)
+  (into #{}
+        (map (comp :nimi tk/suodattimet-idlla))
+        s))
 
 (defn alueen-hypotenuusa
   "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
@@ -195,7 +200,7 @@
 (defn- hae-tyokoneet
   [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?]} urakat]
   (when nykytilanne?
-    (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
+    (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
       (when-not (empty? haettavat-toimenpiteet)
         (try
           (let [tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")
@@ -221,7 +226,7 @@
 
 (defn- hae-toteumien-reitit
   [db user {:keys [toleranssi alue alku loppu talvi kesa]} urakat]
-  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
+  (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
     (when-not (empty? haettavat-toimenpiteet)
       (try
         (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit db haettavat-toimenpiteet))]
