@@ -4,8 +4,8 @@
             [harja.palvelin.komponentit.http-palvelin
              :refer [julkaise-palvelu poista-palvelu]])
   (:import (java.awt.image BufferedImage)
-           (java.awt Color BasicStroke)
-           (java.awt.geom AffineTransform)
+           (java.awt Color BasicStroke RenderingHints)
+           (java.awt.geom AffineTransform Line2D$Double)
            (javax.imageio ImageIO)))
 
 (defn- kirjoita-kuva [kuva]
@@ -89,17 +89,28 @@
     (piirra g l)))
 
 (defmethod piirra :line [g {points :points :as line}]
-  (doseq [[[x1 y1] [x2 y2]] (partition 2 1 points)]
-    (println "VIIVA: " x1 "," x2 "  ->  " x2 "," y2)
-    (.drawLine g x1 y1 x2 y2)))
+  (doseq [[[x1 y1] [x2 y2]] (partition 2 1 points)
+          :let [line (Line2D$Double.  x1 y1 x2 y2)]]
+    (.draw g line)))
+
+(defn px [img-width extent-width pikselit]
+  (* (/ extent-width img-width) pikselit))
 
 (defn- luo-kuva [{:keys [extent resoluutio kuva] :as parametrit} db user]
   (println "PARAMETRIT: " (pr-str parametrit))
   (let [[w h] (:kuva parametrit)
         img (BufferedImage. w h BufferedImage/TYPE_INT_ARGB)
-        g (.createGraphics img)]
+        g (doto (.createGraphics img)
+            (.addRenderingHints (RenderingHints.
+                                 RenderingHints/KEY_ANTIALIASING
+                                 RenderingHints/VALUE_ANTIALIAS_ON)))
+        [x1 _ x2 _] extent
+        px (partial px w (- x2 x1))]
     (.setColor g (Color. 1.0 0.0 0.0 1.0))
-    (.setStroke g (BasicStroke. 30))
+    (.setStroke g (BasicStroke. (px 3)
+                                BasicStroke/CAP_ROUND
+                                BasicStroke/JOIN_MITER))
+    
     (.transform
      g
      (let [[w h] kuva
