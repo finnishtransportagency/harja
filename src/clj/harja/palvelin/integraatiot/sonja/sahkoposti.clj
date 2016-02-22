@@ -12,15 +12,16 @@
   (integraatioloki/lokittaja il db "sonja" nimi))
 
 (defn- tee-vastaanottokuuntelija [{:keys [db sonja] :as this} sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono kuuntelijat]
-  (jms/kuuntele-ja-kuittaa (lokittaja this "sahkoposti-vastaanotto") sonja
-                           sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono
-                           sanomat/lue-sahkoposti sanomat/kirjoita-kuittaus
-                           #(try
-                              (doseq [kuuntelija @kuuntelijat]
-                                (kuuntelija %))
-                              (sanomat/kuittaus % nil)
-                              (catch Exception e
-                                (sanomat/kuittaus % [(.getMessage e)])))))
+  (when sahkoposti-sisaan-jono
+    (jms/kuuntele-ja-kuittaa (lokittaja this "sahkoposti-vastaanotto") sonja
+                             sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono
+                             sanomat/lue-sahkoposti sanomat/kirjoita-kuittaus
+                             #(try
+                               (doseq [kuuntelija @kuuntelijat]
+                                 (kuuntelija %))
+                               (sanomat/kuittaus % nil)
+                               (catch Exception e
+                                 (sanomat/kuittaus % [(.getMessage e)]))))))
 
 (defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono]
   (let [integraatio (q/integraation-id db "sonja" "sahkoposti-lahetys")]
@@ -33,11 +34,11 @@
   component/Lifecycle
   (start [{sonja :sonja :as this}]
     (assoc this
-           :saapuva (tee-vastaanottokuuntelija this (:sahkoposti-sisaan-jono jonot) (:sahkoposti-sisaan-kuittausjono jonot) kuuntelijat)
-           :lahteva (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ulos-kuittausjono jonot))
-           :jms-lahettaja (jms/jonolahettaja (lokittaja this "sahkoposti-lahetys")
-                                             sonja
-                                             (:sahkoposti-ulos-jono jonot))))
+      :saapuva (tee-vastaanottokuuntelija this (:sahkoposti-sisaan-jono jonot) (:sahkoposti-sisaan-kuittausjono jonot) kuuntelijat)
+      :lahteva (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ulos-kuittausjono jonot))
+      :jms-lahettaja (jms/jonolahettaja (lokittaja this "sahkoposti-lahetys")
+                                        sonja
+                                        (:sahkoposti-ulos-jono jonot))))
 
   (stop [this]
     ((:saapuva this))

@@ -164,6 +164,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
+    (assert (some? jonon-nimi) "Ei voida yhdistää tyhjään jonoon")
     (log/debug (format "---> Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
     (send tila
           (fn [tila]
