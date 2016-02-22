@@ -56,10 +56,10 @@
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
                     :suora? true
                     :palvelin "solita-service-1.solita.fi"
-                    :jonot {:sahkoposti-sisaan-jono "Harja.EmailToHarja.Msg"
-                            :sahkoposti-sisaan-kuittausjono "Harja.EmailToHarja.Ack"
-                            :sahkoposti-ulos-jono "Harja.HarjaToEmail.Msg"
-                            :sahkoposti-ulos-kuittausjono "Harja.HarjaToEmail.Ack"}}
+                    :jonot {:sahkoposti-sisaan-jono ""
+                            :sahkoposti-sisaan-kuittausjono ""
+                            :sahkoposti-ulos-jono ""
+                            :sahkoposti-ulos-kuittausjono ""}}
 
  :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
 

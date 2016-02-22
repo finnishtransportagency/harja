@@ -44,12 +44,12 @@
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
                                          sonja (:toimenpideviestijono jonot))]
     (when-let [labyrintti labyrintti]
-      (log/debug "---> Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
+      (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
       (sms/rekisteroi-kuuntelija! labyrintti
                                   (fn [numero viesti]
                                     (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))
     (when-let [sonja-sahkoposti sonja-sahkoposti]
-      (log/debug "---> Yhdistetään kuuntelija Sonjan sähköpostijonoihin")
+      (log/debug "Yhdistetään kuuntelija Sonjan sähköpostijonoihin")
       (sahkoposti/rekisteroi-kuuntelija!
         sonja-sahkoposti
         (fn [viesti]
@@ -61,7 +61,7 @@
 (defrecord Tloik [asetukset]
   component/Lifecycle
   (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
-    (log/debug "---> Käynnistetään T-LOIK komponentti")
+    (log/debug "Käynnistetään T-LOIK komponentti")
     (rekisteroi-kuittauskuuntelijat this asetukset)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono]} asetukset
           ilmoitusasetukset (merge (:ilmoitukset asetukset)

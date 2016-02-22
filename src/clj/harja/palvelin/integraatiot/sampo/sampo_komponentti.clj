@@ -34,7 +34,7 @@
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
   component/Lifecycle
   (start [this]
-    (log/debug "---> Käynnistetään Sampo komponentti")
+    (log/debug "Käynnistetään Sampo komponentti")
     (assoc this :sonja-viestikuuntelija (tee-sonja-viestikuuntelija this lahetysjono-sisaan kuittausjono-sisaan)
                 :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)
                 :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika lahetysjono-ulos)))

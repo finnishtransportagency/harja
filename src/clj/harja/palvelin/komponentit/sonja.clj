@@ -56,7 +56,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (let [jono (.createQueue istunto jonon-nimi)
         consumer (.createConsumer istunto jono)
         viesti-ch (viestin-kasittelija kasittelija)]
-    (log/debug (format "---> Luodaan jono kuuntelija jonoon: %s" jonon-nimi))
+    (log/debug (format "Luodaan jono kuuntelija jonoon: %s" jonon-nimi))
     (thread
       (try
         (loop [viesti (.receive consumer)]
@@ -126,7 +126,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
                    :consumer (or consumer
                                  (luo-jonon-kuuntelija istunto jonon-nimi
                                                        #(doseq [kuuntelija @kuuntelijat]
-                                                         (log/debug (format "---> Vastaanotettiin viesti jonosta: %s." jonon-nimi))
+                                                         (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
                                                          (kuuntelija %))))
                    :kuuntelijat kuuntelijat)))))
 
