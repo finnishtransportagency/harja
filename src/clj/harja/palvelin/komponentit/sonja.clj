@@ -56,6 +56,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (let [jono (.createQueue istunto jonon-nimi)
         consumer (.createConsumer istunto jono)
         viesti-ch (viestin-kasittelija kasittelija)]
+    (log/debug (format "---> Luodaan jono kuuntelija jonoon: %s" jonon-nimi))
     (thread
       (try
         (loop [viesti (.receive consumer)]
@@ -104,6 +105,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     (let [yhteys (yhdista asetukset)]
       (if yhteys
         (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
+          (log/debug "Saatiin yhteys Sonjan JMS-brokeriin.")
           (reset! yhteys-ok? true)
           (assoc tila :yhteys yhteys :istunto istunto))
         (do
@@ -115,6 +117,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
 
 (defn yhdista-kuuntelija [{:keys [istunto] :as tila} jonon-nimi kuuntelija-fn]
+  (log/debug (format "---> Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
   (update-in tila [:jonot jonon-nimi]
              (fn [{:keys [consumer kuuntelijat] :as jonon-tiedot}]
                (let [kuuntelijat (or kuuntelijat (atom []))]
@@ -123,6 +126,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
                    :consumer (or consumer
                                  (luo-jonon-kuuntelija istunto jonon-nimi
                                                        #(doseq [kuuntelija @kuuntelijat]
+                                                         (log/debug (format "---> Vastaanotettiin viesti jonosta: %s." jonon-nimi))
                                                          (kuuntelija %))))
                    :kuuntelijat kuuntelijat)))))
 
@@ -160,6 +164,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
+    (log/debug (format "---> Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
     (send tila
           (fn [tila]
             (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)
