@@ -32,14 +32,14 @@
   (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus)))]
     (first (urakat/hae-urakka db urakka-id))))
 
-(defn kasittele-ilmoitus [sonja sms email lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id]
+(defn kasittele-ilmoitus [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id]
   (let [urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)
         paivystaja (yhteyshenkilot/hae-urakan-tamanhetkinen-paivystaja db urakka-id)
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka paivystaja nil)]
     (ilmoitus/tallenna-ilmoitus db ilmoitus)
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
-    (when paivystaja (paivystajaviestit/laheta sms email db (assoc ilmoitus :urakka-id urakka-id) paivystaja))
+    (when paivystaja (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id korrelaatio-id tapahtuma-id]
@@ -48,7 +48,7 @@
     (log/error virhe)
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [sonja lokittaja sms email tapahtumat db kuittausjono viesti]
+(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
@@ -57,7 +57,7 @@
         {:keys [viesti-id ilmoitus-id] :as ilmoitus} (lue-ilmoitus sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti)]
     (try+
      (if-let [urakka (hae-urakka db ilmoitus)]
-       (kasittele-ilmoitus sonja sms email lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id)
+       (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka ilmoitus viesti-id korrelaatio-id tapahtuma-id)
        (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id korrelaatio-id tapahtuma-id))
       (catch Exception e
         (log/error e (format "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta (id: %s, viesti id: %s)" ilmoitus-id viesti-id))
