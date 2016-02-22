@@ -24,11 +24,12 @@
                                  (sanomat/kuittaus % [(.getMessage e)]))))))
 
 (defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono]
-  (let [integraatio (q/integraation-id db "sonja" "sahkoposti-lahetys")]
-    (jms/kuittausjonokuuntelija (lokittaja this "sahkoposti-lahetys") (:sonja this) sahkoposti-ulos-kuittausjono
-                                sanomat/lue-kuittaus :viesti-id :onnistunut
-                                (fn [viesti viesti-id onnistunut]
-                                  (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id)))))
+  (when sahkoposti-ulos-kuittausjono
+    (let [integraatio (q/integraation-id db "sonja" "sahkoposti-lahetys")]
+      (jms/kuittausjonokuuntelija (lokittaja this "sahkoposti-lahetys") sonja sahkoposti-ulos-kuittausjono
+                                  sanomat/lue-kuittaus :viesti-id :onnistunut
+                                  (fn [viesti viesti-id onnistunut]
+                                    (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id))))))
 
 (defrecord SonjaSahkoposti [vastausosoite jonot kuuntelijat]
   component/Lifecycle
