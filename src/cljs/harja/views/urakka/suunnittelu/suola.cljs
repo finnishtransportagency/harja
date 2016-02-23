@@ -47,8 +47,8 @@
   (reaction (first @u/valitun-urakan-hoitokaudet)))
 
 (defn yhden-hoitokauden-rivit [rivit]
-  (let [vuosi (pvm/vuosi (first @urakan-ensimmainen-hoitokausi))]
-    (filter #(= (:hoitokauden_alkuvuosi %) vuosi) rivit)))
+  (when-let [eka-hk @urakan-ensimmainen-hoitokausi]
+    (filter #(= (:hoitokauden_alkuvuosi %) (pvm/vuosi (first eka-hk))) rivit)))
 
 (defonce syotettavat-tiedot
          (reaction (let [ss @suolasakot-ja-lampotilat]
