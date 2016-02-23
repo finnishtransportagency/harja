@@ -1,7 +1,6 @@
 (ns harja.domain.tilannekuva.makrot)
 
 (defmacro maarittele-suodattimet [& sym-nimi-otsikko]
-  (println "SUODATTIMIA: " (count sym-nimi-otsikko))
   (let [id (atom 0)]
     `(do
        ~@(mapv
