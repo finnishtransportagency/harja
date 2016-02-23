@@ -11,21 +11,6 @@
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
 
-;; Koneellista generointia varten!
-(def toteuma-varit-ja-nuolet
-  [[{:color puhtaat/punainen} "punainen"]
-   [{:color puhtaat/oranssi} "oranssi"]
-   [{:color puhtaat/keltainen} "keltainen"]
-   [{:color puhtaat/magenta} "magenta"]
-   [{:color puhtaat/vihrea} "vihrea"]
-   [{:color puhtaat/turkoosi} "turkoosi"]
-   [{:color puhtaat/syaani} "syaani"]
-   [{:color puhtaat/sininen} "sininen"]
-   [{:color puhtaat/tummansininen} "tummansininen"]
-   [{:color puhtaat/violetti} "violetti"]
-   [{:color puhtaat/lime} "lime"]
-   [{:color puhtaat/pinkki} "pinkki"]])
-
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
   "[varit/musta 0 {} varit/punainen 2 {} varit/sininen 4 {:dash [10 10]}]
 
@@ -71,6 +56,21 @@
   viivoja levennetään vaaditun verran."
   [& varit]
   (apply monivarinen-viiva-leveyksilla (interleave varit (range 0 100 2))))
+
+;; Koneellista generointia varten!
+(def toteuma-varit-ja-nuolet
+  [[(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
+   [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
+   [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
+   [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
+   [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
+   [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
+   [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
+   [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]])
 
 ;;;;;;;;;;
 ;;; VÄRIMÄÄRITTELYT
