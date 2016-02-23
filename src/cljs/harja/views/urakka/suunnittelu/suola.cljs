@@ -43,14 +43,14 @@
                   (some :kaytossa ss)))))
 
 (defn valitun-hoitokauden-rivit [rivit]
-  (when @u/valittu-hoitokausi
-    (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
-      (filter #(= (:hoitokauden_alkuvuosi %) vuosi) rivit))))
+  (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
+    (filter #(= (:hoitokauden_alkuvuosi %) vuosi) rivit)))
 
 (defonce hoitokauden-tiedot
   (reaction (let [ss @suolasakot-ja-lampotilat]
-              {:suolasakko (first (valitun-hoitokauden-rivit (:suolasakot ss)))
-               :pohjavesialue-talvisuola (vec (valitun-hoitokauden-rivit (:pohjavesialue-talvisuola ss)))})))
+              (when ss
+                {:suolasakko               (first (valitun-hoitokauden-rivit (:suolasakot ss)))
+                 :pohjavesialue-talvisuola (vec (valitun-hoitokauden-rivit (:pohjavesialue-talvisuola ss)))}))))
 
 (defonce pohjavesialueet
   (reaction (let [ss @suolasakot-ja-lampotilat]
