@@ -285,7 +285,7 @@
             (for [{:keys [img nimi vari teksti]} (sort-by :nimi selitteet)]
               (when
                 (or (not-empty vari) (not-empty img))
-                ^{:key (str (or vari img) "_" nimi)}
+                ^{:key (str (or vari img) "_" teksti)}
                 [:tr
                  (cond
                    (string? vari)
@@ -311,7 +311,7 @@
                                                              :height           (first pohja)}}]
                       (doall
                         (for [[koko v] sisakkaiset]
-                          ^{:key (str koko "_" v "--" nimi)}
+                          ^{:key (str koko "_" v "--" teksti)}
                           [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color v
                                                                        :width            koko
                                                                        :height           koko

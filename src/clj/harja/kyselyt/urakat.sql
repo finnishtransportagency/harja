@@ -371,7 +371,7 @@ FROM urakoiden_alueet ua
 WHERE ua.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (st_contains(ua.alue, ST_MakePoint(:x, :y)))
       AND (u.alkupvm IS NULL OR u.alkupvm <= current_timestamp)
-      AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
+      AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp)
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
