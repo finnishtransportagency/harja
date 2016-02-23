@@ -14,7 +14,7 @@
     :tilaaja "Tilaaja"
     :urakoitsija "Urakoitsija"
     :konsultti "Konsultti"
-    "Ei tiedossa"))
+    "Tekijä ei tiedossa"))
 
 (defn kuvaile-kasittelytapa [kasittelytapa]
   (case kasittelytapa

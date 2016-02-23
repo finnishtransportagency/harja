@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.tyokalut
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [taoensso.timbre :as log]
+            [clojure.test :refer [deftest is use-fixtures]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [hiccup.core :refer [html]]
@@ -83,7 +84,7 @@
 (defn tee-testipaivystys []
   (let [yhteyshenkilo (hae-paivystaja)]
     (u (format "INSERT INTO paivystys (alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
-                VALUES (now() + interval '1' day, now() - interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
+                VALUES (now() - interval '1' day, now() + interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
     yhteyshenkilo))
 
 (defn poista-ilmoitus []

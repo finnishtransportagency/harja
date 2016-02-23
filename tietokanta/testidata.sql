@@ -115,4 +115,5 @@ SELECT paivita_pohjavesialueet();
 
 -- Luodaan testidataa laskutusyhteenvetoraporttia varten
 \i testidata/laskutusyhteenveto.sql
+\i testidata/laskutusyhteenveto_kajaani.sql
 -- ****

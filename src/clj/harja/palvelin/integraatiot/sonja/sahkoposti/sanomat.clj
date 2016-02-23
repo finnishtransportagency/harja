@@ -3,7 +3,8 @@
             [clojure.data.zip.xml :as z]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [throw+]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [hiccup.compiler :refer [HtmlRenderer]]))
 
 (def ^:const +xsd-polku+ "xsd/sahkoposti/")
 (def ^:const +sahkoposti-xsd+ "sahkoposti.xsd")
@@ -36,7 +37,9 @@
    [:vastaanottajat [:vastaanottaja vastaanottaja]]
    [:lahettaja lahettaja]
    [:otsikko otsikko]
-   [:sisalto sisalto]])
+   [:sisalto (reify HtmlRenderer
+               (render-html [_]
+                 (str "<![CDATA[" sisalto "]]>")))]])
 
 (defn lue-kuittaus [xml-viesti]
   (let [v (lue-xml xml-viesti)]

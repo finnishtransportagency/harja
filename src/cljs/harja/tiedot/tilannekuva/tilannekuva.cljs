@@ -261,7 +261,8 @@ hakutiheys-historiakuva 1200000)
           tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!))]
-      (reset! tilannekuva-kartalla/haetut-asiat tulos)
+      (when @nakymassa?
+        (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
 
 (def asioiden-haku (reaction<!
