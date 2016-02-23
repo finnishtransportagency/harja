@@ -2,7 +2,7 @@
   #?(:cljs
      (:require-macros [harja.domain.tilannekuva.makrot
                        :refer [maarittele-suodattimet]])
-     
+
      :clj
      (:require [harja.domain.tilannekuva.makrot
                 :refer [maarittele-suodattimet]])))
@@ -99,7 +99,7 @@
 (defn valitut-suodattimet
   "Ottaa nested map rakenteen, jossa viimeisellä tasolla avaimet ovat
 Suodatin recordeja ja arvot boolean. Palauttaa mäpin muuten samalla rakenteella,
-mutta viimeisen tason {suodatin boolean} mäpit on korvattu valittujen 
+mutta viimeisen tason {suodatin boolean} mäpit on korvattu valittujen
 suodattimien id numeroilla."
   [valinnat]
   (loop [m valinnat
@@ -120,9 +120,13 @@ suodattimien id numeroilla."
           (recur (dissoc m avain) loput)
           (recur (assoc m avain valitut)
                  loput)))
-      
+
       (map? arvo)
       (recur (assoc m avain (valitut-suodattimet arvo)) loput)
 
       :else
       (recur m loput))))
+
+(defn valittu? [valitut-set suodatin]
+  (and valitut-set
+       (valitut-set (:id suodatin))))

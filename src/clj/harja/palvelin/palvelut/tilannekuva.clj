@@ -1,7 +1,8 @@
 (ns harja.palvelin.palvelut.tilannekuva
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-palvelu poista-palvelut]]
 
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.hallintayksikot :as hal-q]
@@ -16,7 +17,8 @@
             [clojure.set :refer [union]]))
 
 (defn tulosta-virhe! [asiat e]
-  (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat ", mutta virhe tapahtui: " (.getMessage e))))
+  (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
+                  ", mutta virhe tapahtui: " (.getMessage e))))
 
 (defn tulosta-tulos! [asiaa tulos]
   (if (vector? tulos)
@@ -52,32 +54,32 @@
         (let [suljetut? (if (:suljetut tilat) true false)
               avoimet? (if (:avoimet tilat) true false)
               tulos (mapv
-                      #(assoc % :uusinkuittaus
-                                (when-not (empty? (:kuittaukset %))
-                                  (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                      (konv/sarakkeet-vektoriin
-                        (into []
-                              (comp
-                                (geo/muunna-pg-tulokset :sijainti)
-                                (map konv/alaviiva->rakenne)
-                                (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-                                (map #(konv/array->vec % :selitteet))
-                                (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                                (map #(assoc-in
-                                       %
-                                       [:kuittaus :kuittaustyyppi]
-                                       (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                                (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                                (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                              (q/hae-ilmoitukset db
-                                                 toleranssi
-                                                 (when-not (:nykytilanne? tiedot) (konv/sql-date (:alku tiedot)))
-                                                 (when-not (:nykytilanne? tiedot) (konv/sql-date (:loppu tiedot)))
-                                                 urakat
-                                                 avoimet?
-                                                 suljetut?
-                                                 (mapv name haettavat)))
-                        {:kuittaus :kuittaukset}))]
+                     #(assoc % :uusinkuittaus
+                             (when-not (empty? (:kuittaukset %))
+                               (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                     (konv/sarakkeet-vektoriin
+                      (into []
+                            (comp
+                             (geo/muunna-pg-tulokset :sijainti)
+                             (map konv/alaviiva->rakenne)
+                             (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                             (map #(konv/array->vec % :selitteet))
+                             (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                             (map #(assoc-in
+                                    %
+                                    [:kuittaus :kuittaustyyppi]
+                                    (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                             (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                             (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                            (q/hae-ilmoitukset db
+                                               toleranssi
+                                               (when-not (:nykytilanne? tiedot) (konv/sql-date (:alku tiedot)))
+                                               (when-not (:nykytilanne? tiedot) (konv/sql-date (:loppu tiedot)))
+                                               urakat
+                                               avoimet?
+                                               suljetut?
+                                               (mapv name haettavat)))
+                      {:kuittaus :kuittaukset}))]
           tulos)
         (catch Exception e
           (tulosta-virhe! "ilmoituksia" e)
@@ -85,7 +87,7 @@
 
 (defn- hae-paallystystyot
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
-  (when (:paallystys yllapito)
+  (when (tk/valittu? yllapito tk/paallystys)
     (try
       (into []
             (comp
@@ -104,7 +106,7 @@
 
 (defn- hae-paikkaustyot
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
-  (when (:paikkaus yllapito)
+  (when (tk/valittu? yllapito tk/paikkaus)
     (try
       (into []
             (comp
@@ -180,7 +182,7 @@
 
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [toleranssi alku loppu turvallisuus]} urakat]
-  (when (:turvallisuuspoikkeamat turvallisuus)
+  (when (tk/valittu? turvallisuus tk/turvallisuuspoikkeamat)
     (try
       (konv/sarakkeet-vektoriin
         (into []
