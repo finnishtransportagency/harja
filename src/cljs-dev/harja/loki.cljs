@@ -7,7 +7,7 @@
   (set! +mittaa-aika+ true))
 
 (defn warn [& things]
-  (.apply js/console.warn (apply array things)))
+  (.apply js/console.warn js/console (apply array things)))
 
 (defn log [& things]
   (.apply js/console.log js/console (apply array things)))

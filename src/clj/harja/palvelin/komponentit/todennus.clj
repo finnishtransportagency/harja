@@ -70,9 +70,9 @@
   Todennus
   (todenna-pyynto [{db :db :as this} req]
     (let [headerit (:headers req)
+          ryhmat (headerit "oam_groups") ; PENDING: Sähke ryhmät synkataan täältä
           kayttaja-id (headerit "oam_remote_user")]
       
-      ;;(log/info "KOKA: " kayttaja-id)
       (if (nil? kayttaja-id)
         (throw+ todennusvirhe)
         (if-let [kayttajatiedot (koka-remote-id->kayttajatiedot db kayttaja-id)]

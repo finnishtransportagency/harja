@@ -8,6 +8,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
+            [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.loki :refer [log logt]]
             [harja.atom :refer [paivita!]]
@@ -44,7 +45,7 @@
 (defn suolatoteumat []
 
   (komp/luo
-   (komp/lippu suolatoteumissa?)
+   (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet)
    (fn []
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero

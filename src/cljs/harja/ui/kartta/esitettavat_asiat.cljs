@@ -35,6 +35,7 @@
   (cond
     (empty? viivat) [{}]
     (map? viivat) [viivat]
+    (string? viivat) [{:color viivat}]
     :else viivat))
 
 (defn- maarittele-piste
@@ -136,6 +137,18 @@
           {:type   :viiva
            :points koordinaatit}))))))
 
+;;;;;;
+
+(defn- viivojen-varit-leveimmasta-kapeimpaan [viivat]
+  (let [sortattu (sort-by :width >
+                          ;; Täydennä väliaikaisesti tänne oletusarvot,
+                          ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
+                          ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
+                          (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
+                                          :color (or (:color %) ulkoasu/+normaali-vari+))
+                                viivat))]
+    (mapv :color sortattu)))
+
 (defmulti
   ^{:private true}
   asia-kartalle :tyyppi-kartalla)
@@ -197,7 +210,7 @@
   (str etuliite " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
-  (let [ikoni (ulkoasu/laatupoikkeaman-ikoni)
+  (let [ikoni (ulkoasu/laatupoikkeaman-ikoni (:tekija laatupoikkeama))
         otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
     (assoc laatupoikkeama
       :type :laatupoikkeama
@@ -253,7 +266,7 @@
     (assoc pt
       :nimi (or (:nimi pt) teksti)
       :selite {:teksti teksti
-               :vari   {:color viiva}}
+               :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature pt (valittu-fn? pt)
                                 ikoni
                                 viiva))))
@@ -333,20 +346,11 @@
         validoi-viiva
         viimeistele-asetukset)))
 
-(defn- viivojen-varit-leveimmasta-kapeimpaan [viivat]
-  (let [sortattu (sort-by :width >
-                          ;; Täydennä väliaikaisesti tänne oletusarvot,
-                          ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
-                          ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
-                          (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
-                                          :color (or (:color %) ulkoasu/+normaali-vari+))
-                                viivat))]
-    (mapv :color sortattu)))
-
 (defmethod asia-kartalle :toteuma [toteuma valittu-fn?]
   ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
     (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
+          _ (when (empty? toimenpiteet) (harja.loki/warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
                  ;; toteumalla on suoraan nimi
                  (:nimi toteuma)

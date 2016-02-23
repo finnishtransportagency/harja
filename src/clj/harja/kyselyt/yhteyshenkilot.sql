@@ -254,3 +254,14 @@ WHERE (matkapuhelin = :puhelinnumero OR tyopuhelin = :puhelinnumero) AND
                      FROM paivystys p
                      WHERE p.yhteyshenkilo = y.id))
 LIMIT 1;
+
+-- name: hae-urakan-paivystaja-sahkopostilla
+SELECT y.id, y.etunimi, y.sukunimi,
+       y.matkapuhelin, y.tyopuhelin, y.sahkoposti,
+       o.ytunnus, o.nimi
+  FROM yhteyshenkilo y
+       JOIN paivystys p ON p.yhteyshenkilo = y.id
+       LEFT JOIN organisaatio o ON o.id = y.organisaatio
+ WHERE p.urakka = :urakka AND
+       LOWER(sahkoposti) = LOWER(:sahkoposti)
+      

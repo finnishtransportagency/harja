@@ -45,7 +45,7 @@
              (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-kuittauksen-vastaanotto-tekstiviestilla
   (tuo-ilmoitus)
@@ -72,16 +72,14 @@
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V2"))
         "Tuntematon viestinumero käsitellään oikein.")
 
-    (let [viestit (atom [])]
-      (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(swap! viestit conj (.getText %)))
+    (let [viesti (atom nil)]
+      (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
 
-      (is (= "Viestisi käsiteltiin onnistuneesti. Kiitos!"
+      (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
              (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V1 Asia selvä."))
           "Onnistunut viestin käsittely")
-
-      (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
-
-      (let [xml (first @viestit)
+      
+      (let [xml (odota-arvo viesti)
             data (xml/lue xml)]
         (is (= "123456789" (z/xml1-> data :ilmoitusId z/text)) "Kuittaus on tehty oikeaan viestiin.")
         (is (= "vastaanotto" (z/xml1-> data :tyyppi z/text)) "Kuittaus on tehty oikeaan viestiin.")
@@ -96,17 +94,20 @@
         paivystaja (hae-paivystaja)
         paivystaja {:id (first paivystaja) :matkapuhelin (second paivystaja)}
         ilmoitus (first (hae-ilmoitus))
-        ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}]
+        ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}
+        paivystajaviestien-maara (fn []
+                                   (count
+                                    (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
+                                               (:id paivystaja)
+                                               (:id ilmoitus)))))]
     (with-fake-http
       [{:url +labyrintti-url+ :method :post} fake-vastaus]
 
-      (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:sms jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
-
-      (let [paivystajaviestit (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
-                                         (:id paivystaja)
-                                         (:id ilmoitus)))]
-        (is (= 1 (count paivystajaviestit)))
-        (println paivystajaviestit))
+      (let [viestien-maara-ennen  (paivystajaviestien-maara)]
+        
+        (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
+        
+        (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
 
       (poista-paivystajatekstiviestit)
       (poista-ilmoitus))))

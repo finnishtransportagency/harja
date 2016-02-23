@@ -114,7 +114,7 @@
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
-(defn paasisalto [sivu]
+(defn paasisalto [sivu korkeus]
   [:div
    (cond
      @k/istunto-vanhentunut? [yleinen-varoituspalkki
@@ -148,7 +148,7 @@
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
    ;; se asemoidaan mountin jälkeen
-   [:div#kartta-container {:style {:position "absolute" :top (- @dom/korkeus)}}
+   [:div#kartta-container {:style {:position "absolute" :top (- korkeus)}}
     [kartta/kartta]]])
 
 (defn main
@@ -168,6 +168,6 @@
               (if (or (:poistettu kayttaja)
                       (empty? (:roolit kayttaja)))
                 [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
-                [paasisalto sivu]))))
+                [paasisalto sivu korkeus]))))
         [ladataan]))))
 
