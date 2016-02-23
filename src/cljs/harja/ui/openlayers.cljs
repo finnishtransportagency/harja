@@ -66,6 +66,8 @@ oletus-zindex 4)
        :const true}
 nuolten-valimatka 3000)
 
+(def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
+
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
@@ -493,7 +495,9 @@ nuolten-valimatka 3000)
 (defn taitokset-valimatkoin [valimatka taitokset]
   (loop [pisteet-ja-rotaatiot []
          viimeisin-sijanti [0 0]
-         [{:keys [sijainti rotaatio]} & taitokset] taitokset]
+         [{:keys [sijainti rotaatio]} & taitokset] taitokset
+         verrokki-kulma rotaatio
+         ensimmainen? true]
     (if-not sijainti
       ;; Kaikki käsitelty
       pisteet-ja-rotaatiot
@@ -502,16 +506,19 @@ nuolten-valimatka 3000)
             [x2 y2] sijainti
             dx (- x1 x2)
             dy (- y1 y2)
-            dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
-
-        (if (or (> dist valimatka)
-                (empty? taitokset))
+            dist (Math/sqrt (+ (* dx dx) (* dy dy)))
+            kulman-erotus (- verrokki-kulma rotaatio)]
+        (cond
+          (or (> dist valimatka)
+              (> (max kulman-erotus (- kulman-erotus)) kulmaraja-nuolelle)
+              ensimmainen?)
           (recur (conj pisteet-ja-rotaatiot
                        [(-> sijainti second clj->js ol.geom.Point.) rotaatio])
-                 sijainti
-                 taitokset)
+                 sijainti taitokset rotaatio false)
 
-          (recur pisteet-ja-rotaatiot sijainti taitokset))))))
+          :else
+          (recur pisteet-ja-rotaatiot
+                 viimeisin-sijanti taitokset verrokki-kulma false))))))
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-ikonille-tyyli
