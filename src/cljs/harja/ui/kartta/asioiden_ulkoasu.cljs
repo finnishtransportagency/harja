@@ -109,7 +109,7 @@
    :yllapito-pohja puhtaat/musta
    :yllapito-katkoviiva puhtaat/tummanharmaa
 
-   :ok-tarkastus puhtaat/harmaa
+   :ok-tarkastus puhtaat/musta
    :ei-ok-tarkastus puhtaat/punainen})
 
 
@@ -199,7 +199,7 @@
               (:yllapito-muu viivojen-varit))
      :width (nth leveydet 1)}
      {:color (:yllapito-katkoviiva viivojen-varit)
-      :dash (if (= tyyppi :paikkaus) [3 9] [9 3])
+      :dash (if (= tyyppi :paikkaus) [3 9] [10 5])
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
@@ -211,16 +211,16 @@
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
 
-(defn tarkastuksen-ikoni [valittu? ok?]
+(defn tarkastuksen-ikoni [valittu? ok? reitti?]
   (cond
+    reitti? nil
     (not ok?) (pinni-ikoni (:tarkastus ikonien-varit))
     (and valittu? ok?) (pinni-ikoni (:tarkastus ikonien-varit)))) ;; Ei näytetä ok-tarkastuksia jos ei ole valittu
 
 (defn tarkastuksen-reitti [ok?]
-  (if ok? (:ok-tarkastus viivojen-varit)
-          {:color (:ei-ok-tarkastus viivojen-varit)
-           :width 2
-           :dash [2 10]}))
+  (if ok? {:color (:ok-tarkastus viivojen-varit)
+           :width 2}
+          {:color (:ei-ok-tarkastus viivojen-varit)}))
 
 (defn laatupoikkeaman-ikoni [tekija]
   (pinni-ikoni (case tekija
