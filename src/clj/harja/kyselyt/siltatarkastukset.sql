@@ -277,5 +277,5 @@ SET tyyppi        = :tyyppi,
   siltatunnus     = :tunnus
 WHERE siltaid = :siltaid;
 
--- name: paivita-urakoiden-sillat!
-REFRESH MATERIALIZED VIEW sillat_alueurakoittain;
+-- name: paivita-urakoiden-sillat
+SELECT paivita_sillat_alueurakoittain();
