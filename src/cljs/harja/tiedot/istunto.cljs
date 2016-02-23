@@ -32,7 +32,7 @@
 (def ajastin-taukotilassa (atom false))
 (def ajastimen-paivitys-paalla (atom false))
 (def kayttoaikaa-jaljella-sekunteina (atom oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
-Mahdollista
+
 (defn pysayta-ajastin []
   (reset! ajastin-paalla false))
 
