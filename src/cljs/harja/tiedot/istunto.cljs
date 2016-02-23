@@ -1,7 +1,7 @@
 (ns harja.tiedot.istunto
   "Harjan istunnon tiedot"
   (:require [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
 
             [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
@@ -29,9 +29,10 @@
 (def oletuskayttoaika-ilman-kayttajasyotteita-sekunteina (* 60 60 2))
 (def istunto-aikakatkaistu (atom false))
 (def ajastin-paalla (atom false))
+(def ajastin-taukotilassa (atom false))
 (def ajastimen-paivitys-paalla (atom false))
 (def kayttoaikaa-jaljella-sekunteina (atom oletuskayttoaika-ilman-kayttajasyotteita-sekunteina))
-
+Mahdollista
 (defn pysayta-ajastin []
   (reset! ajastin-paalla false))
 
@@ -98,7 +99,7 @@
       (reset! ajastimen-paivitys-paalla true)
       (loop []
         (<! (timeout 1000))
-        (when @ajastin-paalla
+        (when (and @ajastin-paalla (not @ajastin-taukotilassa))
           (reset! kayttoaikaa-jaljella-sekunteina (- @kayttoaikaa-jaljella-sekunteina 1))
           (varoita-jos-kayttoaika-umpeutumassa)
           (aikakatkaise-istunto-jos-kayttoaika-umpeutunut))

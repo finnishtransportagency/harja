@@ -19,6 +19,7 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka :as u]
             [harja.ui.bootstrap :as bs]
+            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
@@ -183,7 +184,7 @@
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
     (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus! %2))
-    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset)
+    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset istunto/ajastin-taukotilassa)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 
     (fn []
