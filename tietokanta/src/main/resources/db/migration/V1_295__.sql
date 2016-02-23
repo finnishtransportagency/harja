@@ -1,0 +1,19 @@
+CREATE OR REPLACE FUNCTION paivita_sillat_alueurakoittain()
+  RETURNS VOID
+SECURITY DEFINER
+AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW sillat_alueurakoittain;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION paivita_tieverkko_paloina()
+  RETURNS VOID
+SECURITY DEFINER
+AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW tieverkko_paloina WITH DATA;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;

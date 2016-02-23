@@ -117,7 +117,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
 
 (defn yhdista-kuuntelija [{:keys [istunto] :as tila} jonon-nimi kuuntelija-fn]
-  (log/debug (format "---> Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
+  (log/debug (format "Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
   (update-in tila [:jonot jonon-nimi]
              (fn [{:keys [consumer kuuntelijat] :as jonon-tiedot}]
                (let [kuuntelijat (or kuuntelijat (atom []))]
@@ -165,7 +165,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
     (assert (some? jonon-nimi) "Ei voida yhdistää tyhjään jonoon")
-    (log/debug (format "---> Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
+    (log/debug (format "Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
     (send tila
           (fn [tila]
             (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)
