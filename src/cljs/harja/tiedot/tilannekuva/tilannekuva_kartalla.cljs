@@ -62,16 +62,15 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
           (let [vanhat-asiat (get vanha taso)
                 uudet-asiat (get uusi taso)
                 tason-nimi (karttatason-nimi taso)]
-            (log "TASON NIMI: " (pr-str tason-nimi))
             (recur (cond
                      ;; Jos taso on nyt tyhjä, poistetaan se
                      ;; (nil taso poistuu kartalta)
                      (empty? uudet-asiat)
                      (assoc uudet-tasot tason-nimi nil)
 
-                     ;; Jos taso on kuva
-                     (= taso :toteumat)
-                     (assoc uudet-tasot
+                     ;; Jos taso on kuva, PENDING: work in progress
+                     #_(= taso :toteumat)
+                     #_(assoc uudet-tasot
                             tason-nimi (openlayers/luo-kuvataso))
 
                      ;; Jos tason asiat ovat muuttuneet, muodostetaan
