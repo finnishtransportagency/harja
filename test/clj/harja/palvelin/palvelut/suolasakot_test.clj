@@ -49,18 +49,19 @@
 
   (testing "suolasakon luonti ja päivitys"
     (let [urakka-id @oulun-alueurakan-2014-2019-id
-          lisattava-suolasakko {:hoitokauden-alkuvuosi 2015
+          valitun-urakan-hoitokaudet (q (str "SELECT * FROM urakan_hoitokaudet(" urakka-id ")"))
+          lisattava-suolasakko {:hoitokaudet valitun-urakan-hoitokaudet
                                 :urakka urakka-id
                                 :suolasakko {:maksukuukausi 6
                                              :indeksi "MAKU 2005"
                                              :maara 40
-                                             :hoitokauden-alkuvuosi 2015}}
-          tulos (kutsu-palvelua
-                 (:http-palvelin jarjestelma)
-                 :tallenna-suolasakko-ja-pohjavesialueet
-                 +kayttaja-jvh+
-                 lisattava-suolasakko)
-
+                                             :hoitokauden-alkuvuosi 2015
+                                             :talvisuolaraja 100}}
+          tulos (:suolasakot (kutsu-palvelua
+                               (:http-palvelin jarjestelma)
+                               :tallenna-suolasakko-ja-pohjavesialueet
+                               +kayttaja-jvh+
+                               lisattava-suolasakko))
           kutsun-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :hae-urakan-suolasakot-ja-lampotilat
                                          +kayttaja-jvh+
@@ -69,6 +70,8 @@
                                     (:suolasakot kutsun-jalkeen))) ]
           
       (is (= (:maksukuukausi suolasakko) 6) "maksukuukausi")
+      (is (= (:kaytossa suolasakko) true) "kaytossa")
+      (is (= (:talvisuolaraja suolasakko) 100M) "talvisuolaraja")
       (is (= (:urakka suolasakko) urakka-id) "urakka")
       (is (= (:indeksi suolasakko) "MAKU 2005") "indeksi")
       (is (= (:hoitokauden_alkuvuosi suolasakko) 2015) "hoitokauden alkuvuosi")
