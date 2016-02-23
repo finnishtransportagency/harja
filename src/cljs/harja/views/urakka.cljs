@@ -83,13 +83,13 @@
      :kohdeluettelo-paallystys
      (when (valilehti-mahdollinen? :kohdeluettelo-paallystys (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "kohdeluettelo"}
-       [paallystyksen-kohdeluettelo/kohdeluettelo ur])
+       [paallystyksen-kohdeluettelo/kohdeluettelo])
 
      "Kohdeluettelo"
      :kohdeluettelo-paikkaus
      (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus (:tyyppi ur) (:sopimustyyppi ur))
        ^{:key "kohdeluettelo"}
-       [paikkauksen-kohdeluettelo/kohdeluettelo ur])
+       [paikkauksen-kohdeluettelo/kohdeluettelo])
 
      "Laadunseuranta"
      :laadunseuranta

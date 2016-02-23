@@ -37,7 +37,7 @@
         g (grid/grid-ohjaus)
         jo-valitut-tehtavat (atom nil)]
     (komp/luo
-      (fn []
+      (fn [ur]
         (let [tehtavat-tasoineen @u/urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
               tehtavat (map #(nth % 3) tehtavat-tasoineen)
               valittu-tpi-id (:tpi_id @u/valittu-toimenpideinstanssi)

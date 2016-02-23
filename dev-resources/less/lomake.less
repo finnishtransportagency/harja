@@ -1,52 +1,37 @@
 .virhe-tai-varoitus-lomake (@taustavari, @vari) {
-    background-color: @taustavari;
-    bottom: 0;
-    color: @vari;
-    padding: 5px;
+  background-color: @taustavari;
+  bottom: 0;
+  color: @vari;
+  padding: 5px;
 }
 
 .kentta-text {
-    > textarea {
-        padding: 4px 6px;
-        width: 100%;
-	border-style: solid;
-	border-width: 1px;
-    }
+  > textarea {
+    padding: 4px 6px;
+    width: 100%;
+    border-style: solid;
+    border-width: 1px;
+  }
 }
 
 .lomake {
-    padding-bottom: @fontin-koko-leipateksti;
-    border: solid 1px @harmaa7;
-    .lomake-otsikko, .lomake-ryhman-otsikko {
-      margin-left: 1em;
-    }
+  padding-bottom: @fontin-koko-leipateksti;
+  border: solid 1px @harmaa7;
+  .lomake-otsikko, .lomake-ryhman-otsikko {
+    margin-left: 1em;
+  }
 
-          
-    .komponentti {
-      /* Asemointisääntöjä lomakkeisiin upotetuille muille komponenteille */
+  margin-top: 0.25rem;
 
-      .livi-grid {
-         margin-top: -0.5rem;
-	 margin-bottom: 0;
-
-         &.livi-muokkaus-grid {
-          margin-top: -1.75rem; // otsikko ja gridin toimintonapit samalle tasolla
-          margin-bottom: 0; // tyhjä tila alta pois
-         }
-      }
-    }
-    
-    margin-top: 0.25rem;
-
-    .varoitus {
-        .virhe-tai-varoitus-lomake(@varoitus, @valkoinen);
-    }
-    .virhe {
-        .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
-    }
-    .puuttuva-arvo {
-      border-bottom: solid 1px @vaara;
-    }
+  .varoitus {
+    .virhe-tai-varoitus-lomake(@varoitus, @valkoinen);
+  }
+  .virhe {
+    .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
+  }
+  .puuttuva-arvo {
+    border-bottom: solid 1px @vaara;
+  }
   .viesti {
     display: inline-block;
     margin-left: 0.5em;
@@ -59,62 +44,86 @@
     position: relative;
     top: -0.15em;
   }
-  
+
   .kentan-yksikko {
     font-size: (0.8 * @fontin-koko-leipateksti);
     margin-left: 0.5rem;
   }
 
-  /* Kenttätyypeille spesifiset säännöt kun ollaan lomakkeessa */ 
+  /* Kenttätyypeille spesifiset säännöt kun ollaan lomakkeessa */
   .pvm-aika-kentta > table {
     width: 100%;
   }
 
- .tierekisteriosoite-kentta {
-   > table { width: 100%; }
-   .karttavalinta { text-align: right; }
-   .nappi-ensisijainen { margin-right: 0; }
-   thead {
-     font-size: @fontin-koko-leipateksti;
-     th {
-       padding-left: 0.3rem;
-       padding-bottom: 4px; }
-   }
- }
- 
- table.boolean-group {
-   td {
-     .checkbox { padding-top: 0; }
-     label { font-size: @fontin-koko-leipateksti; }
-     padding-right: 2em;
-   }
- }
- .checkbox {
-     // checkbox kentillä ei ole labelia, joten niitä pitää pädätä alaspäin
-     padding-top: @input-korkeus / 2;
- } 
+  .tierekisteriosoite-kentta {
+    > table {
+      width: 100%;
+    }
+    .karttavalinta {
+      text-align: right;
+    }
+    .nappi-ensisijainen {
+      margin-right: 0;
+    }
+    thead {
+      font-size: @fontin-koko-leipateksti;
+      th {
+        padding-left: 0.3rem;
+        padding-bottom: 4px;
+      }
+    }
+  }
 
-
+  table.boolean-group {
+    td {
+      .checkbox {
+        padding-top: 0;
+      }
+      label {
+        font-size: @fontin-koko-leipateksti;
+      }
+      padding-right: 2em;
+    }
+  }
+  .checkbox {
+    // checkbox kentillä ei ole labelia, joten niitä pitää pädätä alaspäin
+    padding-top: @input-korkeus / 2;
+  }
 
   .lomake-ryhman-otsikko {
     font-size: @font-size-h3;
     margin: 2px 0 10px;
     padding-left: 15px;
   }
+
+  .livi-grid {
+    &.nappeja {
+      margin-top: -0.5rem;
+      margin-bottom: 0;
+    }
+  }
+  .livi-muokkaus-grid {
+    &.nappeja {
+      margin-top: -1.75rem;
+      margin-bottom: 0;
+    }
+  }
+
 }
 
-.lomake-footer{
-    margin-top: 20px;
-    button + button {
-        margin-left: @harja-nappien-valinen-etaisyys;
-        margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
-    }
-    // but override that for button groups
-    .btn-group button + button {
-        margin-left: -1px;
-    }
-    .nappi-kielteinen {
-        margin-right: @harja-nappien-valinen-etaisyys}
+.lomake-footer {
+  margin-top: 20px;
+  button + button {
+    margin-left: @harja-nappien-valinen-etaisyys;
+    margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
+  }
+  // but override that for button groups
+  .btn-group button + button {
+    margin-left: -1px;
+  }
+  .nappi-kielteinen {
+    margin-right: @harja-nappien-valinen-etaisyys
+  }
 }
 
 .radiovalinta {
@@ -125,21 +134,22 @@
   margin-left: 0.25em;
 }
 
-
 .inline-block {
- display: inline-block;
+  display: inline-block;
 }
+
 .lomake-yksikko {
-    height: 34px;
-    line-height: 34px;
+  height: 34px;
+  line-height: 34px;
 }
+
 .lomake-vihje {
-    .vihjeen-sisalto {
-        margin: 5px 0;
-        .livicon-info-circle {
-            color: @sininen5;
-        }
+  .vihjeen-sisalto {
+    margin: 5px 0;
+    .livicon-info-circle {
+      color: @sininen5;
     }
+  }
 }
 
 .lomake-yleinen-huomautus {

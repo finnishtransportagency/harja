@@ -26,18 +26,29 @@
 
 (deftest laskutusyhteenvedon-tietojen-haku
   (testing "laskutusyhteenvedon-tietojen-haku"
-    (let [haetut-tiedot (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
-                          (:db jarjestelma)
-                          +kayttaja-jvh+
-                          {:urakka-id @oulun-alueurakan-2014-2019-id
-                           :alkupvm   (pvm/->pvm "1.8.2015")
-                           :loppupvm (pvm/->pvm "31.8.2015")})
-          haetut-tiedot-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot))
-          haetut-tiedot-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot))
-          haetut-tiedot-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot))
-          _ (log/debug "haetut-tiedot-talvihoito" haetut-tiedot-talvihoito)
-          _ (log/debug "haetut-tiedot-liikenneymparisto" haetut-tiedot-liikenneymparisto)
-          _ (log/debug "haetut-tiedot-soratiet" haetut-tiedot-soratiet)
+    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma)
+                               +kayttaja-jvh+
+                               {:urakka-id @oulun-alueurakan-2014-2019-id
+                                :alkupvm   (pvm/->pvm "1.8.2015")
+                                :loppupvm (pvm/->pvm "31.8.2015")})
+          haetut-tiedot-kajaani (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                                  (:db jarjestelma)
+                                  +kayttaja-jvh+
+                                  {:urakka-id @kajaanin-alueurakan-2014-2019-id
+                                   :alkupvm   (pvm/->pvm "1.8.2015")
+                                   :loppupvm  (pvm/->pvm "31.8.2015")})
+          poista-tpi (fn [tiedot]
+                       (map #(dissoc % :tpi) tiedot))
+          haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
+          haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
+
+          haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))
+          haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
+          haetut-tiedot-oulu-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot-oulu))
+          _ (log/debug "haetut-tiedot-oulu-talvihoito" haetut-tiedot-oulu-talvihoito)
+          _ (log/debug "haetut-tiedot-oulu-liikenneymparisto" haetut-tiedot-oulu-liikenneymparisto)
+          _ (log/debug "haetut-tiedot-oulu-soratiet" haetut-tiedot-oulu-soratiet)
 
           odotetut-talvihoito {:akilliset_hoitotyot_laskutetaan                 0.0M
                                :akilliset_hoitotyot_laskutetaan_ind_korotettuna 0.0M
@@ -59,18 +70,18 @@
                                :erilliskustannukset_laskutettu_ind_korotus      -9.57548675390999745000M
                                :kaikki_laskutetaan                              8985.791394829237321930000M
                                :kaikki_laskutetaan_ind_korotus                  205.791394829237321930000M
-                               :kaikki_laskutettu                               39239.24672837535932680200M
-                               :kaikki_laskutettu_ind_korotus                   129.24672837535932680200M
+                               :kaikki_laskutettu                               39229.07756144270691680200M
+                               :kaikki_laskutettu_ind_korotus                   129.07756144270691680200M
                                :kaikki_paitsi_kht_laskutetaan                   5485.791394829237321930000M
                                :kaikki_paitsi_kht_laskutetaan_ind_korotus       146.582968400893821930000M
-                               :kaikki_paitsi_kht_laskutettu                    4229.24672837535932680200M
+                               :kaikki_paitsi_kht_laskutettu                    4229.07756144270691680200M
                                :kaikki_paitsi_kht_laskutettu_ind_korotus        12.89498882859880851200M
                                :kht_laskutetaan                                 3500.0M
                                :kht_laskutetaan_ind_korotettuna                 3559.2084264283435000M
                                :kht_laskutetaan_ind_korotus                     59.2084264283435000M
-                               :kht_laskutettu                                  35010.0M
-                               :kht_laskutettu_ind_korotettuna                  35126.35173954676051829000M
-                               :kht_laskutettu_ind_korotus                      116.35173954676051829000M
+                               :kht_laskutettu                                  35000.0M
+                               :kht_laskutettu_ind_korotettuna                  35116.18257261410810829000M
+                               :kht_laskutettu_ind_korotus                      116.18257261410810829000M
                                :lampotila_puuttuu                               false
                                :muutostyot_laskutetaan                          1000.0M
                                :muutostyot_laskutetaan_ind_korotettuna          1016.91669326524100000M
@@ -230,6 +241,8 @@
 
           ]
 
-      (is (= odotetut-talvihoito haetut-tiedot-talvihoito) "laskutusyhteenvedon-tiedot talvihoito")
-      (is (= odotetut-liikenneymparisto haetut-tiedot-liikenneymparisto) "laskutusyhteenvedon-tiedot liikenneympäristön hoito")
-      (is (= odotetut-soratiet haetut-tiedot-soratiet) "laskutusyhteenvedon-tiedot sorateiden hoito"))))
+
+      (is (= haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita))
+      (is (= odotetut-talvihoito haetut-tiedot-oulu-talvihoito) "laskutusyhteenvedon-tiedot talvihoito")
+      (is (= odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto) "laskutusyhteenvedon-tiedot liikenneympäristön hoito")
+      (is (= odotetut-soratiet haetut-tiedot-oulu-soratiet) "laskutusyhteenvedon-tiedot sorateiden hoito"))))
