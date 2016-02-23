@@ -2,7 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [ring.middleware.params :refer [wrap-params]]
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelu poista-palvelu]])
+             :refer [julkaise-palvelu poista-palvelu]]
+            [harja.palvelin.palvelut.tilannekuva :as tilannekuva])
   (:import (java.awt.image BufferedImage)
            (java.awt Color BasicStroke RenderingHints)
            (java.awt.geom AffineTransform Line2D$Double)
@@ -33,7 +34,7 @@
 
 (defn toteumat [db user]
   (:toteumat
-   (harja.palvelin.palvelut.tilannekuva/hae-tilannekuvaan
+   (tilannekuva/hae-tilannekuvaan
     db user {:talvi #{20 24 39 21 40 41 17 23 19 38 18 42},
              :urakka-id nil,
              :turvallisuus {:turvallisuuspoikkeamat false}
@@ -52,7 +53,14 @@
 ;; näytettävät asiat voi rekisteröidä jotenkin. Tämän ns:n ei
 ;; pidä tehdä tietokantakyselyjä tai päätellä mitä tietoa haetaan
 ;; näytettäväksi
-
+;;
+;; Lisäksi esitettävät asiat, värit, ulkoasu jne .cljs namespacet siirrettävä
+;; .cljc muotoon
+;;
+;; Tämä nimiavaruus hoitaa perus dispatch URL parametreistä oikean tiedon
+;; luokse ja kutsuu harja.palvelin.palvelut.karttakuvat.piirto
+;; namespacea, jonne implementoidaan renderöinti, joka tekee saman kuin
+;; openlayers featuret namespacen luo-feature (mutta kuvaksi).
 
 (defmulti piirra (fn [_ reitti] (:type reitti)))
 (defmethod piirra :multiline [g multiline]
