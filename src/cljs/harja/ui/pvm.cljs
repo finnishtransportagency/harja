@@ -15,11 +15,11 @@
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
 
-(defn selvita-kalenterin-suunta [kalenteri-komponentti sijainti-atom]
-  (let [pvm-input-solmu (.-parentNode (r/dom-node kalenteri-komponentti))
-        r (.getBoundingClientRect pvm-input-solmu)
-        etaisyys-alareunaan (- @dom/korkeus (.-bottom r))
-        etaisyys-oikeaan-reunaan (- @dom/leveys (.-left r))
+(defn selvita-kalenterin-suunta [komponentti sijainti-atom]
+  (let [etaisyys-alareunaan (dom/elementin-etaisyys-alareunaan
+                              (.-parentNode (r/dom-node komponentti)))
+        etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-oikeaan-reunaan
+                                   (.-parentNode (r/dom-node komponentti)))
         uusi-suunta (if (< etaisyys-alareunaan 250)
                       (if (< etaisyys-oikeaan-reunaan 200)
                         :ylos-vasen
@@ -30,7 +30,6 @@
     (reset! sijainti-atom uusi-suunta)))
 
 (defn- pilko-viikoiksi [vuosi kk]
-  ;;(.log js/console "vuosi: " vuosi ", kk: " kk)
   (let [kk (inc kk) ;; cljs-time käyttää luonnollisia kk numeroita
         kk-alku (t/date-time vuosi kk 1)
         ;;_ (log "kk-alku on: " kk-alku)

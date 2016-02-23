@@ -8,10 +8,12 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
+            [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.loki :refer [log logt]]
             [harja.atom :refer [paivita!]]
-            [cljs.core.async :refer [<! >!]])
+            [cljs.core.async :refer [<! >!]]
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -19,20 +21,21 @@
 (defonce suolatoteumissa? (atom false))
 
 (defonce toteumat
-  (reaction<! [hae? @suolatoteumissa?
-               ur @nav/valittu-urakka
-               sopimus @tiedot-urakka/valittu-sopimusnumero
-               hk @tiedot-urakka/valittu-hoitokausi
-               kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and hae? ur)
-                (go
-                  (into []
-                        ;; luodaan kaikille id
-                        (map-indexed (fn [i rivi]
-                                       (assoc rivi :id i)))
-                        (<! (suola/hae-toteumat (:id ur) (first sopimus)
-                                                (or kk hk))))))))
+         (reaction<! [hae? @suolatoteumissa?
+                      ur @nav/valittu-urakka
+                      sopimus @tiedot-urakka/valittu-sopimusnumero
+                      hk @tiedot-urakka/valittu-hoitokausi
+                      kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (when (and hae? ur)
+                       (go
+                         (into []
+                               ;; luodaan kaikille id
+                               (map-indexed (fn [i rivi]
+                                              (assoc rivi :id i)))
+
+                               (<! (suola/hae-toteumat (:id ur) (first sopimus)
+                                                       (or kk hk))))))))
 
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
@@ -42,13 +45,14 @@
 (defn suolatoteumat []
 
   (komp/luo
-   (komp/lippu suolatoteumissa?)
+   (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet)
    (fn []
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
-           muokattava? (comp not :koneellinen)]
+           muokattava? (comp not :koneellinen)
+           listaus  (reverse (sort-by :alkanut @toteumat))]
        [:div.suolatoteumat
-
+        [kartta/kartan-paikka]
         [:span.valinnat
          [urakka-valinnat/urakan-sopimus ur]
          [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
@@ -62,11 +66,15 @@
                     :voi-poistaa? muokattava?}
          [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
            :tyyppi :valinta
+           :validoi [[:ei-tyhja "Valitse materiaali"]]
            :valinta-nayta #(or (:nimi %) "- valitse -")
            :valinnat @materiaalit}
-          {:otsikko "Pvm" :nimi :alkanut :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?}
-          {:otsikko "Käytetty määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?}
+          {:otsikko "Pvm" :nimi :alkanut :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
+           :validoi [[:ei-tyhja "Anna päivämäärä"]]
+           :varoita [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
+          {:otsikko "Käytetty määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
+           :validoi [[:ei-tyhja "Anna määrä"]]}
           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
            :hae #(if (muokattava? %) (:lisatieto %) "Koneellisesti raportoitu")}]
 
-         @toteumat]]))))
+         listaus]]))))

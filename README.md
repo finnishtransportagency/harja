@@ -84,6 +84,9 @@ ssh -L7777:localhost:5432 harja-dfb1-stg
 
 
 ## Autogeneroi nuolikuvat SVG:nä
+Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
+Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
+puhtaat -namespacessa määriteltyihin.
 
 (def varit {"punainen" "rgb(255,0,0)"
             "oranssi" "rgb(255,128,0)"
@@ -124,45 +127,18 @@ Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
 ## Tietokantadumpin ottaminen stg koneelta omalle
 
-> ssh harja-db1-stg
-> sudo bash
-> su postgres
-> pg_dump harja > harja-stg-dump.sql
-> exit
-> cd ~omatunnus
-> mv ~postgres/harja-stg-dump.sql .
-> chown omatunnus harja-stg-dump.sql
-
-Poistu koneelta ja kopio scp:llä harja projektin alla tietokanta kansioon:
-
-> scp harja-db1-stg:harja-stg-dump.sql tietokanta/
+> ssh harja-db1-stg "sudo -u postgres pg_dump harja" > tietokanta/harja-stg-dump.sql
 
 Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
-Mene vagrant koneelle:
+Mene vagrant-kansioon ja aja komennot:
 
 > cd vagrant
 > vagrant ssh
-> sudo bash
-> su postgres
-> psql
+> sudo -u postgres psql
 > drop database harja;
 > create database harja;
 > poistu <ctrl-d>
-> psql harja -f /harja-tietokanta/harja-stg-dump.sql
+> sudo -u postgres psql harja -f /harja-tietokanta/harja-stg-dump.sql
 
 Valmis!
 
-
-
-
-
-laitat sen harja/tietokanta hakemistoon ja purat
-koska tuo hakemisto on vagrantille näkyvä
-sitten: vagrant ssh
-sudo bash
-su postgres
-psql
-drop database harja
-create database harja
-ctrl-d
-psql harja -f /harja-tietokanta/sql-tiedosto.sql

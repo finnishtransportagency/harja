@@ -3,7 +3,11 @@
   (:require [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :refer [atom] :as r]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [goog.events :as events]
+            [goog.events.EventType :as EventType]
+            [harja.ui.dom :as dom]
+            [harja.fmt :as fmt])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -43,7 +47,7 @@
   (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
 
 (defn nuolivalinta
-  "Tekee handlerin, joka helpottaa nuolivalinnan tekemistä. Ottaa kolme funktiota: ylös, alas ja enter, 
+  "Tekee handlerin, joka helpottaa nuolivalinnan tekemistä. Ottaa kolme funktiota: ylös, alas ja enter,
 joita kutsutaan kun niiden näppäimiä paineetaan."
   [ylos alas enter]
   #(let [kc (.-keyCode %)]
@@ -111,10 +115,45 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
+(defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti max-korkeus-atom suunta-atom]
+  (let [solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
+        etaisyys-alareunaan (dom/elementin-etaisyys-alareunaan solmu)
+        etaisyys-ylareunaan (dom/elementin-etaisyys-ylareunaan solmu)
+        suunta (if (< etaisyys-alareunaan 75)
+                 :ylos
+                 :alas)]
+    (reset! suunta-atom suunta)
+    (if (= suunta :alas)
+      (reset! max-korkeus-atom (- etaisyys-alareunaan 5))
+      (reset! max-korkeus-atom etaisyys-ylareunaan))))
+
+
+(defn avautumissuunta-ja-korkeus-tyylit
+  [max-korkeus avautumissuunta]
+  (merge {:max-height (fmt/pikseleina max-korkeus)}
+         (when (= avautumissuunta :alas)
+           {:top    "calc(100% - 1px)"
+            :bottom "auto"})
+         (when (= avautumissuunta :ylos)
+           {:bottom "calc(100% - 1px)"
+            :top    "auto"})))
+
 (defn livi-pudotusvalikko [_ vaihtoehdot]
-  (let [auki (atom false)]
+  (let [auki (atom false)
+        avautumissuunta (atom :alas)
+        max-korkeus (atom 0)
+        pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
+                                                  (maarita-pudotusvalikon-max-korkeus
+                                                    this max-korkeus avautumissuunta))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki false))
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
+                           EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
+      {:component-did-mount
+       (fn [this]
+         (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
+
       (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)]
@@ -172,7 +211,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
-           [:ul.dropdown-menu.livi-alasvetolista
+           [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
+                                                           @max-korkeus @avautumissuunta)}
             (doall
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
@@ -180,6 +220,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                  (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                      (reset! auki false)
                                                      nil))]))]])))))
+
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto

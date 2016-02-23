@@ -91,18 +91,6 @@
                  (> (:hoitokauden-toteutunut-maara rivi) 0))
                @tehtavarivit))))
 
-(def yksikkohintainen-toteuma-kartalla-xf
-  (map #(do
-         (assoc %
-           :type :yksikkohintainen-toteuma
-           :alue {:type   :arrow-line
-                  :points (mapv (comp :coordinates :sijainti)
-                                (sort-by
-                                  :aika
-                                  pvm/ennen?
-                                  (:reittipisteet %)))}))))
-
-
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
 (defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
@@ -129,12 +117,48 @@
 
 (defonce yksikkohintainen-toteuma-kartalla
          (reaction
-           @valittu-yksikkohintainen-toteuma
-           @haetut-reitit
            (when @karttataso-yksikkohintainen-toteuma
-             (if @valittu-yksikkohintainen-toteuma
-               (into [] yksikkohintainen-toteuma-kartalla-xf [@valittu-yksikkohintainen-toteuma]) ; FIXME Ei tarvita enää
-               (kartalla-esitettavaan-muotoon
-                 (map
-                   #(assoc % :tyyppi-kartalla :toteuma)
-                   @haetut-reitit))))))
+             (kartalla-esitettavaan-muotoon
+               @haetut-reitit
+               @valittu-yksikkohintainen-toteuma
+               nil
+               (map #(assoc % :tyyppi-kartalla :toteuma))))))
+
+;; REPL TUNKKAUSTA, toteumien piirtotyylejä varten
+(def monesko? (atom 0))
+
+(def komennot
+  [
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "auraus ja sohjonpoisto"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "SUOLAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "LIUOSSUOLAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "PISTEHIEKOITUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "LINJAHIEKOITUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "PINNAN TASAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "LUMIVALLIEN MADALTAMINEN"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "SULAMISVEDEN HAITTOJEN TORJUNTA"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "AURAUSVIITOITUS JA KINOSTIMET"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "LUMENSIIRTO"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "PAANNEJAAN POISTO"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "MUU"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "SORATEIDEN POLYNSIDONTA"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "SORASTUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "SORATEIDEN MUOKKAUSHOYLAYS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "PAALLYSTEIDEN PAIKKAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "PAALLYSTEIDEN JUOTOSTYOT"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "KONEELLINEN NIITTO"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "KONEELLINEN VESAKONRAIVAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "HARJAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "LIIKENNEMERKKIEN PUHDISTUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "L- JA P-ALUEIDEN PUHDISTUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "SILTOJEN PUHDISTUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "SORATEIDEN TASAUS"}]) @haetut-reitit)))
+
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "auraus ja sohjonpoisto"} {:toimenpide "SUOLAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "auraus ja sohjonpoisto"} {:toimenpide "SUOLAUS"} {:toimenpide "PINNAN TASAUS"}]) @haetut-reitit)))
+   (fn [] (reset! haetut-reitit (map #(assoc % :tehtavat [{:toimenpide "auraus ja sohjonpoisto"} {:toimenpide "PISTEHIEKOITUS"}]) @haetut-reitit)))])
+
+(defn vaihda! []
+  ((nth komennot @monesko?))
+  (swap! monesko? inc)
+  (log "Toimenpide on nyt: " (get-in (first @haetut-reitit) [:tehtavat 0 :toimenpide])))

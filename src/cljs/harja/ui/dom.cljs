@@ -30,6 +30,29 @@
   [perusnimi]
   (str perusnimi (if ie? ".png" ".svg")))
 
+(defn assertoi-ikonin-vari [vari]
+  (assert #{"keltainen" "lime" "magenta" "musta" "oranssi" "pinkki"
+            "punainen" "sininen" "syaani" "tummansininen" "turkoosi"
+            "vihrea" "violetti"} vari))
+
+(def ikonikansio "images/tuplarajat/")
+
+(defn sijainti-ikoni
+  "Oletukena palautetaan <vari-str> värinen sijainti-ikoni, jolla on musta reuna."
+  ([vari-str] (sijainti-ikoni "musta" vari-str))
+  ([tila-str vari-str]
+   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} tila-str))
+   (assertoi-ikonin-vari vari-str)
+   (karttakuva (str ikonikansio"sijainnit/sijainti-"tila-str"-"vari-str))))
+
+(defn nuoli-ikoni [vari-str]
+  (assertoi-ikonin-vari vari-str)
+  (karttakuva (str ikonikansio"nuolet/nuoli-"vari-str)))
+
+(defn pinni-ikoni [vari-str]
+  (assertoi-ikonin-vari vari-str)
+  (karttakuva (str ikonikansio"pinnit/pinni-"vari-str)))
+
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
 
@@ -78,3 +101,18 @@
   (let [[x1 y1 w1 h1] (sijainti elt)
         [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
     [(- x1 x2) (- y1 y2) w1 h1]))
+
+(defn elementin-etaisyys-alareunaan [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (- @korkeus (.-bottom r))]
+    etaisyys))
+
+(defn elementin-etaisyys-ylareunaan [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (.-top r)]
+    etaisyys))
+
+(defn elementin-etaisyys-oikeaan-reunaan [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (- @leveys (.-right r))]
+    etaisyys))

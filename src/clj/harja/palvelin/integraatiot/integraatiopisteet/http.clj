@@ -60,18 +60,21 @@
              vastausdata)))))))
 
 (defn laheta-get-kutsu
+  "Tekee synkronisen HTTP GET -kutsun"
   ([integraatioloki integraatio jarjestelma url otsikot parametrit kayttajatunnus salasana kasittele-vastaus-fn]
    (laheta-kutsu integraatioloki integraatio jarjestelma url "get" otsikot parametrit kayttajatunnus salasana nil kasittele-vastaus-fn))
   ([integraatioloki integraatio jarjestelma url otsikot parametrit kasittele-vastaus-fn]
    (laheta-kutsu integraatioloki integraatio jarjestelma url "get" otsikot parametrit nil kasittele-vastaus-fn)))
 
 (defn laheta-post-kutsu
+  "Tekee synkronisen HTTP POST -kutsun"
   ([integraatioloki integraatio jarjestelma url otsikot parametrit kayttajatunnus salasana kutsudata kasittele-vastaus-fn]
    (laheta-kutsu integraatioloki integraatio jarjestelma url "post" otsikot parametrit kayttajatunnus salasana kutsudata kasittele-vastaus-fn))
   ([integraatioloki integraatio jarjestelma url otsikot parametrit kutsudata kasittele-vastaus-fn]
    (laheta-kutsu integraatioloki integraatio jarjestelma url "post" otsikot parametrit kutsudata kasittele-vastaus-fn)))
 
 (defn laheta-head-kutsu
+  "Tekee synkronisen HTTP HEAD -kutsun"
   ([integraatioloki integraatio jarjestelma url otsikot parametrit kayttajatunnus salasana kasittele-vastaus-fn]
    (laheta-kutsu integraatioloki integraatio jarjestelma url "head" otsikot parametrit kayttajatunnus salasana nil kasittele-vastaus-fn))
   ([integraatioloki integraatio jarjestelma url otsikot parametrit kasittele-vastaus-fn]

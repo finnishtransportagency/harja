@@ -19,7 +19,9 @@
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
             [harja.ui.dom :as dom]
             [harja.views.kartta.tasot :as tasot]
-            [reagent.core :refer [atom] :as reagent])
+            [reagent.core :refer [atom] :as reagent]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.kartta.varit.alpha :as varit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -194,7 +196,11 @@
   [& args]
   (let [koko @nav/kartan-koko]
     (if-not (= :hidden koko)
-      [kartan-paikkavaraus koko args]
+      (if (= :S koko)
+        [:span
+         [kartan-paikkavaraus koko args]
+         [:div.pystyvali-karttanapille]]
+        [kartan-paikkavaraus koko args])
       [:span.ei-karttaa])))
 
 
@@ -208,13 +214,6 @@
          (t/kuuntele! :urakka-valittu
                       #(openlayers/hide-popup!)))
 
-;; Joitain värejä... voi keksiä paremmat tai "oikeat", jos sellaiset on tiedossa
-(def +varit+ ["rgba(102, 204, 255, 0.7)" "rgba(0, 255, 204, 0.7)" "rgba(0, 102, 0, 0.7)" "rgba(255, 153, 0, 0.7)"
-              "rgba(204, 0, 102, 0.7)" "rgba(255, 204, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 51, 204, 0.7)"
-              "rgba(0, 51, 153, 0.7)" "rgba(153, 0, 204, 0.7)" "rgba(51, 204, 51, 0.7)" "rgba(0, 0, 255, 0.7)"
-              "rgba(0, 102, 102, 0.7)" "rgba(51, 153, 102, 0.7)" "rgba(51, 102, 0, 0.7)" "rgba(153, 102, 51, 0.7)"
-              "rgba(153, 0, 51, 0.7)"])
-
 (defonce kartan-koon-paivitys
          (run! (do @dom/ikkunan-koko
                    (openlayers/invalidate-size!))))
@@ -225,11 +224,11 @@
         kartan-korkeus @kartan-korkeus
         sivu (nav/sivu)
         v-ur @nav/valittu-urakka
-        muuta-kokoa-teksti (case koko
-                             :M "Suurenna karttaa"
-                             :L "Pienennä karttaa"
-                             :XL "Pienennä karttaa"
-                             "")]
+        [muuta-kokoa-teksti ikoni] (case koko
+                             :M ["Suurenna karttaa" (ikonit/arrow-down)]
+                             :L ["Pienennä karttaa" (ikonit/arrow-up)]
+                             :XL ["Pienennä karttaa" (ikonit/arrow-up)]
+                             ["" nil])]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
@@ -246,7 +245,7 @@
       (if (= :S koko)
         [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right
          {:on-click #(nav/vaihda-kartan-koko! :L)}
-         "Näytä kartta"]
+         (ikonit/expand) " Näytä kartta"]
         [:span
          (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
            [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
@@ -256,10 +255,10 @@
                                                              ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
                                                              ;; suurenna | pienennä | piilota
                                                              :XL :M))}
-            muuta-kokoa-teksti])
+            ikoni muuta-kokoa-teksti])
 
          [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
-          "Piilota kartta"]])]]))
+          (ikonit/compress) " Piilota kartta"]])]]))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 (defn keskita-kartta-alueeseen! [alue]
@@ -273,7 +272,8 @@
 
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
-                          (keep (comp :selitteet meta) (vals @tasot/geometriat)))]
+                          (keep (comp :selitteet meta) (vals @tasot/geometriat)))
+        varilaatikon-koko 20]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
              @ikonien-selitykset-nakyvissa?)
@@ -282,21 +282,51 @@
          [:div
           [:table
            [:tbody
-            (for [{:keys [img nimi vari teksti]} selitteet]
-              ^{:key (str (or vari img) "_" nimi)}
-              [:tr
-               (if vari
-                 [:td.kartan-ikonien-selitykset-ikoni-sarake
-                  [:div.kartan-ikoni-vari {:style {:background-color vari}}]]
-                 (if (vector? img)
+            (for [{:keys [img nimi vari teksti]} (sort-by :nimi selitteet)]
+              (when
+                (or (not-empty vari) (not-empty img))
+                ^{:key (str (or vari img) "_" nimi)}
+                [:tr
+                 (cond
+                   (string? vari)
                    [:td.kartan-ikonien-selitykset-ikoni-sarake
-                    [:img.kartan-ikonien-selitykset-ikoni.kartta-ikonien-selitykset-ikoni-rotate
-                     {:src (str openlayers/+karttaikonipolku+ (first img))}]
-                    [:img.kartan-ikonien-selitykset-ikonin-paalle {:src (str openlayers/+karttaikonipolku+ (second img))}]]
+                    [:div.kartan-ikoni-vari {:style {:background-color vari
+                                                     :width            (str varilaatikon-koko "px")
+                                                     :height           (str varilaatikon-koko "px")}}]]
 
-                   [:td.kartan-ikonien-selitykset-ikoni-sarake
-                    [:img.kartan-ikonien-selitykset-ikoni {:src (str openlayers/+karttaikonipolku+ img)}]]))
-               [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]])]]
+                   (coll? vari)
+                   (let [vk varilaatikon-koko
+                         kaikki-koot [[vk]
+                                      [vk (- vk 10)]
+                                      [vk (- vk 6) (- vk 12)]
+                                      [vk (- vk 4) (- vk 8) (- vk 12)]]
+                         koot (nth kaikki-koot (dec (count vari)) (take (count vari) (range vk 0 -2)))
+                         solut (partition 2 (interleave koot vari))
+                         pohja (first solut)
+                         sisakkaiset (butlast (rest solut))
+                         viimeinen (last solut)]
+                     [:td.kartan-ikonien-selitykset-ikoni-sarake
+                      [:div.kartan-ikoni-vari-pohja {:style {:background-color (second pohja)
+                                                             :width            (first pohja)
+                                                             :height           (first pohja)}}]
+                      (doall
+                        (for [[koko v] sisakkaiset]
+                          ^{:key (str koko "_" v "--" nimi)}
+                          [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color v
+                                                                       :width            koko
+                                                                       :height           koko
+                                                                       :margin           (/ (- varilaatikon-koko koko) 2)}}]))
+
+                      [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color (second viimeinen)
+                                                                   :width            (first viimeinen)
+                                                                   :height           (first viimeinen)
+                                                                   :position         "relative"
+                                                                   :margin           (/ (- varilaatikon-koko (first viimeinen)) 2)}}]])
+
+
+                   :else [:td.kartan-ikonien-selitykset-ikoni-sarake
+                          [:img.kartan-ikonien-selitykset-ikoni {:src img}]])
+                 [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]]))]]
           [:div.kartan-ikonien-selitykset-sulje.klikattava
            {:on-click (fn [event]
                         (reset! ikonien-selitykset-auki false)
@@ -313,9 +343,10 @@
 (defn kartan-yleiset-kontrollit
   "Kartan yleiset kontrollit -komponentti, johon voidaan antaa mitä tahansa sisältöä, jota tietyssä näkymässä tarvitaan"
   []
-  (let [sisalto @kartan-yleiset-kontrollit-sisalto]
+  (let [sisalto @kartan-yleiset-kontrollit-sisalto
+        luokka-str (or (:class (meta sisalto)) "kartan-yleiset-kontrollit")]
     (when (and sisalto (not= :S @nav/kartan-koko))
-      [:div.kartan-kontrollit.kartan-yleiset-kontrollit sisalto])))
+      [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto])))
 
 (def paivitetaan-karttaa-tila (atom false))
 
@@ -326,13 +357,13 @@
      [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
       [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
 
-(defn aseta-paivitetaan-karttaa-tila [uusi-tila]
+(defn aseta-paivitetaan-karttaa-tila! [uusi-tila]
   (reset! paivitetaan-karttaa-tila uusi-tila))
 
-(defn aseta-yleiset-kontrollit [uusi-sisalto]
+(defn aseta-yleiset-kontrollit! [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 
-(defn tyhjenna-yleiset-kontrollit []
+(defn tyhjenna-yleiset-kontrollit! []
   (reset! kartan-yleiset-kontrollit-sisalto nil))
 
 (def kartan-ohjelaatikko-sisalto (atom nil))
@@ -344,10 +375,10 @@
     (when (and sisalto (not= :S @nav/kartan-koko))
       [:div.kartan-kontrollit.kartan-ohjelaatikko sisalto])))
 
-(defn aseta-ohjelaatikon-sisalto [uusi-sisalto]
+(defn aseta-ohjelaatikon-sisalto! [uusi-sisalto]
   (reset! kartan-ohjelaatikko-sisalto uusi-sisalto))
 
-(defn tyhjenna-ohjelaatikko []
+(defn tyhjenna-ohjelaatikko! []
   (reset! kartan-ohjelaatikko-sisalto nil))
 
 (defn nayta-popup!
@@ -485,7 +516,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
              {}
              geometriat))
 
-(defn- hoverattu-asia-on-valittu-hallintayksikko-tai-urakka?
+(defn- tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
   [geom]
   (or (and
         (= (:type geom) :ur)
@@ -558,21 +589,23 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :on-dblclick        nil
 
           :on-dblclick-select (fn [item event]
-                                (kun-geometriaa-klikattu item event)
-                                (.stopPropagation event)
-                                (.preventDefault event)
+                                ;; jos tuplaklikattiin valittua hallintayksikköä tai urakkaa (eli "tyhjää"),
+                                ;; niin silloin ei pysäytetä eventtiä, eli zoomataan sisään
+                                (when-not (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
+                                  (.stopPropagation event)
+                                  (.preventDefault event)
 
-                                ;; Zoomaa kartta tuplaklikattuun asiaan (ei kuitenkaan urakka/hallintayksikkö)
-                                ;; HY/Urakka valinta aiheuttaa organisaatioon zoomaamisen muun koodin avulla, ei
-                                ;; tehdä "tuplazoomausta"
-                                (when-not (or (= :ur (:type item))
-                                              (= :hy (:type item)))
-                                  (keskita-kartta-alueeseen! (harja.geo/extent (:alue item)))))
+                                  ;; Jos tuplaklikattu asia oli jotain muuta kuin HY/urakka, niin keskitetään
+                                  ;; kartta siihen.
+                                  (when-not (or (= :ur (:type item))
+                                                (= :hy (:type item)))
+                                    (kun-geometriaa-klikattu item event)
+                                    (keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
 
           :tooltip-fn         (fn [geom]
                                 ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
                                 ; on valittu hallintayksikkö tai urakka.
-                                (if (or (hoverattu-asia-on-valittu-hallintayksikko-tai-urakka? geom)
+                                (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
                                         (and (not (:nimi geom)) (not (:siltanimi geom))))
                                   nil
                                   (fn []
@@ -593,7 +626,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                                   {:width 3}))
                                       ;;:harja.ui.openlayers/fit-bounds (:valittu piirrettava) ;; kerro kartalle, että siirtyy valittuun
                                       :color (or (:color alue)
-                                                 (nth +varit+ (mod (:id piirrettava) (count +varit+))))
+                                                 (nth varit/kaikki (mod (hash (:id piirrettava)) (count varit/kaikki))))
                                       :zindex (or (:zindex alue) (case (:type piirrettava)
                                                                    :hy 0
                                                                    :ur 1

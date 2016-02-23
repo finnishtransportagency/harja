@@ -251,7 +251,7 @@ hakutiheys-historiakuva 1200000)
                                                     :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
                                                     :aikavali-historia    @historiakuvan-aikavali
                                                     :suodattimet          @suodattimet})
-      (kartta/aseta-paivitetaan-karttaa-tila true))
+      (kartta/aseta-paivitetaan-karttaa-tila! true))
 
     (let [yhteiset-parametrit (kasaa-parametrit)
           julkaise-tyokonedata! (fn [tulos]
@@ -261,8 +261,9 @@ hakutiheys-historiakuva 1200000)
           tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!))]
-      (reset! tilannekuva-kartalla/haetut-asiat tulos)
-      (kartta/aseta-paivitetaan-karttaa-tila false))))
+      (when @nakymassa?
+        (reset! tilannekuva-kartalla/haetut-asiat tulos))
+      (kartta/aseta-paivitetaan-karttaa-tila! false))))
 
 (def asioiden-haku (reaction<!
                      [_ @valittu-tila

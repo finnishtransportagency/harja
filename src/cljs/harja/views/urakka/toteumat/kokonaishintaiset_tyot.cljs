@@ -63,7 +63,7 @@
       [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys "3%"}
        {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "19%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "38%"}
-       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%"}
+       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%" :fmt #(fmt/desimaaliluku-opt % 1)}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
       (take 500 toteumat)]

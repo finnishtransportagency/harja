@@ -6,29 +6,16 @@
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]))
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
+  (:import (java.util Date)))
 
 (defn hakuehto-annettu? [p]
-  ;; todo: pitäisi yksinkertaistaa
-  (if (nil? p)
-    false
-    (do
-      (if (string? p)
-        (not (empty? p))
-
-        (if (vector? p)
-          (do
-            (if (empty? p)
-              false
-              (some true? (map hakuehto-annettu? p))))
-
-          (if (map? p)
-            (do
-              (if (empty? p)
-                false
-                (some true? (map #(hakuehto-annettu? (val %)) p))))
-
-            true))))))
+  (cond
+    (number? p) true
+    (instance? Date p) true
+    (map? p) (some true? (map #(hakuehto-annettu? (val %)) p))
+    (empty? p) false
+    :else true))
 
 (defn- viesti [mille mista ilman]
   (str ", "
@@ -37,7 +24,7 @@
          (str ilman))))
 
 (defn hae-ilmoitukset
-  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto]
+  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -46,17 +33,20 @@
                                                     urakka urakoitsija urakkatyyppi hallintayksikko
                                                     (first aikavali) (second aikavali))
         tyypit (mapv name tyypit)
-        viesti (str "Haetaan ilmoituksia: "
+        selite-annettu? (boolean (and selite (first selite)))
+        selite (if selite-annettu? (name (first selite)) "")
+        debug-viesti (str "Haetaan ilmoituksia: "
                     (viesti urakat "urakoista" "ilman urakoita")
                     (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                     (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
                     (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                    (viesti selite "selitteellä:" "ilman selitettä")
                     (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                     (cond
                       (:avoimet tilat) ", mutta vain avoimet."
                       (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
                       (:suljetut tilat) ", ainoastaan suljetut."))
-        _ (log/debug viesti)
+        _ (log/debug debug-viesti)
         tulos (when-not (empty? urakat)
                 (mapv
                   #(assoc % :uusinkuittaus
@@ -79,6 +69,7 @@
                                              aikavali-alku aikavali-loppu
                                              (hakuehto-annettu? tyypit) tyypit
                                              (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
+                                             selite-annettu? selite
                                              (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
                                              (if (:avoimet tilat) true false) ;; falseksi
                                              ))
@@ -125,7 +116,14 @@
         (assoc-in [:ilmoittaja :tyopuhelin] (:ilmoittaja_henkilo_tyopuhelin toimenpide))
         (assoc-in [:ilmoittaja :sahkoposti] (:ilmoittaja_henkilo_sahkoposti toimenpide))
         (assoc-in [:ilmoittaja :organisaatio] (:ilmoittaja_organisaatio_nimi toimenpide))
-        (assoc-in [:ilmoittaja :ytunnus] (:ilmoittaja_organisaatio_ytunnus toimenpide)))))
+        (assoc-in [:ilmoittaja :ytunnus] (:ilmoittaja_organisaatio_ytunnus toimenpide))
+        (assoc-in [:kasittelija :etunimi] (:kasittelija_henkilo_etunimi toimenpide))
+        (assoc-in [:kasittelija :sukunimi] (:kasittelija_henkilo_sukunimi toimenpide))
+        (assoc-in [:kasittelija :matkapuhelin] (:kasittelija_henkilo_matkapuhelin toimenpide))
+        (assoc-in [:kasittelija :tyopuhelin] (:kasittelija_henkilo_tyopuhelin toimenpide))
+        (assoc-in [:kasittelija :sahkoposti] (:kasittelija_henkilo_sahkoposti toimenpide))
+        (assoc-in [:kasittelija :organisaatio] (:kasittelija_organisaatio_nimi toimenpide))
+        (assoc-in [:kasittelija :ytunnus] (:kasittelija_organisaatio_ytunnus toimenpide)))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
@@ -136,7 +134,7 @@
                         (hae-ilmoitukset (:db this) user (:hallintayksikko tiedot)
                                          (:urakka tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                          (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
-                                         (:hakuehto tiedot))))
+                                         (:hakuehto tiedot) (:selite tiedot))))
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]

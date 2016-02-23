@@ -298,7 +298,7 @@ documentation:
     /turvallisuuspoikkeama:
       post:
         is: [secured]
-        description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen.
+        description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen. Vakavat turvallisuuspoikkeamat täytyy raportoida Harjaan 24h kuluessa. Lievät turvallisuuspoikkeamat täytyy taas raportoida 5 vuorokauden sisällä. Käsittelyyn liittyvät tiedot voidaan päivittää myöhemmi lähettämällä uusi kutsu samalla turvallisuuspoikkeaman tunnisteella.
         body:
           application/json:
             example: !include examples/turvallisuuspoikkeamien-kirjaus-request.json
@@ -376,8 +376,8 @@ documentation:
          is: [secured]
          description: Ilmoitusten reaaliakainen haku. Resurssiin tehdään ns. long poll joka jää odottamaan ilmoituksia ulkoisesta järjestelmästä. Kun Harja vastaanottaa ilmoituksen, se palautetaan responsessa, jonka jälkeen kutsuva pää tekee samantien uuden requestin. Parametrinä voidaan antaa myös aikaleima, jonka jälkeen luodut tai muuttuneet ilmoitukset palautetaan. Samoin voidaan kytkeä parametrilla ns. streamaus päälle, jolloin ilmoituksen saavuttua ei tarvitse aina aloittaa uutta requestia.
          queryParameters:
-          urakoitsijaId:
-            description: Urakoitsijan id, jolle haetaan ilmoitusket
+          urakkaId:
+            description: Urakan id, jolle haetaan ilmoitukset
             type: integer
             required: true
             example: 1

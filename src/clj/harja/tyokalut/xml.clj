@@ -5,7 +5,9 @@
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [clj-time.format :as f])
+            [clj-time.format :as f]
+            [clj-time.coerce :as tc]
+            [clojure.data.zip.xml :as z])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
@@ -89,6 +91,18 @@
 (defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
 
+(def xsd-datetime-fmt
+  (f/with-zone (f/formatters :date-hour-minute-second)  (org.joda.time.DateTimeZone/forID "EET")))
+
+(defn parsi-xsd-datetime [teksti]
+  (tc/to-date (f/parse xsd-datetime-fmt teksti)))
+
+(defn formatoi-xsd-datetime [date]
+  (f/unparse xsd-datetime-fmt
+             (if (instance? java.util.Date date)
+               (tc/from-date date)
+               date)))
+
 (defn json-date-time->joda-time
   "Muuntaa JSONin date-time -formaatissa olevan stringin (esim. 2016-01-30T12:00:00.000)
   org.joda.time.DateTime -muotoon."
@@ -108,3 +122,8 @@
   (when aika
     (joda-time->xml-xs-date
       (json-date-time->joda-time aika))))
+
+(defn raakateksti
+  "Palauttaa elementin arvon raakatekstinä, jolloin mm. mukana on kaikki välimerkit"
+  [data avain]
+  (:content (first (z/xml1-> data avain))))

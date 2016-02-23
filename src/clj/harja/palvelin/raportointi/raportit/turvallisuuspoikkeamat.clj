@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
+            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat-kuukausittain]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
@@ -10,15 +11,16 @@
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
             [clj-time.format :as tf]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c]))
 
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
 
 
 (def turvallisuuspoikkeama-tyyppi
-  {"turvallisuuspoikkeama" "Turvallisuus\u00ADpoikkeama"
-   "tyoturvallisuuspoikkeama" "Työ\u00ADturvallisuus\u00ADpoikkeama"
-   "prosessipoikkeama" "Prosessi\u00ADpoikkeama"})
+  {"tyotapaturma" "Ty\u00ADö\u00ADta\u00ADpa\u00ADtur\u00ADma"
+   "vaaratilanne" "Vaa\u00ADra\u00ADti\u00ADlan\u00ADne"
+   "turvallisuushavainto" "Tur\u00ADval\u00ADli\u00ADsuus\u00ADha\u00ADvain\u00ADto"})
 
 (defn ilmoituksen-tyyppi [{tyyppi :tyyppi}]
   (into {}
@@ -32,10 +34,11 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         turpot (into []
-                     (comp 
-                      (map #(konv/array->vec % :tyyppi))
-                      (map konv/alaviiva->rakenne))
-                     (hae-turvallisuuspoikkeamat db 
+                     (comp
+                       (map #(konv/array->vec % :tyyppi))
+                       (map #(konv/string->keyword % :vakavuusaste))
+                       (map konv/alaviiva->rakenne))
+                     (hae-turvallisuuspoikkeamat db
                                                  (if urakka-id true false) urakka-id
                                                  (if hallintayksikko-id true false) hallintayksikko-id
                                                  alkupvm loppupvm))
@@ -49,9 +52,9 @@
                                                          (map ilmoituksen-tyyppi turpot))]
                                       (assoc tulos
                                         kk
-                                        [(get maarat "turvallisuuspoikkeama")
-                                         (get maarat "prosessipoikkeama")
-                                         (get maarat "tyoturvallisuuspoikkeama")])))
+                                        [(get maarat "tyotapaturma")
+                                         (get maarat "vaaratilanne")
+                                         (get maarat "turvallisuushavainto")])))
                                   {} turpo-maarat-kuukausittain)
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
@@ -70,9 +73,9 @@
       
       (concat (mapcat (fn [[urakka turpot]]
                         (let [turpo-maarat-per-tyyppi (frequencies (mapcat :tyyppi turpot))]
-                          [(rivi (:nimi urakka) "Turvallisuuspoikkeama" (or (turpo-maarat-per-tyyppi "turvallisuuspoikkeama") 0))
-                           (rivi (:nimi urakka) "Prosessipoikkeama" (or (turpo-maarat-per-tyyppi "prosessipoikkeama") 0))
-                           (rivi (:nimi urakka) "Työturvallisuuspoikkeama" (or (turpo-maarat-per-tyyppi "tyoturvallisuuspoikkeama") 0))]))
+                          [(rivi (:nimi urakka) "Työtapaturma" (or (turpo-maarat-per-tyyppi "tyotapaturma") 0))
+                           (rivi (:nimi urakka) "Vaaratilanne" (or (turpo-maarat-per-tyyppi "vaaratilanne") 0))
+                           (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))]))
                       (if urakoittain?
                         (group-by :urakka turpot)
                         [[nil turpot]]))
@@ -86,7 +89,7 @@
                  :alkupvm               alkupvm :loppupvm loppupvm
                  :kuukausittainen-data  turpomaarat-tyypeittain
                  :piilota-arvo?         #{0}
-                 :legend                ["Turvallisuuspoikkeamat" "Prosessipoikkeamat" "Työturvallisuuspoikkeamat"]}))
+                 :legend                ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]}))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []
@@ -94,26 +97,30 @@
                       [{:otsikko "Urakka" :leveys 14}])
                     [{:otsikko "Pvm" :leveys 14}
                      {:otsikko "Tyyppi" :leveys 24}
+                     {:otsikko "Vakavuusaste" :leveys 15}
+                     {:otsikko "Tyyppi" :leveys 24}
                      {:otsikko "Ammatti" :leveys 14}
                      {:otsikko "Työ\u00ADtehtävä" :leveys 14}
                      {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
-                      {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}]))
+                     {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}]))
 
       (keep identity
             (conj (mapv #(rivi (if urakoittain? (:nimi (:urakka %)) nil)
                                (pvm/pvm-aika (:tapahtunut %))
                                (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
+                               (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
                                (or (:tyontekijanammatti %) "")
                                (or (:tyotehtava %) "")
                                (or (:sairaalavuorokaudet %) "")
                                (or (:sairauspoissaolopaivat %) ""))
 
-                        (sort-by :tapahtunut turpot))
+                        (sort-by :tapahtunut #(t/after? (c/from-sql-time %1)
+                                                        (c/from-sql-time %2)) turpot))
                   (when (not (empty? turpot))
                     (if urakoittain?
-                      (rivi "Yhteensä" "" "" "" ""
+                      (rivi "Yhteensä" "" "" "" "" ""
                             (reduce + 0 (keep :sairaalavuorokaudet turpot))
                             (reduce + 0 (keep :sairauspoissaolopaivat turpot)))
-                      (rivi "Yhteensä" "" "" ""
+                      (rivi "Yhteensä" "" "" "" ""
                             (reduce + 0 (keep :sairaalavuorokaudet turpot))
                             (reduce + 0 (keep :sairauspoissaolopaivat turpot)))))))]]))

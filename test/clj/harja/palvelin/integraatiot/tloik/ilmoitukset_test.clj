@@ -13,8 +13,10 @@
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
-
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+            [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
+            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]))
 
 (def kayttaja "jvh")
 
@@ -25,14 +27,22 @@
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
+    :sonja-sahkoposti (component/using
+                       (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                  {:sahkoposti-sisaan-jono         "email-to-harja"
+                                                   :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                   :sahkoposti-ulos-jono           "harja-to-email"
+                                                   :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                        [:sonja :db :integraatioloki])
+    :labyrintti (component/using
+                  (labyrintti/luo-labyrintti
+                    {:url            "http://localhost:28080/sendsms"
+                     :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
+                  [:db :http-palvelin :integraatioloki])
     :tloik (component/using
-             (->Tloik +tloik-ilmoitusviestijono+
-                      +tloik-ilmoituskuittausjono+
-                      +tloik-ilmoitustoimenpideviestijono+
-                      +tloik-ilmoitustoimenpidekuittausjono+)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat])))
+             (luo-tloik-komponentti)
+             [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
-(use-fixtures :once jarjestelma-fixture)
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
@@ -67,7 +77,7 @@
     (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
-    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
@@ -85,7 +95,7 @@
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
-    (odota #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (let [xml (first @viestit)
           data (xml/lue xml)]

@@ -9,7 +9,8 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
   FROM turvallisuuspoikkeama t
        LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
  WHERE t.urakka = :urakka
-       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
+ ORDER BY t.tapahtunut DESC;
 
 -- name: hae-hallintayksikon-turvallisuuspoikkeamat
 -- Hakee turvallisuuspoikkeamat, jotka ovat annetun hallintayksikön urakoissa raportoituja
@@ -23,7 +24,8 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
   FROM turvallisuuspoikkeama t
       LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
  WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
-       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
+ ORDER BY t.tapahtunut DESC;
 
 -- name: hae-turvallisuuspoikkeamat
 -- Hakee kaikki turvallisuuspoikkeamat aikavälillä ilman aluerajausta
@@ -36,7 +38,8 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
        k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
   FROM turvallisuuspoikkeama t
       LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
- WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
+ WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
+ ORDER BY t.tapahtunut DESC;
 
 
 -- name: hae-turvallisuuspoikkeama
@@ -59,6 +62,8 @@ SELECT
   t.tr_loppuetaisyys,
   t.tr_alkuosa,
   t.tr_loppuosa,
+  t.vakavuusaste,
+  t.vahinkoluokittelu,
   t.tyyppi,
 
   k.id                   AS korjaavatoimenpide_id,
@@ -141,7 +146,8 @@ VALUES
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20.
 UPDATE turvallisuuspoikkeama
-SET urakka               = :urakka,
+SET
+  urakka                 = :urakka,
   tapahtunut             = :tapahtunut,
   paattynyt              = :paattynyt,
   kasitelty              = :kasitelty,
@@ -151,9 +157,11 @@ SET urakka               = :urakka,
   vammat                 = :vammat,
   sairauspoissaolopaivat = :poissa,
   sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeamatyyppi [],
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
   muokkaaja              = :kayttaja,
-  muokattu               = NOW()
+  muokattu               = NOW(),
+  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
+  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
 WHERE id = :id;
 
 --name: aseta-turvallisuuspoikkeaman-sijainti!
@@ -184,8 +192,10 @@ SET urakka               = :urakka,
   vammat                 = :vammat,
   sairauspoissaolopaivat = :poissa,
   sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeamatyyppi [],
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
   muokkaaja              = :kayttaja,
+  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
+  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
   muokattu               = NOW()
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
@@ -212,7 +222,8 @@ WHERE id = :id;
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu)
+ sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
-   :tyyppi :: turvallisuuspoikkeamatyyppi [], :kayttaja, NOW());
+   :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
+   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste);

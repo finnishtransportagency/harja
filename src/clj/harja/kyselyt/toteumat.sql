@@ -451,6 +451,19 @@ SELECT *
 FROM reittipiste
 WHERE toteuma = :id;
 
+-- name: paivita-varustetoteuman-tr-osoite!
+-- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
+UPDATE varustetoteuma
+SET
+  tr_numero        = :tr_numero,
+  tr_alkuosa       = :tr_alkuosa,
+  tr_alkuetaisyys  = :tr_alkuetaisyys,
+  tr_loppuosa      = :tr_loppuosa,
+  tr_loppuetaisyys = :tr_loppuetaisyys,
+  tr_puoli         = :tr_puoli,
+  tr_ajorata       = :tr_ajorata
+WHERE id = :id;
+
 -- name: luo-varustetoteuma<!
 -- Luo uuden varustetoteuman
 INSERT INTO varustetoteuma (tunniste,
@@ -459,18 +472,12 @@ INSERT INTO varustetoteuma (tunniste,
                             tietolaji,
                             arvot,
                             karttapvm,
-                            tr_numero,
-                            tr_alkuosa,
-                            tr_loppuosa,
-                            tr_loppuetaisyys,
-                            tr_alkuetaisyys,
-                            tr_puoli,
-                            tr_ajorata,
                             alkupvm,
                             loppupvm,
                             piiri,
                             kuntoluokka,
                             tierekisteriurakkakoodi,
+                            tarkastusaika,
                             luoja,
                             luotu)
 VALUES (
@@ -480,18 +487,12 @@ VALUES (
   :tietolaji,
   :arvot,
   :karttapvm,
-  :tr_numero,
-  :tr_alkuosa,
-  :tr_loppuosa,
-  :tr_loppuetaisyys,
-  :tr_alkuetaisyys,
-  :tr_puoli,
-  :tr_ajorata,
   :alkupvm,
   :loppupvm,
   :piiri,
   :kuntoluokka,
   :tierekisteriurakkakoodi,
+  :tarkastusaika,
   :luoja,
   NOW());
 
@@ -534,6 +535,7 @@ LIMIT 501;
 
 -- name: hae-yksikkohintaisten-toiden-reittipisteet
 SELECT
+  t.reitti,
   rp.id            AS reittipiste_id,
   rp.aika          AS reittipiste_aika,
   rp.sijainti      AS reittipiste_sijainti,
@@ -608,7 +610,7 @@ WHERE t.urakka = :urakkaid
   AND (:toimenpide :: INTEGER IS NULL OR tk.emo = (SELECT toimenpide FROM toimenpideinstanssi WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
 GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
-ORDER BY pvm
+ORDER BY pvm DESC
 LIMIT 501;
 
 -- name: hae-toteuman-tehtavat
@@ -661,6 +663,7 @@ SELECT
   karttapvm,
   tr_puoli,
   tr_ajorata,
+  tarkastusaika,
   t.id                    AS toteumaid,
   t.alkanut               AS alkupvm,
   t.paattynyt             AS loppupvm,
@@ -684,7 +687,7 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
-ORDER BY t.alkanut
+ORDER BY t.alkanut DESC
 LIMIT 501;
 
 

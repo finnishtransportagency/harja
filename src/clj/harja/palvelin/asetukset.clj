@@ -37,6 +37,13 @@
                                            :kayttaja                s/Str
                                            :salasana                s/Str
                                            (s/optional-key :tyyppi) s/Keyword}
+   (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
+                                       (s/optional-key :suora?) s/Bool
+                                       (s/optional-key :palvelin) s/Str
+                                       :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
+                                               (s/optional-key :sahkoposti-sisaan-kuittausjono) s/Str
+                                               (s/optional-key :sahkoposti-ulos-jono) s/Str
+                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str}}
    (s/optional-key :sampo)                {:lahetysjono-sisaan       s/Str
                                            :kuittausjono-sisaan      s/Str
                                            :lahetysjono-ulos         s/Str
@@ -45,7 +52,8 @@
    (s/optional-key :tloik)                {:ilmoitusviestijono     s/Str
                                            :ilmoituskuittausjono   s/Str
                                            :toimenpideviestijono   s/Str
-                                           :toimenpidekuittausjono s/Str}
+                                           :toimenpidekuittausjono s/Str
+                                           (s/optional-key :ilmoitukset) {:google-static-maps-key s/Str}}
    (s/optional-key :tierekisteri)         {:url s/Str}
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}

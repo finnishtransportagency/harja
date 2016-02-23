@@ -25,7 +25,8 @@
             [harja.views.kartta :as kartta]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -315,9 +316,10 @@
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
         (when @toteutuneet-tehtavat
-          (sort
-            (fn [eka toka] (pvm/ennen? (:alkanut eka) (:alkanut toka)))
-           (filter (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi))) @toteutuneet-tehtavat)))]])))
+          (sort-by :alkanut t/after?
+                   (filter
+                     (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi)))
+                     @toteutuneet-tehtavat)))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"

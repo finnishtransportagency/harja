@@ -9,7 +9,6 @@
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.tiedot.istunto :as oikeudet]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.napit :refer [palvelinkutsu-nappi]]
             [harja.ui.lomake :as lomake :refer [lomake]]
@@ -23,7 +22,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
             [harja.fmt :as fmt]
-            [harja.views.kartta.tasot :as tasot])
+            [harja.views.kartta.pohjavesialueet :as pohjavesialueet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
@@ -193,7 +192,7 @@
 
 (defn suola []
   (komp/luo
-    (komp/lippu suolasakot-nakyvissa? (tasot/taso-atom :pohjavesialueet))
+    (komp/lippu suolasakot-nakyvissa? pohjavesialueet/karttataso-pohjavesialueet)
     (komp/sisaan #(do
                    (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                    (nav/vaihda-kartan-koko! :M)))

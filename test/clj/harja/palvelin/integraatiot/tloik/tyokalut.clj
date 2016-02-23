@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.tyokalut
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [taoensso.timbre :as log]
+            [clojure.test :refer [deftest is use-fixtures]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [hiccup.core :refer [html]]
@@ -9,6 +10,7 @@
             [harja.jms :refer [feikki-sonja]]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
+
 
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
@@ -23,6 +25,7 @@
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
   <otsikko>Korkeat vallit</otsikko>
+  <lyhytSelite>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lyhytSelite>
   <pitkaSelite>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</pitkaSelite>
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>
@@ -50,6 +53,12 @@
   </harja:ilmoitus>
 ")
 
+(defn luo-tloik-komponentti []
+  (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
+            :ilmoituskuittausjono   +tloik-ilmoituskuittausjono+
+            :toimenpidejono         +tloik-ilmoitustoimenpideviestijono+
+            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
+
 (def +ilmoitus-ruotsissa+
   (clojure.string/replace
     (clojure.string/replace +testi-ilmoitus-sanoma+ "452935" "319130")
@@ -57,17 +66,31 @@
 
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma+)]
-    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma+
                                        "<urakkatyyppi>hoito</urakkatyyppi>"
                                        "<urakkatyyppi>paallystys</urakkatyyppi>")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
-    (ilmoitus/kasittele-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
 
+(defn hae-paivystaja []
+  (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;")))
+
+(defn tee-testipaivystys []
+  (let [yhteyshenkilo (hae-paivystaja)]
+    (u (format "INSERT INTO paivystys (alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
+                VALUES (now() - interval '1' day, now() + interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
+    yhteyshenkilo))
+
 (defn poista-ilmoitus []
+  (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
+  (u "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
   (u "delete from ilmoitus where ilmoitusid = 123456789;"))
+
+(defn poista-paivystajatekstiviestit []
+  (u "delete from paivystajatekstiviesti"))

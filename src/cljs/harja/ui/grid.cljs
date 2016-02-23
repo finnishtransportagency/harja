@@ -1,16 +1,20 @@
 (ns harja.ui.grid
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log tarkkaile! logt]]
+            [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
             [harja.ui.skeema :as skeema]
+            [goog.events :as events]
+            [goog.events.EventType :as EventType]
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
-            [schema.core :as s :include-macros true])
+            [schema.core :as s :include-macros true]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.dom :as dom])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def gridia-muokataan? (atom false))
@@ -201,10 +205,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
           (if (or (nil? muokattava?) (muokattava? rivi))
             ^{:key (str nimi)}
-            [:td {:class (str tasaus-luokka (if-not (empty? kentan-virheet)
-                                              " sisaltaa-virheen")
-                              (when-not (empty? kentan-varoitukset)
-                                " sisaltaa-varoituksen"))}
+            [:td {:class (str "muokattava " tasaus-luokka (if-not (empty? kentan-virheet)
+                                                            " sisaltaa-virheen"
+                                                            (when-not (empty? kentan-varoitukset)
+                                                              " sisaltaa-varoituksen")))}
              (if-not (empty? kentan-virheet)
                (virheen-ohje kentan-virheet)
                (if-not (empty? kentan-varoitukset)
@@ -245,7 +249,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                    (aseta rivi uusi)))
                     (muokkaa! id assoc nimi uusi))))]]
             ^{:key (str nimi)}
-            [:td {:class tasaus-luokka}
+            [:td {:class (str "ei-muokattava " tasaus-luokka)}
              ((or fmt str) (hae rivi))])))))
    (when-not piilota-toiminnot?
      [:td.toiminnot
@@ -296,6 +300,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               [nayta-arvo skeema (vain-luku-atomina arvon-pituus-rajattu)])))]))
    (when (and (not piilota-toiminnot?)
            tallenna) [:td.toiminnot])])
+
+(def renderoi-rivia-kerralla 100)
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
@@ -354,6 +360,8 @@ Optiot on mappi optioita:
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
+        rivien-maara (atom (count tiedot))
+        renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
@@ -479,7 +487,6 @@ Optiot on mappi optioita:
                                                 (assoc varoitukset id rivin-varoitukset))))))
                      (when muutos
                        (muutos ohjaus))))
-
         ;; Peruu yhden muokkauksen
         peru! (fn []
                 (let [[muok virh var jarj] (peek @historia)]
@@ -519,11 +526,14 @@ Optiot on mappi optioita:
                                         rivit)
                                  (let [id ((or tunniste :id) r)]
                                    (recur (assoc muok
-                                            id (assoc r :koskematon true)
-                                            )
+                                            id (assoc r :koskematon true))
                                           (conj jarj id)
                                           rivit)))))
-                           nil)]
+                           nil)
+        maarita-rendattavien-rivien-maara (fn [this _]
+                                            (when (and (pos? (dom/elementin-etaisyys-alareunaan (r/dom-node this)))
+                                                       (< @renderoi-max-rivia @rivien-maara))
+                                              (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
@@ -531,21 +541,28 @@ Optiot on mappi optioita:
     (when muokkaa-aina
       (aloita-muokkaus! tiedot))
 
-    (r/create-class
+    (komp/luo
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL maarita-rendattavien-rivien-maara)
       {:component-will-receive-props
-       (fn [this new-argv]
+       (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
          (when muokkaa-aina
-           (aloita-muokkaus! (nth new-argv 3))))
+           (aloita-muokkaus! tiedot))
+         (reset! rivien-maara (count tiedot))
+         (maarita-rendattavien-rivien-maara this nil))
+
+       :component-did-mount
+       (fn [this _]
+         (maarita-rendattavien-rivien-maara this nil))
 
        :component-will-unmount
        (fn []
-         (nollaa-muokkaustiedot!))
-
-       :reagent-render
+         (nollaa-muokkaustiedot!))}
        (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu korostustyyli] :as opts} skeema tiedot]
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
+                    korostustyyli] :as opts} skeema tiedot]
          (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
                colspan (if (or piilota-toiminnot? (nil? tallenna))
                          (count skeema)
@@ -665,7 +682,7 @@ Optiot on mappi optioita:
                                           jarjestys))))))
 
                    ;; Näyttömuoto
-                   (let [rivit tiedot]
+                   (let [rivit (take @renderoi-max-rivia tiedot)]
                      (if (empty? rivit)
                        [:tr.tyhja [:td {:col-span colspan} tyhja]]
                        (doall
@@ -700,8 +717,7 @@ Optiot on mappi optioita:
                                                          :mahdollista-rivin-valinta mahdollista-rivin-valinta
                                                          :piilota-toiminnot?        piilota-toiminnot?}
                                             skeema rivi]
-                                            (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))
-                                            ])))
+                                            (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
                                      rivit-jarjestetty)))))))]])
              (when (and muokataan muokkaa-footer)
                [muokkaa-footer ohjaus])]
@@ -709,7 +725,7 @@ Optiot on mappi optioita:
             (when (> (count (or @muokatut tiedot))
                      +rivimaara-jonka-jalkeen-napit-alaskin+)
               [:span.gridin-napit-alhaalla
-               (muokkauspaneeli false)])]))})))
+               (muokkauspaneeli false)])])))))
 
 
 (defn muokkaus-grid
@@ -841,7 +857,8 @@ Optiot on mappi optioita:
              (aseta-grid ohj ohjaus))
 
            [:div.panel.panel-default.livi-grid.livi-muokkaus-grid
-            {:class (clojure.string/join " " luokat)}
+            {:class (str (str/join " " luokat)
+                         (if voi-muokata? " nappeja"))}
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])
              (when (not= false voi-muokata?)
@@ -938,8 +955,7 @@ Optiot on mappi optioita:
                              (sort-by (comp jarjesta second) (seq muokatut))
                              (seq muokatut))))))))]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
-               [muokkaa-footer ohjaus])
-             ]]))})))
+               [muokkaa-footer ohjaus])]]))})))
 
 ; Apufunktiot
 

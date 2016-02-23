@@ -186,7 +186,8 @@ FROM toteuma t
        AND mk.poistettu IS NOT TRUE
 
   LEFT JOIN pohjavesialue pa
-    ON mk.pohjavesialue = pa.id;
+    ON mk.pohjavesialue = pa.id
+    ORDER BY t.alkanut DESC;
 
 -- name: hae-toteuman-materiaalitiedot
 SELECT
@@ -306,10 +307,11 @@ FROM (WITH paivat AS (
         t.lisatieto,
         FALSE   AS koneellinen
       FROM toteuma_materiaali tm
-        JOIN toteuma t ON tm.toteuma = t.id
+        JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
         JOIN kayttaja k ON tm.luoja = k.id
       WHERE t.urakka = :urakka
+            AND tm.poistettu IS NOT TRUE
             AND k.jarjestelma IS NOT TRUE
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
             AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi

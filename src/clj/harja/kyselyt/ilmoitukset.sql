@@ -80,6 +80,9 @@ WHERE
   -- Tarkasta vapaatekstihakuehto
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
 
+  -- Tarkasta selitehakuehto
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY[:selite ::ilmoituksenselite])) AND
+
   -- Tarkasta ilmoituksen tilat
   (
     (:suljetut IS TRUE AND :avoimet IS TRUE) OR
@@ -228,6 +231,7 @@ WHERE id = :id;
 -- name: hae-ilmoitustoimenpide
 SELECT
   id                               AS id,
+  ilmoitus                         AS ilmoitus,
   ilmoitusid                       AS ilmoitusid,
   kuitattu                         AS kuitattu,
   vapaateksti                      AS vapaateksti,
@@ -306,4 +310,13 @@ VALUES
    :kasittelija_organisaatio_nimi,
    :kasittelija_organisaatio_ytunnus);
 
+-- name: merkitse-ilmoitustoimenpide-suljetuksi!
+UPDATE ilmoitus
+SET suljettu = TRUE
+WHERE id = :id;
 
+-- name: hae-ilmoitus-ilmoitus-idlla
+-- Hakee ilmoituksen T-LOIK ilmoitus id:n perusteella
+SELECT id,ilmoitusid,ilmoitustyyppi,urakka
+  FROM ilmoitus
+ WHERE ilmoitusid = :ilmoitusid

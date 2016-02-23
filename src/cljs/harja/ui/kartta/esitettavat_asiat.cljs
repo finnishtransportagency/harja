@@ -1,70 +1,152 @@
 (ns harja.ui.kartta.esitettavat-asiat
-  (:require [harja.pvm :as pvm]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-            [cljs-time.core :as t]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.ui.dom :refer [karttakuva]]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
 
-(defn arrow-line [optiot geometria]
-  (merge optiot
-         {:type :arrow-line}
-         (case (:type geometria)
-           :line
-           {:points (:points geometria)}
-
-           :multiline
-           {:points (mapcat :points (:lines geometria))}
-
-           :point
-           {:points [(:coordinates geometria)]})))
-
-(defn tack-icon [optiot geometria]
-  (merge optiot
-         (case (:type geometria)
-           :line
-           {:type   :tack-icon-line
-            :points (:points geometria)}
-
-           :multiline
-           {:type   :tack-icon-line
-            :points (mapcat :points (:lines geometria))}
-
-           :point
-           {:type        :tack-icon
-            :coordinates (:coordinates geometria)})))
-
-(def +valitun-skaala+ 1.5)
-(def +normaali-skaala+ 1)
+            [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
 (defn- laske-skaala [valittu?]
-  (if valittu? +valitun-skaala+ +normaali-skaala+))
+  (if valittu? ulkoasu/+valitun-skaala+ ulkoasu/+normaali-skaala+))
 
 (defn viivan-vari
-  ([valittu?] (viivan-vari valittu? "blue" "black"))
-  ([valittu? valittu-vari] (viivan-vari valittu? valittu-vari "black"))
+  ([valittu?] (viivan-vari valittu? ulkoasu/+valitun-vari+ ulkoasu/+normaali-vari+))
+  ([valittu? valittu-vari] (viivan-vari valittu? valittu-vari ulkoasu/+normaali-vari+))
   ([valittu? valittu-vari ei-valittu-vari]
    (if valittu? valittu-vari ei-valittu-vari)))
 
 (defn viivan-leveys
-  ([valittu?] (viivan-leveys valittu? 8 nil))               ;; Nil tarkoittaa että käytetään openlayersissä määriteltyä defaulttia
-  ([valittu? valittu-leveys] (viivan-leveys valittu? valittu-leveys nil))
+  ([valittu?] (viivan-leveys valittu? ulkoasu/+valitun-leveys+ ulkoasu/+normaali-leveys+))
+  ([valittu? valittu-leveys] (viivan-leveys valittu? valittu-leveys ulkoasu/+normaali-leveys+))
   ([valittu? valittu-leveys ei-valittu-leveys]
    (if valittu? valittu-leveys ei-valittu-leveys)))
 
-(defn- tack-ikoni
-  ([asia ikoni valittu-fn?] (tack-ikoni asia ikoni valittu-fn? {}))
-  ([asia ikoni valittu-fn? optiot]
-   (tack-icon
-     (merge
-       {:scale (laske-skaala (valittu-fn? asia))
-        :color (viivan-vari (valittu-fn? asia))
-        :width (viivan-leveys (valittu-fn? asia))
-        :img   ikoni}
-       optiot)
-     (:sijainti asia))))
+;; Varmistaa, että merkkiasetukset ovat vähintään [{}].
+;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]
+(defn- validoi-merkkiasetukset [merkit]
+  (cond
+    (empty? merkit) [{}]
+    (string? merkit) [{:img merkit}]
+    (map? merkit) [merkit]
+    :else merkit))
+
+(defn- validoi-viiva-asetukset [viivat]
+  (cond
+    (empty? viivat) [{}]
+    (map? viivat) [viivat]
+    (string? viivat) [{:color viivat}]
+    :else viivat))
+
+(defn- maarittele-piste
+  [valittu? merkki]
+  (let [merkki (first (validoi-merkkiasetukset merkki))]
+    (merge
+      {:scale (laske-skaala valittu?)}
+      merkki)))
+
+(defn- maarittele-viiva
+  [valittu? merkit viivat]
+  (let [merkit (validoi-merkkiasetukset merkit)
+        viivat (validoi-viiva-asetukset viivat)]
+    {:viivat (mapv (fn [v] (merge
+                             ;; Ylikirjoitettavat oletusasetukset
+                             {:color (viivan-vari valittu?)
+                              :width (viivan-leveys valittu?)}
+                             v)) viivat)
+     :ikonit (mapv (fn [i] (merge
+                             ;; Oletusasetukset
+                             {:tyyppi :merkki
+                              :paikka :loppu
+                              :scale  (laske-skaala valittu?)}
+                             i)) merkit)}))
+
+(defn maarittele-feature
+  "Funktio palauttaa mäpin, joka määrittelee featuren openlayersin haluamassa muodossa.
+  Pakolliset parametrit:
+  * Asia: kannasta haettu, piirrettävä asia. Tai pelkästään juttu joka sisältää geometriatiedot.
+  * Valittu?: Onko asia valittu? true/false
+
+  Valinnaiset (mutta tärkeät!) parametrit:
+  * Merkit: Vektori mäppejä, mäppi, tai string, joka määrittelee featureen piirrettävät ikonit
+    - Jos parametri on string, muutetaan se muotoon {:img string}. Jos siis piirrettävä
+      asia on pistemäinen, riittää parametriksi pelkkä string, muuten voidaan mennä
+      oletusasetuksilla
+    - Reittimäisille asioille tällä parametrilla on enemmän merkitystä.
+      Mäpille voi antaa seuraavia arvoja:
+      -- paikka: :alku, :loppu, :taitokset, tai vektori näitä. Mihin paikkoihin ikoni piirretään?
+      -- tyyppi: :nuoli tai :merkki. Merkit kääntyvät viivan suunnan mukaan, merkit aina pystyssä.
+      -- img: käytettävä ikoni
+      -- Lisäksi openlayersin asetukset scale, zindex, anchor. Jätä mieluummin antamatta
+  * Viivat: Vektori mäppejä tai mäppi, joka määrittelee viivan piirtotyylit
+    - Käytä vektoria mäppejä, jos haluat tehdä kaksivärisiä viivoja. Voit esim. piirtää
+      paksumman mustan viivan, ja sitten ohuemman sinisen viivan sen päälle.
+    - Mäpillä on seuraavat arvot:
+    -- Openlayersin color, width, zindex, dash, cap, join, miter
+  * Pisteen merkki: Valinnainen parametri, johon pätee samat säännöt kuin em. merkkeihin.
+    Jos tätä ei ole annettu, käytetään merkin piirtämiseen merkit vektorissa ensimmäisenä
+    määriteltyä merkkiä (tai jos taas merkit on string tai pelkkä mäp, niin käytetään vaan sitä..).
+    Käytännöllinen jos haluaa esim piirtää reitit nuoliviivoilla, ja pisteen ikonilla.
+
+  Esimerkkejä:
+
+  (maarittele-feature juttu val? (pinni-ikoni 'vihrea'))
+    Juttu on todennäköisesti pistemäinen asia. Käytetään vihrää pinniä. Jos juttu
+    onkin reitillinen, käytetään reitin piirtämiseen puhtaasti oletusasetuksia.
+
+  (maarittele-feature homma val? (sijainti-ikoni 'magenta') {:color (if (val? homma) varit/vihrea varit/keltainen)})
+    Samanlainen kuin edellinen, mutta on määritelty millä värillä halutaan piirtää reitti
+
+  (maarittele-feature foo val? [{:paikka :loppu :img (pinni-ikoni 'sininen)}
+                                {:paikka :taitokset :img (nuoli-ikoni 'sininen')}]
+                                [{:width 12 :color varit/musta} {:width 6 :color varit/sininen}])
+    Jos foo on pistemäinen, käytetään sinistä pinniä. Reitilliselle foolle piirretään
+    kaksivärinen viiva, jonka taitoksissa on nuoli, ja loppupäässä sininen pinni.
+
+  (maarittele-feature bar val? {:paikka [:alku :loppu :taitokset] :img (nuoli-ikoni 'lime')}
+                      nil (pinn-ikoni 'lime')
+    Reitillinen bar piirretään käyttäen viivojen oletusasetuksia. Alku- ja loppupäähän sekä
+    jokaiseen taitokseen piirretään nuoli. Jos bar onkin piste, käytetään vaan limeä pinniä."
+  ([asia valittu?] (maarittele-feature asia valittu? [{}] [{}]))
+  ([asia valittu? merkit] (maarittele-feature asia valittu? merkit [{}]))
+  ([asia valittu? merkit viivat] (maarittele-feature asia valittu? merkit viivat nil))
+  ([asia valittu? merkit viivat pisteen-ikoni]
+   (let [geo (or (:sijainti asia) asia)
+         tyyppi (:type geo)
+         koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
+     (cond
+       ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
+       ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
+       (or (= :point tyyppi) (= 1 (count koordinaatit)))
+       (when merkit
+         (merge
+          (maarittele-piste valittu? (or pisteen-ikoni merkit))
+          {:type        :merkki
+           :coordinates (flatten koordinaatit)}))           ;; [x y] -> [x y] && [[x y]] -> [x y]
+
+       (= :line tyyppi)
+       (merge
+         (maarittele-viiva valittu? merkit viivat)
+         {:type   :viiva
+          :points koordinaatit})
+
+       (= :multiline tyyppi)
+       (merge
+         (maarittele-viiva valittu? merkit viivat)
+         {:type   :viiva
+          :points koordinaatit})))))
+
+;;;;;;
+
+(defn- viivojen-varit-leveimmasta-kapeimpaan [viivat]
+  (let [sortattu (sort-by :width >
+                          ;; Täydennä väliaikaisesti tänne oletusarvot,
+                          ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
+                          ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
+                          (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
+                                          :color (or (:color %) ulkoasu/+normaali-vari+))
+                                viivat))]
+    (mapv :color sortattu)))
 
 (defmulti
   ^{:private true}
@@ -86,21 +168,19 @@
       oletusteksti)))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu-fn?]
-  (assoc ilmoitus
-    :type :ilmoitus
-    :nimi (ilmoituksen-tooltip ilmoitus "Tiedotus")
-    :selite {:teksti "Tiedotus"
-             :img    (karttakuva "tiedotus-tack-violetti")}
-    :alue (tack-ikoni ilmoitus (karttakuva "tiedotus-tack-violetti") valittu-fn?)))
+  (let [ikoni (ulkoasu/tiedotuksen-ikoni)]
+    (assoc ilmoitus
+     :type :ilmoitus
+     :nimi (ilmoituksen-tooltip ilmoitus "Tiedotus")
+     :selite {:teksti "Tiedotus"
+              :img    ikoni}
+     :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu-fn?]
   (let [aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
-        ikoni (karttakuva (cond
-                            lopetettu? "kysely-tack-harmaa"
-                            aloitettu? "kysely-tack-violetti"
-                            :else "kysely-tack-punainen"))]
+        ikoni (ulkoasu/kyselyn-ikoni lopetettu? aloitettu?)]
     (assoc ilmoitus
       :type :ilmoitus
       :nimi (ilmoituksen-tooltip ilmoitus "Kysely")
@@ -109,15 +189,12 @@
                          lopetettu? "Kysely, lopetettu"
                          :else "Kysely, ei aloituskuittausta.")
                :img    ikoni}
-      :alue (tack-ikoni ilmoitus ikoni valittu-fn?))))
+      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu-fn?]
   (let [vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
         lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
-        ikoni (karttakuva (cond
-                            lopetettu? "toimenpidepyynto-tack-harmaa"
-                            vastaanotettu? "toimenpidepyynto-tack-violetti"
-                            :else "toimenpidepyynto-tack-punainen"))]
+        ikoni (ulkoasu/toimenpidepyynnon-ikoni lopetettu? vastaanotettu?)]
     (assoc ilmoitus
       :type :ilmoitus
       :nimi (ilmoituksen-tooltip ilmoitus "Toimenpidepyyntö")
@@ -126,186 +203,168 @@
                          lopetettu? "Toimenpidepyyntö, lopetettu"
                          :else "Toimenpidepyyntö, kuittaamaton")
                :img    ikoni}
-      :alue (tack-ikoni ilmoitus ikoni valittu-fn?))))
-
-(defn selvita-laadunseurannan-ikoni [ikonityyppi tekija]
-  (karttakuva
-    (case tekija
-      :urakoitsija (str ikonityyppi "-urakoitsija-tack-violetti")
-      :tilaaja (str ikonityyppi "-tilaaja-tack-violetti")
-      :konsultti (str ikonityyppi "-konsultti-tack-violetti")
-      (str ikonityyppi "-tack-violetti"))))
-
-(defn selvita-tarkastuksen-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "tarkastus" tekija))
-
-(defn selvita-laatupoikkeaman-ikoni [tekija]
-  (selvita-laadunseurannan-ikoni "laatupoikkeama" tekija))
+      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
 (defn otsikko-tekijalla [etuliite laatupoikkeama]
   (str etuliite " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
-  (let [ikoni (selvita-laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+  (let [ikoni (ulkoasu/laatupoikkeaman-ikoni (:tekija laatupoikkeama))
         otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
     (assoc laatupoikkeama
       :type :laatupoikkeama
       :nimi (or (:nimi laatupoikkeama) otsikko)
       :selite {:teksti otsikko
                :img    ikoni}
-      :alue (tack-ikoni laatupoikkeama ikoni valittu-fn?))))
+      :alue (maarittele-feature laatupoikkeama (valittu-fn? laatupoikkeama) ikoni))))
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
-  (let [ikoni (selvita-tarkastuksen-ikoni (:tekija tarkastus))]
+  (let [ikoni (ulkoasu/tarkastuksen-ikoni (valittu-fn? tarkastus) (:ok? tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus))]
     (assoc tarkastus
       :type :tarkastus
       :nimi (or (:nimi tarkastus)
                 (otsikko-tekijalla (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tarkastus))
       :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
                :img    ikoni}
-      :alue (tack-ikoni tarkastus ikoni valittu-fn?))))
+      :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni viiva))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
-  (let [ikoni (karttakuva "varusteet-ja-laitteet-tack-violetti")]
+  (let [ikoni (ulkoasu/varustetoteuman-ikoni)]
     (assoc varustetoteuma
       :type :varustetoteuma
       :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
       :selite {:teksti "Varustetoteuma"
                :img    ikoni}
-      :alue (tack-ikoni varustetoteuma ikoni valittu-fn?))))
-
-(def toteuma-varit-ja-nuolet
-  [["rgb(255,0,0)" "punainen"]
-   ["rgb(255,128,0)" "oranssi"]
-   ["rgb(255,255,0)" "keltainen"]
-   ["rgb(255,0,255)" "magenta"]
-   ["rgb(0,255,0)" "vihrea"]
-   ["rgb(0,255,128)" "turkoosi"]
-   ["rgb(0,255,255)" "syaani"]
-   ["rgb(0,128,255)" "sininen"]
-   ["rgb(0,0,255)" "tummansininen"]
-   ["rgb(128,0,255)" "violetti"]
-   ["rgb(128,255,0)" "lime"]
-   ["rgb(255,0,128)" "pinkki"]])
-
-(let [varien-lkm (count toteuma-varit-ja-nuolet)]
-  (defn tehtavan-vari-ja-nuoli [tehtavan-nimi]
-    (nth toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
-
-(defmethod asia-kartalle :toteuma [toteuma valittu-fn?]
-  ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä (ei yksittäisistä reittipisteistä)
-  (when-let [reitti (:reitti toteuma)]
-    (let [nimi (or
-                 ;; toteumalla on suoraan nimi
-                 (:nimi toteuma)
-                 ;; tai nimi muodostetaan yhdistämällä tehtävien toimenpiteet
-                 (str/join ", " (map :toimenpide (:tehtavat toteuma))))
-          [vari nuoli] (tehtavan-vari-ja-nuoli nimi)]
-      (assoc toteuma
-        :type :toteuma
-        :nimi nimi
-        :selite {:teksti nimi
-                 :vari   vari}
-        :alue (arrow-line {:width       5
-                           :color       vari
-                           :arrow-image (karttakuva (str "images/nuoli-" nuoli))
-                           :scale       (if (valittu-fn? toteuma) 1.0 0.75)}
-                          reitti)))))
+      :alue (maarittele-feature varustetoteuma (valittu-fn? varustetoteuma) (ulkoasu/varustetoteuman-ikoni)))))
 
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)
-      [(karttakuva "turvallisuuspoikkeama-tack-oranssi") "Turvallisuuspoikkeama, avoin"]
+      [:tyhja "Turvallisuuspoikkeama, avoin"]
 
       (if (some (comp nil? :suoritettu) kt)
-        [(karttakuva "turvallisuuspoikkeama-tack-punainen") "Turvallisuuspoikkeama, ei korjauksia"]
+        [:avoimia "Turvallisuuspoikkeama, ei korjauksia"]
 
-        [(karttakuva "turvallisuuspoikkeama-tack-vihrea") "Turvallisuuspoikkeama, kaikki korjattu"]))))
+        [:valmis "Turvallisuuspoikkeama, kaikki korjattu"]))))
 
 (defmethod asia-kartalle :turvallisuuspoikkeama [tp valittu-fn?]
-  (let [[ikoni selite] (paattele-turpon-ikoni tp)]
+  (let [[kt-tila selite] (paattele-turpon-ikoni tp)
+        ikoni (ulkoasu/turvallisuuspoikkeaman-ikoni kt-tila)]
     (when (:sijainti tp)
       (assoc tp
         :type :turvallisuuspoikkeama
         :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
         :selite {:teksti selite
                  :img    ikoni}
-        :alue (tack-ikoni tp ikoni valittu-fn?)))))
+        :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
-(defn- paattele-yllapidon-ikoni-ja-viivan-vari
-  [teksti asia]
-  (let [[ikonin-vari viivan-vari] (if (:tila asia)
-                                    (case (name (:tila asia))
-                                      "aloitettu" ["keltainen" "rgb(255,255,0)"]
-                                      "valmis" ["vihrea" "rgb(0,255,0)"]
-                                      ["sininen" "rgb(0,128,255)"])
-
-                                    ["sininen" "rgb(0,128,255)"])] ;; tila on nil jos vasta suunnitteilla
-    [(karttakuva
-       (str teksti "-tack-" ikonin-vari)) viivan-vari]))
-
-(defn- paikkaus-paallystys [pt valittu-fn? tyo teksti]
-  (let [[ikoni viiva] (paattele-yllapidon-ikoni-ja-viivan-vari tyo pt)]
+(defn- paikkaus-paallystys [tyyppi pt valittu-fn? teksti]
+  (let [ikoni (ulkoasu/yllapidon-ikoni)
+        viiva (ulkoasu/yllapidon-viiva (valittu-fn? pt) (:avoin? pt) (:tila pt) tyyppi)]
     (assoc pt
       :nimi (or (:nimi pt) teksti)
       :selite {:teksti teksti
-               :img    ikoni}
-      :alue (tack-ikoni pt ikoni valittu-fn? {:color viiva
-                                              :width (if (:avoin? pt)
-                                                       (if (valittu-fn? pt) 8 5)
-                                                       (if (valittu-fn? pt) 8 nil))})))) ;; nil on default, joka on kommentin kirjoittamisen hetkellä 2.
+               :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
+      :alue (maarittele-feature pt (valittu-fn? pt)
+                                ikoni
+                                viiva))))
 
 (defmethod asia-kartalle :paallystys [pt valittu-fn?]
-  (assoc (paikkaus-paallystys pt valittu-fn? "paallystystyo" "Päällystys")
+  (assoc (paikkaus-paallystys :paallystys pt valittu-fn? "Päällystys")
     :type :paallystys))
 
 (defmethod asia-kartalle :paikkaus [pt valittu-fn?]
-  (assoc (paikkaus-paallystys pt valittu-fn? "paikkaustyo" "Paikkaus")
+  (assoc (paikkaus-paallystys :paikkaus pt valittu-fn? "Paikkaus")
     :type :paikkaus))
 
-(def ikonikartta {"auraus ja sohjonpoisto"          ["auraus-tai-sohjonpoisto" "Auraus tai sohjonpoisto"]
-                  "suolaus"                         ["suolaus" "Suolaus"]
-                  "pistehiekoitus"                  ["pistehiekoitus" "Pistehiekoitus"]
-                  "linjahiekoitus"                  ["linjahiekoitus" "Linjahiekoitus"]
-                  "lumivallien madaltaminen"        ["lumivallien-madaltaminen" "Lumivallien madaltaminen"]
-                  "sulamisveden haittojen torjunta" ["sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"]
-                  "kelintarkastus"                  ["talvihoito" "Talvihoito"]
+(let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]
+  (defn generoitu-tyyli [tehtavan-nimi]
+    (log "WARN: "tehtavan-nimi" määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
+    (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
-                  "tiestotarkastus"                 ["tiestotarkastus" "Tiestötarkastus"]
-                  "koneellinen niitto"              ["koneellinen-niitto" "Koneellinen niitto"]
-                  "koneellinen vesakonraivaus"      ["koneellinen-vesakonraivaus" "Koneellinen vesakonraivaus"]
+(def tehtavien-nimet
+  {"AURAUS JA SOHJONPOISTO"          "Auraus tai sohjonpoisto"
+   "SUOLAUS"                         "Suolaus"
+   "PISTEHIEKOITUS"                  "Pistehiekoitus"
+   "LINJAHIEKOITUS"                  "Linjahiekoitus"
+   "LUMIVALLIEN MADALTAMINEN"        "Lumivallien madaltaminen"
+   "SULAMISVEDEN HAITTOJEN TORJUNTA" "Sulamisveden haittojen torjunta"
+   "KELINTARKASTUS"                  "Talvihoito"
 
-                  "liikennemerkkien puhdistus"      ["liikennemerkkien-puhdistus" "Liikennemerkkien puhdistus"]
+   "TIESTOTARKASTUS"                 "Tiestötarkastus"
+   "KONEELLINEN NIITTO"              "Koneellinen niitto"
+   "KONEELLINEN VESAKONRAIVAUS"      "Koneellinen vesakonraivaus"
 
-                  "sorateiden muokkaushoylays"      ["sorateiden-muokkaushoylays" "Sorateiden muokkaushöyläys"]
-                  "sorateiden polynsidonta"         ["sorateiden-polynsidonta" "Sorateiden pölynsidonta"]
-                  "sorateiden tasaus"               ["sorateiden-tasaus" "Sorateiden tasaus"]
-                  "sorastus"                        ["sorastus" "Sorastus"]
+   "LIIKENNEMERKKIEN PUHDISTUS"      "Liikennemerkkien puhdistus"
 
-                  "harjaus"                         ["harjaus" "Harjaus"]
-                  "pinnan tasaus"                   ["pinnan-tasaus" "Pinnan tasaus"]
-                  "paallysteiden paikkaus"          ["paallysteiden-paikkaus" "Päällysteiden paikkaus"]
-                  "paallysteiden juotostyot"        ["paallysteiden-juotostyot" "Päällysteiden juotostyöt"]
+   "SORATEIDEN MUOKKAUSHOYLAYS"      "Sorateiden muokkaushöyläys"
+   "SORATEIDEN POLYNSIDONTA"         "Sorateiden pölynsidonta"
+   "SORATEIDEN TASAUS"               "Sorateiden tasaus"
+   "SORASTUS"                        "Sorastus"
 
-                  "siltojen puhdistus"              ["siltojen-puhdistus" "Siltojen puhdistus"]
+   "HARJAUS"                         "Harjaus"
+   "PINNAN TASAUS"                   "Pinnan tasaus"
+   "PAALLYSTEIDEN PAIKKAUS"          "Päällysteiden paikkaus"
+   "PAALLYSTEIDEN JUOTOSTYOT"        "Päällysteiden juotostyöt"
 
-                  "l- ja p-alueiden puhdistus"      ["l-ja-p-alueiden-puhdistus" "L- ja P-alueiden puhdistus"]
-                  "muu"                             ["tuntematon-koneen-tekema-tyo" "Muu"]})
+   "SILTOJEN PUHDISTUS"              "Siltojen puhdistus"
 
-(defn- paattele-tyokoneen-ikoni
-  [tehtavat lahetetty valittu?]
-  ;; TODO Miten päätellään järkevästi mikä ikoni työkoneelle näytetään?
-  ;; Työkoneella voi olla useampi tehtävä. Miten se hoidetaan?
-  ;; Voisi kuvitella että jotkut tehtävät ovat luonnostaan kiinnostavampia,
-  ;; Esim jos talvella aurataan paljon mutta suolataan vain vähän (ja yleensä aurataan kun suolataan),
-  ;; niin silloin pitäisi näyttää suolauksen ikoni silloin harvoin kun sitä tehdään.
-  (let [tila (cond
-               valittu? "valittu"
-               (and lahetetty (t/before? lahetetty (t/now)) (> 20 (t/in-minutes (t/interval lahetetty (t/now)))))
-               "sininen"
-               :else "harmaa")
-        [ikoni selite] (or (get ikonikartta (first tehtavat)) ["tuntematon-koneen-tekema-tyo" "Muu"])]
-    [(karttakuva (str ikoni "-sticker-" tila)) (karttakuva (str ikoni "-sticker-sininen")) selite]))
+   "L- JA P-ALUEIDEN PUHDISTUS"      "L- ja P-alueiden puhdistus"
+   "MUU"                             "Muu"})
+
+(defn tehtavan-nimi [tehtavat]
+  (str/join ", " (map #(or (get tehtavien-nimet (str/upper-case %)) %) tehtavat)))
+
+
+(defn- maaritelty-tyyli [tehtava]
+  (let [koodi (into #{} (map str/upper-case tehtava))
+        tulos (get ulkoasu/tehtavien-varit koodi)]
+    (when-not (empty? tulos) tulos)))
+
+(defn- tehtavan-viivat-ja-nuolitiedosto
+  "Hakee toimenpiteelle esitysasetukset joko yllä määritellystä mäpistä, tai generoi sellaisen itse."
+  [tehtava valittu?]
+  (let [;; Prosessoi asetukset siten, että stringinä määritellystä nuoli-ikonista tehdään :nuoli,
+        ;; ja jos viivoille on määritelty leveydet (monivärinen nuoli), niin kasvatetaan niitä jos toteuma
+        ;; on valittu.
+        viimeistele-asetukset (fn [[viivat nuoli :as asetukset]]
+                                [(mapv
+                                    ;; Kasvata jokaisen viivan määriteltyä leveyttä kahdella jos toteuma on valittu.
+                                    ;; Jos leveyttä ei ole annettu, niin mennään oletusasetuksilla, jotka ottavat
+                                    ;; valinnan jo huomioon.
+                                    #(if (and (:width %) valittu?) (assoc % :width (+ 2 (:width %))) %)
+                                    viivat)
+                                  nuoli])
+        validoi-viiva (fn [[viivat nuoli :as asetukset]]
+                        (cond
+                          (string? viivat) [[{:color viivat}] nuoli]
+                          (map? viivat) [[viivat] nuoli]
+                          :else asetukset))]
+    (-> (or (maaritelty-tyyli tehtava) (generoitu-tyyli (str/join ", " tehtava)))
+        validoi-viiva
+        viimeistele-asetukset)))
+
+(defmethod asia-kartalle :toteuma [toteuma valittu-fn?]
+  ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä (ei yksittäisistä reittipisteistä)
+  (when-let [reitti (:reitti toteuma)]
+    (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
+          _ (when (empty? toimenpiteet) (harja.loki/warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
+          nimi (or
+                 ;; toteumalla on suoraan nimi
+                 (:nimi toteuma)
+                 ;; tai nimi muodostetaan yhdistämällä tehtävien toimenpiteet
+                 (tehtavan-nimi toimenpiteet))
+          [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto toimenpiteet (valittu-fn? toteuma))]
+      (assoc toteuma
+        :type :toteuma
+        :nimi nimi
+        :selite {:teksti nimi
+                 :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+        :alue (maarittele-feature reitti (valittu-fn? toteuma)
+                                  (ulkoasu/toteuman-nuoli nuolen-vari)
+                                  viivat
+                                  (ulkoasu/toteuman-ikoni nuolen-vari))))))
 
 (defn muunna-tyokoneen-suunta [kulma]
   (+ (- Math/PI)
@@ -313,24 +372,20 @@
         kulma)))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
-  (let [[img selite-img selite-teksti] (paattele-tyokoneen-ikoni
-                                         (:tehtavat tyokone)
-                                         (or (:lahetysaika tyokone) (:vastaanotettu tyokone))
-                                         (valittu-fn? tyokone))]
+  (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
+        [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto (:tehtavat tyokone) (valittu-fn? tyokone))
+        paikka {:sijainti {:type (if (:reitti tyokone) :line :point)}}
+        paikka (if (:reitti tyokone)
+                 (assoc-in paikka [:sijainti :points] (:reitti tyokone))
+                 (assoc-in paikka [:sijainti :coordinates] (:sijainti tyokone)))]
     (assoc tyokone
       :type :tyokone
       :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
       :selite {:teksti selite-teksti
-               :img    [(karttakuva "sticker-sininen") selite-img]}
-      :alue (if-let [reitti (:reitti tyokone)]
-              {:type      :sticker-icon-line
-               :points    reitti
-               :direction (muunna-tyokoneen-suunta (:suunta tyokone))
-               :img       img}
-              {:type        :sticker-icon
-               :coordinates (:sijainti tyokone)
-               :direction   (muunna-tyokoneen-suunta (:suunta tyokone))
-               :img         img}))))
+               :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+      :alue (maarittele-feature paikka (valittu-fn? tyokone)
+                                (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
+                                viivat))))
 
 (defmethod asia-kartalle :default [asia _]
   (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, sain: " (pr-str asia))
@@ -352,10 +407,6 @@
          (vswap! selitteet conj selite))
        (xf result input)))))
 
-;; Palauttaa joukon vektoreita joten kutsu (mapcat kartalla-xf @jutut)
-;; Tämä sen takia, että aiemmin toteumille piirrettiin "itse toteuma" viivana, ja jokaiselle reittipisteelle
-;; oma merkki. Tästä luovuttiin, mutta pidetään vielä kiinni siitä että täältä palautetaan joukko vektoreita,
-;; jos vastaisuudessa tulee samankaltaisia tilanteita.
 (defn kartalla-xf
   ([asia] (kartalla-xf asia nil nil))
   ([asia valittu] (kartalla-xf asia valittu [:id]))
@@ -381,5 +432,3 @@
              asiat)
        {:extent    @extent
         :selitteet @selitteet}))))
-
-

@@ -33,10 +33,10 @@ SELECT
   y.tyopuhelin,
   y.matkapuhelin,
   y.organisaatio,
-  org.id      AS organisaatio_id,
-  org.nimi    AS organisaatio_nimi,
-  org.tyyppi  AS organisaatio_tyyppi,
-  org.ytunnus AS organisaatio_ytunnus,
+  org.id      AS urakoitsija_id,
+  org.nimi    AS urakoitsija_nimi,
+  org.tyyppi  AS urakoitsija_tyyppi,
+  org.ytunnus AS urakoitsija_ytunnus,
   u.id        AS urakka_id,
   u.nimi      AS urakka_nimi,
   u.alkupvm   AS urakka_alkupvm,
@@ -44,8 +44,8 @@ SELECT
   u.tyyppi    AS urakka_tyyppi
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
-  LEFT JOIN organisaatio org ON y.organisaatio = org.id
-  LEFT JOIN urakka u ON p.urakka = u.id
+  LEFT JOIN urakka u ON u.id = :urakka
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE p.urakka = :urakka AND
       (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
@@ -64,10 +64,10 @@ SELECT
   y.tyopuhelin,
   y.matkapuhelin,
   y.organisaatio,
-  org.id      AS organisaatio_id,
-  org.nimi    AS organisaatio_nimi,
-  org.tyyppi  AS organisaatio_tyyppi,
-  org.ytunnus AS organisaatio_ytunnus,
+  org.id      AS urakoitsija_id,
+  org.nimi    AS urakoitsija_nimi,
+  org.tyyppi  AS urakoitsija_tyyppi,
+  org.ytunnus AS urakoitsija_ytunnus,
   u.id        AS urakka_id,
   u.nimi      AS urakka_nimi,
   u.alkupvm   AS urakka_alkupvm,
@@ -83,6 +83,7 @@ WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
 SELECT
+  k.id,
   kur.rooli,
   k.etunimi,
   k.sukunimi,
@@ -94,7 +95,6 @@ FROM kayttaja_urakka_rooli kur
   JOIN organisaatio o ON k.organisaatio = o.id
 WHERE kur.urakka = :urakka
       AND kur.poistettu = FALSE AND k.poistettu = FALSE;
-
 
 -- name: hae-yhteyshenkilotyypit
 -- Hakee käytetyt yhteyshenkilötyypit
@@ -126,7 +126,7 @@ WHERE id = :id;
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
 SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :matkapuh,
-  sahkoposti = :email, organisaatio = :org
+  sahkoposti = :email
 WHERE ulkoinen_id = :id;
 
 -- name: hae-urakan-yhteyshenkilo-idt
@@ -141,7 +141,6 @@ DELETE FROM yhteyshenkilo
 WHERE id = :id AND id IN (SELECT yhteyshenkilo
                           FROM yhteyshenkilo_urakka
                           WHERE urakka = :urakka);
-
 
 -- name: poista-paivystaja!
 -- Poista päivystäjän annetusta urakasta.,
@@ -218,3 +217,51 @@ SELECT exists(
     SELECT id
     FROM paivystys
     WHERE yhteyshenkilo = :yhteyshenkilo);
+
+-- name: hae-urakan-taman-hetkiset-paivystajat
+SELECT
+  yh.id,
+  yh.etunimi,
+  yh.sukunimi,
+  yh.matkapuhelin,
+  yh.tyopuhelin,
+  yh.sahkoposti,
+  p.alku,
+  p.loppu,
+  p.vastuuhenkilo,
+  p.varahenkilo
+FROM paivystys p
+  INNER JOIN yhteyshenkilo yh ON p.yhteyshenkilo = yh.id
+WHERE
+  urakka = :urakkaid AND
+  ((now() BETWEEN p.alku AND p.loppu) OR
+   (now() <= p.alku AND loppu IS NULL));
+
+-- name: hae-paivystaja-puhelinnumerolla
+SELECT
+  y.id,
+  y.etunimi,
+  y.sukunimi,
+  y.matkapuhelin,
+  y.tyopuhelin,
+  y.sahkoposti,
+  o.ytunnus,
+  o.nimi
+FROM yhteyshenkilo y
+  LEFT JOIN organisaatio o ON o.id = y.organisaatio
+WHERE (matkapuhelin = :puhelinnumero OR tyopuhelin = :puhelinnumero) AND
+      (SELECT exists(SELECT id
+                     FROM paivystys p
+                     WHERE p.yhteyshenkilo = y.id))
+LIMIT 1;
+
+-- name: hae-urakan-paivystaja-sahkopostilla
+SELECT y.id, y.etunimi, y.sukunimi,
+       y.matkapuhelin, y.tyopuhelin, y.sahkoposti,
+       o.ytunnus, o.nimi
+  FROM yhteyshenkilo y
+       JOIN paivystys p ON p.yhteyshenkilo = y.id
+       LEFT JOIN organisaatio o ON o.id = y.organisaatio
+ WHERE p.urakka = :urakka AND
+       LOWER(sahkoposti) = LOWER(:sahkoposti)
+      

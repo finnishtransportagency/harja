@@ -8,10 +8,10 @@
     (virheet/heita-viallinen-apikutsu-poikkeus {:koodi  :toteuman-aika-viallinen
                                                 :viesti "Totauman alkuaika on loppuajan jälkeen."})))
 
-(defn tarkista-reittipisteet [toteuma]
-  (let [toteuman-alku (aika-string->java-sql-date (get-in toteuma [:reittitoteuma :toteuma :alkanut]))
-        toteuman-loppu (aika-string->java-sql-date (get-in toteuma [:reittitoteuma :toteuma :paattynyt]))
-        reitti (get-in toteuma [:reittitoteuma :reitti])]
+(defn tarkista-reittipisteet [reittitoteuma]
+  (let [toteuman-alku (aika-string->java-sql-date (get-in reittitoteuma [:reittitoteuma :toteuma :alkanut]))
+        toteuman-loppu (aika-string->java-sql-date (get-in reittitoteuma [:reittitoteuma :toteuma :paattynyt]))
+        reitti (get-in reittitoteuma [:reittitoteuma :reitti])]
     (doseq [reittipiste reitti]
       (let [pisteen-aika (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))]
         (when (or (.before pisteen-aika toteuman-alku) (.after pisteen-aika toteuman-loppu))

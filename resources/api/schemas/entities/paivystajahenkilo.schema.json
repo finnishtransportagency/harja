@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "id": "urn:harja/id",
+      "type": "integer",
+      "required": true
+    },
+    "etunimi": {
+      "id": "urn:harja/etunimi",
+      "type": "string",
+      "required": true
+    },
+    "sukunimi": {
+      "id": "urn:harja/sukunimi",
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "id": "urn:harja/paivystykset/0/paivystys/email",
+      "type": "string"
+    },
+    "matkapuhelin": {
+      "id": "urn:harja/paivystykset/0/paivystys/matkapuhelin",
+      "type": "string"
+    },
+    "tyopuhelin": {
+      "id": "urn:harja/paivystykset/0/paivystys/tyopuhelin",
+      "type": "string"
+    },
+    "liviTunnus": {
+      "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
+      "type": "string"
+    }
+  }
+}

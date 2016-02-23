@@ -182,19 +182,22 @@
         hae-lkm (fn [] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE poistettu IS NOT TRUE and toteuma=1;"))))
         alkuperainen-lkm (hae-lkm)
         lisatyt (doall (repeatedly 3 lisaa-materiaalitoteuma))]
-    (log/debug (pr-str lisatyt))
 
     (is (= (hae-lkm) (+ 3 alkuperainen-lkm)))
 
     ;; Poistamisen pitäisi palauttaa urakassa käytetyt materiaalit jos hoitokausi annetaan
-    
-    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-toteuma-materiaali! +kayttaja-jvh+
-                                  {:urakka urakka
-                                   :sopimus sopimus
-                                   :id (vec lisatyt)
-                                   :hk-alku (first hoitokausi)
-                                   :hk-loppu (second hoitokausi)})]
-      ;; Testidatassa ei ole mitään materiaaleja, koska talvisuolat eivät enää tule tämän palvelun kautta
-      (is (vector? vastaus)))
 
-    (is (= alkuperainen-lkm (hae-lkm)))))
+
+    (let [payload {:urakka   urakka
+                   :sopimus  sopimus
+                   :hk-alku  (first hoitokausi)
+                   :hk-loppu (second hoitokausi)
+                   :tid 1}]
+      (doseq [lisatty lisatyt]
+        (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-toteuma-materiaali! +kayttaja-jvh+
+                                      (assoc payload :tmid lisatty))]
+
+          ;; Testidatassa ei ole mitään materiaaleja, koska talvisuolat eivät enää tule tämän palvelun kautta
+          (is (vector? vastaus)))))
+
+(is (= alkuperainen-lkm (hae-lkm)))))

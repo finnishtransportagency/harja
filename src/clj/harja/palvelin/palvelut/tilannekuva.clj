@@ -9,6 +9,7 @@
             [harja.kyselyt.tilannekuva :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
 
+            [harja.domain.laadunseuranta :as laadunseuranta]
             [harja.geo :as geo]
             [harja.pvm :as pvm]))
 
@@ -85,7 +86,7 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
-              (map #(konv/string->avain % [:paallystysilmoitus :tila])))
+              (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
             (if nykytilanne?
               (q/hae-paallystykset-nykytilanteeseen db toleranssi)
               (q/hae-paallystykset-historiakuvaan db
@@ -104,7 +105,7 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
-              (map #(konv/string->avain % [:paikkausilmoitus :tila])))
+              (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
             (if nykytilanne?
               (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
               (q/hae-paikkaukset-historiakuvaan db
@@ -151,6 +152,7 @@
       (try
         (into []
               (comp
+                (map laadunseuranta/tarkastus-tiedolla-onko-ok)
                 (geo/muunna-pg-tulokset :sijainti)
                 (map konv/alaviiva->rakenne)
                 (map #(konv/string->keyword % :tyyppi))
@@ -181,7 +183,8 @@
                 (map konv/alaviiva->rakenne)
                 (geo/muunna-pg-tulokset :sijainti)
                 (map #(konv/array->vec % :tyyppi))
-                (map #(assoc % :tyyppi (mapv keyword (:tyyppi %)))))
+                (map #(konv/string-vector->keyword-vector % :tyyppi))
+                (map #(konv/string->keyword % :vakavuusaste)))
               (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
                                             (konv/sql-date loppu)))
         {:korjaavatoimenpide :korjaavattoimenpiteet})

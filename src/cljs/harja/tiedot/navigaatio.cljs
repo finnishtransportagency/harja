@@ -174,10 +174,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def kartan-kontrollit-nakyvissa?
   (reaction
    (let [sivu (valittu-valilehti :sivu)]
-     (or (empty? @tarvitsen-isoa-karttaa)
-         (not= sivu :tilannekuva)
-         (and (not= sivu :urakat)
-              (nil? @valittu-urakka))))))
+     ;; Näytetään kartta jos karttaa ei ole pakotettu näkyviin,
+     ;; JA ei olla tilannekuvassa, JA joko ei olla urakoissa TAI urakkaa ei ole valittu.
+     (and
+       (empty? @tarvitsen-isoa-karttaa)
+       (not= sivu :tilannekuva)
+       (or
+         (not= sivu :urakat)
+         (some? @valittu-urakka))))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
   (reset! valittu-hallintayksikko-id hy-id)

@@ -381,13 +381,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   ;; FIXME: tarkista myös oikeus, urakanvalvoja... urakoitsija/konsultti EI saa päätöstä tehdä
                   {:otsikko     "Sanktiot"
                    :nimi        :sanktiot
-                   :palstoja 4
+                   :tyyppi :komponentti
+                   :palstoja 2
                    :komponentti [laatupoikkeaman-sanktiot
                                  (r/wrap (:sanktiot @laatupoikkeama)
                                          #(swap! laatupoikkeama assoc :sanktiot %))
-                                 sanktio-virheet]})
-                ))]
-
+                                 sanktio-virheet]})))]
             @laatupoikkeama]])))))
 
 (defn laatupoikkeamat []

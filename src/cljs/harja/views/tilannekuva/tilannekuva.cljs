@@ -60,9 +60,9 @@
 
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
-   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
-                                                        :salli-pitka-aikavali? true
-                                                        :aloitusaika-pakota-suunta :alas-oikea
+   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko?              false
+                                                        :aikavalin-rajoitus          [12 :kuukausi]
+                                                        :aloitusaika-pakota-suunta   :alas-oikea
                                                         :paattymisaika-pakota-suunta :alas-vasen}]])
 
 (defn yksittainen-suodatincheckbox
@@ -183,10 +183,10 @@
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
     (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
                            (reset! kartta/pida-geometriat-nakyvilla? false)
-                           (kartta/aseta-paivitetaan-karttaa-tila true))
+                           (kartta/aseta-paivitetaan-karttaa-tila! true))
                       #(do (murupolku/aseta-murupolku-perusmuotoon)
                            (reset! kartta/pida-geometriat-nakyvilla? true)
-                           (kartta/aseta-paivitetaan-karttaa-tila false)))
+                           (kartta/aseta-paivitetaan-karttaa-tila! false)))
     (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
@@ -194,11 +194,11 @@
                      (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
                      :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
     {:component-will-mount   (fn [_]
-                               (kartta/aseta-yleiset-kontrollit
+                               (kartta/aseta-yleiset-kontrollit!
                                  [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
                                                                    :luokka               "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
-                               (kartta/tyhjenna-yleiset-kontrollit)
+                               (kartta/tyhjenna-yleiset-kontrollit!)
                                (kartta/poista-popup!))}
     (fn []
       [:span.tilannekuva

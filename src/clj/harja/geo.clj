@@ -2,9 +2,7 @@
   "Yleiskäyttöisiä paikkatietoon ja koordinaatteihin liittyviä apureita."
   (:require [taoensso.timbre :as log])
   (:import (org.postgresql.geometric PGpoint PGpolygon)
-           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection)))
-
-(declare euref->osm)
+           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection Geometry)))
 
 (defprotocol MuunnaGeometria
   "Geometriatyyppien muunnos PostgreSQL muodosta Clojure dataksi"
@@ -76,8 +74,16 @@
 (defn luo-point [[x y]]
   (PGpoint. x y))
 
-(defmulti clj->pg (fn [geometria] (:type geometria)))
+(defmulti clj->pg (fn [geometria]
+                    (if (vector? geometria)
+                      :geometry-collection
+                      (:type geometria))))
 
+(defmethod clj->pg :geometry-collection [geometriat]
+  (if (= 1 (count geometriat))
+    (clj->pg (first geometriat))
+    (GeometryCollection. (into-array Geometry
+                                     (map clj->pg geometriat)))))
 (defmethod clj->pg :multiline [{lines :lines}]
   (MultiLineString. (into-array LineString
                                 (map clj->pg lines))))
@@ -106,27 +112,28 @@
 
 
 
-(def osm-wkt "PROJCS[\"WGS 84 / Pseudo-Mercator\", \n  GEOGCS[\"WGS 84\", \n    DATUM[\"World Geodetic System 1984\", \n      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n      AUTHORITY[\"EPSG\",\"6326\"]], \n    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Geodetic longitude\", EAST], \n    AXIS[\"Geodetic latitude\", NORTH], \n    AUTHORITY[\"EPSG\",\"4326\"]], \n  PROJECTION[\"Popular Visualisation Pseudo Mercator\"], \n  PARAMETER[\"semi_minor\", 6378137.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"central_meridian\", 0.0], \n  PARAMETER[\"scale_factor\", 1.0], \n  PARAMETER[\"false_easting\", 0.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"Easting\", EAST], \n  AXIS[\"Northing\", NORTH], \n  AUTHORITY[\"EPSG\",\"3857\"]]")
+(def wgs84-wkt "PROJCS[\"WGS 84 / Pseudo-Mercator\", \n  GEOGCS[\"WGS 84\", \n    DATUM[\"World Geodetic System 1984\", \n      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n      AUTHORITY[\"EPSG\",\"6326\"]], \n    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Geodetic longitude\", EAST], \n    AXIS[\"Geodetic latitude\", NORTH], \n    AUTHORITY[\"EPSG\",\"4326\"]], \n  PROJECTION[\"Popular Visualisation Pseudo Mercator\"], \n  PARAMETER[\"semi_minor\", 6378137.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"central_meridian\", 0.0], \n  PARAMETER[\"scale_factor\", 1.0], \n  PARAMETER[\"false_easting\", 0.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"Easting\", EAST], \n  AXIS[\"Northing\", NORTH], \n  AUTHORITY[\"EPSG\",\"3857\"]]")
 
 (def euref-wkt "PROJCS[\"EUREF_FIN_TM35FIN\", \n  GEOGCS[\"GCS_EUREF_FIN\", \n    DATUM[\"D_ETRS_1989\", \n      SPHEROID[\"GRS_1980\", 6378137.0, 298.257222101]], \n    PRIMEM[\"Greenwich\", 0.0], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Longitude\", EAST], \n    AXIS[\"Latitude\", NORTH]], \n  PROJECTION[\"Transverse_Mercator\"], \n  PARAMETER[\"central_meridian\", 27.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"scale_factor\", 0.9996], \n  PARAMETER[\"false_easting\", 500000.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"x\", EAST], \n  AXIS[\"y\", NORTH]]")
 
-(def osm org.geotools.referencing.crs.DefaultGeographicCRS/WGS84) ; (org.geotools.referencing.CRS/parseWKT osm-wkt))
+(def wgs84 org.geotools.referencing.crs.DefaultGeographicCRS/WGS84) ; (org.geotools.referencing.CRS/parseWKT osm-wkt))
 (def euref (org.geotools.referencing.CRS/parseWKT euref-wkt))
-(def euref->osm-transform (org.geotools.referencing.CRS/findMathTransform euref osm true))
+(def euref->wgs84-transform (org.geotools.referencing.CRS/findMathTransform euref wgs84 true))
 
-(defn euref->osm
-  "Muunnetaan OSM koordinaatistoon, tätä ei tarvita enää kun meillä on MML kartat"
+(defn euref->wgs84
+  "Muunnetaan WGS84 (GPS) koordinaatistoon"
   [coordinate]
   (if (vector? coordinate)
-    (let [c (org.geotools.geometry.jts.JTS/transform (com.vividsolutions.jts.geom.Coordinate. (first coordinate) (second coordinate))
-                                                     nil euref->osm-transform)]
+    (let [c (org.geotools.geometry.jts.JTS/transform
+             (com.vividsolutions.jts.geom.Coordinate. (first coordinate) (second coordinate))
+             nil euref->wgs84-transform)]
       [(.y c) (.x c)])
-    (org.geotools.geometry.jts.JTS/transform coordinate nil euref->osm-transform)))
+    (org.geotools.geometry.jts.JTS/transform coordinate nil euref->wgs84-transform)))
 
-(def osm->euref-transform (org.geotools.referencing.CRS/findMathTransform osm euref true))
+(def wgs84->euref-transform (org.geotools.referencing.CRS/findMathTransform wgs84 euref true))
 
-(defn osm->euref
+(defn wgs84->euref
   [coord]
   (let [c (org.geotools.geometry.jts.JTS/transform (com.vividsolutions.jts.geom.Coordinate. (:x coord) (:y coord))
-                                                   nil osm->euref-transform)]
+                                                   nil wgs84->euref-transform)]
     {:x (.y c) :y (.x c)}))
