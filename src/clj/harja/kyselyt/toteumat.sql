@@ -202,7 +202,7 @@ FROM toteuma_tehtava tt
                           AND urakka = :urakka
                           AND sopimus = :sopimus
                           AND alkanut >= :alkupvm
-                          AND paattynyt <= :loppupvm
+                          AND alkanut <= :loppupvm
                           AND tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
                                          'lisatyo' :: toteumatyyppi,
                                          'muutostyo' :: toteumatyyppi,
