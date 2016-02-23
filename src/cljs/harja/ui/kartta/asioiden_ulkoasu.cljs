@@ -1,7 +1,9 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.dom :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
-            [harja.ui.kartta.varit.alpha :as alpha]))
+            [clojure.string :as str]
+
+            [harja.loki :refer [log]]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -190,14 +192,17 @@
                           (and valittu? avoin?) (+ 2 +valitun-leveys+)
                           avoin? (+ 2 +normaali-leveys+)
                           valittu? +valitun-leveys+
-                          :else +normaali-leveys+) 0 -2)]
+                          :else +normaali-leveys+) 0 -2)
+        tila (if (keyword? tila)
+               tila
+               (keyword (str/lower-case (or tila "muu"))))]
     [{:color (:yllapito-pohja viivojen-varit)
      :width (nth leveydet 0)}
-    {:color (case (keyword ((fnil clojure.string/lower-case "muu") tila))
-              :aloitettu (:yllapito-aloitettu viivojen-varit)
-              :valmis (:yllapito-valmis viivojen-varit)
-              (:yllapito-muu viivojen-varit))
-     :width (nth leveydet 1)}
+     {:color (case tila
+               :aloitettu (:yllapito-aloitettu viivojen-varit)
+               :valmis (:yllapito-valmis viivojen-varit)
+               (:yllapito-muu viivojen-varit))
+      :width (nth leveydet 1)}
      {:color (:yllapito-katkoviiva viivojen-varit)
       :dash (if (= tyyppi :paikkaus) [3 9] [10 5])
       :width (nth leveydet 2)}]))
