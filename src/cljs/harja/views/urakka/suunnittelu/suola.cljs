@@ -43,8 +43,9 @@
                   (some :kaytossa ss)))))
 
 (defn valitun-hoitokauden-rivit [rivit]
-  (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
-    (filter #(= (:hoitokauden_alkuvuosi %) vuosi) rivit)))
+  (when @u/valittu-hoitokausi
+    (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
+      (filter #(= (:hoitokauden_alkuvuosi %) vuosi) rivit))))
 
 (defonce hoitokauden-tiedot
   (reaction (let [ss @suolasakot-ja-lampotilat]
