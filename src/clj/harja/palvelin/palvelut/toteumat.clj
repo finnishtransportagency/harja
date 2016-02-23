@@ -494,7 +494,8 @@
                                                                    tehtava))
         kasitellyt-reitit (konv/sarakkeet-vektoriin
                             reitit
-                            {:reittipiste :reittipisteet}
+                            {:reittipiste :reittipisteet
+                             :tehtava :tehtavat}
                             :toteumaid)]
     kasitellyt-reitit))
 
