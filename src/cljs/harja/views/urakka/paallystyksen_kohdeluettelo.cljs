@@ -47,12 +47,12 @@
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
-  [ur]
+  []
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paallystys-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
-    (fn [ur]
+    (fn []
       [:span.kohdeluettelo
        [bs/tabs {:style  :tabs :classes "tabs-taso2"
                  :active (nav/valittu-valilehti-atom :kohdeluettelo-paallystys)}

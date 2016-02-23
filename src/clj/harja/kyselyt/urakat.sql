@@ -129,7 +129,6 @@ FROM urakka u
 WHERE urk.id = :organisaatio
       OR hal.id = :organisaatio;
 
-
 -- name: tallenna-urakan-sopimustyyppi!
 -- Tallentaa urakalle sopimustyypin
 UPDATE urakka
@@ -312,7 +311,9 @@ WHERE u.id = :urakka_id;
 
 -- name: hae-urakan-urakoitsija
 -- Hakee valitun urakan urakoitsijan id:n
-SELECT urakoitsija FROM urakka WHERE id = :urakka_id
+SELECT urakoitsija
+FROM urakka
+WHERE id = :urakka_id
 
 -- name: paivita-urakka-alaueiden-nakyma
 -- Päivittää urakka-alueiden materialisoidun näkymän
@@ -371,6 +372,7 @@ WHERE ua.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (st_contains(ua.alue, ST_MakePoint(:x, :y)))
       AND (u.alkupvm IS NULL OR u.alkupvm <= current_timestamp)
       AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp);
+ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero)
@@ -391,9 +393,10 @@ WHERE alueurakkanro = :alueurakkanro;
 DELETE FROM alueurakka;
 
 -- name: hae-urakan-geometria
-SELECT u.alue AS urakka_alue,
-       alueurakka.alue AS alueurakka_alue
+SELECT
+  u.alue          AS urakka_alue,
+  alueurakka.alue AS alueurakka_alue
 FROM urakka u
-JOIN hanke ON u.hanke = hanke.id
-JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+  JOIN hanke ON u.hanke = hanke.id
+  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id = :id;
