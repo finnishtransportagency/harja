@@ -121,7 +121,7 @@
              (kartalla-esitettavaan-muotoon
                @haetut-reitit
                @valittu-yksikkohintainen-toteuma
-               nil
+               [[:toteumaid] [:toteuma-id]]
                (map #(assoc % :tyyppi-kartalla :toteuma))))))
 
 ;; REPL TUNKKAUSTA, toteumien piirtotyylejä varten

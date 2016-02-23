@@ -412,10 +412,12 @@
   nil)
 
 (defn- valittu-fn? [valittu tunniste asia]
-  (let [tunniste (if (vector? tunniste) tunniste [tunniste])]
+  (log "Tunniste on: " (pr-str tunniste))
+  (let [tunniste (if (vector? tunniste) tunniste [tunniste])
+        tunnisteet (if (vector? (first tunniste)) tunniste [tunniste tunniste])]
     (and
       (not (nil? valittu))
-      (= (get-in asia tunniste) (get-in valittu tunniste)))))
+      (= (get-in asia (first tunnisteet)) (get-in valittu (second tunnisteet))))))
 
 (defn- tallenna-selitteet-xf [selitteet]
   (fn [xf]
@@ -436,6 +438,8 @@
                                             (constantly false)))))
 
 (defn kartalla-esitettavaan-muotoon
+  "Valitun asian tunniste on defaulttina :id. Voi antaa :id, [:tehtava :id], tai jos
+  esitettävän asian ja valitun asian id on eri, [[:id] [:toteuma-id]]"
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]
