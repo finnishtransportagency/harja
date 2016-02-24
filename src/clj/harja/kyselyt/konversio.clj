@@ -134,18 +134,10 @@
   [rivi & kentat]
   (muunna rivi kentat double))
 
-(defn vec->array-yksittaisesta-arvosta
+(defn vec->array
   "Muuntaa yksittäisen arvon Clojure vektorista JDBC arrayksi."
   [vektori]
   (str "{" (clojure.string/join "," (map name vektori)) "}"))
-
-(defn vec->array
-  "Muuntaa rivin annetun kentän Clojure vektorista JDBC arrayksi."
-  [rivi kentta]
-  (assoc rivi
-    kentta (if-let [a (get rivi kentta)]
-             (vec->array-yksittaisesta-arvosta a)
-             "{}")))
 
 (defn string-vector->keyword-vector
   "Muuntaa mapin kentän vectorissa olevat stringit keywordeiksi."
