@@ -16,14 +16,13 @@
                urakka @nav/valittu-urakka
                listaus @listaus]
               {:nil-kun-haku-kaynnissa? true}
-              (if (and paalla? urakka)
-                (do (log "Siltataso päällä, haetaan sillat urakalle: " (:nimi urakka) " (id: " (:id urakka) ")")
-                    (go (let [sillat (<! (k/post! :hae-urakan-sillat {:urakka-id (:id urakka)
-                                                                      :listaus listaus}))]
-                          (map #(assoc % :type :silta) sillat))))
-                
-                ;; Jos siltataso ei päällä tai urakkaa ei valittu, asetetaan nil dataksi
-                nil)))
+              (when (and paalla? urakka)
+                (log "Siltataso päällä, haetaan sillat urakalle: "
+                     (:nimi urakka) " (id: " (:id urakka) ")")
+                (go (mapv #(assoc % :type :silta)
+                          (<! (k/post! :hae-urakan-sillat
+                                       {:urakka-id (:id urakka)
+                                        :listaus listaus})))))))
 
 (defn paivita-silta! [id funktio & args]
   (swap! sillat (fn [sillat]
