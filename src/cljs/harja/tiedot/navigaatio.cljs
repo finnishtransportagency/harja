@@ -86,6 +86,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    {:nimi "Paikkaus" :arvo :paikkaus }
    {:nimi "Valaistus" :arvo :valaistus }])
 
+(defn urakkatyyppi [tyyppi]
+  (first (filter #(= tyyppi (:arvo %))
+                 +urakkatyypit+)))
+
 (defn nayta-urakkatyyppi [tyyppi]
   (:nimi (first
            (filter #(= tyyppi (:arvo %))
@@ -105,12 +109,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
               (when (and id yksikot)
                 (some #(and (= id (:id %)) %) yksikot)))))
 
-(def hallintayksikot-kartalla
-  (reaction (let [hals @hy/hallintayksikot]
-              (if @valittu-hallintayksikko
-                []
-                hals))))
-
 ;; Jos urakka valitaan id:n perusteella (url parametrilla), asetetaan se tänne
 (defonce valittu-urakka-id (atom nil))
 
@@ -127,19 +125,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
               (when (and id urakat)
                 (some #(when (= id (:id %)) %) urakat)))))
 
-(defonce edellinen-valittu-urakkatyyppi (atom nil))
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 (defonce valittu-urakkatyyppi
-         (reaction (let [valittu-urakka @valittu-urakka]
-                     (if valittu-urakka
-                       (let [valittu (first (filter #(= (:tyyppi valittu-urakka) (:arvo %))
-                                                    +urakkatyypit+))]
-                         (reset! edellinen-valittu-urakkatyyppi valittu)
-                         valittu)
-                       (if (not (nil? @edellinen-valittu-urakkatyyppi))
-                         @edellinen-valittu-urakkatyyppi
-                         (first +urakkatyypit+))))))
+         (atom (urakkatyyppi :hoito)))
+
+(defonce paivita-valittu-urakkatyyppi!
+         (run! (when-let [ur @valittu-urakka]
+                 (reset! valittu-urakkatyyppi (urakkatyyppi (:tyyppi ur))))))
 
 (defn paivita-urakka [urakka-id funktio & argumentit]
   (swap! hallintayksikon-urakkalista (fn [urakat]

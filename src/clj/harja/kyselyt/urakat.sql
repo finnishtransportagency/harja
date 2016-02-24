@@ -315,7 +315,7 @@ SELECT urakoitsija
 FROM urakka
 WHERE id = :urakka_id
 
--- name: paivita-urakka-alaueiden-nakyma
+-- name: paivita-urakka-alueiden-nakyma
 -- Päivittää urakka-alueiden materialisoidun näkymän
 SELECT paivita_urakoiden_alueet();
 

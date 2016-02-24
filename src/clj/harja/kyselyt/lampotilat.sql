@@ -57,7 +57,7 @@ VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
  
 -- name: aseta-suolasakon-kaytto!
 UPDATE suolasakko
-   SET kaytossa = :kaytossa
+   SET kaytossa = :kaytossa, muokattu = NOW(), muokkaaja = :kayttaja
  WHERE urakka = :urakka;
 
 -- name: onko-suolasakko-kaytossa?

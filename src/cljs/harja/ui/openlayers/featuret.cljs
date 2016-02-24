@@ -22,6 +22,8 @@
 (def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
   oletus-zindex 4)
 
+(def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
+
 (defmulti luo-feature :type)
 
 (defn aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
@@ -57,7 +59,9 @@
 (defn taitokset-valimatkoin [valimatka taitokset]
   (loop [pisteet-ja-rotaatiot []
          viimeisin-sijanti [0 0]
-         [{:keys [sijainti rotaatio]} & taitokset] taitokset]
+         [{:keys [sijainti rotaatio]} & taitokset] taitokset
+         verrokki-kulma rotaatio
+         ensimmainen? true]
     (if-not sijainti
       ;; Kaikki käsitelty
       pisteet-ja-rotaatiot
@@ -66,16 +70,19 @@
             [x2 y2] sijainti
             dx (- x1 x2)
             dy (- y1 y2)
-            dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
-
-        (if (or (> dist valimatka)
-                (empty? taitokset))
+            dist (Math/sqrt (+ (* dx dx) (* dy dy)))
+            kulman-erotus (- verrokki-kulma rotaatio)]
+        (cond
+          (or (> dist valimatka)
+              (> (max kulman-erotus (- kulman-erotus)) kulmaraja-nuolelle)
+              ensimmainen?)
           (recur (conj pisteet-ja-rotaatiot
                        [(-> sijainti second clj->js ol.geom.Point.) rotaatio])
-                 sijainti
-                 taitokset)
+                 sijainti taitokset rotaatio false)
 
-          (recur pisteet-ja-rotaatiot sijainti taitokset))))))
+          :else
+          (recur pisteet-ja-rotaatiot
+                 viimeisin-sijanti taitokset verrokki-kulma false))))))
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-ikonille-tyyli
