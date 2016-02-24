@@ -181,7 +181,7 @@
 
 (defn tilannekuva []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa)
+    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
                            (reset! kartta/pida-geometriat-nakyvilla? false)
                            (kartta/aseta-paivitetaan-karttaa-tila! true))

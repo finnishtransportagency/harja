@@ -184,7 +184,7 @@
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
     (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus! %2))
-    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset istunto/ajastin-taukotilassa)
+    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset istunto/ajastin-taukotilassa?)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 
     (fn []
