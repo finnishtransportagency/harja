@@ -117,8 +117,7 @@
     (t/after? eka toka)
     false))
 
-(defn sama-tai-jalkeen? [eka toka]´
-´
+(defn sama-tai-jalkeen? [eka toka]
   (if-not (or (nil? eka) (nil? toka))
     (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
     false))
