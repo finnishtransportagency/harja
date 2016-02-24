@@ -20,6 +20,7 @@
                       [valittu-sopimus-id _] @u/valittu-sopimusnumero
                       nakymassa? @yksikkohintaiset-tyot-nakymassa?
                       valittu-hoitokausi @u/valittu-hoitokausi
+                      valittu-aikavali @u/valittu-aikavali
                       valittu-toimenpide-id (:tpi_id @urakka/valittu-toimenpideinstanssi)
                       valittu-tehtava-id (:id @u/valittu-yksikkohintainen-tehtava)]
                      {:nil-kun-haku-kaynnissa? true}
@@ -27,7 +28,7 @@
                        (log "Haetaan urakan toteumat: " (pr-str valittu-urakka-id)
                             (pr-str valittu-sopimus-id) (pr-str valittu-hoitokausi))
                        (toteumat/hae-urakan-toteumien-tehtavien-summat
-                         valittu-urakka-id valittu-sopimus-id valittu-hoitokausi :yksikkohintainen
+                         valittu-urakka-id valittu-sopimus-id valittu-aikavali :yksikkohintainen
                          valittu-toimenpide-id valittu-tehtava-id))))
 
 (defn assosioi [rivit rivin-avain hakuehto valittu-sopimusnumero valittu-hoitokausi urakan-yks-hint-tyot]
