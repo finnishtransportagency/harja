@@ -22,6 +22,15 @@
   ([valittu? valittu-leveys ei-valittu-leveys]
    (if valittu? valittu-leveys ei-valittu-leveys)))
 
+(defn reitillinen-asia? [asia]
+  (case (:type (or (:sijainti asia) asia))
+    :point false
+    :line true
+    :multiline true))
+
+(defn asia-on-piste? [asia]
+  (not (reitillinen-asia? asia)))
+
 ;; Varmistaa, että merkkiasetukset ovat vähintään [{}].
 ;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]
 (defn- validoi-merkkiasetukset [merkit]
@@ -220,7 +229,8 @@
       :alue (maarittele-feature laatupoikkeama (valittu-fn? laatupoikkeama) ikoni))))
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
-  (let [ikoni (ulkoasu/tarkastuksen-ikoni (valittu-fn? tarkastus) (:ok? tarkastus))
+  (let [ikoni (ulkoasu/tarkastuksen-ikoni
+                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus))
         viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus))]
     (assoc tarkastus
       :type :tarkastus
@@ -261,11 +271,13 @@
         :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
 (defn- paikkaus-paallystys [tyyppi pt valittu-fn? teksti]
-  (let [ikoni (ulkoasu/yllapidon-ikoni)
-        viiva (ulkoasu/yllapidon-viiva (valittu-fn? pt) (:avoin? pt) (:tila pt) tyyppi)]
+  (let [tila (:tila pt)
+        tila-teksti (str ", " ((fnil name "suunniteltu") tila))
+        ikoni (ulkoasu/yllapidon-ikoni)
+        viiva (ulkoasu/yllapidon-viiva (valittu-fn? pt) (:avoin? pt) tila tyyppi)]
     (assoc pt
       :nimi (or (:nimi pt) teksti)
-      :selite {:teksti teksti
+      :selite {:teksti (str teksti tila-teksti)
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature pt (valittu-fn? pt)
                                 ikoni
@@ -287,10 +299,15 @@
 (def tehtavien-nimet
   {"AURAUS JA SOHJONPOISTO"          "Auraus tai sohjonpoisto"
    "SUOLAUS"                         "Suolaus"
+   "LIUOSSUOLAUS"                    "Liuossuolaus"
    "PISTEHIEKOITUS"                  "Pistehiekoitus"
    "LINJAHIEKOITUS"                  "Linjahiekoitus"
+   "PINNAN TASAUS"                   "Pinnan tasaus"
    "LUMIVALLIEN MADALTAMINEN"        "Lumivallien madaltaminen"
    "SULAMISVEDEN HAITTOJEN TORJUNTA" "Sulamisveden haittojen torjunta"
+   "AURAUSVIITOITUS JA KINOSTIMET"   "Aurausviitoitus ja kinostimet"
+   "LUMENSIIRTO"                     "Lumensiirto"
+   "PAANNEJAAN POISTO"               "Paannejään poisto"
    "KELINTARKASTUS"                  "Talvihoito"
 
    "TIESTOTARKASTUS"                 "Tiestötarkastus"
@@ -305,7 +322,6 @@
    "SORASTUS"                        "Sorastus"
 
    "HARJAUS"                         "Harjaus"
-   "PINNAN TASAUS"                   "Pinnan tasaus"
    "PAALLYSTEIDEN PAIKKAUS"          "Päällysteiden paikkaus"
    "PAALLYSTEIDEN JUOTOSTYOT"        "Päällysteiden juotostyöt"
 
@@ -315,7 +331,11 @@
    "MUU"                             "Muu"})
 
 (defn tehtavan-nimi [tehtavat]
-  (str/join ", " (map #(or (get tehtavien-nimet (str/upper-case %)) %) tehtavat)))
+  (str/join ", " (into []
+                       (comp
+                         (map str/capitalize)
+                         (map #(or (get tehtavien-nimet (str/upper-case %)) %)))
+                       tehtavat)))
 
 
 (defn- maaritelty-tyyli [tehtava]
@@ -393,10 +413,12 @@
   nil)
 
 (defn- valittu-fn? [valittu tunniste asia]
-  (let [tunniste (if (vector? tunniste) tunniste [tunniste])]
+  (log "Tunniste on: " (pr-str tunniste))
+  (let [tunniste (if (vector? tunniste) tunniste [tunniste])
+        tunnisteet (if (vector? (first tunniste)) tunniste [tunniste tunniste])]
     (and
       (not (nil? valittu))
-      (= (get-in asia tunniste) (get-in valittu tunniste)))))
+      (= (get-in asia (first tunnisteet)) (get-in valittu (second tunnisteet))))))
 
 (defn- tallenna-selitteet-xf [selitteet]
   (fn [xf]
@@ -417,6 +439,8 @@
                                             (constantly false)))))
 
 (defn kartalla-esitettavaan-muotoon
+  "Valitun asian tunniste on defaulttina :id. Voi antaa :id, [:tehtava :id], tai jos
+  esitettävän asian ja valitun asian id on eri, [[:id] [:toteuma-id]]"
   ([asiat] (kartalla-esitettavaan-muotoon asiat nil nil))
   ([asiat valittu] (kartalla-esitettavaan-muotoon asiat valittu [:id]))
   ([asiat valittu tunniste]

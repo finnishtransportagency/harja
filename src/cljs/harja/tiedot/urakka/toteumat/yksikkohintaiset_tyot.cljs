@@ -96,14 +96,14 @@
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
-(def yksikkohintainen-toteuma-kartalla
-  (reaction
-   (when @karttataso-yksikkohintainen-toteuma
-     (kartalla-esitettavaan-muotoon
-      @haetut-reitit
-      @valittu-yksikkohintainen-toteuma
-      nil
-      (map #(assoc % :tyyppi-kartalla :toteuma))))))
+(defonce yksikkohintainen-toteuma-kartalla
+         (reaction
+           (when @karttataso-yksikkohintainen-toteuma
+             (kartalla-esitettavaan-muotoon
+               @haetut-reitit
+               @valittu-yksikkohintainen-toteuma
+               [[:toteumaid] [:toteuma-id]]
+               (map #(assoc % :tyyppi-kartalla :toteuma))))))
 
 ;; REPL TUNKKAUSTA, toteumien piirtotyylejä varten
 (def monesko? (atom 0))

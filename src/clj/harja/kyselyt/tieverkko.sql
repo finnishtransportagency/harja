@@ -18,9 +18,9 @@ FROM tierekisteriosoite_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, CAST(:tresho
 -- poistaa kaikki tieverkon tiedot taulusta. ajetaan transaktiossa
 DELETE FROM tieverkko;
 
--- name: paivita-paloiteltu-tieverkko!
+-- name: paivita-paloiteltu-tieverkko
 -- päivittää materialisoidun näkymän
-REFRESH MATERIALIZED VIEW tieverkko_paloina WITH DATA;
+select paivita_tieverkko_paloina();
 
 -- name: tierekisteriosoite-viivaksi
 -- hakee geometrian annetulle tierekisteriosoitteelle
