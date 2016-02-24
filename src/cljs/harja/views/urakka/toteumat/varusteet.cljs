@@ -16,7 +16,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.ikonit :as ikonit]
-            [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot])
+            [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -33,12 +34,21 @@
       {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 1}
       (when (= (:toteumatyyppi toteuma) :yksikkohintainen)
         {:otsikko     "Toteuma" :nimi :linkki-toteumaan :tyyppi :komponentti :leveys 1
-        :komponentti (fn [] [:button.nappi-toissijainen.nappi-grid
-                             {:on-click #(yksikkohintaiset-tyot/nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid toteuma))}
-                             (ikonit/eye-open) " Toteuma"])})]
+         :komponentti (fn [] [:button.nappi-toissijainen.nappi-grid
+                              {:on-click #(yksikkohintaiset-tyot/nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid toteuma))}
+                              (ikonit/eye-open) " Toteuma"])})]
      toteumatehtavat]))
 
 (def valittu-varustetoteuman-tyyppi (atom nil))
+
+(defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
+  (when (and tietolaji tunniste)
+    (let [url (->
+                "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+                (str/replace "<pvm>" (pvm/pvm alkupvm))
+                (str/replace "<tietolaji>" tietolaji)
+                (str/replace "<tunniste>" tunniste))]
+      [:a {:href url :target "_blank"} "Avaa"])))
 
 (defn toteumataulukko []
   (let [toteumat @varustetiedot/haetut-toteumat
@@ -69,15 +79,16 @@
                      (:alkupvm rivi)))}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15 :hae (fn [rivi]
-                                                                     (or (varustetiedot/tietolaji->selitys (:tietolaji rivi))
-                                                                         (:tietolaji rivi)))}
+                                                                                (or (varustetiedot/tietolaji->selitys (:tietolaji rivi))
+                                                                                    (:tietolaji rivi)))}
        {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15 :hae (fn [rivi]
-                                                                       (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))}
+                                                                                  (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))}
        {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10}
        {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5}
-       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}]
+       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}
+       {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
       (take nayta-max-toteumaa valitut-toteumat)]
      (when (> (count valitut-toteumat) nayta-max-toteumaa)
        [:div.alert-warning (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])]))
