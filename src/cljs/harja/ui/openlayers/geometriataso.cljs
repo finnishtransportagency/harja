@@ -48,7 +48,6 @@
     ;; Remove all ol3 feature objects that are no longer in the new geometries
     (doseq [[avain feature] (seq geometries-map)
             :when (and feature (not (geometries-set avain)))]
-      (log "POISTA FEATURE " feature " ,jonka avain: " (pr-str avain))
       (.removeFeature features feature))
 
     ;; Create new features for new geometries and update the geometries map
@@ -87,5 +86,3 @@
     (-> this meta :selitteet))
   (paivita [items ol3 ol-layer aiempi-paivitystieto]
     (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items)))
-
-
