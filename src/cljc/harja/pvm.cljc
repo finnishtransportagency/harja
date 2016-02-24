@@ -113,15 +113,12 @@
        false))))
 
 (defn jalkeen? [eka toka]
-  (assert eka "Ensimmäinen päivämäärä puuttuu!")
-  (assert toka "Toinen päivämäärä puuttuu!")
   (if-not (or (nil? eka) (nil? toka))
     (t/after? eka toka)
     false))
 
-(defn sama-tai-jalkeen? [eka toka]
-  (assert eka "Ensimmäinen päivämäärä puuttuu!")
-  (assert toka "Toinen päivämäärä puuttuu!")
+(defn sama-tai-jalkeen? [eka toka]´
+´
   (if-not (or (nil? eka) (nil? toka))
     (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
     false))
@@ -137,9 +134,6 @@
 (defn valissa?
   "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä."
   [pvm alkupvm loppupvm]
-  (assert pvm "Verrattava päivämäärä puuttuu!")
-  (assert alkupvm "Ensimmäinen päivämäärä puuttuu!")
-  (assert loppupvm "Toinen päivämäärä puuttuu!")
   (and (sama-tai-jalkeen? pvm alkupvm) (sama-tai-ennen? pvm loppupvm)))
 
 (defn- luo-format [str]
