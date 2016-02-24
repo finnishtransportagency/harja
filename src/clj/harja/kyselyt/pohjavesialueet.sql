@@ -22,15 +22,16 @@ WHERE p.urakka = :urakka;
 DELETE FROM pohjavesialue;
 
 -- name: luo-pohjavesialue!
-INSERT INTO pohjavesialue (nimi, tunnus, ulkoinen_id, alue) VALUES
-  (:nimi, :tunnus, :ulkoinen_id, ST_GeomFromText(:geometria) :: GEOMETRY);
+INSERT INTO pohjavesialue (nimi, tunnus, ulkoinen_id, alue, suolarajoitus) VALUES
+  (:nimi, :tunnus, :ulkoinen_id, ST_GeomFromText(:geometria) :: GEOMETRY, :suolarajoitus);
 
 -- name: paivita-pohjavesialue!
 UPDATE pohjavesialue
 SET
-  nimi        = :nimi,
-  tunnus      = :tunnus,
-  alue        = ST_GeomFromText(:geometria) :: GEOMETRY
+  nimi          = :nimi,
+  tunnus        = :tunnus,
+  alue          = ST_GeomFromText(:geometria) :: GEOMETRY,
+  suolarajoitus = :suolarajoitus
 WHERE ulkoinen_id = :ulkoinen_id;
 
 -- name: onko-olemassa-ulkoisella-idlla

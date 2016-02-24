@@ -7,14 +7,17 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn vie-pohjavesialue [db pohjavesialue]
+  ;; todo: poista!
+  (clojure.pprint/pprint pohjavesialue)
   (if (:the_geom pohjavesialue)
     (let [nimi (:urakka_lyh pohjavesialue)
           tunnus (:urakka_id pohjavesialue)
           ulkoinen-id (int (:id pohjavesialue))
+          suorarajoitus (:pvsuola pohjavesialue)
           geometria (.toString (:the_geom pohjavesialue))]
       (if (p/onko-olemassa-ulkoisella-idlla? db ulkoinen-id)
-        (p/paivita-pohjavesialue! db nimi tunnus geometria ulkoinen-id)
-        (p/luo-pohjavesialue! db nimi tunnus ulkoinen-id geometria)))
+        (p/paivita-pohjavesialue! db nimi tunnus geometria ulkoinen-id suorarajoitus)
+        (p/luo-pohjavesialue! db nimi tunnus ulkoinen-id geometria suorarajoitus)))
     (log/warn "Pohjavesialuetta ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error pohjavesialue))))
 
 (defn vie-pohjavesialue-kantaan [db shapefile]
