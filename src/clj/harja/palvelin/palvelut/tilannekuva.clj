@@ -27,7 +27,6 @@
   tulos)
 
 (defn haettavat [s]
-  (println "HAETTAVAT: " s)
   (into #{}
         (map (comp :nimi tk/suodattimet-idlla))
         s))
