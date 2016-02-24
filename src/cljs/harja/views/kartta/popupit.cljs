@@ -34,7 +34,7 @@
   ([otsikko nimi-arvo-parit {:keys [paaluokka linkki nappi]}]
    [:div {:class (str "kartta-popup " (when paaluokka
                                         paaluokka))}
-    [:p [:b otsikko]]
+    [:h2 [:p [:b otsikko]]]
 
     [:table.otsikot-ja-arvot
      (for [[nimi arvo] nimi-arvo-parit]
