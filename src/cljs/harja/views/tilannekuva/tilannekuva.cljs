@@ -15,7 +15,8 @@
             [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.checkbox :as checkbox]
-            [harja.ui.on-off-valinta :as on-off])
+            [harja.ui.on-off-valinta :as on-off]
+            [harja.domain.tilannekuva :as tk])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
@@ -69,15 +70,14 @@
   "suodatin-polku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
   [nimi suodattimet-atom suodatin-polku]
   [checkbox/checkbox
-   (reaction (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatin-polku)))
-   nimi
-   {:display   "block"
-    :on-change (fn [uusi-tila]
-                 (reset! suodattimet-atom
-                         (assoc-in
-                           @suodattimet-atom
-                           suodatin-polku
-                           (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
+   (r/wrap (checkbox/boolean->checkbox-tila-keyword
+            (get-in @suodattimet-atom suodatin-polku))
+           (fn [uusi-tila]
+             (swap! suodattimet-atom
+                    assoc-in
+                    suodatin-polku
+                    (checkbox/checkbox-tila-keyword->boolean uusi-tila))))
+   nimi])
 
 (def auki-oleva-checkbox-ryhma (atom nil))
 
@@ -159,7 +159,9 @@
      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]]
    [:div.tk-yksittaiset-suodattimet
-    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat] auki-oleva-checkbox-ryhma]]])
+    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
+     tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
+     auki-oleva-checkbox-ryhma]]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
