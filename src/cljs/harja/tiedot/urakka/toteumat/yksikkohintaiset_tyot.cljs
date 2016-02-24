@@ -49,7 +49,7 @@
 (defn- laske-toteutuneet-kustannukset [rivit]
   (map
    (fn [rivi]
-     (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:hoitokauden-toteutunut-maara rivi))))
+     (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:maara rivi))))
    rivit))
 
 (defn- laske-erotus [rivit]
