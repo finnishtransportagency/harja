@@ -46,8 +46,14 @@
 
     (when linkki
       (let [nimi (:nimi linkki)
-            on-click (:on-click linkki)]
-        [:a.arvolistaus-linkki.klikattava {:on-click on-click}
+            on-click (:on-click linkki)
+            href (:href linkki)
+            target (:target linkki)]
+        [:a.arvolistaus-linkki.klikattava
+         (merge
+           (when on-click {:on-click on-click})
+           (when href {:href href})
+           (when target {:target target}))
          nimi]))
 
     (when (and (:nimi nappi) (:on-click nappi))
@@ -95,23 +101,23 @@
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
   (kartta/nayta-popup!
-   (geometrian-koordinaatti tapahtuma)
-   (tee-arvolistaus-popup
-    (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
-      "Toimenpidepyyntö"
-      (if (= :tiedoitus (:ilmoitustyyppi tapahtuma))
-        "Tiedotus"
-        (str/capitalize (name (:ilmoitustyyppi tapahtuma)))))
-    [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-     ["Selite" (:lyhytselite tapahtuma)]
-     ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-    {:linkki {:nimi     "Siirry ilmoitusnäkymään"
-              :on-click #(do
-                           (.preventDefault %)
-                           (let [putsaa (fn [asia]
-                                          (dissoc asia :type :alue))]
-                             (nav/vaihda-sivu! :ilmoitukset)
-                             (ilmoitukset/avaa-ilmoitus! (putsaa tapahtuma))))}})))
+    (geometrian-koordinaatti tapahtuma)
+    (tee-arvolistaus-popup
+      (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
+        "Toimenpidepyyntö"
+        (if (= :tiedoitus (:ilmoitustyyppi tapahtuma))
+          "Tiedotus"
+          (str/capitalize (name (:ilmoitustyyppi tapahtuma)))))
+      [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+       ["Selite" (:lyhytselite tapahtuma)]
+       ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
+      {:linkki {:nimi     "Siirry ilmoitusnäkymään"
+                :on-click #(do
+                            (.preventDefault %)
+                            (let [putsaa (fn [asia]
+                                           (dissoc asia :type :alue))]
+                              (nav/vaihda-sivu! :ilmoitukset)
+                              (ilmoitukset/avaa-ilmoitus! (putsaa tapahtuma))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
@@ -226,3 +232,15 @@
                                                                      "Paikkausilmoitus"
                                                                      "Aloita paikkausilmoitus")
                                                          :on-click (:kohde-click tapahtuma)}}))))
+
+(defmethod nayta-popup :varustetoteuma-klikattu [tapahtuma]
+  (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
+                       (tee-arvolistaus-popup "Varustetoteuma"
+                                              [["Päivämäärä: " (pvm/pvm(:alkupvm tapahtuma))]
+                                               ["Tunniste: " (:tunniste tapahtuma)]
+                                               ["Tietolaji: " (:tietolaji tapahtuma)]
+                                               ["Toimenpide: " (:Toimepide tapahtuma)]]
+                                              {:linkki {:nimi   "Avaa varustekortti"
+                                                        :href   (:varustekortti-url tapahtuma)
+                                                        :target "_blank"}})))
+

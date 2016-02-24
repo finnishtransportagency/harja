@@ -17,7 +17,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.ikonit :as ikonit]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.views.kartta.popupit :as popupit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -41,14 +42,23 @@
 
 (def valittu-varustetoteuman-tyyppi (atom nil))
 
+(defn tee-varustekortti-url [alkupvm tietolaji tunniste]
+  (->
+    "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+    (str/replace "<pvm>" (pvm/pvm alkupvm))
+    (str/replace "<tietolaji>" tietolaji)
+    (str/replace "<tunniste>" tunniste)))
+
 (defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
   (when (and tietolaji tunniste)
-    (let [url (->
-                "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
-                (str/replace "<pvm>" (pvm/pvm alkupvm))
-                (str/replace "<tietolaji>" tietolaji)
-                (str/replace "<tunniste>" tunniste))]
+    (let [url (tee-varustekortti-url alkupvm tietolaji tunniste)]
       [:a {:href url :target "_blank"} "Avaa"])))
+
+(defn varustetoteuma-klikattu [_ toteuma]
+  (popupit/nayta-popup
+    (assoc toteuma
+      :aihe :varustetoteuma-klikattu
+      :varustekortti-url (tee-varustekortti-url (:alkupvm toteuma) (:tietolaji toteuma) (:tunniste toteuma)))))
 
 (defn toteumataulukko []
   (let [toteumat @varustetiedot/haetut-toteumat
@@ -105,7 +115,7 @@
 (defn varusteet []
   (komp/luo
     (komp/lippu varustetiedot/nakymassa? varustetiedot/karttataso-varustetoteuma)
-
+    (komp/kuuntelija :varustetoteuma-klikattu varustetoteuma-klikattu)
     (fn []
       [:span
        [kartta/kartan-paikka]
