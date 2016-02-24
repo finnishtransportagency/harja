@@ -6,7 +6,8 @@
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+            [harja.kyselyt.konversio :as konversio])
   (:import (java.util Date)))
 
 (defn hakuehto-annettu? [p]
@@ -24,7 +25,7 @@
          (str ilman))))
 
 (defn hae-ilmoitukset
-  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite]
+  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit kuittaustyypit aikavali hakuehto selite]}]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -40,6 +41,7 @@
                     (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                     (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
                     (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                    (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
                     (viesti selite "selitteellä:" "ilman selitettä")
                     (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                     (cond
@@ -70,9 +72,9 @@
                                              (hakuehto-annettu? tyypit) tyypit
                                              (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
                                              selite-annettu? selite
-                                             (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
-                                             (if (:avoimet tilat) true false) ;; falseksi
-                                             ))
+                                             (if (:suljetut tilat) true false)  ; Muuttaa nil arvon tai puuttuvan avaimen
+                                             (if (:avoimet tilat) true false)   ; falseksi
+                                             (hakuehto-annettu? kuittaustyypit) (konversio/vec->array-yksittaisesta-arvosta kuittaustyypit)))
                     {:kuittaus :kuittaukset})))]
     (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
@@ -131,10 +133,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-ilmoitukset
                       (fn [user tiedot]
-                        (hae-ilmoitukset (:db this) user (:hallintayksikko tiedot)
-                                         (:urakka tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-                                         (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
-                                         (:hakuehto tiedot) (:selite tiedot))))
+                        (hae-ilmoitukset (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]

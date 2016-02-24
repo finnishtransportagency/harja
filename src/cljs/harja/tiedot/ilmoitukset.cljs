@@ -52,7 +52,9 @@
                     (conj nykyiset-kuittaukset kuittaus)))))
 
 (defonce haetut-ilmoitukset
-         (reaction<! [valinnat @valinnat haku @ilmoitushaku] {:odota 100}
+         (reaction<! [valinnat @valinnat
+                      haku @ilmoitushaku]
+                     {:odota 100}
            (go
              (if (zero? haku)
                []

@@ -89,7 +89,8 @@ WHERE
     (:suljetut IS FALSE AND :avoimet IS FALSE) OR
     (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
     (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
-  )
+  ) AND
+  (:kuittaustyyppi_annettu IS FALSE OR kuittaustyyppi = ANY (:kuittaustyypi ::kuittaustyyppi[]))
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 -- name: hae-ilmoitukset-idlla
