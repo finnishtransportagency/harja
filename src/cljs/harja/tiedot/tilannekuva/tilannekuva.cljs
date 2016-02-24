@@ -224,6 +224,14 @@ hakutiheys-historiakuva 1200000)
                                                             (:sijainti uusi))))))
                                 vanhat uudet))))))
 
+(defn- ilman-kasiteltyja-laatupoikkeamia [tulos]
+  (if (= @valittu-tila :nykytilanne)
+    (let [_ (log "Päätös on: " (pr-str (map #(get-in % [:paatos :paatos]) (:laatupoikkeamat tulos))))
+          laatupoikkeamat (:laatupoikkeamat tulos)
+          ilman-kasiteltyja (remove #(#{:hylatty :ei_sanktiota} (get-in % [:paatos :paatos])) laatupoikkeamat)]
+      (assoc tulos :laatupoikkeamat ilman-kasiteltyja))
+    tulos))
+
 (def edellisen-haun-kayttajan-suodattimet (atom {:tila                 @valittu-tila
                                                  :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
                                                  :aikavali-historia    @historiakuvan-aikavali
@@ -260,7 +268,8 @@ hakutiheys-historiakuva 1200000)
                                   tulos)
           tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
                     (yhdista-tyokonedata)
-                    (julkaise-tyokonedata!))]
+                    (julkaise-tyokonedata!)
+                    (ilman-kasiteltyja-laatupoikkeamia))]
       (when @nakymassa?
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
