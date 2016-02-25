@@ -33,9 +33,8 @@
 
 (defn nayta-tierekisteriosoite
   [tr]
-  (if tr
+  (if (and tr (:numero tr))
     (str "Tie " (:numero tr) " / " (:alkuosa tr) " / " (:alkuetaisyys tr) " / " (:loppuosa tr) " / " (:loppuetaisyys tr))
-
     (str "Ei tierekisteriosoitetta")))
 
 (defn ilmoituksen-tiedot []
