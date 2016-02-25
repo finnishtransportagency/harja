@@ -45,16 +45,9 @@
           [:td.arvo arvo]]))]
 
     (when linkki
-      (let [nimi (:nimi linkki)
-            on-click (:on-click linkki)
-            href (:href linkki)
-            target (:target linkki)]
         [:a.arvolistaus-linkki.klikattava
-         (merge
-           (when on-click {:on-click on-click})
-           (when href {:href href})
-           (when target {:target target}))
-         nimi]))
+         (select-keys linkki [:on-click :href :target])
+         nimi])
 
     (when (and (:nimi nappi) (:on-click nappi))
       (let [nimi (:nimi nappi)
@@ -103,11 +96,10 @@
   (kartta/nayta-popup!
     (geometrian-koordinaatti tapahtuma)
     (tee-arvolistaus-popup
-      (if (= :toimenpidepyynto (:ilmoitustyyppi tapahtuma))
-        "Toimenpidepyyntö"
-        (if (= :tiedoitus (:ilmoitustyyppi tapahtuma))
-          "Tiedotus"
-          (str/capitalize (name (:ilmoitustyyppi tapahtuma)))))
+      (condp = (:ilmoitustyyppi tapahtumat)
+        :toimenpidepyynto "Toimenpidepyyntö"
+        :tiedoitus "Tiedotus"
+        (str/capitalize (name (:ilmoitustyyppi tapahtumat))))
       [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
        ["Selite" (:lyhytselite tapahtuma)]
        ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
