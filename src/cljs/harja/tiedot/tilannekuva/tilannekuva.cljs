@@ -110,8 +110,8 @@ hakutiheys-historiakuva 1200000)
            "siltojen puhdistus"
            "muu"]})
 
-(def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus})
-(def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus})
+(def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
+(def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet (atom {:yllapito        {:paallystys false
