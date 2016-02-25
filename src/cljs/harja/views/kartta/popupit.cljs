@@ -45,9 +45,9 @@
           [:td.arvo arvo]]))]
 
     (when linkki
-        [:a.arvolistaus-linkki.klikattava
-         (select-keys linkki [:on-click :href :target])
-         nimi])
+      [:a.arvolistaus-linkki.klikattava
+       (select-keys linkki [:on-click :href :target])
+       (:nimi linkki)])
 
     (when (and (:nimi nappi) (:on-click nappi))
       (let [nimi (:nimi nappi)
@@ -96,10 +96,10 @@
   (kartta/nayta-popup!
     (geometrian-koordinaatti tapahtuma)
     (tee-arvolistaus-popup
-      (condp = (:ilmoitustyyppi tapahtumat)
+      (condp = (:ilmoitustyyppi tapahtuma)
         :toimenpidepyynto "Toimenpidepyyntö"
         :tiedoitus "Tiedotus"
-        (str/capitalize (name (:ilmoitustyyppi tapahtumat))))
+        (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
       [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
        ["Selite" (:lyhytselite tapahtuma)]
        ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
@@ -228,7 +228,7 @@
 (defmethod nayta-popup :varustetoteuma-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Varustetoteuma"
-                                              [["Päivämäärä: " (pvm/pvm(:alkupvm tapahtuma))]
+                                              [["Päivämäärä: " (pvm/pvm (:alkupvm tapahtuma))]
                                                ["Tunniste: " (:tunniste tapahtuma)]
                                                ["Tietolaji: " (:tietolaji tapahtuma)]
                                                ["Toimenpide: " (:Toimepide tapahtuma)]]
