@@ -13,7 +13,6 @@ SELECT
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
-  i.suljettu,
 
   ST_Simplify(i.sijainti, :toleranssi) AS sijainti,
   i.tr_numero,
@@ -64,8 +63,6 @@ WHERE
    ilmoitus = i.id AND
    kuitattu BETWEEN :alku AND :loppu))) AND
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
-  ((:avoimet IS TRUE AND i.suljettu IS NOT TRUE) OR
-   (:suljetut IS TRUE AND i.suljettu IS TRUE)) AND
   i.ilmoitustyyppi :: TEXT IN (:tyypit);
 
 
