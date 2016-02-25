@@ -1,9 +1,7 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
-            [harja.ui.dom :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
-            [clojure.string :as str]
-
-            [harja.loki :refer [log]]))
+            #?(:cljs [harja.ui.dom :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]])
+            [clojure.string :as str]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -165,6 +163,11 @@
 ;;;;;;;;;;
 ;;; Värimäärittelyt loppuu
 ;;;;;;;;;;
+
+;; Määritellään tyhjät implementaatio ikoneille backendillä
+#?(:clj (defn pinni-ikoni [vari] nil))
+#?(:clj (defn nuoli-ikoni [vari] nil))
+#?(:clj (defn sijainti-ikoni [tila] nil))
 
 ;; Toteuman ja työkoneen käyttämät värit määritellään tehtavien-varit mäpissä.
 (defn toteuman-ikoni [vari]
