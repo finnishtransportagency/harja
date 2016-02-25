@@ -43,7 +43,7 @@
    :ilmoitukset     {:tyypit {tk/tpp true
                               tk/urk true
                               tk/tur true}
-                     :tilat  #{:avoimet :suljetut}}
+                     :tilat  #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
    :turvallisuus    {tk/turvallisuuspoikkeamat true}
    :laatupoikkeamat {tk/laatupoikkeama-tilaaja     true
                      tk/laatupoikkeama-urakoitsija true
