@@ -53,7 +53,7 @@
            :urakka nil
            :tilat nil
            :tyypit [:kysely :toimepidepyynto :ilmoitus]
-           :kuittaustyypit #{:kuittaamaton}
+           :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
            :aikavali nil
            :hakuehto nil}))))
 
