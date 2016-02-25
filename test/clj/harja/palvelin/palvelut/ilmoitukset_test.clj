@@ -32,7 +32,7 @@
   (let []
     (is (oikeat-sarakkeet-palvelussa?
           [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :lyhytselite :pitkaselite
-           :ilmoitustyyppi :selitteet :urakkatyyppi :suljettu :sijainti :uusinkuittaus
+           :ilmoitustyyppi :selitteet :urakkatyyppi :sijainti :uusinkuittaus :tila
 
            [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]
            [:ilmoittaja :etunimi] [:ilmoittaja :sukunimi] [:ilmoittaja :tyopuhelin] [:ilmoittaja :matkapuhelin]
@@ -53,6 +53,7 @@
            :urakka nil
            :tilat nil
            :tyypit [:kysely :toimepidepyynto :ilmoitus]
+           :kuittaustyypit #{:kuittaamaton}
            :aikavali nil
            :hakuehto nil}))))
 
