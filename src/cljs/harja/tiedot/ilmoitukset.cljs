@@ -1,6 +1,6 @@
 (ns harja.tiedot.ilmoitukset
   (:require [reagent.core :refer [atom]]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ kuittaustyypit ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
@@ -26,6 +26,7 @@
                              :hoitokausi      @u/valittu-hoitokausi
                              :aikavali        (or @u/valittu-hoitokausi [nil nil])
                              :tyypit          +ilmoitustyypit+
+                             :kuittaustyypit  kuittaustyypit
                              :tilat           +ilmoitustilat+
                              :hakuehto        ""
                              :selite          [nil ""]}))
@@ -64,7 +65,9 @@
                                             (update-in [:tyypit]
                                                        #(if (empty? %) +ilmoitustyypit+ %))
                                             (update-in [:tilat]
-                                                       #(if (empty? %) +ilmoitustilat+ %)))))]
+                                                       #(if (empty? %) +ilmoitustilat+ %))
+                                            (update-in [:kuittaustyypit]
+                                                       #(if (empty? %) kuittaustyypit %)))))]
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
                      (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))

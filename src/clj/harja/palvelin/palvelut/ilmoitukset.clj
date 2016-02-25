@@ -37,17 +37,17 @@
         selite-annettu? (boolean (and selite (first selite)))
         selite (if selite-annettu? (name (first selite)) "")
         debug-viesti (str "Haetaan ilmoituksia: "
-                    (viesti urakat "urakoista" "ilman urakoita")
-                    (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
-                    (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
-                    (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
-                    (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
-                    (viesti selite "selitteellä:" "ilman selitettä")
-                    (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
-                    (cond
-                      (:avoimet tilat) ", mutta vain avoimet."
-                      (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
-                      (:suljetut tilat) ", ainoastaan suljetut."))
+                          (viesti urakat "urakoista" "ilman urakoita")
+                          (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
+                          (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                          (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                          (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
+                          (viesti selite "selitteellä:" "ilman selitettä")
+                          (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
+                          (cond
+                            (:avoimet tilat) ", mutta vain avoimet."
+                            (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
+                            (:suljetut tilat) ", ainoastaan suljetut."))
         _ (log/debug debug-viesti)
         tulos (when-not (empty? urakat)
                 (mapv
@@ -73,8 +73,7 @@
                                              (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
                                              selite-annettu? selite
                                              (if (:suljetut tilat) true false)  ; Muuttaa nil arvon tai puuttuvan avaimen
-                                             (if (:avoimet tilat) true false)   ; falseksi
-                                             (hakuehto-annettu? kuittaustyypit) (konversio/vec->array-yksittaisesta-arvosta kuittaustyypit)))
+                                             (if (:avoimet tilat) true false))) ; falseksi
                     {:kuittaus :kuittaukset})))]
     (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
