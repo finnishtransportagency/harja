@@ -32,7 +32,7 @@
                            :default (assoc ilmoitus :tila :kuittaamaton)))]
     (-> ilmoitus
         (lisaa-tila)
-        (dissoc :kuitattu :vastaanotettu :aloitettu :lopetettu))))
+        (dissoc :vastaanotettu :aloitettu :lopetettu))))
 
 (defn hae-ilmoitukset
   [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit kuittaustyypit aikavali hakuehto selite]}]
