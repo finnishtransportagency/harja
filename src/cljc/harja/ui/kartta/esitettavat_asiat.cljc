@@ -1,12 +1,18 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
-            [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat
+            #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
+               :clj [taoensso.timbre :as log])
+            [harja.domain.laadunseuranta.laatupoikkeamat
              :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.geo :as geo]
 
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
+
+#?(:clj (defn log [& things]
+          (log/info things)))
+#?(:clj (defn warn [& things]
+          (log/warn things)))
 
 (defn- laske-skaala [valittu?]
   (if valittu? ulkoasu/+valitun-skaala+ ulkoasu/+normaali-skaala+))
@@ -425,7 +431,7 @@
   ;; (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
     (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
-          _ (when (empty? toimenpiteet) (harja.loki/warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
+          _ (when (empty? toimenpiteet) (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
                  ;; toteumalla on suoraan nimi
                  (:nimi toteuma)
