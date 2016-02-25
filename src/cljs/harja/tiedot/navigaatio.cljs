@@ -1,8 +1,8 @@
 (ns harja.tiedot.navigaatio
-  "Tämä nimiavaruus hallinnoi sovelluksen navigoinnin. Sisältää atomit, joilla eri sivuja ja polkua 
+  "Tämä nimiavaruus hallinnoi sovelluksen navigoinnin. Sisältää atomit, joilla eri sivuja ja polkua
 sovelluksessa ohjataan sekä kytkeytyy selaimen osoitepalkin #-polkuun ja historiaan. Tämä nimiavaruus
 ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa navigointitiedot."
- 
+
   (:require
    ;; Reititykset
    [goog.events :as events]
@@ -10,7 +10,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [goog.history.EventType :as EventType]
    [reagent.core :refer [atom wrap]]
    [cljs.core.async :refer [<! >! chan close!]]
-   
+
    [harja.loki :refer [log tarkkaile!]]
    [harja.asiakas.tapahtumat :as t]
    [harja.tiedot.urakoitsijat :as urk]
@@ -20,11 +20,12 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.tiedot.navigaatio.reitit :as reitit]
    [harja.atom :refer-macros [reaction<!]]
    [harja.pvm :as pvm]
-   [clojure.string :as str])
-  
+   [clojure.string :as str]
+   [harja.geo :as geo])
+
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
-  
+
   (:import goog.History))
 
 
@@ -54,6 +55,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    (let [[minx miny maxx maxy] @kartan-extent]
      {:xmin minx :ymin miny
       :xmax maxx :ymax maxy})))
+
+(def kartan-nakyvan-alueen-koko
+  (reaction
+   ((comp geo/extent-hypotenuusa (juxt :xmin :ymin :xmax :ymax))
+    @kartalla-nakyva-alue)))
 
 ;; Kartan koko voi olla
 ;; :hidden (ei näy mitään)
@@ -90,7 +96,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                    +urakkatyypit+))))
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
-                         tätä valintaa voi käyttää esim. alueurakoitden 
+                         tätä valintaa voi käyttää esim. alueurakoitden
                          urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
 
 ;; Hallintayksikön valinta id:llä (URL parametrista)
@@ -182,7 +188,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))
-  
+
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
    löydy valitun tyyppisten urakoitsijain listasta."
@@ -233,11 +239,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                ;; Ehkä joku pino kartan valintatapahtumien kuuntelijoita, jonne voi lisätä
                ;; itsensä ja ne ajettaisiin uusin ensin. Jos palauttaa true, ei ajeta muita.
                ;; Silloin komponentti voisi ylikirjoittaa valintatapahtumien käsittelyn.
-                      
+
                (fn [urakka]
                  ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
                  (valitse-urakka urakka))))
-              
+
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
                     (events/listen h EventType/NAVIGATE

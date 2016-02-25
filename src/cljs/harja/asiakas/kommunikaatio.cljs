@@ -150,15 +150,21 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn pikkukuva-url [liite-id]
   (str (polku) "lataa-pikkukuva?id=" liite-id))
 
+(defn- yhdista-parametrit [parametrit]
+  (str/join "&"
+            (map (fn [[nimi arvo]]
+                   (str (name nimi) "=" arvo))
+                 (partition 2 parametrit))))
+
 (defn pdf-url [tyyppi & parametrit]
-  (str (polku) "pdf?_=" (name tyyppi)
-       "&" (str/join "&"
-                     (map (fn [[nimi arvo]]
-                            (str (name nimi) "=" arvo))
-                          (partition 2 parametrit)))))
+  (str (polku) "pdf?_=" (name tyyppi) "&"
+       (yhdista-parametrit parametrit)))
 
 (defn wmts-polku []
   (str +polku+ "wmts/"))
+
+(defn karttakuva-url [& parametrit]
+  (str (polku) "karttakuva?" (yhdista-parametrit parametrit)))
 
 (defn pingaa-palvelinta []
   (post! :ping {}))
