@@ -12,7 +12,7 @@
   (integraatioloki/lokittaja il db "sonja" nimi))
 
 (defn- tee-vastaanottokuuntelija [{:keys [db sonja] :as this} sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono kuuntelijat]
-  (when sahkoposti-sisaan-jono
+  (when (and (not (empty? sahkoposti-sisaan-jono)) (not (empty? sahkoposti-sisaan-kuittausjono)))
     (jms/kuuntele-ja-kuittaa (lokittaja this "sahkoposti-vastaanotto") sonja
                              sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono
                              sanomat/lue-sahkoposti sanomat/kirjoita-kuittaus
@@ -24,7 +24,7 @@
                                  (sanomat/kuittaus % [(.getMessage e)]))))))
 
 (defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono]
-  (when sahkoposti-ulos-kuittausjono
+  (when (not (empty? sahkoposti-ulos-kuittausjono))
     (let [integraatio (q/integraation-id db "sonja" "sahkoposti-lahetys")]
       (jms/kuittausjonokuuntelija (lokittaja this "sahkoposti-lahetys") sonja sahkoposti-ulos-kuittausjono
                                   sanomat/lue-kuittaus :viesti-id :onnistunut
