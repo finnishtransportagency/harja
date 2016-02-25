@@ -85,15 +85,7 @@ WHERE
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
 
   -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY[:selite ::ilmoituksenselite])) AND
-
-  -- Tarkasta ilmoituksen tilat
-  (
-    (:suljetut IS TRUE AND :avoimet IS TRUE) OR
-    (:suljetut IS FALSE AND :avoimet IS FALSE) OR
-    (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
-    (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
-  )
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY[:selite ::ilmoituksenselite]))
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 -- name: hae-ilmoitukset-idlla

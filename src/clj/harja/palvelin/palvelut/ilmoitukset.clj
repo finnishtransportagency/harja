@@ -71,9 +71,7 @@
                                              aikavali-alku aikavali-loppu
                                              (hakuehto-annettu? tyypit) tyypit
                                              (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
-                                             selite-annettu? selite
-                                             (if (:suljetut tilat) true false)  ; Muuttaa nil arvon tai puuttuvan avaimen
-                                             (if (:avoimet tilat) true false))) ; falseksi
+                                             selite-annettu? selite))
                     {:kuittaus :kuittaukset})))]
     (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")

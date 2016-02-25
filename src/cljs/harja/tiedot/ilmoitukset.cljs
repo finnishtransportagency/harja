@@ -19,6 +19,8 @@
 (defonce valittu-ilmoitus (atom nil))
 (defonce uusi-kuittaus-auki? (atom false))
 
+(defonce kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
+
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
                              :urakoitsija     (:id @nav/valittu-urakoitsija)
@@ -26,8 +28,7 @@
                              :hoitokausi      @u/valittu-hoitokausi
                              :aikavali        (or @u/valittu-hoitokausi [nil nil])
                              :tyypit          +ilmoitustyypit+
-                             :kuittaustyypit  kuittaustyypit
-                             :tilat           +ilmoitustilat+
+                             :kuittaustyypit  kuittaustyyppi-filtterit
                              :hakuehto        ""
                              :selite          [nil ""]}))
 
@@ -64,8 +65,6 @@
                                             ;; jos tyyppiä/tilaa ei valittu, ota kaikki
                                             (update-in [:tyypit]
                                                        #(if (empty? %) +ilmoitustyypit+ %))
-                                            (update-in [:tilat]
-                                                       #(if (empty? %) +ilmoitustilat+ %))
                                             (update-in [:kuittaustyypit]
                                                        #(if (empty? %) kuittaustyypit %)))))]
                  (when-not (k/virhe? tulos)

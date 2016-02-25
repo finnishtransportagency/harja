@@ -10,7 +10,8 @@
   [:vastaanotto :aloitus :lopetus :muutos :vastaus])
 
 (def kuittaustyypin-selite
-  {:vastaanotto "Vastaanotettu"
+  {:kuittaamaton "Kuittaamaton"
+   :vastaanotto "Vastaanotettu"
    :aloitus     "Aloitettu"
    :lopetus     "Lopetettu"
    :muutos      "Muutos"

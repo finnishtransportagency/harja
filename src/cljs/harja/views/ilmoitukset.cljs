@@ -6,7 +6,8 @@
             [harja.tiedot.ilmoitukset :as tiedot]
             [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                                  +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
-                                                 +ilmoitusten-selitteet+ parsi-selitteet]]
+                                                 +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
+                                                 kuittaustyypin-selite]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -146,17 +147,17 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
                                            (vec (sort itemit))))))}
-
          (lomake/ryhma {:ulkoasu :rivi}
-                       {:nimi        :tilat :otsikko "Tila"
-                        :tyyppi      :checkbox-group
-                        :vaihtoehdot [:suljetut :avoimet]}
-
-                       {:nimi             :tyypit :otsikko "Tyyppi"
+                       {:nimi             :kuittaustyypit
+                        :otsikko          "Tila"
+                        :tyyppi           :checkbox-group
+                        :vaihtoehdot      tiedot/kuittaustyyppi-filtterit
+                        :vaihtoehto-nayta kuittaustyypin-selite}
+                       {:nimi             :tyypit
+                        :otsikko          "Tyyppi"
                         :tyyppi           :checkbox-group
                         :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
                         :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi})]
-
         @tiedot/valinnat]
 
        [:div
