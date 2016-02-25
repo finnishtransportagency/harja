@@ -32,7 +32,8 @@
      (+ miny (/ height 2))]))
 
 (defn yhdista-extent
-  "Yhdistää kaksi annettua extentiä ja palauttaa uuden extentin, johon molemmat mahtuvat"
+  "Yhdistää kaksi annettua extentiä ja palauttaa uuden extentin,
+  johon molemmat mahtuvat"
   ([] nil)
   ([[e1-minx e1-miny e1-maxx e1-maxy] [e2-minx e2-miny e2-maxx e2-maxy]]
    [(Math/min e1-minx e2-minx) (Math/min e1-miny e2-miny)
@@ -53,7 +54,7 @@
     :merkki [(:coordinates g)]))
 
 (defn laske-extent-xf
-  "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja 
+  "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja
 lopuksi kirjoittaa sen annettuun volatileen."
   [extent-volatile]
   (assert (volatile? extent-volatile) "Anna volatile!, johon extent palautetaan")
@@ -143,12 +144,17 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmethod extent :polygon [{coordinates :coordinates}]
   (laske-pisteiden-extent coordinates))
-  
+
 (defn extent-monelle [geometriat]
   (laske-pisteiden-extent (mapcat pisteet geometriat)))
 
+(defn extent-hypotenuusa
+  "Laskee extent hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [[x1 y1 x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
 
-  
 ;; Päättelee annetulle geometrialle hyvän ikonisijainnin
 ;; geometry -> [x y]
 (defmulti ikonin-sijainti (fn [geometry] (:type geometry)))
@@ -167,5 +173,3 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmethod ikonin-sijainti :default [g]
   (keskipiste g))
-
-
