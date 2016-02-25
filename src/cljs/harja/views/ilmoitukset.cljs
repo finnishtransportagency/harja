@@ -172,7 +172,7 @@
           {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "15%"}
           {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %)) :leveys "15%"}
           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "15%"}
-          {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "10%"}]
+          {:otsikko "Tila" :nimi :tila :leveys "10%" :hae #(kuittaustyypin-selite (:tila %))}]
          @tiedot/haetut-ilmoitukset]]])))
 
 (defn ilmoitukset []
