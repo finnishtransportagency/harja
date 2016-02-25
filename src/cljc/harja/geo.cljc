@@ -1,6 +1,5 @@
 (ns harja.geo
-  "Yleisiä geometria-apureita"
-  (:require [harja.loki :refer [log]]))
+  "Yleisiä geometria-apureita")
 
 
 (defn- laske-pisteiden-extent
