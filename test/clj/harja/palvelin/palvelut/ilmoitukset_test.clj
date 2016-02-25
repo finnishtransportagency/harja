@@ -63,6 +63,7 @@
                     :hoitokausi      nil
                     :aikavali        [(java.util.Date. 0 0 0) (java.util.Date.)]
                     :tyypit          +ilmoitustyypit+
+                    :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
                     :tilat           +ilmoitustilat+
                     :hakuehto        ""}
         ilmoitusten-maara-suoraan-kannasta (ffirst (q
