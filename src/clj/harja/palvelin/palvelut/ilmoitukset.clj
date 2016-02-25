@@ -85,7 +85,6 @@
                                              selite-annettu? selite))
                     {:kuittaus :kuittaukset})))]
     (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
-    (log/debug "Ilmoitusten tilat: " (map :tila tulos))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
     tulos))
 
