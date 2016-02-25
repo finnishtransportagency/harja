@@ -3,7 +3,7 @@
             [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat
              :as laatupoikkeamat]
-            [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.geo :as geo]
 
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
@@ -181,7 +181,7 @@
                      :color (or (:color %) ulkoasu/+normaali-vari+)))
        (sort-by :width >)
        (mapv :color)))
-       
+
 (defmulti
   ^{:private true}
   asia-kartalle :tyyppi-kartalla)
