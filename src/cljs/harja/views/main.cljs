@@ -132,7 +132,7 @@
      [:div.container
       [murupolku/murupolku]])
 
-   [:div.container.sisalto {:style {:min-height (max 200 (- korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+   [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
     [:div.row.row-sisalto
      [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
       (case sivu
@@ -158,7 +158,7 @@
     (fn []
       (if @nav/render-lupa?
         (let [sivu (nav/sivu)
-              aikakatkaistu? @istunto/istunto-aikakatkaistu
+              aikakatkaistu? @istunto/istunto-aikakatkaistu?
               korkeus @dom/korkeus
               kayttaja @istunto/kayttaja]
           (if aikakatkaistu?

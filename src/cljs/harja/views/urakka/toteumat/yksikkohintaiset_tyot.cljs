@@ -262,11 +262,11 @@
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
-        aikavali [(first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi)]
+        aikavali [(first @u/valittu-aikavali) (second @u/valittu-aikavali)]
         toteutuneet-tehtavat (atom nil)]
     (go (reset! toteutuneet-tehtavat
                 (<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali
-                                                                                 :yksikkohintainen (:id rivi)))))
+                                                                                 :yksikkohintainen (:tpk_id rivi)))))
 
     (fn [toteuma-rivi]
       [:div
@@ -284,6 +284,8 @@
                              (reset! toteutuneet-tehtavat (:tehtavat vastaus))
                              (reset! tehtavien-summat (:tehtavien-summat vastaus))))
          :voi-lisata? false
+         :max-rivimaara 300
+         :max-rivimaaran-ylitys-viesti "Liikaa hakutuloksia, rajaa hakua"
          :tunniste    :tehtava_id}
         [{:otsikko "Päivämäärä"
           :nimi :alkanut
@@ -315,11 +317,8 @@
                          [:button.nappi-toissijainen.nappi-grid
                           {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
-        (when @toteutuneet-tehtavat
-          (sort-by :alkanut t/after?
-                   (filter
-                     (fn [tehtava] (= (:toimenpidekoodi tehtava) (:id toteuma-rivi)))
-                     @toteutuneet-tehtavat)))]])))
+        (when-let [toteutuneet-tehtavat @toteutuneet-tehtavat]
+          (sort-by :alkanut t/after? toteutuneet-tehtavat))]])))
 
 (defn yksikkohintaisten-toteumalistaus
   "Yksikköhintaisten töiden toteumat tehtävittäin"
@@ -327,7 +326,7 @@
   (komp/luo
       (fn []
         [:div
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+         [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
          [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
          [:button.nappi-ensisijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
@@ -336,19 +335,18 @@
 
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat")
+           :tunniste     :tpk_id
            :tyhja        (if (nil? @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
            :luokat       ["toteumat-paasisalto"]
-           :vetolaatikot (into {} (map (juxt :id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
-                                       (filter (fn [rivi]
-                                                 (> (:hoitokauden-toteutunut-maara rivi) 0))
-                                               @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain)))}
+           :vetolaatikot (into {} (map (juxt :tpk_id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
+                                       @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain))}
           [{:tyyppi :vetolaatikon-tila :leveys 5}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
-           {:otsikko "Toteutunut määrä" :nimi :hoitokauden-toteutunut-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
+           {:otsikko "Toteutunut määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
             :fmt #(fmt/desimaaliluku-opt % 1)}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
             :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
