@@ -68,6 +68,10 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 ;; :L (korkeampi täysleveä)
 (def kartan-kokovalinta "Kartan koko" (atom :S))
 
+(def kartta-nakyvissa? "Kartta ei piilotettu" (reaction (let [koko @kartan-kokovalinta]
+                                                          (and (not= :S koko)
+                                                               (not= :hidden koko)))))
+
 (defn vaihda-kartan-koko! [uusi-koko]
   (let [vanha-koko @kartan-kokovalinta]
     (when uusi-koko

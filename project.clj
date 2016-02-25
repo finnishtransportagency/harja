@@ -49,6 +49,9 @@
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"]
 
+                 ;; Match
+                 [org.clojure/core.match "0.3.0-alpha4"]
+                 
                  ;; Sonja-väylän JMS riippuvuudet
                  [progress/sonic-client "7.6.2"]
                  [progress/sonic-crypto "7.6.2"]
