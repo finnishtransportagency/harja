@@ -24,7 +24,7 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
-(defn- selvita-ilmoituksen-tila [ilmoitus]
+(defn- lisaa-ilmoituksen-tila [ilmoitus]
   (let [lisaa-tila (fn [ilmoitus]
                      (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :aloitus)
                            (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :lopetus)
@@ -69,7 +69,7 @@
                           (comp
                             (harja.geo/muunna-pg-tulokset :sijainti)
                             (map konv/alaviiva->rakenne)
-                            (map selvita-ilmoituksen-tila)
+                            (map lisaa-ilmoituksen-tila)
                             (filter #(kuittaustyypit (:tila %)))
                             (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
                             (map #(konv/array->vec % :selitteet))
@@ -85,7 +85,7 @@
                                              (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
                                              selite-annettu? selite))
                     {:kuittaus :kuittaukset})))]
-    (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
+    (log/debug "Löydettiin ilmoitukset: " (pr-str tulos))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
     tulos))
 

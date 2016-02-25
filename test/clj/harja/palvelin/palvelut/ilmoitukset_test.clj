@@ -88,3 +88,13 @@
     (is (= kuittausten-maara-suoraan-kannasta kuittaukset-palvelusta-lkm) "Kuittausten lukumäärä")
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
+
+(deftest ilmoituksen-tyyppi
+ (let [kuittaamaton-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu false}
+       vastaanotettu-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu true}
+       aloitettu-ilmoitus {:aloitettu true :lopetettu false :vastaanotettu true}
+       lopetettu-ilmoitus {:aloitettu true :lopetettu true :vastaanotettu true}]
+   (is (= (:tila (lisaa-ilmoituksen-tila kuittaamaton-ilmoitus)) :kuittaamaton))
+   (is (= (:tila (lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotettu))
+   (is (= (:tila (lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitettu))
+   (is (= (:tila (lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetettu))))
