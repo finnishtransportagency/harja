@@ -151,8 +151,8 @@
 (defn pysayta-ajastin
   "Mixin, joka pysäyttää aikakatkaisun ajastimen komponentin ollessa aktiivinen."
   []
-  (sisaan-ulos #(istunto/pysayta-ajastin)
-               #(istunto/kaynnista-ajastin)))
+  (sisaan-ulos #(istunto/pysayta-ajastin!)
+               #(istunto/kaynnista-ajastin!)))
 
 (defn kun-muuttuu
   "Mixin, joka seuraa annetun parametrin muuttumista. Tekee :component-will-receive-props elinkaaren
