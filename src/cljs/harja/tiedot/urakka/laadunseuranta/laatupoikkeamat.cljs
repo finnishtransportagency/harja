@@ -14,12 +14,14 @@
 (def kuvaile-paatostyyppi laatupoikkeamat/kuvaile-paatostyyppi)
 (def kuvaile-paatos laatupoikkeamat/kuvaile-paatos)
 
-(defonce voi-kirjata? (reaction
-                        (let [kayttaja @istunto/kayttaja
-                              urakka @nav/valittu-urakka]
-                          (and kayttaja
-                               urakka
-                               (roolit/rooli-urakassa? kayttaja roolit/laadunseuranta-kirjaus (:id urakka))))))
+(defonce voi-kirjata?
+  (reaction
+   (let [kayttaja @istunto/kayttaja
+         urakka @nav/valittu-urakka]
+     (and kayttaja
+          urakka
+          (roolit/rooli-urakassa? kayttaja
+                                  roolit/laadunseuranta-kirjaus (:id urakka))))))
 
 (defn hae-urakan-laatupoikkeamat
   "Hakee annetun urakan laatupoikkeamat urakka id:n ja aikavälin perusteella."
@@ -30,8 +32,9 @@
                                   :loppu     loppupvm}))
 
 (defn hae-laatupoikkeaman-tiedot
-  "Hakee urakan laatupoikkeaman tiedot urakan id:n ja laatupoikkeaman id:n perusteella.
-  Palauttaa kaiken tiedon mitä laatupoikkeaman muokkausnäkymään tarvitaan."
+  "Hakee urakan laatupoikkeaman tiedot urakan id:n ja laatupoikkeaman id:n
+  perusteella. Palauttaa kaiken tiedon mitä laatupoikkeaman muokkausnäkymään
+  tarvitaan."
   [urakka-id laatupoikkeama-id]
   (k/post! :hae-laatupoikkeaman-tiedot {:urakka-id   urakka-id
                                   :laatupoikkeama-id laatupoikkeama-id}))
