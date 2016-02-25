@@ -24,10 +24,10 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
-(defn- lisaa-ilmoituksen-tila [ilmoitus]
+(defn lisaa-ilmoituksen-tila [ilmoitus]
   (let [lisaa-tila (fn [ilmoitus]
-                     (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :aloitus)
-                           (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :lopetus)
+                     (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :lopetus)
+                           (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :aloitus)
                            (true? (:vastaanotettu ilmoitus)) (assoc ilmoitus :tila :vastaanotto)
                            :default (assoc ilmoitus :tila :kuittaamaton)))]
     (-> ilmoitus

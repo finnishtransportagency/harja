@@ -95,6 +95,6 @@
        aloitettu-ilmoitus {:aloitettu true :lopetettu false :vastaanotettu true}
        lopetettu-ilmoitus {:aloitettu true :lopetettu true :vastaanotettu true}]
    (is (= (:tila (lisaa-ilmoituksen-tila kuittaamaton-ilmoitus)) :kuittaamaton))
-   (is (= (:tila (lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotettu))
-   (is (= (:tila (lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitettu))
-   (is (= (:tila (lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetettu))))
+   (is (= (:tila (lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotto))
+   (is (= (:tila (lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitus))
+   (is (= (:tila (lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetus))))
