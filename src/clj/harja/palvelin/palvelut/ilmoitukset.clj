@@ -24,6 +24,14 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
+(defn- selvita-ilmoituksen-tila [ilmoitus]
+  (let [lisaa-tila (fn [ilmoitus]
+                     ;; TODO Selvityslogiikka
+                     (assoc ilmoitus :tila :aloitettu))]
+    (-> ilmoitus
+        (lisaa-tila)
+        (dissoc :kuitattu :vastaanotettu :aloitettu :lopetettu))))
+
 (defn hae-ilmoitukset
   [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit kuittaustyypit aikavali hakuehto selite]}]
   (let [aikavali-alku (when (first aikavali)
@@ -59,6 +67,7 @@
                           (comp
                             (harja.geo/muunna-pg-tulokset :sijainti)
                             (map konv/alaviiva->rakenne)
+                            (map selvita-ilmoituksen-tila)
                             (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
                             (map #(konv/array->vec % :selitteet))
                             (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
@@ -74,6 +83,7 @@
                                              selite-annettu? selite))
                     {:kuittaus :kuittaukset})))]
     (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
+    (log/debug "Ilmoitusten tilat: " (map :tila tulos))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
     tulos))
 
