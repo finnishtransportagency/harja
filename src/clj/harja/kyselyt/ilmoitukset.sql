@@ -56,12 +56,12 @@ SELECT
   it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
   it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus,
 
-  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id) as kuitattu,
-  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id) as kuitattu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
                                           AND kuittaustyyppi = 'vastaanotto'::kuittaustyyppi) as vastaanotettu,
-  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
                                                 AND kuittaustyyppi = 'aloitus'::kuittaustyyppi) as aloitettu,
-  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id)
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id)
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
