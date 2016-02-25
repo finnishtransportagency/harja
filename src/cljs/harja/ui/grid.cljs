@@ -564,15 +564,15 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         (nollaa-muokkaustiedot!))}
      (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                   muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
-                  korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema tiedot]
+                  korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
        (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
              colspan (if (or piilota-toiminnot? (nil? tallenna))
                        (count skeema)
                        (inc (count skeema)))
              muokataan (not (nil? @muokatut))
              tiedot (if max-rivimaara
-                 (take max-rivimaara tiedot)
-                 tiedot)
+                 (take max-rivimaara alkup-tiedot)
+                 alkup-tiedot)
              muokkauspaneeli (fn [nayta-otsikko?]
                                [:div.panel-heading
                                 (if-not muokataan
@@ -726,7 +726,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  rivit-jarjestetty)))))))]])
                    (log "Max rivimäärä " max-rivimaara (count tiedot))
 
-           (when (and max-rivimaara (= (count tiedot) max-rivimaara))
+           (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
              [:div.alert-warning (or max-rivimaaran-ylitys-viesti
                                      "Liikaa hakutuloksia, rajaa hakua")])
            (when (and muokataan muokkaa-footer)
