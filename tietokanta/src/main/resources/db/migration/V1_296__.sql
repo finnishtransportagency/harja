@@ -11,6 +11,6 @@ BEGIN
                                      INNER JOIN ilmoitustoimenpide itp ON itp.ilmoitus = i.id
                                    WHERE yhteyshenkilo = yhteyshenkilo_id
                                    AND NOT EXISTS(SELECT id FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id
-                                                                                    AND kuittaustyyppi = 'lopetus'::kuittaustyyppi)))), 0) + 1 AS viestinumero);
+                                                                                    AND kuittaustyyppi = 'lopetus'::kuittaustyyppi))), 0) + 1 AS viestinumero);
 END;
 $$ LANGUAGE plpgsql;

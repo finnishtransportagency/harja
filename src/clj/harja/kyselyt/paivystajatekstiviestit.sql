@@ -17,5 +17,5 @@ FROM paivystajatekstiviesti p
 WHERE p.yhteyshenkilo = :yhteyshenkilo AND
       p.viestinumero = :viestinumero AND
       NOT EXISTS(SELECT id FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id
-                                                   AND kuittaustyyppi = 'lopetus'::kuittaustyyppi))
+                                                   AND kuittaustyyppi = 'lopetus'::kuittaustyyppi)
 LIMIT 1;
