@@ -3,7 +3,10 @@
             [ring.middleware.params :refer [wrap-params]]
             [harja.palvelin.komponentit.http-palvelin
              :refer [julkaise-palvelu poista-palvelu]]
-            [harja.palvelin.palvelut.tilannekuva :as tilannekuva])
+            [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
+            [harja.ui.kartta.esitettavat-asiat
+             :refer [kartalla-esitettavaan-muotoon]]
+            [taoensso.timbre :as log])
   (:import (java.awt.image BufferedImage)
            (java.awt Color BasicStroke RenderingHints)
            (java.awt.geom AffineTransform Line2D$Double)
@@ -33,19 +36,22 @@
      :resoluutio resoluutio}))
 
 (defn toteumat [db user]
-  (:toteumat
-   (tilannekuva/hae-tilannekuvaan
-    db user {:talvi #{20 24 39 21 40 41 17 23 19 38 18 42},
-             :urakka-id nil,
-             :turvallisuus {:turvallisuuspoikkeamat false}
-             :laatupoikkeamat {:tilaaja false, :urakoitsija false, :konsultti false}
-             :kesa #{},
-             :alue {:xmin -906240, :ymin 6829056, :xmax 1995776, :ymax 7654400}
-             :hallintayksikko 9
-             :urakoitsija nil
-             :alku #inst "2016-02-13T06:55:39.000-00:00"
-             :nykytilanne? true
-             :loppu #inst "2016-02-20T06:55:39.000-00:00" :urakkatyyppi :hoito})))
+  (kartalla-esitettavaan-muotoon
+   (:toteumat
+    (tilannekuva/hae-tilannekuvaan
+     db user {:talvi #{20 24 39 21 40 41 17 23 19 38 18 42},
+              :urakka-id nil,
+              :turvallisuus {:turvallisuuspoikkeamat false}
+              :laatupoikkeamat {:tilaaja false, :urakoitsija false, :konsultti false}
+              :kesa #{},
+              :alue {:xmin -906240, :ymin 6829056, :xmax 1995776, :ymax 7654400}
+              :hallintayksikko 9
+              :urakoitsija nil
+              :alku #inst "2016-02-13T06:55:39.000-00:00"
+              :nykytilanne? true
+              :loppu #inst "2016-02-20T06:55:39.000-00:00" :urakkatyyppi :hoito}))
+   nil nil
+   (map #(assoc % :tyyppi-kartalla :toteuma))))
 
 
 
@@ -62,12 +68,15 @@
 ;; namespacea, jonne implementoidaan renderöinti, joka tekee saman kuin
 ;; openlayers featuret namespacen luo-feature (mutta kuvaksi).
 
-(defmulti piirra (fn [_ reitti] (:type reitti)))
-(defmethod piirra :multiline [g multiline]
-  (doseq [l (:lines multiline)]
-    (piirra g l)))
+(defmulti piirra (fn [_ toteuma reitti] (:type reitti)))
 
-(defmethod piirra :line [g {points :points :as line}]
+(defmethod piirra :multiline [g toteuma multiline]
+  (println "TOTEUMA: " toteuma)
+  (doseq [l (:lines multiline)]
+    (piirra g toteuma l)))
+
+(defmethod piirra :line [g toteuma {points :points :as line}]
+
   (doseq [[[x1 y1] [x2 y2]] (partition 2 1 points)
           :let [line (Line2D$Double.  x1 y1 x2 y2)]]
     (.draw g line)))
@@ -89,7 +98,7 @@
     (.setStroke g (BasicStroke. (px 3)
                                 BasicStroke/CAP_ROUND
                                 BasicStroke/JOIN_MITER))
-    
+
     (.transform
      g
      (let [[w h] kuva
@@ -103,8 +112,9 @@
          (.translate 0 h)
          (.scale sx sy)
          (.translate tx ty))))
-    (doseq [t (toteumat db user)]
-      (piirra g (:reitti t)))
+    (doseq [{reitti :reitti :as toteuma} (toteumat db user)
+            :when reitti]
+      (piirra g toteuma reitti))
 
     ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
     #_(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
@@ -138,5 +148,3 @@
           :as this}]
     (poista-palvelu http :karttakuva)
     this))
-
-
