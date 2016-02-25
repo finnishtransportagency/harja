@@ -2,7 +2,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.7.228"] 
+                 [org.clojure/clojurescript "1.7.228"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "1.0.4"]
@@ -71,7 +71,7 @@
 
                  [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
-                 
+
                  [alandipert/storage-atom "1.2.4"]
 
                  [clj-time "0.11.0"]
@@ -111,14 +111,14 @@
 
                  ;; Apache ANT core
                  [org.apache.ant/ant "1.9.6"]
-                                      
+
                  ;; Clojure(Script) assertointi
                  [com.taoensso/truss "1.0.0"]
                  ]
 
   :dev-dependencies [
                      [walmartlabs/system-viz "0.1.0"]
-                     
+
                      ;; Testaus
                      [prismatic/dommy "1.1.0"]
                      [org.clojure/test.check "0.8.1"]
@@ -152,43 +152,45 @@
             [refactor-nrepl "2.0.0"]
 
             ]                                               ;; Asiakaspuolen cljs buildin tietoja
-  :cljsbuild {
-              :builds [{:id           "dev"
-                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
-                        :compiler     {:optimizations :none
-                                       :source-map    true
-                                       ;;:preamble ["reagent/react.js"]
-                                       :output-to     "dev-resources/js/harja.js"
-                                       :output-dir    "dev-resources/js/out"
+  :cljsbuild {:builds
+              [{:id           "dev"
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+                :compiler     {:optimizations :none
+                               :source-map    true
+                               ;;:preamble ["reagent/react.js"]
+                               :output-to     "dev-resources/js/harja.js"
+                               :output-dir    "dev-resources/js/out"
+                               :libs ["src/js/kuvataso.js"]
+                               }}
+               {:id             "test"
+                :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+                :compiler       {:output-to     "target/cljs/test/test.js"
+                                 :output-dir    "target/cljs/test"
+                                 :optimizations :none
+                                 :pretty-print  true
+                                 :source-map    "target/cljs/test/test.js.map"}
+                :notify-command ["./run-karma.sh"]}
+               ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
-                                       }}
-                       {:id             "test"
-                        :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
-                        :compiler       {:output-to     "target/cljs/test/test.js"
-                                         :output-dir    "target/cljs/test"
-                                         :optimizations :none
-                                         :pretty-print  true
-                                         :source-map    "target/cljs/test/test.js.map"}
-                        :notify-command ["./run-karma.sh"]}
-                       ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
+               {:id           "prod"
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
+                :compiler     {:optimizations :advanced
+                               ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
+                               :recompile-dependents false
+                               ;;:preamble ["reagent/react.min.js"]
+                               :output-to                 "resources/public/js/harja.js"
+                               :closure-extra-annotations #{"api" "observable"}
 
-                       {:id           "prod"
-                        :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
-                        :compiler     {:optimizations             :advanced
-                                       :recompile-dependents      false ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
-                                       ;;:preamble ["reagent/react.min.js"]
-                                       :output-to                 "resources/public/js/harja.js"
-                                       :closure-extra-annotations #{"api" "observable"}
+                               ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
+                               :source-map                "resources/public/js/harja.js.map"
+                               :output-dir                "resources/public/js/"
 
-                                       ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
-                                       :source-map                "resources/public/js/harja.js.map"
-                                       :output-dir                "resources/public/js/"
+                               :parallel-build true
+                               :libs ["src/js/kuvataso.js"]
+                               }}
 
-                                       :parallel-build true
-                                       }}
-
-                       ]}
+               ]}
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
                                      "resources/public/js/harja.js"
@@ -234,7 +236,7 @@
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
-  ;; ne pitää kopioida 
+  ;; ne pitää kopioida
   :manifest {"Specification-Title"    "Java Advanced Imaging Image I/O Tools"
              "Specification-Version"  "1.1"
              "Specification-Vendor"   "Sun Microsystems, Inc."
