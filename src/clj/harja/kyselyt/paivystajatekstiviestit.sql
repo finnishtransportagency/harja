@@ -12,6 +12,9 @@ SELECT
   i.ilmoitusid
 FROM paivystajatekstiviesti p
   INNER JOIN ilmoitus i ON i.id = p.ilmoitus
+  INNER JOIN ilmoitustoimenpide itp ON itp.ilmoitus = i.id
+                                    AND kuittaustyyppi = 'lopetus'::kuittaustyyppi
 WHERE p.yhteyshenkilo = :yhteyshenkilo AND
-      p.viestinumero = :viestinumero
+      p.viestinumero = :viestinumero AND
+      NOT EXISTS(SELECT id FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id)
 LIMIT 1;

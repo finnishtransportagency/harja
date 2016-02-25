@@ -8,6 +8,8 @@ BEGIN
   RETURN (SELECT coalesce((SELECT (SELECT max(p.viestinumero)
                                    FROM paivystajatekstiviesti p
                                      INNER JOIN ilmoitus i ON p.ilmoitus = i.id
-                                   WHERE yhteyshenkilo = yhteyshenkilo_id)), 0) + 1 AS viestinumero);
+                                     INNER JOIN ilmoitustoimenpide itp ON itp.ilmoitus = i.id
+                                   WHERE yhteyshenkilo = yhteyshenkilo_id
+                                   AND NOT EXISTS(SELECT id FROM ilmoitustoimenpide WHERE ilmoitus = ilmoitus.id))), 0) + 1 AS viestinumero);
 END;
 $$ LANGUAGE plpgsql;
