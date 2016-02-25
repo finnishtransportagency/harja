@@ -14,6 +14,7 @@
             [reagent.core :as r]
             [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.checkbox :as checkbox]
             [harja.ui.on-off-valinta :as on-off])
   (:require-macros [reagent.ratom :refer [reaction]]))
@@ -180,7 +181,7 @@
 
 (defn tilannekuva []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
+    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
                            (reset! kartta/pida-geometriat-nakyvilla? false)
                            (kartta/aseta-paivitetaan-karttaa-tila! true))
