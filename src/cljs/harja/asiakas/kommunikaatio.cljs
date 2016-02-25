@@ -216,3 +216,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
           sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
         (recur)))))
 
+(defn varustekortti-url [alkupvm tietolaji tunniste]
+  (->
+    "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+    (str/replace "<pvm>" (pvm/pvm alkupvm))
+    (str/replace "<tietolaji>" tietolaji)
+    (str/replace "<tunniste>" tunniste)))
+
