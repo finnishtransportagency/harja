@@ -26,9 +26,9 @@
 
 (defn- selvita-ilmoituksen-tila [ilmoitus]
   (let [lisaa-tila (fn [ilmoitus]
-                     (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :lopetettu)
-                           (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :aloitettu)
-                           (true? (:vastaanotettu ilmoitus)) (assoc ilmoitus :tila :vastaanotettu)
+                     (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :aloitus)
+                           (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :lopetus)
+                           (true? (:vastaanotettu ilmoitus)) (assoc ilmoitus :tila :vastaanotto)
                            :default (assoc ilmoitus :tila :kuittaamaton)))]
     (-> ilmoitus
         (lisaa-tila)
