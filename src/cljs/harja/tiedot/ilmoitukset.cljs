@@ -28,7 +28,7 @@
                              :hoitokausi      @u/valittu-hoitokausi
                              :aikavali        (or @u/valittu-hoitokausi [nil nil])
                              :tyypit          +ilmoitustyypit+
-                             :kuittaustyypit  kuittaustyyppi-filtterit
+                             :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
                              :hakuehto        ""
                              :selite          [nil ""]}))
 
@@ -66,7 +66,7 @@
                                             (update-in [:tyypit]
                                                        #(if (empty? %) +ilmoitustyypit+ %))
                                             (update-in [:kuittaustyypit]
-                                                       #(if (empty? %) kuittaustyypit %)))))]
+                                                       #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))]
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
                      (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))

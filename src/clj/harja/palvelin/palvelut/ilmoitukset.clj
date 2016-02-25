@@ -70,6 +70,7 @@
                             (harja.geo/muunna-pg-tulokset :sijainti)
                             (map konv/alaviiva->rakenne)
                             (map selvita-ilmoituksen-tila)
+                            (filter #(kuittaustyypit (:tila %)))
                             (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
                             (map #(konv/array->vec % :selitteet))
                             (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
