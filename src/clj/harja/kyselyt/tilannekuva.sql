@@ -65,7 +65,6 @@ WHERE
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
   i.ilmoitustyyppi :: TEXT IN (:tyypit);
 
-
 -- name: hae-laatupoikkeamat
 SELECT
   l.id,

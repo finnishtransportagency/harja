@@ -40,15 +40,14 @@
                                                                 (if (false? @on-off-tila)
                                                                   :nykytilanne
                                                                   :historiakuva))
-                                                        ;; Nykytilanteessa haetaan vain avoimet ilmoitukset, historiakuvassa myös suljetut
                                                         (reset! tiedot/suodattimet
                                                                 (if (= :nykytilanne @tiedot/valittu-tila)
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
-                                                                            #{:avoimet})
+                                                                            tiedot/ilmoitusten-tilat-nykytilanteessa)
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
-                                                                            #{:avoimet :suljetut}))))}]])))
+                                                                            tiedot/ilmoitusten-tilat-historiakuvassa))))}]])))
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
