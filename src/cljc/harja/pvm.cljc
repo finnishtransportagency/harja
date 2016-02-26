@@ -19,7 +19,7 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-           (:import (java.util Date Calendar)
+           (:import (java.util Calendar)
                     (java.text SimpleDateFormat))))
 
 
@@ -42,12 +42,15 @@
        (.setMilliseconds millisekunnit))
 
      :clj
-     (.getTime (doto (Calendar/getInstance)
+     (cond type dt
+           java.util.Date (.getTime (doto (Calendar/getInstance)
                  (.setTime dt)
                  (.set Calendar/HOUR_OF_DAY tunnit)
                  (.set Calendar/MINUTE minuutit)
                  (.set Calendar/SECOND sekunnit)
-                 (.set Calendar/MILLISECOND millisekunnit)))))
+                 (.set Calendar/MILLISECOND millisekunnit)))
+           org.joda.time.DateTime
+           (t/local-date (t/year dt) (t/month dt) (t/day dt)))))
 
 (defn paivan-alussa [dt]
   (assert dt "Päivämäärä puuttuu!")
@@ -84,18 +87,9 @@
          (= (t/month eka) (t/month toka))
          (= (t/day eka) (t/day toka)))))
 
-
-#?(:cljs
-   (defn ennen? [eka toka]
+(defn ennen? [eka toka]
      (if (and eka toka)
-       (t/before? eka toka)
-       false))
-
-   :clj
-   (defn ennen? [eka toka]
-     (if (and eka toka)
-       (.before eka toka)
-       false)))
+       (t/before? eka toka)))
 
 (defn sama-tai-ennen?
   ([eka toka] (sama-tai-ennen? eka toka true))

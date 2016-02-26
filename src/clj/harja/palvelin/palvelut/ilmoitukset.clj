@@ -8,7 +8,8 @@
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clj-time.core :as t]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c])
   (:import (java.util Date)))
 
 (defn hakuehto-annettu? [p]
@@ -33,18 +34,19 @@
    :tiedoitus        {:kuittaustyyppi :vastaanotto
                       :kuittausaika   (t/hours 1)}})
 
-(defn ilmoitus-myohassa? [ilmoitus]
+(defn ilmoitus-myohassa? [ilmoitus] ;; FIXME Destruct hyvä mies!
   (let [ilmoitustyyppi (:ilmoitustyyppi ilmoitus)
         kuittaukset (:kuittaukset ilmoitus)
+        ilmoitettu (c/from-sql-time (:ilmoitettu ilmoitus))
         vaadittu-kuittaustyyppi (get-in kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
         vaadittu-kuittausaika (get-in kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
         vaaditut-kuittaukset (filter
                                (fn [kuittaus]
                                  (and
                                    (pvm/valissa?
-                                     (:kuitattu kuittaus)
-                                     (:ilmoitettu ilmoitus)
-                                     (t/plus (:ilmoitettu ilmoitus) vaadittu-kuittausaika))
+                                     (c/from-sql-time (:kuitattu kuittaus))
+                                     ilmoitettu
+                                     (t/plus ilmoitettu vaadittu-kuittausaika))
                                    (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)))
                                kuittaukset)]
     (empty? vaaditut-kuittaukset)))

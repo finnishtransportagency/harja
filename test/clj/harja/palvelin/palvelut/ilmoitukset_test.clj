@@ -8,7 +8,8 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -91,9 +92,15 @@
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
 
 (deftest myohastyneen-ilmoituksen-paattely-toimii
-  (let [myohastynyt-toimenpidepyynto1 {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (t/now) :kuittaukset []}
-        myohastynyt-kysely1 {:ilmoitustyyppi :kysely :ilmoitettu (t/now) :kuittaukset []}
-        myohastynyt-tiedoitus1 {:ilmoitustyyppi :tiedoitus :ilmoitettu (t/now) :kuittaukset []}]
-    (is (true? (ilmoitus-myohassa? myohastynyt-toimenpidepyynto1)))
+  (let [myohastynyt-kysely1 {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/now)) :kuittaukset []}
+        myohastynyt-kysely2 {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/now))
+                             :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/hours 73))) :kuittaustyyppi :lopetus}]}
+        myohastynyt-kysely3 {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/now))
+                             :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/hours 70))) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-toimenpidepyynto1 {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/now)) :kuittaukset []}
+        myohastynyt-tiedoitus1 {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/now)) :kuittaukset []}]
     (is (true? (ilmoitus-myohassa? myohastynyt-kysely1)))
+    (is (true? (ilmoitus-myohassa? myohastynyt-kysely2)))
+    (is (true? (ilmoitus-myohassa? myohastynyt-kysely3)))
+    (is (true? (ilmoitus-myohassa? myohastynyt-toimenpidepyynto1)))
     (is (true? (ilmoitus-myohassa? myohastynyt-tiedoitus1)))))
