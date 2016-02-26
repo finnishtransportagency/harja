@@ -79,26 +79,27 @@
 (defn tapahtuman-tiedot [{id :id}]
   (let [viestit (atom nil)]
     (komp/luo
-     {:component-did-mount (fn [_]
-                             (go (reset! viestit (<! (tiedot/hae-integraatiotapahtuman-viestit id)))))}
-     (fn [_]
-       [:span
-        [:div.container
-         [grid
-          {:otsikko "Viestit"}
-          [{:otsikko     "Suunta" :nimi :suunta :leveys "10%" :tyyppi :komponentti
-            :komponentti #(if (= "sisään" (:suunta %))
+      {:component-did-mount (fn [_]
+                              (go (reset! viestit (<! (tiedot/hae-integraatiotapahtuman-viestit id)))))}
+      (fn [_]
+        [:span
+         [:div.container
+          [grid
+           {:otsikko "Viestit"}
+           [{:otsikko     "Suunta" :nimi :suunta :leveys "10%" :tyyppi :komponentti
+             :komponentti #(if (= "sisään" (:suunta %))
                             [:span.integraatioloki-onnistunut (ikonit/circle-arrow-right) " Sisään"]
                             [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
-           {:otsikko     "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
-            :komponentti #(leikkaa-merkkijono (kartta-merkkijonoksi (:parametrit %)) 50)}
-           {:otsikko     "Otsikko" :nimi :otsikko :leveys "40%" :tyyppi :komponentti
-            :komponentti #(nayta-otsikko (:otsikko %))}
-           {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys "20%"}
-           {:otsikko "Sisältötyyppi" :nimi :sisaltotyyppi :leveys "20%"}
-           {:otsikko     "Sisältö" :nimi :sisalto :leveys "40%" :tyyppi :komponentti
-            :komponentti #(nayta-sisalto (:sisalto %))}]
-          @viestit]]]))))
+            {:otsikko "Osoite" :nimi :osoite :leveys "30%"}
+            {:otsikko     "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
+             :komponentti #(leikkaa-merkkijono (kartta-merkkijonoksi (:parametrit %)) 50)}
+            {:otsikko     "Otsikko" :nimi :otsikko :leveys "30%" :tyyppi :komponentti
+             :komponentti #(nayta-otsikko (:otsikko %))}
+            {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys "20%"}
+            {:otsikko "Sisältötyyppi" :nimi :sisaltotyyppi :leveys "20%"}
+            {:otsikko     "Sisältö" :nimi :sisalto :leveys "30%" :tyyppi :komponentti
+             :komponentti #(nayta-sisalto (:sisalto %))}]
+           @viestit]]]))))
 
 (defn tapahtumien-maarat-graafi [tiedot]
   (let [w (int (* 0.85 @dom/leveys))
@@ -129,7 +130,7 @@
                   :value-fn      :maara
                   :format-amount str
                   :ticks         tikit}
-       pvm-kohtaiset-maarat-summattu])]))
+        pvm-kohtaiset-maarat-summattu])]))
 
 (defn eniten-kutsutut-integraatiot [tiedot]
   (let [ryhmittele #(group-by :integraatio %)
@@ -143,13 +144,13 @@
                              ryhmitellyt)
         eniten-kutsutut (take 5 (reverse (sort-by :maara maarat-summattu)))]
     [grid
-     {:otsikko "Eniten kutsutut integraatiot"
+     {:otsikko      "Eniten kutsutut integraatiot"
       :voi-muokata? false
-      :tunniste       :integraatio}
+      :tunniste     :integraatio}
 
-     [{:otsikko     "Järjestelmä" :nimi :jarjestelma :leveys "15%" :tyyppi :string}
-      {:otsikko     "Nimi" :nimi :nimi :leveys "40%" :tyyppi :string}
-      {:otsikko     "Määrä" :nimi :maara :leveys "10%" :tyyppi :string}]
+     [{:otsikko "Järjestelmä" :nimi :jarjestelma :leveys "15%" :tyyppi :string}
+      {:otsikko "Nimi" :nimi :nimi :leveys "40%" :tyyppi :string}
+      {:otsikko "Määrä" :nimi :maara :leveys "10%" :tyyppi :string}]
 
      eniten-kutsutut]
     ))
@@ -195,8 +196,8 @@
       [:div "Ei pyyntöjä annetuilla parametreillä"])
 
     [grid
-     {:otsikko       (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
-      :tyhja         (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
+     {:otsikko      (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
+      :tyhja        (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
@@ -204,23 +205,23 @@
       }
 
      (vec
-      (keep identity
-            [{:tyyppi :vetolaatikon-tila :leveys 3}
-             (when-not @tiedot/valittu-jarjestelma
-               {:otsikko "Järjestelmä" :nimi :jarjestelma :hae (comp :jarjestelma :integraatio) :leveys 10})
-             (when-not @tiedot/valittu-integraatio
-               {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
-             {:otsikko     "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
-              :komponentti #(if (nil? (:paattynyt %))
+       (keep identity
+             [{:tyyppi :vetolaatikon-tila :leveys 3}
+              (when-not @tiedot/valittu-jarjestelma
+                {:otsikko "Järjestelmä" :nimi :jarjestelma :hae (comp :jarjestelma :integraatio) :leveys 10})
+              (when-not @tiedot/valittu-integraatio
+                {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
+              {:otsikko     "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
+               :komponentti #(if (nil? (:paattynyt %))
                               [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
                               (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
-                                  [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
-             {:otsikko "Alkanut" :nimi :alkanut :leveys 15
-              :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
-             {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
-              :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
-             {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
-             {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
+                                                  [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
+              {:otsikko "Alkanut" :nimi :alkanut :leveys 15
+               :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
+              {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
+               :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
+              {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
+              {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
 
      @tiedot/haetut-tapahtumat]]])
 
