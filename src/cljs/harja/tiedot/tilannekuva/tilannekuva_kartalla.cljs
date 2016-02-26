@@ -69,8 +69,8 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
                      (assoc uudet-tasot tason-nimi nil)
 
                      ;; Jos taso on kuva, PENDING: work in progress
-                     (= taso :toteumat)
-                     (assoc uudet-tasot
+                     #_(= taso :toteumat)
+                     #_(assoc uudet-tasot
                             tason-nimi (openlayers/luo-kuvataso))
 
                      ;; Jos tason asiat ovat muuttuneet, muodostetaan
