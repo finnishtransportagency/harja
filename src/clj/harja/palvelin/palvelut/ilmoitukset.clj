@@ -33,7 +33,7 @@
    :tiedoitus        {:kuittaustyyppi :vastaanotto
                       :kuittausaika   (t/hours 1)}})
 
-(defn- ilmoitus-kuitattu-ajoissa? [ilmoitus]
+(defn- ilmoitus-myohassa? [ilmoitus]
   (let [ilmoitustyyppi (:ilmoitustyyppi ilmoitus)
         kuittaukset (:kuittaukset ilmoitus)
         vaadittu-kuittaustyyppi (get-in kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
@@ -47,10 +47,10 @@
                                      (t/plus (:ilmoitettu ilmoitus) vaadittu-kuittausaika))
                                    (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)))
                                kuittaukset)]
-    (not (empty? vaaditut-kuittaukset))))
+    (empty? vaaditut-kuittaukset)))
 
 (defn- lisaa-tieto-myohastymisesta [ilmoitus]
-  (assoc ilmoitus :myohassa? (not (ilmoitus-kuitattu-ajoissa? ilmoitus))))
+  (assoc ilmoitus :myohassa? (ilmoitus-myohassa? ilmoitus)))
 
 (defn hae-ilmoitukset
   [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite]
