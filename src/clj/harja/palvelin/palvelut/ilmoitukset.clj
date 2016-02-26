@@ -33,7 +33,7 @@
    :tiedoitus        {:kuittaustyyppi :vastaanotto
                       :kuittausaika   (t/hours 1)}})
 
-(defn- ilmoitus-myohassa? [ilmoitus]
+(defn ilmoitus-myohassa? [ilmoitus]
   (let [ilmoitustyyppi (:ilmoitustyyppi ilmoitus)
         kuittaukset (:kuittaukset ilmoitus)
         vaadittu-kuittaustyyppi (get-in kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])

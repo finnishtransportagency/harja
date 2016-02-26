@@ -7,7 +7,8 @@
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [clj-time.core :as t]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -88,3 +89,11 @@
     (is (= kuittausten-maara-suoraan-kannasta kuittaukset-palvelusta-lkm) "Kuittausten lukumäärä")
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
+
+(deftest myohastyneen-ilmoituksen-paattely-toimii
+  (let [myohastynyt-toimenpidepyynto1 {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (t/now) :kuittaukset []}
+        myohastynyt-kysely1 {:ilmoitustyyppi :kysely :ilmoitettu (t/now) :kuittaukset []}
+        myohastynyt-tiedoitus1 {:ilmoitustyyppi :tiedoitus :ilmoitettu (t/now) :kuittaukset []}]
+    (is (true? (ilmoitus-myohassa? myohastynyt-toimenpidepyynto1)))
+    (is (true? (ilmoitus-myohassa? myohastynyt-kysely1)))
+    (is (true? (ilmoitus-myohassa? myohastynyt-tiedoitus1)))))
