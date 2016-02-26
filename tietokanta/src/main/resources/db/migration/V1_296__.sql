@@ -9,8 +9,6 @@ BEGIN
                                    FROM paivystajatekstiviesti p
                                      INNER JOIN ilmoitus i ON p.ilmoitus = i.id
                                      INNER JOIN ilmoitustoimenpide itp ON itp.ilmoitus = i.id
-                                   WHERE yhteyshenkilo = yhteyshenkilo_id
-                                   AND NOT EXISTS(SELECT id FROM ilmoitustoimenpide WHERE ilmoitus = i.id
-                                                                                    AND kuittaustyyppi = 'lopetus'::kuittaustyyppi))), 0) + 1 AS viestinumero);
+                                   WHERE yhteyshenkilo = yhteyshenkilo_id)), 0) + 1 AS viestinumero);
 END;
 $$ LANGUAGE plpgsql;
