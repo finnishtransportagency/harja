@@ -6,7 +6,8 @@
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+            [clj-time.core :as t])
   (:import (java.util Date)))
 
 (defn hakuehto-annettu? [p]
@@ -22,6 +23,33 @@
        (if (hakuehto-annettu? mille)
          (str mista " " (pr-str mille))
          (str ilman))))
+
+(defn- kuittaus-tehty-ajoissa? [ilmoitus-ilmoitettu kuittaus-tehty]
+  true) ; TODO Vertaa pvm:iä
+
+(def kuittausvaatimukset
+  {:kysely           {:kuittaustyyppi :lopetus
+                      :kuittausaika   (t/hours 72)}
+   :toimenpidepyynto {:kuittaustyyppi :vastaanotto
+                      :kuittausaika   (t/minutes 10)}
+   :tiedoitus        {:kuittaustyyppi :vastaanotto
+                      :kuittausaika   (t/hours 1)}})
+
+(defn- ilmoitus-kuitattu-ajoissa? [ilmoitus]
+  (let [ilmoitustyyppi (:ilmoitustyyppi ilmoitus)
+        kuittaukset (:kuittaukset ilmoitus)
+        vaadittu-kuittaustyyppi (get-in kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
+        vaadittu-kuittausaika (get-in kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
+        vaaditut-kuittaukset (filter
+                               (fn [kuittaus]
+                                 (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)) ;; TODO Selvitä myös kuittausaika
+                               kuittaukset)]
+    (true? (some (fn [kuittaus]
+                   (kuittaus-tehty-ajoissa? (:ilmoitettu ilmoitus) (:kuitattu kuittaus)))
+                 vaaditut-kuittaukset))))
+
+(defn- lisaa-tieto-myohastymisesta [ilmoitus]
+  (assoc ilmoitus :myohassa? (not (ilmoitus-kuitattu-ajoissa? ilmoitus))))
 
 (defn hae-ilmoitukset
   [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite]
@@ -49,9 +77,11 @@
         _ (log/debug debug-viesti)
         tulos (when-not (empty? urakat)
                 (mapv
-                  #(assoc % :uusinkuittaus
-                            (when-not (empty? (:kuittaukset %))
-                              (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                  #(-> %
+                       (assoc :uusinkuittaus
+                              (when-not (empty? (:kuittaukset %))
+                                (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                       (lisaa-tieto-myohastymisesta))
                   (konv/sarakkeet-vektoriin
                     (into []
                           (comp
