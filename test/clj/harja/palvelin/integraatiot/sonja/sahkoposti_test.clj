@@ -33,7 +33,7 @@
         (sanomat/lue-sahkoposti (slurp +sahkoposti-esimerkki+))]
     (is (= viesti-id "21EC2020-3AEA-4069-A2DD-08002B30309D"))
     (is (= lahettaja "harja@liikennevirasto.fi"))
-    (is (= vastaanottaja "erkki.esimerkki@domain.foo"))
+    (is (= vastaanottaja "erkki.esimerkki@example.com"))
     (is (= otsikko "Testiviesti"))
     (is (= sisalto "Tämä on testiviesti!"))))
 
