@@ -123,26 +123,30 @@
         nil))))
 
 (defn- hae-laatupoikkeamat
-  [db user {:keys [toleranssi alku loppu laatupoikkeamat]} urakat]
+  [db user {:keys [toleranssi alku loppu laatupoikkeamat nykytilanne?]} urakat]
   (let [haettavat (haettavat laatupoikkeamat)]
     (when-not (empty? haettavat)
       (try
         (into []
               (comp
-                (geo/muunna-pg-tulokset :sijainti)
                 (map konv/alaviiva->rakenne)
-                (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
-                (map #(dissoc % :selvityspyydetty))
-                (map #(assoc % :tekija (keyword (:tekija %))))
                 (map #(update-in % [:paatos :paatos]
                                  (fn [p]
                                    (when p (keyword p)))))
+                (remove (fn [lp]
+                          (if nykytilanne?
+                            (#{:hylatty :ei_sanktiota} (get-in lp [:paatos :paatos]))
+                            false)))
+                (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+                (map #(dissoc % :selvityspyydetty))
+                (map #(assoc % :tekija (keyword (:tekija %))))
                 (map #(update-in % [:paatos :kasittelytapa]
                                  (fn [k]
                                    (when k (keyword k)))))
                 (map #(if (nil? (:kasittelyaika (:paatos %)))
                        (dissoc % :paatos)
-                       %)))
+                       %))
+                (geo/muunna-pg-tulokset :sijainti))
               (q/hae-laatupoikkeamat db toleranssi urakat
                                      (konv/sql-date alku)
                                      (konv/sql-date loppu)
