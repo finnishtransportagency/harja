@@ -7,7 +7,8 @@
             [harja.kyselyt.ilmoitukset :as q]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [harja.pvm :as pvm])
   (:import (java.util Date)))
 
 (defn hakuehto-annettu? [p]
@@ -24,9 +25,6 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
-(defn- kuittaus-tehty-ajoissa? [ilmoitus-ilmoitettu kuittaus-tehty]
-  true) ; TODO Vertaa pvm:iä
-
 (def kuittausvaatimukset
   {:kysely           {:kuittaustyyppi :lopetus
                       :kuittausaika   (t/hours 72)}
@@ -42,11 +40,14 @@
         vaadittu-kuittausaika (get-in kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
         vaaditut-kuittaukset (filter
                                (fn [kuittaus]
-                                 (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)) ;; TODO Selvitä myös kuittausaika
+                                 (and
+                                   (pvm/valissa?
+                                     (:kuitattu kuittaus)
+                                     (:ilmoitettu ilmoitus)
+                                     (t/plus (:ilmoitettu ilmoitus) vaadittu-kuittausaika))
+                                   (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)))
                                kuittaukset)]
-    (true? (some (fn [kuittaus]
-                   (kuittaus-tehty-ajoissa? (:ilmoitettu ilmoitus) (:kuitattu kuittaus)))
-                 vaaditut-kuittaukset))))
+    (not (empty? vaaditut-kuittaukset))))
 
 (defn- lisaa-tieto-myohastymisesta [ilmoitus]
   (assoc ilmoitus :myohassa? (not (ilmoitus-kuitattu-ajoissa? ilmoitus))))
