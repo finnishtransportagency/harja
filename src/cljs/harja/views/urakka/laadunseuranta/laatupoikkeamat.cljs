@@ -287,6 +287,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :muokattava?   muokattava?
               :validoi       [[:ei-tyhja "Valitse laatupoikkeaman tehnyt osapuoli"]]}
 
+             {:tyyppi :tierekisteriosoite
+              :nimi :tr
+              :muokattava? muokattava?
+              :pakollinen? true
+              :sijainti (r/wrap (:sijainti @laatupoikkeama)
+                                #(swap! laatupoikkeama assoc :sijainti %))}
+
              (when-not (= :urakoitsija (:tekija @laatupoikkeama))
                {:otsikko "Urakoitsijan selvitystä pyydetään"
                 :nimi    :selvitys-pyydetty

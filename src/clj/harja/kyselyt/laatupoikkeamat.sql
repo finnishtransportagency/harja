@@ -130,7 +130,12 @@ SELECT
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.perustelu                        AS paatos_perustelu,
   h.muu_kasittelytapa                AS paatos_muukasittelytapa,
-  h.selvitys_pyydetty                AS selvityspyydetty
+  h.selvitys_pyydetty                AS selvityspyydetty,
+  h.tr_numero,
+  h.tr_alkuosa,
+  h.tr_alkuetaisyys,
+  h.tr_loppuosa,
+  h.tr_loppuetaisyys
 FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
 WHERE h.urakka = :urakka
