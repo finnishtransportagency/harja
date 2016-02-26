@@ -4,7 +4,10 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.loki :refer [log]]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -63,3 +66,38 @@
 
 (defn tallenna-laatupoikkeama [laatupoikkeama]
   (k/post! :tallenna-laatupoikkeama laatupoikkeama))
+
+(defonce listaus (atom :kaikki))
+
+(defonce urakan-laatupoikkeamat
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)
+                      [alku loppu] @tiedot-urakka/valittu-aikavali
+                      laadunseurannassa? @laadunseuranta/laadunseurannassa?
+                      valilehti (nav/valittu-valilehti :laadunseuranta)
+                      listaus @listaus]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
+                     (when (and laadunseurannassa? (= :laatupoikkeamat valilehti)
+                                urakka-id alku loppu)
+                       (hae-urakan-laatupoikkeamat listaus urakka-id alku loppu))))
+
+
+(defonce valittu-laatupoikkeama-id (atom nil))
+
+(defn uusi-laatupoikkeama []
+  {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))})
+
+(defonce valittu-laatupoikkeama
+         (reaction<! [id @valittu-laatupoikkeama-id]
+                     {:nil-kun-haku-kaynnissa? false}
+                     (when id
+                       (go (let [laatupoikkeama (if (= :uusi id)
+                                                  (uusi-laatupoikkeama)
+                                                  (<! (hae-laatupoikkeaman-tiedot (:id @nav/valittu-urakka) id)))]
+                             (-> laatupoikkeama
+
+                                 ;; Tarvitsemme urakan liitteen linkitystä varten
+
+                                 (assoc :urakka (:id @nav/valittu-urakka))
+                                 (assoc :sanktiot (into {}
+                                                        (map (juxt :id identity) (:sanktiot laatupoikkeama))))))))))

@@ -6,6 +6,8 @@
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
              :as tarkastukset]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla
+             :as laatupoikkeamat]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat
@@ -30,7 +32,7 @@
 
 ;; Lisää uudet karttatasot tänne
 (def +karttatasot+
-  #{:pohjavesialueet :sillat :tarkastukset :ilmoitukset :turvallisuuspoikkeamat
+  #{:pohjavesialueet :sillat :tarkastukset :laatupoikkeamat :ilmoitukset :turvallisuuspoikkeamat
     :tilannekuva :paallystyskohteet :tr-alkupiste :yksikkohintainen-toteuma
     :kokonaishintainen-toteuma :varusteet})
 
@@ -140,6 +142,9 @@
      :tarkastukset
      (aseta-z-index @tarkastukset/tarkastukset-kartalla)
 
+     :laatupoikkeamat
+     (aseta-z-index @laatupoikkeamat/laatupoikkeamat-kartalla)
+
      :turvallisuus
      (aseta-z-index
       @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla)
@@ -183,6 +188,7 @@
     :pohjavesialueet pohjavesialueet/karttataso-pohjavesialueet
     :sillat sillat/karttataso-sillat
     :tarkastukset tarkastukset/karttataso-tarkastukset
+    :laatupoikkeamat laatupoikkeamat/karttataso-laatupoikkeamat
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
     :turvallisuuspoikkeamat
     turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
