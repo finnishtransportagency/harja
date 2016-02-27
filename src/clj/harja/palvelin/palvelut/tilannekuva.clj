@@ -14,6 +14,9 @@
             [harja.geo :as geo]
             [harja.pvm :as pvm]
             [harja.domain.tilannekuva :as tk]
+            [harja.ui.kartta.esitettavat-asiat
+             :refer [kartalla-esitettavaan-muotoon]]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]))
 
 (defn tulosta-virhe! [asiat e]
@@ -230,7 +233,8 @@
   (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
     (when-not (empty? haettavat-toimenpiteet)
       (try
-        (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit db haettavat-toimenpiteet))]
+        (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit
+                                         db haettavat-toimenpiteet))]
           (when-not (empty? toimenpidekoodit)
             (konv/sarakkeet-vektoriin
               (into []
@@ -239,8 +243,11 @@
                       (map konv/alaviiva->rakenne)
                       (map #(assoc % :tyyppi :toteuma)))
                     (q/hae-toteumat db toleranssi
-                                    (konv/sql-date alku) (konv/sql-date loppu) toimenpidekoodit
-                                    urakat (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue)))
+                                    (konv/sql-date alku)
+                                    (konv/sql-date loppu) toimenpidekoodit
+                                    urakat
+                                    (:xmin alue) (:ymin alue)
+                                    (:xmax alue) (:ymax alue)))
               {:tehtava     :tehtavat
                :materiaali  :materiaalit
                :reittipiste :reittipisteet})))
@@ -248,50 +255,110 @@
           (tulosta-virhe! "toteumaa" e)
           nil)))))
 
-(defn hae-tilannekuvaan
-  [db user tiedot]
-  (println (pr-str tiedot))
-  (let [urakat (urakat/kayttajan-urakat-aikavalilta db user
-                                                    (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-                                                    (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
+(def tilannekuvan-osiot
+  #{:toteumat :tyokoneet :turvallisuuspoikkeamat :tarkastukset :laatupoikkeamat
+    :paikkaus :paallystys :ilmoitukset})
 
-    ;; Teoriassa on mahdollista, että käyttäjälle ei (näillä parametreilla) palauteta yhtään urakkaa.
-    ;; Tällöin voitaisiin hakea kaikki "julkiset" asiat, esim ilmoitukset joita ei ole sidottu mihinkään
-    ;; urakkaan. Käytännössä tästä syntyy ongelmia kyselyissä, sillä tuntuu olevan erittäin vaikeaa tehdä
-    ;; kyselyä, joka esim palauttaa ilmoituksen jos a) ilmoitus ei kuulu mihinkään urakkaan TAI b) ilmoitus
-    ;; kuuluu listassa olevaan urakkaan _jos lista urakoita ei ole tyhjä_. i.urakka IN (:urakat) epäonnistuu,
-    ;; jos annettu lista on tyhjä.
-    (when-not (empty? urakat)
-      (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
-      (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
-        {:toteumat               (tulosta-tulos! "toteumaa"
-                                                 (hae-toteumien-reitit db user tiedot urakat))
-         :tyokoneet              (tulosta-tulos! "tyokonetta"
-                                                 (hae-tyokoneet db user tiedot urakat))
-         :turvallisuuspoikkeamat (tulosta-tulos! "turvallisuuspoikkeamaa"
-                                                 (hae-turvallisuuspoikkeamat db user tiedot urakat))
-         :tarkastukset           (tulosta-tulos! "tarkastusta"
-                                                 (hae-tarkastukset db user tiedot urakat))
-         :laatupoikkeamat        (tulosta-tulos! "laatupoikkeamaa"
-                                                 (hae-laatupoikkeamat db user tiedot urakat))
-         :paikkaus               (tulosta-tulos! "paikkausta"
-                                                 (hae-paikkaustyot db user tiedot urakat))
-         :paallystys             (tulosta-tulos! "paallystysta"
-                                                 (hae-paallystystyot db user tiedot urakat))
-         :ilmoitukset            (tulosta-tulos! "ilmoitusta"
-                                                 (hae-ilmoitukset db user tiedot urakat))}))))
+(defmulti hae-osio (fn [db user tiedot urakat osio] osio))
+(defmethod hae-osio :toteumat [db user tiedot urakat _]
+  (tulosta-tulos! "toteumaa"
+                  (hae-toteumien-reitit db user tiedot urakat)))
+(defmethod hae-osio :tyokoneet [db user tiedot urakat _]
+  (tulosta-tulos! "tyokonetta"
+                  (hae-tyokoneet db user tiedot urakat)))
+(defmethod hae-osio :turvallisuuspoikkeamat [db user tiedot urakat _]
+  (tulosta-tulos! "turvallisuuspoikkeamaa"
+                  (hae-turvallisuuspoikkeamat db user tiedot urakat)))
+(defmethod hae-osio :tarkastukset [db user tiedot urakat _]
+  (tulosta-tulos! "tarkastusta"
+                  (hae-tarkastukset db user tiedot urakat)))
+(defmethod hae-osio :laatupoikkeamat [db user tiedot urakat _]
+  (tulosta-tulos! "laatupoikkeamaa"
+                  (hae-laatupoikkeamat db user tiedot urakat)))
+(defmethod hae-osio :paikkaus [db user tiedot urakat _]
+  (tulosta-tulos! "paikkausta"
+                  (hae-paikkaustyot db user tiedot urakat)))
+(defmethod hae-osio :paallystys [db user tiedot urakat _]
+  (tulosta-tulos! "paallystysta"
+                  (hae-paallystystyot db user tiedot urakat)))
+(defmethod hae-osio :ilmoitukset [db user tiedot urakat _]
+  (tulosta-tulos! "ilmoitusta"
+                  (hae-ilmoitukset db user tiedot urakat)))
+
+(defn hae-tilannekuvaan
+  ([db user tiedot]
+   (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
+  ([db user tiedot osiot]
+   (println (pr-str tiedot))
+   (let [urakat (urakat/kayttajan-urakat-aikavalilta
+                 db user
+                 (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+                 (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
+
+     ;; Teoriassa on mahdollista, että käyttäjälle ei (näillä parametreilla)
+     ;; palauteta yhtään urakkaa.
+     ;; Tällöin voitaisiin hakea kaikki "julkiset" asiat, esim ilmoitukset joita
+     ;; ei ole sidottu mihinkään urakkaan. Käytännössä tästä syntyy ongelmia
+     ;; kyselyissä, sillä tuntuu olevan erittäin vaikeaa tehdä kyselyä, joka esim.
+     ;; palauttaa ilmoituksen jos a) ilmoitus ei kuulu mihinkään urakkaan
+     ;; TAI b) ilmoitus kuuluu listassa olevaan urakkaan _jos lista urakoita ei ole
+     ;; tyhjä_. i.urakka IN (:urakat) epäonnistuu, jos annettu lista on tyhjä.
+     (when-not (empty? urakat)
+       (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
+       (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
+         (into {}
+               (map (juxt identity (partial hae-osio db user tiedot urakat)))
+               osiot))))))
+
+;; {:urakka-id nil, :alue {:xmin 440408, :ymin 7191776, :xmax 451848, :ymax 7196880}
+;;  :ilmoitukset {:tilat #{:avoimet}}, :hallintayksikko nil, :urakoitsija nil,
+;;  :tarkastukset #{7 6 9 10 8},
+;;  :alku #inst "2016-02-05T14:48:16.000-00:00"
+;;  :loppu #inst "2016-02-26T14:48:16.000-00:00"
+;;  :nykytilanne? true,  :urakkatyyppi :hoito}
+
+(defn- karttakuvan-suodattimet
+  "Tekee karttakuvan URL parametreistä suodattimet"
+  [{:keys [extent parametrit]}]
+  (let [[x1 y1 x2 y2] extent
+        hy (some-> parametrit (get "hy") Long/parseLong)]
+    {:talvi #{20 24 39 21 40 41 17 23 19 38 18 42},
+     :urakka-id nil,
+     :turvallisuus {:turvallisuuspoikkeamat false}
+     :laatupoikkeamat {:tilaaja false, :urakoitsija false,
+                       :konsultti false}
+     :kesa #{},
+     :alue {:xmin x1 :ymin y1
+            :xmax x2 :ymax x2}
+     :hallintayksikko hy
+     :urakoitsija nil ;; FIXME
+     :alku #inst "2016-02-13T06:55:39.000-00:00"
+     :nykytilanne? true
+     :loppu #inst "2016-02-20T06:55:39.000-00:00"
+     :urakkatyyppi :hoito}))
+
+(defn- hae-karttakuvan-tiedot [db user parametrit]
+  (let [tiedot (karttakuvan-suodattimet parametrit)]
+    (kartalla-esitettavaan-muotoon
+     (map #(assoc % :tyyppi-kartalla :toteuma)
+          (:toteumat (hae-tilannekuvaan db user tiedot #{:toteumat})))
+     nil nil)))
 
 (defrecord Tilannekuva []
   component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-tilannekuvaan
+  (start [{karttakuvat :karttakuvat
+           db :db
+           http :http-palvelin
+           :as this}]
+    (julkaise-palvelu http :hae-tilannekuvaan
                       (fn [user tiedot]
-                        (hae-tilannekuvaan (:db this) user tiedot)))
+                        (hae-tilannekuvaan db user tiedot)))
+    (karttakuvat/rekisteroi-karttakuvan-lahde!
+     karttakuvat :tilannekuva (partial hae-karttakuvan-tiedot db))
     this)
 
-  (stop [this]
+  (stop [{karttakuvat :karttakuvat :as this}]
     (poista-palvelut (:http-palvelin this)
                      :hae-tilannekuvaan)
-
+    (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva)
     this))
