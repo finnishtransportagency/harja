@@ -35,19 +35,22 @@
                       :kuittausaika   (t/hours 1)}})
 
 (defn- ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset ilmoitettu]}]
-  (let [ilmoitettu (c/from-sql-time ilmoitettu)
+  (let [ilmoitusaika (c/from-sql-time ilmoitettu)
         vaadittu-kuittaustyyppi (get-in kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
         vaadittu-kuittausaika (get-in kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
+        vaadittu-aika-kulunut? (t/after? (t/now) (t/plus ilmoitusaika vaadittu-kuittausaika))
         vaaditut-kuittaukset (filter
                                (fn [kuittaus]
                                  (and
                                    (pvm/valissa?
                                      (c/from-sql-time (:kuitattu kuittaus))
-                                     ilmoitettu
-                                     (t/plus ilmoitettu vaadittu-kuittausaika))
+                                     ilmoitusaika
+                                     (t/plus ilmoitusaika vaadittu-kuittausaika))
                                    (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)))
-                               kuittaukset)]
-    (empty? vaaditut-kuittaukset)))
+                               kuittaukset)
+        myohassa? (or (empty vaaditut-kuittaukset)
+                      vaadittu-aika-kulunut?)]
+    myohassa?))
 
 (defn- lisaa-tieto-myohastymisesta [ilmoitus]
   (assoc ilmoitus :myohassa? (ilmoitus-myohassa? ilmoitus)))

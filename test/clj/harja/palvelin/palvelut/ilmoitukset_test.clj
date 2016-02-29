@@ -92,42 +92,42 @@
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
 
 (deftest ilmoitus-myohassa-ilman-kuittauksia
-         (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/days 1)) :kuittaukset []}
-               myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 1)) :kuittaukset []}
-               myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (t/minus (t/now) (t/days 1)) :kuittaukset []}]
-    (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
-    (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
-    (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/days 7)) :kuittaukset []}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (t/minus (t/now) (t/days 7)) :kuittaukset []}]
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-myohassa
-         (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 73))
-                                   :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :lopetus}]}
-               myohastynyt-toimenpidepyynto {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 11))
-                                             :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :vastaanotto}]}
-               myohastynyt-tiedoitus {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 2))
-                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :vastaanotto}]}]
-           (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
-           (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
-           (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 73))
+                            :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 11))
+                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 2))
+                               :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-vaaraa-tyyppia
-         (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 71))
-                                   :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :vastaanotto}]}
-               myohastynyt-toimenpidepyynto {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 9))
-                                             :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :aloitus}]}
-               myohastynyt-tiedoitus {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 40))
-                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :aloitus}]}]
-           (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
-           (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
-           (is (true? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 71))
+                            :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 9))
+                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 40))
+                               :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}]
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (true? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-ei-myohassa
-         (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 71))
-                                   :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :lopetus}]}
-               myohastynyt-toimenpidepyynto {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 9))
-                                             :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :vastaanotto}]}
-               myohastynyt-tiedoitus {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 40))
-                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now) :kuittaustyyppi :vastaanotto}]}]
-           (is (false? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
-           (is (false? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
-           (is (false? ('#ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/hours 71))
+                            :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 9))
+                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :kysely :ilmoitettu (t/minus (t/now) (t/minutes 40))
+                               :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
+    (is (false? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (false? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (false? (#'ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))

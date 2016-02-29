@@ -19,7 +19,7 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-           (:import (java.util Calendar)
+           (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat))))
 
 
