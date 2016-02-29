@@ -48,7 +48,7 @@
                                      (t/plus ilmoitusaika vaadittu-kuittausaika))
                                    (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)))
                                kuittaukset)
-        myohassa? (or (empty vaaditut-kuittaukset)
+        myohassa? (or (empty? vaaditut-kuittaukset)
                       vaadittu-aika-kulunut?)]
     myohassa?))
 
