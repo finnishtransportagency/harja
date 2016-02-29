@@ -34,10 +34,8 @@
    :tiedoitus        {:kuittaustyyppi :vastaanotto
                       :kuittausaika   (t/hours 1)}})
 
-(defn ilmoitus-myohassa? [ilmoitus] ;; FIXME Destruct hyvä mies!
-  (let [ilmoitustyyppi (:ilmoitustyyppi ilmoitus)
-        kuittaukset (:kuittaukset ilmoitus)
-        ilmoitettu (c/from-sql-time (:ilmoitettu ilmoitus))
+(defn- ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset ilmoitettu]}]
+  (let [ilmoitettu (c/from-sql-time ilmoitettu)
         vaadittu-kuittaustyyppi (get-in kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
         vaadittu-kuittausaika (get-in kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
         vaaditut-kuittaukset (filter
