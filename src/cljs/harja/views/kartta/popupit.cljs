@@ -12,8 +12,7 @@
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
-            [harja.domain.paallystys.pot :as paallystys-pot]
-            [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]))
+            [harja.domain.paallystys.pot :as paallystys-pot]))
 
 (def klikattu-tyokone (atom nil))
 
