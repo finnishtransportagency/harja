@@ -84,16 +84,19 @@ datan kartalla esitettävässä muodossa.")
   "Hakee karttakuvadatan oikeasti lähteestä"
   [lahteet user parametrit]
   (let [lahteen-nimi (keyword (get-in parametrit [:parametrit "_"]))
-        lahde (get lahteet lahteen-nimi)]
-    (when lahde
-      (lahde user parametrit))))
+        lahde (get lahteet lahteen-nimi)
+        karttakuvadata (when lahde
+                         (lahde user parametrit))]
+    (println "LAHDE nimelle " lahteen-nimi " ON " lahde)
+    (println "SAATIIN: " (count karttakuvadata) " ASIAA")
+    karttakuvadata))
 
 (defn karttakuva [lahteet user parametrit]
   (println "PARAM: " (pr-str parametrit))
-  (let [kuva (->> parametrit lue-parametrit
-                  (hae-karttakuvadata lahteet user)
-                  (luo-kuva parametrit)
-                  kirjoita-kuva)]
+  (let [parametrit (lue-parametrit parametrit)
+        karttakuvadata (hae-karttakuvadata lahteet user parametrit)
+        kuva (kirjoita-kuva
+              (luo-kuva parametrit karttakuvadata))]
     {:status 200
      :headers {"Content-Type" "image/png"
                "Content-Length" (count kuva)

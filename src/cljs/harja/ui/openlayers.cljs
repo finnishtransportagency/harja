@@ -149,8 +149,10 @@
   "Luo uuden kuvatason joka hakee serverillä renderöidyn kuvan.
 Ottaa sisään vaihtelevat parametri nimet (string) ja niiden arvot.
 Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti."
-  [& parametri-nimet-ja-arvot]
-  (kuvataso/luo-kuvataso projektio suomen-extent parametri-nimet-ja-arvot))
+  [lahde & parametri-nimet-ja-arvot]
+  (kuvataso/luo-kuvataso projektio suomen-extent
+                         (concat ["_" (name lahde)]
+                                 parametri-nimet-ja-arvot)))
 
 (defn keskipiste
   "Laskee geometrian keskipisteen extent perusteella"
