@@ -24,13 +24,13 @@
     +ilmoitustilat+ +ilmoitustyypit+
     [alkupvm loppupvm] hakuehto selite))
 
-(defn ilmoitukset-asiakaspalauteluokittain []
+(defn ilmoitukset-asiakaspalauteluokittain [db urakka-id hallintayksikko-id alkupvm loppupvm]
   (let [rivit [["Talvihoito" 0 2 3] ["Polanteen tasaus" 3 55 21]]]
     [:taulukko {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
-     [{:leveys 8 :otsikko "Asiakaspalauteluokka"}
-      {:leveys 5 :otsikko "TPP (Toimenpidepyyntö)"}
-      {:leveys 6 :otsikko "TUR (Tiedoksi)"}
-      {:leveys 6 :otsikko "URK (Kysely)"}]
+     [{:leveys 6 :otsikko "Asiakaspalauteluokka"}
+      {:leveys 4 :otsikko "TPP (Toimenpidepyyntö)"}
+      {:leveys 4 :otsikko "TUR (Tiedoksi)"}
+      {:leveys 4 :otsikko "URK (Kysely)"}]
      rivit]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
@@ -138,7 +138,6 @@
                                  :legend               ["TPP" "TUR" "URK"]})
          (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm loppupvm)))
 
-     (ilmoitukset-asiakaspalauteluokittain)
-     ]))
+     (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)]))
 
     
