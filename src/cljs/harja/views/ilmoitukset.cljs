@@ -152,11 +152,15 @@
                        {:nimi        :tilat :otsikko "Tila"
                         :tyyppi      :checkbox-group
                         :vaihtoehdot [:suljetut :avoimet]}
-
                        {:nimi             :tyypit :otsikko "Tyyppi"
                         :tyyppi           :checkbox-group
                         :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
-                        :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi})]
+                        :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
+                       {:nimi             :myohassa?
+                        :otsikko          "Kuittaukset"
+                        :tyyppi           :checkbox-group
+                        :vaihtoehdot      [:myohassa?]
+                        :vaihtoehto-nayta (fn [_] "Myöhässä?")})]
 
         @tiedot/valinnat]
 

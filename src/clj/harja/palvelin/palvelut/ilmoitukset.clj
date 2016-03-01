@@ -16,6 +16,7 @@
   (cond
     (number? p) true
     (instance? Date p) true
+    (instance? Boolean p) p
     (map? p) (some true? (map #(hakuehto-annettu? (val %)) p))
     (empty? p) false
     :else true))
@@ -56,7 +57,7 @@
   (assoc ilmoitus :myohassa? (ilmoitus-myohassa? ilmoitus)))
 
 (defn hae-ilmoitukset
-  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite]
+  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite myohassa?]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -72,6 +73,7 @@
                     (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                     (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
                     (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                    (viesti myohassa? "vain myöhässä olevat?" "kaikki, myös myöhästyneet")
                     (viesti selite "selitteellä:" "ilman selitettä")
                     (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                     (cond
@@ -168,7 +170,7 @@
                         (hae-ilmoitukset (:db this) user (:hallintayksikko tiedot)
                                          (:urakka tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                          (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
-                                         (:hakuehto tiedot) (:selite tiedot))))
+                                         (:hakuehto tiedot) (:selite tiedot) (:myohassa? tiedot))))
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]
