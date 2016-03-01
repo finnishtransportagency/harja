@@ -58,8 +58,7 @@
       "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
       "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
       "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
-      ;; toistaiseksi tarkastuksia ei viedä Tierekisteriin
-      "tarkastus" :default)))
+      "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
