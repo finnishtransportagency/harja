@@ -76,9 +76,7 @@
                              [varustetoteuman-tehtavat toteuma]))
                          toteumat))}
       [{:tyyppi :vetolaatikon-tila :leveys 5}
-       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm
-        :nimi    :alkupvm :leveys 10
-        :hae     (:alkupvm rivi)}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
         :hae     (fn [rivi]
