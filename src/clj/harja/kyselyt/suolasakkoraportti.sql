@@ -1,17 +1,17 @@
 -- name: hae-tiedot-urakan-suolasakkoraportille
-SELECT *, (suola_kaytetty - suola_suunniteltu) as ylitys,
-          (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * suola_suunniteltu
-           WHEN erotus >= 3.0 THEN 1.20 * 1.05 * suola_suunniteltu
-           WHEN erotus >= 2.0 THEN 1.10 * 1.05 * suola_suunniteltu
-           ELSE 1.05 * suola_suunniteltu
+SELECT *, (suola_kaytetty - sakko_talvisuolaraja) as ylitys,
+          (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * sakko_talvisuolaraja
+           WHEN erotus >= 3.0 THEN 1.20 * 1.05 * sakko_talvisuolaraja
+           WHEN erotus >= 2.0 THEN 1.10 * 1.05 * sakko_talvisuolaraja
+           ELSE 1.05 * sakko_talvisuolaraja
            END) as kohtuullistarkistettu_sakkoraja
 FROM (SELECT
         u.nimi AS urakka_nimi,
-        ss.maara AS sakko_maara,
         ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
         ss.maksukuukausi AS sakko_maksukuukausi,
         ss.indeksi AS sakko_indeksi,
         ss.maara AS sakko_maara_per_tonni,
+        ss.talvisuolaraja as sakko_talvisuolaraja,
         lt.urakka,
         ss.indeksi,
         lt.alkupvm AS lampotila_alkupvm,
@@ -53,22 +53,21 @@ FROM (SELECT
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;
 
 -- name: hae-tiedot-hallintayksikon-suolasakkoraportille
-SELECT *, (suola_kaytetty - suola_suunniteltu) as ylitys,
-          (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * suola_suunniteltu
-           WHEN erotus >= 3.0 THEN 1.20 * 1.05 * suola_suunniteltu
-           WHEN erotus >= 2.0 THEN 1.10 * 1.05 * suola_suunniteltu
-           ELSE 1.05 * suola_suunniteltu
+SELECT *, (suola_kaytetty - sakko_talvisuolaraja) as ylitys,
+          (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * sakko_talvisuolaraja
+           WHEN erotus >= 3.0 THEN 1.20 * 1.05 * sakko_talvisuolaraja
+           WHEN erotus >= 2.0 THEN 1.10 * 1.05 * sakko_talvisuolaraja
+           ELSE 1.05 * sakko_talvisuolaraja
            END) as kohtuullistarkistettu_sakkoraja
 FROM (SELECT
         u.nimi AS urakka_nimi,
-        ss.maara AS sakko_maara,
+        ss.talvisuolaraja as sakko_talvisuolaraja,
         ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
         ss.maksukuukausi AS sakko_maksukuukausi,
         ss.indeksi AS sakko_indeksi,
         ss.maara AS sakko_maara_per_tonni,
         lt.urakka,
         ss.indeksi,
-        ss.maara AS sakko_maara_per_tonni,
         lt.alkupvm AS lampotila_alkupvm,
         lt.loppupvm AS lampotila_loppupvm,
         lt.keskilampotila as keskilampotila,
@@ -108,15 +107,15 @@ FROM (SELECT
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;
 
 -- name: hae-tiedot-koko-maan-suolasakkoraportille
-SELECT *, (suola_kaytetty - suola_suunniteltu) as ylitys,
-          (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * suola_suunniteltu
-           WHEN erotus >= 3.0 THEN 1.20 * 1.05 * suola_suunniteltu
-           WHEN erotus >= 2.0 THEN 1.10 * 1.05 * suola_suunniteltu
-           ELSE 1.05 * suola_suunniteltu
+SELECT *, (suola_kaytetty - sakko_talvisuolaraja) as ylitys,
+          (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * sakko_talvisuolaraja
+           WHEN erotus >= 3.0 THEN 1.20 * 1.05 * sakko_talvisuolaraja
+           WHEN erotus >= 2.0 THEN 1.10 * 1.05 * sakko_talvisuolaraja
+           ELSE 1.05 * sakko_talvisuolaraja
            END) as kohtuullistarkistettu_sakkoraja
 FROM (SELECT
         u.nimi AS urakka_nimi,
-        ss.maara AS sakko_maara,
+        ss.talvisuolaraja as sakko_talvisuolaraja,
         ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
         ss.maksukuukausi AS sakko_maksukuukausi,
         ss.indeksi AS sakko_indeksi,
