@@ -58,7 +58,7 @@
       "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
       "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
       "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
-      "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
+      "tarkastustarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -67,8 +67,7 @@
     toteuma-id))
 
 (defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                            kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm
-                                            tarkastusaika]} toteuma-id]
+                                            kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
   (jdbc/with-db-transaction
     [db db]
     (let [tr (:tie sijainti)
@@ -86,7 +85,6 @@
                     piiri
                     kuntoluokitus
                     tierekisteriurakkakoodi
-                    (aika-string->java-sql-date tarkastusaika)
                     (:id kirjaaja)))]
       (toteumat/paivita-varustetoteuman-tr-osoite! db
                                                    (:numero tr)

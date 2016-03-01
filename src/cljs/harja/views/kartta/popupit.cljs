@@ -232,8 +232,7 @@
                                               [["Päivämäärä: " (pvm/pvm (:alkupvm tapahtuma))]
                                                ["Tunniste: " (:tunniste tapahtuma)]
                                                ["Tietolaji: " (:tietolaji tapahtuma)]
-                                               ["Toimenpide: " (varustetiedot/varuste-toimenpide->string
-                                                                 (keyword (:toimenpide tapahtuma)))]
+                                               ["Toimenpide: " (:toimenpide tapahtuma)]
                                                ["Kuntoluokka" (:kuntoluokka tapahtuma)]]
                                               {:linkki {:nimi   "Avaa varustekortti"
                                                         :href   (:varustekortti-url tapahtuma)

@@ -477,7 +477,6 @@ INSERT INTO varustetoteuma (tunniste,
                             piiri,
                             kuntoluokka,
                             tierekisteriurakkakoodi,
-                            tarkastusaika,
                             luoja,
                             luotu)
 VALUES (
@@ -492,7 +491,6 @@ VALUES (
   :piiri,
   :kuntoluokka,
   :tierekisteriurakkakoodi,
-  :tarkastusaika,
   :luoja,
   NOW());
 
@@ -665,7 +663,6 @@ SELECT
   karttapvm,
   tr_puoli,
   tr_ajorata,
-  tarkastusaika,
   t.id                    AS toteumaid,
   t.alkanut               AS alkupvm,
   t.paattynyt             AS loppupvm,
