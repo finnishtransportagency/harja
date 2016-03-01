@@ -1,4 +1,4 @@
-(ns harja.domain.ilmoitusapurit
+(ns harja.domain.ilmoitukset
   "Selain- ja palvelinpuolen yhteisiä ilmoituksiin liittyviä asioita"
   (:require
     #?(:cljs [harja.loki :refer [log]])
@@ -168,3 +168,18 @@
                      selitteet)))
 
 (def +ilmoitustilat+ #{:suljetut :avoimet})
+
+
+(defn lisaa-ilmoituksen-tila
+  "Ottaa ilmoituksen, jolla on tieto siitä, millaisia kuittauksia se sisältää.
+  Poistaa nämä tiedot ja sen sijaan lisää tiedon siitä, missä tilassa ilmoitus on
+  sen sisältämien kuittausten perusteella."
+  [ilmoitus]
+  (let [lisaa-tila (fn [ilmoitus]
+                     (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :lopetus)
+                           (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :aloitus)
+                           (true? (:vastaanotettu ilmoitus)) (assoc ilmoitus :tila :vastaanotto)
+                           :default (assoc ilmoitus :tila :kuittaamaton)))]
+    (-> ilmoitus
+        (lisaa-tila)
+        (dissoc :vastaanotettu :aloitettu :lopetettu))))

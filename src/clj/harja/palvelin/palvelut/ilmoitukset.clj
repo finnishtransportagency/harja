@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.ilmoitukset :as q]
+            [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [harja.kyselyt.konversio :as konversio])
@@ -23,16 +24,6 @@
        (if (hakuehto-annettu? mille)
          (str mista " " (pr-str mille))
          (str ilman))))
-
-(defn lisaa-ilmoituksen-tila [ilmoitus]
-  (let [lisaa-tila (fn [ilmoitus]
-                     (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :lopetus)
-                           (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :aloitus)
-                           (true? (:vastaanotettu ilmoitus)) (assoc ilmoitus :tila :vastaanotto)
-                           :default (assoc ilmoitus :tila :kuittaamaton)))]
-    (-> ilmoitus
-        (lisaa-tila)
-        (dissoc :vastaanotettu :aloitettu :lopetettu))))
 
 (defn hae-ilmoitukset
   [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit kuittaustyypit aikavali hakuehto selite]}]
@@ -69,7 +60,7 @@
                           (comp
                             (harja.geo/muunna-pg-tulokset :sijainti)
                             (map konv/alaviiva->rakenne)
-                            (map lisaa-ilmoituksen-tila)
+                            (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
                             (filter #(kuittaustyypit (:tila %)))
                             (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
                             (map #(konv/array->vec % :selitteet))

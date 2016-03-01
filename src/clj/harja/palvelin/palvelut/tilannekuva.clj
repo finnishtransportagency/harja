@@ -4,7 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin
              :refer [julkaise-palvelu poista-palvelut]]
 
-            [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset-palvelu]
+            [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.hallintayksikot :as hal-q]
             [harja.kyselyt.urakat :as urakat-q]
@@ -60,7 +60,7 @@
                               (comp
                                 (geo/muunna-pg-tulokset :sijainti)
                                 (map konv/alaviiva->rakenne)
-                                (map ilmoitukset-palvelu/lisaa-ilmoituksen-tila)
+                                (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
                                 (filter #(tilat (:tila %)))
                                 (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
                                 (map #(konv/array->vec % :selitteet))
