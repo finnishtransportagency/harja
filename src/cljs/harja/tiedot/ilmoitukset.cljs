@@ -31,7 +31,8 @@
                              :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
                              :hakuehto        ""
                              :selite          [nil ""]
-                             :vain-myohassa?  #{}}))
+                             :vain-myohassa?  #{}
+                             :aloituskuittauksen-ajankohta nil}))
 
 (defonce ilmoitushaku (atom 0))
 

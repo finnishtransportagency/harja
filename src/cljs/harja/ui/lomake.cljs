@@ -12,7 +12,8 @@
 (defrecord Ryhma [otsikko optiot skeemat])
 
 (defn ryhma [otsikko-tai-optiot & skeemat]
-  (if-let [optiot (and (map? otsikko-tai-optiot) otsikko-tai-optiot)]
+  (if-let [optiot (and (map? otsikko-tai-optiot)
+                       otsikko-tai-optiot)]
     (->Ryhma (:otsikko optiot)
              (merge {:ulkoasu :oletus}
                     optiot)

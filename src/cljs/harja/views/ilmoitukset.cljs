@@ -147,7 +147,7 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
                                            (vec (sort itemit))))))}
-         (lomake/ryhma {:ulkoasu :rivi}
+         (lomake/ryhma {:ulkoasu :rivi :palstoja 4}
                        {:nimi             :kuittaustyypit
                         :otsikko          "Tila"
                         :tyyppi           :checkbox-group
@@ -162,7 +162,15 @@
                         :otsikko          "Kuittaukset"
                         :tyyppi           :checkbox-group
                         :vaihtoehdot      [:vain-myohassa?]
-                        :vaihtoehto-nayta (constantly "Vain myöhässä olevat")})]
+                        :vaihtoehto-nayta (constantly "Vain myöhässä olevat")}
+                       {:nimi             :aloituskuittauksen-ajankohta
+                        :otsikko          "Aloituskuittaus annettu"
+                        :tyyppi           :radio-group
+                        :vaihtoehdot      [:alle-tunti :yli-tunti]
+                        :vaihtoehto-nayta (fn [arvo]
+                                            ({:alle-tunti "alle tunnin kuluessa"
+                                              :myohemmin  "myöhemmin"}
+                                              arvo))})]
         @tiedot/valinnat]
 
        [:div
