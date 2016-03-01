@@ -4,6 +4,7 @@
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.ilmoitukset :refer :all]
+            [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -96,7 +97,7 @@
        vastaanotettu-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu true}
        aloitettu-ilmoitus {:aloitettu true :lopetettu false :vastaanotettu true}
        lopetettu-ilmoitus {:aloitettu true :lopetettu true :vastaanotettu true}]
-   (is (= (:tila (lisaa-ilmoituksen-tila kuittaamaton-ilmoitus)) :kuittaamaton))
-   (is (= (:tila (lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotto))
-   (is (= (:tila (lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitus))
-   (is (= (:tila (lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetus))))
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila kuittaamaton-ilmoitus)) :kuittaamaton))
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotto))
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitus))
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetus))))
