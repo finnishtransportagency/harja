@@ -156,12 +156,11 @@
                         :tyyppi           :checkbox-group
                         :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
                         :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
-                       {:nimi             :myohassa?
+                       {:nimi             :vain-myohassa?
                         :otsikko          "Kuittaukset"
                         :tyyppi           :checkbox-group
-                        :vaihtoehdot      [:myohassa?]
+                        :vaihtoehdot      [:vain-myohassa?]
                         :vaihtoehto-nayta (constantly "Vain myöhässä olevat")})]
-
         @tiedot/valinnat]
 
        [:div

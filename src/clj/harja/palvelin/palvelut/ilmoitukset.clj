@@ -57,7 +57,7 @@
   (assoc ilmoitus :myohassa? (ilmoitus-myohassa? ilmoitus)))
 
 (defn hae-ilmoitukset
-  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite myohassa?]
+  [db user hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit aikavali hakuehto selite vain-myohassa?]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -73,7 +73,7 @@
                     (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                     (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
                     (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
-                    (viesti myohassa? "vain myöhässä olevat?" "myös myöhästyneet")
+                    (viesti vain-myohassa? "vain myöhässä olevat?" "myös myöhästyneet")
                     (viesti selite "selitteellä:" "ilman selitettä")
                     (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                     (cond
@@ -82,13 +82,7 @@
                       (:suljetut tilat) ", ainoastaan suljetut."))
         _ (log/debug debug-viesti)
         tulos (when-not (empty? urakat)
-                (mapv
-                  #(-> %
-                       (assoc :uusinkuittaus
-                              (when-not (empty? (:kuittaukset %))
-                                (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                       (lisaa-tieto-myohastymisesta))
-                  (konv/sarakkeet-vektoriin
+                (konv/sarakkeet-vektoriin
                     (into []
                           (comp
                             (harja.geo/muunna-pg-tulokset :sijainti)
@@ -109,7 +103,19 @@
                                              (if (:suljetut tilat) true false) ;; Muuttaa nil arvon tai puuttuvan avaimen
                                              (if (:avoimet tilat) true false) ;; falseksi
                                              ))
-                    {:kuittaus :kuittaukset})))]
+                    {:kuittaus :kuittaukset}))
+        tulos (mapv
+                  #(-> %
+                       (assoc :uusinkuittaus
+                              (when-not (empty? (:kuittaukset %))
+                                (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                       (lisaa-tieto-myohastymisesta))
+                  tulos)
+        tulos (if vain-myohassa?
+                (filter
+                  #(true? (:myohassa? %))
+                  tulos)
+                tulos)]
     (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
     tulos))
@@ -170,7 +176,7 @@
                         (hae-ilmoitukset (:db this) user (:hallintayksikko tiedot)
                                          (:urakka tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                          (:tilat tiedot) (:tyypit tiedot) (:aikavali tiedot)
-                                         (:hakuehto tiedot) (:selite tiedot) (:myohassa? tiedot))))
+                                         (:hakuehto tiedot) (:selite tiedot) (:vain-myohassa? tiedot))))
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]

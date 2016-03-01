@@ -29,7 +29,7 @@
                              :tilat           +ilmoitustilat+
                              :hakuehto        ""
                              :selite          [nil ""]
-                             :myohassa?       false}))
+                             :vain-myohassa?  #{}}))
 
 (defonce ilmoitushaku (atom 0))
 
@@ -64,7 +64,7 @@
                                                     #(if (empty? %) +ilmoitustyypit+ %))
                                             (update :tilat
                                                     #(if (empty? %) +ilmoitustilat+ %))
-                                            (update :myohassa?
+                                            (update :vain-myohassa?
                                                     #(if (empty? %) false true)))))]
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
