@@ -25,7 +25,7 @@
   bufferi 1000)
 
 ;; 10s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
-;; karttaa siirretään tai zoomataanxx
+;; karttaa siirretään tai zoomataan
 (def ^{:doc   "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
        :const true}
 hakutiheys-nykytilanne 10000)
@@ -33,7 +33,6 @@ hakutiheys-nykytilanne 10000)
 (def ^{:doc   "Päivitystiheys historiakuvassa on 20 minuuttia."
        :const true}
 hakutiheys-historiakuva 1200000)
-
 
 (def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
 (def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
@@ -45,7 +44,7 @@ hakutiheys-historiakuva 1200000)
          :ilmoitukset     {:tyypit {tk/tpp false
                                     tk/urk false
                                     tk/tur false}
-                           :tilat   ilmoitusten-tilat-nykytilanteessa}}
+                           :tilat  ilmoitusten-tilat-nykytilanteessa}
          :turvallisuus    {tk/turvallisuuspoikkeamat false}
          :laatupoikkeamat {tk/laatupoikkeama-tilaaja     false
                            tk/laatupoikkeama-urakoitsija false
@@ -91,7 +90,7 @@ hakutiheys-historiakuva 1200000)
                 tk/paallysteiden-juotostyot   false
                 tk/siltojen-puhdistus         false
                 tk/l-ja-p-alueiden-puhdistus  false
-                tk/muu                        false}))
+                tk/muu                        false}}))
 
 (def jarjestys tk/jarjestys)
 
