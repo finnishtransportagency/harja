@@ -71,7 +71,7 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
                      ;; Jos taso on kuva, PENDING: work in progress
                      (= taso :toteumat)
                      (assoc uudet-tasot
-                            tason-nimi (openlayers/luo-kuvataso))
+                            tason-nimi (openlayers/luo-kuvataso :tilannekuva))
 
                      ;; Jos tason asiat ovat muuttuneet, muodostetaan
                      ;; kartalla esitettävä muoto
