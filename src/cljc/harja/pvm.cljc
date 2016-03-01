@@ -1,5 +1,7 @@
 (ns harja.pvm
-  "Yleiset päivämääräkäsittelyn asiat."
+  "Yleiset päivämääräkäsittelyn asiat.
+  Frontin puolella käytetään yleisesti tyyppiä goog.date.DateTime.
+  Backendissä käytetään yleisesti tyyppiä org.joda.time.DateTime (poikkeuset dokumentoitu erikseen)"
   (:require
     #?(:cljs [cljs-time.format :as df])
     #?(:cljs [cljs-time.core :as t])
@@ -72,11 +74,17 @@
   (assert pvm "Päivämäärä puuttuu!")
   (tc/to-long pvm))
 
-(defn nyt []
+(defn nyt
+  "Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten"
+  []
   #?(:cljs (DateTime.)
      :clj  (Date.)))
 
-(defn luo-pvm [vuosi kk pv]
+(defn luo-pvm
+  "Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten"
+  [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj  (Date. (- vuosi 1900) kk pv)))
 
