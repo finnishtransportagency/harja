@@ -4,7 +4,7 @@
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
+            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                                  +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
                                                  +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
                                                  kuittaustyypin-selite]]

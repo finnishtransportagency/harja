@@ -1,6 +1,6 @@
 (ns harja.tiedot.ilmoitukset
   (:require [reagent.core :refer [atom]]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ kuittaustyypit ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ kuittaustyypit ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
