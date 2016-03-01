@@ -5,7 +5,7 @@
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.palvelin.raportointi :refer :all]

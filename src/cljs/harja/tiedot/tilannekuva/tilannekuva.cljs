@@ -34,6 +34,8 @@ hakutiheys-nykytilanne 10000)
        :const true}
 hakutiheys-historiakuva 1200000)
 
+(def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
+(def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
@@ -42,7 +44,7 @@ hakutiheys-historiakuva 1200000)
          :ilmoitukset     {:tyypit {tk/tpp false
                                     tk/urk false
                                     tk/tur false}
-                           :tilat  #{:avoimet}}
+                           :tilat  ilmoitusten-tilat-nykytilanteessa}
          :turvallisuus    {tk/turvallisuuspoikkeamat false}
          :laatupoikkeamat {tk/laatupoikkeama-tilaaja     false
                            tk/laatupoikkeama-urakoitsija false

@@ -367,17 +367,14 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
    (oikeat-sarakkeet-palvelussa? sarakkeet palvelu parametrit +kayttaja-jvh+))
 
   ([sarakkeet palvelu parametrit kayttaja]
-   (if parametrit
-     (do
-       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     palvelu (or kayttaja +kayttaja-jvh+) parametrit)]
+   (let [vastaus (if parametrit
+                   (kutsu-palvelua (:http-palvelin jarjestelma) palvelu (or kayttaja +kayttaja-jvh+) parametrit)
+                   (kutsu-palvelua (:http-palvelin jarjestelma) palvelu (or kayttaja +kayttaja-jvh+)))]
          (log/debug "Tarkistetaan sarakkeet vastauksesta:" (pr-str vastaus))
-         (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet)))
-     (do
-       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     palvelu (or kayttaja +kayttaja-jvh+))]
-         (log/debug "Tarkistetaan sarakkeet vastauksesta:" (pr-str vastaus))
-         (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet))))))
+         (if (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet)
+           true
+           (do (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus))
+               false)))))
 
 (def portti nil)
 (def urakka nil)

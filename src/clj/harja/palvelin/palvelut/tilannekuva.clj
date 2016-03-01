@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin
              :refer [julkaise-palvelu poista-palvelut]]
 
+            [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.hallintayksikot :as hal-q]
             [harja.kyselyt.urakat :as urakat-q]
@@ -50,35 +51,33 @@
   (let [haettavat (haettavat tyypit)]
     (when-not (empty? haettavat)
       (try
-        (let [suljetut? (if (:suljetut tilat) true false)
-              avoimet? (if (:avoimet tilat) true false)
-              tulos (mapv
-                     #(assoc % :uusinkuittaus
-                             (when-not (empty? (:kuittaukset %))
-                               (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                     (konv/sarakkeet-vektoriin
-                      (into []
-                            (comp
-                             (geo/muunna-pg-tulokset :sijainti)
-                             (map konv/alaviiva->rakenne)
-                             (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-                             (map #(konv/array->vec % :selitteet))
-                             (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                             (map #(assoc-in
-                                    %
-                                    [:kuittaus :kuittaustyyppi]
-                                    (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                             (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                             (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                            (q/hae-ilmoitukset db
-                                               toleranssi
-                                               (when-not (:nykytilanne? tiedot) (konv/sql-date (:alku tiedot)))
-                                               (when-not (:nykytilanne? tiedot) (konv/sql-date (:loppu tiedot)))
-                                               urakat
-                                               avoimet?
-                                               suljetut?
-                                               (mapv name haettavat)))
-                      {:kuittaus :kuittaukset}))]
+        (let [tulos (mapv
+                      #(assoc % :uusinkuittaus
+                                (when-not (empty? (:kuittaukset %))
+                                  (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                      (konv/sarakkeet-vektoriin
+                        (into []
+                              (comp
+                                (geo/muunna-pg-tulokset :sijainti)
+                                (map konv/alaviiva->rakenne)
+                                (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
+                                (filter #(tilat (:tila %)))
+                                (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                                (map #(konv/array->vec % :selitteet))
+                                (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                                (map #(assoc-in
+                                       %
+                                       [:kuittaus :kuittaustyyppi]
+                                       (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                                (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                                (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                              (q/hae-ilmoitukset db
+                                                 toleranssi
+                                                 (when-not (:nykytilanne? tiedot) (konv/sql-date (:alku tiedot)))
+                                                 (when-not (:nykytilanne? tiedot) (konv/sql-date (:loppu tiedot)))
+                                                 urakat
+                                                 (mapv name haettavat)))
+                        {:kuittaus :kuittaukset}))]
           tulos)
         (catch Exception e
           (tulosta-virhe! "ilmoituksia" e)
