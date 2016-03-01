@@ -21,7 +21,8 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
-            [alandipert.storage-atom :refer [local-storage]])
+            [alandipert.storage-atom :refer [local-storage]]
+            [clojure.string :as str])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -381,6 +382,7 @@
   (komp/luo
     (fn []
       (let [v-ur @nav/valittu-urakka
+            v-ur-tyyppi @nav/valittu-urakkatyyppi
             v-hal @nav/valittu-hallintayksikko
             konteksti (cond
                         v-ur "urakka"
@@ -400,12 +402,14 @@
                         (:nimi v-ur))
              "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
                                  (:nimi v-hal))
-             "Raportti" [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
-                                              ;;\u2014 on väliviivan unikoodi
-                                              :format-fn  #(if % (:kuvaus %) "Valitse")
-                                              :valitse-fn #(reset! valittu-raporttityyppi %)
-                                              :class      "valitse-raportti-alasveto"}
-                         @mahdolliset-raporttityypit]]])
+             "Raportti" (if-not (empty? @mahdolliset-raporttityypit)
+                          [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
+                                                ;;\u2014 on väliviivan unikoodi
+                                                :format-fn  #(if % (:kuvaus %) "Valitse")
+                                                :valitse-fn #(reset! valittu-raporttityyppi %)
+                                                :class      "valitse-raportti-alasveto"}
+                           @mahdolliset-raporttityypit]
+                          [:span (str "Ei raportteja saatavilla urakkatyypissä " (str/lower-case (:nimi v-ur-tyyppi)))])]])
          
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
