@@ -73,7 +73,7 @@
                     (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                     (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
                     (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
-                    (viesti myohassa? "vain myöhässä olevat?" "kaikki, myös myöhästyneet")
+                    (viesti myohassa? "vain myöhässä olevat?" "myös myöhästyneet")
                     (viesti selite "selitteellä:" "ilman selitettä")
                     (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                     (cond
