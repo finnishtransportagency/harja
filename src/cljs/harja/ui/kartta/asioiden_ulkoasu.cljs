@@ -96,10 +96,10 @@
    :kt-valmis                  "vihrea"
 
    ;; Pienemmät ikonit (pinnit)
-   :laatupoikkeama             "sininen"
-   :laatupoikkeama-tilaaja     "sininen"
-   :laatupoikkeama-konsultti   "sininen"
-   :laatupoikkeama-urakoitsija "tummansininen"
+   :laatupoikkeama             "tummansininen"
+   :laatupoikkeama-tilaaja     "tummansininen"
+   :laatupoikkeama-konsultti   "tummansininen"
+   :laatupoikkeama-urakoitsija "sininen"
    :tarkastus                  "punainen"
    :varustetoteuma             "violetti"
    :yllapito                   "pinkki"})

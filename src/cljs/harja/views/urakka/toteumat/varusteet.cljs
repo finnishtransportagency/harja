@@ -7,6 +7,7 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.ui.kentat :refer [tee-kentta]]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
@@ -111,7 +112,8 @@
 
 (defn varusteet []
   (komp/luo
-    (komp/lippu varustetiedot/nakymassa? varustetiedot/karttataso-varustetoteuma)
+    (komp/lippu varustetiedot/nakymassa? varustetiedot/karttataso-varustetoteuma
+                tiedot-urakka/aseta-kuluva-kk-jos-hoitokaudella?)
     (komp/kuuntelija :varustetoteuma-klikattu varustetoteuma-klikattu)
     (fn []
       [:span

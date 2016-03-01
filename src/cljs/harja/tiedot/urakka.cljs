@@ -128,6 +128,8 @@
   (reset! valittu-hoitokausi hk)
   (reset! valittu-aikavali [(first hk) (second hk)]))
 
+(def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
+
 (defonce valittu-hoitokauden-kuukausi
          (reaction
            (let [hk @valittu-hoitokausi
@@ -137,6 +139,11 @@
                  edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
              (when (and hk ur)
                (cond
+                 ;; mm. toteumanäkymissä halutaan käynnissä oleva kuukausi,
+                 ;; heidän liputettava anna-kuluva-kk-jos-hoitokaudella
+                 (and @aseta-kuluva-kk-jos-hoitokaudella? (kuuluu-hoitokauteen? nykyinen-kk))
+                 nykyinen-kk
+                 ;; raportointinäkymissä halutaan edellinen kuukausi
                  ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
                  ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
                  (kuuluu-hoitokauteen? edellinen-kk)

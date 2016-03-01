@@ -11,13 +11,14 @@
 (def karttataso-tr-alkuosoite (atom true))
 
 (def valittu-alkupiste (atom nil))
-(def tr-alkupiste-kartalla (reaction
-                             (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
-                               [{:alue (maarittele-feature @valittu-alkupiste
-                                                           false
-                                                           {:img    (dom/pinni-ikoni "musta")
-                                                            :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                                           {:color  "gray" ;; muun alle
-                                                            :zindex 20})}])))
+(def tr-alkupiste-kartalla
+  (reaction
+   (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
+     [{:alue (maarittele-feature @valittu-alkupiste
+                                 false
+                                 {:img    (dom/pinni-ikoni "musta")
+                                  :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
+                                 {:color  "gray" ;; muun alle
+                                  :zindex 20})}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)
