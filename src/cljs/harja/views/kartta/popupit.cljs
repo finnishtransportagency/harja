@@ -12,7 +12,8 @@
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
-            [harja.domain.paallystys.pot :as paallystys-pot]))
+            [harja.domain.paallystys.pot :as paallystys-pot]
+            [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]))
 
 (def klikattu-tyokone (atom nil))
 
@@ -231,7 +232,9 @@
                                               [["Päivämäärä: " (pvm/pvm (:alkupvm tapahtuma))]
                                                ["Tunniste: " (:tunniste tapahtuma)]
                                                ["Tietolaji: " (:tietolaji tapahtuma)]
-                                               ["Toimenpide: " (:Toimepide tapahtuma)]]
+                                               ["Toimenpide: " (varustetiedot/varuste-toimenpide->string
+                                                                 (keyword (:toimenpide tapahtuma)))]
+                                               ["Kuntoluokka" (:kuntoluokka tapahtuma)]]
                                               {:linkki {:nimi   "Avaa varustekortti"
                                                         :href   (:varustekortti-url tapahtuma)
                                                         :target "_blank"}})))

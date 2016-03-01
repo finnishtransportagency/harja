@@ -94,6 +94,7 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}
+       {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
        {:otsikko     "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
         :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
       (take nayta-max-toteumaa valitut-toteumat)]
