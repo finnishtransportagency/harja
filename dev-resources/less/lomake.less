@@ -14,6 +14,8 @@
   }
 }
 
+@lomake-input-korkeus: 31px;
+
 .lomake {
   padding-bottom: @fontin-koko-leipateksti;
   border: solid 1px @harmaa7;
@@ -108,7 +110,12 @@
       margin-bottom: 0;
     }
   }
-
+  .alasveto-gridin-kentta {
+    .livi-alasveto(100%, auto, @lomake-input-korkeus);
+    .valittu {
+      max-height: 100%; //vähän häkki
+    }
+  }
 }
 
 .lomake-footer {

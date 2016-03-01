@@ -1,6 +1,6 @@
 (ns harja.tiedot.ilmoitukset
   (:require [reagent.core :refer [atom]]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ kuittaustyypit ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
@@ -19,6 +19,8 @@
 (defonce valittu-ilmoitus (atom nil))
 (defonce uusi-kuittaus-auki? (atom false))
 
+(defonce kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
+
 (defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
                              :urakoitsija     (:id @nav/valittu-urakoitsija)
@@ -26,7 +28,7 @@
                              :hoitokausi      @u/valittu-hoitokausi
                              :aikavali        (or @u/valittu-hoitokausi [nil nil])
                              :tyypit          +ilmoitustyypit+
-                             :tilat           +ilmoitustilat+
+                             :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
                              :hakuehto        ""
                              :selite          [nil ""]
                              :vain-myohassa?  #{}}))
@@ -53,7 +55,9 @@
                     (conj nykyiset-kuittaukset kuittaus)))))
 
 (defonce haetut-ilmoitukset
-         (reaction<! [valinnat @valinnat haku @ilmoitushaku] {:odota 100}
+         (reaction<! [valinnat @valinnat
+                      haku @ilmoitushaku]
+                     {:odota 100}
            (go
              (if (zero? haku)
                []
@@ -62,10 +66,11 @@
                                             ;; jos tyyppiä/tilaa ei valittu, ota kaikki
                                             (update :tyypit
                                                     #(if (empty? %) +ilmoitustyypit+ %))
-                                            (update :tilat
-                                                    #(if (empty? %) +ilmoitustilat+ %))
+                                            (update :kuittaustyypit
+                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))
                                             (update :vain-myohassa?
                                                     #(if (empty? %) false true)))))]
+
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
                      (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
