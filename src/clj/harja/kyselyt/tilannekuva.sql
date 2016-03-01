@@ -52,7 +52,14 @@ SELECT
   it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
   it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
   it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus,
+
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'vastaanotto'::kuittaustyyppi) as vastaanotettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'aloitus'::kuittaustyyppi) as aloitettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'lopetus'::kuittaustyyppi) as lopetettu
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE
