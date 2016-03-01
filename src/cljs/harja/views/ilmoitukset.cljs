@@ -160,7 +160,7 @@
                         :otsikko          "Kuittaukset"
                         :tyyppi           :checkbox-group
                         :vaihtoehdot      [:myohassa?]
-                        :vaihtoehto-nayta (fn [_] "Vain myöhässä olevat")})]
+                        :vaihtoehto-nayta (constantly "Vain myöhässä olevat")})]
 
         @tiedot/valinnat]
 
