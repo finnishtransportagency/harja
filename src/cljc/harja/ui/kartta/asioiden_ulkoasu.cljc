@@ -6,7 +6,7 @@
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 (def +zindex+ 4)
-(def +normaali-leveys+ 6) ;;Openlayers default
+(def +normaali-leveys+ 6)
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
