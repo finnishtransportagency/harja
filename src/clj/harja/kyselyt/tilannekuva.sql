@@ -13,7 +13,6 @@ SELECT
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
-  i.suljettu,
 
   ST_Simplify(i.sijainti, :toleranssi) AS sijainti,
   i.tr_numero,
@@ -53,7 +52,14 @@ SELECT
   it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
   it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
   it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus,
+
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'vastaanotto'::kuittaustyyppi) as vastaanotettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'aloitus'::kuittaustyyppi) as aloitettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'lopetus'::kuittaustyyppi) as lopetettu
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE
@@ -64,10 +70,7 @@ WHERE
    ilmoitus = i.id AND
    kuitattu BETWEEN :alku AND :loppu))) AND
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
-  ((:avoimet IS TRUE AND i.suljettu IS NOT TRUE) OR
-   (:suljetut IS TRUE AND i.suljettu IS TRUE)) AND
   i.ilmoitustyyppi :: TEXT IN (:tyypit);
-
 
 -- name: hae-laatupoikkeamat
 SELECT

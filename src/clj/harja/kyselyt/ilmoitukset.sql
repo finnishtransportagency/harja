@@ -15,7 +15,6 @@ SELECT
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
-  i.suljettu,
 
   i.sijainti,
   i.tr_numero,
@@ -55,9 +54,14 @@ SELECT
   it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
   it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
   it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus,
 
-
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                          AND kuittaustyyppi = 'vastaanotto'::kuittaustyyppi) as vastaanotettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'aloitus'::kuittaustyyppi) as aloitettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'lopetus'::kuittaustyyppi) as lopetettu
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
@@ -81,15 +85,7 @@ WHERE
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
 
   -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY[:selite ::ilmoituksenselite])) AND
-
-  -- Tarkasta ilmoituksen tilat
-  (
-    (:suljetut IS TRUE AND :avoimet IS TRUE) OR
-    (:suljetut IS FALSE AND :avoimet IS FALSE) OR
-    (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
-    (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
-  )
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY[:selite ::ilmoituksenselite]))
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 -- name: hae-ilmoitukset-idlla
@@ -309,11 +305,6 @@ VALUES
    :kasittelija_henkilo_sahkoposti,
    :kasittelija_organisaatio_nimi,
    :kasittelija_organisaatio_ytunnus);
-
--- name: merkitse-ilmoitustoimenpide-suljetuksi!
-UPDATE ilmoitus
-SET suljettu = TRUE
-WHERE id = :id;
 
 -- name: hae-ilmoitus-ilmoitus-idlla
 -- Hakee ilmoituksen T-LOIK ilmoitus id:n perusteella
