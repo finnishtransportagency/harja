@@ -166,7 +166,7 @@
                        {:nimi             :aloituskuittauksen-ajankohta
                         :otsikko          "Aloituskuittaus annettu"
                         :tyyppi           :radio-group
-                        :vaihtoehdot      [:alle-tunti :yli-tunti]
+                        :vaihtoehdot      [:alle-tunti :myohemmin]
                         :vaihtoehto-nayta (fn [arvo]
                                             ({:alle-tunti "alle tunnin kuluessa"
                                               :myohemmin  "myöhemmin"}
