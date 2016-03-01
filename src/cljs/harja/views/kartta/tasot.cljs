@@ -171,7 +171,7 @@
      (aseta-z-index @tierekisteri/tr-alkupiste-kartalla
                           (inc oletus-zindex))
      :nakyman-geometriat
-     (aseta-z-index (vals @nakyman-geometriat)
+     (aseta-z-index (vec (vals @nakyman-geometriat))
                           (inc oletus-zindex))}
     (into {}
           (map (fn [[tason-nimi tason-sisalto]]

@@ -161,7 +161,7 @@
                   {:otsikko "Soratiehoitoluokka" :tyyppi :valinta
                    :nimi :hoitoluokka :palstoja 1
                    :hae (comp :hoitoluokka :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :hoitoluokka] %2)
-                   :valinnat [1 2]})))
+                   :valinnat [1 2 3]})))
                  
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom
