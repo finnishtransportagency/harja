@@ -265,6 +265,7 @@ WHERE pk.poistettu IS NOT TRUE AND
        (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
+-- FIXME: poista tästä "turhaa" tietoa, jota ei renderöinti tarvi
 SELECT
   t.id,
   t.urakka,
@@ -274,7 +275,7 @@ SELECT
   t.tyyppi,
   t.lisatieto,
   ST_Simplify(t.reitti, :toleranssi) as reitti,
-  
+
   t.suorittajan_ytunnus           AS suorittaja_ytunnus,
   t.suorittajan_nimi              AS suorittaja_nimi,
   t.ulkoinen_id                   AS ulkoinenid,
@@ -309,6 +310,25 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+
+-- name: hae-toteumien-selitteet
+SELECT
+  DISTINCT(tt.toimenpidekoodi) AS toimenpidekoodi,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS toimenpide
+FROM toteuma_tehtava tt
+     JOIN toteuma t ON tt.toteuma = t.id
+                    AND t.alkanut >= :alku
+                    AND t.paattynyt <= :loppu
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                    AND tt.poistettu IS NOT TRUE
+                    AND t.poistettu IS NOT TRUE
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.alkanut BETWEEN :alku AND :loppu) AND
+      (t.paattynyt BETWEEN :alku AND :loppu) AND
+      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+
 
 -- name: hae-tyokoneet
 SELECT

@@ -15,6 +15,7 @@
             [harja.pvm :as pvm]
             [harja.domain.tilannekuva :as tk]
             [harja.ui.kartta.esitettavat-asiat
+             :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]))
@@ -233,24 +234,14 @@
       :reittipiste :reittipisteet})))
 
 (defn- hae-toteumien-selitteet
-  [db user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
+  [db user {:keys [alue alku loppu] :as tiedot} urakat]
   (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
     (when-not (empty? toimenpidekoodit)
-      (konv/sarakkeet-vektoriin
-       (into []
-             (comp
-              (harja.geo/muunna-pg-tulokset :reitti)
-              (map konv/alaviiva->rakenne)
-              (map #(assoc % :tyyppi :toteuma)))
-             (q/hae-toteumat db toleranssi
-                             (konv/sql-date alku)
-                             (konv/sql-date loppu) toimenpidekoodit
-                             urakat
-                             (:xmin alue) (:ymin alue)
-                             (:xmax alue) (:ymax alue)))
-       {:tehtava     :tehtavat
-        :materiaali  :materiaalit
-        :reittipiste :reittipisteet}))))
+      (q/hae-toteumien-selitteet db
+                                 (konv/sql-date alku) (konv/sql-date loppu)
+                                 toimenpidekoodit urakat
+                                 (:xmin alue) (:ymin alue)
+                                 (:xmax alue) (:ymax alue)))))
 
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat :tarkastukset
@@ -260,7 +251,7 @@
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
   ;; FIXME: Toteumat taso on kuvataso, joten siihen vain tehtyjen
   ;; toimenpiteiden selitteet
-  [true])
+  (hae-toteumien-selitteet db user tiedot urakat))
 (defmethod hae-osio :toteumat-kuva [db user tiedot urakat _]
   (tulosta-tulos! "toteumaa"
                   (hae-toteumien-reitit db user tiedot urakat)))

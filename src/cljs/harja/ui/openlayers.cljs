@@ -149,8 +149,8 @@
   "Luo uuden kuvatason joka hakee serverillä renderöidyn kuvan.
 Ottaa sisään vaihtelevat parametri nimet (string) ja niiden arvot.
 Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti."
-  [lahde & parametri-nimet-ja-arvot]
-  (kuvataso/luo-kuvataso projektio suomen-extent
+  [lahde selitteet & parametri-nimet-ja-arvot]
+  (kuvataso/luo-kuvataso projektio suomen-extent selitteet
                          (concat ["_" (name lahde)]
                                  parametri-nimet-ja-arvot)))
 

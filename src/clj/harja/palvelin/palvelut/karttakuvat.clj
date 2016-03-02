@@ -77,7 +77,7 @@ datan kartalla esitettävässä muodossa.")
                          asiat)
 
     ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
-    #_(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
+    (.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
     img))
 
 (defn- hae-karttakuvadata

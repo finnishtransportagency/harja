@@ -178,7 +178,7 @@
 
 ;;;;;;
 
-(defn- viivojen-varit-leveimmasta-kapeimpaan [viivat]
+(defn viivojen-varit-leveimmasta-kapeimpaan [viivat]
   ;; Täydennä väliaikaisesti tänne oletusarvot,
   ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
@@ -409,7 +409,7 @@
      :else viivat)
    nuoli])
 
-(defn- tehtavan-viivat-ja-nuolitiedosto
+(defn tehtavan-viivat-ja-nuolitiedosto
   "Hakee toimenpiteelle esitysasetukset joko yllä määritellystä mäpistä, tai
   generoi sellaisen itse."
   [tehtava valittu?]
