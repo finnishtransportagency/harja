@@ -7,12 +7,10 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn vie-pohjavesialue [db pohjavesialue]
-  ;; todo: poista!
-  (clojure.pprint/pprint pohjavesialue)
   (if (:the_geom pohjavesialue)
-    (let [nimi (:urakka_lyh pohjavesialue)
-          tunnus (:urakka_id pohjavesialue)
-          ulkoinen-id (int (:id pohjavesialue))
+    (let [nimi (:pvteksti pohjavesialue)
+          tunnus (:ualue pohjavesialue)
+          ulkoinen-id (:id pohjavesialue)
           suorarajoitus (:pvsuola pohjavesialue)
           geometria (.toString (:the_geom pohjavesialue))]
       (if (p/onko-olemassa-ulkoisella-idlla? db ulkoinen-id)
@@ -29,4 +27,4 @@
           (vie-pohjavesialue transaktio pohjavesialue)))
       (p/paivita-pohjavesialueet db)
       (log/debug "Pohjavesialueen tuonti kantaan valmis."))
-    (log/debug "Pohjavesialueen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+    (log/debug "Pohjavesialueen tiedostoa ei löydy kon§figuraatiosta. Tuontia ei suoriteta.")))
