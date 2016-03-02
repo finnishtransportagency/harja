@@ -9,19 +9,13 @@
     #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.format :as df])
-    #?(:clj
-            [clj-time.core :as t])
-    #?(:clj
-            [clj-time.coerce :as tc])
-    #?(:clj
-            [clj-time.local :as l])
-    #?(:clj
-            [taoensso.timbre :as log])
+    #?(:clj [clj-time.core :as t])
+    #?(:clj [clj-time.coerce :as tc])
+    #?(:clj [clj-time.local :as l])
+    #?(:clj [taoensso.timbre :as log])
             [clojure.string :as str])
-
   #?(:cljs (:import (goog.date DateTime))
-     :clj
-           (:import (java.util Calendar Date)
+     :clj (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat))))
 
 
