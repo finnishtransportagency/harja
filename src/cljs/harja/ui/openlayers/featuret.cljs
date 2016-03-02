@@ -7,22 +7,26 @@
             [ol.geom.Circle]
             [ol.geom.LineString]
             [ol.geom.MultiLineString]
-            
+
             [ol.style.Style]
             [ol.style.Fill]
             [ol.style.Stroke]
             [ol.style.Icon]
 
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
 
-(def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä turhaan liikaa"
+            [harja.ui.kartta.apurit :as apurit]))
+
+(def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä
+turhaan liikaa"
        :const true}
   nuolten-valimatka 3000)
 
-(def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään pienemmällä zindexillä." :const true}
+(def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään
+pienemmällä zindexillä." :const true}
   oletus-zindex 4)
 
-(def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
+
 
 (defmulti luo-feature :type)
 
@@ -56,34 +60,6 @@
   [kasvava-zindex tiedot [piste _]]
   (tee-nuoli kasvava-zindex (merge {:anchor [0.5 1]} tiedot) [piste 0]))
 
-(defn taitokset-valimatkoin [valimatka taitokset]
-  (loop [pisteet-ja-rotaatiot []
-         viimeisin-sijanti [0 0]
-         [{:keys [sijainti rotaatio]} & taitokset] taitokset
-         verrokki-kulma rotaatio
-         ensimmainen? true]
-    (if-not sijainti
-      ;; Kaikki käsitelty
-      pisteet-ja-rotaatiot
-
-      (let [[x1 y1] viimeisin-sijanti
-            [x2 y2] sijainti
-            dx (- x1 x2)
-            dy (- y1 y2)
-            dist (Math/sqrt (+ (* dx dx) (* dy dy)))
-            kulman-erotus (- verrokki-kulma rotaatio)]
-        (cond
-          (or (> dist valimatka)
-              (> (max kulman-erotus (- kulman-erotus)) kulmaraja-nuolelle)
-              ensimmainen?)
-          (recur (conj pisteet-ja-rotaatiot
-                       [(-> sijainti second clj->js ol.geom.Point.) rotaatio])
-                 sijainti taitokset rotaatio false)
-
-          :else
-          (recur pisteet-ja-rotaatiot
-                 viimeisin-sijanti taitokset verrokki-kulma false))))))
-
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-ikonille-tyyli
   [zindex laske-taitokset-fn {:keys [tyyppi paikka img] :as ikoni}]
@@ -104,7 +80,8 @@
                              [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol.geom.Point.)
                                (-> (laske-taitokset-fn) last :rotaatio)]]
                              :taitokset
-                             (taitokset-valimatkoin nuolten-valimatka (butlast (laske-taitokset-fn)))))
+                             (apurit/taitokset-valimatkoin
+                              nuolten-valimatka (butlast (laske-taitokset-fn)))))
           pisteet-ja-rotaatiot (mapcat palauta-paikat (if (coll? paikka) paikka [paikka]))]
       (condp = tyyppi
         :nuoli (map #(tee-nuoli zindex ikoni %) pisteet-ja-rotaatiot)
