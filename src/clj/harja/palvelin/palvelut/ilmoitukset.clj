@@ -63,7 +63,7 @@
     #(true? (:myohassa? %))
     ilmoitukset))
 
-(defn- sisaltaa-aloituskuittauksen-aikavalilla
+(defn- sisaltaa-aloituskuittauksen-aikavalilla?
   [ilmoitus kulunut-aika]
   (let [{:keys [ilmoitettu kuittaukset]} ilmoitus
         ilmoitusaika (c/from-sql-time ilmoitettu)
@@ -141,8 +141,8 @@
                       (suodata-myohastyneet ilmoitukset)
                       ilmoitukset)
         ilmoitukset (case aloituskuittauksen-ajankohta
-                      :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla % (t/hours 1)) ilmoitukset)
-                      :myohemmin (filter #(not (sisaltaa-aloituskuittauksen-aikavalilla % (t/hours 1))) ilmoitukset)
+                      :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
+                      :myohemmin (filter #(not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))) ilmoitukset)
                       nil ilmoitukset)]
     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
