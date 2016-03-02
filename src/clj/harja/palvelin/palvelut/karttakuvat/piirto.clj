@@ -30,8 +30,6 @@
             :let [line (Line2D$Double.  x1 y1 x2 y2)]]
       (.draw g line))))
 
-(def nuolen-kulma (* 0.25 Math/PI))
-
 (defmacro with-rotation [g anchor-x anchor-y rad & body]
   `(let [at# (.getTransform ~g)]
      (.rotate ~g ~rad ~anchor-x ~anchor-y)
@@ -58,11 +56,16 @@
   nil-image-observer (reify java.awt.image.ImageObserver
                        (imageUpdate [this img flags x y width height])))
 
+(def ^{:doc "Ikonien tiheys, välimatkaksi otetaan alueen hypotenuusa jaettuna tällä.
+Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
+       :private true}
+  ikonien-tiheys 15)
+
 (defn- piirra-ikonit [g {points :points ikonit :ikonit}]
   (let [segmentit (partition 2 1 points)
-        paikat (apurit/taitokset-valimatkoin 3000 ; FIXME: constant sama kuin frontilla
+        valimatka (/ (geo/extent-hypotenuusa *extent*) ikonien-tiheys)
+        paikat (apurit/taitokset-valimatkoin valimatka
                                              (apurit/pisteiden-taitokset points))]
-
     (doseq [[[x y] rotaatio] paikat]
       (with-rotation g x y rotaatio
         (doseq [{:keys [img scale]} ikonit

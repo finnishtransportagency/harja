@@ -511,7 +511,6 @@
   ([asiat valittu tunniste asia-xf]
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
-     (log "Asioiden eka: " (first asiat))
      (with-meta
        (into []
              (comp (or asia-xf identity)

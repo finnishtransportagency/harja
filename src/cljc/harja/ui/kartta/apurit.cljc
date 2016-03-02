@@ -28,7 +28,7 @@
              kulman-erotus (- verrokki-kulma rotaatio)]
          (cond
            (or (> dist valimatka)
-               (> (max kulman-erotus (- kulman-erotus)) kulmaraja-nuolelle)
+               (> (Math/abs kulman-erotus) kulmaraja-nuolelle)
                ensimmainen?)
            (recur (conj pisteet-ja-rotaatiot
                         [(-> sijainti luo-piste) rotaatio])
@@ -46,4 +46,4 @@
                               (- y2 y1)
                               (- x2 x1))}))
           []
-          (partition 2 1 pisteet)))
+          (partition 2 pisteet)))
