@@ -34,9 +34,9 @@
 
 #?(:clj
    (defn joda-time? [pvm]
-     (or (instance? org.joda.time.DateTime dt)
-         (instance? org.joda.time.LocalDate dt)
-         (instance? org.joda.time.LocalDateTime dt))))
+     (or (instance? org.joda.time.DateTime pvm)
+         (instance? org.joda.time.LocalDate pvm)
+         (instance? org.joda.time.LocalDateTime pvm))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
