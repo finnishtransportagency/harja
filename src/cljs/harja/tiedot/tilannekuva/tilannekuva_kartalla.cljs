@@ -16,7 +16,9 @@
 (defonce karttataso-tilannekuva (atom false))
 (defonce haetut-asiat (atom nil))
 
+(defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
+
 
 (def lisaa-karttatyyppi-fn
   {:ilmoitukset            #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
@@ -64,7 +66,8 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    :tilannekuva
    (into #{}
          (map toimenpiteen-selite)
-         toimenpiteet)))
+         toimenpiteet)
+   "tk" @url-hakuparametrit))
 
 ;; Päivittää tilannekuvan karttatasot kun niiden tiedot ovat muuttuneet.
 ;; Muuntaa kartalla esitettävään muotoon ne tasot, joiden tiedot on oikeasti

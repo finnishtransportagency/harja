@@ -11,7 +11,8 @@
             [harja.domain.roolit :as roolit]
             [clojure.string :as str]
             [harja.virhekasittely :as vk]
-            [cljs-time.core :as time])
+            [cljs-time.core :as time]
+            [goog.string :as gstr])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (def +polku+ (let [host (.-host js/location)]
@@ -89,7 +90,7 @@
     chan))
 
 (defn post!
-  "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
+  "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
 Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service payload] (post! service payload nil false))
   ([service payload transducer] (post! service payload transducer false))
@@ -97,7 +98,7 @@ Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori mu
    (kysely service :post payload transducer paasta-virhe-lapi?)))
 
 (defn get!
-  "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
+  "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
 Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service] (get! service nil false))
   ([service transducer] (get! service transducer false))
@@ -216,3 +217,9 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
           sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
         (recur)))))
 
+(defn url-parametri
+  "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
+  [clj-data]
+  (-> clj-data
+      transit/clj->transit
+      gstr/urlEncode))

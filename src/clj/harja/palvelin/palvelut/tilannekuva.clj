@@ -18,7 +18,8 @@
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [clojure.set :refer [union]]))
+            [clojure.set :refer [union]]
+            [harja.transit :as transit]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -216,6 +217,7 @@
 
 (defn- hae-toteumien-reitit
   [db user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
+  (println "HAE REITIT ALUEELLE: " (pr-str ((juxt :xmin :ymin :xmax :ymax) alue)))
   (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
     (konv/sarakkeet-vektoriin
      (into []
@@ -249,30 +251,36 @@
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
-  ;; FIXME: Toteumat taso on kuvataso, joten siihen vain tehtyjen
-  ;; toimenpiteiden selitteet
   (hae-toteumien-selitteet db user tiedot urakat))
+
 (defmethod hae-osio :toteumat-kuva [db user tiedot urakat _]
   (tulosta-tulos! "toteumaa"
                   (hae-toteumien-reitit db user tiedot urakat)))
+
 (defmethod hae-osio :tyokoneet [db user tiedot urakat _]
   (tulosta-tulos! "tyokonetta"
                   (hae-tyokoneet db user tiedot urakat)))
+
 (defmethod hae-osio :turvallisuuspoikkeamat [db user tiedot urakat _]
   (tulosta-tulos! "turvallisuuspoikkeamaa"
                   (hae-turvallisuuspoikkeamat db user tiedot urakat)))
+
 (defmethod hae-osio :tarkastukset [db user tiedot urakat _]
   (tulosta-tulos! "tarkastusta"
                   (hae-tarkastukset db user tiedot urakat)))
+
 (defmethod hae-osio :laatupoikkeamat [db user tiedot urakat _]
   (tulosta-tulos! "laatupoikkeamaa"
                   (hae-laatupoikkeamat db user tiedot urakat)))
+
 (defmethod hae-osio :paikkaus [db user tiedot urakat _]
   (tulosta-tulos! "paikkausta"
                   (hae-paikkaustyot db user tiedot urakat)))
+
 (defmethod hae-osio :paallystys [db user tiedot urakat _]
   (tulosta-tulos! "paallystysta"
                   (hae-paallystystyot db user tiedot urakat)))
+
 (defmethod hae-osio :ilmoitukset [db user tiedot urakat _]
   (tulosta-tulos! "ilmoitusta"
                   (hae-ilmoitukset db user tiedot urakat)))
@@ -319,25 +327,13 @@
   "Tekee karttakuvan URL parametreistä suodattimet"
   [{:keys [extent parametrit]}]
   (let [[x1 y1 x2 y2] extent
-        hy (some-> parametrit (get "hy") Long/parseLong)]
-    {:talvi #{20 24 39 21 40 41 17 23 19 38 18 42},
-     :urakka-id nil,
-     :turvallisuus {:turvallisuuspoikkeamat false}
-     :laatupoikkeamat {:tilaaja false, :urakoitsija false,
-                       :konsultti false}
-     :kesa #{},
-     :alue {:xmin x1 :ymin y1
-            :xmax x2 :ymax x2}
-     :hallintayksikko hy
-     :urakoitsija nil ;; FIXME
-     :alku #inst "2016-02-13T06:55:39.000-00:00"
-     :nykytilanne? true
-     :loppu #inst "2016-02-20T06:55:39.000-00:00"
-     :urakkatyyppi :hoito}))
+        hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string)]
+    (merge hakuparametrit
+           {:alue {:xmin x1 :ymin y1
+                   :xmax x2 :ymax x2}})))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit]
   (let [tiedot (karttakuvan-suodattimet parametrit)]
-    (println "HAE KUVAAN: " (pr-str tiedot))
     (kartalla-esitettavaan-muotoon
      (map #(assoc % :tyyppi-kartalla :toteuma)
           (:toteumat-kuva (hae-tilannekuvaan db user tiedot #{:toteumat-kuva})))

@@ -28,7 +28,7 @@
         :geometries (into []
                           (map pg->clj)
                           (.getGeometries gc))})
-     
+
      MultiPolygon
      (pg->clj [^MultiPolygon mp]
        {:type :multipolygon
@@ -45,11 +45,11 @@
                                (recur (conj acc (.getPoint p i))
                                       (inc i)))))})
 
-     Point 
+     Point
      (pg->clj [^Point p]
        {:type :point
         :coordinates (piste-koordinaatit p)})
-     
+
      PGpoint
      (pg->clj [^PGpoint p]
        {:type :point
@@ -65,7 +65,7 @@
      (pg->clj [^LineString line]
        {:type :line
         :points (mapv piste-koordinaatit (.getPoints line))})
-     
+
      MultiLineString
      (pg->clj [^MultiLineString mls]
        {:type :multiline
@@ -329,3 +329,10 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmethod ikonin-sijainti :default [g]
   (keskipiste g))
+
+(defn extent-sisalla?
+  "Tarkistaa onko piste extentin sisällä. Ottaa sisään extentin [x1 y1 x2 y2] ja
+pisteen [px py]."
+  [[x1 y1 x2 y2] [px py]]
+  (and (<= x1 px x2)
+       (<= y1 py y2)))

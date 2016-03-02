@@ -64,7 +64,6 @@ datan kartalla esitettävässä muodossa.")
 
 
 (defn- luo-kuva [{:keys [extent resoluutio kuva] :as parametrit} asiat]
-  (println "PARAMETRIT: " (pr-str parametrit))
   (let [[w h] (:kuva parametrit)
         img (BufferedImage. w h BufferedImage/TYPE_INT_ARGB)
         g (doto (.createGraphics img)
@@ -73,11 +72,10 @@ datan kartalla esitettävässä muodossa.")
                                  RenderingHints/VALUE_ANTIALIAS_ON)))
         [x1 _ x2 _] extent]
     (aseta-kuvan-koordinaatisto g kuva extent)
-    (piirra-karttakuvaan (/ (- x2 x1) w) g
-                         asiat)
+    (piirra-karttakuvaan extent (/ (- x2 x1) w) g asiat)
 
     ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
-    (.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
+    ;(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
     img))
 
 (defn- hae-karttakuvadata
@@ -85,14 +83,17 @@ datan kartalla esitettävässä muodossa.")
   [lahteet user parametrit]
   (let [lahteen-nimi (keyword (get-in parametrit [:parametrit "_"]))
         lahde (get lahteet lahteen-nimi)
+        parametrit (assoc parametrit
+                          ;; Käännä yla/ala extentissä, koska ol taso ilmoittaa sen
+                          ;; sen toisin päin kuin meillä
+                          :extent (let  [[vasen yla oikea ala] (:extent parametrit)]
+                                    [vasen ala oikea yla]))
         karttakuvadata (when lahde
                          (lahde user parametrit))]
-    (println "LAHDE nimelle " lahteen-nimi " ON " lahde)
-    (println "SAATIIN: " (count karttakuvadata) " ASIAA")
+    (log/debug "KUVA " lahteen-nimi " HAKI " (count karttakuvadata) " ASIAA")
     karttakuvadata))
 
 (defn karttakuva [lahteet user parametrit]
-  (println "PARAM: " (pr-str parametrit))
   (let [parametrit (lue-parametrit parametrit)
         karttakuvadata (hae-karttakuvadata lahteet user parametrit)
         kuva (kirjoita-kuva

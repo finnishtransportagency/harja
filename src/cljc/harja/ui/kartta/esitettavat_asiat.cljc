@@ -431,7 +431,8 @@
   ;; (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
     (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
-          _ (when (empty? toimenpiteet) (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
+          _ (when (empty? toimenpiteet)
+              (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
                  ;; toteumalla on suoraan nimi
                  (:nimi toteuma)
