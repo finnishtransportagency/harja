@@ -335,7 +335,8 @@ FROM (WITH paivat AS (
       FROM materiaalikoodi mk
         CROSS JOIN paivat p
       WHERE mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi) toteumat
-WHERE maara IS NOT NULL;
+WHERE maara IS NOT NULL
+LIMIT 501;
 
 -- name: hae-suolamateriaalit
 SELECT *
