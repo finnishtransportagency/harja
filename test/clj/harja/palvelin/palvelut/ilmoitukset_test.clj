@@ -146,14 +146,14 @@
    (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetus))))
 
 (deftest aloituskuittausta-ei-annettu-alle-tunnissa
-  (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset {:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 80)))
-                                                                    :kuittaustyyppi :aloitus}}
-        ilmoitus2 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset {:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 55)))
-                                                                     :kuittaustyyppi :vastaanotto}}]
+  (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 80)))
+                                                                      :kuittaustyyppi :aloitus}]}
+        ilmoitus2 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 55)))
+                                                                      :kuittaustyyppi :vastaanotto}]}]
     (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus1 (t/hours 1))))
     (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus2 (t/hours 1))))))
 
 (deftest aloituskuittaus-annettu-alle-tunnissa
-  (let [ilmoitus {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset {:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 25)))
-                                                                    :kuittaustyyppi :aloitus}}]
+  (let [ilmoitus {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 25)))
+                                                                     :kuittaustyyppi :aloitus}]}]
     (is (true? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus (t/hours 1))))))
