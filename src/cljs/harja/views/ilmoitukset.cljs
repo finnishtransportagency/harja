@@ -147,7 +147,8 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
                                            (vec (sort itemit))))))}
-         (lomake/ryhma {:ulkoasu :rivi :palstoja 4}
+         (lomake/ryhma {:ulkoasu :rivi
+                        :palstoja 4}
                        {:nimi             :kuittaustyypit
                         :otsikko          "Tila"
                         :tyyppi           :checkbox-group
