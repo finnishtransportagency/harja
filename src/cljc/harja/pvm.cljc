@@ -44,14 +44,14 @@
        (.setMilliseconds millisekunnit))
 
      :clj
-     (cond type dt
-           java.util.Date (.getTime (doto (Calendar/getInstance)
-                 (.setTime dt)
-                 (.set Calendar/HOUR_OF_DAY tunnit)
-                 (.set Calendar/MINUTE minuutit)
-                 (.set Calendar/SECOND sekunnit)
-                 (.set Calendar/MILLISECOND millisekunnit)))
-           org.joda.time.DateTime
+     (cond (instance? java.util.Date dt)
+           (.getTime (doto (Calendar/getInstance)
+                       (.setTime dt)
+                       (.set Calendar/HOUR_OF_DAY tunnit)
+                       (.set Calendar/MINUTE minuutit)
+                       (.set Calendar/SECOND sekunnit)
+                       (.set Calendar/MILLISECOND millisekunnit)))
+           (instance? org.joda.time.DateTime dt)
            (t/local-date-time
              (t/year dt)
              (t/month dt)
