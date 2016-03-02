@@ -57,9 +57,9 @@
              (t/month dt)
              (t/day dt)
              tunnit
-             minuutit)
+             minuutit
              sekunnit
-             millisekunnit)))
+             millisekunnit))))
 
 (defn paivan-alussa [dt]
   (assert dt "Päivämäärä puuttuu!")
