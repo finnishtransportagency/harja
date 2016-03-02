@@ -48,7 +48,8 @@
                                    (pvm/valissa?
                                      (c/from-sql-time (:kuitattu kuittaus))
                                      ilmoitusaika
-                                     (t/plus ilmoitusaika vaadittu-kuittausaika))
+                                     (t/plus ilmoitusaika vaadittu-kuittausaika)
+                                     false)
                                    (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)))
                                kuittaukset)
         myohassa? (and vaadittu-aika-kulunut?
@@ -76,7 +77,8 @@
                    (pvm/valissa?
                      (c/from-sql-time (:kuitattu kuittaus))
                      ilmoitusaika
-                     (t/plus ilmoitusaika kulunut-aika)))
+                     (t/plus ilmoitusaika kulunut-aika)
+                     false))
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
