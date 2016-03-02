@@ -51,7 +51,9 @@
                        (.set Calendar/MINUTE minuutit)
                        (.set Calendar/SECOND sekunnit)
                        (.set Calendar/MILLISECOND millisekunnit)))
-           (instance? org.joda.time.DateTime dt)
+           (or (instance? org.joda.time.DateTime dt)
+               (instance? org.joda.time.LocalDate dt)
+               (instance? org.joda.time.LocalDateTime dt))
            (t/local-date-time
              (t/year dt)
              (t/month dt)
@@ -114,8 +116,7 @@
   ([eka toka ilman-kellonaikaa?]
    (if (and eka toka)
      (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
-         toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-
+           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
        (or (ennen? eka toka)
            (= (millisekunteina eka) (millisekunteina toka))))
      false)))
@@ -133,7 +134,6 @@
    (if (and eka toka)
      (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
            toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-
        (or (jalkeen? eka toka)
            (= (millisekunteina eka) (millisekunteina toka))))
      false)))
