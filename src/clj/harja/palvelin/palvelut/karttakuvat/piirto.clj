@@ -38,8 +38,6 @@
      ~@body
      (.setTransform ~g at#)))
 
-(defmacro with-scale [g ])
-
 ;; Yksinkertainen kuvien cache
 (def kuvat (atom {}))
 (defn hae-kuva [tiedosto]
