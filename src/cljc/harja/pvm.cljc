@@ -32,6 +32,12 @@
      (-hash [o]
        (hash (tc/to-long o)))))
 
+#?(:clj
+   (defn joda-time? [pvm]
+     (or (instance? org.joda.time.DateTime dt)
+         (instance? org.joda.time.LocalDate dt)
+         (instance? org.joda.time.LocalDateTime dt))))
+
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
      (doto (goog.date.DateTime.)
@@ -51,9 +57,7 @@
                        (.set Calendar/MINUTE minuutit)
                        (.set Calendar/SECOND sekunnit)
                        (.set Calendar/MILLISECOND millisekunnit)))
-           (or (instance? org.joda.time.DateTime dt)
-               (instance? org.joda.time.LocalDate dt)
-               (instance? org.joda.time.LocalDateTime dt))
+           (joda-time? dt)
            (t/local-date-time
              (t/year dt)
              (t/month dt)
@@ -104,10 +108,25 @@
          (= (t/month eka) (t/month toka))
          (= (t/day eka) (t/day toka)))))
 
-(defn ennen? [eka toka]
-  (if (and eka toka)
-    (t/before? eka toka)
-    false))
+
+#?(:cljs
+   (defn ennen? [eka toka]
+     (if (and eka toka)
+       (t/before? eka toka)
+       false))
+
+   :clj
+   (defn ennen? [eka toka]
+     (if (and eka toka)
+       (cond
+         (or (instance? java.util.Date eka)
+             (instance? java.util.Date toka))
+         (.before eka toka)
+         (or (joda-time? eka)
+             (joda-time? toka))
+         (t/before? eka toka))
+       false)))
+
 
 (defn sama-tai-ennen?
   "Tarkistaa, onko ensimmäisenä annettu pvm sama tai ennen toista annettua pvm:ää.
