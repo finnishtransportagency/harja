@@ -31,7 +31,7 @@
                (> (max kulman-erotus (- kulman-erotus)) kulmaraja-nuolelle)
                ensimmainen?)
            (recur (conj pisteet-ja-rotaatiot
-                        [(-> sijainti second luo-piste) rotaatio])
+                        [(-> sijainti luo-piste) rotaatio])
                   sijainti taitokset rotaatio false)
 
            :else
@@ -42,8 +42,8 @@
   (reduce (fn [taitokset [[x1 y1] [x2 y2]]]
             (conj taitokset
                   {:sijainti [x1 y1]
-                   :rotaatio (- (Math/atan2
-                                 (- y2 y1)
-                                 (- x2 x1)))}))
+                   :rotaatio (Math/atan2
+                              (- y2 y1)
+                              (- x2 x1))}))
           []
           (partition 2 1 pisteet)))

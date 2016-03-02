@@ -3,7 +3,7 @@
   #?(:cljs (:require [harja.ui.dom :refer [ie?]])))
 
 (def ikonikansio #?(:cljs "images/tuplarajat/"
-                    :clj "resources/public/images/tuplarajat/"))
+                    :clj "public/images/tuplarajat/"))
 
 #?(:cljs
    (defn karttakuva [perusnimi]

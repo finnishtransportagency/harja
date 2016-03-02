@@ -2,7 +2,8 @@
   "Hoitaa karttalla esitettävien asioiden piirtämisen Java Graphics2D
   piirtoalustaan."
   (:import (java.awt Color BasicStroke RenderingHints)
-           (java.awt.geom AffineTransform Line2D$Double))
+           (java.awt.geom AffineTransform Line2D$Double)
+           (javax.imageio ImageIO))
   (:require [harja.geo :as geo]
             [taoensso.timbre :as log]
             [harja.ui.kartta.apurit :as apurit]))
@@ -37,26 +38,56 @@
      ~@body
      (.setTransform ~g at#)))
 
+(defmacro with-scale [g ])
+
+;; Yksinkertainen kuvien cache
+(def kuvat (atom {}))
+(defn hae-kuva [tiedosto]
+  (swap! kuvat
+         (fn [kuvat]
+           (if (contains? kuvat tiedosto)
+             kuvat
+             (assoc kuvat tiedosto
+                    (ImageIO/read
+                     (ClassLoader/getSystemResourceAsStream tiedosto))))))
+  (if-let [kuva (get @kuvat tiedosto)]
+    kuva
+    (do (log/warn "Karttakuvaa " tiedosto " ei voitu ladata!")
+        nil)))
+
+(def ^:private
+  ;; Rajapinnan tarvima ImageObserver, joka ei tee mitään
+  nil-image-observer (reify java.awt.image.ImageObserver
+                       (imageUpdate [this img flags x y width height])))
+
 (defn- piirra-ikonit [g {points :points ikonit :ikonit}]
-  (log/debug "IKONIT: " (pr-str ikonit))
   (let [segmentit (partition 2 1 points)
         paikat (apurit/taitokset-valimatkoin 3000 ; FIXME: constant sama kuin frontilla
                                              (apurit/pisteiden-taitokset points))]
-    (println "TAITOKSET PAIKOISSA: " (pr-str paikat))
-    (doseq [[{:keys [sijainti rotaatio]} & taitokset] paikat
-            :let [[x y] sijainti]]
+
+    (doseq [[[x y] rotaatio] paikat]
       (with-rotation g x y rotaatio
-        (.drawImage Line g x1 y1 (+ x1 (px 20)) (+ y1 (px 50))))
-      (with-rotation g x1 y1 (- kulma nuolen-kulma)
-        (.drawLine g x1 y1 (+ x1 (px 20)) (+ y1 (px 50))))
-      )))
+        (doseq [{:keys [img scale]} ikonit
+                :let [kuva (hae-kuva img)]]
+          (when kuva
+            (.drawImage g kuva
+                        (doto (AffineTransform.)
+                          ;; Keskitetään kuva
+                          (.translate (px (/ (.getWidth kuva) 2))
+                                      (px (- (/ (.getHeight kuva) 2))))
+                          ;; Siirretään kuvan kohtaan
+                          (.translate x y)
+
+                          ;; Skaalataan pikselit karttakoordinaateiksi
+                          (.scale (px scale) (px scale)))
+                        nil-image-observer)))))))
 
 
 (defmethod piirra :viiva [g toteuma {:keys [viivat points ikonit] :as alue}]
   (let [viivat (reverse (sort-by :width viivat))]
-    (piirra-ikonit g alue)
     (doseq [viiva viivat]
-      (piirra-viiva g  alue viiva))))
+      (piirra-viiva g  alue viiva))
+    (piirra-ikonit g alue)))
 
 (defn piirra-karttakuvaan [extent px-scale g asiat]
   (binding [*px-scale* px-scale
