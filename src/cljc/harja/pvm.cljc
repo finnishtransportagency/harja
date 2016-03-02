@@ -9,13 +9,19 @@
     #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.format :as df])
-    #?(:clj [clj-time.core :as t])
-    #?(:clj [clj-time.coerce :as tc])
-    #?(:clj [clj-time.local :as l])
-    #?(:clj [taoensso.timbre :as log])
+    #?(:clj
+            [clj-time.core :as t])
+    #?(:clj
+            [clj-time.coerce :as tc])
+    #?(:clj
+            [clj-time.local :as l])
+    #?(:clj
+            [taoensso.timbre :as log])
             [clojure.string :as str])
+
   #?(:cljs (:import (goog.date DateTime))
-     :clj (:import (java.util Calendar Date)
+     :clj
+           (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat))))
 
 
@@ -46,7 +52,14 @@
                  (.set Calendar/SECOND sekunnit)
                  (.set Calendar/MILLISECOND millisekunnit)))
            org.joda.time.DateTime
-           (t/local-date (t/year dt) (t/month dt) (t/day dt)))))
+           (t/local-date-time
+             (t/year dt)
+             (t/month dt)
+             (t/day dt)
+             (t/hour tunnit)
+             (t/minute minuutit)
+             (t/second sekunnit)
+             (t/milli millisekunnit)))))
 
 (defn paivan-alussa [dt]
   (assert dt "Päivämäärä puuttuu!")
