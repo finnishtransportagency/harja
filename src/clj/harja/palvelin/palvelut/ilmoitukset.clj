@@ -143,7 +143,7 @@
         ilmoitukset (case aloituskuittauksen-ajankohta
                       :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla % (t/hours 1)) ilmoitukset)
                       :myohemmin (filter #(not (sisaltaa-aloituskuittauksen-aikavalilla % (t/hours 1))) ilmoitukset)
-                      :default ilmoitukset)]
+                      nil ilmoitukset)]
     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
     ilmoitukset))
