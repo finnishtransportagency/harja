@@ -161,7 +161,7 @@
                             [:div.col-sm-4.murupolku-oikea
                              [urakoitsija]])]
             ;; Perusversio
-            (if ei-urakkaa?
+            (if (or ei-urakkaa? (= sivu :raportit))
               [:ol.murupolku
                [:div.col-sm-6.murupolku-vasen
                 [koko-maa]

@@ -62,8 +62,8 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara) VALUES ((SE
 
 INSERT INTO toteuma (urakka, sopimus, alkanut, paattynyt, tyyppi, lisatieto, suorittajan_ytunnus, suorittajan_nimi) VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019' AND paasopimus IS NULL)), '2016-01-05 13:10:00.000000', '2016-01-05 13:20:00.000000', 'yksikkohintainen', 'Varustetarkastus 1', '8765432-1', 'Tehotekijät Oy');
 INSERT INTO varustetoteuma (tunniste, toteuma, toimenpide, tietolaji, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
-                            piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi, tarkastusaika)
-VALUES ('HARJ951547ZK', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetarkastus 1'), 'tarkastus', 'tl505', 4, 364, 4157, null, null, null, 5, 9, '2015-11-05 11:57:05.360537', null, 1, null, null, null, 'HARJ951547ZK        2                           HARJ951547ZK          01  ', null, '2016-01-05 13:15:00');
+                            piiri, kuntoluokka, luoja, luotu, karttapvm, tr_puoli, tr_ajorata, alkupvm, loppupvm, arvot, tierekisteriurakkakoodi)
+VALUES ('HARJ951547ZK', (SELECT id FROM toteuma WHERE lisatieto = 'Varustetarkastus 1'), 'tarkastus', 'tl505', 4, 364, 4157, null, null, null, 5, 9, '2015-11-05 11:57:05.360537', null, 1, null, null, null, 'HARJ951547ZK        2                           HARJ951547ZK          01  ', null);
 
 
 -- Pudasjärven alueurakka 2007-2012

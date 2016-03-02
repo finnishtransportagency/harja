@@ -6,7 +6,7 @@
             [harja.domain.roolit :as roolit]
             [clj-time.coerce :as tc]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
             [clj-time.core :as t]
@@ -18,11 +18,17 @@
 (defn hae-ilmoitukset-raportille
   [db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
    +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto selite]
-  (ilmoituspalvelu/hae-ilmoitukset
-    db user hallintayksikko-id urakka-id
-    urakoitsija urakkatyyppi
-    +ilmoitustilat+ +ilmoitustyypit+
-    [alkupvm loppupvm] hakuehto selite))
+  (ilmoituspalvelu/hae-ilmoitukset db user
+                                   {:hallintayksikko-id hallintayksikko-id
+                                    :urakka-id urakka-id
+                                    :urakoitsija urakoitsija
+                                    :urakkatyyppi urakkatyyppi
+                                    :tilat +ilmoitustilat+
+                                    :tyypit +ilmoitustyypit+
+                                    :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}
+                                    :aikavali [alkupvm loppupvm]
+                                    :hakuehto hakuehto
+                                    :selite selite}))
 
 (defn ilmoitukset-asiakaspalauteluokittain [db urakka-id hallintayksikko-id alkupvm loppupvm]
   (let [rivit [["Talvihoito" 0 2 3] ["Polanteen tasaus" 3 55 21]]]

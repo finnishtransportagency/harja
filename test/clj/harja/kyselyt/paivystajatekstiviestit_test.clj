@@ -10,6 +10,9 @@
 (defn poista-ilmoitukset []
   (u "DELETE FROM ilmoitus WHERE otsikko = 'yksikkotesti'"))
 
+(defn poista-ilmoitustoimenpiteet []
+  (u "DELETE FROM ilmoitustoimenpide WHERE ilmoitus IN (SELECT id FROM ilmoitus WHERE otsikko = 'yksikkotesti')"))
+
 (defn poista-paivystajatekstiviestit [paivystaja-id]
   (u (format "DELETE FROM paivystajatekstiviesti WHERE yhteyshenkilo = %s" paivystaja-id)))
 
@@ -17,10 +20,12 @@
   (first (first (q "SELECT id FROM yhteyshenkilo LIMIT 1;"))))
 
 (defn sulje-ilmoitus [ilmoitus-id]
-  (u (format "UPDATE ilmoitus SET suljettu = TRUE WHERE ilmoitusid = %s;" ilmoitus-id)))
+  (u (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu) VALUES
+  ((SELECT id FROM ilmoitus WHERE ilmoitusid = %s), %s,
+  'lopetus' :: kuittaustyyppi, now());" ilmoitus-id ilmoitus-id)))
 
 (defn hae-seuraava-viestinumero [paivystaja-id]
-  (first(first(q (format "SELECT hae_seuraava_vapaa_viestinumero(%s);" paivystaja-id)))))
+  (first (first (q (format "SELECT hae_seuraava_vapaa_viestinumero(%s);" paivystaja-id)))))
 
 (deftest tarkista-taman-hetkisen-paivystajan-haku
   (let [db (tietokanta/luo-tietokanta testitietokanta)
@@ -49,5 +54,6 @@
     (is (= 2 (hae-seuraava-viestinumero paivystaja-id))
         "Seuraava id on yhä 2, kun suurimman id:n omaava ilmoitus on suljettu")
 
+    (poista-ilmoitustoimenpiteet)
     (poista-paivystajatekstiviestit paivystaja-id)
     (poista-ilmoitukset)))

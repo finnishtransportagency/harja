@@ -14,5 +14,9 @@ FROM paivystajatekstiviesti p
   INNER JOIN ilmoitus i ON i.id = p.ilmoitus
 WHERE p.yhteyshenkilo = :yhteyshenkilo AND
       p.viestinumero = :viestinumero AND
-      i.suljettu IS NOT TRUE
+      NOT exists(SELECT itp.id
+                 FROM ilmoitustoimenpide itp
+                 WHERE
+                   itp.ilmoitus = i.id AND
+                   itp.kuittaustyyppi = 'lopetus')
 LIMIT 1;
