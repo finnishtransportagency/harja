@@ -37,3 +37,13 @@
            :else
            (recur pisteet-ja-rotaatiot
                   viimeisin-sijanti taitokset verrokki-kulma false)))))))
+
+(defn pisteiden-taitokset [pisteet]
+  (reduce (fn [taitokset [[x1 y1] [x2 y2]]]
+            (conj taitokset
+                  {:sijainti [x1 y1]
+                   :rotaatio (- (Math/atan2
+                                 (- y2 y1)
+                                 (- x2 x1)))}))
+          []
+          (partition 2 1 pisteet)))

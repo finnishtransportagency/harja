@@ -25,33 +25,6 @@
                (not= -1 (.indexOf ua "Trident/"))
                (not= -1 (.indexOf ua "Edge/")))))
 
-(defn karttakuva
-  "Palauttaa kuvatiedoston nimen, jos käytössä IE palauttaa .png kuvan, muuten .svg"
-  [perusnimi]
-  (str perusnimi (if ie? ".png" ".svg")))
-
-(defn assertoi-ikonin-vari [vari]
-  (assert #{"keltainen" "lime" "magenta" "musta" "oranssi" "pinkki"
-            "punainen" "sininen" "syaani" "tummansininen" "turkoosi"
-            "vihrea" "violetti"} vari))
-
-(def ikonikansio "images/tuplarajat/")
-
-(defn sijainti-ikoni
-  "Oletukena palautetaan <vari-str> värinen sijainti-ikoni, jolla on musta reuna."
-  ([vari-str] (sijainti-ikoni "musta" vari-str))
-  ([tila-str vari-str]
-   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} tila-str))
-   (assertoi-ikonin-vari vari-str)
-   (karttakuva (str ikonikansio"sijainnit/sijainti-"tila-str"-"vari-str))))
-
-(defn nuoli-ikoni [vari-str]
-  (assertoi-ikonin-vari vari-str)
-  (karttakuva (str ikonikansio"nuolet/nuoli-"vari-str)))
-
-(defn pinni-ikoni [vari-str]
-  (assertoi-ikonin-vari vari-str)
-  (karttakuva (str ikonikansio"pinnit/pinni-"vari-str)))
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
