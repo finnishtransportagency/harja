@@ -71,7 +71,7 @@
             (.drawImage g kuva
                         (doto (AffineTransform.)
                           ;; Keskitetään kuva
-                          (.translate (px (/ (.getWidth kuva) 2))
+                          (.translate  (px (- (/ (.getWidth kuva) 2)))
                                       (px (- (/ (.getHeight kuva) 2))))
                           ;; Siirretään kuvan kohtaan
                           (.translate x y)
