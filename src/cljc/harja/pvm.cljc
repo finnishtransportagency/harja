@@ -112,12 +112,13 @@
   Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
-   (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+   (if (and eka toka)
+     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
          toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-     (if (and eka toka)
+
        (or (ennen? eka toka)
-           (= (millisekunteina eka) (millisekunteina toka)))
-       false))))
+           (= (millisekunteina eka) (millisekunteina toka))))
+     false)))
 
 (defn jalkeen? [eka toka]
   (if (and eka toka)
@@ -129,12 +130,13 @@
   Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([eka toka] (sama-tai-jalkeen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
-   (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
-         toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-     (if (and eka toka)
+   (if (and eka toka)
+     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
+
        (or (jalkeen? eka toka)
-           (= (millisekunteina eka) (millisekunteina toka)))
-       false))))
+           (= (millisekunteina eka) (millisekunteina toka))))
+     false)))
 
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
