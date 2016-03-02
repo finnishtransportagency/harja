@@ -18,6 +18,7 @@
     (number? p) true
     (instance? Date p) true
     (instance? Boolean p) p
+    (keyword? p) true
     (map? p) (some true? (map #(hakuehto-annettu? (val %)) p))
     (empty? p) false
     :else true))
@@ -57,8 +58,31 @@
 (defn- lisaa-tieto-myohastymisesta [ilmoitus]
   (assoc ilmoitus :myohassa? (ilmoitus-myohassa? ilmoitus)))
 
+(defn- suodata-myohastyneet [ilmoitukset]
+  (filter
+    #(true? (:myohassa? %))
+    ilmoitukset))
+
+(defn- sisaltaa-aloituskuittauksen-aikavalilla
+  [ilmoitus kulunut-aika]
+  (let [{:keys [ilmoitettu kuittaukset]} ilmoitus
+        ilmoitusaika (c/from-sql-time ilmoitettu)
+        aloituskuittaukset (filter
+                             #(= (:kuittaustyyppi %) :aloitus)
+                             kuittaukset)
+        aloituskuittauksia-annetuna-ajan-valissa
+        (true? (some
+                 (fn [kuittaus]
+                   (pvm/valissa?
+                     (c/from-sql-time (:kuitattu kuittaus))
+                     ilmoitusaika
+                     (t/plus ilmoitusaika kulunut-aika)))
+                 aloituskuittaukset))]
+    aloituskuittauksia-annetuna-ajan-valissa))
+
 (defn hae-ilmoitukset
-  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit kuittaustyypit aikavali hakuehto selite vain-myohassa?]}]
+  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
+                   kuittaustyypit aikavali hakuehto selite vain-myohassa? aloituskuittauksen-ajankohta]}]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -75,7 +99,8 @@
                           (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
                           (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
                           (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
-                          (viesti vain-myohassa? "vain myöhässä olevat?" "myös myöhästyneet")
+                          (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
+                          (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
                           (viesti selite "selitteellä:" "ilman selitettä")
                           (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                           (cond
@@ -83,43 +108,41 @@
                             (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
                             (:suljetut tilat) ", ainoastaan suljetut."))
         _ (log/debug debug-viesti)
-        tulos (when-not (empty? urakat)
-                (konv/sarakkeet-vektoriin
-                  (into []
-                        (comp
-                          (harja.geo/muunna-pg-tulokset :sijainti)
-                          (map konv/alaviiva->rakenne)
-                          (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
-                          (filter #(kuittaustyypit (:tila %)))
-                          (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-                          (map #(konv/array->vec % :selitteet))
-                          (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                          (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                          (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                          (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                        (q/hae-ilmoitukset db
-                                           urakat
-                                           (hakuehto-annettu? aikavali-alku) (hakuehto-annettu? aikavali-loppu)
-                                           aikavali-alku aikavali-loppu
-                                           (hakuehto-annettu? tyypit) tyypit
-                                           (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
-                                           selite-annettu? selite))
-                  {:kuittaus :kuittaukset}))
-        tulos (mapv
-                #(-> %
-                     (assoc :uusinkuittaus
-                            (when-not (empty? (:kuittaukset %))
-                              (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                     (lisaa-tieto-myohastymisesta))
-                tulos)
-        tulos (if vain-myohassa?
-                (filter
-                  #(true? (:myohassa? %))
-                  tulos)
-                tulos)]
-    (log/debug "Löydettiin ilmoitukset: " (map :id tulos))
-    (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) tulos) "kappaletta")
-    tulos))
+        ilmoitukset (when-not (empty? urakat)
+                      (konv/sarakkeet-vektoriin
+                        (into []
+                              (comp
+                                (harja.geo/muunna-pg-tulokset :sijainti)
+                                (map konv/alaviiva->rakenne)
+                                (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
+                                (filter #(kuittaustyypit (:tila %)))
+                                (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                                (map #(konv/array->vec % :selitteet))
+                                (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                                (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                                (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                                (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                              (q/hae-ilmoitukset db
+                                                 urakat
+                                                 (hakuehto-annettu? aikavali-alku) (hakuehto-annettu? aikavali-loppu)
+                                                 aikavali-alku aikavali-loppu
+                                                 (hakuehto-annettu? tyypit) tyypit
+                                                 (hakuehto-annettu? hakuehto) (str "%" hakuehto "%")
+                                                 selite-annettu? selite))
+                        {:kuittaus :kuittaukset}))
+        ilmoitukset (mapv
+                      #(-> %
+                           (assoc :uusinkuittaus
+                                  (when-not (empty? (:kuittaukset %))
+                                    (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                           (lisaa-tieto-myohastymisesta))
+                      ilmoitukset)
+        ilmoitukset (if vain-myohassa?
+                      (suodata-myohastyneet ilmoitukset)
+                      ilmoitukset)]
+    (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
+    (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
+    ilmoitukset))
 
 (defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
