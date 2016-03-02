@@ -148,33 +148,29 @@
   ([asia valittu? merkit viivat pisteen-ikoni]
    (let [geo (or (:sijainti asia) asia)
          tyyppi (:type geo)
-         koordinaatit (or (:coordinates geo)
-                          (:points geo)
-                          (mapcat :points (:lines geo)))]
-     (cond
-       ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä,
-       ;; joilla on vain yksi piste
-       ;; Ei tietoa onko tämä virheellistä testidataa vai real world case,
-       ;; mutta varaudutaan siihen joka tapauksessa
-       (or (= :point tyyppi) (= 1 (count koordinaatit)))
-       (when merkit
+         koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
+     (when (not (empty? koordinaatit))
+       (cond
+         ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
+         ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
+         (or (= :point tyyppi) (= 1 (count koordinaatit)))
+         (when merkit
+           (merge
+            (maarittele-piste valittu? (or pisteen-ikoni merkit))
+            {:type        :merkki
+             :coordinates (flatten koordinaatit)})) ;; [x y] -> [x y] && [[x y]] -> [x y]
+
+         (= :line tyyppi)
          (merge
-          (maarittele-piste valittu? (or pisteen-ikoni merkit))
-          {:type        :merkki
-           ;; [x y] -> [x y] && [[x y]] -> [x y]
-           :coordinates (flatten koordinaatit)}))
+          (maarittele-viiva valittu? merkit viivat)
+          {:type   :viiva
+           :points koordinaatit})
 
-       (= :line tyyppi)
-       (merge
-         (maarittele-viiva valittu? merkit viivat)
-         {:type   :viiva
-          :points koordinaatit})
-
-       (= :multiline tyyppi)
-       (merge
-         (maarittele-viiva valittu? merkit viivat)
-         {:type   :viiva
-          :points koordinaatit})))))
+         (= :multiline tyyppi)
+         (merge
+          (maarittele-viiva valittu? merkit viivat)
+          {:type   :viiva
+           :points koordinaatit}))))))
 
 ;;;;;;
 
@@ -515,10 +511,13 @@
   ([asiat valittu tunniste asia-xf]
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
+     (log "Asioiden eka: " (first asiat))
      (with-meta
        (into []
              (comp (or asia-xf identity)
                    (map #(kartalla-xf % valittu (or tunniste [:id])))
+                   (filter some?)
+                   (filter #(some? (:alue %)))
                    (geo/laske-extent-xf extent)
                    (tallenna-selitteet-xf selitteet))
              asiat)

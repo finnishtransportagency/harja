@@ -23,8 +23,7 @@ FROM toimenpidekoodi t4
 WHERE t4.taso = 4 AND
       t3.id IN (SELECT toimenpide
                 FROM toimenpideinstanssi
-                WHERE urakka = :urakka) AND
-      t4.poistettu = FALSE;
+                WHERE urakka = :urakka);
 
 
 -- name: hae-urakan-toimenpiteet

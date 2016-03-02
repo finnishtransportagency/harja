@@ -241,7 +241,8 @@ FROM toteuma_tehtava tt
                           AND toimenpidekoodi = :toimenpidekoodi
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
-  LEFT JOIN kayttaja k ON k.id = t.luoja;
+  LEFT JOIN kayttaja k ON k.id = t.luoja
+  LIMIT 301;
 
 -- name: paivita-toteuma!
 UPDATE toteuma
@@ -477,7 +478,6 @@ INSERT INTO varustetoteuma (tunniste,
                             piiri,
                             kuntoluokka,
                             tierekisteriurakkakoodi,
-                            tarkastusaika,
                             luoja,
                             luotu)
 VALUES (
@@ -492,7 +492,6 @@ VALUES (
   :piiri,
   :kuntoluokka,
   :tierekisteriurakkakoodi,
-  :tarkastusaika,
   :luoja,
   NOW());
 
@@ -665,7 +664,6 @@ SELECT
   karttapvm,
   tr_puoli,
   tr_ajorata,
-  tarkastusaika,
   t.id                    AS toteumaid,
   t.alkanut               AS alkupvm,
   t.paattynyt             AS loppupvm,

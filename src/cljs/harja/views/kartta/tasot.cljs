@@ -174,7 +174,6 @@
      :nakyman-geometriat
      (aseta-z-index (vec (vals @nakyman-geometriat))
                     (inc oletus-zindex))}
-
     (into {}
           (map (fn [[tason-nimi tason-sisalto]]
                  {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})

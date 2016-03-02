@@ -16,8 +16,6 @@
       (do
         (jms-lahettaja xml viesti-id)
         (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db viesti-id id)
-        (when (= "lopetus" (:kuittaustyyppi data))
-          (ilmoitukset/merkitse-ilmoitustoimenpide-suljetuksi! db (:ilmoitus data)))
         (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id)))
       (do
         (log/error (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n epäonnistui." id))

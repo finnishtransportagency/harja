@@ -1,9 +1,10 @@
 (ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.ilmoitukset :refer :all]
+            [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -32,7 +33,7 @@
   (let []
     (is (oikeat-sarakkeet-palvelussa?
           [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :lyhytselite :pitkaselite
-           :ilmoitustyyppi :selitteet :urakkatyyppi :suljettu :sijainti :uusinkuittaus
+           :ilmoitustyyppi :selitteet :urakkatyyppi :sijainti :uusinkuittaus :tila
 
            [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]
            [:ilmoittaja :etunimi] [:ilmoittaja :sukunimi] [:ilmoittaja :tyopuhelin] [:ilmoittaja :matkapuhelin]
@@ -53,6 +54,7 @@
            :urakka nil
            :tilat nil
            :tyypit [:kysely :toimepidepyynto :ilmoitus]
+           :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
            :aikavali nil
            :hakuehto nil}))))
 
@@ -62,6 +64,7 @@
                     :hoitokausi      nil
                     :aikavali        [(java.util.Date. 0 0 0) (java.util.Date.)]
                     :tyypit          +ilmoitustyypit+
+                    :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
                     :tilat           +ilmoitustilat+
                     :hakuehto        ""}
         ilmoitusten-maara-suoraan-kannasta (ffirst (q
@@ -88,3 +91,13 @@
     (is (= kuittausten-maara-suoraan-kannasta kuittaukset-palvelusta-lkm) "Kuittausten lukumäärä")
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
+
+(deftest ilmoituksen-tyyppi
+ (let [kuittaamaton-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu false}
+       vastaanotettu-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu true}
+       aloitettu-ilmoitus {:aloitettu true :lopetettu false :vastaanotettu true}
+       lopetettu-ilmoitus {:aloitettu true :lopetettu true :vastaanotettu true}]
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila kuittaamaton-ilmoitus)) :kuittaamaton))
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotto))
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitus))
+   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetus))))
