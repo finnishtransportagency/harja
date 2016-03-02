@@ -103,27 +103,38 @@
          (= (t/day eka) (t/day toka)))))
 
 (defn ennen? [eka toka]
-     (if (and eka toka)
-       (t/before? eka toka)))
+  (if (and eka toka)
+    (t/before? eka toka)
+    false))
 
 (defn sama-tai-ennen?
+  "Tarkistaa, onko ensimmäisenä annettu pvm sama tai ennen toista annettua pvm:ää.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
    (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
          toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-     (if-not (or (nil? eka) (nil? toka))
-       (or (ennen? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
+     (if (and eka toka)
+       (or (ennen? eka toka)
+           (= (millisekunteina eka) (millisekunteina toka)))
        false))))
 
 (defn jalkeen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
+  (if (and eka toka)
     (t/after? eka toka)
     false))
 
-(defn sama-tai-jalkeen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
-    (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
-    false))
+(defn sama-tai-jalkeen?
+  "Tarkistaa, onko ensimmäisenä annettu pvm sama tai toisena annettun pvm:n jälkeen.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
+  ([eka toka] (sama-tai-jalkeen? eka toka true))
+  ([eka toka ilman-kellonaikaa?]
+   (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+         toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
+     (if (and eka toka)
+       (or (jalkeen? eka toka)
+           (= (millisekunteina eka) (millisekunteina toka)))
+       false))))
 
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
@@ -134,9 +145,12 @@
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
-  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä."
-  [pvm alkupvm loppupvm]
-  (and (sama-tai-jalkeen? pvm alkupvm) (sama-tai-ennen? pvm loppupvm)))
+  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä. Mahdollisuus verrata ilman kellonaikaa,
+  joka on oletuksena true."
+  ([pvm alkupvm loppupvm] (valissa? pvm alkupvm loppupvm true))
+  ([pvm alkupvm loppupvm ilman-kellonaikaa?]
+   (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
+        (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
