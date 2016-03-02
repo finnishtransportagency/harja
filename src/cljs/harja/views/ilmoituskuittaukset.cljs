@@ -4,7 +4,7 @@
             [reagent.core :refer [atom]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoituskuittaukset :as tiedot]
-            [harja.domain.ilmoitusapurit :as apurit]
+            [harja.domain.ilmoitukset :as apurit]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]

@@ -78,25 +78,21 @@
      :clj  (Date. (- vuosi 1900) kk pv)))
 
 (defn sama-pvm? [eka toka]
-  (assert eka "Ensimmäinen päivämäärä puuttuu!")
-  (assert toka "Toinen päivämäärä puuttuu!")
-  (and (= (t/year eka) (t/year toka))
-       (= (t/month eka) (t/month toka))
-       (= (t/day eka) (t/day toka))))
+  (if-not (and eka toka)
+    false
+    (and (= (t/year eka) (t/year toka))
+         (= (t/month eka) (t/month toka))
+         (= (t/day eka) (t/day toka)))))
 
 
 #?(:cljs
    (defn ennen? [eka toka]
-     (assert eka "Ensimmäinen päivämäärä puuttuu!")
-     (assert toka "Toinen päivämäärä puuttuu!")
      (if (and eka toka)
        (t/before? eka toka)
        false))
 
    :clj
    (defn ennen? [eka toka]
-     (assert eka "Ensimmäinen päivämäärä puuttuu!")
-     (assert toka "Toinen päivämäärä puuttuu!")
      (if (and eka toka)
        (.before eka toka)
        false)))
@@ -104,8 +100,6 @@
 (defn sama-tai-ennen?
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
-   (assert eka "Ensimmäinen päivämäärä puuttuu!")
-   (assert toka "Toinen päivämäärä puuttuu!")
    (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
          toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
      (if-not (or (nil? eka) (nil? toka))
@@ -125,10 +119,10 @@
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
   [eka toka]
-  (assert eka "Ensimmäinen päivämäärä puuttuu!")
-  (assert toka "Toinen päivämäärä puuttuu!")
-  (and (= (t/year eka) (t/year toka))
-       (= (t/month eka) (t/month toka))))
+  (if-not (and eka toka)
+    false
+    (and (= (t/year eka) (t/year toka))
+         (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
   "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä."

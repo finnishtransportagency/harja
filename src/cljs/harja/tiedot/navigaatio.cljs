@@ -1,8 +1,8 @@
 (ns harja.tiedot.navigaatio
-  "Tämä nimiavaruus hallinnoi sovelluksen navigoinnin. Sisältää atomit, joilla eri sivuja ja polkua 
+  "Tämä nimiavaruus hallinnoi sovelluksen navigoinnin. Sisältää atomit, joilla eri sivuja ja polkua
 sovelluksessa ohjataan sekä kytkeytyy selaimen osoitepalkin #-polkuun ja historiaan. Tämä nimiavaruus
 ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa navigointitiedot."
- 
+
   (:require
    ;; Reititykset
    [goog.events :as events]
@@ -10,7 +10,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [goog.history.EventType :as EventType]
    [reagent.core :refer [atom wrap]]
    [cljs.core.async :refer [<! >! chan close!]]
-   
+
    [harja.loki :refer [log tarkkaile!]]
    [harja.asiakas.tapahtumat :as t]
    [harja.tiedot.urakoitsijat :as urk]
@@ -20,11 +20,12 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.tiedot.navigaatio.reitit :as reitit]
    [harja.atom :refer-macros [reaction<!]]
    [harja.pvm :as pvm]
-   [clojure.string :as str])
-  
+   [clojure.string :as str]
+   [harja.geo :as geo])
+
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
-  
+
   (:import goog.History))
 
 
@@ -55,12 +56,21 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
      {:xmin minx :ymin miny
       :xmax maxx :ymax maxy})))
 
+(def kartan-nakyvan-alueen-koko
+  (reaction
+   ((comp geo/extent-hypotenuusa (juxt :xmin :ymin :xmax :ymax))
+    @kartalla-nakyva-alue)))
+
 ;; Kartan koko voi olla
 ;; :hidden (ei näy mitään)
 ;; :S (näkyy Näytä kartta -nappi)
 ;; :M (matalampi täysleveä)
 ;; :L (korkeampi täysleveä)
 (def kartan-kokovalinta "Kartan koko" (atom :S))
+
+(def kartta-nakyvissa? "Kartta ei piilotettu" (reaction (let [koko @kartan-kokovalinta]
+                                                          (and (not= :S koko)
+                                                               (not= :hidden koko)))))
 
 (defn vaihda-kartan-koko! [uusi-koko]
   (let [vanha-koko @kartan-kokovalinta]
@@ -80,13 +90,17 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    {:nimi "Paikkaus" :arvo :paikkaus }
    {:nimi "Valaistus" :arvo :valaistus }])
 
+(defn urakkatyyppi [tyyppi]
+  (first (filter #(= tyyppi (:arvo %))
+                 +urakkatyypit+)))
+
 (defn nayta-urakkatyyppi [tyyppi]
   (:nimi (first
            (filter #(= tyyppi (:arvo %))
                    +urakkatyypit+))))
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
-                         tätä valintaa voi käyttää esim. alueurakoitden 
+                         tätä valintaa voi käyttää esim. alueurakoitden
                          urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
 
 ;; Hallintayksikön valinta id:llä (URL parametrista)
@@ -98,12 +112,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                   yksikot @hy/hallintayksikot]
               (when (and id yksikot)
                 (some #(and (= id (:id %)) %) yksikot)))))
-
-(def hallintayksikot-kartalla
-  (reaction (let [hals @hy/hallintayksikot]
-              (if @valittu-hallintayksikko
-                []
-                hals))))
 
 ;; Jos urakka valitaan id:n perusteella (url parametrilla), asetetaan se tänne
 (defonce valittu-urakka-id (atom nil))
@@ -121,19 +129,14 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
               (when (and id urakat)
                 (some #(when (= id (:id %)) %) urakat)))))
 
-(defonce edellinen-valittu-urakkatyyppi (atom nil))
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 (defonce valittu-urakkatyyppi
-         (reaction (let [valittu-urakka @valittu-urakka]
-                     (if valittu-urakka
-                       (let [valittu (first (filter #(= (:tyyppi valittu-urakka) (:arvo %))
-                                                    +urakkatyypit+))]
-                         (reset! edellinen-valittu-urakkatyyppi valittu)
-                         valittu)
-                       (if (not (nil? @edellinen-valittu-urakkatyyppi))
-                         @edellinen-valittu-urakkatyyppi
-                         (first +urakkatyypit+))))))
+         (atom (urakkatyyppi :hoito)))
+
+(defonce paivita-valittu-urakkatyyppi!
+         (run! (when-let [ur @valittu-urakka]
+                 (reset! valittu-urakkatyyppi (urakkatyyppi (:tyyppi ur))))))
 
 (defn paivita-urakka [urakka-id funktio & argumentit]
   (swap! hallintayksikon-urakkalista (fn [urakat]
@@ -189,7 +192,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))
-  
+
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
    löydy valitun tyyppisten urakoitsijain listasta."
@@ -240,11 +243,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                ;; Ehkä joku pino kartan valintatapahtumien kuuntelijoita, jonne voi lisätä
                ;; itsensä ja ne ajettaisiin uusin ensin. Jos palauttaa true, ei ajeta muita.
                ;; Silloin komponentti voisi ylikirjoittaa valintatapahtumien käsittelyn.
-                      
+
                (fn [urakka]
                  ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
                  (valitse-urakka urakka))))
-              
+
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
                     (events/listen h EventType/NAVIGATE

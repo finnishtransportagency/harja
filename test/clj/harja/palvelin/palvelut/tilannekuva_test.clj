@@ -7,7 +7,8 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.domain.tilannekuva :as tk]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -33,56 +34,52 @@
    :urakoitsija     nil
    :urakkatyyppi    :hoito
    :nykytilanne?    false
-   :alue            {:xmin -550093.049087613, :ymin 6372322.595126259, :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
+   :alue            {:xmin -550093.049087613, :ymin 6372322.595126259,
+                     :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
    :alku            (c/to-date (t/local-date 2000 1 1))
    :loppu           (c/to-date (t/local-date 2030 1 1))
-   :yllapito        {:paallystys true
-                     :paikkaus   true}
-   :ilmoitukset     {:tyypit {:toimenpidepyynto true
-                              :kysely           true
-                              :tiedoitus        true}
-                     :tilat  #{:avoimet :suljetut}}
-   :turvallisuus    {:turvallisuuspoikkeamat true}
-   :laatupoikkeamat {:tilaaja     true
-                     :urakoitsija true
-                     :konsultti   true}
-   :tarkastukset    {:tiesto     true
-                     :talvihoito true
-                     :soratie    true
-                     :laatu      true
-                     :pistokoe   true}
-   :talvi           {"auraus ja sohjonpoisto"          true
-                     "suolaus"                         true
-                     "pistehiekoitus"                  true
-                     "linjahiekoitus"                  true
-                     "lumivallien madaltaminen"        true
-                     "sulamisveden haittojen torjunta" true
-                     "kelintarkastus"                  true
-                     "liuossuolaus"                    true
-                     "aurausviitoitus ja kinostimet"   true
-                     "lumensiirto"                     true
-                     "paannejaan poisto"               true
-                     "muu"                             true}
-   :kesa            {"tiestotarkastus"            true
-                     "koneellinen niitto"         true
-                     "koneellinen vesakonraivaus" true
-
-                     "liikennemerkkien puhdistus" true
-
-                     "sorateiden muokkaushoylays" true
-                     "sorateiden polynsidonta"    true
-                     "sorateiden tasaus"          true
-                     "sorastus"                   true
-
-                     "harjaus"                    true
-                     "pinnan tasaus"              true
-                     "paallysteiden paikkaus"     true
-                     "paallysteiden juotostyot"   true
-
-                     "siltojen puhdistus"         true
-
-                     "l- ja p-alueiden puhdistus" true
-                     "muu"                        true}})
+   :yllapito        {tk/paallystys true
+                     tk/paikkaus   true}
+   :ilmoitukset     {:tyypit {tk/tpp true
+                              tk/urk true
+                              tk/tur true}
+                     :tilat  #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
+   :turvallisuus    {tk/turvallisuuspoikkeamat true}
+   :laatupoikkeamat {tk/laatupoikkeama-tilaaja     true
+                     tk/laatupoikkeama-urakoitsija true
+                     tk/laatupoikkeama-konsultti   true}
+   :tarkastukset    {tk/tarkastus-tiesto     true
+                     tk/tarkastus-talvihoito true
+                     tk/tarkastus-soratie    true
+                     tk/tarkastus-laatu      true
+                     tk/tarkastus-pistokoe   true}
+   :talvi           {tk/auraus-ja-sohjonpoisto          true
+                     tk/suolaus                         true
+                     tk/pistehiekoitus                  true
+                     tk/linjahiekoitus                  true
+                     tk/lumivallien-madaltaminen        true
+                     tk/sulamisveden-haittojen-torjunta true
+                     tk/kelintarkastus                  true
+                     tk/liuossuolaus                    true
+                     tk/aurausviitoitus-ja-kinostimet   true
+                     tk/lumensiirto                     true
+                     tk/paannejaan-poisto               true
+                     tk/muu                             true}
+   :kesa            {tk/tiestotarkastus            true
+                     tk/koneellinen-niitto         true
+                     tk/koneellinen-vesakonraivaus true
+                     tk/liikennemerkkien-puhdistus true
+                     tk/sorateiden-muokkaushoylays true
+                     tk/sorateiden-polynsidonta    true
+                     tk/sorateiden-tasaus          true
+                     tk/sorastus                   true
+                     tk/harjaus                    true
+                     tk/pinnan-tasaus              true
+                     tk/paallysteiden-paikkaus     true
+                     tk/paallysteiden-juotostyot   true
+                     tk/siltojen-puhdistus         true
+                     tk/l-ja-p-alueiden-puhdistus  true
+                     tk/muu                        true}})
 
 (defn aseta-filtterit-falseksi [parametrit ryhma]
   (assoc parametrit ryhma (reduce
@@ -91,9 +88,13 @@
                             (ryhma parametrit)
                             (keys (ryhma parametrit)))))
 
+(defn hae-tk [parametrit]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-tilannekuvaan +kayttaja-jvh+
+                  (tk/valitut-suodattimet parametrit)))
+
 (deftest hae-asioita-tilannekuvaan
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)]
+  (let [vastaus (hae-tk parametrit-laaja-historia)]
     (is (>= (count (:toteumat vastaus)) 1))
     ;; Testaa, että toteumat tulivat useasta urakasta
     (is (not-every? #(= (first (:urakka (:toteumat vastaus))) %)
@@ -105,45 +106,40 @@
     (is (>= (count (:paallystys vastaus)) 1))
     (is (>= (count (:ilmoitukset vastaus)) 1))))
 
+
 (deftest hae-urakan-toteumat
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         parametrit (assoc parametrit-laaja-historia :urakka-id urakka-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (true? (every? #(= % urakka-id)
                        (mapv :urakka (:toteumat vastaus)))))))
 
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (:laatupoikkeamat vastaus)) 0))))
 
 (deftest ala-hae-toteumia
   (let [parametrit (-> parametrit-laaja-historia
                        (aseta-filtterit-falseksi :kesa)
                        (aseta-filtterit-falseksi :talvi))
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
 
 ;; Päällystysurakoista ei löydy toteumia
 (deftest urakkatyyppi-filter-toimii
   (let [parametrit (assoc parametrit-laaja-historia :urakkatyyppi :paallystys)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
 
 (deftest ala-hae-tarkastuksia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :tarkastukset)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (:tarkastukset vastaus)) 0))))
 
 (deftest ala-hae-turvallisuuspoikkeamia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :turvallisuus)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (:turvallisuus vastaus)) 0))))
 
 (deftest ala-hae-ilmoituksia
@@ -151,29 +147,25 @@
                                                                            :kysely           false
                                                                            :tiedoitus        false}
                                                                   :tilat  #{:avoimet :suljetut}})
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (:ilmoitukset vastaus)) 0))))
 
 (deftest ala-hae-tyokoneita-historianakymaan
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)]
+  (let [vastaus (hae-tk parametrit-laaja-historia)]
     (is (= (count (:tyokoneet vastaus)) 0))))
 
 (deftest loyda-vahemman-asioita-tiukalla-aikavalilla
-  (let [vastaus-pitka-aikavali (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)
+  (let [vastaus-pitka-aikavali (hae-tk parametrit-laaja-historia)
         parametrit (-> parametrit-laaja-historia
                        (assoc :alku (c/to-date (t/local-date 2005 1 1)))
                        (assoc :loppu (c/to-date (t/local-date 2010 1 1))))
-        vastaus-lyhyt-aikavali (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
-    (is (< (count (:toteumat vastaus-lyhyt-aikavali)) (count (:toteumat vastaus-pitka-aikavali))))))
+        vastaus-lyhyt-aikavali (hae-tk parametrit)]
+    (is (< (count (:toteumat vastaus-lyhyt-aikavali))
+           (count (:toteumat vastaus-pitka-aikavali))))))
 
 (deftest hae-tyokoneet-nykytilaan
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (>= (count (vals (:tyokoneet vastaus))) 1))))
 
 (deftest ala-hae-toteumia-liian-lahelle-zoomatussa-historianakymassa
@@ -181,8 +173,7 @@
                                                            :ymin 0,
                                                            :xmax 1,
                                                            :ymax 1})
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
 
 (deftest ala-hae-tyokoneita-liian-lahelle-zoomatussa-nykytilannenakymassa
@@ -192,6 +183,5 @@
                                      :xmax 1,
                                      :ymax 1})
                        (assoc :nykytilanne? true))
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tilannekuvaan +kayttaja-jvh+ parametrit)]
+        vastaus (hae-tk parametrit)]
     (is (= (count (vals (:tyokoneet vastaus))) 0))))

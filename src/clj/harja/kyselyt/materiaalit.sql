@@ -29,12 +29,12 @@ SELECT
   mk.loppupvm,
   mk.maara,
   mk.sopimus,
-          m.id      AS materiaali_id,
-          m.nimi    AS materiaali_nimi,
-          m.yksikko AS materiaali_yksikko,
-          pa.id     AS pohjavesialue_id,
-          pa.nimi   AS pohjavesialue_nimi,
-          pa.tunnus AS pohjavesialue_tunnus,
+  m.id      AS materiaali_id,
+  m.nimi    AS materiaali_nimi,
+  m.yksikko AS materiaali_yksikko,
+  pa.id     AS pohjavesialue_id,
+  pa.nimi   AS pohjavesialue_nimi,
+  pa.tunnus AS pohjavesialue_tunnus,
   (SELECT SUM(maara) AS kokonaismaara
    FROM toteuma_materiaali
    WHERE materiaalikoodi = mk.id AND toteuma IN (SELECT id

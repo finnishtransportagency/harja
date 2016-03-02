@@ -14,8 +14,10 @@
             [reagent.core :as r]
             [goog.events.EventType :as EventType]
             [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.checkbox :as checkbox]
-            [harja.ui.on-off-valinta :as on-off])
+            [harja.ui.on-off-valinta :as on-off]
+            [harja.domain.tilannekuva :as tk])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
@@ -40,15 +42,14 @@
                                                                 (if (false? @on-off-tila)
                                                                   :nykytilanne
                                                                   :historiakuva))
-                                                        ;; Nykytilanteessa haetaan vain avoimet ilmoitukset, historiakuvassa myös suljetut
                                                         (reset! tiedot/suodattimet
                                                                 (if (= :nykytilanne @tiedot/valittu-tila)
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
-                                                                            #{:avoimet})
+                                                                            tiedot/ilmoitusten-tilat-nykytilanteessa)
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
-                                                                            #{:avoimet :suljetut}))))}]])))
+                                                                            tiedot/ilmoitusten-tilat-historiakuvassa))))}]])))
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
@@ -69,15 +70,14 @@
   "suodatin-polku on polku, josta tämän checkboxin nimi ja tila löytyy suodattimet-atomissa"
   [nimi suodattimet-atom suodatin-polku]
   [checkbox/checkbox
-   (reaction (checkbox/boolean->checkbox-tila-keyword (get-in @suodattimet-atom suodatin-polku)))
-   nimi
-   {:display   "block"
-    :on-change (fn [uusi-tila]
-                 (reset! suodattimet-atom
-                         (assoc-in
-                           @suodattimet-atom
-                           suodatin-polku
-                           (checkbox/checkbox-tila-keyword->boolean uusi-tila))))}])
+   (r/wrap (checkbox/boolean->checkbox-tila-keyword
+            (get-in @suodattimet-atom suodatin-polku))
+           (fn [uusi-tila]
+             (swap! suodattimet-atom
+                    assoc-in
+                    suodatin-polku
+                    (checkbox/checkbox-tila-keyword->boolean uusi-tila))))
+   nimi])
 
 (def auki-oleva-checkbox-ryhma (atom nil))
 
@@ -133,9 +133,9 @@
          (when (auki?)
            [:div.tk-checkbox-ryhma-sisalto
             (doall (for [elementti (seq ryhman-elementtien-avaimet)]
-                     ^{:key (str "pudotusvalikon-asia-" (get tiedot/suodattimien-nimet elementti))}
+                     ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
                      [yksittainen-suodatincheckbox
-                      (get tiedot/suodattimien-nimet elementti)
+                      (:otsikko elementti)
                       suodattimet-atom
                       (conj ryhma-polku elementti)]))])]))))
 
@@ -159,7 +159,9 @@
      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]]
    [:div.tk-yksittaiset-suodattimet
-    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat" tiedot/suodattimet [:turvallisuus :turvallisuuspoikkeamat] auki-oleva-checkbox-ryhma]]])
+    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
+     tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
+     auki-oleva-checkbox-ryhma]]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
@@ -180,7 +182,7 @@
 
 (defn tilannekuva []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva)
+    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
                            (reset! kartta/pida-geometriat-nakyvilla? false)
                            (kartta/aseta-paivitetaan-karttaa-tila! true))

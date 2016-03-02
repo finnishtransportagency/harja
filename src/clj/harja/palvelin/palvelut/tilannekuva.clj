@@ -1,8 +1,10 @@
 (ns harja.palvelin.palvelut.tilannekuva
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-palvelu poista-palvelut]]
 
+            [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.hallintayksikot :as hal-q]
             [harja.kyselyt.urakat :as urakat-q]
@@ -11,10 +13,13 @@
 
             [harja.domain.laadunseuranta :as laadunseuranta]
             [harja.geo :as geo]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.tilannekuva :as tk]
+            [clojure.set :refer [union]]))
 
 (defn tulosta-virhe! [asiat e]
-  (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat ", mutta virhe tapahtui: " (.getMessage e))))
+  (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
+                  ", mutta virhe tapahtui: " (.getMessage e))))
 
 (defn tulosta-tulos! [asiaa tulos]
   (if (vector? tulos)
@@ -23,7 +28,9 @@
   tulos)
 
 (defn haettavat [s]
-  (into #{} (keep (fn [[avain arvo]] (when arvo avain)) s)))
+  (into #{}
+        (map (comp :nimi tk/suodattimet-idlla))
+        s))
 
 (defn alueen-hypotenuusa
   "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
@@ -44,9 +51,7 @@
   (let [haettavat (haettavat tyypit)]
     (when-not (empty? haettavat)
       (try
-        (let [suljetut? (if (:suljetut tilat) true false)
-              avoimet? (if (:avoimet tilat) true false)
-              tulos (mapv
+        (let [tulos (mapv
                       #(assoc % :uusinkuittaus
                                 (when-not (empty? (:kuittaukset %))
                                   (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
@@ -55,6 +60,8 @@
                               (comp
                                 (geo/muunna-pg-tulokset :sijainti)
                                 (map konv/alaviiva->rakenne)
+                                (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
+                                (filter #(tilat (:tila %)))
                                 (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
                                 (map #(konv/array->vec % :selitteet))
                                 (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
@@ -69,8 +76,6 @@
                                                  (when-not (:nykytilanne? tiedot) (konv/sql-date (:alku tiedot)))
                                                  (when-not (:nykytilanne? tiedot) (konv/sql-date (:loppu tiedot)))
                                                  urakat
-                                                 avoimet?
-                                                 suljetut?
                                                  (mapv name haettavat)))
                         {:kuittaus :kuittaukset}))]
           tulos)
@@ -80,7 +85,7 @@
 
 (defn- hae-paallystystyot
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
-  (when (:paallystys yllapito)
+  (when (tk/valittu? yllapito tk/paallystys)
     (try
       (into []
             (comp
@@ -99,7 +104,7 @@
 
 (defn- hae-paikkaustyot
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
-  (when (:paikkaus yllapito)
+  (when (tk/valittu? yllapito tk/paikkaus)
     (try
       (into []
             (comp
@@ -117,26 +122,30 @@
         nil))))
 
 (defn- hae-laatupoikkeamat
-  [db user {:keys [toleranssi alku loppu laatupoikkeamat]} urakat]
+  [db user {:keys [toleranssi alku loppu laatupoikkeamat nykytilanne?]} urakat]
   (let [haettavat (haettavat laatupoikkeamat)]
     (when-not (empty? haettavat)
       (try
         (into []
               (comp
-                (geo/muunna-pg-tulokset :sijainti)
                 (map konv/alaviiva->rakenne)
-                (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
-                (map #(dissoc % :selvityspyydetty))
-                (map #(assoc % :tekija (keyword (:tekija %))))
                 (map #(update-in % [:paatos :paatos]
                                  (fn [p]
                                    (when p (keyword p)))))
+                (remove (fn [lp]
+                          (if nykytilanne?
+                            (#{:hylatty :ei_sanktiota} (get-in lp [:paatos :paatos]))
+                            false)))
+                (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+                (map #(dissoc % :selvityspyydetty))
+                (map #(assoc % :tekija (keyword (:tekija %))))
                 (map #(update-in % [:paatos :kasittelytapa]
                                  (fn [k]
                                    (when k (keyword k)))))
                 (map #(if (nil? (:kasittelyaika (:paatos %)))
                        (dissoc % :paatos)
-                       %)))
+                       %))
+                (geo/muunna-pg-tulokset :sijainti))
               (q/hae-laatupoikkeamat db toleranssi urakat
                                      (konv/sql-date alku)
                                      (konv/sql-date loppu)
@@ -175,7 +184,7 @@
 
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [toleranssi alku loppu turvallisuus]} urakat]
-  (when (:turvallisuuspoikkeamat turvallisuus)
+  (when (tk/valittu? turvallisuus tk/turvallisuuspoikkeamat)
     (try
       (konv/sarakkeet-vektoriin
         (into []
@@ -195,7 +204,7 @@
 (defn- hae-tyokoneet
   [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?]} urakat]
   (when nykytilanne?
-    (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
+    (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
       (when-not (empty? haettavat-toimenpiteet)
         (try
           (let [tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")
@@ -221,7 +230,7 @@
 
 (defn- hae-toteumien-reitit
   [db user {:keys [toleranssi alue alku loppu talvi kesa]} urakat]
-  (let [haettavat-toimenpiteet (haettavat (merge talvi kesa))]
+  (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
     (when-not (empty? haettavat-toimenpiteet)
       (try
         (let [toimenpidekoodit (map :id (q/hae-toimenpidekoodit db haettavat-toimenpiteet))]
@@ -244,6 +253,7 @@
 
 (defn hae-tilannekuvaan
   [db user tiedot]
+  (println (pr-str tiedot))
   (let [urakat (urakat/kayttajan-urakat-aikavalilta db user
                                                     (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                                     (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]

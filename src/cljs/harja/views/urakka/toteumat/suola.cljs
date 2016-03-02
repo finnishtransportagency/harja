@@ -45,7 +45,8 @@
 (defn suolatoteumat []
 
   (komp/luo
-   (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet)
+   (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet
+               tiedot-urakka/aseta-kuluva-kk-jos-hoitokaudella?)
    (fn []
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero

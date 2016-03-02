@@ -3,6 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.0.9. Julkaistu 11.2.2016
+    - Varustetoteumilta poistettu tarkastuspäivämäärä
     - Turvallisuuspoikkeamalle vaihdettu uudet tyyppi-arvot, yksi tai useampi: tyotapaturma, vaaratilanne, turvallisuushavainto
     - Turvallisuuspoikkeama vastaanottaa vahinkoluokittelun, yksi tai useampi: henkilovahinko, omaisuusvahinko, ymparistovahinko
     - Turvallisuuspoikkeama vastaanottaa vakavuusastee: vakava tai lieva

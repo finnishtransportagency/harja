@@ -45,3 +45,35 @@
      (catch :default e#
        (.log js/console e#)
        (harja.virhekasittely/arsyttava-virhe "go-blokki kaatui: " e#))))
+
+
+;; Helpompi Google Closure luokkien extend,
+;; http://www.50ply.com/blog/2012/07/08/extending-closure-from-clojurescript/
+
+(defn- to-property [sym]
+  (symbol (str "-" sym)))
+
+(def ^:dynamic *current-method* nil)
+
+(defmacro goog-extend [type base-type ctor & methods]
+  `(do
+     (defn ~type ~@ctor)
+
+     (goog/inherits ~type ~base-type)
+     
+     ~@(mapv
+        (fn [method]
+          (binding [*current-method* (name (first method))]
+            `(set! (.. ~type -prototype ~(to-property (first method)))
+                   (fn ~@(rest method)))))
+        methods)))
+
+;; Yläluokan metodin kutsuminen (super arg1 ... argN), this automaattisesti
+
+#_(defmacro super [& args]
+  (if *current-method*
+    ;; Metodikutsu
+    `(goog/base (cljs.core/js* "this") ~*current-method* ~@args)
+
+    ;; Ei metodissa, konstruktorikutsu
+    `(goog/base (cljs.core/js* "this") ~@args)))

@@ -8,7 +8,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
-;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi 
+;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi
 (def kohteet-xf (map (fn [rivi]
                        (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
                          (assoc rivi
@@ -27,7 +27,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
   :puutteet  hakee sillat, joilla on viimeisimmässä tarkastuksessa puutteuta
              mukana :kohteet avaimella kohteet, joissa puutteuta
   :korjatut  hakee sillat, joilla on ollut puutteita ja jotka on korjattu"
-  
+
   [db user urakka-id listaus]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (case listaus
@@ -75,7 +75,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
           (q/hae-urakan-sillat-korjatut db urakka-id))))
 
 
-                  
+
 (defn hae-siltatarkastus [db id]
   (first (into []
                kohteet-xf
@@ -104,7 +104,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
       (q/luo-siltatarkastuksen-kohde<! db tulos lisatieto id kohde))
     (assoc luotu-tarkastus
       :kohteet kohteet)))
-  
+
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
@@ -113,14 +113,14 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
                       (paivita-siltatarkastuksen-kohteet! c siltatarkastus)
-                      
+
                       ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
                       ;; ja sen kohteet
                       (luo-siltatarkastus c user siltatarkastus))]
-      
+
       (hae-siltatarkastus c (:id tarkastus)))))
 
-      
+
 
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
