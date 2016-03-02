@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 CREATE TABLE asiakaspalauteluokka (
   id        SERIAL PRIMARY KEY,
   nimi      VARCHAR(128),
@@ -17,9 +16,13 @@ VALUES ('Liukkaudentorjunta',
         ARRAY ['hiekoitustarve',
         'kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita',
         'kevyenLiikenteenVaylatOvatLiukkaita',
+        'kevyenLiikenteenVaylillaOnLunta',
         'liukkaudentorjuntatarve',
         'raskasAjoneuvoJumissa',
-        'tieOnLiukas']
+        'tieOnLiukas',
+        'tietOvatJaatymassa',
+        'jaatavaaSadetta',
+        'mustaaJaataTiella']
         :: ilmoituksenselite []);
 
 INSERT INTO asiakaspalauteluokka (nimi, selitteet)
@@ -44,32 +47,110 @@ VALUES ('Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito',
 INSERT INTO asiakaspalauteluokka (nimi, selitteet)
 VALUES ('Puhtaanapito ja kalusteiden hoito',
         ARRAY ['avattavatPuomit',
-        Harjaustarve
-        Irtokiviä tiellä
-        Lasia tiellä
-        Levähdysalueeseen liittyvä ilmoitus
-        Liikennettä vaarantava este tiellä
-        Pysäkkiin liittyvä ilmoitus
-        Savea tiellä]
+        'harjaustarve',
+        'irtokiviaTiella',
+        'lasiaTiella',
+        'levahdysalueeseenLiittyvaIlmoitus',
+        'liikennettaVaarantavaEsteTiella',
+        'pysakkiinLiittyvaIlmoitus',
+        'saveaTiella',
+        'tiellaOnEste']
         :: ilmoituksenselite []);
-=======
--- Pudota suljettu-boolean ilmoitukselta, vanhentunut
-ALTER TABLE ilmoitus DROP COLUMN suljettu;
 
-CREATE OR REPLACE FUNCTION hae_seuraava_vapaa_viestinumero(yhteyshenkilo_id INTEGER)
-  RETURNS INTEGER AS $$
-BEGIN
-  LOCK TABLE paivystajatekstiviesti IN ACCESS EXCLUSIVE MODE;
-  RETURN (SELECT coalesce((SELECT (SELECT max(p.viestinumero)
-                                   FROM paivystajatekstiviesti p
-                                     INNER JOIN ilmoitus i ON p.ilmoitus = i.id
-                                   WHERE p.yhteyshenkilo = 1 AND
-                                         NOT exists(SELECT itp.id
-                                                    FROM ilmoitustoimenpide itp
-                                                    WHERE
-                                                      itp.ilmoitus = i.id AND
-                                                      itp.kuittaustyyppi = 'lopetus'))), 0)
-                 + 1 AS viestinumero);
-END;
-$$ LANGUAGE plpgsql;
->>>>>>> develop
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Viheralueiden hoito',
+        ARRAY ['niittotarve',
+        'nakemaalueenRaivaustarve',
+        'vesakonraivaustarve']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito',
+        ARRAY ['alikulkukaytavassaVetta',
+        'kaivonKansiRikki',
+        'rumpuunLiittyvaIlmoitus',
+        'avattavatPuomit']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Rumpujen kunnossapito',
+        ARRAY []
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito',
+        ARRAY ['hirviaitaVaurioitunut',
+        'kaidevaurio']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Päällysteiden paikkaus',
+        ARRAY ['kuoppa',
+        'paallystevaurio',
+        'routaheitto']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Päällystettyjen teiden sorapientareen kunnossapito',
+        ARRAY []
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Siltojen ja laitureiden hoito',
+        ARRAY ['siltaanLiittyvaIlmoitus']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Sorateiden hoito',
+        ARRAY ['polynsidontatarve',
+        'soratienKuntoHuono',
+        'soratienTasaustarve']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Äkillinen hoitotyö',
+        ARRAY ['virkaApupyynto',
+        'vesiSyovyttanytTienReunaa',
+        'sahkojohtoOnPudonnutTielle',
+        'puitaOnKaatunutTielle',
+        'tulvavesiOnNoussutTielle',
+        'tieOnSortunut',
+        'oljyaTiella',
+        'kuormaOnLevinnytTielle',
+        'myrskyvaurioita',
+        'tieTaiTienReunaOnPainunut',
+        'vettaTiella',
+        'rikkoutunutAjoneuvoTiella',
+        'raivausJaKorjaustoita']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Lupa-asiat',
+        ARRAY ['korvauskysely']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Tiemerkinnät',
+        ARRAY ['tiemerkintoihinLiittyvaIlmoitus']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Korjaus ja investointihankkeet (tietyöt)',
+        ARRAY ['tyomaajarjestelyihinLiittyvaIlmoitus']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Valaistus',
+        ARRAY ['tievalaistusVioittunut',
+        'tievalaistusVioittunutOnnettomuudessa',
+        'tievalaistuksenLamppujaPimeana']
+        :: ilmoituksenselite []);
+
+INSERT INTO asiakaspalauteluokka (nimi, selitteet)
+VALUES ('Muu',
+        ARRAY ['liikennekeskusKuitannutLoppuneeksi',
+        'testilahetys',
+        'muuToimenpidetarve',
+        'toimenpidekysely'
+        ]
+        :: ilmoituksenselite []);
