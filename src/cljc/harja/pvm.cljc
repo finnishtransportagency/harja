@@ -1,7 +1,7 @@
 (ns harja.pvm
   "Yleiset päivämääräkäsittelyn asiat.
   Frontin puolella käytetään yleisesti tyyppiä goog.date.DateTime.
-  Backendissä käytetään yleisesti org.joda.time:n pvm-tyyppejä (muutamat java.util.Date poikkeuset dokumentoitu erikseen)"
+  Backendissä käytetään yleisesti org.joda.time:n pvm-tyyppejä (muutamat java.util.Date-poikkeukset dokumentoitu erikseen)"
   (:require
     #?(:cljs [cljs-time.format :as df])
     #?(:cljs [cljs-time.core :as t])
