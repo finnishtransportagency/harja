@@ -149,9 +149,11 @@
   (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 80)))
                                                                       :kuittaustyyppi :aloitus}]}
         ilmoitus2 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 55)))
-                                                                      :kuittaustyyppi :vastaanotto}]}]
+                                                                      :kuittaustyyppi :vastaanotto}]}
+        ilmoitus3 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset []}]
     (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus1 (t/hours 1))))
-    (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus2 (t/hours 1))))))
+    (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus2 (t/hours 1))))
+    (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus3 (t/hours 1))))))
 
 (deftest aloituskuittaus-annettu-alle-tunnissa
   (let [ilmoitus {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 25)))
