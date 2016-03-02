@@ -342,21 +342,24 @@
                         checkboxit)]]
          checkboxit))]))
 
-(defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
+(defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina? salli-tyhja-valinta?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
     [:div
      (let [radiobuttonit (doall
-                           (for [v vaihtoehdot]
-                             ^{:key (str "radio-group-" (name v))}
+                           (for [vaihtoehto vaihtoehdot]
+                             ^{:key (str "radio-group-" (name vaihtoehto))}
                              [:div.radio
                               [:label
-                               [:input {:type      "radio" :checked (= valittu v)
+                               [:input {:type      "radio" :checked (= valittu vaihtoehto)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (if valittu?
-                                                       (reset! data v)))}
-                                (vaihtoehto-nayta v)]]]))]
+                                                     (if (and salli-tyhja-valinta?
+                                                              (= @data vaihtoehto))
+                                                       (reset! data nil)
+                                                       (if valittu?
+                                                         (reset! data vaihtoehto))))}
+                                (vaihtoehto-nayta vaihtoehto)]]]))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
