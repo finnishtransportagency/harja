@@ -56,10 +56,10 @@
              (t/year dt)
              (t/month dt)
              (t/day dt)
-             (t/hour tunnit)
-             (t/minute minuutit)
-             (t/second sekunnit)
-             (t/milli millisekunnit)))))
+             tunnit
+             minuutit)
+             sekunnit
+             millisekunnit)))
 
 (defn paivan-alussa [dt]
   (assert dt "Päivämäärä puuttuu!")
