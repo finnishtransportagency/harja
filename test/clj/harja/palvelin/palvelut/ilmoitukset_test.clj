@@ -58,6 +58,7 @@
            :tyypit [:kysely :toimepidepyynto :ilmoitus]
            :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
            :aikavali nil
+           :aloituskuittauksen-ajankohta :kaikki
            :hakuehto nil}))))
 
 (deftest hae-ilmoituksia

@@ -143,8 +143,8 @@
                       #(-> %
                            (assoc :uusinkuittaus
                                   (when-not (empty? (:kuittaukset %))
-                                    (:kuitattu (last (sort-by :kuitattu (:kuittaukset %)))))
-                                  (lisaa-tieto-myohastymisesta)))
+                                    (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                                  (lisaa-tieto-myohastymisesta))
                       ilmoitukset)
         ilmoitukset (if vain-myohassa?
                       (suodata-myohastyneet ilmoitukset)
