@@ -452,9 +452,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   - Valittu: Keyword joka kertoo, kumpi aikavälin arvoista valittiin, eli kumpi pysyy vakiona,
     jos palautettavaa aikaväliä joudutaan muokkaamaan."
   ([[alku loppu] [n yksikko :as maksimi] valittu]
-  (assertoi-aikavalin-yksikko maksimi)
-  (assert (#{:alku :loppu} valittu)
-          "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
+   (assertoi-aikavalin-yksikko maksimi)
+   (assert (#{:alku :loppu} valittu)
+           "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
    (cond
      (jalkeen? alku loppu)
      (if (= valittu :alku)
@@ -472,6 +472,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (if (jalkeen? alku loppu)
      (samalle-kuukaudelle (if (= valittu :alku) alku loppu) valittu)
      [(paivan-alussa alku) (paivan-lopussa loppu)])))
+
+(defn varmista-aikavali-opt [[alku loppu] & args]
+  (if (and alku loppu)
+    (apply varmista-aikavali [alku loppu] args)
+    [alku loppu]))
 
 
 #?(:cljs
