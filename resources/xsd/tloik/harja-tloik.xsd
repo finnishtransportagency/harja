@@ -193,6 +193,11 @@
             <xs:enumeration value="myrskyvaurioita" />
             <xs:enumeration value="kaidevaurio" />
             <xs:enumeration value="liikennemerkkeihinLiittyvaIlmoitus" />
+            <xs:enumeration value="siirrettavaAjoneuvo" />
+            <xs:enumeration value="tielleOnVuotanutNestettäLiikkuvastaAjoneuvosta" />
+            <xs:enumeration value="tapahtumaOhi" />
+            <xs:enumeration value="kevyenLiikenteenVaylatOvatjaatymassa" />
+            <xs:enumeration value="tietOvatjaisiäJamarkia" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="urakkatyyppi">
