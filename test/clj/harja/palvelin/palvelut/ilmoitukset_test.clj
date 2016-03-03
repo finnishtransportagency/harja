@@ -69,6 +69,7 @@
                     :tyypit          +ilmoitustyypit+
                     :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
                     :tilat           +ilmoitustilat+
+                    :aloituskuittauksen-ajankohta :kaikki
                     :hakuehto        ""}
         ilmoitusten-maara-suoraan-kannasta (ffirst (q
                                                      (str "SELECT count(*) FROM ilmoitus;")))
