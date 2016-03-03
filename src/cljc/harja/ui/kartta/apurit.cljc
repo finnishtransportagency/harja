@@ -47,3 +47,25 @@
                               (- x2 x1))}))
           []
           (partition 2 pisteet)))
+
+
+
+(def ^:private suurin-extent 1500000)
+(def ^:private pienin-extent 25000)
+(def ^:private extent-range (- suurin-extent pienin-extent))
+(def ^:private suurin-skaala 1.0)
+(def ^:private pienin-skaala 0.4)
+(def ^:private skaala-range (- suurin-skaala pienin-skaala))
+
+(defn ikonin-skaala
+  "Palauttaa ikonille uuden skaalan näkyvän alueen koon perusteella.
+Suurempi näkyvä alue skaalaa ikonia pienemmäksi."
+  [hypotenuusa scale]
+  (double
+   (* scale
+      (cond
+        (<= hypotenuusa pienin-extent) suurin-skaala
+        (>= hypotenuusa suurin-extent) pienin-skaala
+        :default
+        (+ pienin-skaala (* skaala-range
+                            (/ (- suurin-extent hypotenuusa) extent-range)))))))

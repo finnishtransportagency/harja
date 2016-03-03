@@ -106,17 +106,8 @@ pienemmällä zindexillä." :const true}
         laske-taitokset (fn []
                           (if-not (empty? @taitokset)
                             @taitokset
-
-                            (do
-                              (.forEachSegment
-                                (.getGeometry feature)
-                                (fn [start end]
-                                  (swap! taitokset conj {:sijainti [(js->clj start) (js->clj end)]
-                                                         :rotaatio (- (js/Math.atan2
-                                                                        (- (second end) (second start))
-                                                                        (- (first end) (first start))))})
-                                  false))
-                              @taitokset)))
+                            (reset! taitokset
+                                    (apurit/pisteiden-taitokset points))))
         tee-ikoni (partial tee-ikonille-tyyli kasvava-zindex laske-taitokset)
         tee-viiva (partial tee-viivalle-tyyli kasvava-zindex)
         tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
