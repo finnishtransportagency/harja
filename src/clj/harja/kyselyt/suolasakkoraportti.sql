@@ -1,5 +1,5 @@
 -- name: hae-tiedot-urakan-suolasakkoraportille
-SELECT *, (suola_kaytetty - sakko_talvisuolaraja) as ylitys,
+SELECT *, (suola_kaytetty - kohtuullistarkistettu_sakkoraja) as ylitys,
           (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * sakko_talvisuolaraja
            WHEN erotus >= 3.0 THEN 1.20 * 1.05 * sakko_talvisuolaraja
            WHEN erotus >= 2.0 THEN 1.10 * 1.05 * sakko_talvisuolaraja
@@ -53,7 +53,7 @@ FROM (SELECT
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;
 
 -- name: hae-tiedot-hallintayksikon-suolasakkoraportille
-SELECT *, (suola_kaytetty - sakko_talvisuolaraja) as ylitys,
+SELECT *, (suola_kaytetty - kohtuullistarkistettu_sakkoraja) as ylitys,
           (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * sakko_talvisuolaraja
            WHEN erotus >= 3.0 THEN 1.20 * 1.05 * sakko_talvisuolaraja
            WHEN erotus >= 2.0 THEN 1.10 * 1.05 * sakko_talvisuolaraja
@@ -107,7 +107,7 @@ FROM (SELECT
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;
 
 -- name: hae-tiedot-koko-maan-suolasakkoraportille
-SELECT *, (suola_kaytetty - sakko_talvisuolaraja) as ylitys,
+SELECT *, (suola_kaytetty - kohtuullistarkistettu_sakkoraja) as ylitys,
           (CASE WHEN erotus >= 4.0 THEN 1.30 * 1.05 * sakko_talvisuolaraja
            WHEN erotus >= 3.0 THEN 1.20 * 1.05 * sakko_talvisuolaraja
            WHEN erotus >= 2.0 THEN 1.10 * 1.05 * sakko_talvisuolaraja
