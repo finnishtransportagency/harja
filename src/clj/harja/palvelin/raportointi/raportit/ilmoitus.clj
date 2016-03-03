@@ -46,12 +46,13 @@
 
         ;; graafia varten haetaan joko ilmoitukset pitkältä aikaväliltä tai jos kk raportti, niin hoitokaudelta
         hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
+        hoitokauden-loppupvm (second (pvm/paivamaaran-hoitokausi alkupvm))
         ilmoitukset-hoitokaudella (when kyseessa-kk-vali?
-                                    (ilmoituspalvelu/hae-ilmoitukset
+                                    (hae-ilmoitukset-raportille
                                       db user hallintayksikko-id urakka-id
                                       nil nil
                                       +ilmoitustilat+ +ilmoitustyypit+
-                                      [hoitokauden-alkupvm loppupvm] "" selite))
+                                      [hoitokauden-alkupvm hoitokauden-loppupvm] "" selite))
         ilmoitukset-kuukausittain (group-by ffirst
                                             (frequencies (map (juxt (comp vuosi-ja-kk :ilmoitettu)
                                                                     :ilmoitustyyppi)
@@ -70,7 +71,10 @@
         graafin-alkupvm (if kyseessa-kk-vali?
                           hoitokauden-alkupvm
                           alkupvm)
-        hoitokaudella-tahan-asti-opt (if kyseessa-kk-vali? " hoitokaudella tähän asti " "")
+        graafin-loppupvm (if kyseessa-kk-vali?
+                          hoitokauden-loppupvm
+                          loppupvm)
+        hoitokaudella-tahan-asti-opt (if kyseessa-kk-vali? " hoitokaudella " "")
         raportin-nimi "Ilmoitusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -130,9 +134,9 @@
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
          (pylvaat-kuukausittain {:otsikko              (str "Ilmoitukset kuukausittain" hoitokaudella-tahan-asti-opt)
-                                 :alkupvm              graafin-alkupvm :loppupvm loppupvm
+                                 :alkupvm              graafin-alkupvm :loppupvm graafin-loppupvm
                                  :kuukausittainen-data ilmoitukset-kuukausittain-tyyppiryhmiteltyna :piilota-arvo? #{0}
                                  :legend               ["TPP" "TUR" "URK"]})
-         (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm loppupvm)))]))
+         (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm graafin-loppupvm)))]))
 
     
