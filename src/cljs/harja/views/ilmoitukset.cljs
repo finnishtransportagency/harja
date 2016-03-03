@@ -154,6 +154,15 @@
                         :tyyppi           :checkbox-group
                         :vaihtoehdot      tiedot/kuittaustyyppi-filtterit
                         :vaihtoehto-nayta kuittaustyypin-selite}
+                       {:nimi             :aloituskuittauksen-ajankohta
+                        :otsikko          "Aloituskuittaus annettu"
+                        :tyyppi           :radio-group
+                        :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
+                        :vaihtoehto-nayta (fn [arvo]
+                                            ({:kaikki     "Kaikki"
+                                              :alle-tunti "Alle tunnin kuluessa"
+                                              :myohemmin  "Yli tunnin päästä"}
+                                              arvo))}
                        {:nimi             :tyypit
                         :otsikko          "Tyyppi"
                         :tyyppi           :checkbox-group
@@ -164,15 +173,7 @@
                         :tyyppi           :checkbox-group
                         :vaihtoehdot      [:vain-myohassa?]
                         :vaihtoehto-nayta (constantly "Vain myöhässä olevat")}
-                       {:nimi             :aloituskuittauksen-ajankohta
-                        :otsikko          "Aloituskuittaus annettu"
-                        :tyyppi           :radio-group
-                        :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
-                        :vaihtoehto-nayta (fn [arvo]
-                                            ({:kaikki     "Kaikki"
-                                              :alle-tunti "Alle tunnin kuluessa"
-                                              :myohemmin  "Yli tunnin päästä"}
-                                              arvo))})]
+                       )]
         @tiedot/valinnat]
 
        [:div
