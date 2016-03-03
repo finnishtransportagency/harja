@@ -32,7 +32,7 @@
                              :hakuehto        ""
                              :selite          [nil ""]
                              :vain-myohassa?  #{}
-                             :aloituskuittauksen-ajankohta nil}))
+                             :aloituskuittauksen-ajankohta :kaikki}))
 
 (defonce ilmoitushaku (atom 0))
 
@@ -68,9 +68,7 @@
                                             (update :tyypit
                                                     #(if (empty? %) +ilmoitustyypit+ %))
                                             (update :kuittaustyypit
-                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))
-                                            (update :vain-myohassa?
-                                                    #(if (empty? %) false true)))))]
+                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))]
 
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta

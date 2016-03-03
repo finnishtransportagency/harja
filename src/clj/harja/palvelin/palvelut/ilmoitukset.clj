@@ -17,7 +17,6 @@
   (cond
     (number? p) true
     (instance? Date p) true
-    (instance? Boolean p) p
     (keyword? p) true
     (map? p) (some true? (map #(hakuehto-annettu? (val %)) p))
     (empty? p) false
@@ -145,7 +144,7 @@
         ilmoitukset (case aloituskuittauksen-ajankohta
                       :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
                       :myohemmin (filter #(not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))) ilmoitukset)
-                      nil ilmoitukset)]
+                      :kaikki ilmoitukset)]
     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
     ilmoitukset))

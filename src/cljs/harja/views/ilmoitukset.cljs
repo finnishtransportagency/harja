@@ -167,11 +167,11 @@
                        {:nimi             :aloituskuittauksen-ajankohta
                         :otsikko          "Aloituskuittaus annettu"
                         :tyyppi           :radio-group
-                        :salli-tyhja-valinta? true
-                        :vaihtoehdot      [:alle-tunti :myohemmin]
+                        :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
                         :vaihtoehto-nayta (fn [arvo]
-                                            ({:alle-tunti "alle tunnin kuluessa"
-                                              :myohemmin  "myöhemmin"}
+                                            ({:kaikki     "Kaikki"
+                                              :alle-tunti "Alle tunnin kuluessa"
+                                              :myohemmin  "Yli tunnin päästä"}
                                               arvo))})]
         @tiedot/valinnat]
 
