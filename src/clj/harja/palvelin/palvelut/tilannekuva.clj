@@ -356,7 +356,9 @@
                       (fn [user tiedot]
                         (hae-tilannekuvaan db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
-     karttakuvat :tilannekuva (partial #'hae-karttakuvan-tiedot db))
+     karttakuvat :tilannekuva
+     ;; Viitataan var kautta funktioon, jotta sen voi RPELissä määritellä uudestaan
+     (partial #'hae-karttakuvan-tiedot db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]

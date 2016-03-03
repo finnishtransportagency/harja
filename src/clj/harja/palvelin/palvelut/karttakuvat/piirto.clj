@@ -61,27 +61,34 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        :private true}
   ikonien-tiheys 15)
 
-(defn- piirra-ikonit [g {points :points ikonit :ikonit}]
-  (let [segmentit (partition 2 1 points)
-        valimatka (/ (geo/extent-hypotenuusa *extent*) ikonien-tiheys)
-        paikat (apurit/taitokset-valimatkoin valimatka
-                                             (apurit/pisteiden-taitokset points))]
-    (doseq [[[x y] rotaatio] paikat]
-      (with-rotation g x y rotaatio
-        (doseq [{:keys [img scale]} ikonit
-                :let [kuva (hae-kuva img)]]
-          (when kuva
-            (.drawImage g kuva
-                        (doto (AffineTransform.)
-                          ;; Keskitetään kuva
-                          (.translate  (px (- (/ (.getWidth kuva) 2)))
-                                      (px (- (/ (.getHeight kuva) 2))))
-                          ;; Siirretään kuvan kohtaan
-                          (.translate x y)
+(def ^{:doc "Raja, jota suuremmalla näkyvällä alueella ei enää piirretä ikoneita"
+       :private true}
+  ikonien-piirtoraja-m 1400000)
 
-                          ;; Skaalataan pikselit karttakoordinaateiksi
-                          (.scale (px scale) (px scale)))
-                        nil-image-observer)))))))
+(defn- piirra-ikonit [g {points :points ikonit :ikonit}]
+  (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
+        valimatka (/ hypotenuusa ikonien-tiheys)
+        paikat (apurit/taitokset-valimatkoin valimatka
+                                             (apurit/pisteiden-taitokset points))
+        ikonin-skaala (partial apurit/ikonin-skaala hypotenuusa)]
+    (when (< hypotenuusa ikonien-piirtoraja-m)
+      (doseq [[[x y] rotaatio] paikat]
+        (with-rotation g x y rotaatio
+          (doseq [{:keys [img scale]} ikonit
+                  :let [kuva (hae-kuva img)
+                        skaala (ikonin-skaala scale)]]
+            (when kuva
+              (.drawImage g kuva
+                          (doto (AffineTransform.)
+                            ;; Keskitetään kuva
+                            (.translate  (px (- (/ (* skaala (.getWidth kuva)) 2)))
+                                         (px (- (/ (* skaala (.getHeight kuva)) 2))))
+                            ;; Siirretään kuvan kohtaan
+                            (.translate x y)
+
+                            ;; Skaalataan pikselit karttakoordinaateiksi
+                            (.scale (px skaala) (px skaala)))
+                          nil-image-observer))))))))
 
 
 (defmethod piirra :viiva [g toteuma {:keys [viivat points ikonit] :as alue}]
