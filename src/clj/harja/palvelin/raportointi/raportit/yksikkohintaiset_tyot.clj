@@ -50,8 +50,8 @@
                                                         :nimi
                                                         :yksikko
                                                         (comp #(fmt/euro-opt false %) :yksikkohinta)
-                                                        (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
-                                                        (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
+                                                        (comp #(fmt/desimaaliluku-opt % 1) :suunniteltu_maara)
+                                                        (comp #(fmt/desimaaliluku-opt % 1) :toteutunut_maara)
                                                         (comp #(fmt/euro-opt false %) :suunnitellut_kustannukset)
                                                         (comp #(fmt/euro-opt false %) :toteutuneet_kustannukset)))
                   (when (not (empty? naytettavat-rivit))

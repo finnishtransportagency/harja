@@ -161,9 +161,9 @@
                                                  (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
                                                  0))
                                              listattavat-pvmt)
-                                       (fmt/desimaaliluku (:toteutunut_maara rivi) 1)
+                                       (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1)
                                        (when (= konteksti :urakka)
-                                         [(fmt/desimaaliluku (:toteumaprosentti rivi) 1)
-                                          (fmt/desimaaliluku (:suunniteltu_maara rivi) 1)])])))
+                                         [(fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1)
+                                          (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)])])))
             naytettavat-rivit)]]))
 
