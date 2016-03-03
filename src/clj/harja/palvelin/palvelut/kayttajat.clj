@@ -34,7 +34,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-kayttajan-tiedot
                       (fn [user tiedot]
-                        (tallenna-kayttajan-tiedot (:db this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
+                        (tallenna-kayttajan-tiedot (:db this) (:integraatioloki this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :poista-kayttaja
                       (fn [user kayttaja-id]
@@ -138,7 +138,7 @@
 
 (defn tallenna-kayttajan-tiedot
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
-  [db fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
+  [db integraatioloki fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
   (roolit/vaadi-rooli user #{roolit/jarjestelmavastuuhenkilo
                              roolit/hallintayksikon-vastuuhenkilo
                              roolit/urakoitsijan-paakayttaja})
@@ -147,7 +147,7 @@
         (jdbc/with-db-transaction [c db]
 
           (let [luotu-kayttaja (when (nil? kayttaja-id)
-                                 (tuo-fim-kayttaja c fim user kayttajatunnus organisaatio-id))
+                                 (tuo-fim-kayttaja c integraatioloki fim user kayttajatunnus organisaatio-id))
                 kayttaja-id (if luotu-kayttaja
                               (:id luotu-kayttaja) 
                               kayttaja-id)
