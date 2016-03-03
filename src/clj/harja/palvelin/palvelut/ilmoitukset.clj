@@ -155,7 +155,7 @@
                                            (sisaltaa-aloituskuittauksen? %)
                                            (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
                                          ilmoitukset)
-                      :kaikki ilmoitukset)]
+                      ilmoitukset)]
     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
     ilmoitukset))
