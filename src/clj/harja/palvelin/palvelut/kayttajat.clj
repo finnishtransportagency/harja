@@ -34,7 +34,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-kayttajan-tiedot
                       (fn [user tiedot]
-                        (tallenna-kayttajan-tiedot (:db this) (:integraatioloki this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
+                        (tallenna-kayttajan-tiedot (:db this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :poista-kayttaja
                       (fn [user kayttaja-id]
@@ -42,7 +42,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-fim-kayttaja
                       (fn [user tunnus]
-                        (hae-fim-kayttaja (:db this) (:fim this) user tunnus)))
+                        (hae-fim-kayttaja (:db this) (:integraatioloki this) (:fim this) user tunnus)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-organisaatioita
                       (fn [user teksti]
@@ -93,7 +93,7 @@
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
-(defn hae-fim-kayttaja [db fim user tunnus]
+(defn hae-fim-kayttaja [db integraatioloki fim user tunnus]
   (if-let [tulos (fim/hae-kayttajatunnus fim tunnus integraatioloki)]
     (if-not (number? tulos) ;; Tulos on virhekoodi
       (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio tulos))))
@@ -124,7 +124,7 @@
       (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki virheviesti nil tapahtuma-id nil)
       (throw (RuntimeException. "Käyttöoikeus puuttuu")))))
 
-(defn- tuo-fim-kayttaja [db integraatioloki fim user tunnus organisaatio-id]
+(defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
   (tarkista-oikeus-tuoda-fim-kayttaja user organisaatio-id)
   (let [k (hae-fim-kayttaja db fim user tunnus)]
     (when-not (= :ei-loydy k)
@@ -135,7 +135,7 @@
 
 (defn tallenna-kayttajan-tiedot
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
-  [db integraatioloki fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
+  [db fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
   (roolit/vaadi-rooli user #{roolit/jarjestelmavastuuhenkilo
                              roolit/hallintayksikon-vastuuhenkilo
                              roolit/urakoitsijan-paakayttaja})
@@ -144,7 +144,7 @@
         (jdbc/with-db-transaction [c db]
 
           (let [luotu-kayttaja (when (nil? kayttaja-id)
-                                 (tuo-fim-kayttaja c integraatioloki fim user kayttajatunnus organisaatio-id))
+                                 (tuo-fim-kayttaja c fim user kayttajatunnus organisaatio-id))
                 kayttaja-id (if luotu-kayttaja
                               (:id luotu-kayttaja) 
                               kayttaja-id)
