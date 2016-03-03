@@ -311,7 +311,7 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
-      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
 -- name: hae-tyokoneet
 SELECT
@@ -337,8 +337,13 @@ FROM tyokonehavainto t
 WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
                   CAST(sijainti AS GEOMETRY)) AND
       (:valittugeometria :: GEOMETRY IS NULL OR ST_Contains(:valittugeometria, CAST(sijainti AS GEOMETRY))) AND
-      (:urakka :: INTEGER IS NULL OR
-       t.urakkaid = :urakka OR t.urakkaid IS NULL) AND
+      (t.urakkaid IN (:urakat) OR t.urakkaid IS NULL) AND
+      /*
+      Alunperin ajateltiin, että jos urakkaa ei ole valittuna, niin näytetään kaikki alueella
+      toimivat työkoneet (informaation jako, työn läpinäkyvyys). Todettiin kuitenkin että ainakin
+      alkuun pidetään urakoitsijen työkoneiden liikkeet salassa.
+      */
+      -- (:urakka :: INTEGER IS NULL OR t.urakkaid = :urakka OR t.urakkaid IS NULL) AND
       t.tehtavat && :toimenpiteet :: suoritettavatehtava[];
 
 -- name: hae-toimenpidekoodit
