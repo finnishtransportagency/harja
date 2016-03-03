@@ -15,7 +15,9 @@
 
             [harja.loki :refer [log]]
 
-            [harja.ui.kartta.apurit :as apurit]))
+            [harja.ui.kartta.apurit :as apurit]
+            [harja.geo :as geo]
+            [harja.tiedot.navigaatio :as nav]))
 
 (def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä
 turhaan liikaa"
@@ -69,7 +71,8 @@ pienemmällä zindexillä." :const true}
   ;; ei ole määritelty, eikä siis haluta piirtää mitään.
   (when img
     (assert (#{:nuoli :merkki} tyyppi) "Merkin tyypin pitää olla joko :nuoli tai :merkki")
-    (let [palauta-paikat (fn [paikka]
+    (let [nuolen-skaalaus (partial apurit/ikonin-skaala (geo/extent-hypotenuusa nav/kartan-extent))
+          palauta-paikat (fn [paikka]
                            (assert (#{:alku :loppu :taitokset} paikka)
                                    "Merkin paikan pitää olla :alku, :loppu, :taitokset")
                            (condp = paikka
@@ -84,7 +87,9 @@ pienemmällä zindexillä." :const true}
                               nuolten-valimatka (butlast (laske-taitokset-fn)))))
           pisteet-ja-rotaatiot (mapcat palauta-paikat (if (coll? paikka) paikka [paikka]))]
       (condp = tyyppi
-        :nuoli (map #(tee-nuoli zindex ikoni %) pisteet-ja-rotaatiot)
+        :nuoli (map #(tee-nuoli
+                      (update zindex :scale nuolen-skaalaus) ikoni %)
+                    pisteet-ja-rotaatiot)
         :merkki (map #(tee-merkki zindex ikoni %) pisteet-ja-rotaatiot)))))
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
