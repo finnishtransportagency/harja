@@ -1,0 +1,1 @@
+UPDATE raportti SET kuvaus = 'Suolasakkoraportti' WHERE nimi = 'suolasakko';
