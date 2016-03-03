@@ -8,10 +8,11 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.tapahtumat :refer [julkaise!]]
-            
+
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (declare hae-kayttajat
          hae-kayttajan-tiedot
@@ -113,18 +114,26 @@
       tulos) ;; Palauta statuskoodi
     :ei-loydy))
 
-(defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
+(defn- tarkista-oikeus-tuoda-fim-kayttaja [user organisaatio-id tapahtuma-id integraatioloki]
   (when (and (not (roolit/roolissa? user roolit/jarjestelmavastuuhenkilo))
              (roolit/roolissa? user roolit/urakoitsijan-paakayttaja)
              ;; Urakoitsijan pk saa antaa vain omaan organisaatioon
              (not (= organisaatio-id (:id (:organisaatio user)))))
-    (log/warn "Käyttäjä " user " on urakoitsijan pääkäyttäjä, mutta yritti tuoda käyttäjän organisaatioon: " organisaatio-id)
-    (throw (RuntimeException. "Käyttöoikeus puuttuu")))
-  (let [k (hae-fim-kayttaja db fim user tunnus)]
-    (when-not (= :ei-loydy k)
-      (log/info "Tuodaan FIM käyttäjä Harjaan: " k)
-      (q/luo-kayttaja<! db (:kayttajatunnus k) (:etunimi k) (:sukunimi k)
-                        (:sahkoposti k) (:puhelin k) organisaatio-id))))
+    (let [virheviesti (log/warn "Käyttäjä " user " on urakoitsijan pääkäyttäjä, mutta yritti tuoda käyttäjän organisaatioon: " organisaatio-id)]
+      (log/warn virheviesti)
+      (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki virheviesti nil tapahtuma-id nil)
+      (throw (RuntimeException. "Käyttöoikeus puuttuu")))))
+
+(defn- tuo-fim-kayttaja [db integraatioloki fim user tunnus organisaatio-id]
+  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" "tuo-fim-kayttaja" nil
+                                                                 (format "Käyttäjä %s yrittää tuoda käyttäjän %s" user tunnus))]
+    (tarkista-oikeus-tuoda-fim-kayttaja user organisaatio-id tapahtuma-id integraatioloki)
+    (let [k (hae-fim-kayttaja db fim user tunnus)]
+      (when-not (= :ei-loydy k)
+        (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki (format "Käyttäjä %s toi käyttäjän %s " user tunnus) nil tapahtuma-id nil)
+        (log/info "Tuodaan FIM käyttäjä Harjaan: " k)
+        (q/luo-kayttaja<! db (:kayttajatunnus k) (:etunimi k) (:sukunimi k)
+                          (:sahkoposti k) (:puhelin k) organisaatio-id)))))
 
 
 (defn tallenna-kayttajan-tiedot
