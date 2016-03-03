@@ -63,6 +63,14 @@
     #(true? (:myohassa? %))
     ilmoitukset))
 
+(defn- sisaltaa-aloituskuittauksen?
+  [ilmoitus]
+  (let [{:keys [kuittaukset]} ilmoitus
+        aloituskuittaukset (filter
+                             #(= (:kuittaustyyppi %) :aloitus)
+                             kuittaukset)]
+    (> (count aloituskuittaukset) 0)))
+
 (defn- sisaltaa-aloituskuittauksen-aikavalilla?
   [ilmoitus kulunut-aika]
   (let [{:keys [ilmoitettu kuittaukset]} ilmoitus
@@ -135,15 +143,18 @@
                       #(-> %
                            (assoc :uusinkuittaus
                                   (when-not (empty? (:kuittaukset %))
-                                    (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                           (lisaa-tieto-myohastymisesta))
+                                    (:kuitattu (last (sort-by :kuitattu (:kuittaukset %)))))
+                                  (lisaa-tieto-myohastymisesta)))
                       ilmoitukset)
         ilmoitukset (if vain-myohassa?
                       (suodata-myohastyneet ilmoitukset)
                       ilmoitukset)
         ilmoitukset (case aloituskuittauksen-ajankohta
                       :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
-                      :myohemmin (filter #(not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))) ilmoitukset)
+                      :myohemmin (filter #(and
+                                           (sisaltaa-aloituskuittauksen? %)
+                                           (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
+                                         ilmoitukset)
                       :kaikki ilmoitukset)]
     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
