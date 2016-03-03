@@ -120,7 +120,7 @@
                                               [["Tyyppi" (:tyokonetyyppi tapahtuma)]
                                                ["Viimeisin paikka\u00ADtieto" (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
                                                ["Organisaatio" (:organisaationimi tapahtuma)]
-                                               ["Urakka" (:urakkanimi tapahtuma)]
+                                               ["Urakka" (or (:urakkanimi tapahtuma) "Ei urakkaa")]
                                                ["Tehtävät" (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
                                                              [:span tehtavat])]])))
 
