@@ -1,19 +1,15 @@
 (ns harja.palvelin.raportointi.raportit.ilmoitus
   "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
-                                                                 pylvaat-kuukausittain ei-osumia-aikavalilla-teksti]]
-            [harja.domain.roolit :as roolit]
-            [clj-time.coerce :as tc]
+            [harja.palvelin.raportointi.raportit.yleinen :refer
+             [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
+              pylvaat-kuukausittain ei-osumia-aikavalilla-teksti]]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
-            [clj-time.core :as t]
-            [clj-time.local :as l]
-            [harja.pvm :as pvm]))
-
-
+            [harja.pvm :as pvm]
+            [harja.kyselyt.ilmoitukset :as ilmoitukset]))
 
 (defn hae-ilmoitukset-raportille
   [db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
@@ -30,13 +26,23 @@
                                     :hakuehto hakuehto
                                     :selite selite}))
 
+(defn kasittele-summat [summat]
+  (let [nolla-jos-nil (fn [numero] (if (nil? numero) 0 numero))]
+    [(nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) nil) summat))))
+     (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "toimenpidepyynto") summat))))
+     (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "tiedoitus") summat))))
+     (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "tiedoitus") summat))))]))
+
 (defn ilmoitukset-asiakaspalauteluokittain [db urakka-id hallintayksikko-id alkupvm loppupvm]
-  (let [rivit [["Talvihoito" 0 2 3] ["Polanteen tasaus" 3 55 21]]]
+  (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
+        ilman-kokonaismaaria (filter #(not-empty (:nimi %)) data)
+        rivit (mapv (fn [[nimi summat]] (into [nimi] (kasittele-summat summat))) (group-by :nimi ilman-kokonaismaaria))]
     [:taulukko {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
      [{:leveys 6 :otsikko "Asiakaspalauteluokka"}
-      {:leveys 4 :otsikko "TPP (Toimenpidepyyntö)"}
-      {:leveys 4 :otsikko "TUR (Tiedoksi)"}
-      {:leveys 4 :otsikko "URK (Kysely)"}]
+      {:leveys 2 :otsikko "Yhteensä"}
+      {:leveys 2 :otsikko "TPP (Toimenpidepyyntö)"}
+      {:leveys 2 :otsikko "TUR (Tiedoksi)"}
+      {:leveys 2 :otsikko "URK (Kysely)"}]
      rivit]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
@@ -95,14 +101,14 @@
                            (and (> (count ilmoitukset-hoitokaudella) 0)
                                 kyseessa-kk-vali?))]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko                    otsikko
+     [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat
               [{:otsikko "Urakka" :leveys 31}]
               (map (fn [ilmoitustyyppi]
                      {:otsikko (ilmoitustyypin-lyhenne-ja-nimi ilmoitustyyppi)
-                      :leveys  23})
+                      :leveys 23})
                    [:toimenpidepyynto :tiedoitus :kysely])))
       (keep identity
             (into
@@ -138,10 +144,10 @@
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
-         (pylvaat-kuukausittain {:otsikko              (str "Ilmoitukset kuukausittain" hoitokaudella-tahan-asti-opt)
-                                 :alkupvm              graafin-alkupvm :loppupvm loppupvm
+         (pylvaat-kuukausittain {:otsikko (str "Ilmoitukset kuukausittain" hoitokaudella-tahan-asti-opt)
+                                 :alkupvm graafin-alkupvm :loppupvm loppupvm
                                  :kuukausittainen-data ilmoitukset-kuukausittain-tyyppiryhmiteltyna :piilota-arvo? #{0}
-                                 :legend               ["TPP" "TUR" "URK"]})
+                                 :legend ["TPP" "TUR" "URK"]})
          (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm loppupvm)))
 
      (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)]))
