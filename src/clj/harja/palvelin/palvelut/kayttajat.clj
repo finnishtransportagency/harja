@@ -94,7 +94,7 @@
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
 (defn hae-fim-kayttaja [db fim user tunnus]
-  (if-let [tulos (fim/hae fim tunnus)]
+  (if-let [tulos (fim/hae-kayttajatunnus fim tunnus integraatioloki)]
     (if-not (number? tulos) ;; Tulos on virhekoodi
       (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio tulos))))
             olemassaoleva (some->> tunnus
@@ -114,7 +114,7 @@
       tulos) ;; Palauta statuskoodi
     :ei-loydy))
 
-(defn- tarkista-oikeus-tuoda-fim-kayttaja [user organisaatio-id tapahtuma-id integraatioloki]
+(defn- tarkista-oikeus-tuoda-fim-kayttaja [user organisaatio-id]
   (when (and (not (roolit/roolissa? user roolit/jarjestelmavastuuhenkilo))
              (roolit/roolissa? user roolit/urakoitsijan-paakayttaja)
              ;; Urakoitsijan pk saa antaa vain omaan organisaatioon
@@ -125,15 +125,12 @@
       (throw (RuntimeException. "Käyttöoikeus puuttuu")))))
 
 (defn- tuo-fim-kayttaja [db integraatioloki fim user tunnus organisaatio-id]
-  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" "tuo-fim-kayttaja" nil
-                                                                 (format "Käyttäjä %s yrittää tuoda käyttäjän %s" user tunnus))]
-    (tarkista-oikeus-tuoda-fim-kayttaja user organisaatio-id tapahtuma-id integraatioloki)
-    (let [k (hae-fim-kayttaja db fim user tunnus)]
-      (when-not (= :ei-loydy k)
-        (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki (format "Käyttäjä %s toi käyttäjän %s " user tunnus) nil tapahtuma-id nil)
-        (log/info "Tuodaan FIM käyttäjä Harjaan: " k)
-        (q/luo-kayttaja<! db (:kayttajatunnus k) (:etunimi k) (:sukunimi k)
-                          (:sahkoposti k) (:puhelin k) organisaatio-id)))))
+  (tarkista-oikeus-tuoda-fim-kayttaja user organisaatio-id)
+  (let [k (hae-fim-kayttaja db fim user tunnus)]
+    (when-not (= :ei-loydy k)
+      (log/info "Tuodaan FIM käyttäjä Harjaan: " k)
+      (q/luo-kayttaja<! db (:kayttajatunnus k) (:etunimi k) (:sukunimi k)
+                        (:sahkoposti k) (:puhelin k) organisaatio-id))))
 
 
 (defn tallenna-kayttajan-tiedot
