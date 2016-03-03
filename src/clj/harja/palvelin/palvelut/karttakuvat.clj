@@ -58,8 +58,14 @@ datan kartalla esitettävässä muodossa.")
          tx (- x1)
          ty (- y1)]
      (doto (AffineTransform.)
+       ;; Siirrytään alakulmaan
        (.translate 0 h)
+
+       ;; Skaalaataan karttakoordinaatit pikseleiksi
+       ;; ja käännetään Y-akseli
        (.scale sx sy)
+
+       ;; Siirrytään kartan [x1 y1] kohtaan
        (.translate tx ty)))))
 
 

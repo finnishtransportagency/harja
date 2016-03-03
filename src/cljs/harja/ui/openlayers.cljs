@@ -475,8 +475,11 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
         (do
           (log "Map layer item counts: "
                (str/join ", "
-                         (map #(str (count (second (second %))) " "
-                                    (name (first %)))
+                         (map #(str (let [l (second (second %))]
+                                      (if (counted? l)
+                                        (count l)
+                                        "N/A"))
+                                    " " (name (first %)))
                               (seq new-geometry-layers))))
           (reagent/set-state component {:geometry-layers new-geometry-layers}))
         (if-let [taso (get geometries layer)]

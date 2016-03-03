@@ -61,7 +61,8 @@
       (when (and (not luo?) (not sama?))
         ;; Jos ei luoda ja parametrit eivät ole samat
         ;; asetetaan uusi source ol layeriiin
-        (.setSource ol-layer source)))))
+        (.setSource ol-layer source))
+      [ol-layer ::kuvataso])))
 
 
 

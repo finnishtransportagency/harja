@@ -225,7 +225,7 @@
 
 (defn- hae-toteumien-reitit
   [db user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
-  (println "HAE REITIT ALUEELLE: " (pr-str ((juxt :xmin :ymin :xmax :ymax) alue)))
+  (println "HAE REITIT: " (pr-str tiedot))
   (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
     (konv/sarakkeet-vektoriin
      (into []
@@ -246,12 +246,11 @@
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
   (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-    (when-not (empty? toimenpidekoodit)
-      (q/hae-toteumien-selitteet db
-                                 (konv/sql-date alku) (konv/sql-date loppu)
-                                 toimenpidekoodit urakat
-                                 (:xmin alue) (:ymin alue)
-                                 (:xmax alue) (:ymax alue)))))
+    (q/hae-toteumien-selitteet db
+                               (konv/sql-date alku) (konv/sql-date loppu)
+                               toimenpidekoodit urakat
+                               (:xmin alue) (:ymin alue)
+                               (:xmax alue) (:ymax alue))))
 
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat :tarkastukset
