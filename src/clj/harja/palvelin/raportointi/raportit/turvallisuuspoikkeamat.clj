@@ -82,14 +82,15 @@
               (if urakoittain?
                 [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
                 [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))]
-     
-     (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
-                (> (count turpot) 0))
-       (pylvaat-kuukausittain {:otsikko "Turvallisuuspoikkeamat kuukausittain"
-                 :alkupvm               alkupvm :loppupvm loppupvm
-                 :kuukausittainen-data  turpomaarat-tyypeittain
-                 :piilota-arvo?         #{0}
-                 :legend                ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]}))
+
+     (keep identity
+           (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+                      (> (count turpot) 0))
+             (pylvaat-kuukausittain {:otsikko              "Turvallisuuspoikkeamat kuukausittain"
+                                     :alkupvm              alkupvm :loppupvm loppupvm
+                                     :kuukausittainen-data turpomaarat-tyypeittain
+                                     :piilota-arvo?        #{0}
+                                     :legend               ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]})))
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []

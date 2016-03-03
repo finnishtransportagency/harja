@@ -199,11 +199,10 @@
                         [" Kaikki yhteensä " " Ei kustannuksia "
                          :kaikki_laskutettu :kaikki_laskutetaan tiedot]])]
 
-    [:raportti {:nimi "Laskutusyhteenveto"}
-     (when-not (empty? taulukot)
-       varoitus-tietojen-puuttumisesta)
-     (if (empty? taulukot)
-       [:teksti " Ei laskutettavaa"]
-       taulukot)]))
-                
+    (keep identity
+          [:raportti {:nimi "Laskutusyhteenveto"}
+           varoitus-tietojen-puuttumisesta
+           (if (empty? taulukot)
+             [:teksti " Ei laskutettavaa"]
+             taulukot)])))
                                                 
