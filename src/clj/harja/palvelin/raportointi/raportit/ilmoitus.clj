@@ -28,21 +28,22 @@
 
 (defn kasittele-summat [summat]
   (let [nolla-jos-nil (fn [numero] (if (nil? numero) 0 numero))]
-    [(nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) nil) summat))))
-     (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "toimenpidepyynto") summat))))
+    [(nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "toimenpidepyynto") summat))))
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "tiedoitus") summat))))
-     (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "kysely") summat))))]))
+     (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "kysely") summat))))
+     (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) nil) summat))))]))
 
 (defn ilmoitukset-asiakaspalauteluokittain [db urakka-id hallintayksikko-id alkupvm loppupvm]
   (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
         ilman-kokonaismaaria (filter #(not-empty (:nimi %)) data)
-        rivit (mapv (fn [[nimi summat]] (into [nimi] (kasittele-summat summat))) (group-by :nimi ilman-kokonaismaaria))]
+        rivit (mapv (fn [[nimi summat]] (into [nimi] (kasittele-summat summat)))
+                    (group-by :nimi ilman-kokonaismaaria))]
     [:taulukko {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
      [{:leveys 6 :otsikko "Asiakaspalauteluokka"}
-      {:leveys 2 :otsikko "Yhteensä"}
-      {:leveys 2 :otsikko "TPP"}
-      {:leveys 2 :otsikko "TUR"}
-      {:leveys 2 :otsikko "URK"}]
+      {:leveys 2 :otsikko "TPP (Toimenpidepyyntö)"}
+      {:leveys 2 :otsikko "TUR (Tiedoksi)"}
+      {:leveys 2 :otsikko "URK (Kysely)"}
+      {:leveys 2 :otsikko "Yhteensä"}]
      rivit]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
