@@ -223,7 +223,7 @@
                     (map #(konv/array->set % :tehtavat))
                     (map (juxt :tyokoneid identity)))
                   (q/hae-tyokoneet db (:xmin alue) (:ymin alue) (:xmax alue) (:ymax alue) valitun-alueen-geometria
-                                   urakka-id tpi-str)))
+                                   urakat tpi-str)))
           (catch Exception e
             (tulosta-virhe! "tyokoneet" e)
             nil))))))
@@ -253,7 +253,6 @@
 
 (defn hae-tilannekuvaan
   [db user tiedot]
-  (println (pr-str tiedot))
   (let [urakat (urakat/kayttajan-urakat-aikavalilta db user
                                                     (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
                                                     (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
