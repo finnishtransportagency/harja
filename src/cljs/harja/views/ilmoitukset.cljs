@@ -149,21 +149,13 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
                                            (vec (sort itemit))))))}
-         (lomake/ryhma {:rivi? true}
+         (lomake/ryhma
+           {:rivi? true}
            {:nimi             :kuittaustyypit
             :otsikko          "Tila"
             :tyyppi           :checkbox-group
             :vaihtoehdot      tiedot/kuittaustyyppi-filtterit
             :vaihtoehto-nayta kuittaustyypin-selite}
-           {:nimi             :aloituskuittauksen-ajankohta
-            :otsikko          "Aloituskuittaus annettu"
-            :tyyppi           :radio-group
-            :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
-            :vaihtoehto-nayta (fn [arvo]
-                                ({:kaikki     "Kaikki"
-                                  :alle-tunti "Alle tunnin kuluessa"
-                                  :myohemmin  "Yli tunnin päästä"}
-                                  arvo))}
            {:nimi             :tyypit
             :otsikko          "Tyyppi"
             :tyyppi           :checkbox-group
@@ -173,7 +165,16 @@
             :otsikko          "Kuittaukset"
             :tyyppi           :checkbox-group
             :vaihtoehdot      [:vain-myohassa?]
-            :vaihtoehto-nayta (constantly "Vain myöhässä olevat")})]
+            :vaihtoehto-nayta (constantly "Vain myöhässä olevat")}
+           {:nimi             :aloituskuittauksen-ajankohta
+            :otsikko          "Aloituskuittaus annettu"
+            :tyyppi           :radio-group
+            :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
+            :vaihtoehto-nayta (fn [arvo]
+                                ({:kaikki     "Kaikki"
+                                  :alle-tunti "Alle tunnin kuluessa"
+                                  :myohemmin  "Yli tunnin päästä"}
+                                  arvo))})]
         @tiedot/valinnat]
 
        [:div
