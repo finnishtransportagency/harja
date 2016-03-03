@@ -40,9 +40,9 @@
     [:taulukko {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
      [{:leveys 6 :otsikko "Asiakaspalauteluokka"}
       {:leveys 2 :otsikko "Yhteensä"}
-      {:leveys 2 :otsikko "TPP (Toimenpidepyyntö)"}
-      {:leveys 2 :otsikko "TUR (Tiedoksi)"}
-      {:leveys 2 :otsikko "URK (Kysely)"}]
+      {:leveys 2 :otsikko "TPP"}
+      {:leveys 2 :otsikko "TUR"}
+      {:leveys 2 :otsikko "URK"}]
      rivit]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
