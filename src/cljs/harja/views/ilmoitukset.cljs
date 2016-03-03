@@ -111,20 +111,22 @@
             :valinnat      @u/valitun-urakan-hoitokaudet
             :valinta-nayta fmt/pvm-vali-opt})
 
-         (lomake/ryhma {:ulkoasu :rivi :palstoja 2}
-                       {:nimi     :saapunut-alkaen
-                        :hae      (comp first :aikavali)
-                        :aseta    #(assoc-in %1 [:aikavali 0] %2)
-                        :otsikko  "Alkaen"
-                        :palstoja 1
-                        :tyyppi   :pvm}
+         (lomake/ryhma
+           {:ulkoasu  :rivi
+            :palstoja 2}
+           {:nimi     :saapunut-alkaen
+            :hae      (comp first :aikavali)
+            :aseta    #(assoc-in %1 [:aikavali 0] %2)
+            :otsikko  "Alkaen"
+            :palstoja 1
+            :tyyppi   :pvm}
 
-                       {:nimi     :saapunut-paattyen
-                        :otsikko  "Päättyen"
-                        :palstoja 1
-                        :hae      (comp second :aikavali)
-                        :aseta    #(assoc-in %1 [:aikavali 1] %2)
-                        :tyyppi   :pvm})
+           {:nimi     :saapunut-paattyen
+            :otsikko  "Päättyen"
+            :palstoja 1
+            :hae      (comp second :aikavali)
+            :aseta    #(assoc-in %1 [:aikavali 1] %2)
+            :tyyppi   :pvm})
 
          {:nimi        :hakuehto :otsikko "Hakusana"
           :placeholder "Hae tekstillä..."
@@ -147,33 +149,33 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
                                            (vec (sort itemit))))))}
-         (lomake/ryhma {:ulkoasu :rivi
-                        :palstoja 4}
-                       {:nimi             :kuittaustyypit
-                        :otsikko          "Tila"
-                        :tyyppi           :checkbox-group
-                        :vaihtoehdot      tiedot/kuittaustyyppi-filtterit
-                        :vaihtoehto-nayta kuittaustyypin-selite}
-                       {:nimi             :aloituskuittauksen-ajankohta
-                        :otsikko          "Aloituskuittaus annettu"
-                        :tyyppi           :radio-group
-                        :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
-                        :vaihtoehto-nayta (fn [arvo]
-                                            ({:kaikki     "Kaikki"
-                                              :alle-tunti "Alle tunnin kuluessa"
-                                              :myohemmin  "Yli tunnin päästä"}
-                                              arvo))}
-                       {:nimi             :tyypit
-                        :otsikko          "Tyyppi"
-                        :tyyppi           :checkbox-group
-                        :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
-                        :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
-                       {:nimi             :vain-myohassa?
-                        :otsikko          "Kuittaukset"
-                        :tyyppi           :checkbox-group
-                        :vaihtoehdot      [:vain-myohassa?]
-                        :vaihtoehto-nayta (constantly "Vain myöhässä olevat")}
-                       )]
+         (lomake/ryhma
+           {:ulkoasu  :rivi
+            :palstoja 4}
+           {:nimi             :kuittaustyypit
+            :otsikko          "Tila"
+            :tyyppi           :checkbox-group
+            :vaihtoehdot      tiedot/kuittaustyyppi-filtterit
+            :vaihtoehto-nayta kuittaustyypin-selite}
+           {:nimi             :aloituskuittauksen-ajankohta
+            :otsikko          "Aloituskuittaus annettu"
+            :tyyppi           :radio-group
+            :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
+            :vaihtoehto-nayta (fn [arvo]
+                                ({:kaikki     "Kaikki"
+                                  :alle-tunti "Alle tunnin kuluessa"
+                                  :myohemmin  "Yli tunnin päästä"}
+                                  arvo))}
+           {:nimi             :tyypit
+            :otsikko          "Tyyppi"
+            :tyyppi           :checkbox-group
+            :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
+            :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
+           {:nimi             :vain-myohassa?
+            :otsikko          "Kuittaukset"
+            :tyyppi           :checkbox-group
+            :vaihtoehdot      [:vain-myohassa?]
+            :vaihtoehto-nayta (constantly "Vain myöhässä olevat")})]
         @tiedot/valinnat]
 
        [:div
