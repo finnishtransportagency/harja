@@ -165,7 +165,7 @@
             :otsikko          "Kuittaukset"
             :tyyppi           :checkbox-group
             :vaihtoehdot      [:vain-myohassa?]
-            :vaihtoehto-nayta (constantly "Vain myöhässä olevat")}
+            :vaihtoehto-nayta (constantly "Myöhästyneet")}
            {:nimi             :aloituskuittauksen-ajankohta
             :otsikko          "Aloituskuittaus annettu"
             :tyyppi           :radio-group
