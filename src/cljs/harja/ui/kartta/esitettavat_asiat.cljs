@@ -195,8 +195,8 @@
       :type :ilmoitus
       :nimi (ilmoituksen-tooltip ilmoitus)
       :selite {:teksti (str (ilmoitukset/ilmoitustyypin-nimi ilmoitustyyppi)
-                            "("
-                            (ilmoitukset/kuittaustyypin-selite tila)
+                            " ("
+                            (str/lower-case (ilmoitukset/kuittaustyypin-selite tila))
                             ")")
                :img    ikoni}
       :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
