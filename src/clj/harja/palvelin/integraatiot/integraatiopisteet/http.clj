@@ -30,7 +30,7 @@
       (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki nil (str " Tapahtui poikkeus: " e) tapahtuma-id nil)
       (throw+
         {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
-         :virheet [{:koodi :poikkeus :viesti (str "Poikkeus :" (.getMessage e))}]}))))
+         :virheet [{:koodi :poikkeus :viesti (str "HTTP-kutsukäsittelyssä tapahtui odottamaton virhe.")}]}))))
 
 (defn laheta-kutsu
   ([integraatioloki integraatio jarjestelma url metodi otsikot parametrit kutsudata kasittele-vastaus]
@@ -47,12 +47,18 @@
            lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
        (log/debug (format " Palvelu palautti: tila: %s , otsikot: %s , data: %s" status headers body))
 
-       (if (or error (not (= 200 status)))
+       (if (or error
+               (not (= 200 status)))
          (do
            (log/error (format "Kutsu palveluun: %s epäonnistui. Virhe: %s " url error))
+           (log/error "Virhetyyppi: " (type error))
            (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
-           (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
-                    :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]}))
+           (cond (instance? java.net.ConnectException error)
+                 (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
+                          :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
+                 :default
+                 (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
+                          :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]})))
          (do
            (let [vastausdata (kasittele-vastaus body headers)]
              (log/debug (format "Kutsu palveluun: %s onnistui." url))
