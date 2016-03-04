@@ -1,4 +1,6 @@
 (ns harja.palvelin.integraatiot.integraatiopisteet.http
+  "Yleiset apurit kutsujen lähettämiseen ulkoisiin järjestelmiin.
+  Sisältää automaattiset lokitukset integraatiolokiin."
   (:require [taoensso.timbre :as log]
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -53,12 +55,14 @@
            (log/error (format "Kutsu palveluun: %s epäonnistui. Virhe: %s " url error))
            (log/error "Virhetyyppi: " (type error))
            (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
+           ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
+           ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.
            (cond (instance? java.net.ConnectException error)
                  (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
                           :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
                  :default
                  (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
-                          :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]})))
+                          :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti "Ulkoisen järjestelmän kommunikoinnissa tapahtui odottaman virhe."}]})))
          (do
            (let [vastausdata (kasittele-vastaus body headers)]
              (log/debug (format "Kutsu palveluun: %s onnistui." url))
