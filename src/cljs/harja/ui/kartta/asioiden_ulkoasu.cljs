@@ -81,8 +81,8 @@
 
 (def ikonien-varit
   {;; Tilallisten sijainti-ikonien sisempi väri
-   :tiedotus                   "syaani"
-   :kysely                     "magenta"
+   :tiedotus                   "magenta"
+   :kysely                     "syaani"
    :toimenpidepyynto           "oranssi"
    :turvallisuuspoikkeama      "punainen"
 
