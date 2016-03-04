@@ -71,8 +71,7 @@ pienemmällä zindexillä." :const true}
   ;; ei ole määritelty, eikä siis haluta piirtää mitään.
   (when img
     (assert (#{:nuoli :merkki} tyyppi) "Merkin tyypin pitää olla joko :nuoli tai :merkki")
-    (let [nuolen-skaalaus (partial apurit/ikonin-skaala (geo/extent-hypotenuusa nav/kartan-extent))
-          palauta-paikat (fn [paikka]
+    (let [palauta-paikat (fn [paikka]
                            (assert (#{:alku :loppu :taitokset} paikka)
                                    "Merkin paikan pitää olla :alku, :loppu, :taitokset")
                            (condp = paikka
@@ -87,8 +86,7 @@ pienemmällä zindexillä." :const true}
                               nuolten-valimatka (butlast (laske-taitokset-fn)))))
           pisteet-ja-rotaatiot (mapcat palauta-paikat (if (coll? paikka) paikka [paikka]))]
       (condp = tyyppi
-        :nuoli (map #(tee-nuoli
-                      (update zindex :scale nuolen-skaalaus) ikoni %)
+        :nuoli (map #(tee-nuoli zindex ikoni %)
                     pisteet-ja-rotaatiot)
         :merkki (map #(tee-merkki zindex ikoni %) pisteet-ja-rotaatiot)))))
 
