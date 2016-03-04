@@ -673,7 +673,8 @@
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
 
-        keskita-kartta! (fn [sijainti] (kartta/keskita-kartta-alueeseen! (harja.geo/extent sijainti)))
+        keskita-kartta! (fn [sijainti] (when sijainti
+                                         (kartta/keskita-kartta-alueeseen! (harja.geo/extent sijainti))))
 
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
