@@ -73,11 +73,13 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         laske-sakko (fn [rivi]
-                      (when (and (:ylitys rivi) (:sakko_maara_per_tonni rivi))
+                      (when (and (> (:ylitys rivi) 0)
+                                 (:ylitys rivi) (:sakko_maara_per_tonni rivi))
                         (* (:ylitys rivi)
                            (:sakko_maara_per_tonni rivi))))
         laske-indeksikorotettu-sakko (fn [rivi]
-                                       (when (and (:kerroin rivi) (:ylitys rivi) (:sakko_maara_per_tonni rivi))
+                                       (when (and (> (:ylitys rivi) 0)
+                                                  (:kerroin rivi) (:ylitys rivi) (:sakko_maara_per_tonni rivi))
                                          (* (:kerroin rivi)
                                             (* (:ylitys rivi)
                                                (:sakko_maara_per_tonni rivi)))))
@@ -91,7 +93,7 @@
       [{:leveys "15%" :otsikko "Urakka"}
        {:otsikko "Keski\u00ADlämpö\u00ADtila"}
        {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
-       {:otsikko "Sopimuk\u00ADsen mukainen suola\u00ADmäärä (t)"}
+       {:otsikko "Talvi\u00ADsuolan maksimi\u00ADmäärä (t)"}
        {:otsikko "Sakko\u00ADraja (t)"}
        {:otsikko "Kerroin"}
        {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)"}
@@ -109,17 +111,17 @@
                   [(:urakka_nimi rivi)
                    (str (:keskilampotila rivi) " °C")
                    (str (:pitkakeskilampotila rivi) " °C")
-                   (:suola_suunniteltu rivi)
-                   (when (:suola_suunniteltu rivi)
-                     (format "%.2f" (* (:suola_suunniteltu rivi) 1.05)))
+                   (:sakko_talvisuolaraja rivi)
+                   (when (:sakko_talvisuolaraja rivi)
+                     (format "%.2f" (* (:sakko_talvisuolaraja rivi) 1.05)))
                    (if (:kerroin rivi)
                      (format "%.4f" (:kerroin rivi))
                      "Indeksi puuttuu!")
                    (when (:kohtuullistarkistettu_sakkoraja rivi)
                      (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi)))
                    (:suola_kaytetty rivi)
-                   (when (and (:suola_kaytetty rivi) (:suola_suunniteltu rivi))
-                     (- (:suola_kaytetty rivi) (:suola_suunniteltu rivi)))
+                   (when (and (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi))
+                     (- (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi)))
                    (fmt/euro-opt false (:sakko_maara_per_tonni rivi))
                    (fmt/euro-opt false (laske-sakko rivi))
                    (when (and sakko indeksikorotettu-sakko)
@@ -130,7 +132,7 @@
                 [["Yhteensä"
                   nil
                   nil
-                  (reduce + (keep :suola_suunniteltu raportin-data))
+                  (reduce + (keep :sakko_talvisuolaraja raportin-data))
                   nil
                   nil
                   nil

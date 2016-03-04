@@ -42,10 +42,6 @@ http {
       server 10.0.2.2:3000;
     }
 
-    upstream laadunseuranta {
-      server 10.0.2.2:3001;
-    }
-    
     server {
         listen       8000;
         server_name  localhost;
@@ -54,13 +50,6 @@ http {
 
         underscores_in_headers on;
 
-        location ~ /laadunseuranta/(?<path>.*) {
-	    proxy_pass_request_headers on;
-	    proxy_pass http://laadunseuranta/$path$is_args$args;
-	    access_log /var/log/nginx/3001_access.log;
-	    error_log /var/log/nginx/3001_error.log;
-	}
-	
 	location ~ /wmts/(?<path>.*)$ {
 	  proxy_set_header Host "karttakuva.maanmittauslaitos.fi:443";
           proxy_set_header Authorization "Basic TGlpa2VubmV2aXJrb2U6VGFtbWlrdXUyMDE2";

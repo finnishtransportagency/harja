@@ -169,10 +169,11 @@
 
      :tr-valitsin
      (aseta-z-index @tierekisteri/tr-alkupiste-kartalla
-                          (inc oletus-zindex))
+                    (inc oletus-zindex))
+
      :nakyman-geometriat
      (aseta-z-index (vec (vals @nakyman-geometriat))
-                          (inc oletus-zindex))}
+                    (inc oletus-zindex))}
     (into {}
           (map (fn [[tason-nimi tason-sisalto]]
                  {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})

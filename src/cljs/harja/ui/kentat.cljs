@@ -17,7 +17,7 @@
             [cljs.core.async :refer [<! >! chan] :as async]
 
             [harja.ui.dom :as dom]
-
+            [harja.ui.kartta.ikonit :as kartta-ikonit]
             [harja.views.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
@@ -27,7 +27,9 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -559,7 +561,7 @@
                              (reset! data nil)))))
 
               muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
-              
+
               muuta-aika!  #(if (re-matches #"\d{3}" %)
                               ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä, niin 3 merkin kohdalla lisätään se automaattisesti
                               (let [alku (js/parseInt (.substring % 0 2))]
@@ -678,14 +680,14 @@
                            (tasot/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do
-                               (tasot/nayta-geometria! :tr-valittu-osoite
-                                                       {:alue (maarittele-feature arvo
-                                                                            false
-                                                                            {:img    (dom/pinni-ikoni "musta")
-                                                                             :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                                                            {:color  "gray" ;; muun alle
-                                                                             :zindex 20})
-                                                        :type :tr-valittu-osoite})
+                               (tasot/nayta-geometria!
+                                 :tr-valittu-osoite
+                                 {:alue (maarittele-feature
+                                          arvo
+                                          false
+                                          asioiden-ulkoasu/tr-ikoni
+                                          asioiden-ulkoasu/tr-viiva)
+                                  :type :tr-valittu-osoite})
                                (keskita-kartta! arvo)))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
@@ -729,9 +731,9 @@
                       (cond
                         (onko-tr-osoite-kokonainen? osoite)
                         (hae-tr-geometria osoite vkm/tieosoite->viiva tr-osoite-ch virheet)
-                        
+
                         (onko-tr-osoite-pistemainen? osoite)
-                        (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch virheet) 
+                        (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch virheet)
                         :else
                         (do
                           (tasot/poista-geometria! :tr-valittu-osoite)
@@ -757,7 +759,7 @@
              [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
              [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
-             
+
              (if-not @karttavalinta-kaynnissa
                [:td.karttavalinta
                 [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)

@@ -2,8 +2,10 @@
   "Tierekisteri-UI-komponenttiin liittyvät asiat, joita ei voinut laittaa viewiin circular dependencyn takia"
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.ui.dom :as dom]
-            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]])
+            [harja.ui.kartta.ikonit :as kartta-ikonit]
+            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
+            [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
     [cljs.core.async.macros :refer [go]]))
@@ -16,9 +18,7 @@
    (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
      [{:alue (maarittele-feature @valittu-alkupiste
                                  false
-                                 {:img    (dom/pinni-ikoni "musta")
-                                  :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                 {:color  "gray" ;; muun alle
-                                  :zindex 20})}])))
+                                 asioiden-ulkoasu/tr-ikoni
+                                 asioiden-ulkoasu/tr-viiva)}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)

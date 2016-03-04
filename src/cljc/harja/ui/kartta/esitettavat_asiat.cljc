@@ -1,12 +1,18 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
-            [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat
+            #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
+               :clj [taoensso.timbre :as log])
+            [harja.domain.laadunseuranta.laatupoikkeamat
              :as laatupoikkeamat]
-            [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.geo :as geo]
 
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
+
+#?(:clj (defn log [& things]
+          (log/info things)))
+#?(:clj (defn warn [& things]
+          (log/warn things)))
 
 (defn- laske-skaala [valittu?]
   (if valittu? ulkoasu/+valitun-skaala+ ulkoasu/+normaali-skaala+))
@@ -67,7 +73,7 @@
      :ikonit (mapv (fn [i] (merge
                              ;; Oletusasetukset
                              {:tyyppi :merkki
-                              :paikka :loppu
+                              :paikka [:loppu]
                               :scale  (laske-skaala valittu?)}
                              i)) merkit)}))
 
@@ -87,8 +93,8 @@
       string, muuten voidaan mennä oletusasetuksilla
     - Reittimäisille asioille tällä parametrilla on enemmän merkitystä.
       Mäpille voi antaa seuraavia arvoja:
-      -- paikka: :alku, :loppu, :taitokset, tai vektori näitä. Mihin paikkoihin
-         ikoni piirretään?
+      -- paikka: vektori, jonka elementtejä voivat olla :alku, :loppu ja :taitokset
+         Mihin paikkoihin ikoni piirretään?
       -- tyyppi: :nuoli tai :merkki. Merkit kääntyvät viivan suunnan mukaan,
          merkit aina pystyssä.
       -- img: käytettävä ikoni
@@ -121,8 +127,8 @@
     piirtää reitti
 
   (maarittele-feature foo val?
-                      [{:paikka :loppu :img (pinni-ikoni 'sininen)}
-                       {:paikka :taitokset :img (nuoli-ikoni 'sininen')}]
+                      [{:paikka [:loppu] :img (pinni-ikoni 'sininen)}
+                       {:paikka [:taitokset] :img (nuoli-ikoni 'sininen')}]
                       [{:width 12 :color varit/musta}
                        {:width 6 :color varit/sininen}])
     Jos foo on pistemäinen, käytetään sinistä pinniä. Reitilliselle foolle
@@ -168,7 +174,7 @@
 
 ;;;;;;
 
-(defn- viivojen-varit-leveimmasta-kapeimpaan [viivat]
+(defn viivojen-varit-leveimmasta-kapeimpaan [viivat]
   ;; Täydennä väliaikaisesti tänne oletusarvot,
   ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
@@ -177,7 +183,7 @@
                      :color (or (:color %) ulkoasu/+normaali-vari+)))
        (sort-by :width >)
        (mapv :color)))
-       
+
 (defmulti
   ^{:private true}
   asia-kartalle :tyyppi-kartalla)
@@ -399,7 +405,7 @@
      :else viivat)
    nuoli])
 
-(defn- tehtavan-viivat-ja-nuolitiedosto
+(defn tehtavan-viivat-ja-nuolitiedosto
   "Hakee toimenpiteelle esitysasetukset joko yllä määritellystä mäpistä, tai
   generoi sellaisen itse."
   [tehtava valittu?]
@@ -421,7 +427,8 @@
   ;; (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
     (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
-          _ (when (empty? toimenpiteet) (harja.loki/warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
+          _ (when (empty? toimenpiteet)
+              (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
                  ;; toteumalla on suoraan nimi
                  (:nimi toteuma)
@@ -504,7 +511,6 @@
   ([asiat valittu tunniste asia-xf]
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
-     (log "Asioiden eka: " (first asiat))
      (with-meta
        (into []
              (comp (or asia-xf identity)
