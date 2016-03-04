@@ -1,5 +1,7 @@
 (ns harja.pvm
-  "Yleiset päivämääräkäsittelyn asiat."
+  "Yleiset päivämääräkäsittelyn asiat.
+  Frontin puolella käytetään yleisesti tyyppiä goog.date.DateTime.
+  Backendissä käytetään yleisesti org.joda.time:n pvm-tyyppejä (muutamat java.util.Date-poikkeukset dokumentoitu erikseen)"
   (:require
     #?(:cljs [cljs-time.format :as df])
     #?(:cljs [cljs-time.core :as t])
@@ -19,7 +21,7 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-           (:import (java.util Date Calendar)
+           (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat))))
 
 
@@ -29,6 +31,12 @@
      IHash
      (-hash [o]
        (hash (tc/to-long o)))))
+
+#?(:clj
+   (defn joda-time? [pvm]
+     (or (instance? org.joda.time.DateTime pvm)
+         (instance? org.joda.time.LocalDate pvm)
+         (instance? org.joda.time.LocalDateTime pvm))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -42,12 +50,22 @@
        (.setMilliseconds millisekunnit))
 
      :clj
-     (.getTime (doto (Calendar/getInstance)
-                 (.setTime dt)
-                 (.set Calendar/HOUR_OF_DAY tunnit)
-                 (.set Calendar/MINUTE minuutit)
-                 (.set Calendar/SECOND sekunnit)
-                 (.set Calendar/MILLISECOND millisekunnit)))))
+     (cond (instance? java.util.Date dt)
+           (.getTime (doto (Calendar/getInstance)
+                       (.setTime dt)
+                       (.set Calendar/HOUR_OF_DAY tunnit)
+                       (.set Calendar/MINUTE minuutit)
+                       (.set Calendar/SECOND sekunnit)
+                       (.set Calendar/MILLISECOND millisekunnit)))
+           (joda-time? dt)
+           (t/local-date-time
+             (t/year dt)
+             (t/month dt)
+             (t/day dt)
+             tunnit
+             minuutit
+             sekunnit
+             millisekunnit))))
 
 (defn paivan-alussa [dt]
   (aikana dt 0 0 0 0))
@@ -66,11 +84,17 @@
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
 
-(defn nyt []
+(defn nyt
+  "Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten"
+  []
   #?(:cljs (DateTime.)
      :clj  (Date.)))
 
-(defn luo-pvm [vuosi kk pv]
+(defn luo-pvm
+  "Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten"
+  [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj  (Date. (- vuosi 1900) kk pv)))
 
@@ -91,27 +115,44 @@
    :clj
    (defn ennen? [eka toka]
      (if (and eka toka)
-       (.before eka toka)
+       (cond
+         (or (instance? java.util.Date eka)
+             (instance? java.util.Date toka))
+         (.before eka toka)
+         (or (joda-time? eka)
+             (joda-time? toka))
+         (t/before? eka toka))
        false)))
 
+
 (defn sama-tai-ennen?
+  "Tarkistaa, onko ensimmäisenä annettu pvm sama tai ennen toista annettua pvm:ää.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
-   (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
-         toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-     (if-not (or (nil? eka) (nil? toka))
-       (or (ennen? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
-       false))))
+   (if (and eka toka)
+     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
+       (or (ennen? eka toka)
+           (= (millisekunteina eka) (millisekunteina toka))))
+     false)))
 
 (defn jalkeen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
+  (if (and eka toka)
     (t/after? eka toka)
     false))
 
-(defn sama-tai-jalkeen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
-    (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
-    false))
+(defn sama-tai-jalkeen?
+  "Tarkistaa, onko ensimmäisenä annettu pvm sama tai toisena annettun pvm:n jälkeen.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
+  ([eka toka] (sama-tai-jalkeen? eka toka true))
+  ([eka toka ilman-kellonaikaa?]
+   (if (and eka toka)
+     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
+       (or (jalkeen? eka toka)
+           (= (millisekunteina eka) (millisekunteina toka))))
+     false)))
 
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
@@ -122,9 +163,12 @@
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
-  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä."
-  [pvm alkupvm loppupvm]
-  (and (sama-tai-jalkeen? pvm alkupvm) (sama-tai-ennen? pvm loppupvm)))
+  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä. Mahdollisuus verrata ilman kellonaikaa,
+  joka on oletuksena true."
+  ([pvm alkupvm loppupvm] (valissa? pvm alkupvm loppupvm true))
+  ([pvm alkupvm loppupvm ilman-kellonaikaa?]
+   (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
+        (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)

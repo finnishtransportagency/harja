@@ -316,9 +316,6 @@
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
     [:div.boolean-group
-     ;; Esimerkiksi tilannekuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
-     ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
-     ;; ei voi vain yksinkertaisesti resetoida datan sisältöä tyhjäksi tai kaikiksi vaihtoehdoiksi.
      (when tyhjenna-kaikki?
        [:button.nappi-toissijainen {:on-click #(reset! data (apply disj @data vaihtoehdot))}
         [:span.livicon-trash " Tyhjennä kaikki"]])
@@ -350,15 +347,15 @@
         valittu (or @data nil)]
     [:div
      (let [radiobuttonit (doall
-                           (for [v vaihtoehdot]
-                             ^{:key (str "radio-group-" (name v))}
+                           (for [vaihtoehto vaihtoehdot]
+                             ^{:key (str "radio-group-" (name vaihtoehto))}
                              [:div.radio
                               [:label
-                               [:input {:type      "radio" :checked (= valittu v)
+                               [:input {:type      "radio" :checked (= valittu vaihtoehto)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (if valittu?
-                                                       (reset! data v)))}
-                                (vaihtoehto-nayta v)]]]))]
+                                                       (if valittu?
+                                                         (reset! data vaihtoehto)))}
+                                (vaihtoehto-nayta vaihtoehto)]]]))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr

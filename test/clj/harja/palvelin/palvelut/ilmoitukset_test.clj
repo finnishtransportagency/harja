@@ -3,12 +3,14 @@
             [taoensso.timbre :as log]
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.ilmoitukset :refer :all]
+            [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
             [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -18,7 +20,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :hae-ilmoitukset (component/using
-                                                (->Ilmoitukset)
+                                                (ilmoitukset/->Ilmoitukset)
                                                 [:http-palvelin :db])))))
 
   (testit)
@@ -56,6 +58,7 @@
            :tyypit [:kysely :toimepidepyynto :ilmoitus]
            :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
            :aikavali nil
+           :aloituskuittauksen-ajankohta :kaikki
            :hakuehto nil}))))
 
 (deftest hae-ilmoituksia
@@ -66,6 +69,7 @@
                     :tyypit          +ilmoitustyypit+
                     :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
                     :tilat           +ilmoitustilat+
+                    :aloituskuittauksen-ajankohta :kaikki
                     :hakuehto        ""}
         ilmoitusten-maara-suoraan-kannasta (ffirst (q
                                                      (str "SELECT count(*) FROM ilmoitus;")))
@@ -92,6 +96,47 @@
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
 
+(deftest ilmoitus-myohassa-ilman-kuittauksia
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+
+(deftest ilmoitus-myohassa-kun-kuittaus-myohassa
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 73)))
+                            :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 11)))
+                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
+                               :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+
+(deftest ilmoitus-myohassa-kun-kuittaus-vaaraa-tyyppia
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 75)))
+                            :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 15)))
+                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
+                               :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}]
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+
+(deftest ilmoitus-ei-myohassa
+  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 71)))
+                            :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
+                                      :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
+                               :kuittaukset    [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
+    (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+
 (deftest ilmoituksen-tyyppi
  (let [kuittaamaton-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu false}
        vastaanotettu-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu true}
@@ -101,3 +146,18 @@
    (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotto))
    (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitus))
    (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetus))))
+
+(deftest aloituskuittausta-ei-annettu-alle-tunnissa
+  (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 80)))
+                                                                      :kuittaustyyppi :aloitus}]}
+        ilmoitus2 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 55)))
+                                                                      :kuittaustyyppi :vastaanotto}]}
+        ilmoitus3 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset []}]
+    (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus1 (t/hours 1))))
+    (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus2 (t/hours 1))))
+    (is (false? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus3 (t/hours 1))))))
+
+(deftest aloituskuittaus-annettu-alle-tunnissa
+  (let [ilmoitus {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 25)))
+                                                                     :kuittaustyyppi :aloitus}]}]
+    (is (true? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus (t/hours 1))))))
