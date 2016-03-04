@@ -190,7 +190,7 @@
 
 
 (defn ilmoitus-kartalle [{:keys [tila ilmoitustyyppi] :as ilmoitus} valittu-fn?]
-  (let [ikoni (ulkoasu/ilmoituksen-ikoni (:tila ilmoitus))]
+  (let [ikoni (ulkoasu/ilmoituksen-ikoni ilmoitus)]
     (assoc ilmoitus
       :type :ilmoitus
       :nimi (ilmoituksen-tooltip ilmoitus)
