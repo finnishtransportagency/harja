@@ -44,7 +44,7 @@
       "http://185.26.50.104/Pohjavesialue.zip"
       "/Users/jarihan/Desktop/Pohjavesialue-testi/"
       (fn []
-        (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan
+        (pohjavesialueen-tuonti/vie-pohjavesialueet-kantaan
           testitietokanta
           "file:///Users/jarihan/Desktop/Pohjavesialue-testi/Pohjavesialue.shp")))))
 
