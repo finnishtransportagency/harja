@@ -5,7 +5,8 @@
             [harja.palvelin.palvelut.toteumat :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -50,8 +51,8 @@
 
 ;; käyttää testidata.sql:stä tietoa
 (deftest erilliskustannukset-haettu-oikein
-         (let [alkupvm (java.sql.Date. 105 9 1)
-               loppupvm (java.sql.Date. 106 10 30)
+         (let [alkupvm (pvm/luo-pvm 2005 9 1)
+               loppupvm (pvm/luo-pvm 2006 10 30)
                res (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :urakan-erilliskustannukset +kayttaja-jvh+
                                      {:urakka-id @oulun-alueurakan-2005-2010-id
@@ -65,9 +66,9 @@
            (is (= (count res) oulun-alueurakan-toiden-lkm) "Erilliskustannusten määrä")))
 
 (deftest tallenna-erilliskustannus-testi
-         (let [hoitokauden-alkupvm (java.sql.Date. 105 9 1) ;;1.10.2005
-               hoitokauden-loppupvm (java.sql.Date. 106 10 30) ;;30.9.2006
-               toteuman-pvm (java.sql.Date. 105 11 12)
+         (let [hoitokauden-alkupvm (pvm/luo-pvm 2005 9 1) ;;1.10.2005
+               hoitokauden-loppupvm (pvm/luo-pvm 2006 10 30) ;;30.9.2006
+               toteuman-pvm (pvm/luo-pvm 2005 11 12)
                toteuman-lisatieto "Testikeissin lisätieto"
                ek {:urakka-id @oulun-alueurakan-2005-2010-id
                    :alkupvm hoitokauden-alkupvm
@@ -97,9 +98,9 @@
 
 
 (deftest tallenna-muut-tyot-toteuma-testi
-  (let [tyon-pvm (konv/sql-timestamp (java.util.Date. 105 11 24)) ;;24.12.2005
-        hoitokausi-aloituspvm (java.sql.Date. 105 9 1)      ; 1.10.2005
-        hoitokausi-lopetuspvm (java.sql.Date. 106 8 30)     ;30.9.2006
+  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2005 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (pvm/luo-pvm 2005 9 1)      ; 1.10.2005
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30)     ;30.9.2006
         toteuman-lisatieto "Testikeissin lisätieto2"
         tyo {:urakka-id @oulun-alueurakan-2005-2010-id :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
              :alkanut tyon-pvm :paattynyt tyon-pvm
@@ -139,9 +140,9 @@
 
 
 (deftest tallenna-yksikkohintainen-toteuma-testi
-  (let [tyon-pvm (konv/sql-timestamp (java.util.Date. 105 11 24)) ;;24.12.2005
-        hoitokausi-aloituspvm (java.sql.Date. 105 9 1)      ; 1.10.2005
-        hoitokausi-lopetuspvm (java.sql.Date. 106 8 30)     ;30.9.2006
+  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2005 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (pvm/luo-pvm 2005 9 1)      ; 1.10.2005
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30)     ;30.9.2006
         toteuman-lisatieto "Testikeissin lisätieto4"
         tyo {:urakka-id @oulun-alueurakan-2005-2010-id :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
              :alkanut tyon-pvm :paattynyt tyon-pvm
@@ -188,7 +189,7 @@
 ;; TODO implementoi..
 (deftest tallenna-toteuma-ja-toteumamateriaalit-test
   (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka="@oulun-alueurakan-2005-2010-id)))
-        toteuma (atom {:id -5, :urakka urakka :sopimus sopimus :alkanut (java.util.Date. 105 11 24) :paattynyt (java.util.Date. 105 11 24)
+        toteuma (atom {:id -5, :urakka urakka :sopimus sopimus :alkanut (pvm/luo-pvm 2005 11 24) :paattynyt (pvm/luo-pvm 2005 11 24)
                  :tyyppi "yksikkohintainen" :suorittajan-nimi "UNIT TEST" :suorittajan-ytunnus 1234 :lisatieto "Unit test teki tämän"})
         tmt (atom [{:id -1 :materiaalikoodi 1 :maara 192837} {:materiaalikoodi 1 :maara 192837}])]
 
@@ -197,7 +198,7 @@
     (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
                               {:toteuma @toteuma
                                :toteumamateriaalit @tmt
-                               ;:hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
+                               ;pvm/luo-pvm 2006 8 30)]
                                :sopimus sopimus})))
 
     (let [tmidt (flatten (q "SELECT id FROM toteuma_materiaali WHERE maara=192837"))
@@ -219,7 +220,7 @@
       (is (not (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
                                      {:toteuma @toteuma
                                       :toteumamateriaalit @tmt
-                                      :hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
+                                      :hoitokausi [(pvm/luo-pvm 2005 9 1) (pvm/luo-pvm 2006 8 30)]
                                       :sopimus sopimus}))))
 
       (is (= 1 (ffirst (q "SELECT count(*) FROM toteuma WHERE suorittajan_nimi='UNIT TEST' AND poistettu IS NOT TRUE"))))
@@ -233,8 +234,8 @@
       (u "DELETE FROM toteuma WHERE id="tid))))
 
 (deftest varustetoteumat-haettu-oikein
-  (let [alkupvm (java.sql.Date. 105 9 1)
-        loppupvm (java.sql.Date. 106 10 30)
+  (let [alkupvm (pvm/luo-pvm 2005 9 1)
+        loppupvm (pvm/luo-pvm 2006 10 30)
         varustetoteumat (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :urakan-varustetoteumat +kayttaja-jvh+
                                         {:urakka-id  @oulun-alueurakan-2005-2010-id
@@ -245,8 +246,8 @@
     (is (contains? (first varustetoteumat) :reitti))))
 
 (deftest kok-hint-toteumien-reitit-haettu-oikein
-  (let [alkupvm (java.sql.Date. 100 9 1)
-        loppupvm (java.sql.Date. 110 10 30)
+  (let [alkupvm (pvm/luo-pvm 2000 9 1)
+        loppupvm (pvm/luo-pvm 2010 10 30)
         toteumat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :urakan-kokonaishintaisten-toteumien-reitit +kayttaja-jvh+
                                  {:urakka-id  @oulun-alueurakan-2005-2010-id
@@ -259,8 +260,8 @@
     (is (= :line (get-in toteumat [0 :reitti :type])))))
 
 (deftest yks-hint-toteumien-reitit-haettu-oikein
-  (let [alkupvm (java.sql.Date. 100 9 1)
-        loppupvm (java.sql.Date. 110 10 30)
+  (let [alkupvm (pvm/luo-pvm 2000 9 1)
+        loppupvm (pvm/luo-pvm 2010 10 30)
         toteumat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :urakan-yksikkohintaisten-toteumien-reitit +kayttaja-jvh+
                                  {:urakka-id  @oulun-alueurakan-2005-2010-id

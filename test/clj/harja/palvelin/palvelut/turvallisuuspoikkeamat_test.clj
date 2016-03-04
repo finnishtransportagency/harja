@@ -4,7 +4,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.turvallisuuspoikkeamat :as tp]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -35,8 +36,8 @@
 
           :hae-turvallisuuspoikkeamat
           {:urakka-id @oulun-alueurakan-2005-2010-id
-           :alku      (java.sql.Date. 105 9 1)
-           :loppu     (java.sql.Date. 106 8 30)}))))
+           :alku      (pvm/luo-pvm (+ 1900 105) 9 1)
+           :loppu     (pvm/luo-pvm (+ 1900 106) 8 30)}))))
 
 (defn poista-tp-taulusta
   [kuvaus]
@@ -48,9 +49,9 @@
 
 (deftest tallenna-turvallisuuspoikkeama-test
   (let [tp {:urakka    @oulun-alueurakan-2005-2010-id
-            :tapahtunut (java.sql.Date. 105 9 1)
-            :paattynyt (java.sql.Date. 105 9 1)
-            :kasitelty (java.sql.Date. 105 9 1)
+            :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
+            :paattynyt (pvm/luo-pvm (+ 1900 105) 9 1)
+            :kasitelty (pvm/luo-pvm (+ 1900 105) 9 1)
             :tyontekijanammatti "Testaaja"
             :tyotehtava "Testaus"
             :kuvaus    "e2e taas punaisena"
@@ -64,7 +65,7 @@
             :tr {:numero 6 :alkuetaisyys 6 :loppuetaisyys 6 :alkuosa 6 :loppuosa 6}}
         korjaavattoimenpiteet [{:kuvaus "Ei ressata liikaa" :suoritettu nil :vastaavahenkilo "Kaikki yhdessä"}]
         uusi-kommentti {:tekija "Teemu" :kommentti "Näin on!" :liite nil}
-        hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
+        hoitokausi [(pvm/luo-pvm (+ 1900 105) 9 1) (pvm/luo-pvm (+ 1900 106) 8 30)]
         hae-tp-maara (fn[] (ffirst (q "SELECT count(*) FROM turvallisuuspoikkeama;")))
         vanha-maara (hae-tp-maara)]
 
@@ -82,5 +83,3 @@
     (is (= (hae-tp-maara) (+ 1 vanha-maara)))
 
     (poista-tp-taulusta "e2e taas punaisena")))
-
-
