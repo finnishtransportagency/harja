@@ -7,17 +7,21 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn rakenna-http-kutsu [metodi otsikot parametrit kayttajatunnus salasana kutsudata]
+(def timeout-aika-ms 10000)
+
+(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit kayttajatunnus salasana kutsudata timeout] :as optiot}]
   (let [kutsu {}]
     (-> kutsu
         (cond-> (not-empty otsikot) (assoc :headers otsikot)
                 (not-empty parametrit) (assoc :query-params parametrit)
                 (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
-                (or (= metodi "post") (= metodi "put")) (assoc :body kutsudata)))))
+                (or (= metodi "post") (= metodi "put")) (assoc :body kutsudata)
+                timeout (assoc :timeout timeout)))))
 
 (defn tee-http-kutsu [integraatioloki jarjestelma integraatio tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
   (try
-    (let [kutsu (rakenna-http-kutsu metodi otsikot parametrit kayttajatunnus salasana kutsudata)]
+    (let [kutsu (rakenna-http-kutsu {:metodi metodi :otsikot otsikot :parametrit parametrit :kayttajatunnus kayttajatunnus
+                                     :salasana salasana :kutsudata kutsudata :timeout timeout-aika-ms})]
       (case metodi
         "post" @(http/post url kutsu)
         "get" @(http/get url kutsu)
@@ -57,7 +61,8 @@
            (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
            ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
            ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.
-           (cond (instance? java.net.ConnectException error)
+           (cond (or (instance? java.net.ConnectException error)
+                     (instance? org.httpkit.client.TimeoutException error))
                  (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
                           :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
                  :default
