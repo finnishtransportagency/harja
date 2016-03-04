@@ -18,6 +18,7 @@
     (number? p) true
     (instance? Date p) true
     (keyword? p) true
+    (instance? Boolean p) true
     (map? p) (some true? (map #(hakuehto-annettu? (val %)) p))
     (empty? p) false
     :else true))
@@ -92,6 +93,7 @@
 (defn hae-ilmoitukset
   [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                    kuittaustyypit aikavali hakuehto selite vain-myohassa? aloituskuittauksen-ajankohta]}]
+  (assert (instance? Boolean vain-myohassa?) "vain-myohassa? parametrin täytyy olla boolean")
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)

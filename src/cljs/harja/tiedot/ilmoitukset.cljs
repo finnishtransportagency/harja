@@ -68,7 +68,9 @@
                                             (update :tyypit
                                                     #(if (empty? %) +ilmoitustyypit+ %))
                                             (update :kuittaustyypit
-                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))]
+                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))
+                                            (update :vain-myohassa?
+                                                    #(if (empty? %) false true)))))]
 
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
