@@ -5,16 +5,15 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.navigaatio :as nav]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +tarkastustyyppi->nimi+ {:tiesto "Tiestötarkastus"
-                              :talvihoito "Kelitarkastus"
-                              :soratie "Soratien tarkastus"
-                              :laatu "Laaduntarkastus"
-                              :pistokoe "Pistokoe"})
+
+
+(def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
 
 (defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie

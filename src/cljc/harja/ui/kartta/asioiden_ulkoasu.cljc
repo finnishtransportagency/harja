@@ -1,14 +1,12 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
-            [harja.ui.dom :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
-            [clojure.string :as str]
-
-            [harja.loki :refer [log]]))
+            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
+            [clojure.string :as str]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 (def +zindex+ 4)
-(def +normaali-leveys+ 6) ;;Openlayers default
+(def +normaali-leveys+ 6)
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
