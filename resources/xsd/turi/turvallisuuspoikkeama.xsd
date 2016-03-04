@@ -236,7 +236,14 @@
             <xs:element type="xs:string" name="tyotehtava"/>
             <xs:element type="luokittelutType" name="luokittelut"/>
             <xs:element type="vahinkoluokittelutType" name="vahinkoluokittelut"/>
-            <xs:element type="xs:string" name="vakavuusaste"/>
+            <xs:element name="vakavuusaste">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="vakava"/>
+                        <xs:enumeration value="lieva"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
             <xs:element type="xs:string" name="aiheutuneet-seuraukset"/>
             <xs:element type="korjaavat-toimenpiteetType" name="korjaavat-toimenpiteet"/>
             <xs:element type="kommentitType" name="kommentit"/>

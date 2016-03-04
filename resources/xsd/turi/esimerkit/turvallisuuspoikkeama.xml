@@ -1,41 +1,43 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<turvallisuuspoikkeama>
-    <vaylamuoto></vaylamuoto>
-    <tapahtunut>2015-12-03T07:40:40.811Z</tapahtunut>
-    <paattynyt>2015-12-03T07:40:40.811Z</paattynyt>
-    <kasitelty>2015-12-03T07:40:40.811Z</kasitelty>
-    <toteuttaja>Yritys OY</toteuttaja>
-    <tilaaja>POP ELY</tilaaja>
-    <turvallisuuskoordinaattori>
-        <etunimi>Tiina</etunimi>
-        <sukunimi>Turvallinen</sukunimi>
-    </turvallisuuskoordinaattori>
-    <laatija>
-        <etunimi>Lasse</etunimi>
-        <sukunimi>Laatija</sukunimi>
-    </laatija>
-    <ilmoittaja>
-        <etunimi>Irma</etunimi>
-        <sukunimi>Ilmiantaja</sukunimi>
-    </ilmoittaja>
-    <kuvaus>Aura-auto suistui tieltä väistäessä jalankulkijaa ja törmäsi autoon.</kuvaus>
-    <tyotehtava>Tien auraus</tyotehtava>
-    <luokittelut>
-        <luokittelu>henkilostovahinko</luokittelu>
-        <luokittelu>omaisuusvahinko</luokittelu>
-    </luokittelut>
-    <vakavuusaste>vakava</vakavuusaste>
-    <aiheutuneet-seuraukset>Tehdään jotain</aiheutuneet-seuraukset>
-    <korjaavat-toimenpiteet>
-        <korjaava-toimenpide>
-            <kuvaus>Kaadetaan risteystä pimentävä pensaikko</kuvaus>
-            <suoritettu>2016-01-30T12:00:00Z</suoritettu>
-            <vastaavahenkilo>
-                <etunimi>Henri</etunimi>
-                <sukunimi>Hakkuri</sukunimi>
-            </vastaavahenkilo>
-        </korjaava-toimenpide>
-    </korjaavat-toimenpiteet>
+<turi:turvallisuuspoikkeama xmlns:turi="http://www.liikennevirasto.fi/xsd/turi">
+  <vaylamuoto>tie</vaylamuoto>
+  <tapahtunut>2015-10-26T09:36:28</tapahtunut>
+  <paattynyt>2015-02-14T20:44:14</paattynyt>
+  <kasitelty>2018-11-01T07:36:46+02:00</kasitelty>
+  <toteuttaja>Yritys OY</toteuttaja>
+  <tilaaja>POP ELY</tilaaja>
+  <turvallisuuskoordinaattori>
+    <etunimi>Tiina</etunimi>
+    <sukunimi>Turvallinen</sukunimi>
+  </turvallisuuskoordinaattori>
+  <laatija>
+    <etunimi>Lasse</etunimi>
+    <sukunimi>Laatija</sukunimi>
+  </laatija>
+  <ilmoittaja>
+    <etunimi>Irma</etunimi>
+    <sukunimi>Ilmiantaja</sukunimi>
+  </ilmoittaja>
+  <kuvaus></kuvaus>
+  <tyotehtava>Aura-auto suistui tieltä väistäessä jalankulkijaa ja törmäsi autoon.</tyotehtava>
+  <luokittelut>
+    <luokittelu>tyotapaturma</luokittelu>
+  </luokittelut>
+  <vahinkoluokittelut>
+    <luokittelu>henkilostovahinko</luokittelu>
+    <luokittelu>omaisuusvahinko</luokittelu>
+  </vahinkoluokittelut>
+  <vakavuusaste>vakava</vakavuusaste>
+  <aiheutuneet-seuraukset>Tehdään asialle jotain</aiheutuneet-seuraukset>
+  <korjaavat-toimenpiteet>
+    <korjaava-toimenpide>
+      <kuvaus>Kaadetaan risteystä pimentävä pensaikko</kuvaus>
+      <suoritettu>2016-01-30T12:00:00Z</suoritettu>
+      <vastaavahenkilo>
+        <etunimi>Henri</etunimi>
+        <sukunimi>Hakkuri</sukunimi>
+      </vastaavahenkilo>
+    </korjaava-toimenpide>
+  </korjaavat-toimenpiteet>
     <kommentit>
         <kommentti>Aika pahalta näytti.</kommentti>
         <kommentti>Jatkossa ei tule tapahtumaan.</kommentti>
@@ -60,7 +62,7 @@
             <y>7212292</y>
         </koordinaatit>
         <tierekisteriosoite>
-            <tienumero></tienumero>
+            <tienumero>1</tienumero>
             <aosa>1</aosa>
             <aet>1</aet>
             <losa>1</losa>
@@ -85,4 +87,4 @@
         <sairaalahoitovuorokaudet>1</sairaalahoitovuorokaudet>
         <jatkuuko-sairaspoissaolo>false</jatkuuko-sairaspoissaolo>
     </henkilovahinko>
-</turvallisuuspoikkeama>
+</turi:turvallisuuspoikkeama>
