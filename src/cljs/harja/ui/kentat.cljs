@@ -28,7 +28,8 @@
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.kartta.varit.puhtaat :as puhtaat])
+            [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -682,10 +683,8 @@
                                  {:alue (maarittele-feature
                                           arvo
                                           false
-                                          {:img    (kartta-ikonit/pinni-ikoni "musta")
-                                           :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                          {:color  puhtaat/harmaa ;; muun alle
-                                           :zindex 20})
+                                          asioiden-ulkoasu/tr-ikoni
+                                          asioiden-ulkoasu/tr-viiva)
                                   :type :tr-valittu-osoite})
                                (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
     (when hae-sijainti

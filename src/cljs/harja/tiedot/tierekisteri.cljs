@@ -4,7 +4,8 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
-            [harja.ui.kartta.varit.puhtaat :as puhtaat])
+            [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
     [cljs.core.async.macros :refer [go]]))
@@ -17,9 +18,7 @@
    (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
      [{:alue (maarittele-feature @valittu-alkupiste
                                  false
-                                 {:img    (kartta-ikonit/pinni-ikoni "musta")
-                                  :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                 {:color  puhtaat/harmaa ;; muun alle
-                                  :zindex 20})}])))
+                                 asioiden-ulkoasu/tr-ikoni
+                                 asioiden-ulkoasu/tr-viiva)}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)
