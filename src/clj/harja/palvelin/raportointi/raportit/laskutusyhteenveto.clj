@@ -4,6 +4,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
             [clj-time.local :as l]
             [harja.fmt :as fmt]
@@ -85,9 +86,12 @@
                                                    nil)))) taulukon-tiedot)
                [yhteenveto]))]))))
 
-(defn suorita [db user {:keys [alkupvm loppupvm] :as parametrit}]
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+  (let [urakan-nimi (when urakka-id (:nimi (first (urakat-q/hae-urakka db urakka-id))))
+        _ (log/debug " urakka-id " urakka-id)
+        _ (log/debug "urakan nimi " urakan-nimi)
+        kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Laskutettu hoito\u00ADkaudella ennen " (pvm/kuukausi-ja-vuosi alkupvm) " \u20AC")
@@ -201,6 +205,7 @@
 
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}
+                [:otsikko (str (or (str urakan-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]
