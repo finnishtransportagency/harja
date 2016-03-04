@@ -82,14 +82,17 @@
               (if urakoittain?
                 [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
                 [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))]
-     
-     (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+
+
+     (if (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
-       (pylvaat-kuukausittain {:otsikko "Turvallisuuspoikkeamat kuukausittain"
-                 :alkupvm               alkupvm :loppupvm loppupvm
-                 :kuukausittainen-data  turpomaarat-tyypeittain
-                 :piilota-arvo?         #{0}
-                 :legend                ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]}))
+       (pylvaat-kuukausittain {:otsikko              "Turvallisuuspoikkeamat kuukausittain"
+                               :alkupvm              alkupvm :loppupvm loppupvm
+                               :kuukausittainen-data turpomaarat-tyypeittain
+                               :piilota-arvo?        #{0}
+                               :legend               ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]})
+       ;; estää nillin pääsyn PDF:ään
+       [:teksti ""])
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []
@@ -98,7 +101,6 @@
                     [{:otsikko "Pvm" :leveys 14}
                      {:otsikko "Tyyppi" :leveys 24}
                      {:otsikko "Vakavuusaste" :leveys 15}
-                     {:otsikko "Tyyppi" :leveys 24}
                      {:otsikko "Ammatti" :leveys 14}
                      {:otsikko "Työ\u00ADtehtävä" :leveys 14}
                      {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
