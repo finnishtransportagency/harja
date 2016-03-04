@@ -82,7 +82,6 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
   (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
         valimatka (/ hypotenuusa ikonien-tiheys)
         taitokset (apurit/pisteiden-taitokset points)
-        _ (log/debug "PAIKAT: " (map :paikka ikonit))
         ikonin-skaala (partial apurit/ikonin-skaala hypotenuusa)]
     (when (< hypotenuusa ikonien-piirtoraja-m)
       (doseq [{:keys [img scale paikka]} ikonit
