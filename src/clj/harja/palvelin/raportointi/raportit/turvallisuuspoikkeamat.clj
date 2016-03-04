@@ -84,13 +84,15 @@
                 [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))]
 
 
-     (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+     (if (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
        (pylvaat-kuukausittain {:otsikko              "Turvallisuuspoikkeamat kuukausittain"
                                :alkupvm              alkupvm :loppupvm loppupvm
                                :kuukausittainen-data turpomaarat-tyypeittain
                                :piilota-arvo?        #{0}
-                               :legend               ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]}))
+                               :legend               ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]})
+       ;; estää nillin pääsyn PDF:ään
+       [:teksti ""])
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []
