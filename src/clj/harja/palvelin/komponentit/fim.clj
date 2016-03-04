@@ -4,7 +4,7 @@
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
             [com.stuartsierra.component :as component]
-            [org.httpkit.client :as http]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [clojure.string :as str]
             [taoensso.timbre :as log]))
 
@@ -42,23 +42,20 @@
   (xml-zip (parse (java.io.ByteArrayInputStream. bytet))))
 
 
-(defn hae
+(defn hae-kayttajatunnus
   "Hakee FIM palvelusta käyttäjätunnuksella."
-  [fim kayttajatunnus]
-  (let [{:keys [status body error]} @(http/get (:url fim)
-                                               {:timeout      15000 ; 15 sekuntia
-                                                :as           :byte-array
-                                                :query-params {:filterproperty "AccountName"
-                                                               :filter         kayttajatunnus
-                                                               :fetch          "AccountName,FirstName,LastName,Email,MobilePhone,Company"
-                                                               }})]
-    (if error
-      (do (log/error "FIM haku epäonnistui: " error)
-          (throw (RuntimeException. "FIM haku epäonnistui: " error)))
-      (if (and (<= 400 status) (> 600 status))
-        status
-
-        (first (lue-fim-vastaus (lue-xml body)))))))
+  [fim kayttajatunnus integraatioloki]
+  (http/laheta-get-kutsu
+    integraatioloki
+    "tuo-fim-kayttaja"
+    "fim"
+    (:url fim)
+    nil
+    {:filterproperty "AccountName"
+     :filter         kayttajatunnus
+     :fetch          "AccountName,FirstName,LastName,Email,MobilePhone,Company"}
+    (fn [body _]
+      (first (lue-fim-vastaus (lue-xml body))))))
 
 
 (defrecord FIM [url]

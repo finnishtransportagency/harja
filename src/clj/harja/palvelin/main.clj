@@ -226,7 +226,7 @@
                           [:http-palvelin :db])
       :kayttajat (component/using
                    (kayttajat/->Kayttajat)
-                   [:http-palvelin :db :fim :klusterin-tapahtumat])
+                   [:http-palvelin :db :fim :klusterin-tapahtumat :integraatioloki])
       :pohjavesialueet (component/using
                          (pohjavesialueet/->Pohjavesialueet)
                          [:http-palvelin :db])

@@ -73,7 +73,7 @@
      :ikonit (mapv (fn [i] (merge
                              ;; Oletusasetukset
                              {:tyyppi :merkki
-                              :paikka :loppu
+                              :paikka [:loppu]
                               :scale  (laske-skaala valittu?)}
                              i)) merkit)}))
 
@@ -93,8 +93,8 @@
       string, muuten voidaan mennä oletusasetuksilla
     - Reittimäisille asioille tällä parametrilla on enemmän merkitystä.
       Mäpille voi antaa seuraavia arvoja:
-      -- paikka: :alku, :loppu, :taitokset, tai vektori näitä. Mihin paikkoihin
-         ikoni piirretään?
+      -- paikka: vektori, jonka elementtejä voivat olla :alku, :loppu ja :taitokset
+         Mihin paikkoihin ikoni piirretään?
       -- tyyppi: :nuoli tai :merkki. Merkit kääntyvät viivan suunnan mukaan,
          merkit aina pystyssä.
       -- img: käytettävä ikoni
@@ -127,8 +127,8 @@
     piirtää reitti
 
   (maarittele-feature foo val?
-                      [{:paikka :loppu :img (pinni-ikoni 'sininen)}
-                       {:paikka :taitokset :img (nuoli-ikoni 'sininen')}]
+                      [{:paikka [:loppu] :img (pinni-ikoni 'sininen)}
+                       {:paikka [:taitokset] :img (nuoli-ikoni 'sininen')}]
                       [{:width 12 :color varit/musta}
                        {:width 6 :color varit/sininen}])
     Jos foo on pistemäinen, käytetään sinistä pinniä. Reitilliselle foolle
