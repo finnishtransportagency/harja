@@ -199,10 +199,9 @@
                         [" Kaikki yhteensä " " Ei kustannuksia "
                          :kaikki_laskutettu :kaikki_laskutetaan tiedot]])]
 
-    (keep identity
-          [:raportti {:nimi "Laskutusyhteenveto"}
-           varoitus-tietojen-puuttumisesta
-           (if (empty? taulukot)
-             [:teksti " Ei laskutettavaa"]
-             taulukot)])))
-                                                
+    (vec (keep identity
+               [:raportti {:nimi "Laskutusyhteenveto"}
+                varoitus-tietojen-puuttumisesta
+                (if (empty? taulukot)
+                  [:teksti " Ei laskutettavaa"]
+                  taulukot)]))))
