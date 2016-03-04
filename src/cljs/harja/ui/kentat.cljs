@@ -670,6 +670,9 @@
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
 
+        keskita-kartta! (fn [sijainti] (when sijainti
+                                         (kartta/keskita-kartta-alueeseen! (harja.geo/extent sijainti))))
+
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (tasot/poista-geometria! :tr-valittu-osoite)
@@ -683,7 +686,7 @@
                                           asioiden-ulkoasu/tr-ikoni
                                           asioiden-ulkoasu/tr-viiva)
                                   :type :tr-valittu-osoite})
-                               (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
+                               (keskita-kartta! arvo)))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go-loop []
@@ -704,6 +707,8 @@
         (when sijainti
           (reset! alkuperainen-sijainti @sijainti)
           (nayta-kartalla @sijainti)))}
+
+     (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @sijainti))
 
      (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")
