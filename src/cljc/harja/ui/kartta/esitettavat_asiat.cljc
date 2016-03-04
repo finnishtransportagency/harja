@@ -475,7 +475,6 @@
   nil)
 
 (defn- valittu-fn? [valittu tunniste asia]
-  (log "Tunniste on: " (pr-str tunniste))
   (let [tunniste (if (vector? tunniste) tunniste [tunniste])
         tunnisteet (if (vector? (first tunniste)) tunniste [tunniste tunniste])]
     (and
