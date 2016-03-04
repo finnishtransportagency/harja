@@ -174,13 +174,13 @@
    :img    (nuoli-ikoni nuolen-vari)})
 
 (defn tyokoneen-ikoni [nuolen-vari rotaatio]
-  {:paikka   :loppu
+  {:paikka   [:loppu]
    :tyyppi   :nuoli
    :img      (nuoli-ikoni nuolen-vari)
    :rotation rotaatio})
 
 (defn yllapidon-ikoni []
-  {:paikka :loppu
+  {:paikka [:loppu]
    :tyyppi :merkki
    :img (:yllapito ikonien-varit)})
 

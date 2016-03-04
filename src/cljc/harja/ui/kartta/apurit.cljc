@@ -31,8 +31,8 @@
                (> (Math/abs kulman-erotus) kulmaraja-nuolelle)
                ensimmainen?)
            (recur (conj pisteet-ja-rotaatiot
-                        [(-> sijainti luo-piste) rotaatio])
-                  sijainti taitokset rotaatio false)
+                        [(-> sijainti second luo-piste) rotaatio])
+                  (second sijainti) taitokset rotaatio false)
 
            :else
            (recur pisteet-ja-rotaatiot
