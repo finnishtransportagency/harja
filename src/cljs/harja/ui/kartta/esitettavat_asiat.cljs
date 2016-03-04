@@ -1,9 +1,9 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
             [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat
-             :as laatupoikkeamat]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.ilmoitukset :as ilmoitukset]
             [harja.geo :as geo]
 
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
@@ -186,23 +186,17 @@
   (some #(= (:kuittaustyyppi %) kuittaustyyppi)
         (get-in ilmoitus [:kuittaukset])))
 
-(defn ilmoituksen-tooltip [ilmoitus oletusteksti]
-  (if (empty? (:kuittaukset ilmoitus))
-    "Ei kuittauksia"
-
-    (case (last (map :kuittaustyyppi (:kuittaukset ilmoitus)))
-      :vastaanotto "Vastaanottokuittaus annettu"
-      :vastaus "Vastauskuittaus annettu"
-      :aloitus "Aloituskuittaus annettu"
-      :lopetus "Lopetuskuittaus annettu"
-      :muutos "Muutoskuittaus annettu"
-      oletusteksti)))
+(defn ilmoituksen-tooltip [ilmoitus]
+  (str (ilmoitukset/ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
+       " ("
+       (str/lower-case (ilmoitukset/kuittaustyypin-selite (:tila ilmoitus)))
+       ")"))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu-fn?]
   (let [ikoni (ulkoasu/tiedotuksen-ikoni)]
     (assoc ilmoitus
      :type :ilmoitus
-     :nimi (ilmoituksen-tooltip ilmoitus "Tiedotus")
+     :nimi (ilmoituksen-tooltip ilmoitus)
      :selite {:teksti "Tiedotus"
               :img    ikoni}
      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
@@ -214,7 +208,7 @@
         ikoni (ulkoasu/kyselyn-ikoni lopetettu? aloitettu?)]
     (assoc ilmoitus
       :type :ilmoitus
-      :nimi (ilmoituksen-tooltip ilmoitus "Kysely")
+      :nimi (ilmoituksen-tooltip ilmoitus)
       :selite {:teksti (cond
                          aloitettu? "Kysely, aloitettu"
                          lopetettu? "Kysely, lopetettu"
@@ -228,7 +222,7 @@
         ikoni (ulkoasu/toimenpidepyynnon-ikoni lopetettu? vastaanotettu?)]
     (assoc ilmoitus
       :type :ilmoitus
-      :nimi (ilmoituksen-tooltip ilmoitus "Toimenpidepyyntö")
+      :nimi (ilmoituksen-tooltip ilmoitus)
       :selite {:teksti (cond
                          vastaanotettu? "Toimenpidepyyntö, kuitattu"
                          lopetettu? "Toimenpidepyyntö, lopetettu"
