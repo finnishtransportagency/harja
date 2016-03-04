@@ -14,7 +14,8 @@
    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
    [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
    [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-   [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+   [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti
+    :as tierekisteri]
    [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
    [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
    [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
@@ -60,7 +61,7 @@
    ;; karttakuvien renderöinti
    [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
 
-   
+
    ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
    [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
 
@@ -80,11 +81,13 @@
    [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
 
    ;; Ajastetut tehtävät
-   [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
+   [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
+    :as suolasakkojen-lahetys]
    [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
 
    [com.stuartsierra.component :as component]
-   [harja.palvelin.asetukset :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
+   [harja.palvelin.asetukset
+    :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
   (:import [java.util Locale])
   (:gen-class))
 
@@ -119,18 +122,22 @@
                              [:db])
 
       ;; Integraatioloki
-      :integraatioloki (component/using (integraatioloki/->Integraatioloki
-                                          (:paivittainen-lokin-puhdistusaika (:integraatiot asetukset)))
-                                        [:db])
+      :integraatioloki
+      (component/using (integraatioloki/->Integraatioloki
+                        (:paivittainen-lokin-puhdistusaika
+                         (:integraatiot asetukset)))
+                       [:db])
 
       ;; Sonja (Sonic ESB) JMS yhteyskomponentti
       :sonja (sonja/luo-sonja (:sonja asetukset))
-      :sonja-sahkoposti (component/using
-                         (let [{:keys [vastausosoite jonot suora? palvelin]} (:sonja-sahkoposti asetukset)]
-                           (if suora?
-                             (sahkoposti/luo-vain-lahetys palvelin vastausosoite)
-                             (sonja-sahkoposti/luo-sahkoposti vastausosoite jonot)))
-                         [:sonja :integraatioloki :db])
+      :sonja-sahkoposti
+      (component/using
+       (let [{:keys [vastausosoite jonot suora? palvelin]}
+             (:sonja-sahkoposti asetukset)]
+         (if suora?
+           (sahkoposti/luo-vain-lahetys palvelin vastausosoite)
+           (sonja-sahkoposti/luo-sahkoposti vastausosoite jonot)))
+       [:sonja :integraatioloki :db])
 
       ;; FIM REST rajapinta
       :fim (fim/->FIM (:url (:fim asetukset)))
@@ -145,16 +152,20 @@
                               [:sonja :db :integraatioloki])
 
       ;; T-LOIK
-      :tloik (component/using (tloik/->Tloik (:tloik asetukset))
-                              [:sonja :db :integraatioloki :klusterin-tapahtumat :sonja-sahkoposti :labyrintti])
+      :tloik (component/using
+              (tloik/->Tloik (:tloik asetukset))
+              [:sonja :db :integraatioloki :klusterin-tapahtumat
+               :sonja-sahkoposti :labyrintti])
 
       ;; Tierekisteri
-      :tierekisteri (component/using (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
-                                     [:db :integraatioloki])
+      :tierekisteri (component/using
+                     (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
+                     [:db :integraatioloki])
 
       ;; Labyrintti SMS Gateway
-      :labyrintti (component/using (labyrintti/luo-labyrintti (:labyrintti asetukset))
-                                   [:http-palvelin :db :integraatioloki])
+      :labyrintti (component/using
+                   (labyrintti/luo-labyrintti (:labyrintti asetukset))
+                   [:http-palvelin :db :integraatioloki])
 
       :raportointi (component/using
                      (raportointi/luo-raportointi)
@@ -232,8 +243,9 @@
                            (siltatarkastukset/->Siltatarkastukset)
                            [:http-palvelin :db])
       :lampotilat (component/using
-                    (lampotilat/->Lampotilat (:lampotilat-url (:ilmatieteenlaitos asetukset)))
-                    [:http-palvelin :db])
+                   (lampotilat/->Lampotilat
+                    (:lampotilat-url (:ilmatieteenlaitos asetukset)))
+                   [:http-palvelin :db])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)
                    [:http-palvelin :sampo :db])
@@ -265,17 +277,20 @@
                            (tyokoneenseuranta/->TyokoneseurantaHaku)
                            [:http-palvelin :db])
 
-      :tr-haku (component/using (tierek-haku/->TierekisteriHaku) [:http-palvelin :db])
+      :tr-haku (component/using
+                (tierek-haku/->TierekisteriHaku)
+                [:http-palvelin :db])
 
-      :geometriapaivitykset (component/using (geometriapaivitykset/->Geometriapaivitykset
-                                               (:geometriapaivitykset asetukset))
-                                             [:db :integraatioloki])
+      :geometriapaivitykset (component/using
+                             (geometriapaivitykset/->Geometriapaivitykset
+                              (:geometriapaivitykset asetukset))
+                             [:db :integraatioloki])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
-                     [:http-palvelin :db])
+                     [:http-palvelin :db :karttakuvat])
       :karttakuvat (component/using
-                   (karttakuvat/->Karttakuvat)
+                   (karttakuvat/luo-karttakuvat)
                    [:http-palvelin :db])
 
       ;; Harja API
@@ -284,7 +299,8 @@
                     [:http-palvelin :db :integraatioloki])
       :api-laatupoikkeamat (component/using
                              (api-laatupoikkeamat/->Laatupoikkeamat)
-                             [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
+                             [:http-palvelin :db :liitteiden-hallinta
+                              :integraatioloki])
       :api-paivystajatiedot (component/using
                               (api-paivystajatiedot/->Paivystajatiedot)
                               [:http-palvelin :db :integraatioloki])
@@ -306,16 +322,23 @@
       :api-tyokoneenseuranta (component/using
                                (api-tyokoneenseuranta/->Tyokoneenseuranta)
                                [:http-palvelin :db])
-      :api-tyokoneenseuranta-puhdistus (component/using (tks-putsaus/->TyokoneenseurantaPuhdistus)
-                                                        [:db])
-      :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                                  [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
-      :api-suolasakkojen-lahetys (component/using (suolasakkojen-lahetys/->SuolasakkojenLahetys)
-                                                  [:db])
-      :api-varusteet (component/using (api-varusteet/->Varusteet)
-                                      [:http-palvelin :db :integraatioloki :tierekisteri])
-      :api-ilmoitukset (component/using (api-ilmoitukset/->Ilmoitukset)
-                                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat :tloik]))))
+      :api-tyokoneenseuranta-puhdistus (component/using
+                                        (tks-putsaus/->TyokoneenseurantaPuhdistus)
+                                        [:db])
+      :api-turvallisuuspoikkeama (component/using
+                                  (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
+                                  [:http-palvelin :db :integraatioloki
+                                   :liitteiden-hallinta])
+      :api-suolasakkojen-lahetys (component/using
+                                  (suolasakkojen-lahetys/->SuolasakkojenLahetys)
+                                  [:db])
+      :api-varusteet (component/using
+                      (api-varusteet/->Varusteet)
+                      [:http-palvelin :db :integraatioloki :tierekisteri])
+      :api-ilmoitukset (component/using
+                        (api-ilmoitukset/->Ilmoitukset)
+                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat
+                         :tloik]))))
 
 (defonce harja-jarjestelma nil)
 

@@ -5,8 +5,10 @@
             [harja.atom :refer-macros [reaction<!]
              :refer [paivita-periodisesti]]
             [harja.ui.kartta.esitettavat-asiat
+             :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
-            [harja.ui.openlayers :as openlayers])
+            [harja.ui.openlayers :as openlayers]
+            [clojure.string :as str])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -14,7 +16,9 @@
 (defonce karttataso-tilannekuva (atom false))
 (defonce haetut-asiat (atom nil))
 
+(defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
+
 
 (def lisaa-karttatyyppi-fn
   {:ilmoitukset            #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
@@ -42,6 +46,29 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    :tyokoneet              :tilannekuva-tyokoneet
    :toteumat               :tilannekuva-toteumat})
 
+(defmulti muodosta-karttataso (fn [taso uudet-asiat] taso))
+
+(defmethod muodosta-karttataso :default [taso uudet-asiat]
+  (kartalla-esitettavaan-muotoon
+   uudet-asiat
+   nil nil
+   (map (lisaa-karttatyyppi-fn taso))))
+
+(defn- toimenpiteen-selite [{:keys [toimenpide toimenpidekoodi]}]
+  (let [[viivat _] (esitettavat-asiat/tehtavan-viivat-ja-nuolitiedosto
+                    [toimenpide] false)]
+    {:nimi toimenpide :teksti toimenpide
+     :vari (esitettavat-asiat/viivojen-varit-leveimmasta-kapeimpaan viivat)}))
+
+(defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
+  (log "toteumat taso tehdään!" (pr-str toimenpiteet))
+  (openlayers/luo-kuvataso
+   :tilannekuva
+   (into #{}
+         (map toimenpiteen-selite)
+         toimenpiteet)
+   "tk" @url-hakuparametrit))
+
 ;; Päivittää tilannekuvan karttatasot kun niiden tiedot ovat muuttuneet.
 ;; Muuntaa kartalla esitettävään muotoon ne tasot, joiden tiedot on oikeasti
 ;; muuttuneet.
@@ -68,19 +95,11 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
                      (empty? uudet-asiat)
                      (assoc uudet-tasot tason-nimi nil)
 
-                     ;; Jos taso on kuva, PENDING: work in progress
-                     #_(= taso :toteumat)
-                     #_(assoc uudet-tasot
-                            tason-nimi (openlayers/luo-kuvataso))
-
                      ;; Jos tason asiat ovat muuttuneet, muodostetaan
                      ;; kartalla esitettävä muoto
                      (not= vanhat-asiat uudet-asiat)
                      (assoc uudet-tasot
-                            tason-nimi (kartalla-esitettavaan-muotoon
-                                        uudet-asiat
-                                        nil nil
-                                        (map (lisaa-karttatyyppi-fn taso))))
+                            tason-nimi (muodosta-karttataso taso uudet-asiat))
 
                      :default
                      uudet-tasot)

@@ -119,22 +119,32 @@ hakutiheys-historiakuva 1200000)
 
 (defonce nykytilanteen-aikasuodattimen-arvo (atom 2))
 
-(defn kasaa-parametrit []
+(defn kasaa-parametrit [hallintayksikko urakka urakoitsija urakkatyyppi tila
+                        nakyva-alue nykytilanteen-aikasuodattimen-arvo
+                        historiakuvan-aikavali suodattimet]
   (merge
-   {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-    :urakka-id       (:id @nav/valittu-urakka)
-    :urakoitsija     (:id @nav/valittu-urakoitsija)
-    :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
-    :nykytilanne?    (= :nykytilanne @valittu-tila)
-    :alue            @nav/kartalla-nakyva-alue
-    :alku            (if (= @valittu-tila :nykytilanne)
+   {:hallintayksikko (:id hallintayksikko)
+    :urakka-id       (:id urakka)
+    :urakoitsija     (:id urakoitsija)
+    :urakkatyyppi    (:arvo urakkatyyppi)
+    :nykytilanne?    (= :nykytilanne tila)
+    :alue            nakyva-alue
+    :alku            (if (= tila :nykytilanne)
                        (t/minus (pvm/nyt)
-                                (t/hours @nykytilanteen-aikasuodattimen-arvo))
-                       (first @historiakuvan-aikavali))
-    :loppu           (if (= @valittu-tila :nykytilanne)
+                                (t/hours nykytilanteen-aikasuodattimen-arvo))
+                       (first historiakuvan-aikavali))
+    :loppu           (if (= tila :nykytilanne)
                        (pvm/nyt)
-                       (second @historiakuvan-aikavali))}
-   (tk/valitut-suodattimet @suodattimet)))
+                       (second historiakuvan-aikavali))}
+   (tk/valitut-suodattimet suodattimet)))
+
+(defonce hakuparametrit
+  (reaction
+   (kasaa-parametrit @nav/valittu-hallintayksikko @nav/valittu-urakka
+                     @nav/valittu-urakoitsija @nav/valittu-urakkatyyppi
+                     @valittu-tila @nav/kartalla-nakyva-alue
+                     @nykytilanteen-aikasuodattimen-arvo @historiakuvan-aikavali
+                     @suodattimet)))
 
 (defn yhdista-tyokonedata [uusi]
   (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)
@@ -188,8 +198,8 @@ hakutiheys-historiakuva 1200000)
                          :tyokoneet (vals (:tyokoneet tulos))})
   tulos)
 
-(defn hae-asiat []
-  (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ")")
+(defn hae-asiat [hakuparametrit]
+  (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
   (go
     ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui
     ;; käyttäjän vaihdettua suodattimia
@@ -201,8 +211,10 @@ hakutiheys-historiakuva 1200000)
                :suodattimet          @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila! true))
 
-    (let [yhteiset-parametrit (kasaa-parametrit)
-          tulos (-> (<! (k/post! :hae-tilannekuvaan yhteiset-parametrit))
+    (reset! tilannekuva-kartalla/url-hakuparametrit
+            (k/url-parametri (dissoc hakuparametrit :alue)))
+
+    (let [tulos (-> (<! (k/post! :hae-tilannekuvaan hakuparametrit))
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!))]
       (when @nakymassa?
@@ -210,18 +222,11 @@ hakutiheys-historiakuva 1200000)
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
 
 (def asioiden-haku
-  (reaction<!
-   [_ @valittu-tila
-    _ @suodattimet
-    _ @nykytilanteen-aikasuodattimen-arvo
-    _ @historiakuvan-aikavali
-    _ @nav/kartalla-nakyva-alue
-    _ @nav/valittu-urakka
-    nakymassa? @nakymassa?
-    _ @nav/valittu-hallintayksikko]
-   {:odota bufferi}
-   (when nakymassa?
-     (hae-asiat))))
+  (reaction<! [hakuparametrit @hakuparametrit
+               nakymassa? @nakymassa?]
+              {:odota bufferi}
+              (when nakymassa?
+                (hae-asiat hakuparametrit))))
 
 ;; Säilöö funktion jolla pollaus lopetetaan
 (defonce lopeta-haku (atom nil))
@@ -263,5 +268,3 @@ hakutiheys-historiakuva 1200000)
            (fn [_ _ old new]
              (log "valittu-tila muuttui " old " => " new)
              (pollaus-muuttui)))
-
-
