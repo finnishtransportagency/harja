@@ -102,8 +102,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
 
                             ;; Skaalataan pikselit karttakoordinaateiksi
                             (.scale (px skaala) (px skaala)))
-                          nil-image-observer)))))
-      )))
+                          nil-image-observer))))))))
 
 
 (defmethod piirra :viiva [g toteuma {:keys [viivat points ikonit] :as alue}]
