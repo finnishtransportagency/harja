@@ -3,7 +3,8 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]])
+            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
+            [harja.ui.kartta.varit.puhtaat :as puhtaat])
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
     [cljs.core.async.macros :refer [go]]))
@@ -18,7 +19,7 @@
                                  false
                                  {:img    (kartta-ikonit/pinni-ikoni "musta")
                                   :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                 {:color  "gray" ;; muun alle
+                                 {:color  puhtaat/harmaa ;; muun alle
                                   :zindex 20})}])))
 
 (tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)
