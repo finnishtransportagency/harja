@@ -41,11 +41,11 @@
   "Palauttaa sijainti-ikonin, jolla on kaksi väriä sisä- ja ulkoreunalla.
    Sisäreuna kuvaa ikonin tyyppiä, ulkoreuna tilaa.
    Jos annetaan vain sisäreuna, palautetaan tällä sisäreunalla varustettu ikoni, jolla on musta ulkoreuna."
-  ([sisareuna-vari] (sijainti-ikoni "musta" sisareuna-vari))
-  ([sisareuna-vari ulkoreuna-vari]
-   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} ulkoreuna-vari))
-   (assertoi-ikonin-vari sisareuna-vari)
-   (karttakuva (str ikonikansio"sijainnit/sijainti-"ulkoreuna-vari"-"sisareuna-vari))))
+  ([vari-sisareuna] (sijainti-ikoni "musta" vari-sisareuna))
+  ([vari-sisareuna vari-ulkoreuna]
+   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} vari-ulkoreuna))
+   (assertoi-ikonin-vari vari-sisareuna)
+   (karttakuva (str ikonikansio"sijainnit/sijainti-"vari-ulkoreuna"-"vari-sisareuna))))
 
 (defn nuoli-ikoni [vari-str]
   (assertoi-ikonin-vari vari-str)
