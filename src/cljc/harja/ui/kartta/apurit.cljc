@@ -21,7 +21,7 @@
        pisteet-ja-rotaatiot
 
        (let [[x1 y1] viimeisin-sijanti
-             [x2 y2] sijainti
+             [x2 y2] (second sijainti)
              dx (- x1 x2)
              dy (- y1 y2)
              dist (Math/sqrt (+ (* dx dx) (* dy dy)))
@@ -41,10 +41,10 @@
 (defn pisteiden-taitokset [pisteet]
   (reduce (fn [taitokset [[x1 y1] [x2 y2]]]
             (conj taitokset
-                  {:sijainti [x1 y1]
+                  {:sijainti [[x1 y1] [x2 y2]]
                    :rotaatio (Math/atan2
-                              (- y2 y1)
-                              (- x2 x1))}))
+                               (- y2 y1)
+                               (- x2 x1))}))
           []
           (partition 2 pisteet)))
 
