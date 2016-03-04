@@ -38,8 +38,7 @@
 (def ikonikansio "images/tuplarajat/")
 
 (defn sijainti-ikoni
-  "Palauttaa sijainti-ikonin, jolla on kaksi väriä sisä- ja ulkoreunalla.
-   Sisäreuna kuvaa ikonin tyyppiä, ulkoreuna tilaa.
+  "Palauttaa sijaintia kuvaavan ikonin, jonka ulko- ja sisäreunan väri voidaan itse asettaa.
    Jos annetaan vain sisäreuna, palautetaan tällä sisäreunalla varustettu ikoni, jolla on musta ulkoreuna."
   ([vari-sisareuna] (sijainti-ikoni "musta" vari-sisareuna))
   ([vari-sisareuna vari-ulkoreuna]
