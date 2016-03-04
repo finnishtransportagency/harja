@@ -38,12 +38,14 @@
 (def ikonikansio "images/tuplarajat/")
 
 (defn sijainti-ikoni
-  "Oletukena palautetaan <vari-str> värinen sijainti-ikoni, jolla on musta reuna."
-  ([vari-str] (sijainti-ikoni "musta" vari-str))
-  ([tila-str vari-str]
-   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} tila-str))
-   (assertoi-ikonin-vari vari-str)
-   (karttakuva (str ikonikansio"sijainnit/sijainti-"tila-str"-"vari-str))))
+  "Palauttaa sijainti-ikonin, jolla on kaksi väriä sisä- ja ulkoreunalla.
+   Sisäreuna kuvaa ikonin tyyppiä, ulkoreuna tilaa.
+   Jos annetaan vain sisäreuna, palautetaan tällä sisäreunalla varustettu ikoni, jolla on musta ulkoreuna."
+  ([sisareuna-vari] (sijainti-ikoni "musta" sisareuna-vari))
+  ([sisareuna-vari ulkoreuna-vari]
+   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} ulkoreuna-vari))
+   (assertoi-ikonin-vari sisareuna-vari)
+   (karttakuva (str ikonikansio"sijainnit/sijainti-"ulkoreuna-vari"-"sisareuna-vari))))
 
 (defn nuoli-ikoni [vari-str]
   (assertoi-ikonin-vari vari-str)
