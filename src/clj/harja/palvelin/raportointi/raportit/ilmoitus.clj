@@ -153,7 +153,7 @@
                                  :alkupvm graafin-alkupvm :loppupvm graafin-loppupvm
                                  :kuukausittainen-data ilmoitukset-kuukausittain-tyyppiryhmiteltyna :piilota-arvo? #{0}
                                  :legend ["TPP" "TUR" "URK"]})
-         (ei-osumia-aikavalilla-teksti "TPP-ilmoituksia" graafin-alkupvm graafin-loppupvm)))
+         (ei-osumia-aikavalilla-teksti "ilmoituksia" graafin-alkupvm graafin-loppupvm)))
 
      (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)]))
 
