@@ -27,19 +27,19 @@
                       {java.util.Date
                        (t/write-handler (constantly "dt")
                                         #(.format (SimpleDateFormat. +fi-date-time-format+) %))
-                       
+
                        java.math.BigDecimal
                        (t/write-handler (constantly "bd") double)
-                       
+
                        org.postgresql.geometric.PGpoint
                        (t/write-handler (constantly "pp") geo/pg->clj)
 
                        org.postgis.PGgeometry
                        (t/write-handler "pg" geo/pg->clj)
-                       
+
                        harja.domain.roolit.EiOikeutta
                        (t/write-handler (constantly "eo") #(:syy %))}})
-                      
+
    :cljs
    (def write-optiot {:handlers
                       {DateTime (DateTimeHandler.)
@@ -57,11 +57,11 @@
                       ;; muunnettuna, joten tässä kelpaa identity
                       "bd" identity
 
-                      ;; Serveri lähettää PGpoint ja PGgeometry muunnettuina 
+                      ;; Serveri lähettää PGpoint ja PGgeometry muunnettuina
                       ;; kelpaa meille sellaisenaan
                       "pp" js->clj
                       "pg" js->clj
-                      
+
                       ;; EiOikeutta tulee serveriltä "eo" tägillä ja pelkkänä syy stringiä
                       "eo" #(roolit/->EiOikeutta %)}}))
 
@@ -87,4 +87,6 @@
      :cljs
      (t/read (t/reader :json read-optiot) in)))
 
-  
+#?(:clj
+   (defn lue-transit-string [in]
+     (lue-transit (java.io.ByteArrayInputStream. (.getBytes in)))))

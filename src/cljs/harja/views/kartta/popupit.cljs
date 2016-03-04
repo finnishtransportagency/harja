@@ -119,8 +119,8 @@
                        (tee-arvolistaus-popup "Työkone"
                                               [["Tyyppi" (:tyokonetyyppi tapahtuma)]
                                                ["Viimeisin paikka\u00ADtieto" (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
-                                               ["Organisaatio" (:organisaationimi tapahtuma)]
-                                               ["Urakka" (or (:urakkanimi tapahtuma) "Ei urakkaa")]
+                                               ["Organisaatio" (or (:organisaationimi tapahtuma) "Ei organisaatiotietoja")]
+                                               ["Urakka" (or (:urakkanimi tapahtuma) "Ei urakkatietoja")]
                                                ["Tehtävät" (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
                                                              [:span tehtavat])]])))
 

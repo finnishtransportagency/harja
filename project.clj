@@ -51,7 +51,7 @@
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
-                 
+
                  ;; Sonja-väylän JMS riippuvuudet
                  [progress/sonic-client "7.6.2"]
                  [progress/sonic-crypto "7.6.2"]
@@ -144,14 +144,9 @@
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
-            [lein-pdo "0.1.1"]
-            ;;[mvxcvi/whidbey "0.5.1"]
+            [lein-pdo "0.1.1"]]
 
-            ;; CIDER kehitykseen
-            [cider/cider-nrepl "0.10.2"]
-            [refactor-nrepl "2.0.0"]
-
-            ]                                               ;; Asiakaspuolen cljs buildin tietoja
+  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id           "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
