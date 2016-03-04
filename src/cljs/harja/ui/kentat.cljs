@@ -27,7 +27,9 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -677,15 +679,13 @@
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do
                                (tasot/nayta-geometria!
-                                :tr-valittu-osoite
-                                {:alue (maarittele-feature
-                                        arvo
-                                        false
-                                        {:img    (kartta-ikonit/pinni-ikoni "musta")
-                                         :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                        {:color  "gray" ;; muun alle
-                                         :zindex 20})
-                                 :type :tr-valittu-osoite})
+                                 :tr-valittu-osoite
+                                 {:alue (maarittele-feature
+                                          arvo
+                                          false
+                                          asioiden-ulkoasu/tr-ikoni
+                                          asioiden-ulkoasu/tr-viiva)
+                                  :type :tr-valittu-osoite})
                                (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)

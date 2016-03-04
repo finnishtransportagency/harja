@@ -11,6 +11,8 @@
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
 
+
+
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
   "[varit/musta 0 {} varit/punainen 2 {} varit/sininen 4 {:dash [10 10]}]
 
@@ -174,13 +176,13 @@
    :img    (nuoli-ikoni nuolen-vari)})
 
 (defn tyokoneen-ikoni [nuolen-vari rotaatio]
-  {:paikka   :loppu
+  {:paikka   [:loppu]
    :tyyppi   :nuoli
    :img      (nuoli-ikoni nuolen-vari)
    :rotation rotaatio})
 
 (defn yllapidon-ikoni []
-  {:paikka :loppu
+  {:paikka [:loppu]
    :tyyppi :merkki
    :img (:yllapito ikonien-varit)})
 
@@ -246,3 +248,12 @@
 
 (defn tiedotuksen-ikoni []
   (sijainti-ikoni (:tiedotus ikonien-varit)))
+
+(def ^{:doc "TR-valinnan viivatyyli"}
+  tr-viiva {:color  puhtaat/tummanharmaa
+            :dash [15 15]
+            :zindex 20})
+
+(def ^{:doc "TR-valinnan ikoni"}
+  tr-ikoni {:img    (pinni-ikoni "musta")
+            :zindex 21})
