@@ -64,7 +64,9 @@
                     :tyhja (if (nil? @toteumat)
                              [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                              "Ei suolatoteumia valitulle aikavälille")
-                    :voi-poistaa? muokattava?}
+                    :voi-poistaa? muokattava?
+                    :max-rivimaara 500
+                    :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."}
          [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
            :tyyppi :valinta
            :validoi [[:ei-tyhja "Valitse materiaali"]]

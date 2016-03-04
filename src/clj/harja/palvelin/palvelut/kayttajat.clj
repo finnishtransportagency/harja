@@ -8,10 +8,11 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.tapahtumat :refer [julkaise!]]
-            
+
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (declare hae-kayttajat
          hae-kayttajan-tiedot
@@ -33,7 +34,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-kayttajan-tiedot
                       (fn [user tiedot]
-                        (tallenna-kayttajan-tiedot (:db this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
+                        (tallenna-kayttajan-tiedot (:db this) (:integraatioloki this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :poista-kayttaja
                       (fn [user kayttaja-id]
@@ -41,7 +42,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-fim-kayttaja
                       (fn [user tunnus]
-                        (hae-fim-kayttaja (:db this) (:fim this) user tunnus)))
+                        (hae-fim-kayttaja (:db this) (:integraatioloki this) (:fim this) user tunnus)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-organisaatioita
                       (fn [user teksti]
@@ -92,8 +93,8 @@
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
-(defn hae-fim-kayttaja [db fim user tunnus]
-  (if-let [tulos (fim/hae fim tunnus)]
+(defn hae-fim-kayttaja [db integraatioloki fim user tunnus]
+  (if-let [tulos (fim/hae-kayttajatunnus fim tunnus integraatioloki)]
     (if-not (number? tulos) ;; Tulos on virhekoodi
       (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio tulos))))
             olemassaoleva (some->> tunnus
@@ -113,14 +114,18 @@
       tulos) ;; Palauta statuskoodi
     :ei-loydy))
 
-(defn- tuo-fim-kayttaja [db fim user tunnus organisaatio-id]
+(defn- tarkista-oikeus-tuoda-fim-kayttaja [user organisaatio-id]
   (when (and (not (roolit/roolissa? user roolit/jarjestelmavastuuhenkilo))
              (roolit/roolissa? user roolit/urakoitsijan-paakayttaja)
              ;; Urakoitsijan pk saa antaa vain omaan organisaatioon
              (not (= organisaatio-id (:id (:organisaatio user)))))
-    (log/warn "Käyttäjä " user " on urakoitsijan pääkäyttäjä, mutta yritti tuoda käyttäjän organisaatioon: " organisaatio-id)
-    (throw (RuntimeException. "Käyttöoikeus puuttuu")))
-  (let [k (hae-fim-kayttaja db fim user tunnus)]
+    (let [virheviesti (log/warn "Käyttäjä " user " on urakoitsijan pääkäyttäjä, mutta yritti tuoda käyttäjän organisaatioon: " organisaatio-id)]
+      (log/warn virheviesti)
+      (throw (RuntimeException. "Käyttöoikeus puuttuu")))))
+
+(defn- tuo-fim-kayttaja [db integraatioloki fim user tunnus organisaatio-id]
+  (tarkista-oikeus-tuoda-fim-kayttaja user organisaatio-id)
+  (let [k (hae-fim-kayttaja db integraatioloki fim user tunnus)]
     (when-not (= :ei-loydy k)
       (log/info "Tuodaan FIM käyttäjä Harjaan: " k)
       (q/luo-kayttaja<! db (:kayttajatunnus k) (:etunimi k) (:sukunimi k)
@@ -129,7 +134,7 @@
 
 (defn tallenna-kayttajan-tiedot
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
-  [db fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
+  [db integraatioloki fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
   (roolit/vaadi-rooli user #{roolit/jarjestelmavastuuhenkilo
                              roolit/hallintayksikon-vastuuhenkilo
                              roolit/urakoitsijan-paakayttaja})
@@ -138,7 +143,7 @@
         (jdbc/with-db-transaction [c db]
 
           (let [luotu-kayttaja (when (nil? kayttaja-id)
-                                 (tuo-fim-kayttaja c fim user kayttajatunnus organisaatio-id))
+                                 (tuo-fim-kayttaja c integraatioloki fim user kayttajatunnus organisaatio-id))
                 kayttaja-id (if luotu-kayttaja
                               (:id luotu-kayttaja) 
                               kayttaja-id)

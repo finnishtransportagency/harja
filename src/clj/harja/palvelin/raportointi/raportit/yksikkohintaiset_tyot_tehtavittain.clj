@@ -93,8 +93,8 @@
                                                    (:yksikko rivi)
                                                    (when (= konteksti :urakka)
                                                      [(fmt/euro-opt (:yksikkohinta rivi))
-                                                      (fmt/desimaaliluku (:suunniteltu_maara rivi) 1)])
-                                                   (fmt/desimaaliluku (:toteutunut_maara rivi) 1)
+                                                      (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)])
+                                                   (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1)
                                                    (when (= konteksti :urakka)
                                                      [(fmt/euro-opt (:suunnitellut_kustannukset rivi))
                                                       (fmt/euro-opt (:toteutuneet_kustannukset rivi))])])))
@@ -107,4 +107,4 @@
                       (flatten [(if urakoittain? ["Yhteensä" ""]
                                                  ["Yhteensä"])
                                 nil
-                                (fmt/desimaaliluku (reduce + (keep :toteutunut_maara naytettavat-rivit)) 1)])))))]]))
+                                (fmt/desimaaliluku-opt (reduce + (keep :toteutunut_maara naytettavat-rivit)) 1)])))))]]))
