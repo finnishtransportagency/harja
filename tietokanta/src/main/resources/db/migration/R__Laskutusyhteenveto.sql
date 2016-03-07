@@ -210,6 +210,7 @@ BEGIN
                                                     AND yht.yksikkohinta IS NOT NULL
                                                     AND tpk3.id = t.tpk3_id)
                 WHERE yht.urakka = ur
+                      AND tt.poistettu IS NOT TRUE
                       AND tot.urakka = ur
                       AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
                       AND tot.alkanut < aikavali_alkupvm
@@ -250,6 +251,7 @@ BEGIN
                                         AND yht.yksikkohinta IS NOT NULL
                                         AND tpk3.id = t.tpk3_id)
     WHERE yht.urakka = ur
+          AND tt.poistettu IS NOT TRUE
           AND tot.urakka = ur
           AND tot.alkanut >= hk_alkupvm AND tot.alkanut <= hk_loppupvm
           AND tot.alkanut >= aikavali_alkupvm AND tot.alkanut <= aikavali_loppupvm
