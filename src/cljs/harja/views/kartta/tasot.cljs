@@ -24,7 +24,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
-            [harja.ui.kartta.varit.alpha :as varit])
+            [harja.ui.kartta.varit.puhtaat :as varit])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 ;; Kaikki näytettävät karttatasot

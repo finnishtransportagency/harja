@@ -17,7 +17,8 @@
   []
   (ol.layer.Vector. #js {:source          (ol.source.Vector.)
                          :rendererOptions {:zIndexing true
-                                           :yOrdering true}}))
+                                           :yOrdering true}
+                         :opacity 0.7}))
 
 (defn aseta-feature-geometria! [feature geometria]
   (.set feature "harja-geometria" geometria))
