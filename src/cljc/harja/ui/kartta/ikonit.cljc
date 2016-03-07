@@ -19,12 +19,13 @@
             "vihrea" "violetti"} vari))
 
 (defn sijainti-ikoni
-  "Oletukena palautetaan <vari-str> värinen sijainti-ikoni, jolla on musta reuna."
-  ([vari-str] (sijainti-ikoni "musta" vari-str))
-  ([tila-str vari-str]
-   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} tila-str))
-   (assertoi-ikonin-vari vari-str)
-   (karttakuva (str ikonikansio"sijainnit/sijainti-"tila-str"-"vari-str))))
+  "Palauttaa sijaintia kuvaavan ikonin, jonka ulko- ja sisäreunan väri voidaan itse asettaa.
+   Jos annetaan vain sisäreuna, palautetaan tällä sisäreunalla varustettu ikoni, jolla on musta ulkoreuna."
+  ([vari-sisareuna] (sijainti-ikoni vari-sisareuna "musta"))
+  ([vari-sisareuna vari-ulkoreuna]
+   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} vari-ulkoreuna))
+   (assertoi-ikonin-vari vari-sisareuna)
+   (karttakuva (str ikonikansio"sijainnit/sijainti-"vari-ulkoreuna"-"vari-sisareuna))))
 
 (defn nuoli-ikoni [vari-str]
   (assertoi-ikonin-vari vari-str)

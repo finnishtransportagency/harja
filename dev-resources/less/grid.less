@@ -50,8 +50,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   table {
     font-size: @fontin-koko-taulukko;
     td {
-      overflow: hidden;
-            
       input:not([type="checkbox"]), select {
         width: 100%;
         z-index: 10;
@@ -79,9 +77,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     }
 
     td:hover {
-      // jotta pulldown valinnat näkyvät
-      overflow: visible;
-
       .varoitukset,
       .virheet {
         display: block;

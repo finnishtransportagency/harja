@@ -536,6 +536,12 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (fn [_]
         (zoomaa-geometrioihin)
 
+        (add-watch nav/kartan-koko :muuttuvan-kartan-koon-kuuntelija
+                   (fn [_ _ _ _]
+                     (when @pida-geometriat-nakyvilla?
+                       (log "Kartan koko muuttui, zoomataan!")
+                       (zoomaa-geometrioihin))))
+
         ;; Hallintayksiköt ja valittu urakka ovat nykyään :organisaatio
         ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
         (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
