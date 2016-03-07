@@ -41,13 +41,3 @@
                            sahkoposti
                            organisaatio
                            id))
-
-(defn paivita-yhteyshenkilo-ulkoisella-idlla [db etunimi sukunimi tyopuhelin matkapuhelin sahkoposti organisaatio ulkoinen_id]
-  (harja.kyselyt.yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db
-                                            etunimi
-                                            sukunimi
-                                            (puhelinnumero/kanonisoi tyopuhelin)
-                                            (puhelinnumero/kanonisoi matkapuhelin)
-                                            sahkoposti
-                                            organisaatio
-                                            ulkoinen_id))
