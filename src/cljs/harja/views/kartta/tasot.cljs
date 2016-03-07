@@ -142,7 +142,7 @@
    (when taso
      (taso/aseta-z-index taso z-index))))
 
-(declare tasojen-näkyvyys-atomit)
+(declare tasojen-nakyvyys-atomit)
 
 (def geometrioiden-atomit
   {:organisaatio       urakat-ja-organisaatiot-kartalla
@@ -172,29 +172,29 @@
 (def geometriat-kartalle
   (reaction
     (merge
-      {:organisaatio (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :organisaatio) @(tasojen-atomit :organisaatio) (kartan-asioiden-z-indeksit :urakka))
-       :pohjavesi (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :pohjavesi) @(tasojen-atomit :pohjavesi) (kartan-asioiden-z-indeksit :pohjavesialueet))
-       :sillat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :sillat) @(tasojen-atomit :sillat) (kartan-asioiden-z-indeksit :sillat))
-       :tarkastukset (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :tarkastukset) @(tasojen-atomit :tarkastukset))
-       :turvallisuus (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :turvallisuus) @(tasojen-atomit :turvallisuus))
-       :ilmoitukset (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :ilmoitukset) @(tasojen-atomit :ilmoitukset))
-       :yks-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :yks-hint-toteumat) @(tasojen-atomit :yks-hint-toteumat))
-       :kok-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :kok-hint-toteumat) @(tasojen-atomit :kok-hint-toteumat))
-       :varusteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :varusteet) @(tasojen-atomit :varusteet))
-       :muut-tyot (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :muut-tyot) @(tasojen-atomit :muut-tyot))
-       :paallystyskohteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :paallystyskohteet) @(tasojen-atomit :paallystyskohteet))
-       :paikkauskohteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :paikkauskohteet) @(tasojen-atomit :paikkauskohteet))
-       :tr-valitsin (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :tr-valitsin) @(tasojen-atomit :tr-valitsin) (inc oletus-zindex))
+      {:organisaatio (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :organisaatio) @(tasojen-nakyvyys-atomit :organisaatio) (kartan-asioiden-z-indeksit :urakka))
+       :pohjavesi (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :pohjavesi) @(tasojen-nakyvyys-atomit :pohjavesi) (kartan-asioiden-z-indeksit :pohjavesialueet))
+       :sillat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :sillat) @(tasojen-nakyvyys-atomit :sillat) (kartan-asioiden-z-indeksit :sillat))
+       :tarkastukset (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :tarkastukset) @(tasojen-nakyvyys-atomit :tarkastukset))
+       :turvallisuus (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :turvallisuus) @(tasojen-nakyvyys-atomit :turvallisuus))
+       :ilmoitukset (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :ilmoitukset) @(tasojen-nakyvyys-atomit :ilmoitukset))
+       :yks-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :yks-hint-toteumat) @(tasojen-nakyvyys-atomit :yks-hint-toteumat))
+       :kok-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :kok-hint-toteumat) @(tasojen-nakyvyys-atomit :kok-hint-toteumat))
+       :varusteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :varusteet) @(tasojen-nakyvyys-atomit :varusteet))
+       :muut-tyot (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :muut-tyot) @(tasojen-nakyvyys-atomit :muut-tyot))
+       :paallystyskohteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :paallystyskohteet) @(tasojen-nakyvyys-atomit :paallystyskohteet))
+       :paikkauskohteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :paikkauskohteet) @(tasojen-nakyvyys-atomit :paikkauskohteet))
+       :tr-valitsin (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :tr-valitsin) @(tasojen-nakyvyys-atomit :tr-valitsin) (inc oletus-zindex))
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
                       (inc oletus-zindex))}
-      (when (true? @(tasojen-atomit :tilannekuva))
+      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
                      {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
                    @(geometrioiden-atomit :tilannekuva)))))))
 
-(def ^{:private true} tasojen-näkyvyys-atomit
+(def ^{:private true} tasojen-nakyvyys-atomit
   {:organisaatio       (atom true)
    :pohjavesi          pohjavesialueet/karttataso-pohjavesialueet
    :sillat             sillat/karttataso-sillat
@@ -214,7 +214,7 @@
 (defonce nykyiset-karttatasot
   (reaction (into #{}
                   (keep (fn [nimi]
-                          (when @(tasojen-näkyvyys-atomit nimi)
+                          (when @(tasojen-nakyvyys-atomit nimi)
                             nimi)))
                   +karttatasot+)))
 
@@ -227,9 +227,9 @@
 (defn taso-paalle! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-paalle nimi})
   (log "Karttataso päälle: " (pr-str nimi))
-  (reset! (tasojen-näkyvyys-atomit nimi) true))
+  (reset! (tasojen-nakyvyys-atomit nimi) true))
 
 (defn taso-pois! [nimi]
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
   (log "Karttataso pois: " (pr-str nimi))
-  (reset! (tasojen-näkyvyys-atomit nimi) false))
+  (reset! (tasojen-nakyvyys-atomit nimi) false))
