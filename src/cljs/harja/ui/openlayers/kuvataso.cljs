@@ -10,7 +10,7 @@
             [harja.ui.openlayers.taso :refer [Taso]]))
 
 (defn- ol-kuva [extent resolution url]
-  (ol.Image. extent resolution 1 nil url ""
+  (ol.Image. extent resolution 1 nil url "use-credentials"
              ol.source.Image/defaultImageLoadFunction))
 
 (defn hae-fn [parametrit]
