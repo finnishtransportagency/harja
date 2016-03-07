@@ -89,8 +89,6 @@
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [urakan-nimi (when urakka-id (:nimi (first (urakat-q/hae-urakka db urakka-id))))
-        _ (log/debug " urakka-id " urakka-id)
-        _ (log/debug "urakan nimi " urakan-nimi)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
