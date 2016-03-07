@@ -136,7 +136,7 @@
    (when taso
      (taso/aseta-z-index taso z-index))))
 
-(declare taso-paalla?)
+(declare taso-atom)
 
 (def geometriat-atom
   {:organisaatio       urakat-ja-organisaatiot-kartalla
@@ -157,32 +157,32 @@
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
-  ([tason-nimi]
-   (nakyvat-geometriat-z-indeksilla tason-nimi oletus-zindex))
-  ([taso-nimi z-index]
-   (when (taso-paalla? taso-nimi)
-     (aseta-z-index @(geometriat-atom taso-nimi) z-index))))
+  ([geometria taso]
+   (nakyvat-geometriat-z-indeksilla geometria taso oletus-zindex))
+  ([geometria taso z-index]
+   (when (true? taso)
+     (aseta-z-index geometria z-index))))
 
 (def geometriat-kartalle
   (reaction
     (merge
-      {:organisaatio (nakyvat-geometriat-z-indeksilla :organisaatio 0)
-       :pohjavesi (nakyvat-geometriat-z-indeksilla :pohjavesi 1)
-       :sillat (nakyvat-geometriat-z-indeksilla :sillat 2)
-       :tarkastukset (nakyvat-geometriat-z-indeksilla :tarkastukset)
-       :turvallisuus (nakyvat-geometriat-z-indeksilla :turvallisuus)
-       :ilmoitukset (nakyvat-geometriat-z-indeksilla :ilmoitukset)
-       :yks-hint-toteumat (nakyvat-geometriat-z-indeksilla :yks-hint-toteumat)
-       :kok-hint-toteumat (nakyvat-geometriat-z-indeksilla :kok-hint-toteumat)
-       :varusteet (nakyvat-geometriat-z-indeksilla :varusteet)
-       :muut-tyot (nakyvat-geometriat-z-indeksilla :muut-tyot)
-       :paallystyskohteet (nakyvat-geometriat-z-indeksilla :paallystyskohteet)
-       :paikkauskohteet (nakyvat-geometriat-z-indeksilla :paikkauskohteet)
-       :tr-valitsin (nakyvat-geometriat-z-indeksilla :tr-valitsin (inc oletus-zindex))
+      {:organisaatio (nakyvat-geometriat-z-indeksilla @(geometriat-atom :organisaatio) @(taso-atom :organisaatio) 0)
+       :pohjavesi (nakyvat-geometriat-z-indeksilla @(geometriat-atom :pohjavesi) @(taso-atom :pohjavesi) 1)
+       :sillat (nakyvat-geometriat-z-indeksilla @(geometriat-atom :sillat) @(taso-atom :sillat) 2)
+       :tarkastukset (nakyvat-geometriat-z-indeksilla @(geometriat-atom :tarkastukset) @(taso-atom :tarkastukset))
+       :turvallisuus (nakyvat-geometriat-z-indeksilla @(geometriat-atom :turvallisuus) @(taso-atom :turvallisuus))
+       :ilmoitukset (nakyvat-geometriat-z-indeksilla @(geometriat-atom :ilmoitukset) @(taso-atom :ilmoitukset))
+       :yks-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometriat-atom :yks-hint-toteumat) @(taso-atom :yks-hint-toteumat))
+       :kok-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometriat-atom :kok-hint-toteumat) @(taso-atom :kok-hint-toteumat))
+       :varusteet (nakyvat-geometriat-z-indeksilla @(geometriat-atom :varusteet) @(taso-atom :varusteet))
+       :muut-tyot (nakyvat-geometriat-z-indeksilla @(geometriat-atom :muut-tyot) @(taso-atom :muut-tyot))
+       :paallystyskohteet (nakyvat-geometriat-z-indeksilla @(geometriat-atom :paallystyskohteet) @(taso-atom :paallystyskohteet))
+       :paikkauskohteet (nakyvat-geometriat-z-indeksilla @(geometriat-atom :paikkauskohteet) @(taso-atom :paikkauskohteet))
+       :tr-valitsin (nakyvat-geometriat-z-indeksilla @(geometriat-atom :tr-valitsin) @(taso-atom :tr-valitsin) (inc oletus-zindex))
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometriat-atom :nakyman-geometriat)))
                       (inc oletus-zindex))}
-      (when (taso-paalla? :tilannekuva)
+      (when (true? @(taso-atom :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
                      {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
