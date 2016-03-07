@@ -127,57 +127,57 @@
 
 (def geometriat
   (reaction
-   (merge
-    {:organisaatio
-     (aseta-z-index @organisaatio 0)
+    (merge
+      {:organisaatio
+       (aseta-z-index @organisaatio 0)
 
-     :pohjavesi
-     (aseta-z-index @pohjavesialueet/pohjavesialueet 1)
+       :pohjavesi
+       (aseta-z-index @pohjavesialueet/pohjavesialueet 1)
 
-     :sillat
-     (aseta-z-index @sillat/sillat 2)
+       :sillat
+       (aseta-z-index @sillat/sillat 2)
 
-     :tarkastukset
-     (aseta-z-index @tarkastukset/tarkastukset-kartalla)
+       :tarkastukset
+       (aseta-z-index @tarkastukset/tarkastukset-kartalla)
 
-     :turvallisuus
-     (aseta-z-index
-      @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla)
+       :turvallisuus
+       (aseta-z-index
+         @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla)
 
-     :ilmoitukset
-     (aseta-z-index @ilmoitukset/ilmoitukset-kartalla)
+       :ilmoitukset
+       (aseta-z-index @ilmoitukset/ilmoitukset-kartalla)
 
-     :yks-hint-toteumat
-     (aseta-z-index
-      @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla)
+       :yks-hint-toteumat
+       (aseta-z-index
+         @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla)
 
-     :kok-hint-toteumat
-     (aseta-z-index
-      @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla)
+       :kok-hint-toteumat
+       (aseta-z-index
+         @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla)
 
-     :varusteet
-     (aseta-z-index @varusteet/varusteet-kartalla)
+       :varusteet
+       (aseta-z-index @varusteet/varusteet-kartalla)
 
-     :muut-tyot
-     (aseta-z-index @muut-tyot/muut-tyot-kartalla)
+       :muut-tyot
+       (aseta-z-index @muut-tyot/muut-tyot-kartalla)
 
-     :paallystyskohteet
-     (aseta-z-index @paallystys/paallystyskohteet-kartalla)
+       :paallystyskohteet
+       (aseta-z-index @paallystys/paallystyskohteet-kartalla)
 
-     :paikkauskohteet
-     (aseta-z-index @paikkaus/paikkauskohteet-kartalla)
+       :paikkauskohteet
+       (aseta-z-index @paikkaus/paikkauskohteet-kartalla)
 
-     :tr-valitsin
-     (aseta-z-index @tierekisteri/tr-alkupiste-kartalla
-                    (inc oletus-zindex))
+       :tr-valitsin
+       (aseta-z-index @tierekisteri/tr-alkupiste-kartalla
+                      (inc oletus-zindex))
 
-     :nakyman-geometriat
-     (aseta-z-index (vec (vals @nakyman-geometriat))
-                    (inc oletus-zindex))}
-    (into {}
-          (map (fn [[tason-nimi tason-sisalto]]
-                 {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
-               @tilannekuva/tilannekuvan-asiat-kartalla)))))
+       :nakyman-geometriat
+       (aseta-z-index (vec (vals @nakyman-geometriat))
+                      (inc oletus-zindex))}
+      (into {}
+            (map (fn [[tason-nimi tason-sisalto]]
+                   {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
+                 @tilannekuva/tilannekuvan-asiat-kartalla)))))
 
 (defn- taso-atom [nimi]
   (case nimi
