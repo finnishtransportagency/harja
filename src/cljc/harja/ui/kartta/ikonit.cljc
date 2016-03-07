@@ -21,7 +21,7 @@
 (defn sijainti-ikoni
   "Palauttaa sijaintia kuvaavan ikonin, jonka ulko- ja sisäreunan väri voidaan itse asettaa.
    Jos annetaan vain sisäreuna, palautetaan tällä sisäreunalla varustettu ikoni, jolla on musta ulkoreuna."
-  ([vari-sisareuna] (sijainti-ikoni "musta" vari-sisareuna))
+  ([vari-sisareuna] (sijainti-ikoni vari-sisareuna "musta"))
   ([vari-sisareuna vari-ulkoreuna]
    (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} vari-ulkoreuna))
    (assertoi-ikonin-vari vari-sisareuna)
