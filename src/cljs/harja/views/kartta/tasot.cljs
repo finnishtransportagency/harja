@@ -127,88 +127,71 @@
 
 (declare taso-paalla?)
 
-(def geometriat
+(def geometriat-atom
+  {:organisaatio organisaatio
+   :pohjavesi pohjavesialueet/pohjavesialueet
+   :sillat sillat/sillat
+   :tarkastukset tarkastukset/tarkastukset-kartalla
+   :turvallisuus turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+   :ilmoitukset ilmoitukset/ilmoitukset-kartalla
+   :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
+   :kok-hint-toteumat kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
+   :varusteet varusteet/varusteet-kartalla
+   :muut-tyot muut-tyot/muut-tyot-kartalla
+   :paallystyskohteet paallystys/paallystyskohteet-kartalla
+   :paikkauskohteet paikkaus/paikkauskohteet-kartalla
+   :tr-valitsin tierekisteri/tr-alkupiste-kartalla
+   :nakyman-geometriat nakyman-geometriat
+   :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla})
+
+(defn nakyvat-geometriat-z-indeksilla
+  "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
+  ([tason-nimi]
+   (nakyvat-geometriat-z-indeksilla tason-nimi oletus-zindex))
+  ([taso-nimi z-index]
+   (when (taso-paalla? taso-nimi)
+     (aseta-z-index @(geometriat-atom taso-nimi) z-index))))
+
+(def geometriat-kartalle
   (reaction
     (merge
-      {:organisaatio
-       (aseta-z-index @organisaatio 0)
-
-       :pohjavesi
-       (when (taso-paalla? :pohjavesialueet)
-         (aseta-z-index @pohjavesialueet/pohjavesialueet 1))
-
-       :sillat
-       (when (taso-paalla? :sillat)
-         (aseta-z-index @sillat/sillat 2))
-
-       :tarkastukset
-       (when (taso-paalla? :tarkastukset)
-         (aseta-z-index @tarkastukset/tarkastukset-kartalla))
-
-       :turvallisuus
-       (when (taso-paalla? :turvallisuuspoikkeamat)
-         (aseta-z-index
-           @turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla))
-
-       :ilmoitukset
-       (when (taso-paalla? :ilmoitukset)
-         (aseta-z-index @ilmoitukset/ilmoitukset-kartalla))
-
-       :yks-hint-toteumat
-       (when (taso-paalla? :yksikkohintainen-toteuma)
-         (aseta-z-index @yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla))
-
-       :kok-hint-toteumat
-       (when (taso-paalla? :kokonaishintainen-toteuma)
-         (aseta-z-index @kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla))
-
-       :varusteet
-       (when (taso-paalla? :varusteet)
-         (aseta-z-index @varusteet/varusteet-kartalla))
-
-       :muut-tyot
-       (when (taso-paalla? :muut-tyot)
-         (aseta-z-index @muut-tyot/muut-tyot-kartalla))
-
-       :paallystyskohteet
-       (when (taso-paalla? :paallystyskohteet)
-         (aseta-z-index @paallystys/paallystyskohteet-kartalla))
-
-       :paikkauskohteet
-       (when (taso-paalla? :pakkauskohteet)
-         (aseta-z-index @paikkaus/paikkauskohteet-kartalla))
-
-       :tr-valitsin
-       (when (taso-paalla? :tr-valitsin)
-         (aseta-z-index @tierekisteri/tr-alkupiste-kartalla
-                        (inc oletus-zindex)))
-
+      {:organisaatio (nakyvat-geometriat-z-indeksilla :organisaatio 0)
+       :pohjavesi (nakyvat-geometriat-z-indeksilla :pohjavesi)
+       :sillat (nakyvat-geometriat-z-indeksilla :sillat)
+       :tarkastukset (nakyvat-geometriat-z-indeksilla :tarkastukset)
+       :turvallisuus (nakyvat-geometriat-z-indeksilla :turvallisuus)
+       :ilmoitukset (nakyvat-geometriat-z-indeksilla :ilmoitukset)
+       :yks-hint-toteumat (nakyvat-geometriat-z-indeksilla :yks-hint-toteumat)
+       :kok-hint-toteumat (nakyvat-geometriat-z-indeksilla :kok-hint-toteumat)
+       :varusteet (nakyvat-geometriat-z-indeksilla :varusteet)
+       :muut-tyot (nakyvat-geometriat-z-indeksilla :muut-tyot)
+       :paallystyskohteet (nakyvat-geometriat-z-indeksilla :paallystyskohteet)
+       :paikkauskohteet (nakyvat-geometriat-z-indeksilla :paikkauskohteet)
+       :tr-valitsin (nakyvat-geometriat-z-indeksilla :tr-valitsin (inc oletus-zindex))
        :nakyman-geometriat
-       (aseta-z-index (vec (vals @nakyman-geometriat))
+       (aseta-z-index (vec (vals @(geometriat-atom :nakyman-geometriat)))
                       (inc oletus-zindex))}
-      (into {}
-            (map (fn [[tason-nimi tason-sisalto]]
-                   {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
-                 @tilannekuva/tilannekuvan-asiat-kartalla)))))
+      (when (taso-paalla? :tilannekuva)
+        (into {}
+              (map (fn [[tason-nimi tason-sisalto]]
+                     {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
+                   @(geometriat-atom :tilannekuva)))))))
 
 (defn- taso-atom [nimi]
   (case nimi
-    :pohjavesialueet pohjavesialueet/karttataso-pohjavesialueet
+    :pohjavesi pohjavesialueet/karttataso-pohjavesialueet
     :sillat sillat/karttataso-sillat
     :tarkastukset tarkastukset/karttataso-tarkastukset
+    :turvallisuus turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
     :ilmoitukset ilmoitukset/karttataso-ilmoitukset
-    :turvallisuuspoikkeamat
-    turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
-    :yksikkohintainen-toteuma
-    yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
-    :kokonaishintainen-toteuma
-    kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
+    :yks-hint-toteumat yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
+    :kok-hint-toteumat kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
     :varusteet varusteet/karttataso-varustetoteuma
-    :tilannekuva tilannekuva/karttataso-tilannekuva
+    :muut-tyot muut-tyot/karttataso-muut-tyot
     :paallystyskohteet paallystys/karttataso-paallystyskohteet
     :paikkauskohteet paikkaus/karttataso-paikkauskohteet
-    :tr-alkupiste tierekisteri/karttataso-tr-alkuosoite
-    :muut-tyot muut-tyot/karttataso-muut-tyot))
+    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
+    :tilannekuva tilannekuva/karttataso-tilannekuva))
 
 (defonce nykyiset-karttatasot
   (reaction (into #{}

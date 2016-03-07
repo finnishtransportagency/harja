@@ -274,7 +274,7 @@
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
                           (keep #(when % (taso/selitteet %))
-                                (vals @tasot/geometriat)))
+                                (vals @tasot/geometriat-kartalle)))
         varilaatikon-koko 20]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
@@ -485,7 +485,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
     ;; extentiä siten, että kaikki mahtuvat.
     ;; Jos extentiä tasoista ei ole, zoomataan urakkaan tai hallintayksikköön.
     (let [extent (reduce geo/yhdista-extent
-                         (keep #(-> % meta :extent) (vals @tasot/geometriat)))
+                         (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))
           extentin-margin-metreina geo/pisteen-extent-laajennus]
       (log "EXTENT TASOISTA: " (pr-str extent))
       (if extent
@@ -544,7 +544,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 
         ;; Hallintayksiköt ja valittu urakka ovat nykyään :organisaatio
         ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
-        (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
+        (add-watch tasot/geometriat-kartalle :muuttuvien-geometrioiden-kuuntelija
                    (fn [_ _ vanha uusi]
                      ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
                      ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
@@ -620,7 +620,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                     (and geom
                                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
 
-          :geometries         @tasot/geometriat
+          :geometries         @tasot/geometriat-kartalle
           :layers             [{:type  :mml
                                 :url   (str (k/wmts-polku) "maasto/wmts")
                                 :layer "taustakartta"}]}]))))

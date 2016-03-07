@@ -43,7 +43,7 @@
    [:div.tr-valitsin-peruuta-esc "Peruuta painamalla ESC."]])
 
 (defn poistu-tr-valinnasta! []
-  (karttatasot/taso-pois! :tr-alkupiste)
+  (karttatasot/taso-pois! :tr-valitsin)
   (kartta/tyhjenna-ohjelaatikko!))
 
 (defn pisteelle-ei-loydy-tieta-ilmoitus! []
@@ -150,7 +150,7 @@
             :ei-valittu
             (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
               (paivita osoite)
-              (karttatasot/taso-paalle! :tr-alkupiste)
+              (karttatasot/taso-paalle! :tr-valitsin)
               (reset! tila :alku-valittu)
               (reset! tierekisteri/valittu-alkupiste (:geometria osoite))
               (nayta-alkupiste-ohjelaatikossa! osoite))
