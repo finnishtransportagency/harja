@@ -45,6 +45,12 @@
     :nakyman-geometriat
     :tilannekuva})
 
+(def kartan-asioiden-z-indeksit
+  {:hallintayksikko 0
+   :urakka 1
+   :pohjavesialueet 2
+   :sillat 3})
+
 (def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut
   piirretään pienemmällä zindexillä." :const true}
   oletus-zindex 4)
@@ -66,10 +72,10 @@
                                                    (count varit/kaikki))))
                  :zindex (or (:zindex alue)
                              (case (:type piirrettava)
-                               :hy 0
-                               :ur 1
-                               :pohjavesialueet 2
-                               :sillat 3
+                               :hy (kartan-asioiden-z-indeksit :hallintayksikko)
+                               :ur (kartan-asioiden-z-indeksit :urakka)
+                               :pohjavesialueet (kartan-asioiden-z-indeksit :pohjavesialueet)
+                               :sillat (kartan-asioiden-z-indeksit :sillat)
                                oletus-zindex))))))
 
 (def urakat-ja-organisaatiot-kartalla
@@ -166,9 +172,9 @@
 (def geometriat-kartalle
   (reaction
     (merge
-      {:organisaatio (nakyvat-geometriat-z-indeksilla @(geometriat-atom :organisaatio) @(taso-atom :organisaatio) 0)
-       :pohjavesi (nakyvat-geometriat-z-indeksilla @(geometriat-atom :pohjavesi) @(taso-atom :pohjavesi) 1)
-       :sillat (nakyvat-geometriat-z-indeksilla @(geometriat-atom :sillat) @(taso-atom :sillat) 2)
+      {:organisaatio (nakyvat-geometriat-z-indeksilla @(geometriat-atom :organisaatio) @(taso-atom :organisaatio) (kartan-asioiden-z-indeksit :urakka))
+       :pohjavesi (nakyvat-geometriat-z-indeksilla @(geometriat-atom :pohjavesi) @(taso-atom :pohjavesi) (kartan-asioiden-z-indeksit :pohjavesialueet))
+       :sillat (nakyvat-geometriat-z-indeksilla @(geometriat-atom :sillat) @(taso-atom :sillat) (kartan-asioiden-z-indeksit :sillat))
        :tarkastukset (nakyvat-geometriat-z-indeksilla @(geometriat-atom :tarkastukset) @(taso-atom :tarkastukset))
        :turvallisuus (nakyvat-geometriat-z-indeksilla @(geometriat-atom :turvallisuus) @(taso-atom :turvallisuus))
        :ilmoitukset (nakyvat-geometriat-z-indeksilla @(geometriat-atom :ilmoitukset) @(taso-atom :ilmoitukset))
