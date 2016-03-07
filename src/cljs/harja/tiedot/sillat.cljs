@@ -45,13 +45,13 @@
           (map #(assoc-in % [:alue :radius] sillan-koko))
           sillat)))
 
-(def sillat
+(def sillat-kartalla
   (reaction (skaalaa-sillat-zoom-tason-mukaan
              @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
 
 
 (defn paivita-silta! [id funktio & args]
-  (swap! sillat (fn [sillat]
+  (swap! sillat-kartalla (fn [sillat]
                   (mapv (fn [silta]
                           (if (= id (:id silta))
                             (apply funktio silta args)

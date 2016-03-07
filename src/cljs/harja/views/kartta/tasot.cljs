@@ -72,7 +72,7 @@
                                :sillat 3
                                oletus-zindex))))))
 
-(def urakoiden-ja-organisaatioiden-geometriat
+(def urakat-ja-organisaatiot-kartalla
   (reaction
    (into []
          (keep organisaation-geometria)
@@ -139,9 +139,9 @@
 (declare taso-paalla?)
 
 (def geometriat-atom
-  {:organisaatio       urakoiden-ja-organisaatioiden-geometriat
-   :pohjavesi          pohjavesialueet/pohjavesialueet
-   :sillat             sillat/sillat
+  {:organisaatio       urakat-ja-organisaatiot-kartalla
+   :pohjavesi          pohjavesialueet/pohjavesialueet-kartalla
+   :sillat             sillat/sillat-kartalla
    :tarkastukset       tarkastukset/tarkastukset-kartalla
    :turvallisuus       turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
    :ilmoitukset        ilmoitukset/ilmoitukset-kartalla
