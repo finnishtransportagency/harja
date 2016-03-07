@@ -227,6 +227,3 @@
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
   (log "Karttataso pois: " (pr-str nimi))
   (reset! (taso-atom nimi) false))
-
-(defn taso-paalla? [nimi]
-  @(taso-atom nimi))
