@@ -33,6 +33,8 @@
 (defn tallenna-pohjavesialueet
   "Tallentaa ladatut pohjavesialueet annetulle hallintayksikölle localStorageen."
   [hal alueet]
+  ;; Disabloitu localStorage tallennus, pitää miettiä miten se tehdään paremmin.
+  ;; Tila loppuu kesken pohjavesialueissa ja virhetilanteessa jää toimimaton versio cacheen.
   (comment (try
              (.setItem js/localStorage (str "pohjavesialueet-" hal) (t/write (t/writer :json) alueet))
              (catch :default _
