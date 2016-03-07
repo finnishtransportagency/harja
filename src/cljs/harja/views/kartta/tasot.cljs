@@ -156,8 +156,8 @@
   (reaction
     (merge
       {:organisaatio (nakyvat-geometriat-z-indeksilla :organisaatio 0)
-       :pohjavesi (nakyvat-geometriat-z-indeksilla :pohjavesi)
-       :sillat (nakyvat-geometriat-z-indeksilla :sillat)
+       :pohjavesi (nakyvat-geometriat-z-indeksilla :pohjavesi 1)
+       :sillat (nakyvat-geometriat-z-indeksilla :sillat 2)
        :tarkastukset (nakyvat-geometriat-z-indeksilla :tarkastukset)
        :turvallisuus (nakyvat-geometriat-z-indeksilla :turvallisuus)
        :ilmoitukset (nakyvat-geometriat-z-indeksilla :ilmoitukset)
