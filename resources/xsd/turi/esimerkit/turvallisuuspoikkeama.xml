@@ -1,0 +1,90 @@
+<turi:turvallisuuspoikkeama xmlns:turi="http://www.liikennevirasto.fi/xsd/turi">
+  <vaylamuoto>tie</vaylamuoto>
+  <tapahtunut>2015-10-26T09:36:28</tapahtunut>
+  <paattynyt>2015-02-14T20:44:14</paattynyt>
+  <kasitelty>2018-11-01T07:36:46+02:00</kasitelty>
+  <toteuttaja>Yritys OY</toteuttaja>
+  <tilaaja>POP ELY</tilaaja>
+  <turvallisuuskoordinaattori>
+    <etunimi>Tiina</etunimi>
+    <sukunimi>Turvallinen</sukunimi>
+  </turvallisuuskoordinaattori>
+  <laatija>
+    <etunimi>Lasse</etunimi>
+    <sukunimi>Laatija</sukunimi>
+  </laatija>
+  <ilmoittaja>
+    <etunimi>Irma</etunimi>
+    <sukunimi>Ilmiantaja</sukunimi>
+  </ilmoittaja>
+  <kuvaus></kuvaus>
+  <tyotehtava>Aura-auto suistui tieltä väistäessä jalankulkijaa ja törmäsi autoon.</tyotehtava>
+  <luokittelut>
+    <luokittelu>tyotapaturma</luokittelu>
+  </luokittelut>
+  <vahinkoluokittelut>
+    <luokittelu>henkilostovahinko</luokittelu>
+    <luokittelu>omaisuusvahinko</luokittelu>
+  </vahinkoluokittelut>
+  <vakavuusaste>vakava</vakavuusaste>
+  <aiheutuneet-seuraukset>Tehdään asialle jotain</aiheutuneet-seuraukset>
+  <korjaavat-toimenpiteet>
+    <korjaava-toimenpide>
+      <kuvaus>Kaadetaan risteystä pimentävä pensaikko</kuvaus>
+      <suoritettu>2016-01-30T12:00:00Z</suoritettu>
+      <vastaavahenkilo>
+        <etunimi>Henri</etunimi>
+        <sukunimi>Hakkuri</sukunimi>
+      </vastaavahenkilo>
+    </korjaava-toimenpide>
+  </korjaavat-toimenpiteet>
+    <kommentit>
+        <kommentti>Aika pahalta näytti.</kommentti>
+        <kommentti>Jatkossa ei tule tapahtumaan.</kommentti>
+    </kommentit>
+    <liitteet>
+        <liite>
+            <tiedostonimi>tilanne.png</tiedostonimi>
+            <tyyppi>image/png</tyyppi>
+            <kuvaus>Kuva tilanteesta</kuvaus>
+            <sisalto>...sisältö BASE 64 encoodattuna...</sisalto>
+        </liite>
+        <liite>
+            <tiedostonimi>auto.png</tiedostonimi>
+            <tyyppi>image/png</tyyppi>
+            <kuvaus>Kuva autosta</kuvaus>
+            <sisalto>...sisältö BASE 64 encoodattuna...</sisalto>
+        </liite>
+    </liitteet>
+    <sijainti>
+        <koordinaatit>
+            <x>430198</x>
+            <y>7212292</y>
+        </koordinaatit>
+        <tierekisteriosoite>
+            <tienumero>1</tienumero>
+            <aosa>1</aosa>
+            <aet>1</aet>
+            <losa>1</losa>
+            <let>1</let>
+        </tierekisteriosoite>
+    </sijainti>
+    <henkilovahinko>
+        <tyontekijan-ammatti>
+            <koodi>Muu työntekijä</koodi>
+            <selite>Aura-auton kuljettaja</selite>
+        </tyontekijan-ammatti>
+        <aiheutuneet-vammat>Ranne murtui ja päähän tuli haava</aiheutuneet-vammat>
+        <vamman-laatu>
+            <vamma>Luunmurtumat</vamma>
+            <vamma>Haavat ja pinnalliset vammat</vamma>
+        </vamman-laatu>
+        <vahingoittuneet-ruumiinosat>
+            <ruumiinosa>Pään alue (pl. silmät)</ruumiinosa>
+            <ruumiinosa>Ranne</ruumiinosa>
+        </vahingoittuneet-ruumiinosat>
+        <sairauspoissaolopaivat>3</sairauspoissaolopaivat>
+        <sairaalahoitovuorokaudet>1</sairaalahoitovuorokaudet>
+        <jatkuuko-sairaspoissaolo>false</jatkuuko-sairaspoissaolo>
+    </henkilovahinko>
+</turi:turvallisuuspoikkeama>
