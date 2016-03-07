@@ -97,7 +97,7 @@
     sillat))
 
 (defn sillat []
-  (let [urakan-sillat sillat/sillat]
+  (let [urakan-sillat sillat/sillat-kartalla]
     (komp/luo
       (fn []
         [:div.sillat

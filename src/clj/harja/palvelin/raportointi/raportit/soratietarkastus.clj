@@ -11,8 +11,9 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
-(defn osuus-prosentteina [osoittaja nimittaja]
+(defn osuus-prosentteina
   "Ottaa luvun numerot-vectorista annetulla indeksillä ja jakaa sen vectorin kaikkien lukujen summalla."
+  [osoittaja nimittaja]
   (if (not= nimittaja 0)
     (* (/ osoittaja
           nimittaja)
@@ -40,12 +41,13 @@
 (defn tarkastuksien-laatupoikkeamat [tarkastukset]
   (sort (distinct (keep laatupoikkeama-tapahtunut? tarkastukset))))
 
-(defn muodosta-raportin-rivit [tarkastukset]
+(defn muodosta-raportin-rivit
   "Muodostaa annetuista tarkastukset-riveistä raportilla näytettävät rivit eli yhdistää rivit niin,
   että sama tieosuus ja sama päivä esiintyy aina yhdellä rivillä.
   Jokaisella yhdistetyllä rivillä lasketaan yhteen saman päivän ja tien tarkastuksista saadut kuntoarvot (1-5),
   toisin sanoen kuinka monessa mittauksessa mikäkin kuntoarvo esiintyi.
   Ei säilytä rivien järjestystä."
+  [tarkastukset]
   (let [tarkastusryhmat (group-by
                           (fn [rivi]
                             [(pvm/paivan-alussa (:aika rivi))
@@ -56,33 +58,35 @@
                              (get-in rivi [:tr :loppuetaisyys])
                              (:hoitoluokka rivi)])
                           tarkastukset)
-        yhdistetyt-rivit (mapv (fn [tarkastusryhma]
-                                 (let [tarkastukset (get tarkastusryhmat tarkastusryhma)
-                                       yhdistettava-rivi (first tarkastukset)
-                                       laske-kuntoarvon-summa (fn [rivit arvo]
-                                                                "Laskee annetun kuntoarvon summan annettujen rivien kaikista mittausluokista"
-                                                                (reduce
-                                                                  (fn [nykysumma seuraava-rivi]
-                                                                    (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
-                                                                      (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
-                                                                  0
-                                                                  rivit))
-                                       laatuarvot (mapv (fn [arvo]
-                                                          (laske-kuntoarvon-summa tarkastukset arvo))
-                                                        (range 1 6))
-                                       laatuarvot-yhteensa (reduce + laatuarvot)]
-                                   (merge yhdistettava-rivi
-                                          (zipmap (range 1 6)
-                                                  (map (juxt
-                                                         ;; laatuarvon summa
-                                                         #(nth laatuarvot %)
-                                                         ;; laatuarvon summan osuus
-                                                         #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
-                                                       (range 5)))
-                                          {:laatuarvot-yhteensa laatuarvot-yhteensa
-                                           :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))
-                                           :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
-                               (keys tarkastusryhmat))]
+        yhdistetyt-rivit
+        (mapv (fn [tarkastusryhma]
+                (let [tarkastukset (get tarkastusryhmat tarkastusryhma)
+                      yhdistettava-rivi (first tarkastukset)
+                      laske-kuntoarvon-summa (fn [rivit arvo]
+                                               ;; Laskee annetun kuntoarvon summan annettujen
+                                               ;; rivien kaikista mittausluokista
+                                               (reduce
+                                                (fn [nykysumma seuraava-rivi]
+                                                  (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
+                                                    (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
+                                                0
+                                                rivit))
+                      laatuarvot (mapv (fn [arvo]
+                                         (laske-kuntoarvon-summa tarkastukset arvo))
+                                       (range 1 6))
+                      laatuarvot-yhteensa (reduce + laatuarvot)]
+                  (merge yhdistettava-rivi
+                         (zipmap (range 1 6)
+                                 (map (juxt
+                                       ;; laatuarvon summa
+                                       #(nth laatuarvot %)
+                                       ;; laatuarvon summan osuus
+                                       #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
+                                      (range 5)))
+                         {:laatuarvot-yhteensa laatuarvot-yhteensa
+                          :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))
+                          :laatupoikkeamat (tarkastuksien-laatupoikkeamat tarkastukset)})))
+              (keys tarkastusryhmat))]
     yhdistetyt-rivit))
 
 (defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
@@ -155,16 +159,16 @@
   (vec (concat
         ;; päivämäärä
         [(pvm/pvm (:aika rivi))]
-        
+
         ;; tie,aosa,aet,losa,let
         (map #(get-in rivi %) tr-kentat)
 
         ;; hoitoluokka
         [(fmt/roomalaisena-numerona (:hoitoluokka rivi))]
-        
+
         ;; arvot ja prosentit 1-5
         (map #(str (get-in rivi [% 0]) " (" (get-in rivi [% 1]) "%)") (range 1 6))
-        
+
         ;; yhteensä, 1+2 yhteensä
         [(str (:laatuarvot-yhteensa rivi) " (100%)")
          (str (:laatuarvo-1+2-summa rivi) " (" (+ (get-in rivi [1 1])

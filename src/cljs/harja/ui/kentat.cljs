@@ -27,7 +27,9 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -314,9 +316,6 @@
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
     [:div.boolean-group
-     ;; Esimerkiksi tilannekuvassa boolean-grouppia käytetään siten, että useampi boolean-group käyttää
-     ;; samaa data-atomia säilyttämään valitut suodattimet. Siksi tyhjennyksessä ja kaikkien valitsemisessa
-     ;; ei voi vain yksinkertaisesti resetoida datan sisältöä tyhjäksi tai kaikiksi vaihtoehdoiksi.
      (when tyhjenna-kaikki?
        [:button.nappi-toissijainen {:on-click #(reset! data (apply disj @data vaihtoehdot))}
         [:span.livicon-trash " Tyhjennä kaikki"]])
@@ -348,15 +347,15 @@
         valittu (or @data nil)]
     [:div
      (let [radiobuttonit (doall
-                           (for [v vaihtoehdot]
-                             ^{:key (str "radio-group-" (name v))}
+                           (for [vaihtoehto vaihtoehdot]
+                             ^{:key (str "radio-group-" (name vaihtoehto))}
                              [:div.radio
                               [:label
-                               [:input {:type      "radio" :checked (= valittu v)
+                               [:input {:type      "radio" :checked (= valittu vaihtoehto)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                     (if valittu?
-                                                       (reset! data v)))}
-                                (vaihtoehto-nayta v)]]]))]
+                                                       (if valittu?
+                                                         (reset! data vaihtoehto)))}
+                                (vaihtoehto-nayta vaihtoehto)]]]))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
@@ -671,22 +670,23 @@
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
 
+        keskita-kartta! (fn [sijainti] (when sijainti
+                                         (kartta/keskita-kartta-alueeseen! (harja.geo/extent sijainti))))
+
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
                            (tasot/poista-geometria! :tr-valittu-osoite)
                            (when-not (= arvo @alkuperainen-sijainti)
                              (do
                                (tasot/nayta-geometria!
-                                :tr-valittu-osoite
-                                {:alue (maarittele-feature
-                                        arvo
-                                        false
-                                        {:img    (kartta-ikonit/pinni-ikoni "musta")
-                                         :zindex 21}    ;; Tarpeeksi korkeat etteivät vahingossakaan jää
-                                        {:color  "gray" ;; muun alle
-                                         :zindex 20})
-                                 :type :tr-valittu-osoite})
-                               (kartta/keskita-kartta-alueeseen! (harja.geo/extent arvo))))))]
+                                 :tr-valittu-osoite
+                                 {:alue (maarittele-feature
+                                          arvo
+                                          false
+                                          asioiden-ulkoasu/tr-ikoni
+                                          asioiden-ulkoasu/tr-viiva)
+                                  :type :tr-valittu-osoite})
+                               (keskita-kartta! arvo)))))]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go-loop []
@@ -707,6 +707,8 @@
         (when sijainti
           (reset! alkuperainen-sijainti @sijainti)
           (nayta-kartalla @sijainti)))}
+
+     (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @sijainti))
 
      (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")

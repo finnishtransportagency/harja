@@ -7,7 +7,8 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -36,9 +37,9 @@
                       urakkatieto-fixture))
 
 (def minipot-testidata
-  {:aloituspvm          (java.sql.Date. 105 9 1)
-   :valmispvm_kohde     (java.sql.Date. 105 9 2)
-   :valmispvm_paikkaus  (java.sql.Date. 105 9 2)
+  {:aloituspvm          (pvm/luo-pvm 2005 9 1)
+   :valmispvm_kohde     (pvm/luo-pvm 2005 9 2)
+   :valmispvm_paikkaus  (pvm/luo-pvm 2005 9 2)
    :ilmoitustiedot
                         {:osoitteet
                          [{:tie                5
@@ -54,7 +55,7 @@
                            :yksikko         "km"
                            :maara           5
                            :yks_hint_alv_0  5
-                           :takuupvm        (java.sql.Date. 105 9 1)}]}})
+                           :takuupvm        (pvm/luo-pvm 2005 9 1)}]}})
 
 
 (def paikkauskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "SELECT paallystyskohde.id as paallystyskohde_id

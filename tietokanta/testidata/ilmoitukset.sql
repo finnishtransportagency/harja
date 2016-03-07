@@ -1,4 +1,5 @@
 -- Ensimmäinen ilmoitus: Oulun alueella, kysely
+
 INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, lyhytselite, pitkaselite, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
@@ -71,6 +72,7 @@ VALUES ((SELECT id
         'Välittävä Urakoitsija', 'Y1234');
 
 -- Toinen ilmoitus: Oulun alueella, toimenpidepyynto
+
 INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, lyhytselite, pitkaselite, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
@@ -132,6 +134,7 @@ VALUES ((SELECT id
 
 
 -- Kolmas ilmoitus: Pudasjärvi, toimenpidepyynto, avoin
+
 INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, lyhytselite, pitkaselite, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
@@ -229,6 +232,7 @@ VALUES ((SELECT id
 
 
 -- Neljäs ilmoitus: Turun alueella, tiedoitus. Ei kuittauksia!
+
 INSERT INTO ilmoitus
 (ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet,
@@ -242,6 +246,7 @@ VALUES (12348, '2005-02-13 00:00:00', '2005-02-13 00:01:00', FALSE, 'Täällä j
 
 
 -- Ilmoituksia Oulun alueurakka 2014-2019
+
 INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
@@ -258,6 +263,16 @@ VALUES ((SELECT id
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
         'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus)
+VALUES ((SELECT id
+         FROM ilmoitus
+         WHERE ilmoitusid = 12372), 12372, '2015-11-26 06:06:07', 'vastaanotto' :: kuittaustyyppi,
+        'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+        'Välittävä Urakoitsija', 'Y1242334');
 
 INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
@@ -807,6 +822,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12620), 12620, '2012-3-16 11:1
 -- Pudasjärvi
 
 --Ilmoituksia etelämmäksi: Porin alueurakka 2007-2012
+
 INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, lyhytselite, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,

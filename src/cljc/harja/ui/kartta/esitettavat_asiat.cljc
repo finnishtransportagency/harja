@@ -2,9 +2,9 @@
   (:require [clojure.string :as str]
             #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
                :clj [taoensso.timbre :as log])
-            [harja.domain.laadunseuranta.laatupoikkeamat
-             :as laatupoikkeamat]
+            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.ilmoitukset :as ilmoitukset]
             [harja.geo :as geo]
 
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
@@ -73,7 +73,7 @@
      :ikonit (mapv (fn [i] (merge
                              ;; Oletusasetukset
                              {:tyyppi :merkki
-                              :paikka :loppu
+                              :paikka [:loppu]
                               :scale  (laske-skaala valittu?)}
                              i)) merkit)}))
 
@@ -93,8 +93,8 @@
       string, muuten voidaan mennä oletusasetuksilla
     - Reittimäisille asioille tällä parametrilla on enemmän merkitystä.
       Mäpille voi antaa seuraavia arvoja:
-      -- paikka: :alku, :loppu, :taitokset, tai vektori näitä. Mihin paikkoihin
-         ikoni piirretään?
+      -- paikka: vektori, jonka elementtejä voivat olla :alku, :loppu ja :taitokset
+         Mihin paikkoihin ikoni piirretään?
       -- tyyppi: :nuoli tai :merkki. Merkit kääntyvät viivan suunnan mukaan,
          merkit aina pystyssä.
       -- img: käytettävä ikoni
@@ -127,8 +127,8 @@
     piirtää reitti
 
   (maarittele-feature foo val?
-                      [{:paikka :loppu :img (pinni-ikoni 'sininen)}
-                       {:paikka :taitokset :img (nuoli-ikoni 'sininen')}]
+                      [{:paikka [:loppu] :img (pinni-ikoni 'sininen)}
+                       {:paikka [:taitokset] :img (nuoli-ikoni 'sininen')}]
                       [{:width 12 :color varit/musta}
                        {:width 6 :color varit/sininen}])
     Jos foo on pistemäinen, käytetään sinistä pinniä. Reitilliselle foolle
@@ -188,59 +188,33 @@
   ^{:private true}
   asia-kartalle :tyyppi-kartalla)
 
-(defn sisaltaako-kuittauksen? [ilmoitus kuittaustyyppi]
-  (some #(= (:kuittaustyyppi %) kuittaustyyppi)
-        (get-in ilmoitus [:kuittaukset])))
+(defn ilmoituksen-tooltip [ilmoitus]
+  (str (ilmoitukset/ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
+       " ("
+       (str/lower-case (ilmoitukset/kuittaustyypin-selite (:tila ilmoitus)))
+       ")"))
 
-(defn ilmoituksen-tooltip [ilmoitus oletusteksti]
-  (if (empty? (:kuittaukset ilmoitus))
-    "Ei kuittauksia"
 
-    (case (last (map :kuittaustyyppi (:kuittaukset ilmoitus)))
-      :vastaanotto "Vastaanottokuittaus annettu"
-      :vastaus "Vastauskuittaus annettu"
-      :aloitus "Aloituskuittaus annettu"
-      :lopetus "Lopetuskuittaus annettu"
-      :muutos "Muutoskuittaus annettu"
-      oletusteksti)))
+(defn ilmoitus-kartalle [{:keys [tila ilmoitustyyppi] :as ilmoitus} valittu-fn?]
+  (let [ikoni (ulkoasu/ilmoituksen-ikoni ilmoitus)]
+    (assoc ilmoitus
+      :type :ilmoitus
+      :nimi (ilmoituksen-tooltip ilmoitus)
+      :selite {:teksti (str (ilmoitukset/ilmoitustyypin-nimi ilmoitustyyppi)
+                            " ("
+                            (str/lower-case (ilmoitukset/kuittaustyypin-selite tila))
+                            ")")
+               :img    ikoni}
+      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu-fn?]
-  (let [ikoni (ulkoasu/tiedotuksen-ikoni)]
-    (assoc ilmoitus
-     :type :ilmoitus
-     :nimi (ilmoituksen-tooltip ilmoitus "Tiedotus")
-     :selite {:teksti "Tiedotus"
-              :img    ikoni}
-     :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
-
+  (ilmoitus-kartalle ilmoitus valittu-fn?))
 
 (defmethod asia-kartalle :kysely [ilmoitus valittu-fn?]
-  (let [aloitettu? (sisaltaako-kuittauksen? ilmoitus :aloitus)
-        lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
-        ikoni (ulkoasu/kyselyn-ikoni lopetettu? aloitettu?)]
-    (assoc ilmoitus
-      :type :ilmoitus
-      :nimi (ilmoituksen-tooltip ilmoitus "Kysely")
-      :selite {:teksti (cond
-                         aloitettu? "Kysely, aloitettu"
-                         lopetettu? "Kysely, lopetettu"
-                         :else "Kysely, ei aloituskuittausta.")
-               :img    ikoni}
-      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
+  (ilmoitus-kartalle ilmoitus valittu-fn?))
 
 (defmethod asia-kartalle :toimenpidepyynto [ilmoitus valittu-fn?]
-  (let [vastaanotettu? (sisaltaako-kuittauksen? ilmoitus :vastaanotettu)
-        lopetettu? (sisaltaako-kuittauksen? ilmoitus :lopetus)
-        ikoni (ulkoasu/toimenpidepyynnon-ikoni lopetettu? vastaanotettu?)]
-    (assoc ilmoitus
-      :type :ilmoitus
-      :nimi (ilmoituksen-tooltip ilmoitus "Toimenpidepyyntö")
-      :selite {:teksti (cond
-                         vastaanotettu? "Toimenpidepyyntö, kuitattu"
-                         lopetettu? "Toimenpidepyyntö, lopetettu"
-                         :else "Toimenpidepyyntö, kuittaamaton")
-               :img    ikoni}
-      :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
+  (ilmoitus-kartalle ilmoitus valittu-fn?))
 
 (defn otsikko-tekijalla [etuliite laatupoikkeama]
   (str etuliite
@@ -475,7 +449,6 @@
   nil)
 
 (defn- valittu-fn? [valittu tunniste asia]
-  (log "Tunniste on: " (pr-str tunniste))
   (let [tunniste (if (vector? tunniste) tunniste [tunniste])
         tunnisteet (if (vector? (first tunniste)) tunniste [tunniste tunniste])]
     (and

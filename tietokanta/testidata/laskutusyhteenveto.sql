@@ -125,6 +125,11 @@ VALUES
   ((SELECT id from toteuma where lisatieto = 'lyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
   ((SELECT id from toteuma where lisatieto = 'lyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10);
 
+-- Poistettu toteuma_tehtava (ei saa vaikuttaa laskutusyhteenvedon summiin)
+INSERT INTO toteuma_tehtava (poistettu, toteuma, luotu, toimenpidekoodi, maara)
+VALUES
+  (TRUE, (SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 02:20.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10);
+
 INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta)
 VALUES
   ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),

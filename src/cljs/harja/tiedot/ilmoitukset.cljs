@@ -30,7 +30,9 @@
                              :tyypit          +ilmoitustyypit+
                              :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
                              :hakuehto        ""
-                             :selite          [nil ""]}))
+                             :selite          [nil ""]
+                             :vain-myohassa?  #{}
+                             :aloituskuittauksen-ajankohta :kaikki}))
 
 (defonce ilmoitushaku (atom 0))
 
@@ -63,10 +65,13 @@
                (let [tulos (<! (k/post! :hae-ilmoitukset
                                         (-> valinnat
                                             ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                                            (update-in [:tyypit]
-                                                       #(if (empty? %) +ilmoitustyypit+ %))
-                                            (update-in [:kuittaustyypit]
-                                                       #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))]
+                                            (update :tyypit
+                                                    #(if (empty? %) +ilmoitustyypit+ %))
+                                            (update :kuittaustyypit
+                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))
+                                            (update :vain-myohassa?
+                                                    #(if (empty? %) false true)))))]
+
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
                      (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))

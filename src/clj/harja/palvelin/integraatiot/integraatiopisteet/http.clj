@@ -1,21 +1,27 @@
 (ns harja.palvelin.integraatiot.integraatiopisteet.http
+  "Yleiset apurit kutsujen lähettämiseen ulkoisiin järjestelmiin.
+  Sisältää automaattiset lokitukset integraatiolokiin."
   (:require [taoensso.timbre :as log]
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn rakenna-http-kutsu [metodi otsikot parametrit kayttajatunnus salasana kutsudata]
+(def timeout-aika-ms 10000)
+
+(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit kayttajatunnus salasana kutsudata timeout] :as optiot}]
   (let [kutsu {}]
     (-> kutsu
         (cond-> (not-empty otsikot) (assoc :headers otsikot)
                 (not-empty parametrit) (assoc :query-params parametrit)
                 (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
-                (or (= metodi "post") (= metodi "put")) (assoc :body kutsudata)))))
+                (or (= metodi "post") (= metodi "put")) (assoc :body kutsudata)
+                timeout (assoc :timeout timeout)))))
 
 (defn tee-http-kutsu [integraatioloki jarjestelma integraatio tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
   (try
-    (let [kutsu (rakenna-http-kutsu metodi otsikot parametrit kayttajatunnus salasana kutsudata)]
+    (let [kutsu (rakenna-http-kutsu {:metodi metodi :otsikot otsikot :parametrit parametrit :kayttajatunnus kayttajatunnus
+                                     :salasana salasana :kutsudata kutsudata :timeout timeout-aika-ms})]
       (case metodi
         "post" @(http/post url kutsu)
         "get" @(http/get url kutsu)
@@ -30,7 +36,7 @@
       (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki nil (str " Tapahtui poikkeus: " e) tapahtuma-id nil)
       (throw+
         {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
-         :virheet [{:koodi :poikkeus :viesti (str "Poikkeus :" (.getMessage e))}]}))))
+         :virheet [{:koodi :poikkeus :viesti (str "HTTP-kutsukäsittelyssä tapahtui odottamaton virhe.")}]}))))
 
 (defn laheta-kutsu
   ([integraatioloki integraatio jarjestelma url metodi otsikot parametrit kutsudata kasittele-vastaus]
@@ -47,12 +53,21 @@
            lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
        (log/debug (format " Palvelu palautti: tila: %s , otsikot: %s , data: %s" status headers body))
 
-       (if (or error (not (= 200 status)))
+       (if (or error
+               (not (= 200 status)))
          (do
            (log/error (format "Kutsu palveluun: %s epäonnistui. Virhe: %s " url error))
+           (log/error "Virhetyyppi: " (type error))
            (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
-           (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
-                    :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti (str "Virhe :" error)}]}))
+           ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
+           ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.
+           (cond (or (instance? java.net.ConnectException error)
+                     (instance? org.httpkit.client.TimeoutException error))
+                 (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
+                          :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
+                 :default
+                 (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
+                          :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti "Ulkoisen järjestelmän kommunikoinnissa tapahtui odottaman virhe."}]})))
          (do
            (let [vastausdata (kasittele-vastaus body headers)]
              (log/debug (format "Kutsu palveluun: %s onnistui." url))

@@ -11,6 +11,8 @@
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
 
+
+
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
   "[varit/musta 0 {} varit/punainen 2 {} varit/sininen 4 {:dash [10 10]}]
 
@@ -79,15 +81,15 @@
 
 (def ikonien-varit
   {;; Tilallisten sijainti-ikonien sisempi väri
-   :tiedotus                   "syaani"
-   :kysely                     "magenta"
+   :tiedoitus                  "magenta"
+   :kysely                     "syaani"
    :toimenpidepyynto           "oranssi"
    :turvallisuuspoikkeama      "punainen"
 
    ;; tilaa osoittavat värit (sijaint-ikonin ulompi väri)
-   :ilmoitus-lopetettu         "harmaa"
-   :ilmoitus-kaynnissa         "musta"
    :ilmoitus-auki              "punainen"
+   :ilmoitus-kaynnissa         "musta"
+   :ilmoitus-lopetettu         "harmaa"
 
    :kt-tyhja                   "oranssi"
    :kt-avoimia                 "punainen"
@@ -174,13 +176,13 @@
    :img    (nuoli-ikoni nuolen-vari)})
 
 (defn tyokoneen-ikoni [nuolen-vari rotaatio]
-  {:paikka   :loppu
+  {:paikka   [:loppu]
    :tyyppi   :nuoli
    :img      (nuoli-ikoni nuolen-vari)
    :rotation rotaatio})
 
 (defn yllapidon-ikoni []
-  {:paikka :loppu
+  {:paikka [:loppu]
    :tyyppi :merkki
    :img (:yllapito ikonien-varit)})
 
@@ -206,10 +208,11 @@
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
-  (sijainti-ikoni (case kt-tila
+  (sijainti-ikoni (:turvallisuuspoikkeama ikonien-varit)
+                  (case kt-tila
                     :tyhja (:kt-tyhja ikonien-varit)
                     :avoimia (:kt-avoimia ikonien-varit)
-                    :valmis (:kt-valmis ikonien-varit)) (:turvallisuuspoikkeama ikonien-varit)))
+                    :valmis (:kt-valmis ikonien-varit))))
 
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
@@ -232,17 +235,39 @@
                  :urakoitsija (:laatupoikkeama-urakoitsija ikonien-varit)
                  (:laatupoikkeama ikonien-varit))))
 
-(defn toimenpidepyynnon-ikoni [lopetettu? vastaanotettu?]
-  (cond
-    lopetettu? (sijainti-ikoni (:ilmoitus-lopetettu ikonien-varit) (:toimenpidepyynto ikonien-varit))
-    vastaanotettu? (sijainti-ikoni (:toimenpidepyynto ikonien-varit))
-    :else (sijainti-ikoni (:ilmoitus-auki ikonien-varit) (:toimenpidepyynto ikonien-varit))))
+(defn kyselyn-ikoni [tila]
+  (case tila
+    :kuittaamaton (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :vastaanotto (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :aloitus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :lopetus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
 
-(defn kyselyn-ikoni [lopetettu? aloitettu?]
-  (cond
-    lopetettu? (sijainti-ikoni (:ilmoitus-lopetettu ikonien-varit) (:kysely ikonien-varit))
-    aloitettu? (sijainti-ikoni (:ilmoitus-kaynnissa ikonien-varit) (:kysely ikonien-varit))
-    :else (sijainti-ikoni (:ilmoitus-auki ikonien-varit) (:kysely ikonien-varit))))
+(defn toimenpidepyynnon-ikoni [tila]
+  (case tila
+    :kuittaamaton (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-auki ikonien-varit))
+    :vastaanotto (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :aloitus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :lopetus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
 
-(defn tiedotuksen-ikoni []
-  (sijainti-ikoni (:tiedotus ikonien-varit)))
+
+(defn tiedotuksen-ikoni [tila]
+  (case tila
+    :kuittaamaton (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-auki ikonien-varit))
+    :vastaanotto (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-auki ikonien-varit))
+    :aloitus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :lopetus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+
+(defn ilmoituksen-ikoni [{:keys [ilmoitustyyppi tila] :as ilmoitus}]
+  (case ilmoitustyyppi
+    :kysely (kyselyn-ikoni tila)
+    :toimenpidepyynto (toimenpidepyynnon-ikoni tila)
+    :tiedoitus (tiedotuksen-ikoni tila)))
+
+(def ^{:doc "TR-valinnan viivatyyli"}
+  tr-viiva {:color  puhtaat/tummanharmaa
+            :dash [15 15]
+            :zindex 20})
+
+(def ^{:doc "TR-valinnan ikoni"}
+  tr-ikoni {:img    (pinni-ikoni "musta")
+            :zindex 21})

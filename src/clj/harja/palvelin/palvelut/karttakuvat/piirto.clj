@@ -65,19 +65,33 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        :private true}
   ikonien-piirtoraja-m 1400000)
 
+(defn- nuolten-paikat [valimatka taitokset paikka]
+  (case paikka
+    :alku
+    (let [{:keys [sijainti rotaatio]} (first taitokset)]
+      [[(first sijainti) rotaatio]])
+
+    :loppu
+    (let [{:keys [sijainti rotaatio]} (last taitokset)]
+      [[(second sijainti) rotaatio]])
+
+    :taitokset
+    (apurit/taitokset-valimatkoin valimatka (butlast taitokset))))
+
 (defn- piirra-ikonit [g {points :points ikonit :ikonit}]
   (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
         valimatka (/ hypotenuusa ikonien-tiheys)
-        paikat (apurit/taitokset-valimatkoin valimatka
-                                             (apurit/pisteiden-taitokset points))
+        taitokset (apurit/pisteiden-taitokset points)
         ikonin-skaala (partial apurit/ikonin-skaala hypotenuusa)]
     (when (< hypotenuusa ikonien-piirtoraja-m)
-      (doseq [[[x y] rotaatio] paikat]
-        (with-rotation g x y rotaatio
-          (doseq [{:keys [img scale]} ikonit
-                  :let [kuva (hae-kuva img)
-                        skaala (ikonin-skaala scale)]]
-            (when kuva
+      (doseq [{:keys [img scale paikka]} ikonit
+              :let [paikat (mapcat (partial nuolten-paikat valimatka taitokset)
+                                   paikka)
+                    kuva (hae-kuva img)
+                    skaala (ikonin-skaala scale)]]
+        (when kuva
+          (doseq [[[x y] rotaatio] paikat]
+            (with-rotation g x y rotaatio
               (.drawImage g kuva
                           (doto (AffineTransform.)
                             ;; Keskitetään kuva

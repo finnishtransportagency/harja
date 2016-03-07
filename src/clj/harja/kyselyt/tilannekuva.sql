@@ -118,11 +118,12 @@ SELECT
   t.havainnot,
   t.tyyppi
 FROM tarkastus t
-WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
-      AND (t.luotu BETWEEN :alku AND :loppu OR
-           t.muokattu BETWEEN :alku AND :loppu OR
-           t.aika BETWEEN :alku AND :loppu) AND
-           t.tyyppi :: TEXT IN (:tyypit);
+WHERE sijainti IS NOT NULL
+  AND (t.urakka IN (:urakat) OR t.urakka IS NULL)
+  AND (t.luotu BETWEEN :alku AND :loppu OR
+       t.muokattu BETWEEN :alku AND :loppu OR
+       t.aika BETWEEN :alku AND :loppu) AND
+       t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT

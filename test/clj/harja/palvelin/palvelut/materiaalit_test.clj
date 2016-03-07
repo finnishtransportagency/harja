@@ -56,7 +56,7 @@
   (let [tallennus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-materiaalit
                                   +kayttaja-jvh+
-                                   
+
                                   {:urakka-id @oulun-alueurakan-2005-2010-id
                                    :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
                                    :hoitokausi [(pvm/->pvm "1.10.2014") (pvm/->pvm "30.9.2015")]
@@ -66,7 +66,7 @@
                                                   :materiaali {:id 5}
                                                   :maara 666
                                                   }]})
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) 
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-materiaalit
                                 +kayttaja-jvh+ @oulun-alueurakan-2005-2010-id)]
     (is (some #(and (= (:maara %) 666.0)
@@ -164,7 +164,7 @@
     (is (not (nil?
                (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-materiaaleja! +kayttaja-jvh+
                                (-> (assoc parametrit :toteumamateriaalit @toteumamateriaalit)
-                                   (assoc :hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]))))))
+                                   (assoc :hoitokausi [(pvm/luo-pvm 2005 9 1) (pvm/luo-pvm 2006 8 30)]))))))
 
     (is (= (hae-materiaalitoteumien-maara toteuma_id) (+ 1 vanhat-materiaalitoteumat-lukumaara)))
     (is (= uusi-maara (int (ffirst (q (str "SELECT maara FROM toteuma_materiaali WHERE id="@tmid)))))
@@ -175,7 +175,7 @@
 (deftest poista-toteuma-materiaali-test
   (let [maara 874625
         [urakka sopimus] (first (q "SELECT urakka, sopimus FROM toteuma WHERE id=1"))
-        hoitokausi [(java.sql.Date. 105 9 1) (java.sql.Date. 106 8 30)]
+        hoitokausi [(pvm/luo-pvm 2005 9 1) (pvm/luo-pvm 2006 8 30)]
         lisaa-materiaalitoteuma (fn [] (ffirst (q "INSERT INTO toteuma_materiaali
                                           (toteuma, materiaalikoodi, maara, luotu, luoja, poistettu)
                                           VALUES (1, 1, "maara", NOW(), "(:id +kayttaja-jvh+)", false) RETURNING id;" )))

@@ -15,7 +15,7 @@
 
 
 (defonce karttataso-pohjavesialueet (atom false))
-(defonce pohjavesialueet (atom []))
+(defonce pohjavesialueet-kartalla (atom []))
 
 (def hallintayksikon-pohjavesialueet-haku
   (reify Haku
@@ -26,13 +26,15 @@
                 (into []
                       (filter #(or (not= -1 (.indexOf (str/lower-case (:nimi %)) teksti))
                                    (not= -1 (.indexOf (str/lower-case (:tunnus %)) teksti))))
-                      @pohjavesialueet)))
+                      @pohjavesialueet-kartalla)))
         ch))))
 
 ;; Pohjavesialueet eivät muutu edes vuosittain, joten voimme turvallisesti cachettaa
 (defn tallenna-pohjavesialueet
   "Tallentaa ladatut pohjavesialueet annetulle hallintayksikölle localStorageen."
   [hal alueet]
+  ;; Disabloitu localStorage tallennus, pitää miettiä miten se tehdään paremmin.
+  ;; Tila loppuu kesken pohjavesialueissa ja virhetilanteessa jää toimimaton versio cacheen.
   (comment (try
              (.setItem js/localStorage (str "pohjavesialueet-" hal) (t/write (t/writer :json) alueet))
              (catch :default _
@@ -65,12 +67,12 @@
         (if (or (not nakyvissa?)
                 (nil? hal))
           ;; jos taso ei ole näkyvissä tai hallintayksikköä ei valittu => asetetaan heti tyhjä
-          (reset! pohjavesialueet [])
+          (reset! pohjavesialueet-kartalla [])
 
           ;; taso näkyvissä ja hallintayksikkö valittu, haetaan alueet
           (if-let [pa (lue-pohjavesialueet hal)]
             ;; muistissa oli aiemmin ladatut alueet, palautetaan ne
-            (reset! pohjavesialueet (alueet pa))
+            (reset! pohjavesialueet-kartalla (alueet pa))
 
             ;; ei muistissa, haetaan ne
             (go
@@ -78,6 +80,6 @@
                 (tallenna-pohjavesialueet hal res)
                 (when (= hal (:id @valittu-hallintayksikko))
                   ;; jos hallintayksikköä ei ole ehditty muuttaa ennen kuin vastaus tuli
-                  (reset! pohjavesialueet (alueet res))))))))) 
+                  (reset! pohjavesialueet-kartalla (alueet res)))))))))
 
   

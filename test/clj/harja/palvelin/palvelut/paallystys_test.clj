@@ -42,10 +42,10 @@
                       urakkatieto-fixture))
 
 (def pot-testidata
-  {:aloituspvm     (java.sql.Date. 105 9 1)
-   :valmispvm_kohde (java.sql.Date. 105 9 2)
-   :valmispvm_paallystys (java.sql.Date. 105 9 2)
-   :takuupvm       (java.sql.Date. 105 9 3)
+  {:aloituspvm     (pvm/luo-pvm 2005 9 1)
+   :valmispvm_kohde (pvm/luo-pvm 2005 9 2)
+   :valmispvm_paallystys (pvm/luo-pvm 2005 9 2)
+   :takuupvm       (pvm/luo-pvm 2005 9 3)
    :muutoshinta    0
    :ilmoitustiedot {:osoitteet    [{:tie                       1
                                     :aosa                      2

@@ -25,7 +25,6 @@
                (not= -1 (.indexOf ua "Trident/"))
                (not= -1 (.indexOf ua "Edge/")))))
 
-
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
 
