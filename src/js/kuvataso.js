@@ -1,4 +1,3 @@
-
 /* closure liima, jolla saadaan kätevästi funktio kuvatasoksi */
 
 goog.provide('kuvataso.Lahde');
@@ -14,5 +13,7 @@ goog.inherits(kuvataso.Lahde, ol.source.Image);
 
 kuvataso.Lahde.prototype.getImage =
     function(extent, resolution, pixelRatio, projection) {
-	return this.hae_fn(extent, resolution, pixelRatio, projection);
+	var kuva = this.hae_fn(extent, resolution, pixelRatio, projection);
+	console.log("kuvataso getImage => " kuva);
+	return kuva;
     };
