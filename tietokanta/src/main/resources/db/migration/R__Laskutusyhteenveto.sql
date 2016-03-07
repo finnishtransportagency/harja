@@ -834,11 +834,10 @@ BEGIN
     RAISE NOTICE 'suolasakko_kaytossa: %', suolasakko_kaytossa;
     RAISE NOTICE 'lampotila_puuttuu: %', lampotila_puuttuu;
 
-
     RAISE NOTICE '***** Käsitelly loppui toimenpiteelle: %  *****
 
     ', t.nimi;
-
+    RAISE NOTICE 'Periodinen migraatio R_Laskutusyhteenveto.sql valmis.';
 
     RETURN NEXT (t.nimi, t.tuotekoodi, t.tpi, perusluku,
                          kaikki_paitsi_kht_laskutettu_ind_korotus, kaikki_laskutettu_ind_korotus,
