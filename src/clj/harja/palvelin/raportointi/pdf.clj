@@ -40,7 +40,8 @@
               data (if (> (count data) +max-rivimaara+)
                      (vec (concat (take +max-rivimaara+ data)
                                   (when viimeinen-rivi-yhteenveto?
-                                    [viimeinen-rivi]))))
+                                    [viimeinen-rivi])))
+                     data)
               oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
           [:fo:table-body
            (when (empty? data)

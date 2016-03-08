@@ -78,6 +78,7 @@
                       [:fo:block
                        "Kolmas"]])]]
                  [:fo:table-body
+                  nil
                   ([:fo:table-row
                     ([:fo:table-cell
                       {:border  "solid 0.1mm black"
@@ -99,7 +100,8 @@
                         :text-align "left"}
                        nil
                        [:fo:block
-                        "kolmas"]])])]]
+                        "kolmas"]])])
+                  nil]]
                 [:fo:block
                  {:space-after "1em"}]]))))
 
@@ -125,8 +127,8 @@
     (is (= r2 [:fo:table-row
                [:fo:table-cell [:fo:block {:text-align "right" :font-weight "bold"} "toinen juttu:"]]
                [:fo:table-cell [:fo:block {:margin-left "5mm"} "4242"]]]))))
-            
-          
+
+
 ;; Testataan koko raportti, eli täysi XSL-FO dokumentin luonti ja siitä PDF:n generointi
 
 (def +testiraportti+ [:raportti {:nimi "Testiraportti"
@@ -154,7 +156,7 @@
                                     ["XSL-FO" "hyvin"]]]])
 
 
-              
+
 (defn luo-raportti-pdf-bytes []
   (let [fo (muodosta-pdf +testiraportti+)
         ff (#'pdf-vienti/luo-fop-factory)]
