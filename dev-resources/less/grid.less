@@ -16,6 +16,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 @livitaulukon-input-korkeus: 22px;
+@livitaulukon-rivi-korkeus: 24px;
 @livi-taulukon-padding: 3px;
 @livi-taulukon-padding-muokatessa: 0;
 
@@ -192,6 +193,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
 
   tr.muokataan {
+    height: @livitaulukon-rivi-korkeus;
     padding: @livi-taulukon-padding-muokatessa;
     td {
       &.ei-muokattava {
