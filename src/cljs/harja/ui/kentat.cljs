@@ -273,7 +273,7 @@
            :max-length pituus
            :on-focus   on-focus
            :on-change  #(let [uusi (-> % .-target .-value)]
-                         (when (re-matches #"(\s|\d|\+)*" uusi)
+                         (when (re-matches #"\+(\s|\d)*" uusi)
                            (reset! data uusi)))}])
 
 
