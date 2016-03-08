@@ -237,6 +237,11 @@
 
   (with-channel request channel
     (go
-      (let [vastaus
-            (<! (thread (kasittele-kutsu db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn)))]
+      (let [vastaus (<! (thread (kasittele-kutsu db
+                                                 integraatioloki
+                                                 resurssi
+                                                 request
+                                                 kutsun-skeema
+                                                 vastauksen-skeema
+                                                 kasittele-kutsu-fn)))]
         (send! channel vastaus)))))
