@@ -84,7 +84,7 @@
           :sijainti (r/wrap (:sijainti @muokattu)
                             #(swap! muokattu assoc :sijainti %))}
          
-         {:otsikko "Työntekijä" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true}
+         {:otsikko "Työntekijän ammatti" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true}
          {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
          {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :palstoja 1
           :pakollinen? true
