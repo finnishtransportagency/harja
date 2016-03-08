@@ -118,12 +118,6 @@
                          :disabled   (boolean @nav/valittu-urakka)}
     nav/+urakkatyypit+]])
 
-(def murupolku-muoto (atom :perus))
-(defn aseta-murupolku-muotoon [muoto]
-  (reset! murupolku-muoto muoto))
-(defn aseta-murupolku-perusmuotoon []
-  (reset! murupolku-muoto :perus))
-
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
