@@ -3,6 +3,7 @@
            xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tietolaji"
            xmlns:ns3="http://www.solita.fi/harja/tierekisteri/kuntoluokka"
            xmlns:ns4="http://www.solita.fi/harja/tierekisteri/urakka"
+           xmlns:ns5="http://www.solita.fi/harja/tierekisteri/tunniste"
            targetNamespace="http://www.solita.fi/harja/tierekisteri/tietue" version="1.0">
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/sijainti" schemaLocation="sijainti.xsd"/>
@@ -12,14 +13,7 @@
 
     <xs:complexType name="tietue">
         <xs:sequence>
-            <xs:element minOccurs="1" maxOccurs="1" name="tunniste">
-                <xs:simpleType>
-                    <xs:restriction base="xs:string">
-                        <xs:minLength value="0"/>
-                        <xs:maxLength value="20"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
+            <xs:element minOccurs="1" maxOccurs="1" name="tunniste" type="ns5:tunniste"/>
             <xs:element minOccurs="1" name="alkupvm" type="xs:date"/>
             <xs:element minOccurs="0" name="loppupvm" type="xs:date"/>
             <xs:element minOccurs="0" name="karttapvm" type="xs:date"/>
