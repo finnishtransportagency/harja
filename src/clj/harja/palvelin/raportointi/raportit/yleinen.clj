@@ -100,7 +100,7 @@
             {kuukausi summat}))
         (keys kuukaudet)))))
 
-(defn rivit-kuukausipylvaille-arvoa-laskien
+(defn rivit-kuukausipylvaille-kentan-eri-arvojen-maaraa-laskien
   "Muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon.
   Tekee tämän ryhmittelemällä rivit kuukausille ja laskemalla, kuinka monta kertaa arvo-avaimen
   jokainen mahdollinen arvo esiintyy kuukauden aikana.
