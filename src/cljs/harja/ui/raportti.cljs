@@ -48,7 +48,7 @@
                                           (and viimeinen-rivi-yhteenveto?
                                                (= viimeinen-rivi rivi))
                                           (assoc :yhteenveto true)
-                                          (korosta-rivit index)
+                                          (when korosta-rivit (korosta-rivit index))
                                           (assoc :korosta true))))))
                data)))]))
 
