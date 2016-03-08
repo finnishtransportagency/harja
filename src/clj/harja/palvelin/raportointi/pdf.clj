@@ -20,27 +20,35 @@
                  (pr-str elementti)))
     (first elementti)))
 
+(def ^:const +max-rivimaara+ 1000)
+
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                               korosta-rivit oikealle-tasattavat-kentat] :as optiot} sarakkeet data]]
-  (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko} otsikko
-     [:fo:table {:border "solid 0.2mm black"}
-      (for [{:keys [otsikko leveys]} sarakkeet]
-        [:fo:table-column {:column-width leveys}])
-      [:fo:table-header
-       [:fo:table-row
-        (for [otsikko (map :otsikko sarakkeet)]
-          [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
-           [:fo:block otsikko]])]]
-      [:fo:table-body
-       (if (empty? data)
+  (try
+    (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
+      [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko} otsikko
+       [:fo:table {:border "solid 0.2mm black"}
+        (for [{:keys [otsikko leveys]} sarakkeet]
+          [:fo:table-column {:column-width leveys}])
+        [:fo:table-header
          [:fo:table-row
-          [:fo:table-cell {:padding                "1mm"
-                           :number-columns-spanned (count sarakkeet)}
-           [:fo:block {:space-after "0.5em"}]
-           [:fo:block "Ei tietoja"]]]
-         (let [viimeinen-rivi (last data)
-               oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+          (for [otsikko (map :otsikko sarakkeet)]
+            [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
+             [:fo:block otsikko]])]]
+        (let [rivien-maara (count data)
+              viimeinen-rivi (last data)
+              data (if (> (count data) +max-rivimaara+)
+                     (vec (concat (take +max-rivimaara+ data)
+                                  (when viimeinen-rivi-yhteenveto?
+                                    [viimeinen-rivi]))))
+              oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+          [:fo:table-body
+           (when (empty? data)
+               [:fo:table-row
+                [:fo:table-cell {:padding                "1mm"
+                                 :number-columns-spanned (count sarakkeet)}
+                 [:fo:block {:space-after "0.5em"}]
+                 [:fo:block "Ei tietoja"]]])
            (for [i-rivi (range (count data))
                  :let [rivi (or (nth data i-rivi) "")]]
              (if-let [otsikko (:otsikko rivi)]
@@ -69,8 +77,19 @@
                                            korosta?)
                      (when korosta?
                        [:fo:block {:space-after "0.2em"}])
-                     [:fo:block (str arvo)]])])))))]]
-     [:fo:block {:space-after "1em"}]]))
+                     [:fo:block (str arvo)]])])))
+           (when (> rivien-maara +max-rivimaara+)
+               [:fo:table-row
+                [:fo:table-cell {:padding "1mm"
+                                 :number-columns-spanned (count sarakkeet)}
+                 [:fo:block {:space-after "0.5em"}]
+                 [:fo:block (str "Taulukossa näytetään vain ensimmäiset " +max-rivimaara+ " rivia. "
+                                 "Tarkenna hakuehtoa. "
+                                 (when viimeinen-rivi-yhteenveto?
+                                   "Yhteenveto on laskettu kaikista riveistä"))]]])])]
+       [:fo:block {:space-after "1em"}]])
+    (catch Exception e
+      (log/info "POIKKEUS: " e))))
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
@@ -139,8 +158,10 @@
        [:fo:table-cell [:fo:block "Ajettu " nyt]]
        [:fo:table-cell {:text-align "end"}
         [:fo:block
-         "Sivu " [:fo:page-number] " / " [:fo:page-number-citation {:ref-id "raportti-loppu"}]]]]]]))
-  
+         "Sivu " [:fo:page-number]
+         ;;" / " [:fo:page-number-citation {:ref-id "raportti-loppu"}]
+         ]]]]]))
+
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
   (apply fo/dokumentti {:orientation (or (:orientaatio raportin-tunnistetiedot) :portrait)
@@ -155,4 +176,4 @@
                                    (map muodosta-pdf %)
                                    [(muodosta-pdf %)]))
                                sisalto))
-                 [[:fo:block {:id "raportti-loppu"}]])))
+                 #_[[:fo:block {:id "raportti-loppu"}]])))
