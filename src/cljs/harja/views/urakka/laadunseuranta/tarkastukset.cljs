@@ -16,7 +16,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
-            
+
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
 
@@ -54,11 +54,11 @@
            tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
        [:div.tarkastukset
 
-        
+
         [valinnat/urakan-hoitokausi urakka]
         [valinnat/aikavali]
 
-                
+
         [:span.label-ja-kentta
          [:span.kentan-otsikko "Tyyppi"]
          [:div.kentta
@@ -84,7 +84,7 @@
           :tyhja "Ei tarkastuksia"
           :rivi-klikattu #(valitse-tarkastus %)
           :jarjesta :aika}
-         
+
          [{:otsikko "Pvm ja aika"
            :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
            :nimi :aika}
@@ -110,27 +110,28 @@
 
 
 (defn talvihoitomittaus []
-  (lomake/ryhma {:otsikko "Talvihoitomittaus"
-                 :rivi? true}
-                {:otsikko "Lumimäärä" :tyyppi :numero :yksikko "cm"
-                 :nimi :lumimaara
-                 :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
-                {:otsikko "Tasaisuus" :tyyppi :numero :yksikko "cm"
-                 :nimi :tasaisuus
-                 :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
-                {:otsikko "Kitkakerroin" :tyyppi :numero
-                 :nimi :kitka
-                 :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
-                {:otsikko "Ilman lämpötila" :tyyppi :numero :yksikko "\u2103"
-                 :validoi [#(when-not (<= -55 %1 55)
-                              "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
-                 :nimi :lampotila_ilma
-                 :hae (comp :ilma :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :ilma] %2)}
-                {:otsikko "Tien lämpötila" :tyyppi :numero :yksikko "\u2103"
-                 :validoi [#(when-not (<= -55 %1 55)
-                             "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
-                 :nimi :lampotila_tie
-                 :hae (comp :tie :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :tie] %2)}))
+  (lomake/ryhma
+   {:otsikko "Talvihoitomittaus"
+    :rivi? true}
+   {:otsikko "Lumi" :tyyppi :numero :yksikko "cm"
+    :nimi :lumimaara
+    :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
+   {:otsikko "Tasaisuus" :tyyppi :numero :yksikko "cm"
+    :nimi :tasaisuus
+    :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
+   {:otsikko "Kitka" :tyyppi :numero
+    :nimi :kitka
+    :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
+   {:otsikko "Ilma" :tyyppi :numero :yksikko "\u2103"
+    :validoi [#(when-not (<= -55 %1 55)
+                 "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
+    :nimi :lampotila_ilma
+    :hae (comp :ilma :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :ilma] %2)}
+   {:otsikko "Tie" :tyyppi :numero :yksikko "\u2103"
+    :validoi [#(when-not (<= -55 %1 55)
+                 "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
+    :nimi :lampotila_tie
+    :hae (comp :tie :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :tie] %2)}))
 
 (defn soratiemittaus []
   (let [kuntoluokka (fn [arvo _]
@@ -162,14 +163,14 @@
                    :nimi :hoitoluokka :palstoja 1
                    :hae (comp :hoitoluokka :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :hoitoluokka] %2)
                    :valinnat [1 2 3]})))
-                 
+
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)]
     (log (pr-str @tarkastus-atom))
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
-     
+
      [lomake/lomake
       {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
        :muokkaa!     #(reset! tarkastus-atom %)
@@ -179,7 +180,7 @@
                 "Tallenna tarkastus"
                 (fn []
                   (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-                
+
                 {:disabled (let [validi? (lomake/voi-tallentaa? tarkastus)]
                              (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
                              (not validi?))
@@ -194,7 +195,7 @@
 
        {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
         :varoita [[:urakan-aikana-ja-hoitokaudella]]}
-       
+
        {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
         :pakollinen? true
         :tyyppi :valinta
@@ -213,24 +214,24 @@
         :pakollinen? true
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
-       
+
        {:otsikko "Tar\u00ADkastaja" :nimi :tarkastaja
         :tyyppi :string :pituus-max 256
         :pakollinen? true
         :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
         :palstoja 1}
-       
+
        (case (:tyyppi tarkastus)
          :talvihoito (talvihoitomittaus)
          :soratie (soratiemittaus)
          nil)
-       
+
        {:otsikko "Havain\u00ADnot" :nimi :havainnot
         :koko [80 :auto]
         :tyyppi :text
         :palstoja 2}
 
-       
+
 
        {:otsikko     "Liitteet" :nimi :liitteet
         :tyyppi :komponentti
@@ -239,7 +240,7 @@
                                                                     #(swap! tarkastus-atom assoc :uusi-liite %))
                                          :uusi-liite-teksti "Lisää liite tarkastukseen"}
                       (:liitteet tarkastus)]}]
-      
+
       tarkastus]]))
 
 
