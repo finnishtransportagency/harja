@@ -7,6 +7,10 @@
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
                schemaLocation="tietolajitunniste.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tunniste"
+               schemaLocation="tunniste.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tunniste"
+               schemaLocation="tunniste.xsd"/>
 
     <xs:element name="haeTietue">
         <xs:complexType>

@@ -10,6 +10,7 @@
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolaji" schemaLocation="tietolaji.xsd"/>
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/kuntoluokka" schemaLocation="kuntoluokka.xsd"/>
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/urakka" schemaLocation="urakka.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tunniste" schemaLocation="tunniste.xsd"/>
 
     <xs:complexType name="tietue">
         <xs:sequence>

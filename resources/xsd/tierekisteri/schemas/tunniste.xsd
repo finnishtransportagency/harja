@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            targetNamespace="http://www.solita.fi/harja/tierekisteri/tunniste" version="1.0">
+
     <xs:simpleType name="tunniste">
         <xs:restriction base="xs:string">
             <xs:pattern value="\w*\d+"/>
