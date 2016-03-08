@@ -3,7 +3,7 @@
   (:require [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [clojure.walk :as walk]
-            [clojure.core.async :refer :all]
+            [clojure.core.async :refer [<! go thread]]
             [org.httpkit.server :refer [with-channel on-close send!]]
             [harja.tyokalut.json-validointi :as json]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]

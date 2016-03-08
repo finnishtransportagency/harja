@@ -49,19 +49,3 @@
                   (fn [_]))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
-
-
-(deftest tarkista-asynkroniset-kutsut
-  (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
-        vastaus (kutsukasittely/kasittele-kutsu-async
-                  (:db jarjestelma)
-                  (:integraatioloki jarjestelma)
-                  "hae-urakka"
-                  {:body kutsun-data
-                   :request-method :post
-                   :headers {"oam_remote_user" "tuntematon",}}
-                  json-skeemat/+laatupoikkeaman-kirjaus+
-                  json-skeemat/+kirjausvastaus+
-                  (fn [_]))]
-    (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
