@@ -3,15 +3,15 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
-            [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
@@ -127,7 +127,7 @@
     (julkaise-reitti
       http :lisaa-varustetoteuma
       (POST "/api/urakat/:id/toteumat/varuste" request
-        (kasittele-kutsu db
+        (kasittele-kutsu-async db
                          integraatioloki
                          :lisaa-varustetoteuma
                          request

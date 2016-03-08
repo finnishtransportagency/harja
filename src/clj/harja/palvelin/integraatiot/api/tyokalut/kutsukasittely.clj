@@ -2,23 +2,25 @@
   "API:n kutsujen käsittely funktiot"
   (:require [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
+            [clojure.walk :as walk]
+            [clojure.core.async :refer [<! go thread]]
+            [org.httpkit.server :refer [with-channel on-close send!]]
             [harja.tyokalut.json-validointi :as json]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.kayttajat :as q]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [clojure.walk :as walk]
             [harja.tyokalut.avaimet :as avaimet])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)))
 
 (defn tee-lokiviesti [suunta body viesti]
-  {:suunta        suunta
+  {:suunta suunta
    :sisaltotyyppi "application/json"
-   :siirtotyyppi  "HTTP"
-   :sisalto       body
-   :otsikko       (str (walk/keywordize-keys (:headers viesti)))
-   :parametrit    (str (:params viesti))})
+   :siirtotyyppi "HTTP"
+   :sisalto body
+   :otsikko (str (walk/keywordize-keys (:headers viesti)))
+   :parametrit (str (:params viesti))})
 
 (defn poista-liitteet-logituksesta
   "Etsii avainpolun, joka päättyy avaimeen liitteet. Käsittelee sen alta löytyvät liitteet tyhjentäen niiden
@@ -26,20 +28,20 @@
   [body]
   (try+
     (let [body-clojure-mappina (cheshire/decode body true)
-        avainpolut (avaimet/keys-in body-clojure-mappina)
-        avainpolku-liitteet (first (filter
-                                     (fn [avainpolku]
-                                       (= (last avainpolku) :liitteet))
-                                     avainpolut))
-        liitteet-ilman-sisaltoja (when avainpolku-liitteet
-                                   (mapv (fn [liite]
-                                           (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >"))
-                                         (get-in body-clojure-mappina avainpolku-liitteet)))
-        body-ilman-liittteiden-sisaltoa (when liitteet-ilman-sisaltoja
-                                          (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja))]
-    (if avainpolku-liitteet
-      (cheshire/encode body-ilman-liittteiden-sisaltoa)
-      body))
+          avainpolut (avaimet/keys-in body-clojure-mappina)
+          avainpolku-liitteet (first (filter
+                                       (fn [avainpolku]
+                                         (= (last avainpolku) :liitteet))
+                                       avainpolut))
+          liitteet-ilman-sisaltoja (when avainpolku-liitteet
+                                     (mapv (fn [liite]
+                                             (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >"))
+                                           (get-in body-clojure-mappina avainpolku-liitteet)))
+          body-ilman-liittteiden-sisaltoa (when liitteet-ilman-sisaltoja
+                                            (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja))]
+      (if avainpolku-liitteet
+        (cheshire/encode body-ilman-liittteiden-sisaltoa)
+        body))
     (catch Exception e
       (log/debug "Ei voida poistaa liitteitä bodystä: " (.getMessage e))
       body)))
@@ -74,16 +76,16 @@
 (defn tee-virhevastaus
   "Luo virhevastauksen annetulla statuksella ja asettaa vastauksen bodyksi JSON muodossa virheet."
   [status virheet]
-   (let [body (cheshire/encode
+  (let [body (cheshire/encode
                {:virheet
                 (mapv (fn [virhe]
                         {:virhe
-                         {:koodi  (:koodi virhe)
+                         {:koodi (:koodi virhe)
                           :viesti (:viesti virhe)}})
                       virheet)})]
-    {:status  status
+    {:status status
      :headers {"Content-Type" "application/json"}
-     :body    body}))
+     :body body}))
 
 (defn tee-sisainen-kasittelyvirhevastaus
   [virheet]
@@ -104,14 +106,14 @@
        (if skeema
          (do
            (json/validoi skeema json)
-           {:status  status
+           {:status status
             :headers {"Content-Type" "application/json"}
-            :body    json})
-         {:status  status
+            :body json})
+         {:status status
           :headers {"Content-Type" "application/json"}}))
      (if skeema
-       (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-                :virheet [{:koodi  virheet/+tyhja-vastaus+
+       (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+                :virheet [{:koodi virheet/+tyhja-vastaus+
                            :viesti "Tyhja vastaus vaikka skeema annettu"}]})
        {:status status}))))
 
@@ -149,8 +151,8 @@
       kayttaja
       (do
         (log/error "Tuntematon käyttäjätunnus: " kayttajanimi)
-        (throw+ {:type    virheet/+viallinen-kutsu+
-                 :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
+        (throw+ {:type virheet/+viallinen-kutsu+
+                 :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
 (defn aja-virhekasittelyn-kanssa [resurssi ajo]
@@ -180,28 +182,30 @@
             (recur (.getNextException ex))))
         (log/error "Sisemmät virheet: " (.toString w)))
       (kasittele-sisainen-kasittelyvirhe
-        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+        [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))
     (catch Exception e
       (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " resurssi))
       (kasittele-sisainen-kasittelyvirhe
-        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+        [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))
     (catch Object e
       (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " e))
       (kasittele-sisainen-kasittelyvirhe
-        [{:koodi  virheet/+sisainen-kasittelyvirhe-koodi+
+        [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))))
 
 (defn kasittele-kutsu
-  "Käsittelee annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja lähetetty data
-  on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos tuleva data
-  validoidaan käyttäen annettuja JSON-skeemoja.
+  "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
+  lähetetty data on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
+  tuleva data validoidaan käyttäen annettuja JSON-skeemoja.
 
-  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen käsittelyvirhe."
+  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
+  käsittelyvirhe."
+
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (let [body (if (:body request)
@@ -220,3 +224,24 @@
     (when integraatioloki
       (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
     vastaus))
+
+(defn kasittele-kutsu-async
+  "Käsittelee asynkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
+  lähetetty data  on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
+  tuleva data validoidaan käyttäen annettuja JSON-skeemoja.
+
+  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
+  käsittelyvirhe."
+
+  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+
+  (with-channel request channel
+    (go
+      (let [vastaus (<! (thread (kasittele-kutsu db
+                                                 integraatioloki
+                                                 resurssi
+                                                 request
+                                                 kutsun-skeema
+                                                 vastauksen-skeema
+                                                 kasittele-kutsu-fn)))]
+        (send! channel vastaus)))))
