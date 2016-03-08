@@ -24,73 +24,70 @@
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                               korosta-rivit oikealle-tasattavat-kentat] :as optiot} sarakkeet data]]
-  (try
-    (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-      [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko} otsikko
-       [:fo:table {:border "solid 0.2mm black"}
-        (for [{:keys [otsikko leveys]} sarakkeet]
-          [:fo:table-column {:column-width leveys}])
-        [:fo:table-header
-         [:fo:table-row
-          (for [otsikko (map :otsikko sarakkeet)]
-            [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
-             [:fo:block otsikko]])]]
-        (let [rivien-maara (count data)
-              viimeinen-rivi (last data)
-              data (if (> (count data) +max-rivimaara+)
-                     (vec (concat (take +max-rivimaara+ data)
-                                  (when viimeinen-rivi-yhteenveto?
-                                    [viimeinen-rivi])))
-                     data)
-              oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
-          [:fo:table-body
-           (when (empty? data)
+  (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
+    [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko} otsikko
+     [:fo:table {:border "solid 0.2mm black"}
+      (for [{:keys [otsikko leveys]} sarakkeet]
+        [:fo:table-column {:column-width leveys}])
+      [:fo:table-header
+       [:fo:table-row
+        (for [otsikko (map :otsikko sarakkeet)]
+          [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
+           [:fo:block otsikko]])]]
+      (let [rivien-maara (count data)
+            viimeinen-rivi (last data)
+            data (if (> (count data) +max-rivimaara+)
+                   (vec (concat (take +max-rivimaara+ data)
+                                (when viimeinen-rivi-yhteenveto?
+                                  [viimeinen-rivi])))
+                   data)
+            oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+        [:fo:table-body
+         (when (empty? data)
+           [:fo:table-row
+            [:fo:table-cell {:padding                "1mm"
+                             :number-columns-spanned (count sarakkeet)}
+             [:fo:block {:space-after "0.5em"}]
+             [:fo:block "Ei tietoja"]]])
+         (for [i-rivi (range (count data))
+               :let [rivi (or (nth data i-rivi) "")]]
+           (if-let [otsikko (:otsikko rivi)]
+             [:fo:table-row
+              [:fo:table-cell {:padding                "1mm"
+                               :font-weight            "bold"
+                               :background-color       "#e1e1e1"
+                               :number-columns-spanned (count sarakkeet)}
+               [:fo:block {:space-after "0.5em"}]
+               [:fo:block otsikko]]]
+             (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
+                                          (= viimeinen-rivi rivi))
+                                 {:border      "solid 0.3mm black"
+                                  :font-weight "bold"})
+                   korosta? (when (some #(= i-rivi %) korosta-rivit)
+                              {:background-color       "#919191"
+                               :color "white"})]
                [:fo:table-row
-                [:fo:table-cell {:padding                "1mm"
-                                 :number-columns-spanned (count sarakkeet)}
-                 [:fo:block {:space-after "0.5em"}]
-                 [:fo:block "Ei tietoja"]]])
-           (for [i-rivi (range (count data))
-                 :let [rivi (or (nth data i-rivi) "")]]
-             (if-let [otsikko (:otsikko rivi)]
-               [:fo:table-row
-                [:fo:table-cell {:padding                "1mm"
-                                 :font-weight            "bold"
-                                 :background-color       "#e1e1e1"
-                                 :number-columns-spanned (count sarakkeet)}
-                 [:fo:block {:space-after "0.5em"}]
-                 [:fo:block otsikko]]]
-               (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
-                                            (= viimeinen-rivi rivi))
-                                   {:border      "solid 0.3mm black"
-                                    :font-weight "bold"})
-                     korosta? (when (some #(= i-rivi %) korosta-rivit)
-                                {:background-color       "#919191"
-                                 :color "white"})]
-                 [:fo:table-row
-                  (for [i (range (count sarakkeet))
-                        :let [arvo (or (nth rivi i) "")]]
-                    [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"
-                                            :text-align (if (oikealle-tasattavat-kentat i)
-                                                          "right"
-                                                          "left")}
-                                           yhteenveto?
-                                           korosta?)
-                     (when korosta?
-                       [:fo:block {:space-after "0.2em"}])
-                     [:fo:block (str arvo)]])])))
-           (when (> rivien-maara +max-rivimaara+)
-               [:fo:table-row
-                [:fo:table-cell {:padding "1mm"
-                                 :number-columns-spanned (count sarakkeet)}
-                 [:fo:block {:space-after "0.5em"}]
-                 [:fo:block (str "Taulukossa näytetään vain ensimmäiset " +max-rivimaara+ " rivia. "
-                                 "Tarkenna hakuehtoa. "
-                                 (when viimeinen-rivi-yhteenveto?
-                                   "Yhteenveto on laskettu kaikista riveistä"))]]])])]
-       [:fo:block {:space-after "1em"}]])
-    (catch Exception e
-      (log/info "POIKKEUS: " e))))
+                (for [i (range (count sarakkeet))
+                      :let [arvo (or (nth rivi i) "")]]
+                  [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"
+                                          :text-align (if (oikealle-tasattavat-kentat i)
+                                                        "right"
+                                                        "left")}
+                                         yhteenveto?
+                                         korosta?)
+                   (when korosta?
+                     [:fo:block {:space-after "0.2em"}])
+                   [:fo:block (str arvo)]])])))
+         (when (> rivien-maara +max-rivimaara+)
+           [:fo:table-row
+            [:fo:table-cell {:padding "1mm"
+                             :number-columns-spanned (count sarakkeet)}
+             [:fo:block {:space-after "0.5em"}]
+             [:fo:block (str "Taulukossa näytetään vain ensimmäiset " +max-rivimaara+ " rivia. "
+                             "Tarkenna hakuehtoa. "
+                             (when viimeinen-rivi-yhteenveto?
+                               "Yhteenveto on laskettu kaikista riveistä"))]]])])]
+     [:fo:block {:space-after "1em"}]]))
 
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]

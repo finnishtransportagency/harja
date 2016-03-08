@@ -10,11 +10,11 @@
   (let [ff (#'pdf-vienti/luo-fop-factory)
         out (java.io.ByteArrayOutputStream.)]
     (is (thrown? javax.xml.transform.TransformerException
-                 (.write out
-                         (#'pdf-vienti/hiccup->pdf
-                          ff
-                          (fo/dokumentti
-                           [:fo:ASDASD {:font-family "Helvetica" :font-size "14pt"} "Jotain tekstiä tänne"])))))))
+                 (#'pdf-vienti/hiccup->pdf
+                  ff
+                  (fo/dokumentti
+                   [:fo:ASDASD {:font-family "Helvetica" :font-size "14pt"} "Jotain tekstiä tänne"])
+                  out)))))
 
 (deftest testipdf-generoituu-oikein
   (let [ff (#'pdf-vienti/luo-fop-factory)
