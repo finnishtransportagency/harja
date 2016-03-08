@@ -9,6 +9,7 @@
             [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
@@ -146,7 +147,7 @@
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-arvolistaus-popup (str/capitalize (name (:tyyppi tapahtuma)))
+                       (tee-arvolistaus-popup (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tapahtuma))
                                               [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
                                                ["Mittaaja" (:mittaaja tapahtuma)]])))
 
