@@ -61,7 +61,7 @@
                             :sahkoposti-ulos-jono ""
                             :sahkoposti-ulos-kuittausjono ""}}
 
- :tierekisteri         {:url "http://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
+ :tierekisteri         {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
 
  :integraatiot         {:paivittainen-lokin-puhdistusaika nil}
 
