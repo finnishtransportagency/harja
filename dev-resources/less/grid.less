@@ -51,9 +51,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     font-size: @fontin-koko-taulukko;
     td {
       input:not([type="checkbox"]), select {
-        height: 100%;
         width: 100%;
         z-index: 10;
+        height: @livitaulukon-input-korkeus;
       }
       .kombo {
         width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
