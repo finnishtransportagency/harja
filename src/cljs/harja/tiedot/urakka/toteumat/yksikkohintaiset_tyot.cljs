@@ -64,13 +64,14 @@
   (reaction
    (let [assosioi (fn [rivit rivin-avain haettava-avain]
                     (assosioi rivit rivin-avain haettava-avain @u/valittu-sopimusnumero @u/valittu-hoitokausi @u/urakan-yks-hint-tyot))]
-     (-> @yks-hint-tehtavien-summat
+     (when @yks-hint-tehtavien-summat
+       (-> @yks-hint-tehtavien-summat
          (assosioi :yksikkohinta :yksikkohinta)
          (assosioi :hoitokauden-suunniteltu-maara :maara)
          (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
          (assosioi :yksikko :yksikko)
          (laske-toteutuneet-kustannukset)
-         (laske-erotus)))))
+         (laske-erotus))))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
