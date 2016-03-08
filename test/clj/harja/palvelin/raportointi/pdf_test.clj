@@ -161,10 +161,7 @@
   (let [fo (muodosta-pdf +testiraportti+)
         ff (#'pdf-vienti/luo-fop-factory)]
     (with-open [out (java.io.ByteArrayOutputStream.)]
-      (.write out
-              (#'pdf-vienti/hiccup->pdf
-               ff
-               fo))
+      (#'pdf-vienti/hiccup->pdf ff fo out)
       (.toByteArray out))))
 
 (deftest luo-raportti-pdf
