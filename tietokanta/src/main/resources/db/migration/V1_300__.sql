@@ -1,0 +1,1 @@
+ALTER TABLE erilliskustannus ALTER COLUMN urakka SET NOT NULL;
