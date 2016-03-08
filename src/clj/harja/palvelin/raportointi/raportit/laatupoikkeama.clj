@@ -74,11 +74,11 @@
                             {:liite :liitteet})
         nayta-pylvaat? (= laatupoikkeamatekija :kaikki)
         laatupoikkeamat-kuukausittain (when nayta-pylvaat?
-                                        (yleinen/rivit-kuukausipylvaille-arvoa-laskien
+                                        (yleinen/rivit-kuukausipylvaille-kentan-eri-arvojen-maaraa-laskien
                                         laatupoikkeamarivit
                                         :aika
                                         :tekija
-                                        ["urakoitsija" "tilaaja"]))
+                                        ["urakoitsija" "tilaaja" "konsultti"]))
         raportin-nimi "Laatupoikkeamaraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -112,7 +112,7 @@
                                          :loppupvm             loppupvm
                                          :kuukausittainen-data laatupoikkeamat-kuukausittain
                                          :piilota-arvo?        #{0}
-                                         :legend               ["Urakoitsija" "Tilaaja"]})
+                                         :legend               ["Urakoitsija" "Tilaaja" "Konsultti"]})
          (yleinen/ei-osumia-aikavalilla-teksti "laatupoikkeamia"
                                                alkupvm
                                                loppupvm)))]))
