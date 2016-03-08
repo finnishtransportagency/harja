@@ -7,6 +7,7 @@
             [harja.ui.yleiset :refer [ajax-loader linkki alasveto-ei-loydoksia livi-pudotusvalikko]]
 
             [harja.loki :refer [log]]
+            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakoitsijat :as urakoitsijat]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
@@ -21,8 +22,8 @@
                                     {:text-decoration "none"
                                      :color           "#323232"})
                         :on-click #(do
-                                    (.preventDefault %)
-                                    (nav/valitse-hallintayksikko nil))}
+                                     (.preventDefault %)
+                                     (nav/valitse-hallintayksikko nil))}
     "Koko maa"]])
 
 (defn hallintayksikko [valinta-auki]
@@ -34,8 +35,8 @@
        (if (or (not (nil? vu)) (= va :hallintayksikko))
          [:a.murupolkuteksti {:href     "#"
                               :on-click #(do
-                                          (.preventDefault %)
-                                          (nav/valitse-hallintayksikko valittu))}
+                                           (.preventDefault %)
+                                           (nav/valitse-hallintayksikko valittu))}
           (str (or (:nimi valittu) "- Hallintayksikkö -") " ")]
 
          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
@@ -117,12 +118,6 @@
                          :disabled   (boolean @nav/valittu-urakka)}
     nav/+urakkatyypit+]])
 
-(def murupolku-muoto (atom :perus))
-(defn aseta-murupolku-muotoon [muoto]
-  (reset! murupolku-muoto muoto))
-(defn aseta-murupolku-perusmuotoon []
-  (reset! murupolku-muoto :perus))
-
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
@@ -143,38 +138,28 @@
                               (t/julkaise! {:aihe :murupolku-muuttunut}))}
      (fn []
        (let [ur @nav/valittu-urakka
-             ei-urakkaa? (nil? ur)]
+             ei-urakkaa? (nil? ur)
+             urakoitsija? (-> @istunto/kayttaja
+                              :organisaatio
+                              :tyyppi
+                              (= :urakoitsija))]
          [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                           (cond
                             (= sivu :hallinta) "hide"
                             (= sivu :about) "hide"
                             :default ""))}
-          (case @murupolku-muoto
-            :tilannekuva [:ol.murupolku
-                          [:div.col-sm-8.murupolku-vasen
-                           [koko-maa]
-                           [hallintayksikko valinta-auki]
-                           (when ei-urakkaa?
-                             [urakkatyyppi-murupolussa])
-                           [urakka valinta-auki]]
-                          (when ei-urakkaa?
-                            [:div.col-sm-4.murupolku-oikea
-                             [urakoitsija]])]
-            ;; Perusversio
-            (if (or ei-urakkaa? (= sivu :raportit))
-              [:ol.murupolku
-               [:div.col-sm-6.murupolku-vasen
-                [koko-maa]
-                [hallintayksikko valinta-auki]
-                [urakka valinta-auki]]
-               [:div.col-sm-6.murupolku-oikea
-                [urakoitsija]
-                [urakkatyyppi]]]
-              [:ol.murupolku
-               [:div.col-sm-12.murupolku-vasen
-                [koko-maa]
-                [hallintayksikko valinta-auki]
-                [urakka valinta-auki]]]))])))))
-
-
-
+          (if (or ei-urakkaa? (= sivu :raportit))
+            [:ol.murupolku
+             [:div.col-sm-6.murupolku-vasen
+              [koko-maa]
+              [hallintayksikko valinta-auki]
+              [urakka valinta-auki]]
+             [:div.col-sm-6.murupolku-oikea
+              (when-not urakoitsija?
+                [urakoitsija])
+              [urakkatyyppi]]]
+            [:ol.murupolku
+             [:div.col-sm-12.murupolku-vasen
+              [koko-maa]
+              [hallintayksikko valinta-auki]
+              [urakka valinta-auki]]])])))))
