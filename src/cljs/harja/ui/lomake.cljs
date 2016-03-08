@@ -54,11 +54,16 @@ ja kaikki pakolliset kentät on täytetty"
   (and (not (virheita? data))
        (not (pakollisia-kenttia-puuttuu? data))))
 
-(defn voi-tallentaa?
-  "Tarkista onko lomakkeen tallennus sallittu"
+(defn voi-tallentaa-ja-muokattu?
+  "Tarkista voiko lomakkeen tallentaa ja onko sitä muokattu"
   [data]
   (and (muokattu? data)
        (validi? data)))
+
+(defn voi-tallentaa?
+  "Tarkista onko lomakkeen tallennus sallittu"
+  [data]
+  (validi? data))
 
 (defn ilman-lomaketietoja
   "Palauttaa lomakkeen datan ilman lomakkeen ohjaustietoja"
