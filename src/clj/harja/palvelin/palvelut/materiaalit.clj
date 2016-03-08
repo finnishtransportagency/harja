@@ -240,6 +240,14 @@
               (poista-toteuma-materiaali! db (:id user) toteuma))
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
+              (toteumat/paivita-toteuma! db
+                                         (:alkanut toteuma) (:paattynyt toteuma)
+                                         (:id user)
+                                         (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma)
+                                         (:lisatieto toteuma)
+                                         (:reitti toteuma)
+                                         (:tid toteuma)
+                                         urakka-id)
               (toteumat/paivita-toteuma-materiaali!
                db (:id (:materiaali toteuma))
                (:maara toteuma) (:id user)

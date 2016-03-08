@@ -309,7 +309,7 @@ FROM (WITH paivat AS (
       FROM toteuma_materiaali tm
         JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-        JOIN kayttaja k ON tm.luoja = k.id
+        LEFT JOIN kayttaja k ON tm.luoja = k.id
       WHERE t.urakka = :urakka
             AND tm.poistettu IS NOT TRUE
             AND k.jarjestelma IS NOT TRUE
