@@ -42,8 +42,7 @@
                            (let [suunniteltu-maara (:suunniteltu_maara (first tehtavat))
                                  maara-yhteensa (reduce + (keep :toteutunut_maara tehtavat))
                                  toteumaprosentti (if suunniteltu-maara
-                                                    (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100))
-                                                    "-")
+                                                    (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100)))
                                  kuukausittaiset-summat (reduce
                                                           (fn [map tehtava]
                                                             (assoc map
