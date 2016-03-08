@@ -16,6 +16,7 @@
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
+            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.domain.roolit :as roolit]
@@ -223,10 +224,9 @@
                        (reset! arvo {:laatupoikkeamatekija %}))
       :format-fn  #(case %
                     :kaikki "Kaikki"
-                    :urakoitsija "Urakoitsija"
-                    :tilaaja "Tilaaja")}
+                    (laatupoikkeamat/kuvaile-tekija %))}
 
-     [:kaikki :urakoitsija :tilaaja]]))
+     [:kaikki :urakoitsija :tilaaja :konsultti]]))
 
 (def tyomaakokousraportit
   {"Laskutusyhteenveto" :laskutusyhteenveto

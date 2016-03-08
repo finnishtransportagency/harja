@@ -11,7 +11,8 @@
             [hiccup.core :refer [html]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.codec :as codec]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [ring.util.io :refer [piped-input-stream]])
   (:import javax.xml.transform.sax.SAXResult
            javax.xml.transform.stream.StreamSource
            javax.xml.transform.TransformerFactory
@@ -38,12 +39,12 @@
   (stop [{http :http-palvelin :as this}]
     (log/info "PDF-vientikomponentti lopetettu")
     (poista-palvelu http :pdf))
-  
+
   PdfKasittelijat
   (rekisteroi-pdf-kasittelija! [_ nimi kasittely-fn]
     (log/info "Rekisteröidään PDF käsittelijä: " nimi)
     (swap! pdf-kasittelijat assoc nimi kasittely-fn))
-  
+
   (poista-pdf-kasittelija! [_ nimi]
     (log/info "Poistetaan PDF käsittelijä: " nimi)
     (swap! pdf-kasittelijat dissoc nimi)))
@@ -61,14 +62,12 @@
 (defn luo-pdf-vienti []
   (->PdfVienti (atom {}) (luo-fop-factory)))
 
-(defn- hiccup->pdf [fop-factory hiccup]
-  (with-open [out (java.io.ByteArrayOutputStream.)]
-    (let [fop (.newFop fop-factory MimeConstants/MIME_PDF out)
-          xform (.newTransformer (TransformerFactory/newInstance))
-          src (StreamSource. (java.io.StringReader. (html hiccup)))
-          res (SAXResult. (.getDefaultHandler fop))]
-      (.transform xform src res)
-      (.toByteArray out))))
+(defn- hiccup->pdf [fop-factory hiccup out]
+  (let [fop (.newFop fop-factory MimeConstants/MIME_PDF out)
+        xform (.newTransformer (TransformerFactory/newInstance))
+        src (StreamSource. (java.io.StringReader. (html hiccup)))
+        res (SAXResult. (.getDefaultHandler fop))]
+    (.transform xform src res)))
 
 
 ;; Jostain syystä wrap-params ei lue meidän POSTattua formia
@@ -84,7 +83,7 @@
       (ByteArrayInputStream.)
       t/lue-transit))
 
-(defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja body :body 
+(defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja body :body
                                                query-params :params
                                                :as req}]
   (let [tyyppi (keyword (get query-params "_"))
@@ -94,12 +93,15 @@
     (if-not kasittelija
       {:status 404
        :body (str "Tuntematon PDF: " tyyppi)}
-      (do (log/debug "Luodaan " tyyppi " PDF käyttäjälle " (:kayttajanimi kayttaja) " parametreilla " params)
-          (try
-            {:status 200
-             :headers {"Content-Type" "application/pdf"} ;; content-disposition!
-             :body (java.io.ByteArrayInputStream. (hiccup->pdf fop-factory (kasittelija kayttaja params)))}
-            (catch Exception e
-              (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja) 
-              {:status 500
-               :body "Virhe PDF-muodostuksessa"}))))))
+      (try
+        (log/debug "Luodaan " tyyppi " PDF käyttäjälle " (:kayttajanimi kayttaja)
+                   " parametreilla " params)
+        {:status 200
+         :headers {"Content-Type" "application/pdf"} ;; content-disposition!
+         :body (piped-input-stream
+                (fn [out]
+                  (hiccup->pdf fop-factory (kasittelija kayttaja params) out)))}
+        (catch Exception e
+          (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja)
+          {:status 500
+           :body "Virhe PDF-muodostuksessa"})))))

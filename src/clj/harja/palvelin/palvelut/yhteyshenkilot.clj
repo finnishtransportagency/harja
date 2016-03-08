@@ -77,7 +77,7 @@
                                (map #(if-let [org-id (:organisaatio_id %)]
                                       (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
                                                               :id org-id
-                                                              :nimi (:urakoitsija_nimi %)
+                                                              :nimi (:organisaatio_nimi %)
                                                               :lyhenne (:organisaatio_lyhenne %)})
                                       %))
                                ;; Poistetaan kenttiä, joita emme halua frontille välittää

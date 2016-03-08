@@ -8,7 +8,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
 .virhe-tai-varoitus-grid (@taustavari, @vari) {
   background-color: @taustavari;
-  bottom: 2px;
+  bottom: 5px;
   color: @vari;
   padding: 5px;
   position: absolute;
@@ -16,7 +16,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 @livitaulukon-input-korkeus: 22px;
-@livi-taulukon-margin: 1px;
+@livitaulukon-rivi-korkeus: 24px;
 @livi-taulukon-padding: 3px;
 @livi-taulukon-padding-muokatessa: 0;
 
@@ -52,9 +52,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     font-size: @fontin-koko-taulukko;
     td {
       input:not([type="checkbox"]), select {
-        height: @livitaulukon-input-korkeus;
         width: 100%;
         z-index: 10;
+        height: @livitaulukon-input-korkeus;
       }
       .kombo {
         width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
@@ -193,14 +193,13 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
 
   tr.muokataan {
+    height: @livitaulukon-rivi-korkeus;
     padding: @livi-taulukon-padding-muokatessa;
     td {
       &.ei-muokattava {
-        margin: @livi-taulukon-margin 0;
         padding-left: @livi-taulukon-padding;
       }
       &.muokattava > input {
-        margin: @livi-taulukon-margin 0;
         padding: 0 0 0 @livi-taulukon-padding;
       }
       padding: @livi-taulukon-padding-muokatessa;
@@ -268,9 +267,6 @@ tr.otsikko {
 }
 
 .alasveto-gridin-kentta {
-  &.dropdown {
-    height: @livitaulukon-input-korkeus;
-  }
   .livi-alasveto(100%, auto, @livitaulukon-input-korkeus);
   .valittu {
     max-height: 100%; //vähän häkki
