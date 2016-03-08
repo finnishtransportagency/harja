@@ -21,7 +21,7 @@
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
-                :tunniste           hash
+                :tunniste           (comp str (juxt hash :indeksi))
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
@@ -40,8 +40,10 @@
                (map-indexed (fn [index rivi]
                               (if-let [otsikko (:otsikko rivi)]
                                 (grid/otsikko otsikko)
-                                (let [mappina (zipmap (range (count sarakkeet))
-                                                      rivi)]
+                                (let [mappina (assoc
+                                                (zipmap (range (count sarakkeet))
+                                                       rivi)
+                                                :indeksi index)]
                                   (cond-> mappina
                                           (and viimeinen-rivi-yhteenveto?
                                                (= viimeinen-rivi rivi))

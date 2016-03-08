@@ -703,7 +703,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                        [:td {:colSpan colspan}
                                         [:h5 (:teksti rivi)]]]]
 
-                                     (let [id ((or tunniste :id) rivi)]
+                                     (let [id ((or tunniste :id) rivi)
+                                           _ (log "Luodaan gridille rivi tunnisteella: " (pr-str id))]
                                        [^{:key id}
                                         [naytto-rivi {:ohjaus                    ohjaus
                                                       :vetolaatikot              vetolaatikot
