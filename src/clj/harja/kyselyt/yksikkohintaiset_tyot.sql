@@ -257,6 +257,7 @@ ORDER BY urakka_nimi;
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
 SELECT date_trunc('day', tot.alkanut) as pvm,
   t4.nimi,
+  t4.id as tehtava_id,
   tpi.nimi as toimenpide,
   tt.maara as toteutunut_maara
 FROM toteuma tot
@@ -267,5 +268,5 @@ WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY pvm, t4.nimi, tpi.nimi, tt.maara
+GROUP BY pvm, t4.nimi, tpi.nimi, tt.maara, tehtava_id
 ORDER BY pvm ASC;

@@ -14,7 +14,7 @@
             [harja.domain.roolit :as roolit]))
 
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (let [suunnittelutiedot (yks-hint-tyot/hae-urakan-hoitokauden db urakka-id)
+  (let [suunnittelutiedot (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id)
         toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                                      urakka-id alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)

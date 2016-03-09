@@ -34,7 +34,7 @@
                     (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi)))))))
           syksyrivit)))
 
-(defn hae-urakan-hoitokauden [db urakka-id]
+(defn hae-urakan-hoitokaudet [db urakka-id]
   (yhdista-suunnittelurivit-hoitokausiksi
     (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
@@ -50,5 +50,7 @@
                                                       (= (:tehtava rivi) (:tehtava_id toteuma))))
                                       hoitokaudet))]
         (-> toteuma
+            (assoc :yksikko (:yksikko suunnittelutieto))
+            (assoc :yksikkohinta (:yksikkohinta suunnittelutieto))
             (assoc :suunniteltu_maara (:maara suunnittelutieto)))))
     toteumat))
