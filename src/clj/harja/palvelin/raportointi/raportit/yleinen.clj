@@ -139,3 +139,44 @@
 
 (defn rivi [& asiat]
   (into [] (keep identity asiat)))
+
+(defn yhdista-suunnittelurivit-hoitokausiksi
+  "Ottaa vectorin hoitokausien syksyn ja kevään osuutta kuvaavia rivejä.
+  Yhdistää syksy-kevät parit yhdeksi riviksi, joka kuvaa kokonaista hoitokautta.
+  Palauttaa rivit, jotka voitiin yhdistää."
+  [suunnittelurivit]
+  (let [syksyrivi? (fn [rivi]
+                     (and (= (t/month (c/from-sql-date (:alkupvm rivi))) 9)
+                          (= (t/day (c/from-sql-date (:alkupvm rivi))) 30)))
+        syksyrivit (filter syksyrivi? suunnittelurivit)
+        syksya-vastaava-kevatrivi (fn [syksyrivi]
+                                    (first (filter
+                                             (fn [suunnittelurivi]
+                                               (and (= (t/day (c/from-sql-date (:alkupvm suunnittelurivi))) 31)
+                                                    (= (t/month (c/from-sql-date (:alkupvm suunnittelurivi))) 12)
+                                                    (= (t/year (c/from-sql-date (:alkupvm suunnittelurivi)))
+                                                       (t/year (c/from-sql-date (:alkupvm syksyrivi))))
+                                                    (= (:tehtava syksyrivi) (:tehtava suunnittelurivi))))
+                                             suunnittelurivit)))]
+    (keep (fn [syksyrivi]
+            (let [kevatrivi (syksya-vastaava-kevatrivi syksyrivi)]
+              (when kevatrivi
+                (-> syksyrivi
+                    (assoc :loppupvm (:loppupvm kevatrivi))
+                    (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi)))))))
+          syksyrivit)))
+
+(defn liita-toteumiin-hoitokauden-suunniteltu-maara
+  "Ottaa hoitokauden alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot sisältävät hoitokaudet.
+  Liittää toteumiin niiden suunnittelutiedot, jos sellainen löytyy valitulta hoitokaudelta."
+  [alkupvm loppupvm toteumat hoitokaudet]
+  (map
+    (fn [toteuma]
+      (let [suunnittelutieto (first (filter
+                                      (fn [rivi] (and (pvm/sama-pvm? (c/from-date  alkupvm) (c/from-sql-date (:alkupvm rivi)))
+                                                      (pvm/sama-pvm? (c/from-date loppupvm) (c/from-sql-date (:loppupvm rivi)))
+                                                      (= (:tehtava rivi) (:tehtava_id toteuma))))
+                                      hoitokaudet))]
+        (-> toteuma
+            (assoc :suunniteltu_maara (:maara suunnittelutieto)))))
+    toteumat))

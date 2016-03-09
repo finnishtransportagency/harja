@@ -12,46 +12,13 @@
             [clj-time.coerce :as c]
             [harja.domain.roolit :as roolit]))
 
-(defn- yhdista-suunnittelurivit-hoitokausiksi [suunnittelurivit]
-  (let [syksyrivi? (fn [rivi]
-                     (and (= (t/month (c/from-sql-date (:alkupvm rivi))) 9)
-                          (= (t/day (c/from-sql-date (:alkupvm rivi))) 30)))
-        syksyrivit (filter syksyrivi? suunnittelurivit)
-        syksya-vastaava-kevatrivi (fn [syksyrivi]
-                                    (first (filter
-                                             (fn [suunnittelurivi]
-                                               (and (= (t/day (c/from-sql-date (:alkupvm suunnittelurivi))) 31)
-                                                    (= (t/month (c/from-sql-date (:alkupvm suunnittelurivi))) 12)
-                                                    (= (t/year (c/from-sql-date (:alkupvm suunnittelurivi)))
-                                                       (t/year (c/from-sql-date (:alkupvm syksyrivi))))
-                                                    (= (:tehtava syksyrivi) (:tehtava suunnittelurivi))))
-                                             suunnittelurivit)))]
-    (keep (fn [syksyrivi]
-           (let [kevatrivi (syksya-vastaava-kevatrivi syksyrivi)]
-             (when kevatrivi
-               (-> syksyrivi
-                  (assoc :loppupvm (:loppupvm kevatrivi))
-                  (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi)))))))
-         syksyrivit)))
-
-(defn- liita-toteumiin-hoitokauden-suunniteltu-maara [alkupvm loppupvm toteumat suunnittelutiedot]
-  (map
-    (fn [toteuma]
-      (let [suunnittelutieto (first (filter
-                                      (fn [rivi] (and (= (:alkupvm rivi) alkupvm)
-                                                      (= (:loppupvm rivi) loppupvm)))
-                                      suunnittelutiedot))]
-        (-> toteuma
-            (assoc :suunniteltu_maara (:maara suunnittelutieto))))
-    toteumat)))
-
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (let [suunnittelutiedot (yhdista-suunnittelurivit-hoitokausiksi
+  (let [suunnittelutiedot (yleinen/yhdista-suunnittelurivit-hoitokausiksi
                             (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id))
         toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                                      urakka-id alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)
-        toteumat (liita-toteumiin-hoitokauden-suunniteltu-maara alkupvm loppupvm toteumat suunnittelutiedot)]
+        toteumat (yleinen/liita-toteumiin-hoitokauden-suunniteltu-maara alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
