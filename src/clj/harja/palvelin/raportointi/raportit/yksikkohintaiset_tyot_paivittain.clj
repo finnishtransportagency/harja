@@ -1,6 +1,7 @@
-(ns harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot
+(ns harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain
   (:require [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.yksikkohintaiset-tyot :refer [hae-yksikkohintaiset-tyot-per-paiva]]
+            [harja.kyselyt.yksikkohintaiset-tyot :refer [listaa-urakan-yksikkohintaiset-tyot
+                                                         hae-yksikkohintaiset-tyot-per-paiva]]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -8,6 +9,10 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+
+(defn hae-urakan-hoitokauden [db urakka-id]
+  (yleinen/yhdista-suunnittelurivit-hoitokausiksi
+    (listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
 ;; oulu au 2014 - 2019:
 ;; 1.10.2014-30.9.2015 elokuu 2015 kaikki
