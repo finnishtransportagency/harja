@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.views.ilmoituksen-tiedot :as ilmoituksen-tiedot]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
@@ -13,7 +14,8 @@
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
-            [harja.domain.paallystys.pot :as paallystys-pot]))
+            [harja.domain.paallystys.pot :as paallystys-pot]
+            [harja.ui.modal :as modal]))
 
 (def klikattu-tyokone (atom nil))
 
@@ -104,13 +106,12 @@
       [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
        ["Selite" (:lyhytselite tapahtuma)]
        ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-      {:linkki {:nimi     "Siirry ilmoitusnäkymään"
+      {:linkki {:nimi     "Tarkastele kuittauksia"
                 :on-click #(do
                             (.preventDefault %)
-                            (let [putsaa (fn [asia]
-                                           (dissoc asia :type :alue))]
-                              (nav/vaihda-sivu! :ilmoitukset)
-                              (ilmoitukset/avaa-ilmoitus! (putsaa tapahtuma))))}})))
+                            (modal/nayta!
+                              {:otsikko "Ilmoituksen tiedot"}
+                              (ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
