@@ -143,7 +143,7 @@
 (defn yhdista-suunnittelurivit-hoitokausiksi
   "Ottaa vectorin hoitokausien syksyn ja kevään osuutta kuvaavia rivejä.
   Yhdistää syksy-kevät parit yhdeksi riviksi, joka kuvaa kokonaista hoitokautta.
-  Palauttaa rivit, jotka voitiin yhdistää."
+  Palauttaa ainoastaan ne rivit, jotka voitiin yhdistää."
   [suunnittelurivit]
   (let [syksyrivi? (fn [rivi]
                      (and (= (t/month (c/from-sql-date (:alkupvm rivi))) 9)
@@ -167,8 +167,8 @@
           syksyrivit)))
 
 (defn liita-toteumiin-hoitokauden-suunniteltu-maara
-  "Ottaa hoitokauden alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot sisältävät hoitokaudet.
-  Liittää toteumiin niiden suunnittelutiedot, jos sellainen löytyy valitulta hoitokaudelta."
+  "Ottaa hoitokauden alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot.
+  Liittää toteumiin niiden suunnittelutiedot, jos sellainen löytyy suunnittelutiedoista valitulta hoitokaudelta."
   [alkupvm loppupvm toteumat hoitokaudet]
   (map
     (fn [toteuma]

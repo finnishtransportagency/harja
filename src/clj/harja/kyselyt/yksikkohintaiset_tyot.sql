@@ -257,13 +257,7 @@ ORDER BY urakka_nimi;
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
 SELECT date_trunc('day', tot.alkanut) as pvm,
   t4.nimi,
-  yht.yksikko,
-  yht.yksikkohinta,
-       yht.maara as suunniteltu_maara,
-       SUM(tt.maara) as toteutunut_maara,
-       (yht.maara * yksikkohinta) as suunnitellut_kustannukset,
-       (SUM(tt.maara) * yksikkohinta) as toteutuneet_kustannukset,
-       tpi.nimi as toimenpide
+  tpi.nimi as toimenpide
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
@@ -272,5 +266,5 @@ WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY pvm, t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara, tpi.nimi
+GROUP BY pvm, t4.nimi, tpi.nimi
 ORDER BY pvm ASC;
