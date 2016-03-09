@@ -37,8 +37,9 @@
 (defn- liita-toteumiin-hoitokauden-suunniteltu-maara [toteumat suunnittelutiedot]
   (map
     (fn [toteuma]
-      )
-
+      (let [suunnitelutiedot (first (filter (fn [rivi] (pvm/valissa? (:alkupvm)))suunnittelutiedot))]
+        (-> toteuma
+            (assoc :suunniteltu_maara (:maara suunnittelutiedot))))
     toteumat))
 
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
