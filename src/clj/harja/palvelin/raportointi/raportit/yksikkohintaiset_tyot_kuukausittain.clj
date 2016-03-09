@@ -18,7 +18,7 @@
         toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                                      urakka-id alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)
-        toteumat (yks-hint-tyot/liita-toteumiin-hoitokauden-suunniteltu-maara alkupvm loppupvm toteumat suunnittelutiedot)]
+        toteumat (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]

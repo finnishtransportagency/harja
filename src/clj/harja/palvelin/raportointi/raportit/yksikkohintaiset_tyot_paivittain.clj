@@ -24,20 +24,11 @@
         toteumat (hae-yksikkohintaiset-tyot-per-paiva db
                                                       urakka-id alkupvm loppupvm
                                                       (not (nil? toimenpide-id)) toimenpide-id)
-        toteumat-suunnittelutietoineen (yks-hint-tyot/liita-toteumiin-hoitokauden-suunniteltu-maara
+        naytettavat-rivit (yks-hint-tyot/liita-toteumiin-suunnittelutiedot
                                                    alkupvm
                                                    loppupvm
                                                    toteumat
                                                    suunnittelutiedot)
-        toteumat-kustannustietoineen (map
-                                       (fn [toteuma]
-                                         (-> toteuma
-                                             (assoc :suunnitellut_kustannukset (* (:suunniteltu_maara toteuma)
-                                                                                  (:yksikkohinta toteuma)))
-                                             (assoc :toteutuneet_kustannukset (* (:toteutunut_maara toteuma)
-                                                                                 (:yksikkohinta toteuma)))))
-                                       toteumat-suunnittelutietoineen)
-        naytettavat-rivit toteumat-kustannustietoineen
         raportin-nimi "Yksikköhintaiset työt päivittäin"
         konteksti :urakka
         otsikko (raportin-otsikko

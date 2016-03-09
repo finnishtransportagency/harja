@@ -38,7 +38,7 @@
   (yhdista-suunnittelurivit-hoitokausiksi
     (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
-(defn liita-toteumiin-hoitokauden-suunniteltu-maara
+(defn liita-toteumiin-suunnittelutiedot
   "Ottaa hoitokauden alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot.
   Liittää toteumiin niiden suunnittelutiedot, jos sellainen löytyy suunnittelutiedoista valitulta hoitokaudelta."
   [alkupvm loppupvm toteumat hoitokaudet]
@@ -49,8 +49,14 @@
                                                       (pvm/sama-pvm? (c/from-date loppupvm) (c/from-sql-date (:loppupvm rivi)))
                                                       (= (:tehtava rivi) (:tehtava_id toteuma))))
                                       hoitokaudet))]
-        (-> toteuma
-            (assoc :yksikko (:yksikko suunnittelutieto))
-            (assoc :yksikkohinta (:yksikkohinta suunnittelutieto))
-            (assoc :suunniteltu_maara (:maara suunnittelutieto)))))
+        (if suunnittelutieto
+          (-> toteuma
+              (assoc :yksikko (:yksikko suunnittelutieto))
+              (assoc :yksikkohinta (:yksikkohinta suunnittelutieto))
+              (assoc :suunniteltu_maara (:maara suunnittelutieto))
+              (assoc :suunnitellut_kustannukset (* (:maara suunnittelutieto)
+                                                   (:yksikkohinta suunnittelutieto)))
+              (assoc :toteutuneet_kustannukset (* (:toteutunut_maara toteuma)
+                                                  (:yksikkohinta suunnittelutieto))))
+          toteuma)))
     toteumat))
