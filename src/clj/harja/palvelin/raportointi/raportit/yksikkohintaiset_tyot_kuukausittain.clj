@@ -111,12 +111,13 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti     konteksti
-                                                               :urakka-id     urakka-id
-                                                               :alkupvm       alkupvm
-                                                               :loppupvm      loppupvm
-                                                               :toimenpide-id toimenpide-id
-                                                               :urakoittain?  urakoittain?})
+        kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti          konteksti
+                                                               :urakka-id          urakka-id
+                                                               :hallintayksikko-id hallintayksikko-id
+                                                               :alkupvm            alkupvm
+                                                               :loppupvm           loppupvm
+                                                               :toimenpide-id      toimenpide-id
+                                                               :urakoittain?       urakoittain?})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
         listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
