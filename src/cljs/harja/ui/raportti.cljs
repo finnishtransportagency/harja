@@ -17,11 +17,14 @@
 
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
-                                               korosta-rivit korostustyyli oikealle-tasattavat-kentat]} sarakkeet data]]
+                                               korosta-rivit korostustyyli oikealle-tasattavat-kentat]}
+                                     sarakkeet data]]
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
-                :tunniste           (fn [rivi] (str "raportti_rivi_" (or (:indeksi rivi) (hash rivi))))
+                :tunniste           (fn [rivi] (str "raportti_rivi_"
+                                                    (or (:rivin-indeksi-reagent-avaimena rivi)
+                                                        (hash rivi))))
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
@@ -43,7 +46,7 @@
                                 (let [mappina (assoc
                                                 (zipmap (range (count sarakkeet))
                                                        rivi)
-                                                :indeksi index)]
+                                                :rivin-indeksi-reagent-avaimena index)]
                                   (cond-> mappina
                                           (and viimeinen-rivi-yhteenveto?
                                                (= viimeinen-rivi rivi))
