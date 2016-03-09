@@ -12,10 +12,36 @@
             [clj-time.coerce :as c]
             [harja.domain.roolit :as roolit]))
 
+(defn- yhdista-suunnittelurivit-hoitokausiksi [suunnittelurivit]
+  (let [syksyrivi? (fn [rivi]
+                     (and (= (t/month (c/from-sql-date (:alkupvm rivi))) 9)
+                          (= (t/day (c/from-sql-date (:alkupvm rivi))) 30)))
+        syksyrivit (filter syksyrivi? suunnittelurivit)
+        syksya-vastaava-kevatrivi (fn [syksyrivi]
+                                    (first (filter
+                                             (fn [suunnittelurivi]
+                                               (and (= (t/day (c/from-sql-date (:alkupvm suunnittelurivi))) 31)
+                                                    (= (t/month (c/from-sql-date (:alkupvm suunnittelurivi))) 12)
+                                                    (= (t/year (c/from-sql-date (:alkupvm suunnittelurivi)))
+                                                       (inc (t/year (c/from-sql-date (:alkupvm syksyrivi)))))
+                                                    (= (:tehtava syksyrivi) (:tehtava suunnittelurivi))))
+                                             suunnittelurivit)))]
+    (map (fn [syksyrivi]
+           (let [kevatrivi (syksya-vastaava-kevatrivi syksyrivi)]
+             (println "Kevätrivi: " kevatrivi)
+             (-> syksyrivi
+                 (assoc :loppupvm (:loppupvm kevatrivi))
+                 (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi))))))
+         syksyrivit)))
+
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
-                                                      urakka-id alkupvm loppupvm
-                                                      (not (nil? toimenpide-id)) toimenpide-id))
+  (let [suunnittelutiedot (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)
+        suunnittelutiedot (yhdista-suunnittelurivit-hoitokausiksi suunnittelutiedot)
+        _ (log/debug "Yhdistetyt: " (pr-str suunnittelutiedot))
+        toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
+                                                                     urakka-id alkupvm loppupvm
+                                                                     (not (nil? toimenpide-id)) toimenpide-id)]
+    toteumat))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
@@ -80,7 +106,7 @@
         (into #{} (map :nimi kuukausittaiset-summat))))))
 
 (defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id
-                                          urakoittain?]}]
+                                             urakoittain?]}]
   (case konteksti
     :urakka
     (hae-tehtavat-urakalle db
