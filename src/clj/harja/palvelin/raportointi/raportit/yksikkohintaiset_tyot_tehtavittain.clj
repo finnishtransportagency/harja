@@ -7,12 +7,16 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]))
 
 (defn hae-summatut-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
-                                                                urakka-id alkupvm loppupvm
-                                                                (not (nil? toimenpide-id)) toimenpide-id))
+  (let [suunnittelutiedot (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id)
+        toteumat (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
+                                                                     urakka-id alkupvm loppupvm
+                                                                     (not (nil? toimenpide-id)) toimenpide-id)
+        toteumat (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
+    toteumat))
 
 (defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
