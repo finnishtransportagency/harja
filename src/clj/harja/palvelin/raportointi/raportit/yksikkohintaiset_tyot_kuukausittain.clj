@@ -109,6 +109,7 @@
                         :default :koko-maa)
         kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti     konteksti
                                                                :urakka-id     urakka-id
+                                                               :hallintayksikko-id hallintayksikko-id
                                                                :alkupvm       alkupvm
                                                                :loppupvm      loppupvm
                                                                :toimenpide-id toimenpide-id

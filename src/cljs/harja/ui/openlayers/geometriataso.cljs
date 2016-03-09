@@ -1,7 +1,7 @@
 (ns harja.ui.openlayers.geometriataso
   "Geometriataso, joka muodostaa tason vektorista mäppejä."
   (:require [harja.ui.openlayers.featuret :as featuret]
-            [harja.ui.openlayers.taso :refer [Taso]]
+            [harja.ui.openlayers.taso :as taso :refer [Taso]]
             [harja.loki :refer [log]]))
 
 (defn- luo-feature [geom]
@@ -14,11 +14,11 @@
 
 (defn- create-geometry-layer
   "Create a new ol3 Vector layer with a vector source."
-  []
+  [opacity]
   (ol.layer.Vector. #js {:source          (ol.source.Vector.)
                          :rendererOptions {:zIndexing true
                                            :yOrdering true}
-                         :opacity 0.7}))
+                         :opacity opacity}))
 
 (defn aseta-feature-geometria! [feature geometria]
   (.set feature "harja-geometria" geometria))
@@ -36,7 +36,8 @@
   [ol3 geometry-layer geometries-map items]
   (let [create? (nil? geometry-layer)
         geometry-layer (if create?
-                         (doto (create-geometry-layer)
+                         (doto (create-geometry-layer
+                                (taso/opacity items))
                            (.setZIndex (or (:zindex (meta items)) 0)))
                          geometry-layer)
         geometries-map (if create? {} geometries-map)
@@ -83,6 +84,8 @@
              {:zindex z-index})))
   (extent [this]
     (-> this meta :extent))
+  (opacity [this]
+    (or (-> this meta :opacity) 1))
   (selitteet [this]
     (-> this meta :selitteet))
   (paivita [items ol3 ol-layer aiempi-paivitystieto]

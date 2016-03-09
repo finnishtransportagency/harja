@@ -142,6 +142,12 @@
    (when taso
      (taso/aseta-z-index taso z-index))))
 
+;; Asettaaa läpinäkyvyyden geometriatasolle
+(defn- aseta-opacity [taso opacity]
+  (with-meta taso
+    (merge (meta taso)
+           {:opacity opacity})))
+
 (declare tasojen-nakyvyys-atomit)
 
 (def geometrioiden-atomit
@@ -172,7 +178,12 @@
 (def geometriat-kartalle
   (reaction
     (merge
-      {:organisaatio (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :organisaatio) @(tasojen-nakyvyys-atomit :organisaatio) (kartan-asioiden-z-indeksit :urakka))
+     {:organisaatio
+      (aseta-opacity
+       (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :organisaatio)
+                                        @(tasojen-nakyvyys-atomit :organisaatio)
+                                        (kartan-asioiden-z-indeksit :urakka))
+       0.7)
        :pohjavesi (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :pohjavesi) @(tasojen-nakyvyys-atomit :pohjavesi) (kartan-asioiden-z-indeksit :pohjavesialueet))
        :sillat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :sillat) @(tasojen-nakyvyys-atomit :sillat) (kartan-asioiden-z-indeksit :sillat))
        :tarkastukset (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :tarkastukset) @(tasojen-nakyvyys-atomit :tarkastukset))

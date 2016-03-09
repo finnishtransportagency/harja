@@ -7,6 +7,8 @@
   (aseta-z-index [this z-index]
                  "Palauttaa uuden version tasosta, jossa zindex on asetettu")
   (extent [this] "Palauttaa tason geometrioiden extentin [minx miny maxx maxy]")
+  (opacity [this]
+           "Palauttaa tason opacityn 0 (täysin läpinäkyvä) - 1 välillä (ei läpinäkyvä lainkaan)")
   (selitteet [this] "Palauttaa tällä tasolla olevien asioiden selitteet")
   (paivita
    [this ol3 ol-layer aiempi-paivitystieto]
