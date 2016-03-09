@@ -5,6 +5,7 @@
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
@@ -13,12 +14,11 @@
             [harja.domain.roolit :as roolit]))
 
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (let [suunnittelutiedot (yleinen/yhdista-suunnittelurivit-hoitokausiksi
-                            (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id))
+  (let [suunnittelutiedot (yks-hint-tyot/hae-urakan-hoitokauden db urakka-id)
         toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                                      urakka-id alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)
-        toteumat (yleinen/liita-toteumiin-hoitokauden-suunniteltu-maara alkupvm loppupvm toteumat suunnittelutiedot)]
+        toteumat (yks-hint-tyot/liita-toteumiin-hoitokauden-suunniteltu-maara alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]

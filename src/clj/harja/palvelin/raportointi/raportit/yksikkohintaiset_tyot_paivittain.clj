@@ -10,10 +10,6 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
-(defn hae-urakan-hoitokauden [db urakka-id]
-  (yleinen/yhdista-suunnittelurivit-hoitokausiksi
-    (listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
-
 ;; oulu au 2014 - 2019:
 ;; 1.10.2014-30.9.2015 elokuu 2015 kaikki
 ;;
