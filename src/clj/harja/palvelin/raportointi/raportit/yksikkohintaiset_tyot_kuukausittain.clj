@@ -23,24 +23,31 @@
                                                (and (= (t/day (c/from-sql-date (:alkupvm suunnittelurivi))) 31)
                                                     (= (t/month (c/from-sql-date (:alkupvm suunnittelurivi))) 12)
                                                     (= (t/year (c/from-sql-date (:alkupvm suunnittelurivi)))
-                                                       (inc (t/year (c/from-sql-date (:alkupvm syksyrivi)))))
+                                                       (t/year (c/from-sql-date (:alkupvm syksyrivi))))
                                                     (= (:tehtava syksyrivi) (:tehtava suunnittelurivi))))
                                              suunnittelurivit)))]
-    (map (fn [syksyrivi]
+    (keep (fn [syksyrivi]
            (let [kevatrivi (syksya-vastaava-kevatrivi syksyrivi)]
-             (println "Kevätrivi: " kevatrivi)
-             (-> syksyrivi
-                 (assoc :loppupvm (:loppupvm kevatrivi))
-                 (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi))))))
+             (when kevatrivi
+               (-> syksyrivi
+                  (assoc :loppupvm (:loppupvm kevatrivi))
+                  (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi)))))))
          syksyrivit)))
 
+(defn- liita-toteumiin-hoitokauden-suunniteltu-maara [toteumat suunnittelutiedot]
+  (map
+    (fn [toteuma]
+      )
+
+    toteumat))
+
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (let [suunnittelutiedot (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)
-        suunnittelutiedot (yhdista-suunnittelurivit-hoitokausiksi suunnittelutiedot)
-        _ (log/debug "Yhdistetyt: " (pr-str suunnittelutiedot))
+  (let [suunnittelutiedot (yhdista-suunnittelurivit-hoitokausiksi
+                            (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id))
         toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                                      urakka-id alkupvm loppupvm
-                                                                     (not (nil? toimenpide-id)) toimenpide-id)]
+                                                                     (not (nil? toimenpide-id)) toimenpide-id)
+        toteumat (liita-toteumiin-hoitokauden-suunniteltu-maara toteumat)]
     toteumat))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
