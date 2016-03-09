@@ -47,9 +47,9 @@
                                           #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
                                           (vals @raporttityypit))]
               (sort-by :kuvaus
-                       (into []
-                             (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                             urakkatyypin-raportit)))))
+                         (into []
+                               (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                               urakkatyypin-raportit)))))
 
 (add-watch mahdolliset-raporttityypit :konteksti-muuttui
            (fn [_ _ old new]
@@ -402,14 +402,18 @@
                         (:nimi v-ur))
              "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
                                  (:nimi v-hal))
-             "Raportti" (if-not (empty? @mahdolliset-raporttityypit)
+             "Raportti" (cond
+                          (nil? @raporttityypit)
+                          [:span "Raportteja haetaan..."]
+                          (empty? @mahdolliset-raporttityypit)
+                          [:span (str "Ei raportteja saatavilla urakkatyypissä " (str/lower-case (:nimi v-ur-tyyppi)))]
+                          :default
                           [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn  #(if % (:kuvaus %) "Valitse")
                                                 :valitse-fn #(reset! valittu-raporttityyppi %)
                                                 :class      "valitse-raportti-alasveto"}
-                           @mahdolliset-raporttityypit]
-                          [:span (str "Ei raportteja saatavilla urakkatyypissä " (str/lower-case (:nimi v-ur-tyyppi)))])]])
+                           @mahdolliset-raporttityypit])]])
          
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset

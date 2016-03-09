@@ -2,22 +2,18 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            targetNamespace="http://www.solita.fi/harja/tierekisteri/haeTietue"
            xmlns:ns1="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tunniste"
            version="1.0">
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
                schemaLocation="tietolajitunniste.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tunniste"
+               schemaLocation="tunniste.xsd"/>
 
     <xs:element name="haeTietue">
         <xs:complexType>
             <xs:sequence>
-                <xs:element minOccurs="1" maxOccurs="1" name="tunniste">
-                    <xs:simpleType>
-                        <xs:restriction base="xs:string">
-                            <xs:minLength value="0"/>
-                            <xs:maxLength value="20"/>
-                        </xs:restriction>
-                    </xs:simpleType>
-                </xs:element>
+                <xs:element minOccurs="1" maxOccurs="1" name="tunniste" type="ns2:tunniste"/>
                 <xs:element minOccurs="1" maxOccurs="1" name="tietolajitunniste" type="ns1:tietolajitunniste"/>
             </xs:sequence>
         </xs:complexType>
