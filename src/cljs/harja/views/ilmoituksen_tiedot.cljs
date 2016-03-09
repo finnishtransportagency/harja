@@ -48,5 +48,5 @@
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div
-        (for [kuittaus (sort-by (:kuittaukset ilmoitus))]
+        (for [kuittaus (sort-by :kuitattu pvm/jalkeen? (:kuittaukset ilmoitus))]
           (kuittaukset/kuittauksen-tiedot kuittaus))])]]]))

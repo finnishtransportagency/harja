@@ -7,7 +7,7 @@
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                                  +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
                                                  +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-                                                 kuittaustyypin-selite]]
+                                                 kuittaustyypin-selite nayta-tierekisteriosoite]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
