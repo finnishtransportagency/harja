@@ -21,7 +21,7 @@
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
-                :tunniste           (comp str (juxt hash :indeksi))
+                :tunniste           (fn [rivi] (str "raportti_rivi_" (or (:indeksi rivi) (hash rivi))))
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
