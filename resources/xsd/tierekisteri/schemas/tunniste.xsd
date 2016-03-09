@@ -4,7 +4,7 @@
 
     <xs:simpleType name="tunniste">
         <xs:restriction base="xs:string">
-            <xs:pattern value="\w*\d+"/>
+            <xs:pattern value="[\w\d]+"/>
             <xs:minLength value="0"/>
             <xs:maxLength value="20"/>
         </xs:restriction>
