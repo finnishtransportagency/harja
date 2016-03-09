@@ -36,6 +36,7 @@
     (assoc this :z-index z-index))
   (extent [this]
     extent)
+  (opacity [this] 1)
   (selitteet [this]
     selitteet)
   (paivita [this ol3 ol-layer aiempi-paivitystieto]
