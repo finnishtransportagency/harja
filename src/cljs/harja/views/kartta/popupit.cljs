@@ -110,7 +110,8 @@
                 :on-click #(do
                             (.preventDefault %)
                             (modal/nayta!
-                              {:otsikko "Ilmoituksen tiedot"}
+                              {:otsikko "Ilmoituksen tiedot"
+                               :leveys "1000px"}
                               (ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
