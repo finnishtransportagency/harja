@@ -74,7 +74,7 @@ SELECT date_trunc('day', tot.alkanut) as pvm,
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
-  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
+  LEFT JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
                                     yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
   JOIN toimenpideinstanssi tpi ON (tpi.toimenpide = t4.emo AND tpi.urakka = :urakka)
  WHERE tot.urakka = :urakka
@@ -99,7 +99,7 @@ SELECT
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
-  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
+  LEFT JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
                                     yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
@@ -200,7 +200,7 @@ SELECT
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
-  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava AND yht.urakka = tot.urakka AND
+  LEFT JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava AND yht.urakka = tot.urakka AND
                                     yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
