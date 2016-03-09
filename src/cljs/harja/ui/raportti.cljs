@@ -23,7 +23,7 @@
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"
-                                                    (or (:rivin-indeksi-reagent-avaimena rivi)
+                                                    (or (::rivin-indeksi rivi)
                                                         (hash rivi))))
                 :piilota-toiminnot? true}
      (into []
@@ -46,7 +46,7 @@
                                 (let [mappina (assoc
                                                 (zipmap (range (count sarakkeet))
                                                        rivi)
-                                                :rivin-indeksi-reagent-avaimena index)]
+                                                ::rivin-indeksi index)]
                                   (cond-> mappina
                                           (and viimeinen-rivi-yhteenveto?
                                                (= viimeinen-rivi rivi))
