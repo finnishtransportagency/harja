@@ -25,18 +25,12 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
+            [harja.views.ilmoituksen-tiedot :as it]
             [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn pollauksen-merkki []
   [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
-
-
-(defn nayta-tierekisteriosoite
-  [tr]
-  (if (and tr (:numero tr))
-    (str "Tie " (:numero tr) " / " (:alkuosa tr) " / " (:alkuetaisyys tr) " / " (:loppuosa tr) " / " (:loppuetaisyys tr))
-    (str "Ei tierekisteriosoitetta")))
 
 (defn ilmoituksen-tiedot []
   (let [ilmoitus @tiedot/valittu-ilmoitus]
@@ -44,46 +38,12 @@
      [:span
       [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus!)]
       (pollauksen-merkki)
-      [bs/panel {}
-       (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
-       [:span
-        [yleiset/tietoja {}
-         "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-         "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
-         "Otsikko: " (:otsikko ilmoitus)
-         "Lyhyt selite: " (:lyhytselite ilmoitus)
-         "Pitkä selite: " (when (:pitkaselite ilmoitus)
-                            [yleiset/pitka-teksti (:pitkaselite ilmoitus)])
-         "Selitteet: " (parsi-selitteet (:selitteet ilmoitus))]
-
-        [:br]
-        [yleiset/tietoja {}
-         "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
-                             tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
-                         (if (and henkilo tyyppi)
-                           (str henkilo ", " tyyppi)
-                           (str (or henkilo tyyppi))))
-         "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
-         "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
-
-        [:br]
-        [yleiset/tietoja {}
-         "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
-         "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
-         "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
-
-      [:div.kuittaukset
-       [:h3 "Kuittaukset"]
-       [:div
-        (if @tiedot/uusi-kuittaus-auki?
-          [kuittaukset/uusi-kuittaus-lomake]
-          [:button.nappi-ensisijainen {:class    "uusi-kuittaus-nappi"
-                                       :on-click #(tiedot/avaa-uusi-kuittaus!)} (ikonit/plus) " Uusi kuittaus"])
-
-        (when-not (empty? (:kuittaukset ilmoitus))
-          [:div
-           (for [kuittaus (:kuittaukset ilmoitus)]
-             (kuittaukset/kuittauksen-tiedot kuittaus))])]]]]))
+      [it/ilmoitus ilmoitus (fn [] (if @tiedot/uusi-kuittaus-auki?
+                                     [kuittaukset/uusi-kuittaus-lomake]
+                                     [:button.nappi-ensisijainen
+                                      {:class    "uusi-kuittaus-nappi"
+                                       :on-click #(tiedot/avaa-uusi-kuittaus!)}
+                                      (ikonit/plus) " Uusi kuittaus"]))]]]))
 
 (defn ilmoitusten-paanakyma
   []
