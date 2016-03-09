@@ -34,13 +34,16 @@
                   (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi)))))))
          syksyrivit)))
 
-(defn- liita-toteumiin-hoitokauden-suunniteltu-maara [toteumat suunnittelutiedot]
+(defn- liita-toteumiin-hoitokauden-suunniteltu-maara [alkupvm loppupvm toteumat suunnittelutiedot]
   (map
     (fn [toteuma]
-      (let [suunnitelutiedot (first (filter (fn [rivi] (pvm/valissa? (:alkupvm)))suunnittelutiedot))]
+      (let [suunnittelutieto (first (filter
+                                      (fn [rivi] (and (= (:alkupvm rivi) alkupvm)
+                                                      (= (:loppupvm rivi) loppupvm)))
+                                      suunnittelutiedot))]
         (-> toteuma
-            (assoc :suunniteltu_maara (:maara suunnittelutiedot))))
-    toteumat))
+            (assoc :suunniteltu_maara (:maara suunnittelutieto))))
+    toteumat)))
 
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
   (let [suunnittelutiedot (yhdista-suunnittelurivit-hoitokausiksi
@@ -48,7 +51,7 @@
         toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                                      urakka-id alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)
-        toteumat (liita-toteumiin-hoitokauden-suunniteltu-maara toteumat)]
+        toteumat (liita-toteumiin-hoitokauden-suunniteltu-maara alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
