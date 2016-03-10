@@ -118,4 +118,4 @@
                                                  ["Yhteensä"])
                                 nil
                                 (fmt/desimaaliluku-opt (reduce + (keep :toteutunut_maara naytettavat-rivit)) 1)])))))]
-     (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus alkupvm loppupvm suunnittelutiedot)]))
+     (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))

@@ -14,13 +14,12 @@
             [clj-time.coerce :as c]
             [harja.domain.roolit :as roolit]))
 
-(defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (let [suunnittelutiedot (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id)
-        toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
+(defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id suunnittelutiedot]}]
+  (let [toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db
                                                                      urakka-id alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)
-        toteumat (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
-    toteumat))
+        toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
+    toteumat-suunnittelutiedoilla))
 
 (defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
@@ -84,15 +83,16 @@
                               kuukausittaiset-summat)))
         (into #{} (map :nimi kuukausittaiset-summat))))))
 
-(defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id
+(defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id hallintayksikko-id suunnittelutiedot alkupvm loppupvm toimenpide-id
                                              urakoittain?]}]
   (case konteksti
     :urakka
     (hae-tehtavat-urakalle db
-                           {:urakka-id     urakka-id
-                            :alkupvm       alkupvm
-                            :loppupvm      loppupvm
-                            :toimenpide-id toimenpide-id})
+                           {:urakka-id         urakka-id
+                            :suunnittelutiedot suunnittelutiedot
+                            :alkupvm           alkupvm
+                            :loppupvm          loppupvm
+                            :toimenpide-id     toimenpide-id})
     :hallintayksikko
     (hae-tehtavat-hallintayksikolle db
                                     {:hallintayksikko-id hallintayksikko-id
@@ -112,15 +112,18 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
+        suunnittelutiedot (when (= :urakka konteksti)
+                            (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id))
         kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti          konteksti
                                                                :urakka-id          urakka-id
                                                                :hallintayksikko-id hallintayksikko-id
+                                                               :suunnittelutiedot suunnittelutiedot
                                                                :alkupvm            alkupvm
                                                                :loppupvm           loppupvm
                                                                :toimenpide-id      toimenpide-id
                                                                :urakoittain?       urakoittain?})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
-        ainakin-yksi-suunniteltu-tehtava? (yks-hint-tyot/ainakin-yksi-suunniteltu-tyo? naytettavat-rivit)
+        aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm suunnittelutiedot)
         listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
                                        (not (t/after?
@@ -155,7 +158,7 @@
                                      listattavat-pvmt)
                                {:leveys 7 :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
                                (when (and (= konteksti :urakka)
-                                          (yks-hint-tyot/ainakin-yksi-suunniteltu-tyo? naytettavat-rivit))
+                                          aikavali-kasittaa-hoitokauden?)
                                  [{:leveys 5 :otsikko "Tot-%"}
                                   {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
       (mapv (fn [rivi]
@@ -170,10 +173,11 @@
                                              listattavat-pvmt)
                                        (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) 0)
                                        (when (and (= konteksti :urakka)
-                                                  ainakin-yksi-suunniteltu-tehtava?)
+                                                  aikavali-kasittaa-hoitokauden?)
                                          [(let [formatoitu (fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1)]
                                             (if-not (str/blank? formatoitu) formatoitu "-"))
                                           (let [formatoitu (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)]
                                             (if-not (str/blank? formatoitu) formatoitu "Ei suunnitelmaa"))])])))
-            naytettavat-rivit)]]))
+            naytettavat-rivit)]
+     (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
 

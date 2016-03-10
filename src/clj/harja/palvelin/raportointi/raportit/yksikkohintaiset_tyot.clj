@@ -68,12 +68,6 @@
           toteuma)))
     toteumat))
 
-(defn ainakin-yksi-suunniteltu-tyo? [toteumat]
-  (some
-    (fn [toteuma]
-      (number? (:suunniteltu_maara toteuma)))
-    toteumat))
-
 (defn aikavali-kasittaa-yhden-hoitokauden? [alkupvm loppupvm hoitokaudet]
   (some
     (fn [hoitokausi]
@@ -88,6 +82,7 @@
     hoitokaudet))
 
 
-(defn suunnitelutietojen-nayttamisilmoitus [alkupvm loppupvm hoitokaudet]
-  (when-not (aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm hoitokaudet)
-    [:teksti "Suunnittelutiedot näytetään vain haettaessa tiedot hoitokaudelta tai sen osalta."]))
+(defn suunnitelutietojen-nayttamisilmoitus [konteksti alkupvm loppupvm hoitokaudet]
+  (when (and (not (aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm hoitokaudet))
+             (= konteksti :urakka))
+    [:teksti "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]))
