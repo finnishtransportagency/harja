@@ -157,17 +157,17 @@
                                   {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
       (mapv (fn [rivi]
               (flatten (keep identity [(when urakoittain?
-                                         (:urakka_nimi rivi))
-                                       (:nimi rivi)
-                                       (:yksikko rivi)
+                                         (or (:urakka_nimi rivi) ""))
+                                       (or (:nimi rivi) "")
+                                       (or (:yksikko rivi) "")
                                        (mapv (fn [pvm]
                                                (or
                                                  (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
                                                  0))
                                              listattavat-pvmt)
-                                       (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1)
+                                       (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) "")
                                        (when (= konteksti :urakka)
-                                         [(fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1)
-                                          (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)])])))
+                                         [(or (fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1) "")
+                                          (or (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1) "")])])))
             naytettavat-rivit)]]))
 

@@ -92,8 +92,8 @@
       (keep identity
             (conj (mapv (fn [rivi]
                           (flatten (keep identity [(when urakoittain?
-                                                     (:urakka_nimi rivi))
-                                                   (:nimi rivi)
+                                                     (or (:urakka_nimi rivi) ""))
+                                                   (or (:nimi rivi) "")
                                                    (or (:yksikko rivi) "")
                                                    (when (= konteksti :urakka)
                                                      [(or (fmt/euro-opt (:yksikkohinta rivi)) "")
