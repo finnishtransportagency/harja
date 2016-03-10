@@ -7,13 +7,13 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id
          FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2005-2010'), 12345, '2005-10-01 10:00:00', '2005-10-01 10:05:13', TRUE,
+         WHERE nimi = 'Oulun alueurakka 2005-2012'), 12345, '2005-10-01 10:00:00', '2005-10-01 10:05:13', TRUE,
         'Soittakaa Sepolle', 'Voisko joku soittaa?', 'Seppo Savela on pulassa ja kaipaa, että joku soittaa hänelle',
         ST_MakePoint(452935, 7186873) :: GEOMETRY, 6, 6, 6, 6, 6, 'kysely' :: ilmoitustyyppi,
         ARRAY ['saveaTiella', 'vettaTiella'] :: ilmoituksenselite [],
         (SELECT tyyppi
          FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2005-2010'),
+         WHERE nimi = 'Oulun alueurakka 2005-2012'),
         'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas' :: ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
 
@@ -80,7 +80,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id
          FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2005-2010'), 12346, '2005-10-10 06:05:32', '2005-10-11 06:06:37', TRUE,
+         WHERE nimi = 'Oulun alueurakka 2005-2012'), 12346, '2005-10-10 06:05:32', '2005-10-11 06:06:37', TRUE,
         'Tiellä 6 on taas vikaa', 'Taas täällä joku mättää!', 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed posuere interdum sem. Quisque ligula eros ullamcorper quis, lacinia quis facilisis sed sapien. Mauris varius diam vitae arcu. Sed arcu lectus auctor vitae, consectetuer et venenatis eget velit. Sed augue orci, lacinia eu tincidunt et eleifend nec lacus. Donec ultricies nisl ut felis, suspendisse potenti. Lorem ipsum ligula ut hendrerit mollis, ipsum erat vehicula risus, eu suscipit sem libero nec erat. Aliquam erat volutpat. Sed congue augue vitae neque. Nulla consectetuer porttitor pede. Fusce purus morbi tortor magna condimentum vel, placerat id blandit sit amet tortor.
 
 Mauris sed libero. Suspendisse facilisis nulla in lacinia laoreet, lorem velit accumsan velit vel mattis libero nisl et sem. Proin interdum maecenas massa turpis sagittis in, interdum non lobortis vitae massa. Quisque purus lectus, posuere eget imperdiet nec sodales id arcu. Vestibulum elit pede dictum eu, viverra non tincidunt eu ligula.
@@ -92,7 +92,7 @@ Vivamus placerat lacus vel vehicula scelerisque, dui enim adipiscing lacus sit a
         ARRAY ['kaivonKansiRikki', 'vettaTiella'] :: ilmoituksenselite [],
         (SELECT tyyppi
          FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2005-2010'),
+         WHERE nimi = 'Oulun alueurakka 2005-2012'),
         'Yrjö', 'Mestari', '0441271234', '0441233424', 'tyonvalvonta@isoveli.com', 'muu' :: ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
 

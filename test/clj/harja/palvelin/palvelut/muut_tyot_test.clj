@@ -57,7 +57,7 @@
                                        (str "SELECT count(*)
                                                        FROM muutoshintainen_tyo
                                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
-                                            ") AND alkupvm >= '2005-10-01' AND loppupvm <= '2010-09-30'")))
+                                            ") AND alkupvm >= '2005-10-01' AND loppupvm <= '2012-09-30'")))
 
         muokattavan-tyon-tehtava (ffirst (q (str "select id from toimenpidekoodi where nimi = 'I rampit'")))
         muokattava-tyo (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) muutoshintaiset-tyot))
