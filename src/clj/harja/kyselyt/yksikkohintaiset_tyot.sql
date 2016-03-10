@@ -255,11 +255,11 @@ ORDER BY urakka_nimi;
 -- name: hae-yksikkohintaiset-tyot-per-paiva
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna päivittäin.
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
-SELECT date_trunc('day', tot.alkanut) as pvm,
+SELECT date_trunc('day', tot.alkanut) AS pvm,
   t4.nimi,
-  t4.id as tehtava_id,
-  tpi.nimi as toimenpide,
-  tt.maara as toteutunut_maara
+  t4.id                          AS tehtava_id,
+  tpi.nimi                       AS toimenpide,
+  SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
@@ -268,5 +268,5 @@ WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY pvm, t4.nimi, tpi.nimi, tt.maara, tehtava_id
+GROUP BY pvm, t4.nimi, tpi.nimi, tehtava_id
 ORDER BY pvm ASC;
