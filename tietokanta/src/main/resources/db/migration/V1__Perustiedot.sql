@@ -27,7 +27,7 @@ CREATE TABLE urakka (
        id serial primary key,       -- sisäinen ID
        tyyppi urakkatyyppi,         -- urakan tyyppi
        sampoId varchar(16),         -- sampon hanke id (FIXME: varmista muoto)
-       nimi varchar(128),           -- urakan nimi (esim. Oulun alueurakka 2005-2012)
+       nimi varchar(128),           -- urakan nimi (esim. Oulun alueurakka 2005-2010)
        alkupvm date,                -- alkamispäivä
        loppupvm date,               -- loppumispäivä
        alue geometry,               -- urakan alue, voi olla tyhjä jos urakkaan (esim ylläpito) on linkitetty kohteet erikseen
