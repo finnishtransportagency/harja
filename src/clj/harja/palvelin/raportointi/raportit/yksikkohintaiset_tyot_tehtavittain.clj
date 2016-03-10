@@ -85,12 +85,12 @@
                                {:leveys 25 :otsikko "Tehtävä"}
                                {:leveys 5 :otsikko "Yks."}
                                (when (= konteksti :urakka)
-                                 [{:leveys 10 :otsikko "Yksikkö\u00adhinta"}
+                                 [{:leveys 10 :otsikko "Yksikkö\u00adhinta €"}
                                   {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}])
                                {:leveys 10 :otsikko "Toteutunut määrä"}
                                (when (= konteksti :urakka)
-                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella"}
-                                  {:leveys 15 :otsikko "Toteutuneet kustannukset"}])]))
+                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella €"}
+                                  {:leveys 15 :otsikko "Toteutuneet kustannukset €"}])]))
       (keep identity
             (conj (mapv (fn [rivi]
                           (flatten (keep identity [(when urakoittain?
@@ -98,22 +98,22 @@
                                                    (or (:nimi rivi) "-")
                                                    (or (:yksikko rivi) "-")
                                                    (when (= konteksti :urakka)
-                                                     [(let [formatoitu (fmt/euro-opt (:yksikkohinta rivi))]
+                                                     [(let [formatoitu (fmt/euro-opt false (:yksikkohinta rivi))]
                                                         (if-not (str/blank? formatoitu) formatoitu "-"))
                                                       (let [formatoitu (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)]
                                                         (if-not (str/blank? formatoitu) formatoitu "Ei suunnitelmaa"))])
                                                    (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) 0)
                                                    (when (= konteksti :urakka)
-                                                     [(let [formatoitu (fmt/euro-opt (:suunnitellut_kustannukset rivi))]
+                                                     [(let [formatoitu (fmt/euro-opt false (:suunnitellut_kustannukset rivi))]
                                                         (if-not (str/blank? formatoitu) formatoitu "-"))
-                                                      (let [formatoitu (fmt/euro-opt (:toteutuneet_kustannukset rivi))]
+                                                      (let [formatoitu (fmt/euro-opt false (:toteutuneet_kustannukset rivi))]
                                                         (if-not (str/blank? formatoitu) formatoitu "-"))])])))
                         naytettavat-rivit)
                   (when (not (empty? naytettavat-rivit))
                     (if (= konteksti :urakka)
                       ["Yhteensä" nil nil nil nil
-                       (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
-                       (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))]
+                       (fmt/euro-opt false (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
+                       (fmt/euro-opt false (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))]
                       (flatten [(if urakoittain? ["Yhteensä" ""]
                                                  ["Yhteensä"])
                                 nil

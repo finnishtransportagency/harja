@@ -57,7 +57,7 @@
                     (juxt (comp pvm/pvm :pvm)
                           (or :nimi "-")
                           (or :yksikko "-")
-                          (comp #(let [formatoitu (fmt/euro-opt %)]
+                          (comp #(let [formatoitu (fmt/euro-opt false %)]
                                   (if-not (str/blank? formatoitu) formatoitu "-"))
                                 :yksikkohinta)
                           (comp #(let [formatoitu (fmt/desimaaliluku-opt % 1)]
@@ -66,10 +66,10 @@
                           (comp #(let [formatoitu (fmt/desimaaliluku-opt % 1)]
                                   (if-not (str/blank? formatoitu) formatoitu 0))
                                 :toteutunut_maara)
-                          (comp #(let [formatoitu (fmt/euro-opt %)]
+                          (comp #(let [formatoitu (fmt/euro-opt false %)]
                                   (if-not (str/blank? formatoitu) formatoitu "-"))
                                 :suunnitellut_kustannukset)
-                          (comp #(let [formatoitu (fmt/euro-opt %)]
+                          (comp #(let [formatoitu (fmt/euro-opt false %)]
                                   (if-not (str/blank? formatoitu) formatoitu "-"))
                                 :toteutuneet_kustannukset)))
                   (when (not (empty? naytettavat-rivit))
