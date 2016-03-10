@@ -243,7 +243,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                  (on-click e))
                (when on-select
                  (when-let [g (tapahtuman-geometria this e)]
-                   (log "on-select: " (pr-str  g))
                    (on-select g e))))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
