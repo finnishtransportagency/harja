@@ -85,4 +85,4 @@
 (defn suunnitelutietojen-nayttamisilmoitus [konteksti alkupvm loppupvm hoitokaudet]
   (when (and (not (aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm hoitokaudet))
              (= konteksti :urakka))
-    [:teksti "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]))
+    [:teksti "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta, ja mikäli suunnittelutietoja löytyy."]))
