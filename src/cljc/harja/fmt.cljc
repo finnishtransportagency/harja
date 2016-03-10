@@ -114,14 +114,12 @@
 (defn desimaaliluku-opt
   #?(:cljs ([luku] (desimaaliluku-opt luku 2)))
   #?(:cljs ([luku tarkkuus]
-             (if luku
-               (desimaaliluku luku tarkkuus)
-               "")))
+             (when luku
+               (desimaaliluku luku tarkkuus))))
   #?(:clj ([luku] (desimaaliluku-opt luku 2)))
   #?(:clj ([luku tarkkuus]
-           (if luku
-             (desimaaliluku luku tarkkuus)
-             ""))))
+           (when luku
+             (desimaaliluku luku tarkkuus)))))
 
 (defn trimmaa-puhelinnumero
   "Ottaa suomalaisen puhelinnumeron teksimuodossa ja palauttaa sen yksinkertaistetussa numeromuodossa ilman etuliitettä
