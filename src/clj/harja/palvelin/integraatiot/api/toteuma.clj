@@ -106,4 +106,6 @@
         toteuma-id
         materiaalikoodi-id
         (get-in materiaali [:maara :maara])
-        (:id kirjaaja)))))
+        (:id kirjaaja))))
+  (log/debug "TOTEUMA " (pr-str toteuma)) ;; FIXME: POISTA
+  (materiaalit/paivita-sopimuksen-materiaalin-kaytto (:sopimus toteuma) (:alkanut toteuma)))
