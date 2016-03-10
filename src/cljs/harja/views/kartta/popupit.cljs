@@ -15,7 +15,8 @@
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.paallystys.pot :as paallystys-pot]
-            [harja.ui.modal :as modal]))
+            [harja.ui.modal :as modal]
+            [harja.ui.napit :as napit]))
 
 (def klikattu-tyokone (atom nil))
 
@@ -111,7 +112,8 @@
                             (.preventDefault %)
                             (modal/nayta!
                               {:otsikko "Ilmoituksen tiedot"
-                               :leveys "1000px"}
+                               :leveys  "1000px"
+                               :footer  (napit/takaisin "Sulje" modal/piilota!)}
                               (ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
