@@ -198,12 +198,12 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-oulun-alueurakan-2005-2010-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
-                   WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
+                   WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
 
 (defn hae-oulun-alueurakan-2005-2010-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
-                   WHERE  nimi = 'Oulun alueurakka 2005-2010'"))))
+                   WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
 
 (defn hae-oulun-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -230,7 +230,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (into [] (flatten (q (str "SELECT tpi.id
                   FROM   urakka u
                     JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka
-                  WHERE  u.nimi = 'Oulun alueurakka 2005-2010';")))))
+                  WHERE  u.nimi = 'Oulun alueurakka 2005-2012';")))))
 
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
@@ -249,7 +249,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 (defn hae-oulun-alueurakan-2005-2010-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
-                           (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010') AND paasopimus IS null)"))))
+                           (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null)"))))
 (defn hae-oulun-alueurakan-2014-2019-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null)"))))
@@ -301,7 +301,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
    :roolit       #{"urakanvalvoja"}, :id 417,
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
    :urakkaroolit [{:urakka {:id              @oulun-alueurakan-2005-2010-id,
-                            :nimi            "Oulun alueurakka 2005-2010",
+                            :nimi            "Oulun alueurakka 2005-2012",
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
                    :rooli  "urakanvalvoja"}]})
 
@@ -310,7 +310,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
    :roolit       #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :urakkaroolit [{:urakka {:id              @oulun-alueurakan-2005-2010-id,
-                            :nimi            "Oulun alueurakka 2005-2010", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
+                            :nimi            "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
                    :luotu  nil,
                    :rooli  "urakoitsijan urakan vastuuhenkilo"}]})
@@ -320,7 +320,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
    :roolit       #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :urakkaroolit [{:urakka {:id              234234324234,  ;;eli ei ole oulun urakan ID
-                            :nimi            "Oulun alueurakka 2005-2010", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
+                            :nimi            "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
                    :luotu  nil,
                    :rooli  "urakoitsijan urakan vastuuhenkilo"}]})
