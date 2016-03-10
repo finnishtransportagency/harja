@@ -107,13 +107,16 @@
       [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
        ["Selite" (:lyhytselite tapahtuma)]
        ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-      {:linkki {:nimi     "Tarkastele kuittauksia"
+      {:linkki {:nimi     "Tarkemmat tiedot"
                 :on-click #(do
                             (.preventDefault %)
                             (modal/nayta!
                               {:otsikko "Ilmoituksen tiedot"
                                :leveys  "1000px"
-                               :footer  (napit/takaisin "Sulje" modal/piilota!)}
+                               :footer  [:button.nappi-toissijainen {:on-click (fn [e]
+                                                                                 (.preventDefault e)
+                                                                                 (modal/piilota!))}
+                                         "Sulje"]}
                               (ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue))))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
