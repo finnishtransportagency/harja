@@ -73,8 +73,7 @@
                                   (if-not (str/blank? formatoitu) formatoitu "-"))
                                 :toteutuneet_kustannukset)))
                   (when (not (empty? naytettavat-rivit))
-                    ["Yhteensä" nil nil nil nil nil
-                     (fmt/euro-opt false (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
+                    ["Yhteensä" nil nil nil nil nil nil
                      (fmt/euro-opt false (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])))]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
 
