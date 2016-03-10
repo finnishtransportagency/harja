@@ -152,22 +152,24 @@
                                         :otsikkorivi-luokka "grid-kk-sarake"})
                                      listattavat-pvmt)
                                {:leveys 7 :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
-                               (when (= konteksti :urakka)
+                               (when (and (= konteksti :urakka)
+                                          (yks-hint-tyot/ainakin-yksi-suunniteltu-tyo? naytettavat-rivit))
                                  [{:leveys 5 :otsikko "Tot-%"}
                                   {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
       (mapv (fn [rivi]
               (flatten (keep identity [(when urakoittain?
-                                         (or (:urakka_nimi rivi) ""))
-                                       (or (:nimi rivi) "")
-                                       (or (:yksikko rivi) "")
+                                         (or (:urakka_nimi rivi) "-"))
+                                       (or (:nimi rivi) "-")
+                                       (or (:yksikko rivi) "-")
                                        (mapv (fn [pvm]
                                                (or
                                                  (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
                                                  0))
                                              listattavat-pvmt)
-                                       (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) "")
-                                       (when (= konteksti :urakka)
-                                         [(or (fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1) "")
-                                          (or (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1) "")])])))
+                                       (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) 0)
+                                       (when (and (= konteksti :urakka)
+                                                  (yks-hint-tyot/ainakin-yksi-suunniteltu-tyo? naytettavat-rivit))
+                                         [(or (fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1) "-")
+                                          (or (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1) "Ei suunnitelmaa")])])))
             naytettavat-rivit)]]))
 

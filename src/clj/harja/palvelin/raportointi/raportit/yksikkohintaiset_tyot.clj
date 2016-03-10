@@ -50,9 +50,10 @@
                                                (c/from-date alkupvm)
                                                (c/from-sql-date (:alkupvm hoitokausi))
                                                (c/from-sql-date (:loppupvm hoitokausi)))
-                                             (pvm/valissa? (c/from-date loppupvm)
-                                                           (c/from-sql-date (:alkupvm hoitokausi))
-                                                           (c/from-sql-date (:loppupvm hoitokausi)))
+                                             (pvm/valissa?
+                                               (c/from-date loppupvm)
+                                               (c/from-sql-date (:alkupvm hoitokausi))
+                                               (c/from-sql-date (:loppupvm hoitokausi)))
                                              (= (:tehtava hoitokausi) (:tehtava_id toteuma))))
                                       hoitokaudet))]
         (if suunnittelutieto
@@ -65,4 +66,10 @@
               (assoc :toteutuneet_kustannukset (* (:toteutunut_maara toteuma)
                                                   (:yksikkohinta suunnittelutieto))))
           toteuma)))
+    toteumat))
+
+(defn ainakin-yksi-suunniteltu-tyo? [toteumat]
+  (some
+    (fn [toteuma]
+      (number? (:suunniteltu_maara toteuma)))
     toteumat))
