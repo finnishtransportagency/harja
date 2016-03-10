@@ -9,6 +9,7 @@
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
+            [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.roolit :as roolit]))
@@ -119,6 +120,7 @@
                                                                :toimenpide-id      toimenpide-id
                                                                :urakoittain?       urakoittain?})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
+        ainakin-yksi-suunniteltu-tehtava? (yks-hint-tyot/ainakin-yksi-suunniteltu-tyo? naytettavat-rivit)
         listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
                                        (not (t/after?
@@ -168,8 +170,10 @@
                                              listattavat-pvmt)
                                        (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) 0)
                                        (when (and (= konteksti :urakka)
-                                                  (yks-hint-tyot/ainakin-yksi-suunniteltu-tyo? naytettavat-rivit))
-                                         [(or (fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1) "-")
-                                          (or (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1) "Ei suunnitelmaa")])])))
+                                                  ainakin-yksi-suunniteltu-tehtava?)
+                                         [(let [formatoitu (fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1)]
+                                            (if-not (str/blank? formatoitu) formatoitu "-"))
+                                          (let [formatoitu (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)]
+                                            (if-not (str/blank? formatoitu) formatoitu "Ei suunnitelmaa"))])])))
             naytettavat-rivit)]]))
 
