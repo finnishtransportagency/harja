@@ -41,7 +41,7 @@
                ;; :tehtavan_nimi I rampit, :sopimus 1, :alkupvm #inst "2005-09-30T21:00:00.000-00:00"
                ramppitehtava (first (filter #(= (:tehtava %) ramppitehtavan-id) muutoshintaiset-tyot))
                urakan-alkupvm (pvm/luo-pvm 2005 9 1) ;;1.10.2005
-               urakan-loppupvm (pvm/luo-pvm 2010 8 30)] ;;30.9.2010
+               urakan-loppupvm (pvm/luo-pvm 2012 8 30)] ;;30.9.2010
            (is (= (:yksikkohinta ramppitehtava) 4.5) "muutoshintaisen yksikköhinta")
            (is (= (:yksikko ramppitehtava) "tiekm") "muutoshintaisen yksikköhinta")
            (is (= (:tehtavanimi ramppitehtava) "I rampit") "muutoshintaisen tehtävän nimi")

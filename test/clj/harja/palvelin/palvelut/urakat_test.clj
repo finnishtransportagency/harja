@@ -54,4 +54,4 @@
     (is (= toka-sopimuksen-id 3) "haetun urakan sopimustesti")
     (is (= toka-sopimuksen-sampoid "2H05228/10") "haetun urakan sopimustesti")
     (is (= (:alkupvm haettu-urakka) (java.sql.Date. 105 9 1)) "haetun urakan alkupvm")
-    (is (= (:loppupvm haettu-urakka) (pvm/aikana (pvm/->pvm "30.9.2010") 23 59 59 999)) "haetun urakan loppupvm")))
+    (is (= (:loppupvm haettu-urakka) (pvm/aikana (pvm/->pvm "30.9.2012") 23 59 59 999)) "haetun urakan loppupvm")))
