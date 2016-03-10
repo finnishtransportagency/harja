@@ -45,9 +45,15 @@
   (map
     (fn [toteuma]
       (let [suunnittelutieto (first (filter
-                                      (fn [rivi] (and (pvm/sama-pvm? (c/from-date  alkupvm) (c/from-sql-date (:alkupvm rivi)))
-                                                      (pvm/sama-pvm? (c/from-date loppupvm) (c/from-sql-date (:loppupvm rivi)))
-                                                      (= (:tehtava rivi) (:tehtava_id toteuma))))
+                                      (fn [hoitokausi]
+                                        (and (pvm/valissa?
+                                               (c/from-date alkupvm)
+                                               (c/from-sql-date (:alkupvm hoitokausi))
+                                               (c/from-sql-date (:loppupvm hoitokausi)))
+                                             (pvm/valissa? (c/from-date loppupvm)
+                                                           (c/from-sql-date (:alkupvm hoitokausi))
+                                                           (c/from-sql-date (:loppupvm hoitokausi)))
+                                             (= (:tehtava hoitokausi) (:tehtava_id toteuma))))
                                       hoitokaudet))]
         (if suunnittelutieto
           (-> toteuma
