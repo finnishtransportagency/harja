@@ -254,11 +254,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
    (when-not piilota-toiminnot?
      [:td.toiminnot
       (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-        (if (or (nil? esta-poistaminen?) (false? (esta-poistaminen? rivi)))
+        (if (and esta-poistaminen? (esta-poistaminen? rivi))
+          [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]
           [:span.klikattava {:on-click #(do (.preventDefault %)
                                             (muokkaa! id assoc :poistettu true))}
-           (ikonit/trash)]
-          [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]))
+           (ikonit/trash)]))
       (when-not (empty? rivin-virheet)                       ; true ;-not (empty? rivin-virheet)
         [:span.rivilla-virheita
          (ikonit/warning-sign)])])])
