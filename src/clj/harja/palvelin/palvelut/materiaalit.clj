@@ -166,7 +166,7 @@
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
   [db user urakka-id toteumamateriaalit hoitokausi sopimus]
-  
+
   (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (jdbc/with-db-transaction [c db]
                             (doseq [tm toteumamateriaalit]
@@ -208,7 +208,7 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
-        (q/hae-suolatoteumat db alkupvm loppupvm urakka-id)))
+        (q/hae-suolatoteumat db urakka-id alkupvm loppupvm)))
 
 (defn hae-suolamateriaalit [db user]
   (into []

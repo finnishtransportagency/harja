@@ -52,7 +52,7 @@ WHERE mk.urakka = :urakka AND
 -- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
 -- määrä = suunniteltu määrä. kokonaismäärä = toteutunut määrä
-SELECT mat.* FROM 
+SELECT mat.* FROM
   (SELECT m.nimi    AS materiaali_nimi,
           m.yksikko AS materiaali_yksikko,
           m.id      AS materiaali_id,
@@ -63,7 +63,7 @@ SELECT mat.* FROM
               AND alkupvm :: DATE BETWEEN :alku AND :loppu
               AND loppupvm :: DATE BETWEEN :alku AND :loppu
               AND sopimus = :sopimus) AS maara,
-      (SELECT SUM(maara) 
+      (SELECT SUM(maara)
          FROM toteuma_materiaali
         WHERE materiaalikoodi = m.id AND
               toteuma IN (SELECT id
@@ -285,19 +285,9 @@ WHERE nimi = :nimi;
 
 -- name: hae-suolatoteumat
 -- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
-SELECT
-  tmid,
-  tid,
-  materiaali_id,
-  materiaali_nimi,
-  alkanut,
-  maara,
-  lisatieto,
-  koneellinen
-FROM (WITH paivat AS (
-    SELECT date_trunc('day', dd) AS pvm
-    FROM generate_series(:alkupvm :: DATE, :loppupvm :: DATE, '1 day' :: INTERVAL) dd )
-      SELECT
+SELECT tmid, tid, materiaali_id, materiaali_nimi, alkanut, maara,
+       lisatieto, koneellinen
+FROM (SELECT
         tm.id   AS tmid,
         t.id    AS tid,
         mk.id   AS materiaali_id,
@@ -321,21 +311,21 @@ FROM (WITH paivat AS (
         NULL                                             AS tid,
         mk.id                                            AS materiaali_id,
         mk.nimi                                          AS materiaali_nimi,
-        p.pvm,
-        (SELECT SUM(tm.maara)
-         FROM toteuma_materiaali tm
-           JOIN toteuma t ON tm.toteuma = t.id
-           JOIN kayttaja k ON tm.luoja = k.id
-         WHERE k.jarjestelma = TRUE
-               AND t.urakka = :urakka
-               AND tm.materiaalikoodi = mk.id
-               AND date_trunc('day', t.alkanut) = p.pvm) AS maara,
+        date_trunc('day', t.alkanut) 			 AS alkanut,
+        SUM(tm.maara)                                    AS maara,
         ''                                               AS lisatieto,
         TRUE                                             AS koneellinen
-      FROM materiaalikoodi mk
-        CROSS JOIN paivat p
-      WHERE mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi) toteumat
+      FROM toteuma_materiaali tm
+	   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+           JOIN toteuma t ON tm.toteuma = t.id
+           JOIN kayttaja k ON tm.luoja = k.id
+      WHERE k.jarjestelma = TRUE
+            AND t.urakka = :urakka
+            AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+            AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
+      GROUP BY mk.id, mk.nimi, date_trunc('day', t.alkanut)) toteumat
 WHERE maara IS NOT NULL
+ORDER BY alkanut DESC
 LIMIT 501;
 
 -- name: hae-suolamateriaalit
@@ -349,6 +339,3 @@ SELECT
   nimi,
   yksikko
 FROM materiaalikoodi;
-
-	 
-	 
