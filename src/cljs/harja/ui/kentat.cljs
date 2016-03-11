@@ -592,15 +592,15 @@
                             :on-click    #(do (.stopPropagation %)
                                               (.preventDefault %)
                                               (reset! auki true)
-                                              nil)
+                                              %)
                             :value       nykyinen-pvm-teksti
-                            :on-focus    #(do (on-focus) (reset! auki true))
+                            :on-focus    #(do (on-focus) (reset! auki true) %)
                             :on-change   #(muuta-pvm! (-> % .-target .-value))
                             ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                            (reset! auki false)
                                            %)
-                            :on-blur     #(do (koske-pvm!) (aseta!))}]
+                            :on-blur     #(do (koske-pvm!) (aseta!) %)}]
                (when @auki
                  [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                   (muuta-pvm! (pvm/pvm %))
