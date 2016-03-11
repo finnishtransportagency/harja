@@ -267,7 +267,7 @@ SET alkanut           = :alkanut,
   lisatieto           = :lisatieto,
   tyyppi              = :tyyppi :: toteumatyyppi,
   reitti              = :reitti,
-  sopimus             = :sopimus 
+  sopimus             = :sopimus
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 
@@ -304,8 +304,8 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: onko-olemassa-ulkoisella-idlla
 -- Tarkistaa löytyykö toteumaa ulkoisella id:llä
-SELECT exists(
-    SELECT toteuma.id
+SELECT EXISTS(
+    SELECT ulkoinen_id
     FROM toteuma
     WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
 
@@ -696,7 +696,7 @@ LIMIT 501;
 SELECT t.id, t.luotu, t.alkanut, t.paattynyt, t.lisatieto,
        t.suorittajan_ytunnus as suorittaja_ytunnus,
        t.suorittajan_nimi as suorittaja_nimi,
-       k.jarjestelma, 
+       k.jarjestelma,
        ST_Length(reitti) as pituus
   FROM toteuma t
        JOIN kayttaja k ON t.luoja = k.id
@@ -704,6 +704,3 @@ SELECT t.id, t.luotu, t.alkanut, t.paattynyt, t.lisatieto,
        AND t.alkanut::date = :pvm::date
        AND EXISTS (SELECT id FROM toteuma_tehtava tt
                     WHERE tt.toteuma = t.id AND tt.toimenpidekoodi = :toimenpidekoodi);
-
-
-       

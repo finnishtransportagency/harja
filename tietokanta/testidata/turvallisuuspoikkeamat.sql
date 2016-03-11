@@ -2,7 +2,7 @@ INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
 sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vakavuusaste)
 VALUES
-((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2010'), '2005-10-01 10:00.00', '2005-10-01 12:20.00', '2005-10-06 09:00.00',
+((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), '2005-10-01 10:00.00', '2005-10-01 12:20.00', '2005-10-06 09:00.00',
 'Trukkikuski', 'Lastaus', 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
 'Murtunut peukalo', 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6,
 ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[], 'lieva'::turvallisuuspoikkeama_vakavuusaste);
