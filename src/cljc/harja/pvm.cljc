@@ -620,3 +620,19 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 
 (def paivan-aikavali (juxt paivan-alussa paivan-lopussa))
+
+(defn paivia-valissa
+  "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
+  [[alkupvm loppupvm] [vali-alkupvm vali-loppupvm]]
+  (let [pvm-vector (sort t/before? [alkupvm loppupvm vali-alkupvm vali-loppupvm])]
+    (if (or (and (t/before? vali-alkupvm alkupvm)
+                 (t/before? vali-alkupvm loppupvm)
+                 (t/before? vali-loppupvm alkupvm)
+                 (t/before? vali-loppupvm loppupvm))
+            (and (t/after? vali-alkupvm alkupvm)
+                 (t/after? vali-alkupvm loppupvm)
+                 (t/after? vali-loppupvm alkupvm)
+                 (t/after? vali-loppupvm loppupvm)))
+      0
+      (t/in-days (t/interval (nth pvm-vector 1)
+                             (nth pvm-vector 2))))))

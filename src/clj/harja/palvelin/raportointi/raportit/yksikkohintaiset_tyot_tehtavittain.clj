@@ -7,12 +7,16 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
+            [clojure.string :as str]))
 
-(defn hae-summatut-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id]}]
-  (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
-                                                                urakka-id alkupvm loppupvm
-                                                                (not (nil? toimenpide-id)) toimenpide-id))
+(defn hae-summatut-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id suunnittelutiedot]}]
+  (let [toteumat (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle db
+                                                                     urakka-id alkupvm loppupvm
+                                                                     (not (nil? toimenpide-id)) toimenpide-id)
+        toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
+    toteumat-suunnittelutiedoilla))
 
 (defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
   (if urakoittain?
@@ -36,13 +40,16 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
+        suunnittelutiedot (when (= :urakka konteksti)
+                            (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id))
         naytettavat-rivit (case konteksti
                             :urakka
                             (hae-summatut-tehtavat-urakalle db
                                                             {:urakka-id     urakka-id
                                                              :alkupvm       alkupvm
                                                              :loppupvm      loppupvm
-                                                             :toimenpide-id toimenpide-id})
+                                                             :toimenpide-id toimenpide-id
+                                                             :suunnittelutiedot suunnittelutiedot})
                             :hallintayksikko
                             (hae-summatut-tehtavat-hallintayksikolle db
                                                                      {:hallintayksikko-id hallintayksikko-id
@@ -56,7 +63,6 @@
                                                                 :loppupvm      loppupvm
                                                                 :toimenpide-id toimenpide-id
                                                                 :urakoittain?  urakoittain?}))
-
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -79,32 +85,37 @@
                                {:leveys 25 :otsikko "Tehtävä"}
                                {:leveys 5 :otsikko "Yks."}
                                (when (= konteksti :urakka)
-                                 [{:leveys 10 :otsikko "Yksikkö\u00adhinta"}
+                                 [{:leveys 10 :otsikko "Yksikkö\u00adhinta €"}
                                   {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}])
                                {:leveys 10 :otsikko "Toteutunut määrä"}
                                (when (= konteksti :urakka)
-                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella"}
-                                  {:leveys 15 :otsikko "Toteutuneet kustannukset"}])]))
+                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella €"}
+                                  {:leveys 15 :otsikko "Toteutuneet kustannukset €"}])]))
       (keep identity
             (conj (mapv (fn [rivi]
                           (flatten (keep identity [(when urakoittain?
-                                                     (:urakka_nimi rivi))
-                                                   (:nimi rivi)
-                                                   (:yksikko rivi)
+                                                     (or (:urakka_nimi rivi) "-"))
+                                                   (or (:nimi rivi) "-")
+                                                   (or (:yksikko rivi) "-")
                                                    (when (= konteksti :urakka)
-                                                     [(fmt/euro-opt (:yksikkohinta rivi))
-                                                      (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)])
-                                                   (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1)
+                                                     [(let [formatoitu (fmt/euro-opt false (:yksikkohinta rivi))]
+                                                        (if-not (str/blank? formatoitu) formatoitu "-"))
+                                                      (let [formatoitu (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)]
+                                                        (if-not (str/blank? formatoitu) formatoitu "Ei suunnitelmaa"))])
+                                                   (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) 0)
                                                    (when (= konteksti :urakka)
-                                                     [(fmt/euro-opt (:suunnitellut_kustannukset rivi))
-                                                      (fmt/euro-opt (:toteutuneet_kustannukset rivi))])])))
+                                                     [(let [formatoitu (fmt/euro-opt false (:suunnitellut_kustannukset rivi))]
+                                                        (if-not (str/blank? formatoitu) formatoitu "-"))
+                                                      (let [formatoitu (fmt/euro-opt false (:toteutuneet_kustannukset rivi))]
+                                                        (if-not (str/blank? formatoitu) formatoitu "-"))])])))
                         naytettavat-rivit)
                   (when (not (empty? naytettavat-rivit))
                     (if (= konteksti :urakka)
                       ["Yhteensä" nil nil nil nil
-                       (fmt/euro-opt (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
-                       (fmt/euro-opt (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))]
+                       (fmt/euro-opt false (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
+                       (fmt/euro-opt false (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))]
                       (flatten [(if urakoittain? ["Yhteensä" ""]
                                                  ["Yhteensä"])
                                 nil
-                                (fmt/desimaaliluku-opt (reduce + (keep :toteutunut_maara naytettavat-rivit)) 1)])))))]]))
+                                (fmt/desimaaliluku-opt (reduce + (keep :toteutunut_maara naytettavat-rivit)) 1)])))))]
+     (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
