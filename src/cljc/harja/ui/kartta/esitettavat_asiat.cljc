@@ -217,8 +217,9 @@
   (ilmoitus-kartalle ilmoitus valittu-fn?))
 
 (defn otsikko-tekijalla [etuliite laatupoikkeama]
-  (str etuliite
-       " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")"))
+  (let [tekijatyyppi (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama))]
+    (str etuliite
+         (when-not (empty? tekijatyyppi) (str " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")))))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
   (let [ikoni (ulkoasu/laatupoikkeaman-ikoni (:tekija laatupoikkeama))
