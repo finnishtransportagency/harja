@@ -219,7 +219,7 @@
 (defn otsikko-tekijalla [etuliite laatupoikkeama]
   (let [tekijatyyppi (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama))]
     (str etuliite
-         (when-not (empty? tekijatyyppi) (str " (" (laatupoikkeamat/kuvaile-tekija (:tekija laatupoikkeama)) ")")))))
+         (when-not (empty? tekijatyyppi) (str " (" tekijatyyppi ")")))))
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
   (let [ikoni (ulkoasu/laatupoikkeaman-ikoni (:tekija laatupoikkeama))
