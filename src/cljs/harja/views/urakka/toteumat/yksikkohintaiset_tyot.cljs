@@ -263,7 +263,21 @@
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-aikavali) (second @u/valittu-aikavali)]
-        toteutuneet-tehtavat (atom nil)]
+        toteutuneet-tehtavat (atom nil)
+        tallenna (reaction
+                   (if (or (nil? @toteutuneet-tehtavat)
+                          (every? :jarjestelmanlisaama @toteutuneet-tehtavat))
+                    :ei-mahdollinen
+                    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat
+                                             urakka-id
+                                             sopimus-id
+                                             aikavali
+                                             :yksikkohintainen
+                                             %
+                                             (:tpi_id @u/valittu-toimenpideinstanssi)))]
+                           (log "Tehtävät tallennettu: " (pr-str vastaus))
+                           (reset! toteutuneet-tehtavat (:tehtavat vastaus))
+                           (reset! tehtavien-summat (:tehtavien-summat vastaus))))))]
     (go (reset! toteutuneet-tehtavat
                 (<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali
                                                                                  :yksikkohintainen (:tpk_id rivi)))))
@@ -273,17 +287,11 @@
        [grid/grid
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
-         :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat
-                                               urakka-id
-                                               sopimus-id
-                                               aikavali
-                                               :yksikkohintainen
-                                               %
-                                               (:tpi_id @u/valittu-toimenpideinstanssi)))]
-                             (log "Tehtävät tallennettu: " (pr-str vastaus))
-                             (reset! toteutuneet-tehtavat (:tehtavat vastaus))
-                             (reset! tehtavien-summat (:tehtavien-summat vastaus))))
+         :tallenna    @tallenna
+         :tallennus-ei-mahdollinen-tooltip (constantly "Kaikki toteumat ovat järjestelmän lisäämiä.")
          :voi-lisata? false
+         :esta-poistaminen?        (fn [rivi] (:jarjestelmanlisaama rivi))
+         :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
          :max-rivimaara 300
          :max-rivimaaran-ylitys-viesti "Liikaa hakutuloksia, rajaa hakua"
          :tunniste    :tehtava_id}

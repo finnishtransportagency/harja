@@ -80,3 +80,35 @@
                            (t/minus (t/now) (t/minutes 5))
                            (t/plus (t/now) (t/minutes 5))
                             false))))
+
+(deftest paivia-valissa-toimii
+  (is (= (pvm/paivia-valissa [(t/now)
+                          (t/plus (t/now) (t/days 5))]
+                         [(t/plus (t/now) (t/days 1))
+                          (t/plus (t/now) (t/days 3))])
+         2))
+  (is (= (pvm/paivia-valissa [(t/now)
+                          (t/plus (t/now) (t/days 2))]
+                         [(t/plus (t/now) (t/days 1))
+                          (t/plus (t/now) (t/days 5))])
+         1))
+  (is (= (pvm/paivia-valissa [(t/plus (t/now) (t/days 1))
+                          (t/plus (t/now) (t/days 3))]
+                         [(t/now)
+                          (t/plus (t/now) (t/days 2))])
+         1))
+  (is (= (pvm/paivia-valissa [(t/plus (t/now) (t/days 1))
+                          (t/plus (t/now) (t/days 3))]
+                         [(t/now)
+                          (t/plus (t/now) (t/days 5))])
+         2))
+  (is (= (pvm/paivia-valissa [(t/now)
+                          (t/plus (t/now) (t/days 3))]
+                         [(t/plus (t/now) (t/days 5))
+                          (t/plus (t/now) (t/days 10))])
+         0))
+  (is (= (pvm/paivia-valissa [(t/now)
+                          (t/plus (t/now) (t/days 3))]
+                         [(t/minus (t/now) (t/days 3))
+                          (t/minus (t/now) (t/days 2))])
+         0)))
