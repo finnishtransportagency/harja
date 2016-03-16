@@ -158,12 +158,13 @@
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."
        :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta  :leveys "17%"
-        :valinta-nayta #(if (nil? %) "- valitse -" %)
-        
-        :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
-        
-        :validoi [[:ei-tyhja  "Anna yhteyshenkilön rooli"]]}
+      [{:otsikko       "Rooli" :nimi :rooli :tyyppi :valinta :leveys "17%"
+        :hae #(str/capitalize (:rooli %))
+        :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
+
+        :valinnat      (vec (concat [nil] @yhteyshenkilotyypit))
+
+        :validoi       [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
        {:otsikko "Organisaatio"
         :nimi :organisaatio
         :fmt :nimi
