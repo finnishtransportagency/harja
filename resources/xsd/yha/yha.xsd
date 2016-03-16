@@ -22,6 +22,8 @@
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element name="ely" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element name="vuosi" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
                                         <xs:element name="tunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
                                         <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
                                     </xs:sequence>
@@ -69,6 +71,8 @@
                             <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
                             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
                             <xs:element name="sampo-id" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                            <xs:element name="ely" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                            <xs:element name="vuosi" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
                             <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
                             <xs:element name="kohteet" nillable="false" minOccurs="1" maxOccurs="1">
                                 <xs:complexType>
@@ -133,7 +137,7 @@
 
     <xs:complexType name="toteumakohde">
         <xs:sequence>
-            <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"></xs:element>
+            <xs:element name="yha-id" type="xs:int" minOccurs="0" maxOccurs="1"></xs:element>
             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
             <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
@@ -150,7 +154,6 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-
             <xs:element name="alikohteet" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:complexType>
                     <xs:sequence>
@@ -173,7 +176,7 @@
     <xs:complexType name="toteuma-alikohde">
 
         <xs:sequence>
-            <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="yha-id" type="xs:int" minOccurs="0" maxOccurs="1"/>
             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="tunniste" type="xs:string" minOccurs="0" maxOccurs="1"/>

@@ -3,6 +3,8 @@
     <!--Zero or more repetitions:-->
     <yha:urakka>
       <yha:yha-id>3</yha:yha-id>
+      <yha:ely>POP</yha:ely>
+      <yha:vuosi>2016</yha:vuosi>
       <yha:tunnus>string</yha:tunnus>
       <yha:nimi>string</yha:nimi>
     </yha:urakka>

@@ -4,6 +4,8 @@
     <yha:yha-id>3</yha:yha-id>
     <yha:harja-id>3</yha:harja-id>
     <yha:sampo-id>string</yha:sampo-id>
+    <yha:ely>POP</yha:ely>
+    <yha:vuosi>2016</yha:vuosi>
     <yha:nimi>string</yha:nimi>
     <yha:kohteet>
       <!--Zero or more repetitions:-->
