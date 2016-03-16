@@ -12,6 +12,7 @@
 
 (defn- validoi [xml-viesti]
   (when-not (xml/validoi +xsd-polku+ +sahkoposti-xsd+ xml-viesti)
+    (log/error "Vastaanotettu sähköposti XML-tiedosto ei ole sahkoposti.xsd skeeman mukainen.")
     (throw+ {:type virheet/+invalidi-xml+})))
 
 (defn- lue-xml [xml-viesti]
