@@ -36,6 +36,4 @@ CREATE TYPE tyontekijanammatti AS ENUM (
 
 ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyontekijanammatti;
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN tyontekijanammatti tyontekijanammatti;
-
-
-
+UPDATE turvallisuuspoikkeama SET tyontekijanammatti = 'muu_tyontekija'::tyontekijanammatti WHERE tyontekijanammatti_muu IS NOT NULL;
