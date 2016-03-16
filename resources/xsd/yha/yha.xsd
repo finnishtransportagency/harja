@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema
-        targetNamespace="http://www.liikennevirasto.fi/xsd/yha"
-        attributeFormDefault="unqualified"
-        elementFormDefault="qualified"
-        xmlns="http://www.liikennevirasto.fi/xsd/yha"
-        xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema targetNamespace="http://www.liikennevirasto.fi/xsd/yha"
+           attributeFormDefault="unqualified"
+           elementFormDefault="qualified"
+           xmlns="http://www.liikennevirasto.fi/xsd/yha"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
     <xs:element name="urakoiden-hakuvastaus">
+        <xs:annotation>
+            <xs:documentation>
+                Palauttaa parametreihin sopivien urakoiden otsikkotason tiedot YHA:sta. Urakan kohteet voidaan hakea myöhemmin käyttäen YHA:n urakka id:tä. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
+            </xs:documentation>
+        </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="urakat" minOccurs="1" maxOccurs="1">
+                <xs:element name="urakat" nillable="false" minOccurs="1" maxOccurs="1">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="urakka" minOccurs="0" maxOccurs="unbounded">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="yha-id" type="xs:int" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="tunnus" type="xs:string" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="nimi" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element name="tunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
@@ -27,77 +32,46 @@
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+
     <xs:element name="urakan-kohdehakuvastaus">
+        <xs:annotation>
+            <xs:documentation>
+                Palauttaa urakan kohteet alikohteineen YHA:sta. Kohteille voidaan myöhemmin tätä kautta kirjata toteumatietoja. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
+            </xs:documentation>
+        </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="kohteet" minOccurs="1" maxOccurs="1">
+                <xs:element name="kohteet" nillable="false" minOccurs="1" maxOccurs="1">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="kohde" minOccurs="0" maxOccurs="unbounded">
+                            <xs:element name="kohde" type="kohde" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="virhe" minOccurs="0" maxOccurs="1" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="urakan-kohteiden-toteumatietojen-kirjaus">
+        <xs:annotation>
+            <xs:documentation>
+                Kirjaa urakan kohteet ja alikohteet toteumatietoineneen YHA:n.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="urakka" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+                            <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+                            <xs:element name="sampo-id" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                            <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                            <xs:element name="kohteet" nillable="false" minOccurs="1" maxOccurs="1">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="yha-id" type="xs:int" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="kohdetyyppi" minOccurs="1" maxOccurs="1">
-                                            <xs:simpleType>
-                                                <xs:restriction base="xs:string">
-                                                    <xs:enumeration value="paallystys"/>
-                                                    <xs:enumeration value="paikkaus"/>
-                                                </xs:restriction>
-                                            </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="nimi" type="xs:string" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="yllapitoluokka" type="xs:string" minOccurs="0" maxOccurs="1"/>
-                                        <xs:element name="keskimaarainen-vuorokausiilikenne" type="xs:decimal"
-                                                    minOccurs="0" maxOccurs="1"/>
-                                        <xs:element name="nykyinen-paallyste" type="xs:string" minOccurs="0"
-                                                    maxOccurs="1"/>
-                                        <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali"
-                                                    minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="alikohteet" minOccurs="1" maxOccurs="1">
-                                            <xs:complexType>
-                                                <xs:sequence>
-                                                    <xs:element name="alikohde" minOccurs="0" maxOccurs="unbounded">
-                                                        <xs:complexType>
-                                                            <xs:sequence>
-                                                                <xs:element name="yha-id" type="xs:int" minOccurs="1"
-                                                                            maxOccurs="1"/>
-                                                                <xs:element name="tierekisteriosoitevali"
-                                                                            type="tierekisteriosoitevali"
-                                                                            minOccurs="1" maxOccurs="1"/>
-                                                                <xs:element name="toimenpide" minOccurs="0"
-                                                                            maxOccurs="1">
-                                                                    <xs:complexType>
-                                                                        <xs:sequence>
-                                                                            <xs:element name="tunniste" type="xs:string"
-                                                                                        minOccurs="0" maxOccurs="1"/>
-                                                                            <xs:element name="paallyste"
-                                                                                        type="xs:string" minOccurs="0"
-                                                                                        maxOccurs="1"/>
-                                                                            <xs:element name="raekoko" type="xs:decimal"
-                                                                                        minOccurs="0" maxOccurs="1"/>
-                                                                            <xs:element name="massamenekki"
-                                                                                        type="xs:decimal" minOccurs="0"
-                                                                                        maxOccurs="1"/>
-                                                                            <xs:element name="sideaine" type="xs:string"
-                                                                                        minOccurs="0" maxOccurs="1"/>
-                                                                            <xs:element name="rc-prosentti"
-                                                                                        type="xs:decimal" minOccurs="0"
-                                                                                        maxOccurs="1"/>
-                                                                            <xs:element name="kuulamylly"
-                                                                                        type="xs:string" minOccurs="0"
-                                                                                        maxOccurs="1"/>
-                                                                            <xs:element name="tyomenetelma"
-                                                                                        type="xs:string" minOccurs="0"
-                                                                                        maxOccurs="1"/>
-                                                                        </xs:sequence>
-                                                                    </xs:complexType>
-                                                                </xs:element>
-                                                            </xs:sequence>
-                                                        </xs:complexType>
-                                                    </xs:element>
-                                                </xs:sequence>
-                                            </xs:complexType>
-                                        </xs:element>
+                                        <xs:element name="kohde" type="toteumakohde" minOccurs="0" maxOccurs="unbounded"/>
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
@@ -108,15 +82,166 @@
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+
+    <xs:element name="urakan-kohteiden-toteumatietojen-kirjausvastaus">
+        <xs:annotation>
+            <xs:documentation>
+                Mikäli kutsu onnistuu palautetaan tyhjä dokumentti. Virhetilanteessa virhet ilmoitetaan virhe-elementissä.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="virhe" minOccurs="0" maxOccurs="1" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
     <xs:complexType name="tierekisteriosoitevali">
         <xs:sequence>
-            <xs:element name="tienumero" type="xs:int" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="ajorata" type="xs:int" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kaista" type="xs:int" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="aosa" type="xs:int" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="aet" type="xs:int" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="losa" type="xs:int" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="let" type="xs:int" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="tienumero" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ajorata" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kaista" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="aosa" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="aet" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="losa" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="let" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
+
+    <xs:simpleType name="kohdetyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="paallystys"/>
+            <xs:enumeration value="paikkaus"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="alustalle-tehdyt-toimet">
+        <xs:sequence>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kasittelymenetelma" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="kasittelypaksuus" type="xs:decimal" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: senttimetri
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="verkkotyyppi" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="tekninen-toimenpide" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="kohde">
+        <xs:sequence>
+            <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
+            <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="yllapitoluokka" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="keskimaarainen-vuorokausiilikenne" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="nykyinen-paallyste" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="alikohteet" nillable="false" minOccurs="1" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="alikohde" type="alikohde" minOccurs="0"
+                                    maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="toteumakohde">
+        <xs:sequence>
+            <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"></xs:element>
+            <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
+            <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="valmistumispaivamaara" type="xs:date" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="takuupaivamaara" type="xs:date" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="kokonaishinta" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="alustalle-tehdyt-toimet" minOccurs="0" type="alustalle-tehdyt-toimet" maxOccurs="1">
+            </xs:element>
+            <xs:element name="alikohteet" nillable="false" minOccurs="1" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="alikohde" type="toteumaalikohde" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="alikohde">
+        <xs:sequence>
+            <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="tunniste" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="paallystetyyppi" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="raekoko" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="aluemassamaara" type="xs:decimal" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: kiloa/neliömetri
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="kokonaismassamaara" type="xs:decimal" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: tonni
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="sideaine" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="rc-prosentti" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="kuulamylly" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="paallystystyomenetelma" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="toteumaalikohde">
+        <xs:complexContent>
+            <xs:extension base="alikohde">
+                <xs:sequence>
+                    <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+                    <xs:element name="leveys" type="xs:decimal" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Yksikkö: metri
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="pinta-ala" type="xs:decimal" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Yksikkö: neliömetri
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="materiaalit" minOccurs="0" maxOccurs="1">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="materiaali" type="materiaali" minOccurs="0" maxOccurs="unbounded">
+                                </xs:element>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="materiaali">
+        <xs:sequence>
+            <xs:element name="kiviainesesiintyman-nimi" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="kiviaineksen-km-arvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="kiviaineksen-muotoarvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="sidainetyyppi" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="sideainepitoisuus" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="lisa-aineet" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
 </xs:schema>

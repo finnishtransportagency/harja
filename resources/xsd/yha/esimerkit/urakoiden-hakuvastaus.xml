@@ -3,10 +3,10 @@
     <!--Zero or more repetitions:-->
     <yha:urakka>
       <yha:yha-id>3</yha:yha-id>
-      <yha:tunnus>asdfasdfa</yha:tunnus>
-      <yha:nimi>Oulun alueurakka</yha:nimi>
+      <yha:tunnus>string</yha:tunnus>
+      <yha:nimi>string</yha:nimi>
     </yha:urakka>
   </yha:urakat>
   <!--Optional:-->
-  <yha:virhe>Virhe</yha:virhe>
+  <yha:virhe>string</yha:virhe>
 </yha:urakoiden-hakuvastaus>
