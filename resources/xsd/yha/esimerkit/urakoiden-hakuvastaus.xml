@@ -1,0 +1,12 @@
+<yha:urakoiden-hakuvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
+  <yha:urakat>
+    <!--Zero or more repetitions:-->
+    <yha:urakka>
+      <yha:yha-id>3</yha:yha-id>
+      <yha:tunnus>asdfasdfa</yha:tunnus>
+      <yha:nimi>Oulun alueurakka</yha:nimi>
+    </yha:urakka>
+  </yha:urakat>
+  <!--Optional:-->
+  <yha:virhe>Virhe</yha:virhe>
+</yha:urakoiden-hakuvastaus>
