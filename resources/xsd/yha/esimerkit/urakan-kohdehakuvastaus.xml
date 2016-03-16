@@ -10,11 +10,13 @@
       <!--Optional:-->
       <yha:keskimaarainen-vuorokausiilikenne>1000.00</yha:keskimaarainen-vuorokausiilikenne>
       <!--Optional:-->
-      <yha:nykyinen-paallyste>string</yha:nykyinen-paallyste>
+      <yha:nykyinen-paallyste>Soratien pintaus</yha:nykyinen-paallyste>
       <yha:tierekisteriosoitevali>
         <yha:tienumero>3</yha:tienumero>
-        <yha:ajorata>3</yha:ajorata>
-        <yha:kaista>3</yha:kaista>
+        <yha:ajorata>kaksiajorataisen ensimmainen</yha:ajorata>
+        <yha:kaista>paakaista</yha:kaista>
+        <!--Optional:-->
+        <yha:suunta>tierekisterin vastainen suunta</yha:suunta>
         <yha:aosa>3</yha:aosa>
         <yha:aet>3</yha:aet>
         <yha:losa>3</yha:losa>
@@ -26,8 +28,10 @@
           <yha:yha-id>3</yha:yha-id>
           <yha:tierekisteriosoitevali>
             <yha:tienumero>3</yha:tienumero>
-            <yha:ajorata>3</yha:ajorata>
-            <yha:kaista>3</yha:kaista>
+            <yha:ajorata>kaksiajorataisen ensimmainen</yha:ajorata>
+            <yha:kaista>kolmas kaista</yha:kaista>
+            <!--Optional:-->
+            <yha:suunta>tierekisterin suunta</yha:suunta>
             <yha:aosa>3</yha:aosa>
             <yha:aet>3</yha:aet>
             <yha:losa>3</yha:losa>
@@ -36,21 +40,17 @@
           <!--Optional:-->
           <yha:tunniste>string</yha:tunniste>
           <!--Optional:-->
-          <yha:paallystetyyppi>string</yha:paallystetyyppi>
-          <!--Optional:-->
-          <yha:raekoko>1000.00</yha:raekoko>
-          <!--Optional:-->
-          <yha:aluemassamaara>1000.00</yha:aluemassamaara>
-          <!--Optional:-->
-          <yha:kokonaismassamaara>1000.00</yha:kokonaismassamaara>
-          <!--Optional:-->
-          <yha:sideaine>string</yha:sideaine>
-          <!--Optional:-->
-          <yha:rc-prosentti>1000.00</yha:rc-prosentti>
-          <!--Optional:-->
-          <yha:kuulamylly>string</yha:kuulamylly>
-          <!--Optional:-->
-          <yha:paallystystyomenetelma>string</yha:paallystystyomenetelma>
+          <yha:paallystystoimenpide>
+            <yha:uusi-paallyste>Soratien pintaus</yha:uusi-paallyste>
+            <yha:edellinen-paallyste>Soratien pintaus</yha:edellinen-paallyste>
+            <yha:raekoko>1000.00</yha:raekoko>
+            <yha:aluemassamaara>1000.00</yha:aluemassamaara>
+            <yha:kokonaismassamaara>1000.00</yha:kokonaismassamaara>
+            <yha:rc-prosentti>1000.00</yha:rc-prosentti>
+            <!--Optional:-->
+            <yha:kuulamylly>string</yha:kuulamylly>
+            <yha:paallystetyomenetelma>2-kerroksinen remix-pintaus</yha:paallystetyomenetelma>
+          </yha:paallystystoimenpide>
         </yha:alikohde>
       </yha:alikohteet>
     </yha:kohde>
