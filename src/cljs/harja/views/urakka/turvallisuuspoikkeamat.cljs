@@ -80,7 +80,8 @@
                                   [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
 
          {:otsikko  "Tierekisteriosoite" :nimi :tr
-          :tyyppi   :tierekisteriosoite
+          :tyyppi   :sijainti
+          :tierekisteriosoite? true
           :sijainti (r/wrap (:sijainti @muokattu)
                             #(swap! muokattu assoc :sijainti %))}
          

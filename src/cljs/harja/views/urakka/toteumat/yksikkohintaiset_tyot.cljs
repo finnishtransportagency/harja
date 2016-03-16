@@ -26,7 +26,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.ui.napit :as napit]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -244,6 +245,13 @@
             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
 
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+
+           {:tyyppi   :sijainti
+            :tierekisteriosoite? false
+            :nimi        :tr
+            :pakollinen? true
+            :sijainti    (r/wrap (:reitti @lomake-toteuma)
+                                 #(swap! lomake-toteuma assoc :reitti %))}
            
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2

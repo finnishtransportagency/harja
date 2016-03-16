@@ -657,7 +657,7 @@
     (first (:geometria arvo))
     (:geometria arvo)))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
+(defmethod tee-kentta :sijainti [{:keys [lomake? sijainti tierekisteriosoite?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -743,13 +743,14 @@
              [:div {:class "virhe"}
               [:span (ikonit/warning-sign) [:span @virheet]]]])
           [:table
-           [:thead
-            [:tr
-             [:th "Tie"]
-             [:th "aosa"]
-             [:th "aet"]
-             [:th "losa"]
-             [:th "let"]]]
+           (when tierekisteriosoite?
+             [:thead
+             [:tr
+              [:th "Tie"]
+              [:th "aosa"]
+              [:th "aet"]
+              [:th "losa"]
+              [:th "let"]]])
            [:tbody
             [:tr
              [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
@@ -779,14 +780,17 @@
                (when (vkm/virhe? sijainti)
                  [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
 
-(defmethod nayta-arvo :tierekisteriosoite [_ data]
-  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
-    [:span.tierekisteriosoite
-     [:span.tie "Tie " numero] " / "
-     [:span.alkuosa alkuosa] " / "
-     [:span.alkuetaisyys alkuetaisyys]
-     [:span.loppuosa loppuosa] " / "
-     [:span.loppuetaisyys loppuetaisyys]]))
+(defmethod nayta-arvo :sijainti [{:keys [tierekisteriosoite?]} data]
+  (if tierekisteriosoite?
+    (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
+     [:span.tierekisteriosoite
+      [:span.tie "Tie " numero] " / "
+      [:span.alkuosa alkuosa] " / "
+      [:span.alkuetaisyys alkuetaisyys]
+      [:span.loppuosa loppuosa] " / "
+      [:span.loppuetaisyys loppuetaisyys]])
+
+    [:span ""])) ;;FIXME
 
 (defmethod tee-kentta :komponentti [{:keys [lomake? komponentti rivi]}]
   (komponentti rivi))
