@@ -108,7 +108,7 @@
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
    kayttajat (<! (yht/hae-urakan-kayttajat (:id ur)))
-   paivystajat (<! (yht/hae-urakan-paivystajat (:id ur)))
+   paivystajat (reverse (sort-by :loppu (<! (yht/hae-urakan-paivystajat (:id ur)))))
    yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
    sopimustyyppi (:sopimustyyppi ur)]
 
