@@ -23,7 +23,7 @@ VALUES
   ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-10-03 10:00.00', '2015-10-03 12:20.00', '2015-10-06 23:00.00',
                                                                     'Trukkikuskina ajaminen', 'Lastauksen tekeminen', 'Matilla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
                                                                     'Murtunut käsi', 1, 2, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435837, 7216227)::GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY['vaaratilanne']::turvallisuuspoikkeama_luokittelu[], 'vakava'::turvallisuuspoikkeama_vakavuusaste);
+   ARRAY['muu']::turvallisuuspoikkeama_luokittelu[], 'vakava'::turvallisuuspoikkeama_vakavuusaste);
 
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,

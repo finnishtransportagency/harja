@@ -2,7 +2,8 @@
 
 (def turpo-tyypit {:tyotapaturma "Työtapaturma"
                    :vaaratilanne "Vaaratilanne"
-                   :turvallisuushavainto "Turvallisuushavainto"})
+                   :turvallisuushavainto "Turvallisuushavainto"
+                   :muu "Muu"})
 
 (def vahinkoluokittelu-tyypit {:henkilovahinko   "Henkilövahinko"
                                :omaisuusvahinko  "Omaisuusvahinko"
