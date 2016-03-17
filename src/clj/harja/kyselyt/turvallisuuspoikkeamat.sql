@@ -1,5 +1,5 @@
 -- name: hae-urakan-turvallisuuspoikkeamat
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
        t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
        k.id              AS korjaavatoimenpide_id,
@@ -29,7 +29,7 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
 
 -- name: hae-turvallisuuspoikkeamat
 -- Hakee kaikki turvallisuuspoikkeamat aikavälillä ilman aluerajausta
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
        t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
        k.id AS korjaavatoimenpide_id,
