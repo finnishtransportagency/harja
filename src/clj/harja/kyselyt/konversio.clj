@@ -144,13 +144,26 @@
   [rivi kentta]
   (assoc rivi kentta (mapv keyword (kentta rivi))))
 
+(defn string-set->keyword-set
+  "Muuntaa mapin kentän setissä olevat stringit keywordeiksi."
+  [rivi kentta]
+  (assoc rivi kentta (set (map keyword (kentta rivi)))))
+
 (defn array->vec
-  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure vektoriksi."
+  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure-vektoriksi."
   [rivi kentta]
   (assoc rivi
     kentta (if-let [a (get rivi kentta)]
              (vec (.getArray a))
              [])))
+
+(defn array-set
+  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure-setiksi."
+  [rivi kentta]
+  (assoc rivi
+    kentta (if-let [a (get rivi kentta)]
+             (set (.getArray a))
+             #{})))
 
 (defn array->set
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi. 

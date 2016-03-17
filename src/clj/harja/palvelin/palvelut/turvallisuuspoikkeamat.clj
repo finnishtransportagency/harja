@@ -17,11 +17,11 @@
 (def turvallisuuspoikkeama-xf
   (comp (map konv/alaviiva->rakenne)
         (geo/muunna-pg-tulokset :sijainti)
-        (map #(konv/array->vec % :tyyppi))
-        (map #(konv/array->vec % :vahinkoluokittelu))
-        (map #(konv/string-vector->keyword-vector % :tyyppi))
+        (map #(konv/array->set % :tyyppi))
+        (map #(konv/array->set % :vahinkoluokittelu))
+        (map #(konv/string-set->keyword-set % :tyyppi))
         (map #(konv/string->keyword % :vakavuusaste))
-        (map #(konv/string-vector->keyword-vector % :vahinkoluokittelu))
+        (map #(konv/string-set->keyword-set % :vahinkoluokittelu))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
