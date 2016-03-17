@@ -50,24 +50,22 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
-        [{:otsikko          "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
-          :nayta-rivina?    true
-          :pakollinen?      true
-          :vaihtoehto-nayta #(turpodomain/turpo-tyypit %)
-          :validoi          [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
-          :vaihtoehdot      (keys turpodomain/turpo-tyypit)}
-         {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group
-          :nayta-rivina? true
-          :pakollinen? true
-          :vaihtoehto-nayta #(turpodomain/vahinkoluokittelu-tyypit %)
-          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vahinkoluokittelu")]
-          :vaihtoehdot (keys turpodomain/vahinkoluokittelu-tyypit)}
-         {:otsikko "Vakavuusaste" :nimi :vakavuusaste :tyyppi :radio-group
-          :nayta-rivina? true
-          :pakollinen? true
-          :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
-          :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
-          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)}
+        [(lomake/ryhma {:rivi? true}
+                       {:otsikko          "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
+                        :pakollinen?      true
+                        :vaihtoehto-nayta #(turpodomain/turpo-tyypit %)
+                        :validoi          [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
+                        :vaihtoehdot      (keys turpodomain/turpo-tyypit)}
+                       {:otsikko          "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group
+                        :pakollinen?      true
+                        :vaihtoehto-nayta #(turpodomain/vahinkoluokittelu-tyypit %)
+                        :validoi          [#(when (empty? %) "Anna turvallisuuspoikkeaman vahinkoluokittelu")]
+                        :vaihtoehdot      (keys turpodomain/vahinkoluokittelu-tyypit)}
+                       {:otsikko          "Vakavuusaste" :nimi :vakavuusaste :tyyppi :radio-group
+                        :pakollinen?      true
+                        :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
+                        :validoi          [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
+                        :vaihtoehdot      (keys turpodomain/turpo-vakavuusasteet)})
          (lomake/ryhma {:rivi? true}
                        {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                         :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
