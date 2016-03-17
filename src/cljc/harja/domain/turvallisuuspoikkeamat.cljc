@@ -45,3 +45,9 @@
    :vaylanhoitaja                            "Väylänhoitaja"
    :muu_tyontekija                           "Muu työntekijä"
    :tyomaan_ulkopuolinen                     "Työmään ulkopuolinen"})
+
+(defn kuvaile-tyontekijan-ammatti [turvallisuuspoikkeama]
+  (if (= (:tyontekijanammatti turvallisuuspoikkeama) :muu_tyontekija)
+    (:tyontekijanammattimuu turvallisuuspoikkeama)
+    (turpo-tyontekijan-ammatit
+      (:tyontekijanammatti turvallisuuspoikkeama))))
