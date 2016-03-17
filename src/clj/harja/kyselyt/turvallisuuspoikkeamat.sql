@@ -14,7 +14,7 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
 
 -- name: hae-hallintayksikon-turvallisuuspoikkeamat
 -- Hakee turvallisuuspoikkeamat, jotka ovat annetun hallintayksikön urakoissa raportoituja
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
        t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
        k.id AS korjaavatoimenpide_id,
@@ -188,7 +188,8 @@ SET urakka               = :urakka,
   tapahtunut             = :tapahtunut,
   paattynyt              = :paattynyt,
   kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti,
+  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu = :ammatti_muu,
   tyotehtava             = :tehtava,
   kuvaus                 = :kuvaus,
   vammat                 = :vammat,

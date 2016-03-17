@@ -26,7 +26,7 @@
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyontekijaselite tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -38,6 +38,7 @@
                        (aika-string->java-sql-date paattynyt)
                        (aika-string->java-sql-date kasitelty)
                        tyontekijanammatti
+                       tyontekijaselite
                        tyotehtava
                        kuvaus
                        aiheutuneetVammat
@@ -64,7 +65,7 @@
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyontekijaselite tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -76,6 +77,7 @@
       (aika-string->java-sql-date paattynyt)
       (aika-string->java-sql-date kasitelty)
       tyontekijanammatti
+      tyontekijaselite
       tyotehtava
       kuvaus
       aiheutuneetVammat
