@@ -15,8 +15,8 @@
   [db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
    +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto selite]
   (ilmoituspalvelu/hae-ilmoitukset db user
-                                   {:hallintayksikko-id hallintayksikko-id
-                                    :urakka-id urakka-id
+                                   {:hallintayksikko hallintayksikko-id
+                                    :urakka urakka-id
                                     :urakoitsija urakoitsija
                                     :urakkatyyppi urakkatyyppi
                                     :tilat +ilmoitustilat+

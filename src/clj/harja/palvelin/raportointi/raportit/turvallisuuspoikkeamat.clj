@@ -16,11 +16,11 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
 
-
 (def turvallisuuspoikkeama-tyyppi
   {"tyotapaturma" "Ty\u00ADö\u00ADta\u00ADpa\u00ADtur\u00ADma"
    "vaaratilanne" "Vaa\u00ADra\u00ADti\u00ADlan\u00ADne"
-   "turvallisuushavainto" "Tur\u00ADval\u00ADli\u00ADsuus\u00ADha\u00ADvain\u00ADto"})
+   "turvallisuushavainto" "Tur\u00ADval\u00ADli\u00ADsuus\u00ADha\u00ADvain\u00ADto"
+   "muu" "Muu"})
 
 (defn ilmoituksen-tyyppi [{tyyppi :tyyppi}]
   (into {}
@@ -55,7 +55,8 @@
                                         kk
                                         [(get maarat "tyotapaturma")
                                          (get maarat "vaaratilanne")
-                                         (get maarat "turvallisuushavainto")])))
+                                         (get maarat "turvallisuushavainto")
+                                         (get maarat "muu")])))
                                   {} turpo-maarat-kuukausittain)
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
@@ -76,7 +77,8 @@
                         (let [turpo-maarat-per-tyyppi (frequencies (mapcat :tyyppi turpot))]
                           [(rivi (:nimi urakka) "Työtapaturma" (or (turpo-maarat-per-tyyppi "tyotapaturma") 0))
                            (rivi (:nimi urakka) "Vaaratilanne" (or (turpo-maarat-per-tyyppi "vaaratilanne") 0))
-                           (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))]))
+                           (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))
+                           (rivi (:nimi urakka) "Muu" (or (turpo-maarat-per-tyyppi "muu") 0))]))
                       (if urakoittain?
                         (group-by :urakka turpot)
                         [[nil turpot]]))
@@ -91,7 +93,7 @@
                                :alkupvm              alkupvm :loppupvm loppupvm
                                :kuukausittainen-data turpomaarat-tyypeittain
                                :piilota-arvo?        #{0}
-                               :legend               ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]})
+                               :legend               ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot" "Muut"]})
        ;; estää nillin pääsyn PDF:ään
        [:teksti ""])
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
