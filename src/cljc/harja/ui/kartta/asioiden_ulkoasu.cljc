@@ -30,7 +30,7 @@
       ;; Kasvatetaan kaikkien viivojen leveyttä, jos kapein viiva oli 0 tai alle
       (let [lisattava-leveys (- (- kapein-viiva 2))]
         (map
-          (fn[{:keys [width] :as viiva}]
+          (fn [{:keys [width] :as viiva}]
             (assoc viiva :width (+ lisattava-leveys width)))
           viivat)))))
 
@@ -101,26 +101,26 @@
    :laatupoikkeama-konsultti   "tummansininen"
    :laatupoikkeama-urakoitsija "sininen"
    :tarkastus                  "punainen"
-   :tarkastus-tilaaja                  "punainen"
-   :tarkastus-konsultti                  "punainen"
-   :tarkastus-urakoitsija                  "punainen"
+   :tarkastus-tilaaja          "punainen"
+   :tarkastus-konsultti        "punainen"
+   :tarkastus-urakoitsija      "punainen"
    :varustetoteuma             "violetti"
    :yllapito                   "pinkki"})
 
 (def viivojen-varit
-  {:yllapito-aloitettu puhtaat/keltainen
-   :yllapito-valmis puhtaat/lime
-   :yllapito-muu puhtaat/syaani
-   :yllapito-pohja puhtaat/musta
-   :yllapito-katkoviiva puhtaat/tummanharmaa
+  {:yllapito-aloitettu          puhtaat/keltainen
+   :yllapito-valmis             puhtaat/lime
+   :yllapito-muu                puhtaat/syaani
+   :yllapito-pohja              puhtaat/musta
+   :yllapito-katkoviiva         puhtaat/tummanharmaa
 
-   :ok-tarkastus puhtaat/musta
-   :ok-tarkastus-tilaaja puhtaat/musta
-   :ok-tarkastus-konsultti puhtaat/musta
-   :ok-tarkastus-urakoitsija puhtaat/musta
-   :ei-ok-tarkastus puhtaat/punainen
-   :ei-ok-tarkastus-tilaaja puhtaat/punainen
-   :ei-ok-tarkastus-konsultti puhtaat/punainen
+   :ok-tarkastus                puhtaat/musta
+   :ok-tarkastus-tilaaja        puhtaat/musta
+   :ok-tarkastus-konsultti      puhtaat/musta
+   :ok-tarkastus-urakoitsija    puhtaat/musta
+   :ei-ok-tarkastus             puhtaat/punainen
+   :ei-ok-tarkastus-tilaaja     puhtaat/punainen
+   :ei-ok-tarkastus-konsultti   puhtaat/punainen
    :ei-ok-tarkastus-urakoitsija puhtaat/punainen})
 
 
@@ -193,7 +193,7 @@
 (defn yllapidon-ikoni []
   {:paikka [:loppu]
    :tyyppi :merkki
-   :img (:yllapito ikonien-varit)})
+   :img    (:yllapito ikonien-varit)})
 
 (defn yllapidon-viiva [valittu? avoin? tila tyyppi]
   (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
@@ -206,14 +206,14 @@
                tila
                (keyword (str/lower-case (or tila "muu"))))]
     [{:color (:yllapito-pohja viivojen-varit)
-     :width (nth leveydet 0)}
+      :width (nth leveydet 0)}
      {:color (case tila
                :aloitettu (:yllapito-aloitettu viivojen-varit)
                :valmis (:yllapito-valmis viivojen-varit)
                (:yllapito-muu viivojen-varit))
       :width (nth leveydet 1)}
      {:color (:yllapito-katkoviiva viivojen-varit)
-      :dash (if (= tyyppi :paikkaus) [3 9] [10 5])
+      :dash  (if (= tyyppi :paikkaus) [3 9] [10 5])
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
@@ -285,10 +285,10 @@
     :tiedoitus (tiedotuksen-ikoni tila)))
 
 (def ^{:doc "TR-valinnan viivatyyli"}
-  tr-viiva {:color  puhtaat/tummanharmaa
-            :dash [15 15]
-            :zindex 20})
+tr-viiva {:color  puhtaat/tummanharmaa
+          :dash   [15 15]
+          :zindex 20})
 
 (def ^{:doc "TR-valinnan ikoni"}
-  tr-ikoni {:img    (pinni-ikoni "musta")
-            :zindex 21})
+tr-ikoni {:img    (pinni-ikoni "musta")
+          :zindex 21})
