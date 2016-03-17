@@ -30,7 +30,7 @@
 (deftest hae-turvallisuuspoikkeamat-test
   (let []
     (is (oikeat-sarakkeet-palvelussa?
-          [:id :urakka :tapahtunut :paattynyt :kasitelty :tyontekijanammatti :tyontekijanammattimuu :tyotehtava :kuvaus
+          [:id :urakka :tapahtunut :paattynyt :kasitelty :tyontekijanammatti :tyotehtava :kuvaus
            :vammat :sairauspoissaolopaivat :sairaalavuorokaudet :sijainti :tyyppi
            [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]]
 
