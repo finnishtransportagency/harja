@@ -76,6 +76,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
   (if-let [jono (get-in jonot [jonon-nimi :queue])]
     jono
     (let [q (.createQueue istunto jonon-nimi)]
+      ;; todo: Näyttää epäilyttävälle. Paluuarvoa ei käytetä mihinkään.
       (assoc-in jonot [jonon-nimi :queue] q)
       q)))
 
@@ -86,6 +87,7 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     producer
     (let [jono (varmista-jono istunto jonot jonon-nimi)
           producer (.createProducer istunto jono)]
+      ;; todo: Näyttää epäilyttävälle. Paluuarvoa ei käytetä mihinkään.
       (assoc-in jonot [jonon-nimi :producer] producer)
       producer)))
 
