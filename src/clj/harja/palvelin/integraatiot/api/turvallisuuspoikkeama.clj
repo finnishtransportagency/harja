@@ -86,8 +86,8 @@
       (:id kirjaaja)
       (konv/vec->array vahinkoluokittelu)
       vakavuusaste
-      (:id tunniste)
       seuraukset
+      (:id tunniste)
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
            db

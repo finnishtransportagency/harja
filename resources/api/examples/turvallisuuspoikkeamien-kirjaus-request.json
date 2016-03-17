@@ -69,6 +69,7 @@
       "sairaalahoitovuorokaudet": 0,
       "vahinkoluokittelu": ["omaisuusvahinko", "ymparistovahinko"],
       "vakavuusaste": "vakava",
+      "seuraukset": "Kaikki selvisivät hengissä",
       "korjaavatToimenpiteet": [
         {
           "kuvaus": "Kaadetaan risteystä pimentävä pensaikko",
