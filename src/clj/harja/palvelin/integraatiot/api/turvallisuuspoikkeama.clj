@@ -32,6 +32,13 @@
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ammatin selite puuttuu!"}]})))
 
+(defn pida-ammatin-selite-tarvittaessa
+  "Jos ammatti on muu työntekijä, palauttaa selitteen, muuten tyhjä string."
+  [turvallisuuspoikkeama]
+  (if (= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
+    (:ammatinselite turvallisuuspoikkeama)
+    ""))
+
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
@@ -46,7 +53,7 @@
                        (aika-string->java-sql-date paattynyt)
                        (aika-string->java-sql-date kasitelty)
                        tyontekijanammatti
-                       ammatinselite
+                       (pida-ammatin-selite-tarvittaessa data)
                        tyotehtava
                        kuvaus
                        aiheutuneetVammat
@@ -85,7 +92,7 @@
       (aika-string->java-sql-date paattynyt)
       (aika-string->java-sql-date kasitelty)
       tyontekijanammatti
-      ammatinselite
+      (pida-ammatin-selite-tarvittaessa data)
       tyotehtava
       kuvaus
       aiheutuneetVammat
