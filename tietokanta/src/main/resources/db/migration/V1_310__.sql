@@ -15,7 +15,7 @@ CREATE TYPE tyontekijanammatti AS ENUM (
   'liikenteenohjaaja',
   'mittamies',
   'panostaja',
-  'perämies',
+  'peramies',
   'porari',
   'rakennustyontekija',
   'ratatyontekija',
