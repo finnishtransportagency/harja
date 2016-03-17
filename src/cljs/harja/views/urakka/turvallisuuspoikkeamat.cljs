@@ -94,7 +94,8 @@
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
-         
+         {:otsikko "Aiheutuneet seuraukset" :nimi :seuraukset :palstoja 1
+          :tyyppi  :text}
          {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
           :palstoja 2
           :komponentti [korjaavattoimenpiteet (r/wrap

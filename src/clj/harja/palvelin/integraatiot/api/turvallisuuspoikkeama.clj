@@ -25,7 +25,7 @@
     vastauksen-data))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
+  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
@@ -46,7 +46,8 @@
                        (konv/vec->array luokittelu)
                        (:id kirjaaja)
                        (konv/vec->array vahinkoluokittelu)
-                       vakavuusaste))]
+                       vakavuusaste
+                       seuraukset))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
@@ -63,7 +64,7 @@
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
+  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
@@ -86,6 +87,7 @@
       (konv/vec->array vahinkoluokittelu)
       vakavuusaste
       (:id tunniste)
+      seuraukset
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
            db

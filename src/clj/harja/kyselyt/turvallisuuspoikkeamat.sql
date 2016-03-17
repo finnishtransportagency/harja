@@ -65,6 +65,7 @@ SELECT
   t.vakavuusaste,
   t.vahinkoluokittelu,
   t.tyyppi,
+  t.aiheutuneet_seuraukset as seuraukset,
 
   k.id                   AS korjaavatoimenpide_id,
   k.kuvaus               AS korjaavatoimenpide_kuvaus,
@@ -110,7 +111,7 @@ FROM turvallisuuspoikkeama t
 
   LEFT JOIN liite koml ON kom.liite = koml.id
 
-WHERE t.id = :id AND t.urakka = :urakka
+WHERE t.id = :id AND t.urakka = :urakka;
 
 -- name: onko-olemassa-ulkoisella-idlla
 -- Tarkistaa löytyykö turvallisuuspoikkeamaa ulkoisella id:llä
@@ -161,8 +162,9 @@ SET
   muokkaaja              = :kayttaja,
   muokattu               = NOW(),
   vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
-WHERE id = :id;
+  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  aiheutuneet_seuraukset = :aiheutuneet_seuraukset
+  WHERE id = :id;
 
 --name: aseta-turvallisuuspoikkeaman-sijainti!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
@@ -180,7 +182,6 @@ SET
 WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
-
 UPDATE turvallisuuspoikkeama
 SET urakka               = :urakka,
   tapahtunut             = :tapahtunut,
@@ -196,6 +197,7 @@ SET urakka               = :urakka,
   muokkaaja              = :kayttaja,
   vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
   vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  aiheutuneet_seuraukset = :aiheutuneet_seuraukset,
   muokattu               = NOW()
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
@@ -222,8 +224,8 @@ WHERE id = :id;
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste)
+ sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, aiheutuneet_seuraukset)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste);
+   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :aiheutuneet_seuraukset);
