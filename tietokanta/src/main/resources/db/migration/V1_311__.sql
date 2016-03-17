@@ -28,7 +28,7 @@ CREATE TYPE vahingoittunut_ruumiinosa AS ENUM (
   'ranne',
   'muu_kasi',
   'nilkka',
-  'jalkatera_ja_varvas)',
+  'jalkatera_ja_varvas',
   'muu_jalka',
   'koko_keho',
   'ei_tietoa'
