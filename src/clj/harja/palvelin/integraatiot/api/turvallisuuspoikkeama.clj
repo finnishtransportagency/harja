@@ -33,11 +33,10 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ammatin selite puuttuu!"}]})))
 
 (defn pida-ammatin-selite-tarvittaessa
-  "Jos ammatti on muu työntekijä, palauttaa selitteen, muuten tyhjä string."
+  "Jos ammatti on muu työntekijä, palauttaa selitteen, muuten palautuu nil"
   [turvallisuuspoikkeama]
-  (if (= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
-    (:ammatinselite turvallisuuspoikkeama)
-    ""))
+  (when (= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
+    (:ammatinselite turvallisuuspoikkeama)))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
