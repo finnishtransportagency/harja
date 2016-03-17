@@ -146,7 +146,7 @@
               "tyomaan_ulkopuolinen"
             ]
           },
-          "tyontekijaselite": {
+          "ammatinselite": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijaselite",
             "type": "string"
           },

@@ -3,7 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.1.1. Julkaistu 17.3.2016
-    - Turvallisuuspoikkeaman työntekijän ammatti annetaan nyt tietystä arvojoukosta. Jos ammatt on muu_tyontekija, annetaan tarkempi kuvaus selitteenä.
+    - Turvallisuuspoikkeaman työntekijän ammatti annetaan nyt tietystä arvojoukosta. Jos ammatti on muu_tyontekija, annetaan tarkempi kuvaus selitteenä.
 - Versionumero: 0.1.0. Julkaistu 17.3.2016
     - Uusi turvallisuuspoikkeamatyyppi: muu
 - Versionumero: 0.0.9. Julkaistu 11.2.2016
