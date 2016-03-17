@@ -149,7 +149,7 @@
        :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
       [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
        {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys "15%"
-        :hae (fn [rivi] (if (:tyontekijanammattimuu rivi)
+       :hae (fn [rivi] (if (= (:tyontekijanammatti rivi) :muu_tyontekija)
                           (:tyontekijanammattimuu rivi)
                           (turpodomain/turpo-tyontekijan-ammatit
                             (:tyontekijanammatti rivi))))}
