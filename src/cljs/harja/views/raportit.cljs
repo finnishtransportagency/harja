@@ -83,9 +83,11 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
-(defonce valittu-vuosi (reaction
-                        (when-not @hoitourakassa?
-                          (pvm/vuosi (pvm/nyt)))))
+(def valittu-vuosi (reaction
+                         (let [hoitourakassa? @hoitourakassa?
+                               valittu-urakka @nav/valittu-urakka]
+                           (when-not hoitourakassa?
+                            (pvm/vuosi (pvm/nyt))))))
 (defonce valittu-hoitokausi (reaction (when @hoitourakassa?
                                         @u/valittu-hoitokausi)))
 (defonce kuukaudet (reaction

@@ -45,6 +45,10 @@ SELECT
   o.nimi        AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija,
   stm.hoitoluokka      AS soratiemittaus_hoitoluokka,
   stm.tasaisuus        AS soratiemittaus_tasaisuus,
   stm.kiinteys         AS soratiemittaus_kiinteys,

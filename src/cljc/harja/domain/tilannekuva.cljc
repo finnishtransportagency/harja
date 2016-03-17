@@ -68,7 +68,8 @@
  [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"])
 
 (def jarjestys
-  {:talvi [auraus-ja-sohjonpoisto
+  {:ilmoitukset {:tyypit [tpp tur urk]}
+   :talvi [auraus-ja-sohjonpoisto
            suolaus
            liuossuolaus
            pistehiekoitus

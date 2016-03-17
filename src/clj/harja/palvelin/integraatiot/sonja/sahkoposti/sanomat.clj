@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.sonja.sahkoposti.sanomat
-  (:require [harja.tyokalut.xml :as xml]
+  (:require [taoensso.timbre :as log]
+            [harja.tyokalut.xml :as xml]
             [clojure.data.zip.xml :as z]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [throw+]]
@@ -12,6 +13,7 @@
 
 (defn- validoi [xml-viesti]
   (when-not (xml/validoi +xsd-polku+ +sahkoposti-xsd+ xml-viesti)
+    (log/error "Vastaanotettu sähköposti XML-tiedosto ei ole sahkoposti.xsd skeeman mukainen.")
     (throw+ {:type virheet/+invalidi-xml+})))
 
 (defn- lue-xml [xml-viesti]
@@ -24,7 +26,7 @@
   (let [v (lue-xml xml-viesti)]
     {:viesti-id (v :viestiId)
      :vastaanottaja (v :vastaanottajat
-                        :vastaanottaja)
+                       :vastaanottaja)
      :lahettaja (v :lahettaja)
      :otsikko (v :otsikko)
      :sisalto (v :sisalto)}))

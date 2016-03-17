@@ -1,7 +1,8 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
-            #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-               :clj [taoensso.timbre :as log])
+    #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
+       :clj
+            [taoensso.timbre :as log])
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.ilmoitukset :as ilmoitukset]
@@ -156,21 +157,21 @@
          (or (= :point tyyppi) (= 1 (count koordinaatit)))
          (when merkit
            (merge
-            (maarittele-piste valittu? (or pisteen-ikoni merkit))
-            {:type        :merkki
-             :coordinates (flatten koordinaatit)})) ;; [x y] -> [x y] && [[x y]] -> [x y]
+             (maarittele-piste valittu? (or pisteen-ikoni merkit))
+             {:type        :merkki
+              :coordinates (flatten koordinaatit)}))        ;; [x y] -> [x y] && [[x y]] -> [x y]
 
          (= :line tyyppi)
          (merge
-          (maarittele-viiva valittu? merkit viivat)
-          {:type   :viiva
-           :points koordinaatit})
+           (maarittele-viiva valittu? merkit viivat)
+           {:type   :viiva
+            :points koordinaatit})
 
          (= :multiline tyyppi)
          (merge
-          (maarittele-viiva valittu? merkit viivat)
-          {:type   :viiva
-           :points koordinaatit}))))))
+           (maarittele-viiva valittu? merkit viivat)
+           {:type   :viiva
+            :points koordinaatit}))))))
 
 ;;;;;;
 
@@ -180,7 +181,7 @@
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
   (->> viivat
        (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
-                     :color (or (:color %) ulkoasu/+normaali-vari+)))
+                       :color (or (:color %) ulkoasu/+normaali-vari+)))
        (sort-by :width >)
        (mapv :color)))
 
@@ -234,14 +235,16 @@
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
-                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus))]
+                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
+                (:tekija tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti (valittu-fn? tarkastus) (:ok? tarkastus)
+                                           (:tekija tarkastus))]
     (assoc tarkastus
       :type :tarkastus
       :nimi (or (:nimi tarkastus)
                 (otsikko-tekijalla
-                 (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus))
-                 tarkastus))
+                  (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus))
+                  tarkastus))
       :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
                :img    ikoni}
       :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni viiva))))
@@ -302,7 +305,7 @@
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]
   (defn generoitu-tyyli [tehtavan-nimi]
-    (log "WARN: "tehtavan-nimi" määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
+    (log "WARN: " tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
     (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (def tehtavien-nimet
@@ -357,7 +360,7 @@
   [{leveys :width :as viiva}]
   (if leveys
     (assoc viiva
-           :width (+ 2 leveys))
+      :width (+ 2 leveys))
     viiva))
 
 (defn- viimeistele-asetukset [[viivat nuoli] valittu?]
@@ -410,7 +413,7 @@
                  ;; tai nimi muodostetaan yhdistämällä tehtävien toimenpiteet
                  (tehtavan-nimi toimenpiteet))
           [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
-                                toimenpiteet (valittu-fn? toteuma))]
+                                 toimenpiteet (valittu-fn? toteuma))]
       (assoc toteuma
         :type :toteuma
         :nimi nimi
@@ -429,7 +432,7 @@
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
-                              (:tehtavat tyokone) (valittu-fn? tyokone))
+                               (:tehtavat tyokone) (valittu-fn? tyokone))
         paikka {:sijainti {:type (if (:reitti tyokone) :line :point)}}
         paikka (if (:reitti tyokone)
                  (assoc-in paikka [:sijainti :points] (:reitti tyokone))

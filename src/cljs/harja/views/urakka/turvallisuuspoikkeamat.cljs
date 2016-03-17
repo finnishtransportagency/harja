@@ -53,7 +53,7 @@
         [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
           :nayta-rivina? true
           :pakollinen? true
-          :vaihtoehto-nayta #(turpodomain/turpo-tyypit %)
+          :vaihtoehto-nayta turpodomain/turpo-tyypit
           :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
           :vaihtoehdot (keys turpodomain/turpo-tyypit)}
          {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group

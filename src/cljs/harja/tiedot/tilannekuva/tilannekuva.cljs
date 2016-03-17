@@ -42,8 +42,8 @@ hakutiheys-historiakuva 1200000)
   (atom {:yllapito        {tk/paallystys false
                            tk/paikkaus   false}
          :ilmoitukset     {:tyypit {tk/tpp false
-                                    tk/urk false
-                                    tk/tur false}
+                                    tk/tur false
+                                    tk/urk false}
                            :tilat  ilmoitusten-tilat-nykytilanteessa}
          :turvallisuus    {tk/turvallisuuspoikkeamat false}
          :laatupoikkeamat {tk/laatupoikkeama-tilaaja     false
