@@ -152,7 +152,8 @@ SET
   tapahtunut             = :tapahtunut,
   paattynyt              = :paattynyt,
   kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti,
+  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu = :ammatti_muu,
   tyotehtava             = :tehtava,
   kuvaus                 = :kuvaus,
   vammat                 = :vammat,
@@ -222,9 +223,9 @@ WHERE id = :id;
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
+(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyontekijanammatti_muu, tyotehtava, kuvaus, vammat,
  sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste)
 VALUES
-  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
+  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
    :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste);

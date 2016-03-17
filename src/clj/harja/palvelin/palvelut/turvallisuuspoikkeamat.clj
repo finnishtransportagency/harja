@@ -68,7 +68,7 @@
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user
    {:keys
-    [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
+    [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu tyotehtava kuvaus vammat sairauspoissaolopaivat
      sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste
      tyyppi]}]
 
@@ -87,7 +87,7 @@
         tr_loppuosa (:loppuosa tr)]
     (if id
       (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                             (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                             (konv/sql-timestamp kasitelty) (name tyontekijanammatti) tyontekijanammattimuu tyotehtava
                                              kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
                                              (konv/vec->array tyyppi)
                                              (:id user)
@@ -100,7 +100,7 @@
           id)
 
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                                   (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
+                                                   (konv/sql-timestamp kasitelty) (name tyontekijanammatti) tyontekijanammattimuu tyotehtava
                                                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
                                                    (konv/vec->array tyyppi)
                                                    (:id user)
