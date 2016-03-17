@@ -1,0 +1,14 @@
+<yha:urakoiden-hakuvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
+  <yha:urakat>
+    <!--Zero or more repetitions:-->
+    <yha:urakka>
+      <yha:yha-id>3</yha:yha-id>
+      <yha:ely>POP</yha:ely>
+      <yha:vuosi>2016</yha:vuosi>
+      <yha:tunnus>string</yha:tunnus>
+      <yha:nimi>string</yha:nimi>
+    </yha:urakka>
+  </yha:urakat>
+  <!--Optional:-->
+  <yha:virhe>string</yha:virhe>
+</yha:urakoiden-hakuvastaus>

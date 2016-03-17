@@ -174,7 +174,7 @@
            {:otsikko     "Lähetys Sampoon" :nimi :laheta :tyyppi :komponentti
             :komponentti (fn [rivi]
                            (let [maksueranumero (:numero rivi)]
-                             [:button.nappi-ensisijainen.nappi-grid {:class    (str "nappi-ensisijainen " (if (contains? kuittausta-odottavat maksueranumero) "disabled"))
+                             [:button.nappi-ensisijainen.nappi-grid {:class    (if (contains? kuittausta-odottavat maksueranumero) " disabled")
                                                                      :type     "button"
                                                                      :on-click #(laheta-maksuerat #{maksueranumero})} "Lähetä"]))
             :leveys      "10%"}]
