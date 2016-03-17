@@ -57,7 +57,8 @@
 
         [:span
          [:button
-          {:class    (if (or @kysely-kaynnissa? (:disabled asetukset))
+          {:disabled (or @kysely-kaynnissa? disabled)
+           :class    (if (or @kysely-kaynnissa? (:disabled asetukset))
                        (str luokka " disabled")
                        luokka)
            :on-click #(do
