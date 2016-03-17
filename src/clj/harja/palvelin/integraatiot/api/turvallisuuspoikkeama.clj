@@ -27,16 +27,16 @@
     vastauksen-data))
 
 (defn tarkista-ammatin-selite [turvallisuuspoikkeama]
-  (if (and (= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
-           (str/blank? (:ammatinselite turvallisuuspoikkeama)))
+  (cond
+    (and (= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
+         (str/blank? (:ammatinselite turvallisuuspoikkeama)))
     (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ammatin selite puuttuu!"}]})))
-
-(defn pida-ammatin-selite-tarvittaessa
-  "Jos ammatti on muu työntekijä, palauttaa selitteen, muuten palautuu nil"
-  [turvallisuuspoikkeama]
-  (when (= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
-    (:ammatinselite turvallisuuspoikkeama)))
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ammatin selite puuttuu!"}]})
+    (and (not= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
+         (not (str/blank? (:ammatinselite turvallisuuspoikkeama))))
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})
+    :default true))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
@@ -52,7 +52,7 @@
                        (aika-string->java-sql-date paattynyt)
                        (aika-string->java-sql-date kasitelty)
                        tyontekijanammatti
-                       (pida-ammatin-selite-tarvittaessa data)
+                       ammatinselite
                        tyotehtava
                        kuvaus
                        aiheutuneetVammat
@@ -91,7 +91,7 @@
       (aika-string->java-sql-date paattynyt)
       (aika-string->java-sql-date kasitelty)
       tyontekijanammatti
-      (pida-ammatin-selite-tarvittaessa data)
+      ammatinselite
       tyotehtava
       kuvaus
       aiheutuneetVammat
