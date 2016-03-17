@@ -51,7 +51,7 @@ SELECT
   t.paattynyt,
   t.kasitelty,
   t.tyontekijanammatti,
-  t.tyontekijanammatti_muu,
+  t.tyontekijanammatti_muu as tyontekijanammattimuu,
   t.tyotehtava,
   t.kuvaus,
   t.vammat,

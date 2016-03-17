@@ -50,12 +50,12 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
-        [{:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
-          :nayta-rivina? true
-          :pakollinen? true
+        [{:otsikko          "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
+          :nayta-rivina?    true
+          :pakollinen?      true
           :vaihtoehto-nayta #(turpodomain/turpo-tyypit %)
-          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
-          :vaihtoehdot (keys turpodomain/turpo-tyypit)}
+          :validoi          [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
+          :vaihtoehdot      (keys turpodomain/turpo-tyypit)}
          {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group
           :nayta-rivina? true
           :pakollinen? true
@@ -87,10 +87,12 @@
          {:otsikko "Työntekijän ammatti"
           :nimi :tyontekijanammatti
           :tyyppi :valinta
-          :valinnat (keys turpodomain/turpo-tyontekijan-ammatit)
+          :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
           :valinta-nayta turpodomain/turpo-tyontekijan-ammatit
           :uusi-rivi? true}
-         {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
+         (when (= :muu_tyontekija (:tyontekijanammatti @muokattu))
+           {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
+         {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1 :uusi-rivi? true}
          {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :palstoja 1
           :pakollinen? true
           :validoi [[:ei-tyhja "Anna kuvaus"]]}
@@ -99,7 +101,7 @@
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
-         
+
          {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
           :palstoja 2
           :komponentti [korjaavattoimenpiteet (r/wrap
