@@ -102,7 +102,7 @@
          {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
 
-         {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
+         {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
           :palstoja 2
           :komponentti [korjaavattoimenpiteet (r/wrap
                                                 (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @muokattu)))
@@ -146,17 +146,21 @@
       (ikonit/plus) " Lisää turvallisuuspoikkeama"]
 
      [grid/grid
-      {:otsikko       "Turvallisuuspoikkeamat"
-       :tyhja         (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+      {:otsikko "Turvallisuuspoikkeamat"
+       :tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
       [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
-       {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :tyyppi :string :leveys "15%"}
+       {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys "15%"
+        :hae (fn [rivi] (if (:tyontekijanammattimuu rivi)
+                          (:tyontekijanammattimuu rivi)
+                          (turpodomain/turpo-tyontekijan-ammatit
+                            (:tyontekijanammatti rivi))))}
        {:otsikko "Ty\u00ADöteh\u00ADtä\u00ADvä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
        {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
        {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys "5%"
-        :hae     (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
+        :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
-        :hae     (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
+        :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
       @tiedot/haetut-turvallisuuspoikkeamat]]))
 
 (defn turvallisuuspoikkeamat []
