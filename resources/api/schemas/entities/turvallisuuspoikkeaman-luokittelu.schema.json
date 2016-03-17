@@ -4,6 +4,7 @@
   "enum": [
     "tyotapaturma",
     "vaaratilanne",
-    "turvallisuushavainto"
+    "turvallisuushavainto",
+    "muu"
   ]
 }
