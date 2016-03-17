@@ -234,8 +234,10 @@
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
-                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus))]
+                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
+                (:tekija tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti (valittu-fn? tarkastus) (:ok? tarkastus)
+                                           (:tekija tarkastus))]
     (assoc tarkastus
       :type :tarkastus
       :nimi (or (:nimi tarkastus)
