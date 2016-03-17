@@ -30,7 +30,7 @@
 (deftest hae-turvallisuuspoikkeamat-test
   (let []
     (is (oikeat-sarakkeet-palvelussa?
-          [:id :urakka :tapahtunut :paattynyt :kasitelty :tyontekijanammatti :tyotehtava :kuvaus
+          [:id :urakka :tapahtunut :paattynyt :kasitelty :tyontekijanammatti :tyontekijanammattimuu :tyotehtava :kuvaus
            :vammat :sairauspoissaolopaivat :sairaalavuorokaudet :sijainti :tyyppi
            [:tr :numero] [:tr :alkuetaisyys] [:tr :loppuetaisyys] [:tr :alkuosa] [:tr :loppuosa]]
 
@@ -52,7 +52,7 @@
             :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
             :paattynyt (pvm/luo-pvm (+ 1900 105) 9 1)
             :kasitelty (pvm/luo-pvm (+ 1900 105) 9 1)
-            :tyontekijanammatti "Testaaja"
+            :tyontekijanammatti :kuorma-autonkuljettaja
             :tyotehtava "Testaus"
             :kuvaus    "e2e taas punaisena"
             :vammat "Lähinnä tympäsee"
