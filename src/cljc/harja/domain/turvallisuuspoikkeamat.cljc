@@ -30,7 +30,7 @@
    :panostaja                                "Panostaja"
    :peramies                                 "Perämies"
    :porari                                   "Porari"
-   :rakennustyontekija                       "Rakennustyöntekijä (rakennusmies, purku-, muotti-, raudoitus-, betoni-)"
+   :rakennustyontekija                       "Rakennustyöntekijä"
    :ratatyontekija                           "Ratatyöntekijä"
    :ratatyosta_vastaava                      "Ratatyöstä vastaava"
    :sukeltaja                                "Sukeltaja"
