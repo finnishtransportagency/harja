@@ -17,7 +17,7 @@
 
 (def turpo-tyontekijan-ammatit
   {:aluksen_paallikko                        "Aluksen päällikkö"
-   :asentaja                                 "Asentaja "
+   :asentaja                                 "Asentaja"
    :asfalttityontekija                       "Asfalttityöntekijä"
    :harjoittelija                            "Harjoittelija"
    :hitsaaja                                 "Hitsaaja"
