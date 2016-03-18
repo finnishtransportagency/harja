@@ -68,8 +68,8 @@
   [db user
    {:keys
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
-     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste
-     tyyppi]}]
+     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste vamman_laatu vahingoittunut_ruumiinosa
+     tyyppi sairaspoissaolo_jatkuu]}]
 
   (log/debug "tallennetaan tyypit: " (konv/vec->array tyyppi))
 
@@ -89,6 +89,9 @@
                                              (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
                                              kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
                                              (konv/vec->array tyyppi)
+                                             vamman_laatu
+                                             vahingoittunut_ruumiinosa
+                                             sairaspoissaolo_jatkuu
                                              (:id user)
                                              (konv/vec->array vahinkoluokittelu)
                                              (name vakavuusaste)
