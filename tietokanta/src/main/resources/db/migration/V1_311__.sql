@@ -1,5 +1,5 @@
 -- Turpolle uusia vammoihin liittyviä kenttiä
-CREATE TYPE turvallisuuspoikkeama_vamman_laatu AS ENUM (
+CREATE TYPE turvallisuuspoikkeama_aiheutuneet_vammat AS ENUM (
   'haavat_ja_pinnalliset_vammat',
   'luunmurtumat',
   'sijoiltaan_menot_nyrjahdykset_ja_venahdykset',
@@ -16,7 +16,8 @@ CREATE TYPE turvallisuuspoikkeama_vamman_laatu AS ENUM (
   'ei_tietoa'
 );
 
-ALTER TABLE turvallisuuspoikkeama ADD COLUMN vamman_laatu turvallisuuspoikkeama_vamman_laatu[];
+ALTER TABLE turvallisuuspoikkeama DROP COLUMN vammat;
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vammat turvallisuuspoikkeama_aiheutuneet_vammat[];
 
 CREATE TYPE turvallisuuspoikkeama_vahingoittunut_ruumiinosa AS ENUM (
   'paan_alue',
@@ -34,5 +35,5 @@ CREATE TYPE turvallisuuspoikkeama_vahingoittunut_ruumiinosa AS ENUM (
   'ei_tietoa'
 );
 
-ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahingoittunut_ruumiinosa turvallisuuspoikkeama_vahingoittunut_ruumiinosa[];
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahingoittuneet_ruumiinosat turvallisuuspoikkeama_vahingoittunut_ruumiinosa[];
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN sairaspoissaolo_jatkuu BOOLEAN;
