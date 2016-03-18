@@ -101,6 +101,28 @@
               (when vahinkoluokittelu-valittu?
                 {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
                  :tyyppi  :positiivinen-numero :kokonaisluku? true})
+              (when vahinkoluokittelu-valittu?
+                {:otsikko     "Vamman laatu"
+                 :nimi        :vamman_laatu
+                 :uusi-rivi?  true
+                 :palstoja    1
+                 :tyyppi      :checkbox-group
+                 :vaihtoehdot (keys turpodomain/vamman-laatu)
+                 :vaihtoehto-nayta turpodomain/vamman-laatu})
+              (when vahinkoluokittelu-valittu?
+                {:otsikko     "Vahingoittunut ruumiinosa"
+                 :nimi        :vahingoittunut_ruumiinosa
+                 :palstoja    1
+                 :tyyppi      :checkbox-group
+                 :vaihtoehdot (keys turpodomain/vahingoittunut-ruumiinosa)
+                 :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa})
+              (when vahinkoluokittelu-valittu?
+                {:otsikko     "Sairaspoissaolon jatkuminen"
+                 :nimi        :sairaspoissaolo_jatkuu
+                 :palstoja    1
+                 :tyyppi      :checkbox-group
+                 :vaihtoehdot [:sairaspoissaolo_jatkuu]
+                 :vaihtoehto-nayta (constantly "Sairaspoissaolo jatkuu")})
 
               {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                :palstoja    2
