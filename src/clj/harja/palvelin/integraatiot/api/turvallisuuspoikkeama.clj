@@ -27,7 +27,8 @@
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste
+                vahingoittuneetRuumiinosat sairauspoissaoloJatkuu]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
@@ -40,13 +41,15 @@
                        tyontekijanammatti
                        tyotehtava
                        kuvaus
-                       aiheutuneetVammat
+                       (konv/seq->array aiheutuneetVammat)
                        sairauspoissaolopaivat
                        sairaalahoitovuorokaudet
                        (konv/seq->array luokittelu)
                        (:id kirjaaja)
                        (konv/seq->array vahinkoluokittelu)
-                       vakavuusaste))]
+                       vakavuusaste
+                       vahingoittuneetRuumiinosat
+                       sairauspoissaoloJatkuu))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
@@ -65,7 +68,8 @@
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste
+                vahingoittuneetRuumiinosat sairauspoissaoloJatkuu]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
@@ -78,10 +82,12 @@
       tyontekijanammatti
       tyotehtava
       kuvaus
-      aiheutuneetVammat
+      (konv/seq->array aiheutuneetVammat)
       sairauspoissaolopaivat
       sairaalahoitovuorokaudet
       (konv/seq->array luokittelu)
+      vahingoittuneetRuumiinosat
+      sairauspoissaoloJatkuu
       (:id kirjaaja)
       (konv/seq->array vahinkoluokittelu)
       vakavuusaste

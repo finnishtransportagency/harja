@@ -185,21 +185,23 @@ WHERE id = :id;
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
 
 UPDATE turvallisuuspoikkeama
-SET urakka               = :urakka,
-  tapahtunut             = :tapahtunut,
-  paattynyt              = :paattynyt,
-  kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti,
-  tyotehtava             = :tehtava,
-  kuvaus                 = :kuvaus,
-  vammat                 = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
-  sairauspoissaolopaivat = :poissa,
-  sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  muokkaaja              = :kayttaja,
-  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  muokattu               = NOW()
+SET urakka                    = :urakka,
+  tapahtunut                  = :tapahtunut,
+  paattynyt                   = :paattynyt,
+  kasitelty                   = :kasitelty,
+  tyontekijanammatti          = :ammatti,
+  tyotehtava                  = :tehtava,
+  kuvaus                      = :kuvaus,
+  vammat                      = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
+  sairauspoissaolopaivat      = :poissa,
+  sairaalavuorokaudet         = :sairaalassa,
+  tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
+  muokkaaja                   = :kayttaja,
+  vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  muokattu                    = NOW()
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
 

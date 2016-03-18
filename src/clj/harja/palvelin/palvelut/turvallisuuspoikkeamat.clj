@@ -77,7 +77,7 @@
      tyyppi sairauspoissaolojatkuu]}]
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
-  ;; Nämä kyselyt enemmän argumentteja, joten kyselyt piti katkaista kahtia.
+  ;; Nämä kyselyt tarvitsevat enemmän argumentteja, joten kyselyt piti katkaista kahtia.
   ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
   ;; että betan vuoksi sitä ei liene järkevää tehdä.
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
