@@ -55,8 +55,7 @@ SELECT
   t.vammat,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
-  t.vamman_laatu as vammanlaatu,
-  t.vahingoittunut_ruumiinosa as vahingoittunutruumiinosa,
+  t.vahingoittuneet_ruumiinosat as vahingoittuneetruumiinosat,
   t.sairaspoissaolo_jatkuu as sairaspoissaolojatkuu,
   t.sijainti,
   t.tr_numero,
@@ -149,24 +148,23 @@ VALUES
 -- Clojuressa voi olla max 20.
 UPDATE turvallisuuspoikkeama
 SET
-  urakka                    = :urakka,
-  tapahtunut                = :tapahtunut,
-  paattynyt                 = :paattynyt,
-  kasitelty                 = :kasitelty,
-  tyontekijanammatti        = :ammatti,
-  tyotehtava                = :tehtava,
-  kuvaus                    = :kuvaus,
-  vammat                    = :vammat,
-  sairauspoissaolopaivat    = :poissa,
-  sairaalavuorokaudet       = :sairaalassa,
-  tyyppi                    = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  vamman_laatu              = :vamman_laatu :: turvallisuuspoikkeama_vamman_laatu [],
-  vahingoittunut_ruumiinosa = :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairaspoissaolo_jatkuu    = :sairaspoissaolo_jatkuu,
-  muokkaaja                 = :kayttaja,
-  muokattu                  = NOW(),
-  vahinkoluokittelu         = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
-  vakavuusaste              = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
+  urakka                      = :urakka,
+  tapahtunut                  = :tapahtunut,
+  paattynyt                   = :paattynyt,
+  kasitelty                   = :kasitelty,
+  tyontekijanammatti          = :ammatti,
+  tyotehtava                  = :tehtava,
+  kuvaus                      = :kuvaus,
+  vammat                      = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
+  sairauspoissaolopaivat      = :poissa,
+  sairaalavuorokaudet         = :sairaalassa,
+  tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairaspoissaolo_jatkuu      = :sairaspoissaolo_jatkuu,
+  muokkaaja                   = :kayttaja,
+  muokattu                    = NOW(),
+  vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
 WHERE id = :id;
 
 --name: aseta-turvallisuuspoikkeaman-sijainti!
@@ -194,7 +192,7 @@ SET urakka               = :urakka,
   tyontekijanammatti     = :ammatti,
   tyotehtava             = :tehtava,
   kuvaus                 = :kuvaus,
-  vammat                 = :vammat,
+  vammat                 = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
   sairauspoissaolopaivat = :poissa,
   sairaalavuorokaudet    = :sairaalassa,
   tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
@@ -227,10 +225,10 @@ WHERE id = :id;
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, vahingoittunut_ruumiinosa,
-vamman_laatu, sairaspoissaolo_jatkuu)
+ sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, vahingoittuneet_ruumiinosat,
+ sairaspoissaolo_jatkuu)
 VALUES
-  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
+  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
    :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
-  :vamman_laatu :: turvallisuuspoikkeama_vamman_laatu[], :sairaspoissaolo_jatkuu);
+   :sairaspoissaolo_jatkuu);

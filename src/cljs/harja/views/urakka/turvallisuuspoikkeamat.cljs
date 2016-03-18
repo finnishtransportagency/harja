@@ -99,21 +99,20 @@
                   "Henkilövahingon tiedot"
                   {:otsikko "Työntekijän ammatti" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true}
                   {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
-                  {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :palstoja 1}
                   {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
                    :tyyppi  :positiivinen-numero :kokonaisluku? true}
                   {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
                    :tyyppi  :positiivinen-numero :kokonaisluku? true}
-                  {:otsikko          "Vamman laatu"
-                   :nimi             :vammanlaatu
+                  {:otsikko          "Vammat"
+                   :nimi             :vammat
                    :uusi-rivi?       true
                    :palstoja         1
                    :tyyppi           :checkbox-group
                    :disabloi         henkilovahinkojen-disablointi-fn
-                   :vaihtoehdot      turpodomain/vamman-laatu-avaimet-jarjestyksessa
-                   :vaihtoehto-nayta turpodomain/vamman-laatu}
-                  {:otsikko          "Vahingoittunut ruumiinosa"
-                   :nimi             :vahingoittunutruumiinosa
+                   :vaihtoehdot      turpodomain/vammat-avaimet-jarjestyksessa
+                   :vaihtoehto-nayta turpodomain/vammat}
+                  {:otsikko          "Vahingoittuneet ruumiinosat"
+                   :nimi             :vahingoittuneetruumiinosat
                    :palstoja         1
                    :tyyppi           :checkbox-group
                    :disabloi         henkilovahinkojen-disablointi-fn

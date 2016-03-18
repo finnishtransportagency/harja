@@ -19,7 +19,7 @@
       (->> (remove #{:ei_tietoa}))
       (conj :ei_tietoa)))
 
-(def vamman-laatu
+(def vammat
   {:haavat_ja_pinnalliset_vammat "Haavat ja pinnalliset vammat"
    :luunmurtumat "Luunmurtumat"
    :sijoiltaan_menot_nyrjahdykset_ja_venahdykset "Sijoiltaan menot nyrjähdykset ja venähdykset"
@@ -35,8 +35,8 @@
    :muut "Muut"
    :ei_tietoa "Ei tietoa"})
 
-(def vamman-laatu-avaimet-jarjestyksessa
-  (henkilovahingon-checkboksien-avaimet-jarjestyksessa vamman-laatu))
+(def vammat-avaimet-jarjestyksessa
+  (henkilovahingon-checkboksien-avaimet-jarjestyksessa vammat))
 
 (def vahingoittunut-ruumiinosa
   {:paan_alue "Pään alue (pl. silmät)"

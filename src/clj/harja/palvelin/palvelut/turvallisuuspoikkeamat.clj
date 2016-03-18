@@ -21,10 +21,10 @@
         (map #(konv/string-set->keyword-set % :tyyppi))
         (map #(konv/array->set % :vahinkoluokittelu))
         (map #(konv/string-set->keyword-set % :vahinkoluokittelu))
-        (map #(konv/array->set % :vahingoittunutruumiinosa))
-        (map #(konv/string-set->keyword-set % :vahingoittunutruumiinosa))
-        (map #(konv/array->set % :vammanlaatu))
-        (map #(konv/string-set->keyword-set % :vammanlaatu))
+        (map #(konv/array->set % :vahingoittuneetruumiinosat))
+        (map #(konv/string-set->keyword-set % :vahingoittuneetruumiinosat))
+        (map #(konv/array->set % :vammat))
+        (map #(konv/string-set->keyword-set % :vammat))
         (map #(konv/string->keyword % :vakavuusaste))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
@@ -73,7 +73,7 @@
   [db user
    {:keys
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
-     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste vammanlaatu vahingoittunutruumiinosa
+     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat
      tyyppi sairaspoissaolojatkuu]}]
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
@@ -89,10 +89,9 @@
     (if id
       (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                              (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                             kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
+                                             kuvaus (konv/seq->array vammat) sairauspoissaolopaivat sairaalavuorokaudet
                                              (konv/seq->array tyyppi)
-                                             (konv/seq->array vammanlaatu)
-                                             (konv/seq->array vahingoittunutruumiinosa)
+                                             (konv/seq->array vahingoittuneetruumiinosat)
                                              sairaspoissaolojatkuu
                                              (:id user)
                                              (konv/seq->array vahinkoluokittelu)
@@ -105,13 +104,12 @@
 
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                                    (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                                   kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
+                                                   kuvaus (konv/seq->array vammat) sairauspoissaolopaivat sairaalavuorokaudet
                                                    (konv/seq->array tyyppi)
                                                    (:id user)
                                                    (konv/seq->array vahinkoluokittelu)
                                                    (name vakavuusaste)
-                                                   (konv/seq->array vahingoittunutruumiinosa)
-                                                   (konv/seq->array vammanlaatu)
+                                                   (konv/seq->array vahingoittuneetruumiinosat)
                                                    sairaspoissaolojatkuu))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
