@@ -41,7 +41,6 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
  WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
  ORDER BY t.tapahtunut DESC;
 
-
 -- name: hae-turvallisuuspoikkeama
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
 SELECT
@@ -56,6 +55,9 @@ SELECT
   t.vammat,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
+  t.vamman_laatu,
+  t.vahingoittunut_ruumiinosa,
+  t.sairaspoissaolo_jatkuu,
   t.sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
