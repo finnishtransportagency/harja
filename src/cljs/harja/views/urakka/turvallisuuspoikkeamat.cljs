@@ -90,39 +90,34 @@
                :validoi     [[:ei-tyhja "Anna kuvaus"]]}
 
               (when vahinkoluokittelu-valittu?
-                {:otsikko "Työntekijän ammatti" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true})
-              (when vahinkoluokittelu-valittu?
-                {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1})
-              (when vahinkoluokittelu-valittu?
-                {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :palstoja 1})
-              (when vahinkoluokittelu-valittu?
-                {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
-                 :tyyppi  :positiivinen-numero :kokonaisluku? true})
-              (when vahinkoluokittelu-valittu?
-                {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
-                 :tyyppi  :positiivinen-numero :kokonaisluku? true})
-              (when vahinkoluokittelu-valittu?
-                {:otsikko     "Vamman laatu"
-                 :nimi        :vamman_laatu
-                 :uusi-rivi?  true
-                 :palstoja    1
-                 :tyyppi      :checkbox-group
-                 :vaihtoehdot (keys turpodomain/vamman-laatu)
-                 :vaihtoehto-nayta turpodomain/vamman-laatu})
-              (when vahinkoluokittelu-valittu?
-                {:otsikko     "Vahingoittunut ruumiinosa"
-                 :nimi        :vahingoittunut_ruumiinosa
-                 :palstoja    1
-                 :tyyppi      :checkbox-group
-                 :vaihtoehdot (keys turpodomain/vahingoittunut-ruumiinosa)
-                 :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa})
-              (when vahinkoluokittelu-valittu?
-                {:otsikko     "Sairaspoissaolon jatkuminen"
-                 :nimi        :sairaspoissaolo_jatkuu
-                 :palstoja    1
-                 :tyyppi      :checkbox-group
-                 :vaihtoehdot [:sairaspoissaolo_jatkuu]
-                 :vaihtoehto-nayta (constantly "Sairaspoissaolo jatkuu")})
+                (lomake/ryhma
+                  "Henkilövahingon tiedot"
+                  {:otsikko "Työntekijän ammatti" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true}
+                  {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
+                  {:otsikko "Vammat" :nimi :vammat :tyyppi :text :koko [80 :auto] :palstoja 1}
+                  {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
+                   :tyyppi  :positiivinen-numero :kokonaisluku? true}
+                  {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
+                   :tyyppi  :positiivinen-numero :kokonaisluku? true}
+                  {:otsikko          "Vamman laatu"
+                   :nimi             :vamman_laatu
+                   :uusi-rivi?       true
+                   :palstoja         1
+                   :tyyppi           :checkbox-group
+                   :vaihtoehdot      (keys turpodomain/vamman-laatu)
+                   :vaihtoehto-nayta turpodomain/vamman-laatu}
+                  {:otsikko          "Vahingoittunut ruumiinosa"
+                   :nimi             :vahingoittunut_ruumiinosa
+                   :palstoja         1
+                   :tyyppi           :checkbox-group
+                   :vaihtoehdot      (keys turpodomain/vahingoittunut-ruumiinosa)
+                   :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}
+                  {:otsikko          "Sairaspoissaolon jatkuminen"
+                   :nimi             :sairaspoissaolo_jatkuu
+                   :palstoja         1
+                   :tyyppi           :checkbox-group
+                   :vaihtoehdot      [:sairaspoissaolo_jatkuu]
+                   :vaihtoehto-nayta (constantly "Sairaspoissaolo jatkuu")}))
 
               {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                :palstoja    2
