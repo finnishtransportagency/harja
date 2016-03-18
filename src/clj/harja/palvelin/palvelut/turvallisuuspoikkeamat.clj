@@ -109,7 +109,10 @@
                                                    (konv/seq->array tyyppi)
                                                    (:id user)
                                                    (konv/seq->array vahinkoluokittelu)
-                                                   (name vakavuusaste)))]
+                                                   (name vakavuusaste)
+                                                   (konv/seq->array vahingoittunutruumiinosa)
+                                                   (konv/seq->array vammanlaatu)
+                                                   sairaspoissaolojatkuu))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id))))

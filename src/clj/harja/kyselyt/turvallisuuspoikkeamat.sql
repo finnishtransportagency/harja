@@ -227,8 +227,10 @@ WHERE id = :id;
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste)
+ sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, vahingoittunut_ruumiinosa,
+vamman_laatu, sairaspoissaolo_jatkuu)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste);
+   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
+  :vamman_laatu :: turvallisuuspoikkeama_vamman_laatu[], :sairaspoissaolo_jatkuu);
