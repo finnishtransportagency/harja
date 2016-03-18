@@ -661,18 +661,9 @@
   (let [molemmat-tyhjat? (and (empty? alkuperainen) (empty? nykyinen))
         muuttumaton? (= alkuperainen nykyinen)]
     (cond
-      molemmat-tyhjat? " Valitse kartalta"
+      molemmat-tyhjat? " Valitse sijainti"
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
-
-(defn teksti-sijaintikomponentille [alkuperainen nykyinen kaynnissa?]
-  (let [molemmat-tyhjat? (and (empty? alkuperainen) (empty? nykyinen))
-        muuttumaton? (= alkuperainen nykyinen)]
-    (cond
-      kaynnissa? "Valitse reitti tai piste.."
-      molemmat-tyhjat? "Syötä reitti."
-      muuttumaton? "Reitti olemassa."
-      :else "Reittiä muutettu!")))
 
 (defmethod tee-kentta :sijainti [{:keys [lomake? sijainti tierekisteriosoite?]} data]
   (let [osoite-alussa @data
@@ -779,8 +770,7 @@
                              [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
                              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]]
 
-                            [[:td
-                              [:span (teksti-sijaintikomponentille osoite-alussa osoite @karttavalinta-kaynnissa)]]]))
+                            []))
                     [(if-not @karttavalinta-kaynnissa
                        [:td.karttavalinta
                         [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
