@@ -299,7 +299,7 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina?]} data]
+(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina? disabloi]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
@@ -316,6 +316,9 @@
                          [:div.checkbox
                           [:label
                            [:input {:type      "checkbox" :checked (if (valitut v) true false)
+                                    :disabled (if disabloi
+                                                (disabloi valitut v)
+                                                false)
                                     :on-change #(let [valittu? (-> % .-target .-checked)]
                                                   (reset! data
                                                           ((if valittu? conj disj) valitut v)))}

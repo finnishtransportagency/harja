@@ -34,7 +34,13 @@
   (let [muokattu (reaction @tiedot/valittu-turvallisuuspoikkeama)]
     (fnc []
          (let [vahinkoluokittelu-valittu? (and (set? (:vahinkoluokittelu @muokattu))
-                                               ((:vahinkoluokittelu @muokattu) :henkilovahinko))]
+                                               ((:vahinkoluokittelu @muokattu) :henkilovahinko))
+               henkilovahinkojen-disablointi-fn (fn [valitut vaihtoehto]
+                                                  (or (and (valitut :ei_tietoa)
+                                                           (not= vaihtoehto :ei_tietoa))
+                                                      (and (not (empty? valitut))
+                                                           (not (valitut :ei_tietoa))
+                                                           (= vaihtoehto :ei_tietoa))))]
            [:div
             [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
 
@@ -103,19 +109,21 @@
                    :uusi-rivi?       true
                    :palstoja         1
                    :tyyppi           :checkbox-group
+                   :disabloi         henkilovahinkojen-disablointi-fn
                    :vaihtoehdot      turpodomain/vamman-laatu-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vamman-laatu}
                   {:otsikko          "Vahingoittunut ruumiinosa"
                    :nimi             :vahingoittunutruumiinosa
                    :palstoja         1
                    :tyyppi           :checkbox-group
+                   :disabloi         henkilovahinkojen-disablointi-fn
                    :vaihtoehdot      turpodomain/vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}
-                  {:otsikko          "Sairaspoissaolon jatkuminen"
-                   :nimi             :sairaspoissaolojatkuu
-                   :palstoja         1
-                   :tyyppi           :checkbox
-                   :teksti           "Sairaspoissaolo jatkuu"}))
+                  {:otsikko  "Sairaspoissaolon jatkuminen"
+                   :nimi     :sairaspoissaolojatkuu
+                   :palstoja 1
+                   :tyyppi   :checkbox
+                   :teksti   "Sairaspoissaolo jatkuu"}))
 
               {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                :palstoja    2
