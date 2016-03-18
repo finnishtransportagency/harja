@@ -118,11 +118,11 @@
                    :disabloi         henkilovahinkojen-disablointi-fn
                    :vaihtoehdot      turpodomain/vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}
-                  {:otsikko  "Sairaspoissaolon jatkuminen"
-                   :nimi     :sairaspoissaolojatkuu
+                  {:otsikko  "Sairauspoissaolon jatkuminen"
+                   :nimi     :sairauspoissaolojatkuu
                    :palstoja 1
                    :tyyppi   :checkbox
-                   :teksti   "Sairaspoissaolo jatkuu"}))
+                   :teksti   "Sairauspoissaolo jatkuu"}))
 
               {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                :palstoja    2

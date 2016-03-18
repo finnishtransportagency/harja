@@ -74,7 +74,7 @@
    {:keys
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
      sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat
-     tyyppi sairaspoissaolojatkuu]}]
+     tyyppi sairauspoissaolojatkuu]}]
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
   ;; Nämä kyselyt enemmän argumentteja, joten kyselyt piti katkaista kahtia.
@@ -92,7 +92,7 @@
                                              kuvaus (konv/seq->array vammat) sairauspoissaolopaivat sairaalavuorokaudet
                                              (konv/seq->array tyyppi)
                                              (konv/seq->array vahingoittuneetruumiinosat)
-                                             sairaspoissaolojatkuu
+                                             sairauspoissaolojatkuu
                                              (:id user)
                                              (konv/seq->array vahinkoluokittelu)
                                              (name vakavuusaste)
@@ -110,7 +110,7 @@
                                                    (konv/seq->array vahinkoluokittelu)
                                                    (name vakavuusaste)
                                                    (konv/seq->array vahingoittuneetruumiinosat)
-                                                   sairaspoissaolojatkuu))]
+                                                   sairauspoissaolojatkuu))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id))))

@@ -56,7 +56,7 @@ SELECT
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
   t.vahingoittuneet_ruumiinosat as vahingoittuneetruumiinosat,
-  t.sairaspoissaolo_jatkuu as sairaspoissaolojatkuu,
+  t.sairauspoissaolo_jatkuu as sairauspoissaolojatkuu,
   t.sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
@@ -160,7 +160,7 @@ SET
   sairaalavuorokaudet         = :sairaalassa,
   tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
   vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairaspoissaolo_jatkuu      = :sairaspoissaolo_jatkuu,
+  sairauspoissaolo_jatkuu      = :sairauspoissaolo_jatkuu,
   muokkaaja                   = :kayttaja,
   muokattu                    = NOW(),
   vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
@@ -226,9 +226,9 @@ WHERE id = :id;
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
  sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, vahingoittuneet_ruumiinosat,
- sairaspoissaolo_jatkuu)
+ sairauspoissaolo_jatkuu)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
    :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
-   :sairaspoissaolo_jatkuu);
+   :sairauspoissaolo_jatkuu);
