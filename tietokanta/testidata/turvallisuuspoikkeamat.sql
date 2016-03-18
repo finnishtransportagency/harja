@@ -15,7 +15,7 @@ VALUES
 
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vakavuusaste)
+ sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
   ((SELECT id
     FROM urakka
@@ -26,11 +26,11 @@ VALUES
                                                                                 FROM kayttaja
                                                                                 WHERE kayttajanimi = 'jvh'),
    ST_MakePoint(435847, 7216217) :: GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY ['tyotapaturma'] :: turvallisuuspoikkeama_luokittelu [], 'vakava' :: turvallisuuspoikkeama_vakavuusaste);
+   ARRAY ['tyotapaturma'] :: turvallisuuspoikkeama_luokittelu [], ARRAY ['ymparistovahinko'] :: turvallisuuspoikkeama_vahinkoluokittelu[], 'vakava' :: turvallisuuspoikkeama_vakavuusaste);
 
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vakavuusaste)
+ sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
   ((SELECT id
     FROM urakka
@@ -41,11 +41,11 @@ VALUES
                                                                                FROM kayttaja
                                                                                WHERE kayttajanimi = 'jvh'),
    ST_MakePoint(435837, 7216227) :: GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY ['muu'] :: turvallisuuspoikkeama_luokittelu [], 'vakava' :: turvallisuuspoikkeama_vakavuusaste);
+   ARRAY ['muu'] :: turvallisuuspoikkeama_luokittelu [], ARRAY ['ymparistovahinko'] :: turvallisuuspoikkeama_vahinkoluokittelu[], 'vakava' :: turvallisuuspoikkeama_vakavuusaste);
 
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vakavuusaste)
+ sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
   ((SELECT id
     FROM urakka
@@ -57,11 +57,12 @@ VALUES
                                                                                         WHERE kayttajanimi = 'jvh'),
    ST_MakePoint(435817, 7216257) :: GEOMETRY, 6, 6, 6, 6, 6,
    ARRAY ['vaaratilanne', 'tyotapaturma', 'turvallisuushavainto'] :: turvallisuuspoikkeama_luokittelu [],
+   ARRAY ['ymparistovahinko'] :: turvallisuuspoikkeama_vahinkoluokittelu[],
    'lieva' :: turvallisuuspoikkeama_vakavuusaste);
 
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vakavuusaste)
+ sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
   ((SELECT id
     FROM urakka
@@ -73,12 +74,13 @@ VALUES
                                                                                 WHERE kayttajanimi = 'jvh'),
    ST_MakePoint(435887, 7216237) :: GEOMETRY, 6, 6, 6, 6, 6,
    ARRAY ['turvallisuushavainto'] :: turvallisuuspoikkeama_luokittelu [],
+   ARRAY ['ymparistovahinko'] :: turvallisuuspoikkeama_vahinkoluokittelu[],
    'vakava' :: turvallisuuspoikkeama_vakavuusaste);
 
 
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat, sairauspoissaolopaivat,
- sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vakavuusaste)
+ sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
   ((SELECT id
     FROM urakka
@@ -90,7 +92,7 @@ VALUES
                                                                                         FROM kayttaja
                                                                                         WHERE kayttajanimi = 'jvh'),
    ST_MakePoint(227110, 6820660) :: GEOMETRY, 6, 6, 6, 6, 6,
-   ARRAY ['tyotapaturma'] :: turvallisuuspoikkeama_luokittelu [], 'lieva' :: turvallisuuspoikkeama_vakavuusaste);
+   ARRAY ['tyotapaturma'] :: turvallisuuspoikkeama_luokittelu [], ARRAY ['ymparistovahinko'] :: turvallisuuspoikkeama_vahinkoluokittelu[], 'lieva' :: turvallisuuspoikkeama_vakavuusaste);
 
 INSERT INTO korjaavatoimenpide
 (turvallisuuspoikkeama, kuvaus, vastaavahenkilo)
