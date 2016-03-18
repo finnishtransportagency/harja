@@ -657,8 +657,14 @@
     (first (:geometria arvo))
     (:geometria arvo)))
 
-(defn teksti-sijaintikomponentille [_ _]
-  (str "FIXME"))
+(defn teksti-sijaintikomponentille [alkuperainen nykyinen kaynnissa?]
+  (let [molemmat-tyhjat? (and (empty? alkuperainen) (empty? nykyinen))
+        muuttumaton? (= alkuperainen nykyinen)]
+    (cond
+      kaynnissa? "Valitse reitti tai piste.."
+      molemmat-tyhjat? "Syötä reitti."
+      muuttumaton? "Reitti syötetty."
+      :else "Reittiä muutettu!")))
 
 (defmethod tee-kentta :sijainti [{:keys [lomake? sijainti tierekisteriosoite?]} data]
   (let [osoite-alussa @data
@@ -766,7 +772,7 @@
                              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]]
 
                             [[:td
-                              [:span (teksti-sijaintikomponentille osoite-alussa osoite)]]]))
+                              [:span (teksti-sijaintikomponentille osoite-alussa osoite @karttavalinta-kaynnissa)]]]))
                     [(if-not @karttavalinta-kaynnissa
                        [:td.karttavalinta
                         [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
