@@ -30,12 +30,11 @@
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
-(defn turvallisuuspoikkeaman-tiedot
-  []
-
+(defn turvallisuuspoikkeaman-tiedot []
   (let [muokattu (reaction @tiedot/valittu-turvallisuuspoikkeama)]
     (fnc []
-         (let [vahinkoluokittelu-valittu? ((:vahinkoluokittelu @muokattu) :henkilovahinko)]
+         (let [vahinkoluokittelu-valittu? (and (set? (:vahinkoluokittelu @muokattu))
+                                               ((:vahinkoluokittelu @muokattu) :henkilovahinko))]
            [:div
             [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
 
