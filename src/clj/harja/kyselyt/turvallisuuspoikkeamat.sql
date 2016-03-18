@@ -57,7 +57,7 @@ SELECT
   t.sairaalavuorokaudet,
   t.vamman_laatu as vammanlaatu,
   t.vahingoittunut_ruumiinosa as vahingoittunutruumiinosa,
-  --t.sairaspoissaolo_jatkuu as sairaspoissaolojatkuu,
+  t.sairaspoissaolo_jatkuu as sairaspoissaolojatkuu,
   t.sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,

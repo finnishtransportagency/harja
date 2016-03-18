@@ -117,9 +117,8 @@
                   {:otsikko          "Sairaspoissaolon jatkuminen"
                    :nimi             :sairaspoissaolojatkuu
                    :palstoja         1
-                   :tyyppi           :checkbox-group
-                   :vaihtoehdot      [:sairaspoissaolo_jatkuu]
-                   :vaihtoehto-nayta (constantly "Sairaspoissaolo jatkuu")}))
+                   :tyyppi           :checkbox
+                   :teksti           "Sairaspoissaolo jatkuu"}))
 
               {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                :palstoja    2
