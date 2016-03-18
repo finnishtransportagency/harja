@@ -18,10 +18,14 @@
   (comp (map konv/alaviiva->rakenne)
         (geo/muunna-pg-tulokset :sijainti)
         (map #(konv/array->set % :tyyppi))
-        (map #(konv/array->set % :vahinkoluokittelu))
         (map #(konv/string-set->keyword-set % :tyyppi))
-        (map #(konv/string->keyword % :vakavuusaste))
+        (map #(konv/array->set % :vahinkoluokittelu))
         (map #(konv/string-set->keyword-set % :vahinkoluokittelu))
+        (map #(konv/array->set % :vahingoittunutruumiinosa))
+        (map #(konv/string-set->keyword-set % :vahingoittunutruumiinosa))
+        (map #(konv/array->set % :vammanlaatu))
+        (map #(konv/string-set->keyword-set % :vammanlaatu))
+        (map #(konv/string->keyword % :vakavuusaste))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
@@ -35,19 +39,20 @@
 (defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
-  (-> (first (konv/sarakkeet-vektoriin (into []
-                                             turvallisuuspoikkeama-xf
-                                             (q/hae-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
-                                       {:kommentti          :kommentit
-                                        :korjaavatoimenpide :korjaavattoimenpiteet
-                                        :liite              :liitteet}))
+  (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
+                                              turvallisuuspoikkeama-xf
+                                              (q/hae-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                        {:kommentti          :kommentit
+                                         :korjaavatoimenpide :korjaavattoimenpiteet
+                                         :liite              :liitteet}))
 
-      (update-in [:kommentit]
-                 (fn [kommentit]
-                   (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                         (dissoc % :liite)
-                                         %)
-                                       kommentit))))))
+       (update-in [:kommentit]
+                  (fn [kommentit]
+                    (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                          (dissoc % :liite)
+                                          %)
+                                        kommentit)))))]
+    tulos))
 
 (defn luo-tai-paivita-korjaavatoimenpide
   [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu]}]

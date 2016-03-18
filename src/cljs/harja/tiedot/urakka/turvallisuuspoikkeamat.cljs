@@ -50,7 +50,7 @@
   {:tp                    (-> tp
                               (dissoc :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
                               (assoc :urakka (:id @nav/valittu-urakka))
-                              (assoc :sairaspoissaolo_jatkuu (not (empty? (:sairaspoissaolo_jatkuu tp)))))
+                              (assoc :sairaspoissaolojatkuu (not (empty? (:sairaspoissaolojatkuu tp)))))
    :korjaavattoimenpiteet (remove #(empty? (dissoc % :id :koskematon)) (:korjaavattoimenpiteet tp))
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja

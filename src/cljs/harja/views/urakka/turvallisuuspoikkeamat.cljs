@@ -100,7 +100,7 @@
                   {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
                    :tyyppi  :positiivinen-numero :kokonaisluku? true}
                   {:otsikko          "Vamman laatu"
-                   :nimi             :vamman_laatu
+                   :nimi             :vammanlaatu
                    :uusi-rivi?       true
                    :palstoja         1
                    :tyyppi           :checkbox-group
@@ -108,14 +108,14 @@
                                               (keys turpodomain/vamman-laatu))
                    :vaihtoehto-nayta turpodomain/vamman-laatu}
                   {:otsikko          "Vahingoittunut ruumiinosa"
-                   :nimi             :vahingoittunut_ruumiinosa
+                   :nimi             :vahingoittunutruumiinosa
                    :palstoja         1
                    :tyyppi           :checkbox-group
                    :vaihtoehdot      (sort-by #(turpodomain/vahingoittunut-ruumiinosa %)
                                               (keys turpodomain/vahingoittunut-ruumiinosa))
                    :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}
                   {:otsikko          "Sairaspoissaolon jatkuminen"
-                   :nimi             :sairaspoissaolo_jatkuu
+                   :nimi             :sairaspoissaolojatkuu
                    :palstoja         1
                    :tyyppi           :checkbox-group
                    :vaihtoehdot      [:sairaspoissaolo_jatkuu]
