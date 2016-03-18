@@ -28,15 +28,10 @@
 
 (defn tarkista-ammatin-selite [turvallisuuspoikkeama]
   (cond
-    (and (= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
-         (str/blank? (:ammatinselite turvallisuuspoikkeama)))
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ammatin selite puuttuu!"}]})
     (and (not= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
          (not (str/blank? (:ammatinselite turvallisuuspoikkeama))))
     (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})
-    :default true))
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
@@ -83,6 +78,7 @@
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
+    (log/debug "Selite: " (pr-str ammatinselite))
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
     (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
       db
