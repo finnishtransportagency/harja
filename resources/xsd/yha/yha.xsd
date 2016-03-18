@@ -108,6 +108,7 @@
             <xs:element name="tienumero" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="ajorata" type="ajorata" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kaista" type="kaista" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ura" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="suunta" type="suunta" minOccurs="0" maxOccurs="1"/>
             <xs:element name="aosa" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="aet" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
