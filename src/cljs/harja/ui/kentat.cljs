@@ -763,7 +763,7 @@
                              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]]
 
                             [[:td
-                              [:span "FOOBAR"]]]))
+                              [:span "FOOBAR"]]])) ;; FIXME
                     [(if-not @karttavalinta-kaynnissa
                        [:td.karttavalinta
                         [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
@@ -771,15 +771,20 @@
                                                                     (reset! data {})
                                                                     (reset! karttavalinta-kaynnissa true))}
                          (ikonit/map-marker) " Valitse kartalta"]]
-                       [tr/karttavalitsin {:kun-peruttu #(do
-                                                          (reset! data @osoite-ennen-karttavalintaa)
-                                                          (reset! karttavalinta-kaynnissa false))
-                                           :paivita     #(swap! data merge %)
-                                           :kun-valmis  #(do
-                                                          (reset! data %)
-                                                          (reset! karttavalinta-kaynnissa false)
-                                                          (log "Saatiin tr-osoite! " (pr-str %))
-                                                          (go (>! tr-osoite-ch %)))}])
+                       (let [; Jos tierekisteriosoite? = false, palautetaan pelkästään geometria
+                             kasittele-payload (fn [tulos]
+                                                 (cond-> tulos
+                                                        (not tierekisteriosoite?)
+                                                        :geometria))]
+                         [tr/karttavalitsin {:kun-peruttu #(do
+                                                           (reset! data @osoite-ennen-karttavalintaa)
+                                                           (reset! karttavalinta-kaynnissa false))
+                                            :paivita     #(swap! data merge kasittele-payload)
+                                            :kun-valmis  #(do
+                                                           (reset! data kasittele-payload)
+                                                           (reset! karttavalinta-kaynnissa false)
+                                                           (log "Saatiin tr-osoite! " (pr-str %))
+                                                           (go (>! tr-osoite-ch %)))}]))
 
                      (when-let [sijainti (and hae-sijainti @sijainti)]
                        (when (vkm/virhe? sijainti)

@@ -246,12 +246,12 @@
 
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
 
-           {:tyyppi   :sijainti
+           {:tyyppi              :sijainti
             :tierekisteriosoite? false
-            :nimi        :tr
-            :pakollinen? true
-            :sijainti    (r/wrap (:reitti @lomake-toteuma)
-                                 #(swap! lomake-toteuma assoc :reitti %))}
+            :nimi                :reitti
+            :pakollinen?         true
+            :sijainti            (r/wrap (:reitti @lomake-toteuma)
+                                         #(swap! lomake-toteuma assoc :reitti %))}
            
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2
