@@ -85,6 +85,7 @@
          {:otsikko "Työntekijän ammatti"
           :nimi :tyontekijanammatti
           :tyyppi :valinta
+          :pakollinen? true
           :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
           :valinta-nayta turpodomain/turpo-tyontekijan-ammatit
           :uusi-rivi? true}
