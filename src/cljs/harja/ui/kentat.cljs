@@ -341,6 +341,26 @@
                         checkboxit)]]
          checkboxit))]))
 
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
+  (let [arvo (if (nil? @data)
+               false
+               @data)]
+    [:div.boolean-group
+     (let [checkbox [:div.checkbox
+                           [:label
+                            [:input {:type      "checkbox" :checked arvo
+                                     :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                  (reset! data valittu?))}
+                             teksti]]]]
+       (if nayta-rivina?
+         [:table.boolean-group
+          [:tr
+           (map-indexed (fn [i cb]
+                          ^{:key i}
+                          [:td cb])
+                        checkbox)]]
+         checkbox))]))
+
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
