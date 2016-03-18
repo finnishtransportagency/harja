@@ -657,6 +657,9 @@
     (first (:geometria arvo))
     (:geometria arvo)))
 
+(defn teksti-sijaintikomponentille [_ _]
+  (str "FIXME"))
+
 (defmethod tee-kentta :sijainti [{:keys [lomake? sijainti tierekisteriosoite?]} data]
   (let [osoite-alussa @data
 
@@ -763,7 +766,7 @@
                              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]]
 
                             [[:td
-                              [:span "FOOBAR"]]])) ;; FIXME
+                              [:span (teksti-sijaintikomponentille osoite-alussa osoite)]]]))
                     [(if-not @karttavalinta-kaynnissa
                        [:td.karttavalinta
                         [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
@@ -779,9 +782,9 @@
                          [tr/karttavalitsin {:kun-peruttu #(do
                                                            (reset! data @osoite-ennen-karttavalintaa)
                                                            (reset! karttavalinta-kaynnissa false))
-                                            :paivita     #(swap! data merge kasittele-payload)
+                                            :paivita     #(swap! data merge (kasittele-payload %))
                                             :kun-valmis  #(do
-                                                           (reset! data kasittele-payload)
+                                                           (reset! data (kasittele-payload %))
                                                            (reset! karttavalinta-kaynnissa false)
                                                            (log "Saatiin tr-osoite! " (pr-str %))
                                                            (go (>! tr-osoite-ch %)))}]))
