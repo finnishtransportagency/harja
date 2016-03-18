@@ -1,4 +1,5 @@
-(ns harja.domain.turvallisuuspoikkeamat)
+(ns harja.domain.turvallisuuspoikkeamat
+  (:require [clojure.string :as str]))
 
 (def turpo-tyypit
   {:tyotapaturma         "Työtapaturma"
@@ -48,7 +49,8 @@
    :tyomaan_ulkopuolinen                     "Työmään ulkopuolinen"})
 
 (defn kuvaile-tyontekijan-ammatti [turvallisuuspoikkeama]
-  (if (= (:tyontekijanammatti turvallisuuspoikkeama) :muu_tyontekija)
+  (if (and (= (:tyontekijanammatti turvallisuuspoikkeama) :muu_tyontekija)
+           (not (str/blank? (:tyontekijanammattimuu turvallisuuspoikkeama))))
     (:tyontekijanammattimuu turvallisuuspoikkeama)
     (turpo-tyontekijan-ammatit
       (:tyontekijanammatti turvallisuuspoikkeama))))
