@@ -20,7 +20,7 @@
 (defn lisaa-toimenpidekoodi
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
   [db user {:keys [nimi emo yksikko hinnoittelu] :as rivi}]
-  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (konv/vec->array hinnoittelu) (:id user))]
+  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (konv/seq->array hinnoittelu) (:id user))]
     {:taso              4
      :emo               emo
      :nimi              nimi
@@ -37,7 +37,7 @@
   "Muokkaa toimenpidekoodin nimeä ja yksikköä. Palauttaa true jos muokkaus tehtiin, false muuten."
 
   [db user {:keys [nimi emo yksikko id hinnoittelu] :as rivi}]
-  (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko (konv/vec->array hinnoittelu) id)))
+  (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko (konv/seq->array hinnoittelu) id)))
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
   (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)

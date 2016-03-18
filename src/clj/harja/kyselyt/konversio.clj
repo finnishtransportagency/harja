@@ -134,8 +134,8 @@
   [rivi & kentat]
   (muunna rivi kentat double))
 
-(defn vec->array
-  "Muuntaa yksittäisen arvon Clojure vektorista JDBC arrayksi."
+(defn seq->array
+  "Muuntaa yksittäisen arvon Clojure-sekvenssistä JDBC arrayksi."
   [vektori]
   (str "{" (clojure.string/join "," (map name vektori)) "}"))
 
