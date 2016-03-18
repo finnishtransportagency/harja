@@ -12,6 +12,13 @@
 (def turpo-vakavuusasteet {:lieva "Lievä"
                            :vakava "Vakava"})
 
+(defn henkilovahingon-checkboksien-avaimet-jarjestyksessa [map]
+  (-> map
+      keys
+      sort
+      (->> (remove #{:ei_tietoa}))
+      (conj :ei_tietoa)))
+
 (def vamman-laatu
   {:haavat_ja_pinnalliset_vammat "Haavat ja pinnalliset vammat"
    :luunmurtumat "Luunmurtumat"
@@ -28,6 +35,9 @@
    :muut "Muut"
    :ei_tietoa "Ei tietoa"})
 
+(def vamman-laatu-avaimet-jarjestyksessa
+  (henkilovahingon-checkboksien-avaimet-jarjestyksessa vamman-laatu))
+
 (def vahingoittunut-ruumiinosa
   {:paan_alue "Pään alue (pl. silmät)"
    :silmat "Silmä(t)"
@@ -42,3 +52,6 @@
    :muu_jalka "Muu jalka, mukaan lukien lonkka ja nivuset"
    :koko_keho "Koko keho (useat kehon alueet)"
    :ei_tietoa "Ei tietoa"})
+
+(def vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
+  (henkilovahingon-checkboksien-avaimet-jarjestyksessa vahingoittunut-ruumiinosa))

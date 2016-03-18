@@ -103,15 +103,13 @@
                    :uusi-rivi?       true
                    :palstoja         1
                    :tyyppi           :checkbox-group
-                   :vaihtoehdot      (sort-by #(turpodomain/vamman-laatu %)
-                                              (keys turpodomain/vamman-laatu))
+                   :vaihtoehdot      turpodomain/vamman-laatu-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vamman-laatu}
                   {:otsikko          "Vahingoittunut ruumiinosa"
                    :nimi             :vahingoittunutruumiinosa
                    :palstoja         1
                    :tyyppi           :checkbox-group
-                   :vaihtoehdot      (sort-by #(turpodomain/vahingoittunut-ruumiinosa %)
-                                              (keys turpodomain/vahingoittunut-ruumiinosa))
+                   :vaihtoehdot      turpodomain/vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}
                   {:otsikko          "Sairaspoissaolon jatkuminen"
                    :nimi             :sairaspoissaolojatkuu
