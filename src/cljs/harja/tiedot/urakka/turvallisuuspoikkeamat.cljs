@@ -45,11 +45,12 @@
                (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
                      (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))))))
 
-(defn kasaa-tallennuksen-parametrit
-  [tp]
-  {:tp                    (assoc
-                            (dissoc tp :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
-                            :urakka (:id @nav/valittu-urakka))
+(defn kasaa-tallennettava-turpo
+    [tp]
+  {:tp                    (-> tp
+                              (dissoc :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
+                              (assoc :urakka (:id @nav/valittu-urakka))
+                              (assoc :sairaspoissaolo_jatkuu (not (empty? (:sairaspoissaolo_jatkuu tp)))))
    :korjaavattoimenpiteet (remove #(empty? (dissoc % :id :koskematon)) (:korjaavattoimenpiteet tp))
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
@@ -60,7 +61,7 @@
 
 (defn tallenna-turvallisuuspoikkeama
   [tp]
-  (k/post! :tallenna-turvallisuuspoikkeama (kasaa-tallennuksen-parametrit tp)))
+  (k/post! :tallenna-turvallisuuspoikkeama (kasaa-tallennettava-turpo tp)))
 
 (defn turvallisuuspoikkeaman-tallennus-onnistui
   [turvallisuuspoikkeamat]

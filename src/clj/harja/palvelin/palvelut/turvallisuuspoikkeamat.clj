@@ -70,9 +70,6 @@
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
      sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste vamman_laatu vahingoittunut_ruumiinosa
      tyyppi sairaspoissaolo_jatkuu]}]
-
-  (log/debug "tallennetaan tyypit: " (konv/vec->array tyyppi))
-
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
   ;; Nämä kyselyt enemmän argumentteja, joten kyselyt piti katkaista kahtia.
