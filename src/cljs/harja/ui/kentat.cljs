@@ -299,18 +299,6 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defmethod tee-kentta :boolean [{:keys [otsikko boolean-otsikko]} data]
-  [:div.checkbox
-   [:label
-    [:input {:type      "checkbox" :checked @data
-             :on-change #(do (reset! data (-> % .-target .-checked)) nil)}
-     (or boolean-otsikko otsikko)]]])
-
-(defmethod nayta-arvo :boolean [{:keys [otsikko]} data]
-  [:span (if @data
-           "\u2713 "
-           "\u2610 ") otsikko])
-
 (defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
