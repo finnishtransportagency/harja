@@ -87,7 +87,7 @@
           :tyyppi :valinta
           :pakollinen? true
           :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
-          :valinta-nayta turpodomain/turpo-tyontekijan-ammatit
+          :valinta-nayta #(or (turpodomain/turpo-tyontekijan-ammatit %) "- valitse -")
           :uusi-rivi? true}
          (when (= :muu_tyontekija (:tyontekijanammatti @muokattu))
            {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
