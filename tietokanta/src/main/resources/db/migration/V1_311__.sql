@@ -16,7 +16,7 @@ CREATE TYPE turvallisuuspoikkema_vamman_laatu AS ENUM (
   'ei_tietoa'
 );
 
-ALTER TABLE turvallisuuspoikkeama ADD COLUMN vamman_laatu turvallisuuspoikkema_vamman_laatu[];
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vamman_laatu turvallisuuspoikkeama_vamman_laatu[];
 
 CREATE TYPE turvallisuuspoikkema_vahingoittunut_ruumiinosa AS ENUM (
   'paan_alue',
@@ -34,5 +34,5 @@ CREATE TYPE turvallisuuspoikkema_vahingoittunut_ruumiinosa AS ENUM (
   'ei_tietoa'
 );
 
-ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahingoittunut_ruumiinosa turvallisuuspoikkema_vahingoittunut_ruumiinosa[];
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahingoittunut_ruumiinosa turvallisuuspoikkeama_vahingoittunut_ruumiinosa[];
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN sairaspoissaolo_jatkuu BOOLEAN;
