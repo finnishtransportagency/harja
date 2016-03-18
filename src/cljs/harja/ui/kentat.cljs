@@ -657,13 +657,21 @@
     (first (:geometria arvo))
     (:geometria arvo)))
 
+(defn tr-valintanapin-teksti [alkuperainen nykyinen]
+  (let [molemmat-tyhjat? (and (empty? alkuperainen) (empty? nykyinen))
+        muuttumaton? (= alkuperainen nykyinen)]
+    (cond
+      molemmat-tyhjat? " Valitse kartalta"
+      muuttumaton? " Muokkaa reittiä"
+      :else " Muuta valintaa")))
+
 (defn teksti-sijaintikomponentille [alkuperainen nykyinen kaynnissa?]
   (let [molemmat-tyhjat? (and (empty? alkuperainen) (empty? nykyinen))
         muuttumaton? (= alkuperainen nykyinen)]
     (cond
       kaynnissa? "Valitse reitti tai piste.."
       molemmat-tyhjat? "Syötä reitti."
-      muuttumaton? "Reitti syötetty."
+      muuttumaton? "Reitti olemassa."
       :else "Reittiä muutettu!")))
 
 (defmethod tee-kentta :sijainti [{:keys [lomake? sijainti tierekisteriosoite?]} data]
@@ -779,7 +787,7 @@
                                                                     (reset! osoite-ennen-karttavalintaa osoite)
                                                                     (reset! data {})
                                                                     (reset! karttavalinta-kaynnissa true))}
-                         (ikonit/map-marker) " Valitse kartalta"]]
+                         (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]]
                        (let [; Jos tierekisteriosoite? = false, palautetaan pelkästään geometria
                              kasittele-payload (fn [tulos]
                                                  (cond-> tulos
