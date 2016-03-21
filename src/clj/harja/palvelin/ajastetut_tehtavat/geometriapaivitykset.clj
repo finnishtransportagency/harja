@@ -107,7 +107,7 @@
     :pohjavesialueen-alk-osoite
     :pohjavesialueen-alk-tuontikohde
     :pohjavesialueen-shapefile
-    pohjavesialueen-tuonti/vie-pohjavesialue-kantaan))
+    pohjavesialueen-tuonti/vie-pohjavesialueet-kantaan))
 
 (def tee-pohjavesialueiden-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
@@ -115,7 +115,7 @@
     :pohjavesialueen-alk-osoite
     :pohjavesialueen-alk-tuontikohde
     :pohjavesialueen-shapefile
-    pohjavesialueen-tuonti/vie-pohjavesialue-kantaan))
+    pohjavesialueen-tuonti/vie-pohjavesialueet-kantaan))
 
 (def tee-siltojen-alk-paivitystehtava
   (maarittele-alk-paivitystehtava
@@ -191,7 +191,7 @@
 
 (def tee-elyjen-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
-    "elyt-alueet"
+    "ely-alueet"
     :ely-alueiden-alk-osoite
     :ely-alueiden-alk-tuontikohde
     :ely-alueiden-shapefile

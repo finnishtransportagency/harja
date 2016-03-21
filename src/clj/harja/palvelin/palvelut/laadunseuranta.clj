@@ -42,8 +42,8 @@
     (geo/muunna-pg-tulokset :sijainti)
     (map laadunseuranta/tarkastus-tiedolla-onko-ok)
     (map konv/alaviiva->rakenne)
-    (map #(konv/string->keyword % :tyyppi :tekija)) ;FIXME: tekijä kyselyyn
-    (map #(dissoc % :sopimus))                              ;; tarvitaanko sopimusta?
+    (map #(konv/string->keyword % :tyyppi :tekija))
+    (map #(dissoc % :sopimus))
     (map (fn [tarkastus]
            (condp = (:tyyppi tarkastus)
              :talvihoito (dissoc tarkastus :soratiemittaus)

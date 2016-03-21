@@ -8,22 +8,23 @@
 
 (defn vie-pohjavesialue [db pohjavesialue]
   (if (:the_geom pohjavesialue)
-    (let [nimi (:urakka_lyh pohjavesialue)
-          tunnus (:urakka_id pohjavesialue)
-          ulkoinen-id (int (:id pohjavesialue))
+    (let [nimi (:pvteksti pohjavesialue)
+          tunnus (:pvnro pohjavesialue)
+          suorarajoitus (= 1.0 (:pvsuola pohjavesialue))
           geometria (.toString (:the_geom pohjavesialue))]
-      (if (p/onko-olemassa-ulkoisella-idlla? db ulkoinen-id)
-        (p/paivita-pohjavesialue! db nimi tunnus geometria ulkoinen-id)
-        (p/luo-pohjavesialue! db nimi tunnus ulkoinen-id geometria)))
+      (p/luo-pohjavesialue! db nimi tunnus geometria suorarajoitus))
     (log/warn "Pohjavesialuetta ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error pohjavesialue))))
 
-(defn vie-pohjavesialue-kantaan [db shapefile]
+(defn vie-pohjavesialueet-kantaan [db shapefile]
   (if shapefile
     (do
-      (log/debug (str "Tuodaan pohjavesialuetta kantaan tiedostosta " shapefile))
+      (log/debug (str "Tuodaan pohjavesialueet kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [transaktio db]
+        (log/debug "Poistetaan nykyiset pohjavesialueet")
+        (p/poista-pohjavesialueet! db)
+        (log/debug "Viedään kantaan uudet alueet")
         (doseq [pohjavesialue (shapefile/tuo shapefile)]
           (vie-pohjavesialue transaktio pohjavesialue)))
       (p/paivita-pohjavesialueet db)
-      (log/debug "Pohjavesialueen tuonti kantaan valmis."))
-    (log/debug "Pohjavesialueen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+      (log/debug "Pohjavesialueiden tuonti kantaan valmis."))
+    (log/debug "Pohjavesialueiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

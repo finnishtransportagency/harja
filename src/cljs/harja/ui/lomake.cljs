@@ -285,8 +285,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                        ::virheet kaikki-virheet
                                                        ::varoitukset kaikki-varoitukset
                                                        ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
-         ;(log "RENDER! fokus = " (pr-str @fokus))
-         [:form.lomake
+         ;(lovg "RENDER! fokus = " (pr-str @fokus))
+         [:div.lomake
           (when otsikko
             [:h3.lomake-otsikko otsikko])
           (doall
