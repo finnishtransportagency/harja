@@ -71,6 +71,7 @@
                                                                          :yksikko             (:yksikko tehtava-urakassa)}))
                                                                     (:tehtavat toteuma)))
                                 :alkanut              (:alkanut toteuma)
+                                :reitti (:reitti toteuma)
                                 :paattynyt            (:paattynyt toteuma)
                                 :lisatieto            (:lisatieto toteuma)
                                 :suorittajan-nimi     (:nimi (:suorittaja toteuma))

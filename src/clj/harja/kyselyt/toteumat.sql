@@ -41,6 +41,7 @@ SELECT
   t.suorittajan_ytunnus AS suorittaja_ytunnus,
   t.lisatieto,
   t.luoja       AS luojaid,
+  t.reitti,
   o.nimi        AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma AS jarjestelmanlisaama,
