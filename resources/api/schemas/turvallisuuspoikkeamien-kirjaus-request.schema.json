@@ -183,13 +183,10 @@
           },
           "vakavuusaste": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vakavuusaste",
-            "type": "array",
-            "items": {
-              "enum": [
+            "enum": [
                 "vakava",
                 "lieva"
-              ]
-            }
+              ],
             "required": true
           },
           "korjaavatToimenpiteet": {
