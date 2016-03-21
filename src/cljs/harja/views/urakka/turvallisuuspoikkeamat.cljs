@@ -100,8 +100,9 @@
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
          {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
           :tyyppi  :positiivinen-numero :kokonaisluku? true}
-
-         {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
+         {:otsikko "Aiheutuneet seuraukset" :nimi :seuraukset :palstoja 1
+          :tyyppi  :text}
+         {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
           :palstoja 2
           :komponentti [korjaavattoimenpiteet (r/wrap
                                                 (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @muokattu)))

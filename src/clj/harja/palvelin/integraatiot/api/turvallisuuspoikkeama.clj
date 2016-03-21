@@ -34,8 +34,13 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
+<<<<<<< HEAD
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
+=======
+  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
+>>>>>>> HAR-1911_turpon_seuraukset
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -56,7 +61,8 @@
                        (konv/vec->array luokittelu)
                        (:id kirjaaja)
                        (konv/vec->array vahinkoluokittelu)
-                       vakavuusaste))]
+                       vakavuusaste
+                       seuraukset))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
@@ -73,8 +79,8 @@
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
+  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -97,6 +103,7 @@
       (:id kirjaaja)
       (konv/vec->array vahinkoluokittelu)
       vakavuusaste
+      seuraukset
       (:id tunniste)
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!

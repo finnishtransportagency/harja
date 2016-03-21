@@ -2,8 +2,9 @@
 <b>Julkaistu: 11.2.2016</b>
 
 <b>Versiohistoria:</b>
-- Versionumero: 0.1.1. Julkaistu 17.3.2016
+- Versionumero: 0.1.1. Julkaistu 21.3.2016
     - Turvallisuuspoikkeaman työntekijän ammatti annetaan nyt tietystä arvojoukosta. Jos ammatti on muu_tyontekija, voidaan lisäksi antaa tarkempi kuvaus selitteenä. Muussa tapauksessa selitettä ei tule antaa.
+    - Uusi turvallisuuspoikkeamakenttä: seuraukset (aiheutuneet seuraukset)
 - Versionumero: 0.1.0. Julkaistu 17.3.2016
     - Uusi turvallisuuspoikkeamatyyppi: muu
 - Versionumero: 0.0.9. Julkaistu 11.2.2016

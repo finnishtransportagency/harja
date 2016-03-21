@@ -68,8 +68,8 @@
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user
    {:keys
-    [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu tyotehtava kuvaus vammat sairauspoissaolopaivat
-     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste
+    [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
+     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste seuraukset
      tyyppi]}]
 
   (log/debug "tallennetaan tyypit: " (konv/vec->array tyyppi))
@@ -93,6 +93,7 @@
                                              (:id user)
                                              (konv/vec->array vahinkoluokittelu)
                                              (name vakavuusaste)
+                                             seuraukset
                                              id)
           (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                     sijainti
@@ -105,7 +106,8 @@
                                                    (konv/vec->array tyyppi)
                                                    (:id user)
                                                    (konv/vec->array vahinkoluokittelu)
-                                                   (name vakavuusaste)))]
+                                                   (name vakavuusaste)
+                                                   seuraukset))]
         (q/aseta-turvallisuuspoikkeaman-sijainti! db
                                                   sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
         id))))
