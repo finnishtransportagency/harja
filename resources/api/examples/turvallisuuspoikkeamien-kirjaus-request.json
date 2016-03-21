@@ -58,9 +58,9 @@
         "etunimi": "Veera",
         "sukunimi": "Veistelijä"
       },
-      "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
-      "paattynyt": "2016-01-30T12:00:00Z",
-      "kasitelty": "2016-01-30T12:00:00Z",
+      "tapahtumapaivamaara": "2005-10-10T11:00:00Z",
+      "paattynyt": "2005-10-10T12:00:00Z",
+      "kasitelty": "2005-10-11T12:00:00Z",
       "tyontekijanammatti": "Aura-auton kuljettaja",
       "tyotehtava": "Auraus",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
@@ -69,7 +69,7 @@
       "sairauspoissaoloJatkuu": true,
       "sairauspoissaolopaivat": 2,
       "sairaalahoitovuorokaudet": 0,
-      "vahinkoluokittelu": ["omaisuusvahinko", "ymparistovahinko"],
+      "vahinkoluokittelu": ["omaisuusvahinko", "henkilovahinko"],
       "vakavuusaste": "vakava",
       "korjaavatToimenpiteet": [
         {
@@ -90,7 +90,7 @@
             "nimi": "tilanne.png",
             "tyyppi": "image/png",
             "kuvaus": "Kuva tilanteesta",
-            "sisalto": "... sisältö base64 enkoodattuna  ..."
+            "sisalto": "122"
           }
         }
       ]
