@@ -132,7 +132,7 @@ Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 Tämä saattaa kuitenkin mystisesti kaatua kesken siirron.
 Vaihtoehtoinen tapa SCP:llä
 > ssh harja-db1-stg
-> sudo -u -postgres pg_dump harja > /tmp/harja-stg-dump.sql
+> sudo -u postgres pg_dump harja > /tmp/harja-stg-dump.sql
 > mv /tmp/harja-stg-dump.sql /home/<omatunnus>/harja-stg-dump.sql
 > exit
 > scp <omatunnus>@harja-db1-stg:/home/<omatunnus>/harja-stg-dump.sql /Users/<omatunnus>/Desktop/harja-stg-dump.sql
