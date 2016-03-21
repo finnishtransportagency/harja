@@ -103,6 +103,11 @@
                    :tyyppi  :positiivinen-numero :kokonaisluku? true}
                   {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
                    :tyyppi  :positiivinen-numero :kokonaisluku? true}
+                  {:otsikko  "Sairauspoissaolon jatkuminen"
+                   :nimi     :sairauspoissaolojatkuu
+                   :palstoja 1
+                   :tyyppi   :checkbox
+                   :teksti   "Sairauspoissaolo jatkuu"}
                   {:otsikko          "Vammat"
                    :nimi             :vammat
                    :uusi-rivi?       true
@@ -117,12 +122,7 @@
                    :tyyppi           :checkbox-group
                    :disabloi         henkilovahinkojen-disablointi-fn
                    :vaihtoehdot      turpodomain/vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
-                   :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}
-                  {:otsikko  "Sairauspoissaolon jatkuminen"
-                   :nimi     :sairauspoissaolojatkuu
-                   :palstoja 1
-                   :tyyppi   :checkbox
-                   :teksti   "Sairauspoissaolo jatkuu"}))
+                   :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}))
 
               {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                :palstoja    2
