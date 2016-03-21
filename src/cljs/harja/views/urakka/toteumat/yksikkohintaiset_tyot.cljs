@@ -77,7 +77,6 @@
                                 :suorittajan-ytunnus  (:ytunnus (:suorittaja toteuma))
                                 :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
                                 :luoja                (:kayttajanimi toteuma)
-                                :reittipisteet        (:reittipisteet toteuma)
                                 :organisaatio         (:organisaatio toteuma)}]
              (nav/aseta-valittu-valilehti! :urakat :toteumat)
              (nav/aseta-valittu-valilehti! :toteumat :yksikkohintaiset-tyot)

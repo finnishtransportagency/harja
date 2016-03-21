@@ -487,9 +487,8 @@
   (let [reitit (into []
                      (comp
                        (harja.geo/muunna-pg-tulokset :reitti)
-                       (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                        (map konv/alaviiva->rakenne))
-                     (q/hae-yksikkohintaisten-toiden-reittipisteet db
+                     (q/hae-yksikkohintaisten-toiden-reitit db
                                                                    urakka-id
                                                                    sopimus-id
                                                                    (konv/sql-date alkupvm)
@@ -498,8 +497,7 @@
                                                                    tehtava))
         kasitellyt-reitit (konv/sarakkeet-vektoriin
                             reitit
-                            {:reittipiste :reittipisteet
-                             :tehtava :tehtavat}
+                            {:tehtava :tehtavat}
                             :toteumaid)]
     kasitellyt-reitit))
 
