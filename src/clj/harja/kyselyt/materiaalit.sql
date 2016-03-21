@@ -75,6 +75,13 @@ WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 -- name: paivita-sopimuksen-materiaalin-kaytto
 SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus::integer, :alkupvm::date);
 
+-- name: paivita-sopimuksen-materiaalin-kaytto-toteumapvm
+-- Päivittää sopimuksen materiaalin käytön annetun toteuman alkupäivämäärän
+-- päivälle.
+SELECT paivita_sopimuksen_materiaalin_kaytto(
+       :sopimus::integer,
+       (SELECT alkanut FROM toteuma WHERE id = :toteuma)::date);
+
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
   urakka.nimi             AS urakka_nimi,

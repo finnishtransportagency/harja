@@ -76,6 +76,23 @@
       hoitokausi
       sopimusnumero)))
 
+(defn- paivita-toteuma-materiaalit
+  "Päivittää materiaalien toteumarivit muokattujen rivien perusteella.
+Jos muokatuissa on rivi samalla id:llä, korvaa se aiemman rivin. Jos muokattu
+rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
+  [toteuma-materiaalit muokatut]
+  (let [muokatut-rivit (into {}
+                             (map (juxt :tmid identity))
+                             muokatut)]
+    (into []
+          (comp (map (fn [toteuma-materiaali]
+                       (let [muokattu (get muokatut-rivit (:tmid toteuma-materiaali))]
+                         (if (:poistettu muokattu)
+                           nil
+                           (or muokattu toteuma-materiaali)))))
+                (remove nil?))
+          toteuma-materiaalit)))
+
 (defn tallenna-toteuma-materiaaleja
   [urakka atomi]
   "Tätä funktiota käytetään, kun materiaalitoteuman tietoja muutetaan suoraan pääsivulla,
@@ -93,23 +110,17 @@
                                      (map #(assoc % :id (:tmid %)))
                                      (map #(dissoc % :tmid)))
                                    materiaalit)]
+
+      ;;FIXME
+      (doseq [tm (take 10 toteumamateriaalit)]
+        (log "TOTEUMA MATERIAALI: " (pr-str tm)))
+
       (go (let [tulos (<! (materiaali-tiedot/tallenna-toteuma-materiaaleja urakka
                                                                            toteumamateriaalit
                                                                            @u/valittu-hoitokausi
                                                                            (first @u/valittu-sopimusnumero)))]
             (reset! urakan-materiaalin-kaytot tulos)
-            (reset!
-              atomi
-              (remove :poistettu
-                      (sort-by
-                        #(:alkanut (:toteuma %))
-                        pvm/ennen?
-                        (concat
-                          (filter
-                            (fn [kartta]
-                              (nil? (some (fn [uusi-id] (= (:tmid kartta) uusi-id)) (map :tmid materiaalit))))
-                            @atomi)
-                          materiaalit)))))))))
+            (swap! atomi paivita-toteuma-materiaalit materiaalit))))))
 
 (defn materiaalit-ja-maarat
   [materiaalit-atom virheet-atom koneen-lisaama?]
@@ -152,14 +163,14 @@
                                                      (:toteumamateriaalit @tiedot))
                                                (fn [rivit]
                                                  (swap! tiedot
-                                                        assoc :toteumamateriaalit 
+                                                        assoc :toteumamateriaalit
                                                         (keep
                                                          (fn [[id rivi]]
                                                            (when (not (and (neg? id)
                                                                            (:poistettu rivi)))
                                                              (assoc rivi :tmid id)))
                                                          rivit))))
-              
+
               materiaalien-virheet (wrap (::materiaalivirheet @tiedot)
                                          #(swap! tiedot assoc ::materiaalivirheet %))
               muokattava-pred (constantly (not (:jarjestelmanlisaama tiedot)))
