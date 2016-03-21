@@ -90,15 +90,9 @@
                       (comp
                         toteuma-xf
                         toteumien-tehtavat->map-xf
-                        (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
                         (map konv/alaviiva->rakenne))
-                      (q/hae-urakan-toteuma db urakka-id toteuma-id))
-        kasitelty-toteuma (first
-                            (konv/sarakkeet-vektoriin
-                              toteuma
-                              {:reittipiste :reittipisteet}))]
-    (log/debug "Käsitelty toteuma: " (pr-str kasitelty-toteuma))
-    kasitelty-toteuma))
+                      (q/hae-urakan-toteuma db urakka-id toteuma-id))]
+    toteuma))
 
 (defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id]}]
   (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id)
