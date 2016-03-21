@@ -80,12 +80,12 @@
           "luokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu",
             "type": "array",
-            "maxItems": 10,
             "items": {
-              "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu/0",
-              "type": "string",
-              "additionalProperties":false,
-              "$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeaman-luokittelu.schema.json"
+              "enum": [
+                "tyotapaturma",
+                "vaaratilanne",
+                "turvallisuushavainto"
+              ]
             }
           },
           "ilmoittaja": {
@@ -173,17 +173,23 @@
           "vahinkoluokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vahinkoluokittelu",
             "type": "array",
-            "maxItems": 10,
             "items": {
-              "id": "urn:harja/turvallisuuspoikkeamat/0/vahinkoluokittelu/0",
-              "type": "string",
-              "additionalProperties":false,
-              "$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeaman-vahinkoluokittelu.schema.json"
+              "enum": [
+                "henkilovahinko",
+                "omaisuusvahinko",
+                "ymparistovahinko"
+              ]
             }
           },
           "vakavuusaste": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vakavuusaste",
-            "type": "string",
+            "type": "array",
+            "items": {
+              "enum": [
+                "vakava",
+                "lieva"
+              ]
+            }
             "required": true
           },
           "korjaavatToimenpiteet": {
