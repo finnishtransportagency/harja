@@ -41,7 +41,6 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
  WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
  ORDER BY t.tapahtunut DESC;
 
-
 -- name: hae-turvallisuuspoikkeama
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
 SELECT
@@ -57,6 +56,8 @@ SELECT
   t.vammat,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
+  t.vahingoittuneet_ruumiinosat as vahingoittuneetruumiinosat,
+  t.sairauspoissaolo_jatkuu as sairauspoissaolojatkuu,
   t.sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
@@ -149,6 +150,7 @@ VALUES
 -- Clojuressa voi olla max 20.
 UPDATE turvallisuuspoikkeama
 SET
+<<<<<<< HEAD
   urakka                 = :urakka,
   tapahtunut             = :tapahtunut,
   paattynyt              = :paattynyt,
@@ -167,6 +169,26 @@ SET
   vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
   aiheutuneet_seuraukset = :aiheutuneet_seuraukset
   WHERE id = :id;
+=======
+  urakka                      = :urakka,
+  tapahtunut                  = :tapahtunut,
+  paattynyt                   = :paattynyt,
+  kasitelty                   = :kasitelty,
+  tyontekijanammatti          = :ammatti,
+  tyotehtava                  = :tehtava,
+  kuvaus                      = :kuvaus,
+  vammat                      = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
+  sairauspoissaolopaivat      = :poissa,
+  sairaalavuorokaudet         = :sairaalassa,
+  tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu      = :sairauspoissaolo_jatkuu,
+  muokkaaja                   = :kayttaja,
+  muokattu                    = NOW(),
+  vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
+WHERE id = :id;
+>>>>>>> HAR-1912
 
 --name: aseta-turvallisuuspoikkeaman-sijainti!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
@@ -185,23 +207,25 @@ WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
 UPDATE turvallisuuspoikkeama
-SET urakka               = :urakka,
-  tapahtunut             = :tapahtunut,
-  paattynyt              = :paattynyt,
-  kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
-  tyontekijanammatti_muu = :ammatti_muu,
-  tyotehtava             = :tehtava,
-  kuvaus                 = :kuvaus,
-  vammat                 = :vammat,
-  sairauspoissaolopaivat = :poissa,
-  sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  muokkaaja              = :kayttaja,
-  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  aiheutuneet_seuraukset = :aiheutuneet_seuraukset,
-  muokattu               = NOW()
+SET urakka                    = :urakka,
+  tapahtunut                  = :tapahtunut,
+  paattynyt                   = :paattynyt,
+  kasitelty                   = :kasitelty,
+  tyontekijanammatti          = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu      = :ammatti_muu,
+  tyotehtava                  = :tehtava,
+  kuvaus                      = :kuvaus,
+  vammat                      = :vammat,
+  sairauspoissaolopaivat      = :poissa,
+  sairaalavuorokaudet         = :sairaalassa,
+  tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
+  muokkaaja                   = :kayttaja,
+  vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
+  muokattu                    = NOW()
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
 
@@ -226,9 +250,11 @@ WHERE id = :id;
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, aiheutuneet_seuraukset)
+(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyontekijanammatti_muu, tyotehtava, kuvaus, vammat,
+ sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, vahingoittuneet_ruumiinosat,
+ aiheutuneet_seuraukset, sairauspoissaolo_jatkuu)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :aiheutuneet_seuraukset);
+   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
+   :aiheutuneet_seuraukset, :sairauspoissaolo_jatkuu);

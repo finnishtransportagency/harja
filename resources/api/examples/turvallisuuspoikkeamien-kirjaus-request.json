@@ -65,10 +65,12 @@
       "ammatinselite": "Auraaja",
       "tyotehtava": "Auraus",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
-      "aiheutuneetVammat": "Tikattava haava otsassa",
+      "aiheutuneetVammat": ["luunmurtumat"],
+      "vahingoittuneetRuumiinosat": ["selka", "vartalo"],
+      "sairauspoissaoloJatkuu": true,
       "sairauspoissaolopaivat": 2,
       "sairaalahoitovuorokaudet": 0,
-      "vahinkoluokittelu": ["omaisuusvahinko", "ymparistovahinko"],
+      "vahinkoluokittelu": ["omaisuusvahinko", "henkilovahinko"],
       "vakavuusaste": "vakava",
       "seuraukset": "Kaikki selvisivät hengissä",
       "korjaavatToimenpiteet": [
@@ -90,7 +92,7 @@
             "nimi": "tilanne.png",
             "tyyppi": "image/png",
             "kuvaus": "Kuva tilanteesta",
-            "sisalto": "... sisältö base64 enkoodattuna  ..."
+            "sisalto": "122"
           }
         }
       ]

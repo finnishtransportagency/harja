@@ -299,20 +299,7 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defmethod tee-kentta :boolean [{:keys [otsikko boolean-otsikko]} data]
-  [:div.boolean
-   [:div.checkbox
-    [:label
-     [:input {:type      "checkbox" :checked @data
-              :on-change #(do (reset! data (-> % .-target .-checked)) nil)}
-      (or boolean-otsikko otsikko)]]]])
-
-(defmethod nayta-arvo :boolean [{:keys [otsikko]} data]
-  [:span (if @data
-           "\u2713 "
-           "\u2610 ") otsikko])
-
-(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina?]} data]
+(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina? disabloi]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
@@ -329,6 +316,9 @@
                          [:div.checkbox
                           [:label
                            [:input {:type      "checkbox" :checked (if (valitut v) true false)
+                                    :disabled (if disabloi
+                                                (disabloi valitut v)
+                                                false)
                                     :on-change #(let [valittu? (-> % .-target .-checked)]
                                                   (reset! data
                                                           ((if valittu? conj disj) valitut v)))}
@@ -341,6 +331,26 @@
                           [:td cb])
                         checkboxit)]]
          checkboxit))]))
+
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
+  (let [arvo (if (nil? @data)
+               false
+               @data)]
+    [:div.boolean-group
+     (let [checkbox [:div.checkbox
+                           [:label
+                            [:input {:type      "checkbox" :checked arvo
+                                     :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                  (reset! data valittu?))}
+                             teksti]]]]
+       (if nayta-rivina?
+         [:table.boolean-group
+          [:tr
+           (map-indexed (fn [i cb]
+                          ^{:key i}
+                          [:td cb])
+                        checkbox)]]
+         checkbox))]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta

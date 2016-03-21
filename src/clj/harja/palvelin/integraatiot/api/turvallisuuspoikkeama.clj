@@ -34,13 +34,8 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-<<<<<<< HEAD
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
-=======
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
->>>>>>> HAR-1911_turpon_seuraukset
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -55,14 +50,15 @@
                        ammatinselite
                        tyotehtava
                        kuvaus
-                       aiheutuneetVammat
+                       (konv/seq->array aiheutuneetVammat)
                        sairauspoissaolopaivat
                        sairaalahoitovuorokaudet
-                       (konv/vec->array luokittelu)
+                       (konv/seq->array luokittelu)
                        (:id kirjaaja)
                        (konv/vec->array vahinkoluokittelu)
                        vakavuusaste
-                       seuraukset))]
+                       seuraukset
+                       sairauspoissaoloJatkuu))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
@@ -81,7 +77,8 @@
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste
+                vahingoittuneetRuumiinosat sairauspoissaoloJatkuu]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Selite: " (pr-str ammatinselite))
@@ -96,12 +93,14 @@
       ammatinselite
       tyotehtava
       kuvaus
-      aiheutuneetVammat
+      (konv/seq->array aiheutuneetVammat)
       sairauspoissaolopaivat
       sairaalahoitovuorokaudet
-      (konv/vec->array luokittelu)
+      (konv/seq->array luokittelu)
+      (konv/seq->array vahingoittuneetRuumiinosat)
+      sairauspoissaoloJatkuu
       (:id kirjaaja)
-      (konv/vec->array vahinkoluokittelu)
+      (konv/seq->array vahinkoluokittelu)
       vakavuusaste
       seuraukset
       (:id tunniste)
