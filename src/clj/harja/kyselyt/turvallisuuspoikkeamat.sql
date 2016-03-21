@@ -1,5 +1,5 @@
 -- name: hae-urakan-turvallisuuspoikkeamat
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
        t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
        k.id              AS korjaavatoimenpide_id,
@@ -14,7 +14,7 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
 
 -- name: hae-hallintayksikon-turvallisuuspoikkeamat
 -- Hakee turvallisuuspoikkeamat, jotka ovat annetun hallintayksikön urakoissa raportoituja
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
        t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
        k.id AS korjaavatoimenpide_id,
@@ -29,7 +29,7 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
 
 -- name: hae-turvallisuuspoikkeamat
 -- Hakee kaikki turvallisuuspoikkeamat aikavälillä ilman aluerajausta
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
        t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
        k.id AS korjaavatoimenpide_id,
@@ -51,6 +51,7 @@ SELECT
   t.paattynyt,
   t.kasitelty,
   t.tyontekijanammatti,
+  t.tyontekijanammatti_muu as tyontekijanammattimuu,
   t.tyotehtava,
   t.kuvaus,
   t.vammat,
@@ -151,7 +152,8 @@ SET
   tapahtunut             = :tapahtunut,
   paattynyt              = :paattynyt,
   kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti,
+  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu = :ammatti_muu,
   tyotehtava             = :tehtava,
   kuvaus                 = :kuvaus,
   vammat                 = :vammat,
@@ -186,7 +188,8 @@ SET urakka               = :urakka,
   tapahtunut             = :tapahtunut,
   paattynyt              = :paattynyt,
   kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti,
+  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu = :ammatti_muu,
   tyotehtava             = :tehtava,
   kuvaus                 = :kuvaus,
   vammat                 = :vammat,
@@ -221,9 +224,9 @@ WHERE id = :id;
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyotehtava, kuvaus, vammat,
+(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyontekijanammatti_muu, tyotehtava, kuvaus, vammat,
  sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste)
 VALUES
-  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
+  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
    :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste);

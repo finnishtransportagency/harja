@@ -17,16 +17,25 @@
 
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.string :as str]
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
   (let [vastauksen-data {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"}]
     vastauksen-data))
 
+(defn tarkista-ammatin-selite [turvallisuuspoikkeama]
+  (cond
+    (and (not= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
+         (not (str/blank? (:ammatinselite turvallisuuspoikkeama))))
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})))
+
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -38,6 +47,7 @@
                        (aika-string->java-sql-date paattynyt)
                        (aika-string->java-sql-date kasitelty)
                        tyontekijanammatti
+                       ammatinselite
                        tyotehtava
                        kuvaus
                        aiheutuneetVammat
@@ -64,10 +74,11 @@
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
+    (log/debug "Selite: " (pr-str ammatinselite))
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
     (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
       db
@@ -76,6 +87,7 @@
       (aika-string->java-sql-date paattynyt)
       (aika-string->java-sql-date kasitelty)
       tyontekijanammatti
+      ammatinselite
       tyotehtava
       kuvaus
       aiheutuneetVammat
@@ -144,6 +156,8 @@
                " uutta turvallisuuspoikkeamaa urakalle id:" urakka-id " kayttäjän:"
                (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) ") tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
+      (tarkista-ammatin-selite turvallisuuspoikkeama))
     (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
       (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
     (tee-onnistunut-vastaus)))

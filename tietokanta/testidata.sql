@@ -83,12 +83,6 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Turvallisuuspoikkeamat
 \i testidata/turvallisuuspoikkeamat.sql
 
-INSERT INTO korjaavatoimenpide
-(turvallisuuspoikkeama, kuvaus, vastaavahenkilo)
-VALUES
-((SELECT id FROM turvallisuuspoikkeama WHERE tyontekijanammatti='Trukkikuski' AND tapahtunut = '2005-10-01 10:00.00'), 'Pidetään huoli että ei kenenkään tarvi liikaa kiirehtiä',
-'Tomi Työnjohtaja');
-
 -- Laatupoikkeamat
 
 \i testidata/laatupoikkeamat.sql
