@@ -15,7 +15,8 @@
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [harja.geo :as geo]))
 
 (defn annettu? [p]
   (if (nil? p)
@@ -37,6 +38,9 @@
                 (some true? (map #(annettu? (val %)) p))))
 
             true))))))
+
+(defn geometriaksi [reitti]
+  (when reitti (geo/geometry (geo/clj->pg reitti))))
 
 (def toteuma-xf
   (comp (map #(-> %
@@ -64,7 +68,7 @@
   [(:urakka-id toteuma) (:sopimus-id toteuma)
    (konv/sql-timestamp (:alkanut toteuma)) (konv/sql-timestamp (:paattynyt toteuma))
    (name (:tyyppi toteuma)) (:id kayttaja)
-   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil nil])
+   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil (geometriaksi (:reitti toteuma))])
 
 (defn toteumatehtavan-parametrit [toteuma kayttaja]
   [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
@@ -161,7 +165,7 @@
 
 (defn paivita-toteuma [c user toteuma]
   (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                      (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil
+                      (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (geometriaksi (:reitti toteuma))
                       (:toteuma-id toteuma) (:urakka-id toteuma))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
