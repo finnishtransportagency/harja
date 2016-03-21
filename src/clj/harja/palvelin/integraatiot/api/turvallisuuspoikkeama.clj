@@ -86,7 +86,7 @@
       sairauspoissaolopaivat
       sairaalahoitovuorokaudet
       (konv/seq->array luokittelu)
-      vahingoittuneetRuumiinosat
+      (konv/seq->array vahingoittuneetRuumiinosat)
       sairauspoissaoloJatkuu
       (:id kirjaaja)
       (konv/seq->array vahinkoluokittelu)
