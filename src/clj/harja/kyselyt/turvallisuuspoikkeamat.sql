@@ -230,7 +230,7 @@ INSERT INTO turvallisuuspoikkeama
  sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, vahingoittuneet_ruumiinosat,
  sairauspoissaolo_jatkuu)
 VALUES
-  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissaolot, :sairaalassa,
-   :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
-   :sairauspoissaolo_jatkuu);
+  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti, :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
+   :poissaolot, :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(),
+   :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[], :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+   :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[], :sairauspoissaolo_jatkuu);

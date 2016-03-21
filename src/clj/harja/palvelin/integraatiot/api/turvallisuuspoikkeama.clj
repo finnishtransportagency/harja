@@ -48,7 +48,7 @@
                        (:id kirjaaja)
                        (konv/seq->array vahinkoluokittelu)
                        vakavuusaste
-                       vahingoittuneetRuumiinosat
+                       (konv/seq->array vahingoittuneetRuumiinosat)
                        sairauspoissaoloJatkuu))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
