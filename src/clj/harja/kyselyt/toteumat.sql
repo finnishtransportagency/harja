@@ -542,8 +542,8 @@ SELECT
   rp.sijainti      AS reittipiste_sijainti,
   tt.toteuma AS toteumaid
 FROM toteuma_tehtava tt
-  JOIN reittipiste rp ON tt.toteuma = rp.toteuma
   JOIN toteuma t ON tt.toteuma = t.id
+  LEFT JOIN reittipiste rp ON tt.toteuma = rp.toteuma
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE
   t.urakka = :urakkaid
