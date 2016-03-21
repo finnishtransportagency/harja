@@ -40,14 +40,14 @@
   (go (swap! ilmoitushaku inc)))
 
 (defn jarjesta-ilmoitukset [tulos]
-  (sort-by
-    :ilmoitettu
-    pvm/ennen?
-    (mapv
-      (fn [ilmo]
-        (assoc ilmo :kuittaukset
-                    (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
-      tulos)))
+  (reverse (sort-by
+             :ilmoitettu
+             pvm/ennen?
+             (mapv
+               (fn [ilmo]
+                 (assoc ilmo :kuittaukset
+                             (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
+               tulos))))
 
 (defn lisaa-kuittaus-valitulle-ilmoitukselle [kuittaus]
   (let [nykyiset-kuittaukset (:kuittaukset @valittu-ilmoitus)]
