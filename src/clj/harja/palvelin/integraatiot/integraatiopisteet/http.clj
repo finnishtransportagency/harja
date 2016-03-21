@@ -5,7 +5,9 @@
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:import (java.net ConnectException)
+           (org.httpkit.client TimeoutException)))
 
 (def timeout-aika-ms 10000)
 
@@ -61,8 +63,8 @@
            (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti (str " Virhe: " error) tapahtuma-id nil)
            ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
            ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.
-           (cond (or (instance? java.net.ConnectException error)
-                     (instance? org.httpkit.client.TimeoutException error))
+           (cond (or (instance? ConnectException error)
+                     (instance? TimeoutException error))
                  (throw+ {:type    virheet/+ulkoinen-kasittelyvirhe-koodi+
                           :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
                  :default

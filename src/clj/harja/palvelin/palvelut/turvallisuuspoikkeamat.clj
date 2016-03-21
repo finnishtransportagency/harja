@@ -37,7 +37,7 @@
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
   (-> (first (konv/sarakkeet-vektoriin (into []
                                              turvallisuuspoikkeama-xf
-                                             (q/hae-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                             (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
                                        {:kommentti          :kommentit
                                         :korjaavatoimenpide :korjaavattoimenpiteet
                                         :liite              :liitteet}))
