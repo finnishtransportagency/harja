@@ -102,14 +102,16 @@
                                                          (konv/seq->array vahingoittuneetruumiinosat) sairauspoissaolojatkuu seuraukset
                                                          id)
           id)
-
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
                                                    (konv/sql-timestamp kasitelty) (name tyontekijanammatti) tyontekijanammattimuu tyotehtava
                                                    kuvaus (konv/seq->array vammat) sairauspoissaolopaivat sairaalavuorokaudet
                                                    (konv/seq->array tyyppi)
                                                    (:id user)
                                                    (konv/seq->array vahinkoluokittelu)
-                                                   (name vakavuusaste)))]
+                                                   (name vakavuusaste)
+                                                   (konv/seq->array vahingoittuneetruumiinosat)
+                                                   seuraukset
+                                                   sairauspoissaolojatkuu))]
         (q/paivita-turvallisuuspoikkeaman-muut-tiedot! db
                                                        sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
                                                        (konv/seq->array vahingoittuneetruumiinosat) sairauspoissaolojatkuu seuraukset
