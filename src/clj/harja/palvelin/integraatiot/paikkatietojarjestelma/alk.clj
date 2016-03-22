@@ -21,9 +21,9 @@
       (time-coerce/to-sql-time (java.util.Date. muutospaivamaara))
       nil)))
 
-(defn hae-tiedoston-muutospaivamaara [integraatioloki integraatio url]
+(defn hae-tiedoston-muutospaivamaara [db integraatioloki integraatio url]
   (log/debug "Haetaan tiedoston muutospäivämäärä ALK:sta URL:lla: " url)
-  (let [lokittaja (lokittaja integraatioloki integraatio "ptj")
+  (let [lokittaja (lokittaja integraatioloki db integraatio)
         integraatipiste (http/luo-integraatiopiste lokittaja)
         vastaus-kasittelija (fn [_ otsikko] (kasittele-tiedoston-muutospaivamaaran-hakuvastaus otsikko))]
     (http/HEAD integraatipiste url vastaus-kasittelija)))
@@ -55,7 +55,7 @@
   (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdetiedoston-polku))
     (try+
       (let [integraatio (str paivitystunnus "-muutospaivamaaran-haku")
-            tiedoston-muutospvm (hae-tiedoston-muutospaivamaara integraatioloki integraatio tiedostourl)
+            tiedoston-muutospvm (hae-tiedoston-muutospaivamaara db integraatioloki integraatio tiedostourl)
             alk-paivitys (fn [] (aja-alk-paivitys integraatioloki db paivitystunnus kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys))]
         (if (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm)
           (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus alk-paivitys)
