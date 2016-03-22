@@ -14,6 +14,7 @@
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
+            [harja.transit :as transit]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
@@ -282,9 +283,20 @@
       ;; Jos tämä muuttuu, pitää frontillekin tehdä muutokset.
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
-(defn hae-tarkastusreitit-kartalle [db user parametrit]
-  (println "TARKASTUSREITIT KARTALLE: " (pr-str parametrit))
-  nil)
+(defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
+  (let [hakuparametrit (some-> parametrit (get "tr") transit/lue-transit-string)
+        tarkastukset (hae-urakan-tarkastukset db user hakuparametrit)]
+
+    (println "TARKASTUSREITIT KARTALLE: " (pr-str hakuparametrit))
+    (println "SAATIIN " (count tarkastukset) " TARKASTUSTA")
+    (try
+      (esitettavat-asiat/kartalla-esitettavaan-muotoon
+       tarkastukset
+       nil :id
+       (comp (filter #(not (nil? (:sijainti %))))
+             (map #(assoc % :tyyppi-kartalla :tarkastusreitti))))
+      (catch Exception e
+        (log/debug "TARKASTUSREITTI FIXME: " e)))))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
