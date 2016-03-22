@@ -104,7 +104,7 @@
           id)
 
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                                   (konv/sql-timestamp kasitelty) tyontekijanammatti tyontekijanammattimuu tyotehtava
+                                                   (konv/sql-timestamp kasitelty) (name tyontekijanammatti) tyontekijanammattimuu tyotehtava
                                                    kuvaus (konv/seq->array vammat) sairauspoissaolopaivat sairaalavuorokaudet
                                                    (konv/seq->array tyyppi)
                                                    (:id user)
