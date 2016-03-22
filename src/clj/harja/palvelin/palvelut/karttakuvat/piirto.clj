@@ -87,7 +87,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
       (doseq [{:keys [img scale paikka]} ikonit
               :let [paikat (mapcat (partial nuolten-paikat valimatka taitokset)
                                    paikka)
-                    kuva (hae-kuva img)
+                    kuva (and img (hae-kuva img))
                     skaala (ikonin-skaala scale)]]
         (when kuva
           (doseq [[[x y] rotaatio] paikat]
