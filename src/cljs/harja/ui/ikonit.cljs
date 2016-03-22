@@ -506,13 +506,13 @@
 (defn ban []
   [:span.livicon-ban])
 (defn chevron-up []
-  [:span.livicon-chevron-up])
+  [:span.livicon-chevron.livicon-chevron-up])
 (defn chevron-right []
-  [:span.livicon-chevron-right])
+  [:span.livicon-chevron.livicon-chevron-right])
 (defn chevron-down []
-  [:span.livicon-chevron-down])
+  [:span.livicon-chevron.livicon-chevron-down])
 (defn chevron-left []
-  [:span.livicon-chevron-left])
+  [:span.livicon-chevron.livicon-chevron-left])
 (defn download []
   [:span.livicon-download])
 (defn info-sign []
