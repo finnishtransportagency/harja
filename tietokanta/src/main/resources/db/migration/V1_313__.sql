@@ -1,17 +1,3 @@
--- Luo sopimuksen käytetystä materiaalista summataulu jota ylläpidetään triggereillä
-
-CREATE TABLE sopimuksen_kaytetty_materiaali (
-  sopimus integer REFERENCES sopimus (id),
-  alkupvm date,
-  materiaalikoodi integer REFERENCES materiaalikoodi (id),
-  maara numeric,
-  CONSTRAINT uniikki_sop_pvm_mk UNIQUE (sopimus,alkupvm,materiaalikoodi)
-);
-
--- Luodaan alkutilanne, summataan nykyiset materiaalit
-INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
-  SELECT t.sopimus, date_trunc('day', t.alkanut), tm.materiaalikoodi, SUM(tm.maara)
-    FROM toteuma t
-         JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-   WHERE t.poistettu IS NOT TRUE AND tm.poistettu IS NOT TRUE
-GROUP BY t.sopimus, tm.materiaalikoodi, date_trunc('day', t.alkanut);
+-- Lisää erilliskustannus tauluun ulkoinen_id ja vaadi uniikki (luoja, ulkoinen_id) (konversioita varten)
+ALTER TABLE erilliskustannus ADD COLUMN ulkoinen_id INTEGER;
+ALTER TABLE erilliskustannus ADD CONSTRAINT uniikki_ulkoinen_erilliskustannus UNIQUE (ulkoinen_id, luoja);

@@ -139,7 +139,7 @@
                   (reduce + (keep :suola_kaytetty raportin-data))
                   (-
                     (reduce + (keep :suola_kaytetty raportin-data))
-                    (reduce + (keep :suola_suunniteltu raportin-data)))
+                    (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data)))
                   nil
                   (fmt/euro-opt false
                     (reduce + (keep
