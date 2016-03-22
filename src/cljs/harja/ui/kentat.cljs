@@ -336,7 +336,7 @@
   (let [arvo (if (nil? @data)
                false
                @data)]
-    [:div.boolean-group
+    [:div.boolean
      (let [checkbox [:div.checkbox
                            [:label
                             [:input {:type      "checkbox" :checked arvo
