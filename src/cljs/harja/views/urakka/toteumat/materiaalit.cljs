@@ -110,11 +110,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                      (map #(assoc % :id (:tmid %)))
                                      (map #(dissoc % :tmid)))
                                    materiaalit)]
-
-      ;;FIXME
-      (doseq [tm (take 10 toteumamateriaalit)]
-        (log "TOTEUMA MATERIAALI: " (pr-str tm)))
-
       (go (let [tulos (<! (materiaali-tiedot/tallenna-toteuma-materiaaleja urakka
                                                                            toteumamateriaalit
                                                                            @u/valittu-hoitokausi
