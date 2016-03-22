@@ -71,7 +71,17 @@
                      nil nil
                      (map #(assoc % :tyyppi-kartalla :toteuma)))))))
 
-(defn tallenna-kokonaishintainen-toteuma [toteuma]
+(defn hae-toteuman-reitti! [toteuma]
+  (swap! valittu-kokonaishintainen-toteuma assoc :reitti :hakee)
+  (go (let [reitti nil]
+        (when (= (:id @valittu-kokonaishintainen-toteuma) (:id toteuma))
+          (swap! valittu-kokonaishintainen-toteuma assoc :reitti reitti)))))
+
+(defn valitse-toteuma! [toteuma]
+  (reset! valittu-kokonaishintainen-toteuma toteuma)
+  (hae-toteuman-reitti! toteuma))
+
+(defn tallenna-kokonaishintainen-toteuma! [toteuma]
   (go [{:id 1} {:id 2}]))
 
 (defn toteuman-tallennus-onnistui [tulos])

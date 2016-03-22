@@ -43,14 +43,14 @@
         {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
         {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
-        {:otsikko "Tarkastele koko toteumaa"
-         :nimi :tarkastele-toteumaa
+        {:otsikko     "Tarkastele koko toteumaa"
+         :nimi        :tarkastele-toteumaa
          :muokattava? (constantly false)
-         :tyyppi :komponentti
-         :leveys 2
+         :tyyppi      :komponentti
+         :leveys      2
          :komponentti (fn [rivi]
                         [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(reset! tiedot/valittu-kokonaishintainen-toteuma rivi)}
+                         {:on-click #(tiedot/valitse-toteuma! rivi)}
                          (ikonit/eye-open) " Toteuma"])}]
        (sort-by :alkanut @tiedot)])))
 
@@ -112,11 +112,11 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
+           {:otsikko  (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
             :muokkaa! #(do (log "Toteuma: " (pr-str %)) (reset! muokattu %))
             :footer   [napit/palvelinkutsu-nappi
                        "Tallenna turvallisuuspoikkeama"
-                       #(tiedot/tallenna-kokonaishintainen-toteuma @muokattu)
+                       #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
                        {:luokka       "nappi-ensisijainen"
                         :ikoni        (ikonit/tallenna)
                         :kun-onnistuu #(do
@@ -137,6 +137,21 @@
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
              :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
              :varoita     [[:urakan-aikana-ja-hoitokaudella]]}
+            (if (:jarjestelma @muokattu)
+              {:tyyppi :string
+               :otsikko "Pituus"
+               :fmt fmt/pituus-opt
+               :nimi :pituus
+               :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+              (if-not (= (:reitti @muokattu) :hakee)
+               {:tyyppi              :sijainti
+                :tierekisteriosoite? false
+                :nimi                :reitti
+                :pakollinen?         true
+                :sijainti            (r/wrap (:reitti @muokattu)
+                                             #(swap! muokattu assoc :reitti %))}
+               {:tyyppi :spinner
+                :viesti "Haetaan reittiä"}))
             {:otsikko "Suorittaja"
              :uusi-rivi? true
              :nimi :suorittajan-nimi
