@@ -8,12 +8,12 @@
     "Talvisuolaliuos CaCl2" 2
     "Talvisuolaliuos NaCl" 3
     "Talvisuola NaCl, rakeinen" 4
-    "Erityisalueet NaCl" 8
-    "Erityisalueet NaCl-liuos" 9
-    "Kaliumformiaatti" 5
-    "Kesäsuola (pölynsidonta)" 6
-    "Kesäsuola (sorateiden kevätkunnostus)" 7
-    "Hiekoitushiekan suola" 10
+    "Erityisalueet NaCl" 5
+    "Erityisalueet NaCl-liuos" 6
+    "Kaliumformiaatti" 7
+    "Hiekoitushiekan suola" 8
+    "Kesäsuola (pölynsidonta)" 9
+    "Kesäsuola (sorateiden kevätkunnostus)" 10
     "Hiekoitushiekka" 11
     "Jätteet kaatopaikalle" 12
     "Murskeet" 13
