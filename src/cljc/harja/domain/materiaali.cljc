@@ -1,6 +1,7 @@
 (ns harja.domain.materiaali)
 
 (def materiaalien-jarjestys
+  "Asiakkaan suosima järjestys, jossa suolat ovat peräkkäin"
   {"Talvisuola" 1
    "Talvisuolaliuos CaCl2" 2
    "Talvisuolaliuos NaCl" 3
