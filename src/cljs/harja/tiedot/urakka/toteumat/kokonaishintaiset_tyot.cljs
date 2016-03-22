@@ -12,6 +12,9 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def valittu-kokonaishintainen-toteuma (atom nil))
+(def uusi-kokonaishintainen-toteuma {})
+
 (defn hae-kokonaishintaisen-toteuman-tiedot
   "Hakee annetun toimenpidekoodin ja päivämäärän yksityiskohtaiset tiedot."
   [urakka-id pvm toimenpidekoodi]
@@ -67,3 +70,8 @@
                                             (:toimenpidekoodi valittu-paivakohtainen-tehtava)))
                      nil nil
                      (map #(assoc % :tyyppi-kartalla :toteuma)))))))
+
+(defn tallenna-kokonaishintainen-toteuma [toteuma]
+  (go [{:id 1} {:id 2}]))
+
+(defn toteuman-tallennus-onnistui [tulos])

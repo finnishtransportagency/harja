@@ -17,8 +17,13 @@
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.lomake :as lomake]
+            [harja.domain.roolit :as roolit]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn kokonaishintainen-reitti-klikattu [_ toteuma]
@@ -37,7 +42,16 @@
         {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
         {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
         {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
-        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}]
+        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
+        {:otsikko "Tarkastele koko toteumaa"
+         :nimi :tarkastele-toteumaa
+         :muokattava? (constantly false)
+         :tyyppi :komponentti
+         :leveys 2
+         :komponentti (fn [rivi]
+                        [:button.nappi-toissijainen.nappi-grid
+                         {:on-click #(reset! tiedot/valittu-kokonaishintainen-toteuma rivi)}
+                         (ikonit/eye-open) " Toteuma"])}]
        (sort-by :alkanut @tiedot)])))
 
 (defn tee-taulukko []
@@ -85,7 +99,43 @@
   []
   [:div
    (tee-valinnat)
+   [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
+                                        tiedot/uusi-kokonaishintainen-toteuma)
+    {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
    (tee-taulukko)])
+
+(defn kokonaishintainen-toteuma-lomake []
+  (let [muokattu (reaction @tiedot/valittu-kokonaishintainen-toteuma)
+        jarjestelman-lisaama-toteuma? (true? (:jarjestelman-lisaama @muokattu))]
+    (fnc []
+         [:div
+          [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
+
+          [lomake/lomake
+           {:otsikko (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
+            :muokkaa! #(do (log "TURPO: " (pr-str %)) (reset! muokattu %))
+            :footer   [napit/palvelinkutsu-nappi
+                       "Tallenna turvallisuuspoikkeama"
+                       #(tiedot/tallenna-kokonaishintainen-toteuma @muokattu)
+                       {:luokka       "nappi-ensisijainen"
+                        :ikoni        (ikonit/tallenna)
+                        :kun-onnistuu #(do
+                                        (tiedot/toteuman-tallennus-onnistui %)
+                                        (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                        :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
+           [{:otsikko     "Päivämäärä"
+             :nimi        :alkanut
+             :pakollinen? true
+             :tyyppi      :pvm-aika
+             :uusi-rivi?  true
+             :aseta (fn [rivi arvo]
+                      (-> rivi
+                          (assoc :paattynyt arvo)
+                          (assoc :alkanut arvo)))
+             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+             :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
+             :varoita     [[:urakan-aikana-ja-hoitokaudella]]}]
+           @muokattu]])))
 
 (defn kokonaishintaiset-toteumat []
   (komp/luo
@@ -95,7 +145,9 @@
     (fn []
       [:span
        [kartta/kartan-paikka]
-       [kokonaishintaisten-toteumien-listaus]])))
+       (if @tiedot/valittu-kokonaishintainen-toteuma
+         [kokonaishintainen-toteuma-lomake]
+         [kokonaishintaisten-toteumien-listaus])])))
 
 (def tyhjenna-popupit-kun-filtterit-muuttuu (run!
                                               @tiedot/haetut-toteumat
