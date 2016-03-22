@@ -55,7 +55,7 @@
             :tyontekijanammatti :kuorma-autonkuljettaja
             :tyotehtava "Testaus"
             :kuvaus    "e2e taas punaisena"
-            :vammat "Lähinnä tympäsee"
+            :vammat #{:luunmurtumat}
             :sairauspoissaolopaivat 0
             :sairaalavuorokaudet 0
             :vakavuusaste :lieva
