@@ -83,7 +83,8 @@
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                        [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
 
-              {:otsikko  "Tierekisteriosoite" :nimi :tr
+              {:rivi? true
+               :otsikko  "Tierekisteriosoite" :nimi :tr
                :tyyppi   :tierekisteriosoite
                :sijainti (r/wrap (:sijainti @muokattu)
                                  #(swap! muokattu assoc :sijainti %))}
@@ -105,8 +106,16 @@
               (when henkilovahinko-valittu?
                 (lomake/ryhma
                   "Henkilövahingon tiedot"
-                  {:otsikko "Työntekijän ammatti" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true}
-                  {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
+                  {:otsikko "Työntekijän ammatti"
+                   :nimi :tyontekijanammatti
+                   :tyyppi :valinta
+                   :pakollinen? true
+                   :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
+                   :valinta-nayta #(or (turpodomain/turpo-tyontekijan-ammatit %) "- valitse -")
+                   :uusi-rivi? true}
+                  (when (= :muu_tyontekija (:tyontekijanammatti @muokattu))
+                    {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
+                  {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1 :uusi-rivi? true}
                   {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
                    :tyyppi  :positiivinen-numero :kokonaisluku? true}
                   {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
