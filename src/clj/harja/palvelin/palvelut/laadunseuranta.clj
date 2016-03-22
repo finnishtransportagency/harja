@@ -18,7 +18,10 @@
 
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.laadunseuranta :as laadunseuranta]))
+            [harja.domain.laadunseuranta :as laadunseuranta]
+
+            [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]))
 
 (def laatupoikkeama-xf
   (comp
@@ -226,10 +229,18 @@
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
         (condp = (:tyyppi tarkastus)
-          :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (-> (:talvihoitomittaus tarkastus)
-                                                                                     (assoc :lampotila-tie (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
-                                                                                     (assoc :lampotila-ilma (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))))
-          :soratie (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
+          :talvihoito
+          (tarkastukset/luo-tai-paivita-talvihoitomittaus
+           c id uusi?
+           (-> (:talvihoitomittaus tarkastus)
+               (assoc :lampotila-tie
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
+               (assoc :lampotila-ilma
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))))
+
+          :soratie
+          (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
+
           nil)
 
         (when-let [uusi-liite (:uusi-liite tarkastus)]
@@ -244,7 +255,8 @@
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
-  (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaon " (:id laatupoikkeama) ", urakassa " urakka)
+  (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
+            ", urakassa " urakka)
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka)
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
 
@@ -270,9 +282,17 @@
       ;; Jos tämä muuttuu, pitää frontillekin tehdä muutokset.
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
+(defn hae-tarkastusreitit-kartalle [db user parametrit]
+  (println "TARKASTUSREITIT KARTALLE: " (pr-str parametrit))
+  nil)
+
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
+  (start [{:keys [http-palvelin db karttakuvat] :as this}]
+
+    (karttakuvat/rekisteroi-karttakuvan-lahde!
+     karttakuvat :tarkastusreitit
+     (partial #'hae-tarkastusreitit-kartalle db))
 
     (julkaise-palvelut
       http-palvelin
@@ -287,7 +307,8 @@
 
       :tallenna-suorasanktio
       (fn [user tiedot]
-        (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot) (get-in tiedot [:laatupoikkeama :urakka])))
+        (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot)
+                               (get-in tiedot [:laatupoikkeama :urakka])))
 
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
@@ -327,4 +348,3 @@
                      :tallenna-suorasanktio
                      :hae-tarkastus)
     this))
-            

@@ -256,7 +256,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db])
+                        [:http-palvelin :db :karttakuvat])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
