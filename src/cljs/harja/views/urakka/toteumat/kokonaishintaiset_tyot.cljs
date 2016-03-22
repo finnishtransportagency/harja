@@ -106,14 +106,14 @@
 
 (defn kokonaishintainen-toteuma-lomake []
   (let [muokattu (reaction @tiedot/valittu-kokonaishintainen-toteuma)
-        jarjestelman-lisaama-toteuma? (true? (:jarjestelman-lisaama @muokattu))]
+        jarjestelman-lisaama-toteuma? (true? (:jarjestelma @muokattu))]
     (fnc []
          [:div
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
            {:otsikko (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
-            :muokkaa! #(do (log "TURPO: " (pr-str %)) (reset! muokattu %))
+            :muokkaa! #(do (log "Toteuma: " (pr-str %)) (reset! muokattu %))
             :footer   [napit/palvelinkutsu-nappi
                        "Tallenna turvallisuuspoikkeama"
                        #(tiedot/tallenna-kokonaishintainen-toteuma @muokattu)
@@ -123,6 +123,8 @@
                                         (tiedot/toteuman-tallennus-onnistui %)
                                         (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
                         :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
+           ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
+           ;; reitti!
            [{:otsikko     "Päivämäärä"
              :nimi        :alkanut
              :pakollinen? true
@@ -134,7 +136,30 @@
                           (assoc :alkanut arvo)))
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
              :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
-             :varoita     [[:urakan-aikana-ja-hoitokaudella]]}]
+             :varoita     [[:urakan-aikana-ja-hoitokaudella]]}
+            {:otsikko "Suorittaja"
+             :uusi-rivi? true
+             :nimi :suorittajan-nimi
+             :hae (comp :nimi :suorittaja)
+             :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :nimi] arvo))
+             :pituus-max 256
+             :tyyppi :string
+             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+            {:otsikko "Suorittajan Y-tunnus"
+             :nimi :suorittajan-ytunnus
+             :hae (comp :ytunnus :suorittaja)
+             :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :ytunnus] arvo))
+             :pituus-max 256
+             :tyyppi :string
+             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+            {:otsikko "Lisätieto"
+             :nimi :lisatieto
+             :pituus-max 256
+             :tyyppi :text
+             :uusi-rivi? true
+             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+             :koko [80 :auto]
+             :palstoja 2}]
            @muokattu]])))
 
 (defn kokonaishintaiset-toteumat []
