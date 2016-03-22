@@ -195,6 +195,7 @@
       :pohjavesi (taso :pohjavesi :pohjavesialueet)
       :sillat (taso :sillat :sillat)
       :tarkastukset (taso :tarkastukset)
+      :tarkastusreitit @tarkastukset/tarkastusreitit
       :turvallisuus (taso :turvallisuus)
       :ilmoitukset (taso :ilmoitukset)
       :yks-hint-toteumat (taso :yks-hint-toteumat)
