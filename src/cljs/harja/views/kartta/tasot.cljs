@@ -175,30 +175,38 @@
    (when (true? taso)
      (aseta-z-index geometria z-index))))
 
+(defn- taso
+  ([nimi] (taso nimi nimi))
+  ([nimi z-index]
+   (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit nimi)
+                                    @(tasojen-nakyvyys-atomit nimi)
+                                    (if (number? z-index)
+                                      z-index
+                                      (kartan-asioiden-z-indeksit z-index))))
+  ([nimi z-index opacity]
+   (aseta-opacity
+    (taso nimi z-index)
+    0.7)))
+
 (def geometriat-kartalle
   (reaction
     (merge
-     {:organisaatio
-      (aseta-opacity
-       (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :organisaatio)
-                                        @(tasojen-nakyvyys-atomit :organisaatio)
-                                        (kartan-asioiden-z-indeksit :urakka))
-       0.7)
-       :pohjavesi (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :pohjavesi) @(tasojen-nakyvyys-atomit :pohjavesi) (kartan-asioiden-z-indeksit :pohjavesialueet))
-       :sillat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :sillat) @(tasojen-nakyvyys-atomit :sillat) (kartan-asioiden-z-indeksit :sillat))
-       :tarkastukset (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :tarkastukset) @(tasojen-nakyvyys-atomit :tarkastukset))
-       :turvallisuus (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :turvallisuus) @(tasojen-nakyvyys-atomit :turvallisuus))
-       :ilmoitukset (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :ilmoitukset) @(tasojen-nakyvyys-atomit :ilmoitukset))
-       :yks-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :yks-hint-toteumat) @(tasojen-nakyvyys-atomit :yks-hint-toteumat))
-       :kok-hint-toteumat (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :kok-hint-toteumat) @(tasojen-nakyvyys-atomit :kok-hint-toteumat))
-       :varusteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :varusteet) @(tasojen-nakyvyys-atomit :varusteet))
-       :muut-tyot (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :muut-tyot) @(tasojen-nakyvyys-atomit :muut-tyot))
-       :paallystyskohteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :paallystyskohteet) @(tasojen-nakyvyys-atomit :paallystyskohteet))
-       :paikkauskohteet (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :paikkauskohteet) @(tasojen-nakyvyys-atomit :paikkauskohteet))
-       :tr-valitsin (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit :tr-valitsin) @(tasojen-nakyvyys-atomit :tr-valitsin) (inc oletus-zindex))
-       :nakyman-geometriat
-       (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
-                      (inc oletus-zindex))}
+     {:organisaatio (taso :organisaatio :urakka 0.7)
+      :pohjavesi (taso :pohjavesi :pohjavesialueet)
+      :sillat (taso :sillat :sillat)
+      :tarkastukset (taso :tarkastukset)
+      :turvallisuus (taso :turvallisuus)
+      :ilmoitukset (taso :ilmoitukset)
+      :yks-hint-toteumat (taso :yks-hint-toteumat)
+      :kok-hint-toteumat (taso :kok-hint-toteumat)
+      :varusteet (taso :varusteet)
+      :muut-tyot (taso :muut-tyot)
+      :paallystyskohteet (taso :paallystyskohteet)
+      :paikkauskohteet (taso :paikkauskohteet)
+      :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
+      :nakyman-geometriat
+      (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
+                     (inc oletus-zindex))}
       (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
