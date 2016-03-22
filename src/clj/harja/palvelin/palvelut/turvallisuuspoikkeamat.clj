@@ -27,7 +27,6 @@
         (map #(konv/string-set->keyword-set % :vammat))
         (map #(konv/string->keyword % :vakavuusaste))
         (map #(konv/string->keyword % :tyontekijanammatti))
-        (map #(konv/string-vector->keyword-vector % :vahinkoluokittelu))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
