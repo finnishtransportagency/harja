@@ -33,7 +33,7 @@
 (defn turvallisuuspoikkeaman-tiedot []
   (let [muokattu (reaction @tiedot/valittu-turvallisuuspoikkeama)]
     (fnc []
-         (let [vahinkoluokittelu-valittu? (and (set? (:vahinkoluokittelu @muokattu))
+         (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @muokattu))
                                                ((:vahinkoluokittelu @muokattu) :henkilovahinko))
                henkilovahinkojen-disablointi-fn (fn [valitut vaihtoehto]
                                                   (or (and (valitut :ei_tietoa)
@@ -88,11 +88,21 @@
                :sijainti (r/wrap (:sijainti @muokattu)
                                  #(swap! muokattu assoc :sijainti %))}
 
-              {:otsikko     "Kuvaus" :nimi :kuvaus :tyyppi :text :koko [80 :auto] :palstoja 1
+              {:uusi-rivi? true
+               :otsikko     "Kuvaus"
+               :nimi :kuvaus
+               :tyyppi :text
+               :koko [80 :auto]
+               :palstoja 1
                :pakollinen? true
                :validoi     [[:ei-tyhja "Anna kuvaus"]]}
+              {:otsikko "Aiheutuneet seuraukset"
+               :nimi :seuraukset
+               :tyyppi  :text
+               :koko [80 :auto]
+               :palstoja 1}
 
-              (when vahinkoluokittelu-valittu?
+              (when henkilovahinko-valittu?
                 (lomake/ryhma
                   "Henkilövahingon tiedot"
                   {:otsikko "Työntekijän ammatti" :nimi :tyontekijanammatti :tyyppi :string :uusi-rivi? true}
@@ -121,8 +131,6 @@
                    :disabloi         henkilovahinkojen-disablointi-fn
                    :vaihtoehdot      turpodomain/vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}))
-              {:otsikko "Aiheutuneet seuraukset" :nimi :seuraukset :palstoja 1
-               :tyyppi  :text}
               {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                :palstoja    2
                :komponentti [korjaavattoimenpiteet (r/wrap
