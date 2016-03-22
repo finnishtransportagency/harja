@@ -35,7 +35,7 @@
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste sairauspoissaoloJatkuu]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -56,9 +56,7 @@
                        (konv/seq->array luokittelu)
                        (:id kirjaaja)
                        (konv/seq->array vahinkoluokittelu)
-                       vakavuusaste
-                       seuraukset
-                       sairauspoissaoloJatkuu))]
+                       vakavuusaste))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
@@ -70,6 +68,7 @@
         (:let tie)
         (:aos tie)
         (:los tie)
+        (konv/seq->array vahingoittuneetRuumiinosat) sairauspoissaoloJatkuu seuraukset
         (:id tunniste)
         (:id kirjaaja))
       tp-id)))
@@ -96,12 +95,9 @@
       sairauspoissaolopaivat
       sairaalahoitovuorokaudet
       (konv/seq->array luokittelu)
-      (konv/seq->array vahingoittuneetRuumiinosat)
-      sairauspoissaoloJatkuu
       (:id kirjaaja)
       (konv/seq->array vahinkoluokittelu)
       vakavuusaste
-      seuraukset
       (:id tunniste)
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
@@ -113,6 +109,7 @@
            (:let tie)
            (:aos tie)
            (:los tie)
+           (konv/seq->array vahingoittuneetRuumiinosat) sairauspoissaoloJatkuu seuraukset
            (:id tunniste)
            (:id kirjaaja)))))
 

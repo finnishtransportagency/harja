@@ -109,10 +109,7 @@
                                                    (konv/seq->array tyyppi)
                                                    (:id user)
                                                    (konv/seq->array vahinkoluokittelu)
-                                                   (name vakavuusaste)
-                                                   (konv/seq->array vahingoittuneetruumiinosat)
-                                                   seuraukset
-                                                   sairauspoissaolojatkuu))]
+                                                   (name vakavuusaste)))]
         (q/paivita-turvallisuuspoikkeaman-muut-tiedot! db
                                                        sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
                                                        (konv/seq->array vahingoittuneetruumiinosat) sairauspoissaolojatkuu seuraukset
