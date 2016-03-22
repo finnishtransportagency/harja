@@ -150,45 +150,26 @@ VALUES
 -- Clojuressa voi olla max 20.
 UPDATE turvallisuuspoikkeama
 SET
-<<<<<<< HEAD
-  urakka                 = :urakka,
-  tapahtunut             = :tapahtunut,
-  paattynyt              = :paattynyt,
-  kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
-  tyontekijanammatti_muu = :ammatti_muu,
-  tyotehtava             = :tehtava,
-  kuvaus                 = :kuvaus,
-  vammat                 = :vammat,
-  sairauspoissaolopaivat = :poissa,
-  sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  muokkaaja              = :kayttaja,
-  muokattu               = NOW(),
-  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  aiheutuneet_seuraukset = :aiheutuneet_seuraukset
-  WHERE id = :id;
-=======
   urakka                      = :urakka,
   tapahtunut                  = :tapahtunut,
   paattynyt                   = :paattynyt,
   kasitelty                   = :kasitelty,
-  tyontekijanammatti          = :ammatti,
+  tyontekijanammatti          = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu      = :ammatti_muu,
   tyotehtava                  = :tehtava,
   kuvaus                      = :kuvaus,
-  vammat                      = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
+  vammat                      = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
   sairauspoissaolopaivat      = :poissa,
   sairaalavuorokaudet         = :sairaalassa,
   tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
   vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairauspoissaolo_jatkuu      = :sairauspoissaolo_jatkuu,
+  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
   muokkaaja                   = :kayttaja,
   muokattu                    = NOW(),
   vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
-  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
+  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
 WHERE id = :id;
->>>>>>> HAR-1912
 
 --name: aseta-turvallisuuspoikkeaman-sijainti!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
