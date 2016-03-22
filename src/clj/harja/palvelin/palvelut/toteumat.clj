@@ -403,17 +403,26 @@
               (materiaalit-q/poista-toteuma-materiaali! c (:id user) (:id tm)))
             (do
               (log/debug "Päivitä materiaalitoteuma "
-                         (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) ", " (:poistettu tm) "), toteumassa " (:id toteuma))
+                         (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm)
+                         ", " (:poistettu tm) "), toteumassa " (:id toteuma))
               (materiaalit-q/paivita-toteuma-materiaali!
                c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
           (do
-            (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:id toteuma))
-            (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm) (:maara tm) (:id user)))))
+            (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm)
+                       ", " (:maara tm) ") toteumalle " (:id toteuma))
+            (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm)
+                                                    (:maara tm) (:id user)))))
+
+      ;; Päivitä käytetyt materiaalit toteuman päivälle
+      (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c (:sopimus t) (:alkanut t))
+
       ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
       ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
       ;; tarvitaan tätä tietoa. -Teemu K
       (when hoitokausi
-        (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma) (first hoitokausi) (second hoitokausi) sopimus)))))
+        (materiaalipalvelut/hae-urakassa-kaytetyt-materiaalit c user (:urakka toteuma)
+                                                              (first hoitokausi) (second hoitokausi)
+                                                              sopimus)))))
 
 (defn poista-toteuma!
   [db user t]

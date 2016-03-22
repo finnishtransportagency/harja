@@ -169,23 +169,31 @@
 
   (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
   (jdbc/with-db-transaction [c db]
-                            (doseq [tm toteumamateriaalit]
-                              ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
-                              (if (and (:id tm) (pos? (:id tm)))
-                                (if (:poistettu tm)
-                                  (do
-                                    (log/debug "Poistetaan materiaalitoteuma " (:id tm))
-                                    (q/poista-toteuma-materiaali! c (:id user) (:id tm)))
-                                  (do
-                                    (log/debug "Päivitä materiaalitoteuma "
-                                              (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:toteuma tm))
-                                    (q/paivita-toteuma-materiaali!
-                                      c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) (:id tm))))
-                                (do
-                                  (log/debug "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:toteuma tm))
-                                  (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm) (:maara tm) (:id user)))))
-                            (when hoitokausi
-                              (hae-urakassa-kaytetyt-materiaalit c user urakka-id (first hoitokausi) (second hoitokausi) sopimus))))
+    (doseq [tm toteumamateriaalit]
+      ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
+      (if (and (:id tm) (pos? (:id tm)))
+        (do
+          (if (:poistettu tm)
+            (do
+              (log/debug "Poistetaan materiaalitoteuma " (:id tm))
+              (q/poista-toteuma-materiaali! c (:id user) (:id tm)))
+            (do
+              (log/debug "Päivitä materiaalitoteuma "
+                         (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:toteuma tm))
+              (q/paivita-toteuma-materiaali!
+               c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) (:id tm)))))
+        (do
+          (log/debug "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:toteuma tm))
+          (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm)
+                                      (:maara tm) (:id user))))
+
+      ;; Päivitä toteuman päivän mukainen materiaalin käyttö
+      (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c (:sopimus tm)
+                                                          (:toteuma tm))))
+
+  (when hoitokausi
+    (hae-urakassa-kaytetyt-materiaalit db user urakka-id (first hoitokausi) (second hoitokausi)
+                                       sopimus)))
 
 (defn poista-toteuma-materiaali!
   "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
