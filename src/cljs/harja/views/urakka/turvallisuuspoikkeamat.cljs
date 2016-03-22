@@ -56,7 +56,7 @@
                                           (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                           (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                           :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
-             [(lomake/ryhma {}
+             [(lomake/ryhma {:rivi? true}
                             {:otsikko          "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
                              :pakollinen?      true
                              :vaihtoehto-nayta turpodomain/turpo-tyypit
