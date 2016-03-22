@@ -249,6 +249,13 @@
                :img    ikoni}
       :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni viiva))))
 
+(defmethod asia-kartalle :tarkastusreitti [tarkastus valittu-fn?]
+  ;; Tämä on pelkkä tarkastusreitin viiva, jotta voidaan näyttää kaikki
+  ;; ajetut reitit taustakartalla.
+  (assoc tarkastus
+         :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) nil
+                                   ulkoasu/tarkastusreitin-viiva)))
+
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
   (let [ikoni (ulkoasu/varustetoteuman-ikoni)]
     (assoc varustetoteuma

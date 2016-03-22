@@ -121,7 +121,9 @@
    :ei-ok-tarkastus             puhtaat/punainen
    :ei-ok-tarkastus-tilaaja     puhtaat/punainen
    :ei-ok-tarkastus-konsultti   puhtaat/punainen
-   :ei-ok-tarkastus-urakoitsija puhtaat/punainen})
+   :ei-ok-tarkastus-urakoitsija puhtaat/punainen
+
+   :tarkastus-reitti puhtaat/harmaa})
 
 
 (def auraus-tasaus-ja-kolmas [(monivarinen-viiva-leveyksilla puhtaat/musta 0 puhtaat/oranssi 2 puhtaat/violetti 6) "oranssi"])
@@ -248,6 +250,10 @@
                     :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
                     :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
                     (:ei-ok-tarkastus viivojen-varit))}))
+
+(def ^{:doc "Viiva tarkastusreitille kun piirretään vain ajettu reitti ilman onnistumisen
+tai tekijän perusteella värjäystä."}
+  tarkastusreitin-viiva {:color (:tarkastus-reitti viivojen-varit)})
 
 (defn laatupoikkeaman-ikoni [tekija]
   (pinni-ikoni (case tekija
