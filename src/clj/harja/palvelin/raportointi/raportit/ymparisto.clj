@@ -109,7 +109,7 @@
                          (map (fn [[luokka kuukaudet]]
                                 (let [arvot (group-by :kk kuukaudet)]
                                   (into []
-                                        (concat 
+                                        (concat
                                          (when urakoittain?
                                            [(:nimi urakka)])
                                          [(str " - "
