@@ -36,7 +36,7 @@
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste sairauspoissaoloJatkuu]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
@@ -55,7 +55,7 @@
                        sairaalahoitovuorokaudet
                        (konv/seq->array luokittelu)
                        (:id kirjaaja)
-                       (konv/vec->array vahinkoluokittelu)
+                       (konv/seq->array vahinkoluokittelu)
                        vakavuusaste
                        seuraukset
                        sairauspoissaoloJatkuu))]
@@ -76,12 +76,11 @@
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
+                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava ammatinselite
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste
                 vahingoittuneetRuumiinosat sairauspoissaoloJatkuu]} data
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
-    (log/debug "Selite: " (pr-str ammatinselite))
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
     (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
       db
@@ -105,7 +104,7 @@
       seuraukset
       (:id tunniste)
       (:id kirjaaja))
-    (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+    (:id (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
            db
            (:x koordinaatit)
            (:y koordinaatit)

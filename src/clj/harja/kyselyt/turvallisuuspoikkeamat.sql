@@ -162,16 +162,13 @@ SET
   sairauspoissaolopaivat      = :poissa,
   sairaalavuorokaudet         = :sairaalassa,
   tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
   muokkaaja                   = :kayttaja,
   muokattu                    = NOW(),
   vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
   vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
 WHERE id = :id;
 
---name: aseta-turvallisuuspoikkeaman-sijainti!
+--name: paivita-turvallisuuspoikkeaman-muut-tiedot!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20. Ei aseta muokkaajaa ja muokattua, koska:
 -- * kyselyä kutsutaan heti paivita1:sen jälkeen, joka jo asettaa ne
@@ -183,7 +180,10 @@ SET
   tr_alkuetaisyys  = :aet,
   tr_loppuetaisyys = :let,
   tr_alkuosa       = :aos,
-  tr_loppuosa      = :los
+  tr_loppuosa      = :los,
+  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
 WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
@@ -200,17 +200,14 @@ SET urakka                    = :urakka,
   sairauspoissaolopaivat      = :poissa,
   sairaalavuorokaudet         = :sairaalassa,
   tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
   muokkaaja                   = :kayttaja,
   vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
   vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
   muokattu                    = NOW()
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
 
---name: aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+--name: paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
 UPDATE turvallisuuspoikkeama
 SET
   sijainti         = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY,
@@ -218,7 +215,10 @@ SET
   tr_alkuetaisyys  = :aet,
   tr_loppuetaisyys = :let,
   tr_alkuosa       = :aos,
-  tr_loppuosa      = :los
+  tr_loppuosa      = :los,
+  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
 

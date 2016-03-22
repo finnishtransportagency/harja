@@ -100,7 +100,7 @@
                                              (name vakavuusaste)
                                              seuraukset
                                              id)
-          (q/aseta-turvallisuuspoikkeaman-sijainti! db
+          (q/paivita-turvallisuuspoikkeaman-muut-tiedot! db
                                                     sijainti
                                                     tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
           id)
