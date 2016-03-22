@@ -50,7 +50,8 @@
          :leveys      2
          :komponentti (fn [rivi]
                         [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(tiedot/valitse-toteuma! rivi)}
+                         {:on-click #(tiedot/valitse-toteuma! rivi)
+                          :disabled (:jarjestelma rivi)}
                          (ikonit/eye-open) " Toteuma"])}]
        (sort-by :alkanut @tiedot)])))
 
