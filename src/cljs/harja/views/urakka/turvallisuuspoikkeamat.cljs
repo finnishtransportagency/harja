@@ -113,11 +113,11 @@
                    :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
                    :valinta-nayta #(or (turpodomain/turpo-tyontekijan-ammatit %) "- valitse -")
                    :uusi-rivi? true}
+                  {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
                   (when (= :muu_tyontekija (:tyontekijanammatti @muokattu))
                     {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
-                  {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1 :uusi-rivi? true}
                   {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
-                   :tyyppi  :positiivinen-numero :kokonaisluku? true}
+                   :tyyppi  :positiivinen-numero :kokonaisluku? true :uusi-rivi? true}
                   {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
                    :tyyppi  :positiivinen-numero :kokonaisluku? true}
                   {:otsikko  "Sairauspoissaolon jatkuminen"
