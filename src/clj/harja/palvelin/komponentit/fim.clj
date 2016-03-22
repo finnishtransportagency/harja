@@ -6,7 +6,9 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [clojure.string :as str]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+  (:import (java.io ByteArrayInputStream)))
 
 ;; Kentät, joita voidaan hakea:
 ;; ObjectID EmployeeEndDate
@@ -16,13 +18,13 @@
 
 (def +fim-elementit+
   "Mäppäys FIM elementeistä suomenkielisiin avaimiin ja mahdollisiin prosessointeihin"
-  {:ObjectID    :tunniste
+  {:ObjectID :tunniste
    :AccountName :kayttajatunnus
-   :FirstName   :etunimi
-   :LastName    :sukunimi
-   :Email       :sahkoposti
+   :FirstName :etunimi
+   :LastName :sukunimi
+   :Email :sahkoposti
    :MobilePhone [:puhelin #(str/replace % " " "")]
-   :Company     :organisaatio})
+   :Company :organisaatio})
 
 (defn lue-fim-vastaus
   "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin käyttäjä mäppejä."
@@ -39,24 +41,19 @@
                    +fim-elementit+))))
 
 (defn lue-xml [bytet]
-  (xml-zip (parse (java.io.ByteArrayInputStream. bytet))))
-
+  (xml-zip (parse (ByteArrayInputStream. bytet))))
 
 (defn hae-kayttajatunnus
   "Hakee FIM palvelusta käyttäjätunnuksella."
-  [fim kayttajatunnus integraatioloki]
-  (http/laheta-get-kutsu
-    integraatioloki
-    "tuo-fim-kayttaja"
-    "fim"
-    (:url fim)
-    nil
-    {:filterproperty "AccountName"
-     :filter         kayttajatunnus
-     :fetch          "AccountName,FirstName,LastName,Email,MobilePhone,Company"}
-    (fn [body _]
-      (first (lue-fim-vastaus (lue-xml body))))))
+  [{:keys [url]} kayttajatunnus integraatioloki db]
 
+  (let [lokittaja (integraatioloki/lokittaja integraatioloki db "fim" "tuo-fim-kayttaja")
+        integraatipiste (http/luo-integraatiopiste lokittaja)
+        vastauskasittelija (fn [body _] (first (lue-fim-vastaus (lue-xml body))))
+        parametrit {:filterproperty "AccountName"
+                    :filter kayttajatunnus
+                    :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"}]
+    (http/GET integraatipiste url nil parametrit vastauskasittelija)))
 
 (defrecord FIM [url]
   component/Lifecycle

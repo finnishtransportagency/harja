@@ -91,7 +91,7 @@ FROM turvallisuuspoikkeama t
 WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
 ORDER BY t.tapahtunut DESC;
 
--- name: hae-urakan-turvallisuuspoikkeama
+-- name: hae-turvallisuuspoikkeama
 -- Hakee yksittäisen turvallisuuspoikkeaman
 SELECT
   t.id,
