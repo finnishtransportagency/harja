@@ -625,6 +625,9 @@
            (pvm/pvm-aika p)
            "")])
 
+(defmethod tee-kentta :spinner [{:keys [viesti opts]}]
+  [ajax-loader (or viesti "Lataa") opts])
+
 (defn hae-tr-geometria [osoite hakufn tr-osoite-ch virheet]
   (go
     (log "Haetaan geometria osoitteelle: " (pr-str osoite))
