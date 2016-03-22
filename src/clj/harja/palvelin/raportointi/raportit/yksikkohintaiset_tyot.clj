@@ -67,7 +67,7 @@
               (assoc :suunnitellut_kustannukset (when (and (:maara suunnittelutieto) (:yksikkohinta suunnittelutieto))
                                                   (* (:maara suunnittelutieto)
                                                      (:yksikkohinta suunnittelutieto))))
-              (assoc :toteutuneet_kustannukset (when (and (:toteutunut_maara suunnittelutieto) (:yksikkohinta suunnittelutieto))
+              (assoc :toteutuneet_kustannukset (when (and (:toteutunut_maara toteuma) (:yksikkohinta suunnittelutieto))
                                                  (* (:toteutunut_maara toteuma)
                                                     (:yksikkohinta suunnittelutieto)))))
           toteuma)))
