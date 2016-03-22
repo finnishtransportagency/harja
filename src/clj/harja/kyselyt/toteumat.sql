@@ -41,12 +41,10 @@ SELECT
   t.suorittajan_ytunnus AS suorittaja_ytunnus,
   t.lisatieto,
   t.luoja       AS luojaid,
+  t.reitti,
   o.nimi        AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma AS jarjestelmanlisaama,
-  rp.id         AS reittipiste_id,
-  rp.aika       AS reittipiste_aika,
-  rp.sijainti   AS reittipiste_sijainti,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
@@ -56,7 +54,6 @@ SELECT
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
-  LEFT JOIN reittipiste rp ON rp.toteuma = t.id
 WHERE
   t.urakka = :urakka
   AND t.id = :toteuma
@@ -532,17 +529,13 @@ WHERE
 ORDER BY t.alkanut
 LIMIT 501;
 
--- name: hae-yksikkohintaisten-toiden-reittipisteet
+-- name: hae-yksikkohintaisten-toiden-reitit
 SELECT
   t.reitti,
   tk.nimi AS tehtava_toimenpide,
   tk.id AS tehtava_id,
-  rp.id            AS reittipiste_id,
-  rp.aika          AS reittipiste_aika,
-  rp.sijainti      AS reittipiste_sijainti,
   tt.toteuma AS toteumaid
 FROM toteuma_tehtava tt
-  JOIN reittipiste rp ON tt.toteuma = rp.toteuma
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE
