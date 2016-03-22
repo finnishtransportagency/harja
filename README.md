@@ -143,6 +143,7 @@ Mene vagrant-kansioon ja aja komennot:
 > cd vagrant
 > vagrant ssh
 > sudo -u postgres psql
+> (sulje kaikki kantaa käyttävät sovellukset)
 > drop database harja;
 > create database harja;
 > poistu <ctrl-d>
