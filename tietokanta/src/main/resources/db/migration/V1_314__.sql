@@ -1,3 +1,7 @@
+-- Turpon muutokset
+
+-- Ammattityypit:
+
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN tyontekijanammatti_muu VARCHAR(512);
 UPDATE turvallisuuspoikkeama SET tyontekijanammatti_muu = turvallisuuspoikkeama.tyontekijanammatti;
 
