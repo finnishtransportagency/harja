@@ -165,7 +165,7 @@ SET
   muokkaaja                   = :kayttaja,
   muokattu                    = NOW(),
   vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
-  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
 WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeaman-muut-tiedot!
@@ -175,12 +175,12 @@ WHERE id = :id;
 -- * kyselyä kutsutaan heti luonnin jälkeen
 UPDATE turvallisuuspoikkeama
 SET
-  sijainti         = :sijainti,
-  tr_numero        = :numero,
-  tr_alkuetaisyys  = :aet,
-  tr_loppuetaisyys = :let,
-  tr_alkuosa       = :aos,
-  tr_loppuosa      = :los,
+  sijainti                    = :sijainti,
+  tr_numero                   = :numero,
+  tr_alkuetaisyys             = :aet,
+  tr_loppuetaisyys            = :let,
+  tr_alkuosa                  = :aos,
+  tr_loppuosa                 = :los,
   vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
   sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
   aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
@@ -237,5 +237,5 @@ INSERT INTO turvallisuuspoikkeama
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu, :tehtava, :kuvaus, :vammat, :poissaolot, :sairaalassa,
    :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :vahingoittunut_ruumiinosa :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
+   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
    :aiheutuneet_seuraukset, :sairauspoissaolo_jatkuu);
