@@ -686,14 +686,30 @@ LIMIT 501;
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
 -- Hakee urakan kokonaishintaiset toteumat annetun päivän ja toimenpidekoodin perusteella
-SELECT t.id, t.luotu, t.alkanut, t.paattynyt, t.lisatieto,
-       t.suorittajan_ytunnus as suorittaja_ytunnus,
-       t.suorittajan_nimi as suorittaja_nimi,
-       k.jarjestelma,
-       ST_Length(reitti) as pituus
-  FROM toteuma t
-       JOIN kayttaja k ON t.luoja = k.id
- WHERE t.urakka = :urakka
-       AND t.alkanut::date = :pvm::date
-       AND EXISTS (SELECT id FROM toteuma_tehtava tt
-                    WHERE tt.toteuma = t.id AND tt.toimenpidekoodi = :toimenpidekoodi);
+SELECT
+  t.id,
+  t.luotu,
+  t.alkanut,
+  t.paattynyt,
+  t.lisatieto,
+  t.suorittajan_ytunnus as suorittaja_ytunnus,
+  t.suorittajan_nimi as suorittaja_nimi,
+  k.jarjestelma,
+  SUM(tt.maara)           AS tehtava_maara,
+  tpk.yksikko              AS tehtava_yksikko,
+  tpk.id                   AS tehtava_toimenpidekoodi_id,
+  tpi.id AS tehtava_toimenpideinstanssi_id,
+  ST_Length(reitti) as pituus
+FROM toteuma t
+  JOIN kayttaja k ON t.luoja = k.id
+    AND t.poistettu IS NOT TRUE
+  LEFT JOIN toteuma_tehtava tt ON t.id = tt.toteuma
+    AND tt.poistettu IS NOT TRUE
+  LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tk.id
+  LEFT JOIN toimenpidekoodi emo ON tpk.emo = emo.id
+  LEFT JOIN toimenpideinstanssi tpi ON emo.id = tpi.toimenpide
+ WHERE
+   t.urakka = :urakka
+   AND t.alkanut::date = :pvm::date
+   AND tt.toimenpidekoodi = :toimenpidekoodi;
+
