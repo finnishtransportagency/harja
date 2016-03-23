@@ -78,6 +78,19 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
     :taitokset
     (apurit/taitokset-valimatkoin valimatka (butlast taitokset))))
 
+(defn- piirra-kuva [g kuva skaala x y]
+  (.drawImage g kuva
+              (doto (AffineTransform.)
+                ;; Keskitetään kuva
+                (.translate  (px (- (/ (* skaala (.getWidth kuva)) 2)))
+                             (px (- (/ (* skaala (.getHeight kuva)) 2))))
+                ;; Siirretään kuvan kohtaan
+                (.translate x y)
+
+                ;; Skaalataan pikselit karttakoordinaateiksi
+                (.scale (px skaala) (px skaala)))
+              nil-image-observer))
+
 (defn- piirra-ikonit [g {points :points ikonit :ikonit}]
   (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
         valimatka (/ hypotenuusa ikonien-tiheys)
@@ -92,18 +105,12 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
         (when kuva
           (doseq [[[x y] rotaatio] paikat]
             (with-rotation g x y rotaatio
-              (.drawImage g kuva
-                          (doto (AffineTransform.)
-                            ;; Keskitetään kuva
-                            (.translate  (px (- (/ (* skaala (.getWidth kuva)) 2)))
-                                         (px (- (/ (* skaala (.getHeight kuva)) 2))))
-                            ;; Siirretään kuvan kohtaan
-                            (.translate x y)
+              (piirra-kuva g kuva skaala x y))))))))
 
-                            ;; Skaalataan pikselit karttakoordinaateiksi
-                            (.scale (px skaala) (px skaala)))
-                          nil-image-observer))))))))
-
+;;{:scale 1, :img public/images/tuplarajat/pinnit/pinni-punainen.png, :type :merkki, :coordinates (429739.8163550331 7206534.971915511)}
+(defmethod piirra :merkki [g toteuma {:keys [scale img coordinates]}]
+  (when-let [kuva (hae-kuva img)]
+    (piirra-kuva g kuva scale (first coordinates) (second coordinates))))
 
 (defmethod piirra :viiva [g toteuma {:keys [viivat points ikonit] :as alue}]
   (let [viivat (reverse (sort-by :width viivat))]

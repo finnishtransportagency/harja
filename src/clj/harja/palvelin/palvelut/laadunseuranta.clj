@@ -205,16 +205,22 @@
 
 (defn hae-urakan-tarkastukset
   "Palauttaa urakan tarkastukset annetulle aikavälille."
-  [db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]}]
-  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
-  (jdbc/with-db-transaction [db db]
-    (into []
-          tarkastus-xf
-          (tarkastukset/hae-urakan-tarkastukset db urakka-id
-                                                (konv/sql-timestamp alkupvm)
-                                                (konv/sql-timestamp loppupvm)
-                                                (if tienumero true false) tienumero
-                                                (if tyyppi true false) (and tyyppi (name tyyppi))))))
+  ([db user parametrit]
+   (hae-urakan-tarkastukset db user parametrit false))
+  ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]} palauta-reitti?]
+   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+   (jdbc/with-db-transaction [db db]
+     (into []
+           (comp tarkastus-xf
+                 (if palauta-reitti?
+                   identity
+                   (map #(dissoc % :sijainti))))
+           (tarkastukset/hae-urakan-tarkastukset
+            db urakka-id
+            (konv/sql-timestamp alkupvm)
+            (konv/sql-timestamp loppupvm)
+            (if tienumero true false) tienumero
+            (if tyyppi true false) (and tyyppi (name tyyppi)))))))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -285,7 +291,7 @@
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
   (let [hakuparametrit (some-> parametrit (get "tr") transit/lue-transit-string)
-        tarkastukset (hae-urakan-tarkastukset db user hakuparametrit)]
+        tarkastukset (hae-urakan-tarkastukset db user hakuparametrit true)]
 
     (println "TARKASTUSREITIT KARTALLE: " (pr-str hakuparametrit))
     (println "SAATIIN " (count tarkastukset) " TARKASTUSTA")
@@ -294,7 +300,7 @@
        tarkastukset
        nil :id
        (comp (filter #(not (nil? (:sijainti %))))
-             (map #(assoc % :tyyppi-kartalla :tarkastusreitti))))
+             (map #(assoc % :tyyppi-kartalla :tarkastus #_reitti))))
       (catch Exception e
         (log/debug "TARKASTUSREITTI FIXME: " e)))))
 
