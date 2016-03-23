@@ -55,8 +55,8 @@
             (conj (yleinen/ryhmittele-tulokset-raportin-taulukolle
                     naytettavat-rivit :toimenpide
                     (juxt (comp pvm/pvm :pvm)
-                          (or :nimi "-")
-                          (or :yksikko "-")
+                          #(or (:nimi %) "-")
+                          #(or (:yksikko %) "-")
                           (comp #(let [formatoitu (fmt/euro-opt false %)]
                                   (if-not (str/blank? formatoitu) formatoitu "-"))
                                 :yksikkohinta)
@@ -76,4 +76,3 @@
                     ["Yhteensä" nil nil nil nil nil nil
                      (fmt/euro-opt false (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])))]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
-

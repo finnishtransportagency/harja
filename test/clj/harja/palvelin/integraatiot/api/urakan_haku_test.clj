@@ -19,7 +19,9 @@
 
 (deftest urakan-haku-idlla-toimii
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        materiaalien-lkm (ffirst (q
+                                   (str "SELECT count(*) FROM materiaalikoodi")))]
     (log/debug "Urakan haku id:llä: " encoodattu-body)
     (is (= 200 (:status vastaus)))
     (is (not (nil? (:urakka encoodattu-body))))
@@ -33,7 +35,7 @@
                                    [:sopimus :toteumakirjauskohteet :yksikkohintaiset])]
       (is (= 12 (count kokonaishintaiset)))
       (is (= 2 (count yksikkohintaiset)))
-      (is (= 13 (count (get-in encoodattu-body [:urakka :materiaalit])))))))
+      (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
