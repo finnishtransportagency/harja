@@ -13,18 +13,6 @@
 
 (defonce karttataso-tarkastukset (atom false))
 
-(defonce tarkastukset-kartalla
-         (reaction
-           @tarkastukset/urakan-tarkastukset
-           (when @karttataso-tarkastukset
-             (kartalla-esitettavaan-muotoon
-               @tarkastukset/urakan-tarkastukset
-               @tarkastukset/valittu-tarkastus
-               nil
-               (comp
-                 (filter #(not (nil? (:sijainti %))))
-                 (map #(assoc % :tyyppi-kartalla :tarkastus)))))))
-
 (defn- luo-tarkastusreitit-kuvataso [taso-paalla? urakka [alku loppu] tienumero tyyppi]
   (when taso-paalla?
     (openlayers/luo-kuvataso

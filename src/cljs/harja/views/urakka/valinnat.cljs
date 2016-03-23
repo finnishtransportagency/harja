@@ -7,7 +7,8 @@
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [cljs-time.core :as t]))
 
 (defn tienumero [tienumero-atom]
   [:span.label-ja-kentta
@@ -42,6 +43,41 @@
 (defn aikavali []
   (valinnat/aikavali u/valittu-aikavali))
 
+(defn- aikavali-nyt-miinus [paivia]
+  (let [nyt (pvm/nyt)]
+    [(t/minus nyt (t/days paivia)) nyt]))
+
+(def aikavali-valinnat [["Edellinen viikko" #(aikavali-nyt-miinus 7)]
+                        ["Edelliset 2 viikkoa" #(aikavali-nyt-miinus 14)]
+                        ["Edelliset 3 viikkoa" #(aikavali-nyt-miinus 21)]
+                        ["Valittu aikaväli" nil]])
+
+(defn aikavali-nykypvm-taakse []
+  (let [alkuvalinta (first aikavali-valinnat)
+        [_ aikavali-fn] alkuvalinta
+        valinta (r/atom alkuvalinta)
+        vapaa-aikavali? (r/atom false)]
+    (reset! u/valittu-aikavali (aikavali-fn))
+    (fn []
+      [:span.aikavali-nykypvm-taakse
+       [:div.label-ja-alasveto
+        [:span.alasvedon-otsikko "Näytettävä aikaväli"]
+        [livi-pudotusvalikko {:valinta @valinta
+                              :format-fn first
+                              :class "suunnittelu-alasveto"
+                              :valitse-fn (fn [v]
+                                            (log "VALITSIT: " (pr-str v))
+                                            (reset! valinta v)
+                                            (if-let [aikavali-fn (second v)]
+                                              ;; Esiasetettu laskettava aikaväli
+                                              (do
+                                                (reset! vapaa-aikavali? false)
+                                                (reset! u/valittu-aikavali ((second v))))
+                                              ;; Käyttäjä haluaa asettaa itse aikavälin
+                                              (reset! vapaa-aikavali? true)))}
+         aikavali-valinnat]]
+       (when @vapaa-aikavali?
+         [aikavali])])))
 (defn urakan-toimenpide []
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 

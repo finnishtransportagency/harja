@@ -154,7 +154,6 @@
   {:organisaatio       urakat-ja-organisaatiot-kartalla
    :pohjavesi          pohjavesialueet/pohjavesialueet-kartalla
    :sillat             sillat/sillat-kartalla
-   :tarkastukset       tarkastukset/tarkastukset-kartalla
    :turvallisuus       turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
    :ilmoitukset        ilmoitukset/ilmoitukset-kartalla
    :yks-hint-toteumat  yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
@@ -194,7 +193,6 @@
      {:organisaatio (taso :organisaatio :urakka 0.7)
       :pohjavesi (taso :pohjavesi :pohjavesialueet)
       :sillat (taso :sillat :sillat)
-      :tarkastukset (taso :tarkastukset)
       :tarkastusreitit @tarkastukset/tarkastusreitit
       :turvallisuus (taso :turvallisuus)
       :ilmoitukset (taso :ilmoitukset)
