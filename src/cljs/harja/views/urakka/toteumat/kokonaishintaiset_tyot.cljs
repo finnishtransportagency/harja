@@ -14,14 +14,15 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.lomake :as lomake]
             [harja.domain.roolit :as roolit]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -50,8 +51,7 @@
          :leveys      2
          :komponentti (fn [rivi]
                         [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(tiedot/valitse-toteuma!
-                                      (assoc rivi :toimenpidekoodi toimenpidekoodi))
+                         {:on-click #(tiedot/valitse-toteuma! rivi)
                           :disabled (:jarjestelma rivi)}
                          (ikonit/eye-open) " Toteuma"])}]
        (sort-by :alkanut @tiedot)])))
@@ -108,7 +108,9 @@
 
 (defn kokonaishintainen-toteuma-lomake []
   (let [muokattu (reaction @tiedot/valittu-kokonaishintainen-toteuma)
-        jarjestelman-lisaama-toteuma? (true? (:jarjestelma @muokattu))]
+        jarjestelman-lisaama-toteuma? (true? (:jarjestelma @muokattu))
+        nelostason-tehtavat (map #(nth % 3) @u/urakan-toimenpiteet-ja-tehtavat)
+        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
     (fnc []
          [:div
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
@@ -169,6 +171,52 @@
              :pituus-max 256
              :tyyppi :string
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+            (lomake/ryhma
+              {:otsikko "Tehty työ"
+               :leveys-col 3}
+              {:otsikko       "Toimenpide"
+               :nimi          :toimenpide
+               :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
+               :tyyppi        :valinta
+               :valinnat      toimenpideinstanssit
+               :fmt           #(:tpi_nimi
+                                (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
+               :valinta-arvo  :tpi_id
+               :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
+               :hae (comp :id :toimenpideinstanssi :tehtava)
+               :aseta (fn [rivi arvo]
+                        (-> rivi
+                            (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
+                            (assoc-in [:tehtava :toimenpidekoodi :id] nil)))
+               :leveys-col    3}
+              {:otsikko       "Tehtävä"
+               :nimi          :tehtava
+               :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
+               :tyyppi        :valinta
+               :valinnat      @u/urakan-tpin-kokonaishintaiset-tehtavat
+               :valinta-arvo  #(:id (nth % 3))
+               :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+               :hae           (comp :id :toimenpidekoodi :tehtava)
+               :aseta         (fn [rivi arvo]
+                                (-> rivi
+                                    (assoc-in [:tehtava :toimenpidekoodi :id] arvo)
+                                    (assoc-in [:tehtava :yksikko] (urakan-toimenpiteet/tehtava-idlla
+                                                                    arvo nelostason-tehtavat))))
+               :leveys-col    3}
+              {:otsikko "Määrä"
+               :nimi :maara
+               :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+               :tyyppi :positiivinen-numero
+               :hae (comp :maara :tehtava)
+               :aseta (fn [rivi arvo]
+                        (assoc-in rivi [:tehtava :maara] arvo))
+               :leveys-col 3}
+              {:otsikko "Yksikkö"
+               :nimi :yksikko
+               :muokattava? (constantly false)
+               :tyyppi :string
+               :hae (comp :yksikko :tehtava)
+               :leveys-col 3})
             {:otsikko "Lisätieto"
              :nimi :lisatieto
              :pituus-max 256
