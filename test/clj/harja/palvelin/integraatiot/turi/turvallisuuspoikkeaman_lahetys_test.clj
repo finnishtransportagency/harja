@@ -12,8 +12,10 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :turi (component/using
-            (turi/->Turi {:url +turi-url+ :kayttajatunnus "testi" :salasana "testi"})
+            (turi/->Turi {:turi {:url +turi-url+ :kayttajatunnus "testi" :salasana "testi"}})
             [:db :http-palvelin :integraatioloki])))
+
+(use-fixtures :each jarjestelma-fixture)
 
 (defn hae-turvallisuuspoikkeaman-tila [id]
   (let [tila (first (q (format "select lahetetty, lahetys_onnistunut from turvallisuuspoikkeama where id = %s" id)))]

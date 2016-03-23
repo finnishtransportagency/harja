@@ -12,15 +12,15 @@
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
-(defn kasittele-turin-vastaus [sisalto otsikot id]
+(defn kasittele-turin-vastaus [db sisalto otsikot id]
   ;; todo: tarkista onnistuiko
-  (q/lokita-lahetys<! id true))
+  (q/lokita-lahetys<! db true id))
 
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki url kayttajatunnus salasana]} id]
   (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
         integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
-        vastauskasittelija (fn [sisalto otsikot] (kasittele-turin-vastaus sisalto otsikot id))
-        turvallisuuspoikkeama (q/hae-urakan-turvallisuuspoikkeama db id)
+        vastauskasittelija (fn [sisalto otsikot] (kasittele-turin-vastaus db sisalto otsikot id))
+        turvallisuuspoikkeama (q/hae-turvallisuuspoikkeama db id)
         xml (sanoma/muodosta turvallisuuspoikkeama)]
     ;; todo: poikkeuskäsittely!
     (http/POST integraatiopiste url xml vastauskasittelija)))
@@ -28,15 +28,18 @@
 (defrecord Turi [asetukset]
   component/Lifecycle
   (start [this]
-    (log/debug "Käynnistetään TURI-komponentti")
-    (let [turi (:turi asetukset)]
+    (let [turi (:turi asetukset)
+          {url :url kayttajatunnus :kayttajatunnus salasana :salasana} turi]
+      (println "ASETUKSET: " asetukset)
+      (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" url))
       (assoc this
-        :url (:url turi)
-        :kayttajatunnus (:kayttajatunnus turi)
-        :salasana (:salasana turi))))
+        :url url
+        :kayttajatunnus kayttajatunnus
+        :salasana salasana)))
 
   (stop [this]
     this)
+
   TurvallisuusPoikkeamanLahetys
   (laheta-turvallisuuspoikkeama [this id]
     (laheta-turvallisuuspoikkeama-turiin this id)))

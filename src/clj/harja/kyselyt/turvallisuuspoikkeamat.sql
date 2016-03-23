@@ -350,4 +350,5 @@ VALUES
 
 --name: lokita-lahetys<!
 UPDATE turvallisuuspoikkeama
-SET lahetetty = now(), lahetys_onnistunut = :onnistunut;
+SET lahetetty = now(), lahetys_onnistunut = :onnistunut
+WHERE id = :id;
