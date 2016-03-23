@@ -53,7 +53,7 @@
                         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
                         :ilmoitukset {:google-static-maps-key "AIzaSyAHMEbpTzPW-H-qxvlUCH1rh8iKZCI6SBM"}}
 
- :turi                 {:url "http://localhost"
+ :turi                 {:url "http://localhost:1234/turvallisuuspoikkeama"
                         :kayttajatunnus ""
                         :salasana ""}
 

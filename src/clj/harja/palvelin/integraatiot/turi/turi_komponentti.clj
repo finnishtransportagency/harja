@@ -40,3 +40,4 @@
   TurvallisuusPoikkeamanLahetys
   (laheta-turvallisuuspoikkeama [this id]
     (laheta-turvallisuuspoikkeama-turiin this id)))
+
