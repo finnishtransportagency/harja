@@ -106,4 +106,6 @@
         toteuma-id
         materiaalikoodi-id
         (get-in materiaali [:maara :maara])
-        (:id kirjaaja)))))
+        (:id kirjaaja))))
+  ;; Päivitä sopimuksen päivän materiaalinkäyttö
+  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db (:sopimusId toteuma) (:alkanut toteuma)))

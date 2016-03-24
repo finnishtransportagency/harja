@@ -563,7 +563,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       :component-will-unmount
       (fn []
         (nollaa-muokkaustiedot!))}
-     (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
+     (fn [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                   muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
                   korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
        (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -610,7 +610,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                     (let [kaikki-rivit (mapv second @muokatut)
                                                           tallennettavat
                                                           (if tallenna-vain-muokatut
-                                                            (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
+                                                            (do (log "TALLENNA VAIN MUOKATUT")
+                                                                (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
                                                             kaikki-rivit)]
                                                       (do (.preventDefault %)
                                                           (reset! tallennus-kaynnissa true)
@@ -728,7 +729,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                          skeema rivi]
                                         (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
                                  rivit-jarjestetty)))))))]])
-                   (log "Max rivimäärä " max-rivimaara (count tiedot))
 
            (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
              [:div.alert-warning (or max-rivimaaran-ylitys-viesti
@@ -750,8 +750,8 @@ Optiot on mappi optioita:
   :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                    Parametrina Grid ohjauskahva
-  :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
-  :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
+  :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla
+  :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan
   :voi-lisata?     jos false, uusia rivejä ei voi lisätä
   :voi-kumota?     jos false, kumoa-nappia ei näytetä
   :voi-poistaa?    funktio, joka palauttaa true tai false.
@@ -816,7 +816,7 @@ Optiot on mappi optioita:
                                                (update-in muokatut [id]
                                                           (fn [rivi]
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
-                     
+
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]

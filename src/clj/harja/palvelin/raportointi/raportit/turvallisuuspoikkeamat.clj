@@ -37,6 +37,7 @@
                      (comp
                        (map #(konv/array->vec % :tyyppi))
                        (map #(konv/string->keyword % :vakavuusaste))
+                       (map #(konv/string->keyword % :tyontekijanammatti))
                        (map konv/alaviiva->rakenne))
                      (hae-turvallisuuspoikkeamat db
                                                  (if urakka-id true false) urakka-id
@@ -113,7 +114,7 @@
                                (pvm/pvm-aika (:tapahtunut %))
                                (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                                (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
-                               (or (:tyontekijanammatti %) "")
+                               (or (turpodomain/kuvaile-tyontekijan-ammatti %) "")
                                (or (:tyotehtava %) "")
                                (or (:sairaalavuorokaudet %) "")
                                (or (:sairauspoissaolopaivat %) ""))
