@@ -117,11 +117,11 @@
             "id": "urn:harja/turvallisuuspoikkeamat/0/kuvaus",
             "type": "string"
           },
-          "henkilovahingot": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/henkilovahingot",
+          "henkilovahinko": {
+            "id": "urn:harja/turvallisuuspoikkeamat/0/henkilovahinko",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/henkilovahingot.schema.json"
+            "$ref": "file:resources/api/schemas/entities/henkilovahinko.schema.json"
           },
           "vahinkoluokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vahinkoluokittelu",

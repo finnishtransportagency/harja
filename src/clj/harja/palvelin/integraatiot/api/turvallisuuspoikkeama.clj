@@ -27,8 +27,8 @@
     vastauksen-data))
 
 (defn vastaus [turvallisuuspoikkeamat]
-  (if (some #(and (not= (:tyontekijanammatti %) "muu_tyontekija")
-                 (not (str/blank? (:ammatinselite %))))
+  (if (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
+                  (not (str/blank? (get-in % [:henkilovahinko :ammatinselite]))))
             turvallisuuspoikkeamat)
     {:varoitukset "Ammatin selitettä ei tallennettu, sillä työntekijän ammatti ei ollut 'muu_tyontekija'"}
     (tee-onnistunut-vastaus)))
