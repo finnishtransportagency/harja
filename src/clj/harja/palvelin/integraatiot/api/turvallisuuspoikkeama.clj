@@ -26,12 +26,26 @@
   (let [vastauksen-data {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn vastaus [turvallisuuspoikkeamat]
-  (if (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
+(defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
+  (when (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
                   (not (str/blank? (get-in % [:henkilovahinko :ammatinselite]))))
             turvallisuuspoikkeamat)
-    {:varoitukset "Ammatin selitettä ei tallennettu, sillä työntekijän ammatti ei ollut 'muu_tyontekija'"}
-    (tee-onnistunut-vastaus)))
+    "Ammatin selitettä ei tallennettu, sillä työntekijän ammatti ei ollut 'muu_tyontekija'."))
+
+(defn tarkista-henkilovahingon-tallennus [turvallisuuspoikkeamat]
+  (when (some #(not (some #{"henkilovahinko"} (:vahinkoluokittelu %)))
+              turvallisuuspoikkeamat)
+    "Henkilövahinkoja ei tallennettu, sillä turvallisuuspoikkeaman tyyppi ei ollut henkilövahinko."))
+
+(defn kasaa-varoitukset [turvallisuuspoikkeamat]
+  (keep identity (apply conj [] [(tarkista-ammatin-selitteen-tallennus turvallisuuspoikkeamat)
+                                 (tarkista-henkilovahingon-tallennus turvallisuuspoikkeamat)])))
+
+(defn vastaus [turvallisuuspoikkeamat]
+  (let [varoitukset (kasaa-varoitukset turvallisuuspoikkeamat)]
+    (if (empty? varoitukset)
+     (tee-onnistunut-vastaus)
+     {:varoitukset (str/join " " varoitukset)})))
 
 (defn tallenna-ammatinselite? [turvallisuuspoikkeama]
   (= (get-in turvallisuuspoikkeama [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija"))
