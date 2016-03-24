@@ -68,7 +68,7 @@
             <xs:element name="luokittelu" maxOccurs="unbounded" minOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:enumeration value="henkilostovahinko"/>
+                        <xs:enumeration value="henkilovahinko"/>
                         <xs:enumeration value="omaisuusvahinko"/>
                         <xs:enumeration value="ymparistovahinko"/>
                     </xs:restriction>

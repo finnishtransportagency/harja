@@ -4,19 +4,9 @@
 
 (def +xsd-polku+ "xsd/turi/")
 
-(defn rakenna-luokittelut [tyypit]
-  ;; todo
-  [:turi:luokittelut
-   [:turi:luokittelu
-    "tyotapaturma"]])
-
-(defn rakenna-vahinkoluokittelut [vahinkoluokittelut]
-  ;; todo
-  [:turi:vahinkoluokittelut
-   [:turi:luokittelu
-    "henkilostovahinko"]
-   [:turi:luokittelu
-    "omaisuusvahinko"]])
+(defn rakenna-luokittelulista [elementti tyypit]
+  (let [tyypit (vec (.getArray tyypit))]
+    (vec (mapcat #(vector elementti %) tyypit))))
 
 (defn rakenna-korjaavat-toimenpiteet [data]
   ;; todo
@@ -103,8 +93,7 @@
 (defn muodosta-viesti [data]
   [:turi:turvallisuuspoikkeama
    {:xmlns:turi "http://www.liikennevirasto.fi/xsd/turi"}
-   ;; todo: jari lisää
-   [:turi:vaylamuoto "tie"]
+   [:turi:vaylamuoto (:vaylamuoto data)]
    [:turi:tapahtunut (xml/formatoi-aikaleima (:tapahtunut data))]
    [:turi:paattynyt (xml/formatoi-aikaleima (:paattynyt data))]
    [:turi:kasitelty (xml/formatoi-aikaleima (:kasitelty data))]
@@ -125,8 +114,8 @@
     [:turi:sukunimi "Ilmiantaja"]]
    [:turi:kuvaus (:kuvaus data)]
    [:turi:tyotehtava (:tyotehtava data)]
-   (rakenna-luokittelut (:tyyppi data))
-   (rakenna-vahinkoluokittelut (:vahinkoluokittelu data))
+   [:turi:luokittelut (rakenna-luokittelulista :turi:luokittelu (:tyyppi data))]
+   [:turi:vahinkoluokittelut (rakenna-luokittelulista :turi:luokittelu (:vahinkoluokittelu data))]
    [:turi:vakavuusaste (:vakavuusaste data)]
    ;; todo: jari lisää
    [:turi:aiheutuneet-seuraukset

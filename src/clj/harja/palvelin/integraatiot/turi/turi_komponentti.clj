@@ -28,7 +28,7 @@
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki url kayttajatunnus salasana]} id]
   (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
         integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
-        vastauskasittelija (fn [vastaus otsikot] (kasittele-turin-vastaus db id))
+        vastauskasittelija (fn [_ _] (kasittele-turin-vastaus db id))
         turvallisuuspoikkeama (hae-turvallisuuspoikkeama db id)
         xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
     (if xml

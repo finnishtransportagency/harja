@@ -64,6 +64,7 @@ SELECT
   t.vakavuusaste,
   t.vahinkoluokittelu,
   t.tyyppi,
+  t.vaylamuoto,
 
   k.id                   AS korjaavatoimenpide_id,
   k.kuvaus               AS korjaavatoimenpide_kuvaus,
@@ -310,3 +311,8 @@ VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu, :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
    :poissaolot, :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
    :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste);
+
+--name: lokita-lahetys<!
+UPDATE turvallisuuspoikkeama
+SET lahetetty = now(), lahetys_onnistunut = :onnistunut
+WHERE id = :id;
