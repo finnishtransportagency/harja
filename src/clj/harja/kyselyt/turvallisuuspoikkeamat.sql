@@ -67,6 +67,7 @@ SELECT
   t.vakavuusaste,
   t.vahinkoluokittelu,
   t.tyyppi,
+  t.vaylamuoto,
   t.aiheutuneet_seuraukset as seuraukset,
 
   k.id                   AS korjaavatoimenpide_id,
@@ -183,7 +184,8 @@ SET
   tr_loppuosa                 = :los,
   vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
   sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
+  vaylamuoto                  = :vaylamuoto :: vaylamuoto
 WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
