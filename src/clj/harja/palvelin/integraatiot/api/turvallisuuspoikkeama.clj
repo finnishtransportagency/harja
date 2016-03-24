@@ -50,6 +50,9 @@
 (defn tallenna-ammatinselite? [turvallisuuspoikkeama]
   (= (get-in turvallisuuspoikkeama [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija"))
 
+(defn tallenna-henkilovahinko? [turvallisuuspoikkeama]
+  (some #{"henkilovahinko"} (:vahinkoluokittelu turvallisuuspoikkeama)))
+
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko]} data
@@ -64,13 +67,15 @@
                        (aika-string->java-sql-date tapahtumapaivamaara)
                        (aika-string->java-sql-date paattynyt)
                        (aika-string->java-sql-date kasitelty)
-                       tyontekijanammatti
-                       (when (tallenna-ammatinselite? data) ammatinselite)
-                       tyotehtava
+                       (when (tallenna-henkilovahinko? data) tyontekijanammatti)
+                       (when (and (tallenna-henkilovahinko? data)
+                                  (tallenna-ammatinselite? data))
+                         ammatinselite)
+                       (when (tallenna-henkilovahinko? data) tyotehtava)
                        kuvaus
-                       (konv/seq->array aiheutuneetVammat)
-                       sairauspoissaolopaivat
-                       sairaalahoitovuorokaudet
+                       (when (tallenna-henkilovahinko? data) (konv/seq->array aiheutuneetVammat))
+                       (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
+                       (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
                        (konv/seq->array luokittelu)
                        (:id kirjaaja)
                        (konv/seq->array vahinkoluokittelu)
@@ -86,7 +91,9 @@
         (:let tie)
         (:aos tie)
         (:los tie)
-        (konv/seq->array vahingoittuneetRuumiinosat) sairauspoissaoloJatkuu seuraukset
+        (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
+        (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
+        seuraukset
         (:id tunniste)
         (:id kirjaaja))
       tp-id)))
@@ -105,13 +112,15 @@
       (aika-string->java-sql-date tapahtumapaivamaara)
       (aika-string->java-sql-date paattynyt)
       (aika-string->java-sql-date kasitelty)
-      tyontekijanammatti
-      (when (tallenna-ammatinselite? data) ammatinselite)
-      tyotehtava
+      (when (tallenna-henkilovahinko? data) tyontekijanammatti)
+      (when (and (tallenna-henkilovahinko? data)
+                 (tallenna-ammatinselite? data))
+        ammatinselite)
+      (when (tallenna-henkilovahinko? data) tyotehtava)
       kuvaus
-      (konv/seq->array aiheutuneetVammat)
-      sairauspoissaolopaivat
-      sairaalahoitovuorokaudet
+      (when (tallenna-henkilovahinko? data) (konv/seq->array aiheutuneetVammat))
+      (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
+      (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
       (konv/seq->array luokittelu)
       (:id kirjaaja)
       (konv/seq->array vahinkoluokittelu)
@@ -127,7 +136,9 @@
            (:let tie)
            (:aos tie)
            (:los tie)
-           (konv/seq->array vahingoittuneetRuumiinosat) sairauspoissaoloJatkuu seuraukset
+           (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
+           (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
+           seuraukset
            (:id tunniste)
            (:id kirjaaja)))))
 
