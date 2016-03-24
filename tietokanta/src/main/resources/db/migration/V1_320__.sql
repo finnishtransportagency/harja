@@ -16,5 +16,4 @@ INTO sanktiotyyppi
 VALUES
   ('Muu tuote', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji], NULL),
   ('Talvihoito', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23104')),
-  ('Laatuasiakirjojen, seurantaraprottien yms. vastavien tietojen paikkansa pitämättömyyt', ARRAY['C'::sanktiolaji], NULL),
-  ('Määräpäivän ylitys', ARRAY['C'::sanktiolaji], NULL);
+  ('Laatuasiakirjojen, seurantaraprottien yms. vastavien tietojen paikkansa pitämättömyyt', ARRAY['C'::sanktiolaji], NULL);
