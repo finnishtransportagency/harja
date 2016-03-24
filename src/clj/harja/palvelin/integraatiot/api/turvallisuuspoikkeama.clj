@@ -35,9 +35,9 @@
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahingot]} data
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahingot
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
@@ -75,10 +75,10 @@
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahingot
+  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahinko
                 tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahingot
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
