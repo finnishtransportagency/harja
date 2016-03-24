@@ -12,7 +12,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :turi (component/using
-            (turi/->Turi {:turi {:url +turi-url+ :kayttajatunnus "testi" :salasana "testi"}})
+            (turi/->Turi {:turi {:url +turi-url+ :kayttajatunnus "kayttajatunnus" :salasana "salasana"}})
             [:db :http-palvelin :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -28,11 +28,10 @@
 (deftest tarkista-turvallisuuspoikkeaman-lahetys
   (let [turpo-id 1]
     (with-fake-http [{:url +turi-url+ :method :post}
-                     (fn [a b c]
-                       ;; todo: tutki body ja katso, että se on oikeanlaista xml:ää
-                       (println "----a: " a)
-                       (println "----b: " b)
-                       (println "----c: " c)
+                     (fn [_ opts _]
+                       (is (= +turi-url+ (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
+                       (is (= (first (:basic-auth opts)) "kayttajatunnus") "Autentikaatiossa käytetään oikeaa käyttäjätunnusta")
+                       (is (= (second (:basic-auth opts)) "salasana") "Autentikaatiossa käytetään oikeaa salasanaa")
                        200)]
       (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
       (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]

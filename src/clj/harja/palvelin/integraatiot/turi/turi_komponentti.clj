@@ -31,7 +31,6 @@
         vastauskasittelija (fn [vastaus otsikot] (kasittele-turin-vastaus db id))
         turvallisuuspoikkeama (hae-turvallisuuspoikkeama db id)
         xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
-
     (if xml
       (try
         (http/POST integraatiopiste url xml vastauskasittelija)

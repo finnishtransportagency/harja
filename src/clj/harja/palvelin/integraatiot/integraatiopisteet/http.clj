@@ -54,7 +54,7 @@
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
-                            "Ulkoisen järjestelmän kommunikoinnissa tapahtui odottaman virhe."}]})))
+                            "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe."}]})))
 
 (defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers kasittele-vastaus]
   (let [vastausdata (kasittele-vastaus body headers)]
