@@ -254,13 +254,10 @@
          (reaction (let [tpi @valittu-toimenpideinstanssi
                          tehtavat @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
                      (reset! valittu-kokonaishintainen-tehtava nil)
-                     (filter
-                       (fn [rivi]
-                         (if (:t3_koodi tpi)
-                           (= (:t3_koodi rivi)
-                              (:t3_koodi @valittu-toimenpideinstanssi))
-                           true))
-                       tehtavat))))
+                     (into [] (keep (fn [[_ _ t3 t4]]
+                                      (when (= (:koodi t3) (:t3_koodi tpi))
+                                        t4))
+                                    tehtavat)))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)

@@ -49,7 +49,7 @@
                hoitokausi @urakka/valittu-hoitokausi
                aikavali @urakka/valittu-aikavali
                toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
-               tehtava (:t4_id @urakka/valittu-kokonaishintainen-tehtava)
+               tehtava (:id @urakka/valittu-kokonaishintainen-tehtava)
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when nakymassa?
