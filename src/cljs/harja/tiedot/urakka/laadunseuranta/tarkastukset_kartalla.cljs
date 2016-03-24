@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
-  (:require [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
+  (:require [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.navigaatio :as nav]
@@ -16,7 +16,7 @@
 (defn- luo-tarkastusreitit-kuvataso [taso-paalla? urakka [alku loppu] tienumero tyyppi]
   (when taso-paalla?
     (openlayers/luo-kuvataso
-     :tarkastusreitit #{{:teksti "Tarkastusreitti" :vari varit/harmaa}}
+     :tarkastusreitit esitettavat-asiat/tarkastus-selitteet
      "tr" (k/url-parametri {:urakka-id (:id urakka)
                             :alkupvm alku
                             :loppupvm loppu
