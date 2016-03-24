@@ -26,15 +26,14 @@
   (u (format "update turvallisuuspoikkeama set lahetetty = null, lahetys_onnistunut = null where id = %s" id)))
 
 (deftest tarkista-turvallisuuspoikkeaman-lahetys
-  (let [turpo-id 1
-        fake-vastaus [{:url +turi-url+ :method :post} {:status 200}]]
+  (let [turpo-id 1]
     (with-fake-http [{:url +turi-url+ :method :post}
                      (fn [a b c]
                        ;; todo: tutki body ja katso, että se on oikeanlaista xml:ää
                        (println "----a: " a)
                        (println "----b: " b)
                        (println "----c: " c)
-                       fake-vastaus)]
+                       200)]
       (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
       (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
         (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
@@ -42,12 +41,11 @@
       (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id))))
 
 (deftest tarkista-turvallisuuspoikkeaman-epaonnistunut-lahetys
-  (let [turpo-id 1
-        fake-vastaus [{:url +turi-url+ :method :post} {:status 500}]]
-    (with-fake-http [{:url +turi-url+ :method :post} fake-vastaus]
+  (let [turpo-id 1]
+    (with-fake-http [{:url +turi-url+ :method :post} 500]
       (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
       (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
-        (is (nil? (:lahetetty tila)) "Lähetysaikaa ei ole merkattu")
-        (is (nil? (:lahetys_onnistunut tila)) "Lähetystä ei ole merkitty onnistuneeksi")
+        (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
+        (is (false? (:lahetys_onnistunut tila)) "Lähetys on merkitty epäonnistuneeksi")
         (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id)))))
 

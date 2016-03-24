@@ -12,14 +12,14 @@
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
-(defn kasittele-turin-vastaus [db vastaus otsikot id]
+(defn kasittele-turin-vastaus [db id]
   ;; todo: tarkista onnistuiko
   (q/lokita-lahetys<! db true id))
 
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki url kayttajatunnus salasana]} id]
   (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
         integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
-        vastauskasittelija (fn [vastaus otsikot] (kasittele-turin-vastaus db vastaus otsikot id))
+        vastauskasittelija (fn [vastaus otsikot] (kasittele-turin-vastaus db id))
         turvallisuuspoikkeama (q/hae-turvallisuuspoikkeama db id)
         xml (sanoma/muodosta turvallisuuspoikkeama)]
     (try
