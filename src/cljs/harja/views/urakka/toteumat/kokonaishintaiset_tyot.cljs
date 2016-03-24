@@ -187,21 +187,23 @@
                :aseta (fn [rivi arvo]
                         (-> rivi
                             (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
-                            (assoc-in [:tehtava :toimenpidekoodi :id] nil)))
+                            (assoc-in [:tehtava :toimenpidekoodi :id] nil)
+                            (assoc-in [:tehtava :yksikko] nil)))
                :leveys-col    3}
               {:otsikko       "Tehtävä"
                :nimi          :tehtava
                :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi        :valinta
                :valinnat      @u/urakan-tpin-kokonaishintaiset-tehtavat
-               :valinta-arvo  #(:id (nth % 3))
-               :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+               :valinta-arvo  :id
+               :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
                :hae           (comp :id :toimenpidekoodi :tehtava)
                :aseta         (fn [rivi arvo]
                                 (-> rivi
                                     (assoc-in [:tehtava :toimenpidekoodi :id] arvo)
-                                    (assoc-in [:tehtava :yksikko] (urakan-toimenpiteet/tehtava-idlla
-                                                                    arvo nelostason-tehtavat))))
+                                    (assoc-in [:tehtava :yksikko] (:yksikko
+                                                                    (urakan-toimenpiteet/tehtava-idlla
+                                                                     arvo nelostason-tehtavat)))))
                :leveys-col    3}
               {:otsikko "Määrä"
                :nimi :maara
