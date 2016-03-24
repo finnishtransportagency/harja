@@ -15,7 +15,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
-  (tee-kirjausvastauksen-body {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}]))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}))
 
 (defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja pistetoteuma]
   (log/debug "Käsitellään yksittäinen pistetoteuma tunnisteella " (get-in pistetoteuma [:toteuma :tunniste :id]))
