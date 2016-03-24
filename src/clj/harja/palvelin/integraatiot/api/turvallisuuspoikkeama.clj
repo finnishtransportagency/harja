@@ -94,6 +94,9 @@
         (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
         (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
         seuraukset
+        (:etunimi ilmoittaja)
+        (:sukunimi ilmoittaja)
+        vaylamuoto
         (:id tunniste)
         (:id kirjaaja))
       tp-id)))
@@ -139,6 +142,9 @@
            (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
            (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
            seuraukset
+           (:etunimi ilmoittaja)
+           (:sukunimi ilmoittaja)
+           vaylamuoto
            (:id tunniste)
            (:id kirjaaja)))))
 

@@ -183,7 +183,10 @@ SET
   tr_loppuosa                 = :los,
   vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
   sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
+  ilmoittaja_etunimi = :ilmoittaja_etunimi,
+  ilmoittaja_sukunimi = :ilmoittaja_sukunimi,
+  vaylamuoto = :vaylamuoto :: vaylamuoto
 WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
@@ -218,7 +221,10 @@ SET
   tr_loppuosa      = :los,
   vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
   sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
+  ilmoittaja_etunimi = :ilmoittaja_etunimi,
+  ilmoittaja_sukunimi = :ilmoittaja_sukunimi,
+  vaylamuoto = :vaylamuoto :: vaylamuoto
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
 
