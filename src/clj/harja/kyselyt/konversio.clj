@@ -157,7 +157,7 @@
              (vec (.getArray a))
              [])))
 
-(defn array-set
+(defn array->set
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure-setiksi."
   [rivi kentta]
   (assoc rivi
