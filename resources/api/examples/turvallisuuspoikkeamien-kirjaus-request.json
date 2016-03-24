@@ -92,7 +92,7 @@
             "nimi": "tilanne.png",
             "tyyppi": "image/png",
             "kuvaus": "Kuva tilanteesta",
-            "sisalto": "122"
+            "sisalto": "... sisältö base64 enkoodattuna ..."
           }
         }
       ]
