@@ -49,3 +49,6 @@
         (is (false? (:lahetys_onnistunut tila)) "Lähetys on merkitty epäonnistuneeksi")
         (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id)))))
 
+(deftest tarkista-tuntemattoman-turvallisuuspoikkeaman
+  (let [turpo-id 1890123]
+    (is (thrown? Exception (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)))))

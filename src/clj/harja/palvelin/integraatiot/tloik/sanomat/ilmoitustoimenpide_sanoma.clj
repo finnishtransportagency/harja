@@ -6,9 +6,6 @@
 
 (def +xsd-polku+ "xsd/tloik/")
 
-(defn tee-xml-sanoma [sisalto]
-  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
-
 (defn formatoi-paivamaara [date]
   (when date (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date)))
 
@@ -43,7 +40,7 @@
 
 (defn muodosta [data viesti-id]
   (let [sisalto (muodosta-viesti data viesti-id)
-        xml (tee-xml-sanoma sisalto)]
+        xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do

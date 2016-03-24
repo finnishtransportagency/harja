@@ -4,7 +4,8 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
-            [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]))
+            [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
   (laheta-turvallisuuspoikkeama [this id]))
@@ -13,19 +14,32 @@
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
 (defn kasittele-turin-vastaus [db id]
-  ;; todo: tarkista onnistuiko
   (q/lokita-lahetys<! db true id))
+
+(defn hae-turvallisuuspoikkeama [db id]
+  (let [turvallisuuspoikkeama (first (q/hae-turvallisuuspoikkeama db id))]
+    (if turvallisuuspoikkeama
+      turvallisuuspoikkeama
+      (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]
+        (log/error virhe)
+        (throw+ {:type :tuntematon-turvallisuuspoikkeama
+                 :error virhe})))))
 
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki url kayttajatunnus salasana]} id]
   (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
         integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
         vastauskasittelija (fn [vastaus otsikot] (kasittele-turin-vastaus db id))
-        turvallisuuspoikkeama (q/hae-turvallisuuspoikkeama db id)
-        xml (sanoma/muodosta turvallisuuspoikkeama)]
-    (try
-      (http/POST integraatiopiste url xml vastauskasittelija)
-      (catch Exception e
-        (log/error e (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä tapahtui poikkeus." id))
+        turvallisuuspoikkeama (hae-turvallisuuspoikkeama db id)
+        xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
+
+    (if xml
+      (try
+        (http/POST integraatiopiste url xml vastauskasittelija)
+        (catch Exception e
+          (log/error e (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä tapahtui poikkeus." id))
+          (q/lokita-lahetys<! db false id)))
+      (do
+        (log/error (format "Turvallisuuspoikkeamaa  (id: %s) ei voida lähettää" id))
         (q/lokita-lahetys<! db false id)))))
 
 (defrecord Turi [asetukset]
