@@ -33,6 +33,9 @@
     {:varoitukset "Ammatin selitettä ei tallennettu, sillä työntekijän ammatti ei ollut 'muu_tyontekija'"}
     (tee-onnistunut-vastaus)))
 
+(defn tallenna-ammatinselite? [turvallisuuspoikkeama]
+  (= (get-in turvallisuuspoikkeama [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija"))
+
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko]} data
@@ -48,7 +51,7 @@
                        (aika-string->java-sql-date paattynyt)
                        (aika-string->java-sql-date kasitelty)
                        tyontekijanammatti
-                       ammatinselite
+                       (when (tallenna-ammatinselite? data) ammatinselite)
                        tyotehtava
                        kuvaus
                        (konv/seq->array aiheutuneetVammat)
@@ -89,7 +92,7 @@
       (aika-string->java-sql-date paattynyt)
       (aika-string->java-sql-date kasitelty)
       tyontekijanammatti
-      ammatinselite
+      (when (tallenna-ammatinselite? data) ammatinselite)
       tyotehtava
       kuvaus
       (konv/seq->array aiheutuneetVammat)
