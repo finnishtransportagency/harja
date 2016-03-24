@@ -26,12 +26,12 @@
   (let [vastauksen-data {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"}]
     vastauksen-data))
 
-(defn tarkista-ammatin-selite [turvallisuuspoikkeama]
-  (cond
-    (and (not= (:tyontekijanammatti turvallisuuspoikkeama) "muu_tyontekija")
-         (not (str/blank? (:ammatinselite turvallisuuspoikkeama))))
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})))
+(defn vastaus [turvallisuuspoikkeamat]
+  (if (some #(and (not= (:tyontekijanammatti %) "muu_tyontekija")
+                 (not (str/blank? (:ammatinselite %))))
+            turvallisuuspoikkeamat)
+    {:varoitukset "Ammatin selitettä ei tallennettu, sillä työntekijän ammatti ei ollut 'muu_tyontekija'"}
+    (tee-onnistunut-vastaus)))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
@@ -159,10 +159,8 @@
                (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) ") tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
-      (tarkista-ammatin-selite turvallisuuspoikkeama))
-    (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
       (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
-    (tee-onnistunut-vastaus)))
+    (vastaus (:turvallisuuspoikkeamat data))))
 
 (defrecord Turvallisuuspoikkeama []
   component/Lifecycle
