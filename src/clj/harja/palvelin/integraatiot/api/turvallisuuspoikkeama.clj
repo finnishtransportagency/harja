@@ -34,7 +34,7 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylimääräinen kenttä 'ammatinselite'. Tämä annetaan vain jos työntekijän ammatti on 'muu_tyontekija'."}]})))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
+  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste sairauspoissaoloJatkuu]} data
         tie (:tie sijainti)
@@ -74,7 +74,7 @@
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja seuraukset
+  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava ammatinselite
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste
                 vahingoittuneetRuumiinosat sairauspoissaoloJatkuu]} data

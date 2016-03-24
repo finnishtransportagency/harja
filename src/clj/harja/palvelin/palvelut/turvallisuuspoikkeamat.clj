@@ -4,14 +4,10 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.urakat :as urakat-q]
-
             [harja.geo :as geo]))
 
 (def turvallisuuspoikkeama-xf
