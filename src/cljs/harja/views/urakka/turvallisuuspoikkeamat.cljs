@@ -113,21 +113,21 @@
               (lomake/ryhma {:otsikko    "Turvallisuuskoordinaattori"
                              :uusi-rivi? true}
                             {:otsikko  "Etunimi"
-                             :nimi     :turvallisuuskoordinaattori_etunimi
+                             :nimi     :turvallisuuskoordinaattorietunimi
                              :tyyppi   :string
                              :palstoja 1}
                             {:otsikko  "Sukunimi"
-                             :nimi     :turvallisuuskoordinaattori_sukunimi
+                             :nimi     :turvallisuuskoordinaattorisukunimi
                              :tyyppi   :string
                              :palstoja 1})
               (lomake/ryhma {:otsikko    "Laatija"
                              :uusi-rivi? true}
                             {:otsikko  "Etunimi"
-                             :nimi     :laatija_etunimi
+                             :nimi     :laatijaetunimi
                              :tyyppi   :string
                              :palstoja 1}
                             {:otsikko  "Sukunimi"
-                             :nimi     :laatija_sukunimi
+                             :nimi     :laatijasukunimi
                              :tyyppi   :string
                              :palstoja 1})
 

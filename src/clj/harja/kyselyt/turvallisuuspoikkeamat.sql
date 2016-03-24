@@ -68,6 +68,12 @@ SELECT
   t.vahinkoluokittelu,
   t.tyyppi,
   t.vaylamuoto,
+  t.toteuttaja,
+  t.tilaaja,
+  t.laatija_etunimi as laatijaetunimi,
+  t.laatija_sukunimi as laatijasukunimi,
+  t.turvallisuuskoordinaattori_etunimi as turvallisuuskoordinaattorietunimi,
+  t.turvallisuuskoordinaattori_sukunimi as turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset as seuraukset,
 
   k.id                   AS korjaavatoimenpide_id,
@@ -151,22 +157,24 @@ VALUES
 -- Clojuressa voi olla max 20.
 UPDATE turvallisuuspoikkeama
 SET
-  urakka                      = :urakka,
-  tapahtunut                  = :tapahtunut,
-  paattynyt                   = :paattynyt,
-  kasitelty                   = :kasitelty,
-  tyontekijanammatti          = :ammatti :: tyontekijanammatti,
-  tyontekijanammatti_muu      = :ammatti_muu,
-  tyotehtava                  = :tehtava,
-  kuvaus                      = :kuvaus,
-  vammat                      = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
-  sairauspoissaolopaivat      = :poissa,
-  sairaalavuorokaudet         = :sairaalassa,
-  tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  muokkaaja                   = :kayttaja,
-  muokattu                    = NOW(),
-  vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
-  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste
+  urakka                 = :urakka,
+  tapahtunut             = :tapahtunut,
+  paattynyt              = :paattynyt,
+  kasitelty              = :kasitelty,
+  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu = :ammatti_muu,
+  tyotehtava             = :tehtava,
+  kuvaus                 = :kuvaus,
+  vammat                 = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
+  sairauspoissaolopaivat = :poissa,
+  sairaalavuorokaudet    = :sairaalassa,
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  muokkaaja              = :kayttaja,
+  muokattu               = NOW(),
+  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  toteuttaja             = :toteuttaja,
+  tilaaja                = :tilaaja
 WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeaman-muut-tiedot!
@@ -176,16 +184,20 @@ WHERE id = :id;
 -- * kyselyä kutsutaan heti luonnin jälkeen
 UPDATE turvallisuuspoikkeama
 SET
-  sijainti                    = :sijainti,
-  tr_numero                   = :numero,
-  tr_alkuetaisyys             = :aet,
-  tr_loppuetaisyys            = :let,
-  tr_alkuosa                  = :aos,
-  tr_loppuosa                 = :los,
-  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
-  vaylamuoto                  = :vaylamuoto :: vaylamuoto
+  sijainti                            = :sijainti,
+  tr_numero                           = :numero,
+  tr_alkuetaisyys                     = :aet,
+  tr_loppuetaisyys                    = :let,
+  tr_alkuosa                          = :aos,
+  tr_loppuosa                         = :los,
+  vahingoittuneet_ruumiinosat         = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu             = :sairauspoissaolo_jatkuu,
+  aiheutuneet_seuraukset              = :aiheutuneet_seuraukset,
+  vaylamuoto                          = :vaylamuoto :: vaylamuoto,
+  laatija_etunimi                     = :laatija_etunimi,
+  laatija_sukunimi                    = :laatija_sukunimi,
+  turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
+  turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi
 WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
