@@ -5,7 +5,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
 
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus
+              tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
@@ -21,10 +22,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
-
-(defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"}]
-    vastauksen-data))
 
 (defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
   (when (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
@@ -43,9 +40,8 @@
 
 (defn vastaus [turvallisuuspoikkeamat]
   (let [varoitukset (kasaa-varoitukset turvallisuuspoikkeamat)]
-    (if (empty? varoitukset)
-     (tee-onnistunut-vastaus)
-     {:varoitukset (str/join " " varoitukset)})))
+    (tee-kirjausvastauksen-body {:ilmoitukset (if (empty? varoitukset) "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti")
+                                 :varoitukset (if-not (empty? varoitukset) (str/join " " varoitukset))})))
 
 (defn tallenna-ammatinselite? [turvallisuuspoikkeama]
   (= (get-in turvallisuuspoikkeama [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija"))

@@ -14,6 +14,16 @@
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)))
 
+(defn tee-kirjausvastauksen-body
+  "Ottaa kirjausvastauksen tiedot (mappi, jossa ilmoitukset, varoitukset ja virheet) ja tekee vastauksen bodyn.
+   Sisällyttää body-mappiin vain ne tiedot, jotka eivät ole nil"
+  [{:keys [ilmoitukset varoitukset virheet] :as tiedot}]
+  (merge
+    {}
+    (when ilmoitukset {:ilmoitukset ilmoitukset})
+    (when varoitukset {:varoitukset varoitukset})
+    (when virheet {:virheet virheet})))
+
 (defn tee-lokiviesti [suunta body viesti]
   {:suunta suunta
    :sisaltotyyppi "application/json"
