@@ -41,7 +41,7 @@
 (defn vastaus [turvallisuuspoikkeamat]
   (let [varoitukset (kasaa-varoitukset turvallisuuspoikkeamat)]
     (tee-kirjausvastauksen-body {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"
-                                 :varoitukset (if-not (empty? varoitukset) (str/join " " varoitukset))})))
+                                 :varoitukset (when-not (empty? varoitukset) (str/join " " varoitukset))})))
 
 (defn tallenna-ammatinselite? [turvallisuuspoikkeama]
   (= (get-in turvallisuuspoikkeama [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija"))

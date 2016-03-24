@@ -1,4 +1,5 @@
-(ns harja.palvelin.integraatiot.api.sanomat.paivystajatiedot)
+(ns harja.palvelin.integraatiot.api.sanomat.paivystajatiedot
+  (:require [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :as kutsukasittely]))
 
 (defn muodosta-paivystykset [paivystykset]
   (mapv (fn [{:keys [id vastuuhenkilo varahenkilo alku loppu etunimi
@@ -43,5 +44,4 @@
       (muodosta-hakusanoma urakkaryhmat paivystajatiedot))))
 
 (defn tee-onnistunut-kirjaus-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}]
-    vastauksen-data))
+  (kutsukasittely/tee-kirjausvastauksen-body {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}))
