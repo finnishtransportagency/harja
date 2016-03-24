@@ -64,19 +64,23 @@ SELECT mat.* FROM
               AND loppupvm :: DATE BETWEEN :alku AND :loppu
               AND sopimus = :sopimus) AS maara,
       (SELECT SUM(maara)
-         FROM toteuma_materiaali
+         FROM sopimuksen_kaytetty_materiaali
         WHERE materiaalikoodi = m.id AND
-              toteuma IN (SELECT id
-                            FROM toteuma
-                           WHERE alkanut :: DATE >= :alku AND
-			         alkanut :: DATE <= :loppu AND
-				 sopimus = :sopimus AND
-				 poistettu IS NOT TRUE) AND
-              poistettu IS NOT TRUE) AS kokonaismaara
+              (alkupvm BETWEEN :alku AND :loppu) AND
+ 	      sopimus = :sopimus) AS kokonaismaara
    FROM materiaalikoodi m
   WHERE m.materiaalityyppi != 'talvisuola' :: materiaalityyppi) as mat
 WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 
+-- name: paivita-sopimuksen-materiaalin-kaytto
+SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus::integer, :alkupvm::date);
+
+-- name: paivita-sopimuksen-materiaalin-kaytto-toteumapvm
+-- Päivittää sopimuksen materiaalin käytön annetun toteuman alkupäivämäärän
+-- päivälle.
+SELECT paivita_sopimuksen_materiaalin_kaytto(
+       :sopimus::integer,
+       (SELECT alkanut FROM toteuma WHERE id = :toteuma)::date);
 
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT

@@ -471,9 +471,11 @@
                                 (reset! teksti t)
                                 (if (str/blank? t)
                                   (reset! data nil)
-                                  (when-let [d (pvm/->pvm t)]
-                                    (log "OLIHAN SE VALIDI")
-                                    (reset! data d))))
+                                  (let [d (pvm/->pvm t)
+                                        eri-pvm? (not (pvm/sama-pvm? @data d))]
+                                    (when eri-pvm?
+                                      (log "OLIHAN SE VALIDI JA VIELÄPÄ ERI!")
+                                      (reset! data d)))))
 
         muuta! (fn [data t]
                  (log "MUUTA! pvm")

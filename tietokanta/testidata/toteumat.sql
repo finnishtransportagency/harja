@@ -498,3 +498,25 @@ UPDATE toteuma t
 
 -- Varmistetaan, että kaikilla toteumilla on käyttäjä
 UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'fastroi') WHERE luoja IS NULL;
+
+
+-- Luodaan materiaalitoteuma Oulun alueurakka 2014-2019 hoitokaudelle 2015
+INSERT INTO toteuma (urakka,sopimus,alkanut,paattynyt,tyyppi) VALUES (
+  (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019') and paasopimus is null),
+  '2016-03-21 12:00', '2016-03-21 13:00',
+  'kokonaishintainen');
+
+INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara) VALUES (
+  (SELECT MAX(id) FROM toteuma),
+  (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'),
+  500);
+
+
+-- Luodaan sopimusten käytetyn materiaalin alkutilanne, summataan nykyiset materiaalit
+INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
+  SELECT t.sopimus, date_trunc('day', t.alkanut), tm.materiaalikoodi, SUM(tm.maara)
+    FROM toteuma t
+         JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+   WHERE t.poistettu IS NOT TRUE AND tm.poistettu IS NOT TRUE
+GROUP BY t.sopimus, tm.materiaalikoodi, date_trunc('day', t.alkanut);
