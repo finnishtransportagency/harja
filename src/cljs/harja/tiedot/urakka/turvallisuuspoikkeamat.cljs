@@ -13,7 +13,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
-(def +uusi-turvallisuuspoikkeama+ {})
+(def +uusi-turvallisuuspoikkeama+ {:vakavuusaste :lieva})
 (defonce valittu-turvallisuuspoikkeama (atom nil))
 
 (defn hae-urakan-turvallisuuspoikkeamat
@@ -45,11 +45,13 @@
                (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
                      (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))))))
 
-(defn kasaa-tallennuksen-parametrit
+(defn kasaa-tallennettava-turpo
   [tp]
-  {:tp                    (assoc
-                            (dissoc tp :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
-                            :urakka (:id @nav/valittu-urakka))
+  {:tp                    (-> tp
+                              (dissoc :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
+                              (assoc :urakka (:id @nav/valittu-urakka))
+                              (cond-> (not= (:tyontekijanammatti tp) :muu_tyontekija)
+                                      (dissoc :tyontekijanammattimuu)))
    :korjaavattoimenpiteet (remove #(empty? (dissoc % :id :koskematon)) (:korjaavattoimenpiteet tp))
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
@@ -60,7 +62,7 @@
 
 (defn tallenna-turvallisuuspoikkeama
   [tp]
-  (k/post! :tallenna-turvallisuuspoikkeama (kasaa-tallennuksen-parametrit tp)))
+  (k/post! :tallenna-turvallisuuspoikkeama (kasaa-tallennettava-turpo tp)))
 
 (defn turvallisuuspoikkeaman-tallennus-onnistui
   [turvallisuuspoikkeamat]
