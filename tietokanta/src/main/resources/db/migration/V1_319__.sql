@@ -84,3 +84,15 @@ CREATE TYPE turvallisuuspoikkeama_vahingoittunut_ruumiinosa AS ENUM (
 
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN vahingoittuneet_ruumiinosat turvallisuuspoikkeama_vahingoittunut_ruumiinosa[];
 ALTER TABLE turvallisuuspoikkeama ADD COLUMN sairauspoissaolo_jatkuu BOOLEAN;
+
+--- - Turpolle lisää sarakkeita
+
+CREATE TYPE vaylamuoto AS ENUM(
+  'tie',
+  'vesi',
+  'rautatie'
+);
+
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN ilmoittaja_etunimi VARCHAR(1024);
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN ilmoittaja_sukunimi VARCHAR(1024);
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN vaylamuoto vaylamuoto;
