@@ -74,8 +74,11 @@
           },
           "vaylamuoto": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vaylamuoto",
-            "type": "string",
-            "required": true
+            "enum": [
+              "tie",
+              "vesi",
+              "rautatie"
+            ]
           },
           "luokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu",
@@ -110,108 +113,15 @@
             "type": "string",
             "format": "date-time"
           },
-          "tyontekijanammatti": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijanammatti",
-            "required": true,
-            "enum": [
-              "aluksen_paallikko",
-              "asentaja",
-              "asfalttityontekija",
-              "harjoittelija",
-              "hitsaaja",
-              "kunnossapitotyontekija",
-              "kansimies",
-              "kiskoilla_liikkuvan_tyokoneen_kuljettaja",
-              "konemies",
-              "kuorma-autonkuljettaja",
-              "liikenteenohjaaja",
-              "mittamies",
-              "panostaja",
-              "peramies",
-              "porari",
-              "rakennustyontekija",
-              "ratatyontekija",
-              "ratatyosta_vastaava",
-              "sukeltaja",
-              "sahkotoiden_ammattihenkilo",
-              "tilaajan_edustaja",
-              "turvalaiteasentaja",
-              "turvamies",
-              "tyokoneen_kuljettaja",
-              "tyonjohtaja",
-              "valvoja",
-              "veneenkuljettaja",
-              "vaylanhoitaja",
-              "muu_tyontekija",
-              "tyomaan_ulkopuolinen"
-            ]
-          },
-          "ammatinselite": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijaselite",
-            "type": "string"
-          },
-          "tyotehtava": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/tyotehtava",
-            "type": "string"
-          },
           "kuvaus": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/kuvaus",
             "type": "string"
           },
-          "aiheutuneetVammat": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/aiheutuneetVammat",
-            "type": "array",
-            "items": {
-              "enum": [
-                "haavat_ja_pinnalliset_vammat",
-                "luunmurtumat",
-                "sijoiltaan_menot_nyrjahdykset_ja_venahdykset",
-                "amputoitumiset_ja_irti_repeamiset",
-                "tarahdykset_ja_sisaiset_vammat_ruhjevammat",
-                "palovammat_syopymat_ja_paleltumat",
-                "myrkytykset_ja_tulehdukset",
-                "hukkuminen_ja_tukehtuminen",
-                "aanen_ja_varahtelyn_vaikutukset",
-                "aarilampotilojen_valon_ja_sateilyn_vaikutukset",
-                "sokki",
-                "useita_samantasoisia_vammoja",
-                "muut",
-                "ei_tietoa"
-              ]
-            }
-          },
-          "vahingoittuneetRuumiinosat": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/vahingoittuneetRuumiinosat",
-            "type": "array",
-            "items": {
-              "enum": [
-                "paan_alue",
-                "silmat",
-                "niska_ja_kaula",
-                "selka",
-                "vartalo",
-                "sormi_kammen",
-                "ranne",
-                "muu_kasi",
-                "nilkka",
-                "jalkatera_ja_varvas",
-                "muu_jalka",
-                "koko_keho",
-                "ei_tietoa"
-              ]
-            }
-          },
-          "sairauspoissaoloJatkuu": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/sairauspoissaoloJatkuu",
-            "type": "boolean"
-          },
-          "sairauspoissaolopaivat": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/sairauspoissaolopaivat",
-            "type": "integer"
-          },
-          "sairaalahoitovuorokaudet": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/sairaalahoitovuorokaudet",
-            "type": "integer"
+          "henkilovahingot": {
+            "id": "urn:harja/turvallisuuspoikkeamat/0/henkilovahingot",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/henkilovahingot.schema.json"
           },
           "vahinkoluokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vahinkoluokittelu",

@@ -35,8 +35,9 @@
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste sairauspoissaoloJatkuu]} data
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahingot]} data
+        {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahingot
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
@@ -74,10 +75,10 @@
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava ammatinselite
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste
-                vahingoittuneetRuumiinosat sairauspoissaoloJatkuu]} data
+  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahingot
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste]} data
+        {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahingot
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
@@ -142,7 +143,6 @@
 
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
-  (jdbc/with-db-transaction [db db]
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
           kommentit (:kommentit data)
           korjaavat (:korjaavatToimenpiteet data)
@@ -150,7 +150,7 @@
       (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
       (tallenna-kommentit db tp-id kirjaaja kommentit)
       (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
-      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet))))
+      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)))
 
 (defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -158,8 +158,9 @@
                " uutta turvallisuuspoikkeamaa urakalle id:" urakka-id " kayttäjän:"
                (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) ") tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
-      (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
+    (jdbc/with-db-transaction [db db]
+      (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
+        (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama)))
     (vastaus (:turvallisuuspoikkeamat data))))
 
 (defrecord Turvallisuuspoikkeama []
