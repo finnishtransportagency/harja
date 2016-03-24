@@ -13,7 +13,7 @@
     kayttaja
     :turi (component/using
             (turi/->Turi {:turi {:url +turi-url+ :kayttajatunnus "kayttajatunnus" :salasana "salasana"}})
-            [:db :http-palvelin :integraatioloki])))
+            [:db :http-palvelin :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :each jarjestelma-fixture)
 

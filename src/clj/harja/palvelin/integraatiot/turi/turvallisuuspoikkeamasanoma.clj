@@ -4,9 +4,9 @@
 
 (def +xsd-polku+ "xsd/turi/")
 
-(defn rakenna-luokittelulista [elementti tyypit]
+(defn rakenna-luokittelulista [lista-elementti elementti tyypit]
   (let [tyypit (vec (.getArray tyypit))]
-    (vec (mapcat #(vector elementti %) tyypit))))
+    (apply conj [] lista-elementti (mapv #(vector elementti %) tyypit))))
 
 (defn rakenna-korjaavat-toimenpiteet [data]
   ;; todo
@@ -105,21 +105,20 @@
    [:turi:turvallisuuskoordinaattori
     [:turi:etunimi "Tiina"]
     [:turi:sukunimi "Turvallinen"]]
+   ;; todo lisää
    [:turi:laatija
     [:turi:etunimi "Lasse"]
     [:turi:sukunimi "Laatija"]]
-   ;; todo: puuttuu?
+   ;; todo: lisää
    [:turi:ilmoittaja
-    [:turi:etunimi "Irma"]
-    [:turi:sukunimi "Ilmiantaja"]]
+    [:turi:etunimi (:ilmoittaja_etunimi data)]
+    [:turi:sukunimi (:ilmoittaja_sukunimi data)]]
    [:turi:kuvaus (:kuvaus data)]
    [:turi:tyotehtava (:tyotehtava data)]
-   [:turi:luokittelut (rakenna-luokittelulista :turi:luokittelu (:tyyppi data))]
-   [:turi:vahinkoluokittelut (rakenna-luokittelulista :turi:luokittelu (:vahinkoluokittelu data))]
+   (rakenna-luokittelulista :turi:luokittelut :turi:luokittelu (:tyyppi data))
+   (rakenna-luokittelulista :turi:vahinkoluokittelut :turi:luokittelu (:vahinkoluokittelu data))
    [:turi:vakavuusaste (:vakavuusaste data)]
-   ;; todo: jari lisää
-   [:turi:aiheutuneet-seuraukset
-    "Tehdään asialle jotain"]
+   [:turi:aiheutuneet-seuraukset (:aiheutuneet_seuraukset data)]
    (rakenna-korjaavat-toimenpiteet data)
    (rakenna-kommentit data)
    (rakenna-liitteet data)

@@ -4,7 +4,8 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
-            [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma])
+            [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
+            [harja.palvelin.komponentit.liitteet :as liitteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
@@ -16,20 +17,30 @@
 (defn kasittele-turin-vastaus [db id]
   (q/lokita-lahetys<! db true id))
 
-(defn hae-turvallisuuspoikkeama [db id]
+(defn hae-liitteet [liitteiden-hallinta db id]
+  (let [liitteet (q/hae-turvallisuuspoikkeaman-liitteet db id)]
+    (mapv (fn [liite] (assoc :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite)) liite)) liitteet)))
+
+(defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
   (let [turvallisuuspoikkeama (first (q/hae-turvallisuuspoikkeama db id))]
     (if turvallisuuspoikkeama
-      turvallisuuspoikkeama
+      (let [korjaavat-toimenpiteet (q/hae-turvallisuuspoikkeaman-korjaavat-toimenpiteet db id)
+            kommentit (q/hae-turvallisuuspoikkeaman-kommentit db id)
+            liitteet (hae-liitteet liitteiden-hallinta db id)]
+        (assoc turvallisuuspoikkeama
+          :korjaavat-toimenpiteet korjaavat-toimenpiteet
+          :kommentit kommentit
+          :liitteet liitteet))
       (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]
         (log/error virhe)
         (throw+ {:type :tuntematon-turvallisuuspoikkeama
                  :error virhe})))))
 
-(defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki url kayttajatunnus salasana]} id]
+(defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta url kayttajatunnus salasana]} id]
   (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
         integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
         vastauskasittelija (fn [_ _] (kasittele-turin-vastaus db id))
-        turvallisuuspoikkeama (hae-turvallisuuspoikkeama db id)
+        turvallisuuspoikkeama (hae-turvallisuuspoikkeama liitteiden-hallinta db id)
         xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
     (if xml
       (try

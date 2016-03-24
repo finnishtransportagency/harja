@@ -167,10 +167,10 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                       :roolit #{"urakanvalvoja"}})
 
 ;; id:2 Järjestelmävastuuhenkilö
-(def +kayttaja-jvh+ {:sahkoposti   "jalmari@example.com" :kayttajanimi "jvh"
-                     :sukunimi     "Järjestelmävastuuhenkilö" :roolit #{"jarjestelmavastuuhenkilo"}, :id 2
-                     :etunimi      "Jalmari" :urakka-roolit []
-                     :organisaatio {:id     1 :nimi "Liikennevirasto",
+(def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
+                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"jarjestelmavastuuhenkilo"}, :id 2
+                     :etunimi "Jalmari" :urakka-roolit []
+                     :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
                      :urakkaroolit ()})
 
@@ -297,33 +297,33 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (use-fixtures :once urakkatieto-fixture)
 
 (defn oulun-urakan-tilaajan-urakanvalvoja []
-  {:sahkoposti   "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
-   :roolit       #{"urakanvalvoja"}, :id 417,
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
+   :roolit #{"urakanvalvoja"}, :id 417,
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
-   :urakkaroolit [{:urakka {:id              @oulun-alueurakan-2005-2010-id,
-                            :nimi            "Oulun alueurakka 2005-2012",
+   :urakkaroolit [{:urakka {:id @oulun-alueurakan-2005-2010-id,
+                            :nimi "Oulun alueurakka 2005-2012",
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                   :rooli  "urakanvalvoja"}]})
+                   :rooli "urakanvalvoja"}]})
 
 (defn oulun-urakan-urakoitsijan-urakkavastaava []
-  {:sahkoposti   "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
-   :roolit       #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
-   :urakkaroolit [{:urakka {:id              @oulun-alueurakan-2005-2010-id,
-                            :nimi            "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
+   :urakkaroolit [{:urakka {:id @oulun-alueurakan-2005-2010-id,
+                            :nimi "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                   :luotu  nil,
-                   :rooli  "urakoitsijan urakan vastuuhenkilo"}]})
+                   :luotu nil,
+                   :rooli "urakoitsijan urakan vastuuhenkilo"}]})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
-  {:sahkoposti   "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
-   :roolit       #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
-   :urakkaroolit [{:urakka {:id              234234324234,  ;;eli ei ole oulun urakan ID
-                            :nimi            "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
+   :urakkaroolit [{:urakka {:id 234234324234,               ;;eli ei ole oulun urakan ID
+                            :nimi "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                   :luotu  nil,
-                   :rooli  "urakoitsijan urakan vastuuhenkilo"}]})
+                   :luotu nil,
+                   :rooli "urakoitsijan urakan vastuuhenkilo"}]})
 
 ;; Selkeä rajoite on, että tässä testataan usein vain ensimmäistä, tai tietyllä
 ;; indeksillä löytyvää. Yleensä pitäisi tieten oikeanlainenkin rivi löytyä, mutta
@@ -370,11 +370,11 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
    (let [vastaus (if parametrit
                    (kutsu-palvelua (:http-palvelin jarjestelma) palvelu (or kayttaja +kayttaja-jvh+) parametrit)
                    (kutsu-palvelua (:http-palvelin jarjestelma) palvelu (or kayttaja +kayttaja-jvh+)))]
-         (log/debug "Tarkistetaan sarakkeet vastauksesta:" (pr-str vastaus))
-         (if (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet)
-           true
-           (do (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus))
-               false)))))
+     (log/debug "Tarkistetaan sarakkeet vastauksesta:" (pr-str vastaus))
+     (if (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet)
+       true
+       (do (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus))
+           false)))))
 
 (def portti nil)
 (def urakka nil)
@@ -389,23 +389,27 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
-                        (component/system-map
-                         :db (tietokanta/luo-tietokanta testitietokanta)
-                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
-                                                [:db])
+                         (component/system-map
+                           :db (tietokanta/luo-tietokanta testitietokanta)
+                           :klusterin-tapahtumat (component/using
+                                                   (tapahtumat/luo-tapahtumat)
+                                                   [:db])
 
-                         :todennus (component/using
-                                    (todennus/http-todennus)
-                                    [:db :klusterin-tapahtumat])
-                         :http-palvelin (component/using
-                                         (http/luo-http-palvelin portti true)
-                                         [:todennus])
-                         :integraatioloki (component/using
-                                           (integraatioloki/->Integraatioloki nil)
-                                           [:db])
-                         
-                         ~@omat))))
+                           :todennus (component/using
+                                       (todennus/http-todennus)
+                                       [:db :klusterin-tapahtumat])
+                           :http-palvelin (component/using
+                                            (http/luo-http-palvelin portti true)
+                                            [:todennus])
+                           :integraatioloki (component/using
+                                              (integraatioloki/->Integraatioloki nil)
+                                              [:db])
+
+                           :liitteiden-hallinta (component/using
+                                                  (harja.palvelin.komponentit.liitteet/->Liitteet)
+                                                  [:db])
+
+                           ~@omat))))
 
      (alter-var-root #'urakka
                      (fn [_#]
