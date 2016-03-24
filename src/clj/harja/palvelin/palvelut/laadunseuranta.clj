@@ -300,7 +300,7 @@
        tarkastukset
        nil :id
        (comp (filter #(not (nil? (:sijainti %))))
-             (map #(assoc % :tyyppi-kartalla :tarkastus #_reitti))))
+             (map #(assoc % :tyyppi-kartalla :tarkastus))))
       (catch Exception e
         (log/debug "TARKASTUSREITTI FIXME: " e)))))
 
