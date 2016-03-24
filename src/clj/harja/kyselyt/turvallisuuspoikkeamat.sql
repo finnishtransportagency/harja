@@ -190,22 +190,24 @@ WHERE id = :id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
 UPDATE turvallisuuspoikkeama
-SET urakka                    = :urakka,
-  tapahtunut                  = :tapahtunut,
-  paattynyt                   = :paattynyt,
-  kasitelty                   = :kasitelty,
-  tyontekijanammatti          = :ammatti :: tyontekijanammatti,
-  tyontekijanammatti_muu      = :ammatti_muu,
-  tyotehtava                  = :tehtava,
-  kuvaus                      = :kuvaus,
-  vammat                      = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
-  sairauspoissaolopaivat      = :poissa,
-  sairaalavuorokaudet         = :sairaalassa,
-  tyyppi                      = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  muokkaaja                   = :kayttaja,
-  vahinkoluokittelu           = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
-  vakavuusaste                = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  muokattu                    = NOW()
+SET urakka               = :urakka,
+  tapahtunut             = :tapahtunut,
+  paattynyt              = :paattynyt,
+  kasitelty              = :kasitelty,
+  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu = :ammatti_muu,
+  tyotehtava             = :tehtava,
+  kuvaus                 = :kuvaus,
+  vammat                 = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
+  sairauspoissaolopaivat = :poissa,
+  sairaalavuorokaudet    = :sairaalassa,
+  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  muokkaaja              = :kayttaja,
+  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  toteuttaja             = :toteuttaja,
+  tilaaja                = :tilaaja,
+  muokattu               = NOW()
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
 
@@ -223,7 +225,11 @@ SET
   aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
   ilmoittaja_etunimi = :ilmoittaja_etunimi,
   ilmoittaja_sukunimi = :ilmoittaja_sukunimi,
-  vaylamuoto = :vaylamuoto :: vaylamuoto
+  vaylamuoto = :vaylamuoto :: vaylamuoto,
+  turvallisuuskoordinaattori_etunimi = :turvallisuuskoordinaattori_etunimi,
+  turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
+  laatija_etunimi = :laatija_etunimi,
+  laatija_sukunimi = :laatija_sukunimi
 WHERE ulkoinen_id = :id AND
       luoja = :luoja;
 
@@ -237,8 +243,8 @@ WHERE id = :id;
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyontekijanammatti_muu, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste)
+ sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, toteuttaja, tilaaja)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu, :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
    :poissaolot, :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste);
+   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :toteuttaja, :tilaaja);

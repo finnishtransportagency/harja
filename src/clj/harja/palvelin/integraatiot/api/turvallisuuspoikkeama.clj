@@ -55,7 +55,8 @@
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko]} data
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko
+                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
@@ -79,7 +80,9 @@
                        (konv/seq->array luokittelu)
                        (:id kirjaaja)
                        (konv/seq->array vahinkoluokittelu)
-                       vakavuusaste))]
+                       vakavuusaste
+                       toteuttaja
+                       tilaaja))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
@@ -97,13 +100,18 @@
         (:etunimi ilmoittaja)
         (:sukunimi ilmoittaja)
         vaylamuoto
+        (:etunimi turvallisuuskoordinaattori)
+        (:sukunimi turvallisuuskoordinaattori)
+        (:etunimi laatija)
+        (:sukunimi laatija)
         (:id tunniste)
         (:id kirjaaja))
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahinko
-                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste]} data
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste
+                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
@@ -128,6 +136,8 @@
       (:id kirjaaja)
       (konv/seq->array vahinkoluokittelu)
       vakavuusaste
+      toteuttaja
+      tilaaja
       (:id tunniste)
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
@@ -145,6 +155,10 @@
            (:etunimi ilmoittaja)
            (:sukunimi ilmoittaja)
            vaylamuoto
+           (:etunimi turvallisuuskoordinaattori)
+           (:sukunimi turvallisuuskoordinaattori)
+           (:etunimi laatija)
+           (:sukunimi laatija)
            (:id tunniste)
            (:id kirjaaja)))))
 

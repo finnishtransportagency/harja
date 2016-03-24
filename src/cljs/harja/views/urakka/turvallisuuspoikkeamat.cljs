@@ -102,6 +102,34 @@
                :tyyppi  :text
                :koko [80 :auto]
                :palstoja 1}
+              {:otsikko "Toteuttaja"
+               :nimi :toteuttaja
+               :tyyppi  :string
+               :palstoja 1}
+              {:otsikko "Tilaaja"
+               :nimi :tilaaja
+               :tyyppi  :string
+               :palstoja 1}
+              (lomake/ryhma {:otsikko    "Turvallisuuskoordinaattori"
+                             :uusi-rivi? true}
+                            {:otsikko  "Etunimi"
+                             :nimi     :turvallisuuskoordinaattori_etunimi
+                             :tyyppi   :string
+                             :palstoja 1}
+                            {:otsikko  "Sukunimi"
+                             :nimi     :turvallisuuskoordinaattori_sukunimi
+                             :tyyppi   :string
+                             :palstoja 1})
+              (lomake/ryhma {:otsikko    "Laatija"
+                             :uusi-rivi? true}
+                            {:otsikko  "Etunimi"
+                             :nimi     :laatija_etunimi
+                             :tyyppi   :string
+                             :palstoja 1}
+                            {:otsikko  "Sukunimi"
+                             :nimi     :laatija_sukunimi
+                             :tyyppi   :string
+                             :palstoja 1})
 
               (when henkilovahinko-valittu?
                 (lomake/ryhma
