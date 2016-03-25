@@ -1,5 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.ymparisto
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -8,7 +8,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.fmt :as fmt]))
 
-(defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql")
+(defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"
+  {:positional? true})
 
 
 (defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id]
@@ -53,11 +54,11 @@
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko}
       (into []
-            
+
             (concat
              (when urakoittain?
                [{:otsikko "Urakka" :leveys "10%"}])
-             
+
              ;; Materiaalin nimi
              [{:otsikko "Materiaali" :leveys "16%"}]
              ;; Kaikki kuukaudet (otetaan ensimmäisestä materiaalista)
@@ -72,7 +73,7 @@
 
       (keep identity
             (mapcat (fn [[{:keys [urakka materiaali]} kuukaudet]]
-                      
+
                       (let [maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))
                             luokitellut (filter :luokka kuukaudet)
                             kuukaudet (filter (comp not :luokka) kuukaudet)
@@ -86,7 +87,7 @@
                                  ;; Urakan nimi, jos urakoittain jaottelu päällä
                                  (when urakoittain?
                                    [(:nimi urakka)])
-                                 
+
                                  ;; Materiaalin nimi
                                  [(:nimi materiaali)]
 
@@ -105,7 +106,7 @@
                          (map (fn [[luokka kuukaudet]]
                                 (let [arvot (group-by :kk kuukaudet)]
                                   (into []
-                                        (concat 
+                                        (concat
                                          (when urakoittain?
                                            [(:nimi urakka)])
                                          [(str " - "
@@ -118,12 +119,12 @@
                                                  6 "III"
                                                  7 "K1"
                                                  8 "K2"))]
-                                         
+
                                          (for [kk kk-arvot
                                                :let [arvo (first (get arvot kk))]]
                                            (or (:maara arvo) 0))
 
                                          [(reduce + (map (comp :maara first) (vals arvot))) "-" "-"]))))
                               (group-by :luokka luokitellut)))))
-                                                                  
+
                     materiaalit))]]))

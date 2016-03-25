@@ -7,10 +7,11 @@
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [yesql.core :refer [defqueries]]
+            [jeesql.core :refer [defqueries]]
             [harja.fmt :as fmt]))
 
-(defqueries "harja/kyselyt/suolasakkoraportti.sql")
+(defqueries "harja/kyselyt/suolasakkoraportti.sql"
+  {:positional? true})
 
 (defn muodosta-suolasakkoraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan tiedot suolasakon raportille urakka-kontekstissa: " urakka-id alkupvm loppupvm)

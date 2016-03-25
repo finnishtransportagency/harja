@@ -1,5 +1,5 @@
 (ns harja.kyselyt.tieverkko
-  (:require [yesql.core :refer [defqueries]]))
+  (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/tieverkko.sql")
-
+(defqueries "harja/kyselyt/tieverkko.sql"
+  {:positional? true})
