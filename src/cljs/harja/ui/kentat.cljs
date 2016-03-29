@@ -801,17 +801,14 @@
                 (when (vkm/virhe? sijainti)
                   [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
 
-(defmethod nayta-arvo :sijainti [{:keys [tierekisteriosoite?]} data]
-  (if tierekisteriosoite?
-    (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
-     [:span.tierekisteriosoite
-      [:span.tie "Tie " numero] " / "
-      [:span.alkuosa alkuosa] " / "
-      [:span.alkuetaisyys alkuetaisyys]
-      [:span.loppuosa loppuosa] " / "
-      [:span.loppuetaisyys loppuetaisyys]])
-
-    [:span ""])) ;;FIXME
+(defmethod nayta-arvo :sijainti [_ data]
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
+    [:span.tierekisteriosoite
+     [:span.tie "Tie " numero] " / "
+     [:span.alkuosa alkuosa] " / "
+     [:span.alkuetaisyys alkuetaisyys]
+     [:span.loppuosa loppuosa] " / "
+     [:span.loppuetaisyys loppuetaisyys]]))
 
 (defmethod tee-kentta :komponentti [{:keys [lomake? komponentti rivi]}]
   (komponentti rivi))
