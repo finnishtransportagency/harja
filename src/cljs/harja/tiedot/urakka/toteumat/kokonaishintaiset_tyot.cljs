@@ -107,6 +107,7 @@
    :tyyppi :kokonaishintainen
    :lisatieto (:lisatieto t)
    :reitti (:reitti t)
+   :tr (:tr t)
    :toteuma-id (:id t)
    :tehtavat [{:tehtava-id (get-in t [:tehtava :id])
                :poistettu false
