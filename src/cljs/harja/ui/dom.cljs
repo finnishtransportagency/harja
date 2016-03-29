@@ -32,9 +32,9 @@
   [user-agent-text]
   (let [ie? (not= -1 (.indexOf user-agent-text "MSIE "))
         ie-versio (when ie?
-                    (let [ie-alku-index (.indexOf "MSIE ")
-                          ie-versio-teksti (subs user-agent-text ie-alku-index (+ ie-alku-index 10))
-                          ie-versio-teksti (re-find (re-pattern "\\d+") ie-versio-teksti)]
+                    (let [ie-alku-index (.indexOf "MSIE " user-agent-text)
+                          ie-versio-ja-loput-teksti (subs user-agent-text ie-alku-index (+ ie-alku-index 10))
+                          ie-versio-teksti (re-find (re-pattern "\\d+") ie-versio-ja-loput-teksti)]
                       (js/parseInt ie-versio-teksti)))]
     ie-versio))
 
@@ -42,7 +42,7 @@
 (def ei-tuettu-ie?
   "Kaikissa vanhoissa IE-versioissa (< 11) pitäisi olla user agentin tiedoissa kohta MSIE, jota
    seuraava numero kertoo version. Versiossa 11 tätä ei välttämättä ole, mutta sillä ei ole väliä, koska
-   tarkoitus on havaita nimenomaan versiota 11 vanhemmat selaimet"
+   tarkoitus on havaita nimenomaan versiota 11 vanhemmat selaimet."
   (let [ua (-> js/window .-navigator .-userAgent)
                          ie-versio (maarita-ie-versio-user-agentista ua)]
                        (and (integer? ie-versio) (<= 10 ie-versio))))
