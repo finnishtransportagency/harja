@@ -621,18 +621,23 @@
     (poista-palvelut
       (:http-palvelin this)
       :urakan-toteumat
-      :urakan-toteuma-paivat
-      :hae-urakan-tehtavat
-      :tallenna-urakan-toteuma
-      :urakan-erilliskustannukset
-      :urakan-muut-tyot
-      :tallenna-muiden-toiden-toteuma
-      :paivita-yk-hint-toteumien-tehtavat
-      :tallenna-erilliskustannus
-      :tallenna-toteuma-ja-toteumamateriaalit
-      :urakan-yksikkohintaisten-toteumien-reitit
-      :urakan-kokonaishintaisten-toteumien-reitit
+      :urakan-toteuma
+      :urakan-toteumien-tehtavien-summat
       :poista-toteuma!
       :poista-tehtava!
+      :urakan-toteutuneet-tehtavat-toimenpidekoodilla
+      :hae-urakan-tehtavat
+      :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+      :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+      :paivita-yk-hint-toteumien-tehtavat
+      :urakan-erilliskustannukset
+      :tallenna-erilliskustannus
+      :urakan-muut-tyot
+      :tallenna-muiden-toiden-toteuma
+      :tallenna-toteuma-ja-toteumamateriaalit
+      :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+      :hae-kokonaishintaisen-toteuman-tiedot
+      :urakan-kokonaishintaisten-toteumien-reitit
+      :urakan-yksikkohintaisten-toteumien-reitit
       :urakan-varustetoteumat)
     this))
