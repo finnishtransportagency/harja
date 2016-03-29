@@ -371,4 +371,4 @@ WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
 SELECT
   id
 FROM toimenpidekoodi
-WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
+WHERE suoritettavatehtava :: TEXT = ANY(:toimenpiteet);
