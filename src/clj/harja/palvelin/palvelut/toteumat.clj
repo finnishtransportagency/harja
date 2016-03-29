@@ -547,6 +547,14 @@
         (map konv/alaviiva->rakenne)
         (q/hae-kokonaishintaisen-toteuman-tiedot db urakka-id pvm toimenpidekoodi)))
 
+(defn hae-toteuman-reitti-ja-tr-osoite [db user {:keys [id urakka-id]}]
+  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (into []
+        (comp
+          (harja.geo/muunna-pg-tulokset :reitti)
+          (map konv/alaviiva->rakenne))
+        (q/hae-toteuman-reitti-ja-tr-osoite db id)))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [this]
@@ -615,6 +623,9 @@
       (julkaise-palvelu http :urakan-varustetoteumat
                         (fn [user tiedot]
                           (hae-urakan-varustetoteumat db user tiedot)))
+      (julkaise-palvelu http :hae-toteuman-reitti-ja-tr-osoite
+                        (fn [user tiedot]
+                          (hae-toteuman-reitti-ja-tr-osoite db user tiedot)))
       this))
 
   (stop [this]
@@ -639,5 +650,6 @@
       :hae-kokonaishintaisen-toteuman-tiedot
       :urakan-kokonaishintaisten-toteumien-reitit
       :urakan-yksikkohintaisten-toteumien-reitit
-      :urakan-varustetoteumat)
+      :urakan-varustetoteumat
+      :hae-toteuman-reitti-ja-tr-osoite)
     this))
