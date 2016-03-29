@@ -58,7 +58,8 @@
                   'harja.views.urakka.siltatarkastukset-test
                   'harja.views.urakka.paallystysilmoitukset-test
                   'harja.views.urakka.paikkausilmoitukset-test
-                  'harja.pvm-test)) 
+                  'harja.pvm-test
+                  'harja.ui.dom-test))
 
 (defn change-favicon [ico]
   (let [link (.createElement js/document "link")
