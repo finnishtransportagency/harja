@@ -25,11 +25,11 @@
                (not= -1 (.indexOf ua "Trident/"))
                (not= -1 (.indexOf ua "Edge/")))))
 
-(def vanha-ie? (let [ua (-> js/window .-navigator .-userAgent)
-                     ie-versio (.indexOf ua "MSIE ")]
-                 (and
-                   (not= -1 ie-versio)
-                   (<= 10 ie-versio))))
+(def ei-tuettu-ie? (let [ua (-> js/window .-navigator .-userAgent)
+                           ie-versio (.indexOf ua "MSIE ")]
+                       (and
+                         (not= -1 ie-versio)
+                         (<= 10 ie-versio))))
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))

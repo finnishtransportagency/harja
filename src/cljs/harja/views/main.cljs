@@ -154,7 +154,7 @@
     [kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []
-  (if dom/vanha-ie?
+  (if dom/ei-tuettu-ie?
     (modal/nayta! {:otsikko "Käytössä vanha Internet Explorer"
                    :footer  [:span
                              [:button.nappi-toissijainen {:type     "button"
