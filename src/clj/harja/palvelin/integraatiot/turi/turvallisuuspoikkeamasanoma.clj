@@ -1,8 +1,16 @@
 (ns harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma
   (:require [taoensso.timbre :as log]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml]
+            [harja.geo :as geo]))
 
 (def +xsd-polku+ "xsd/turi/")
+
+(defn rakenna-lista [lista-avain elementti-avain data]
+  (let [lista (vec (.getArray data))]
+    (when (not-empty lista)
+      (apply conj []
+             lista-avain
+             (mapv #(vector elementti-avain %) lista)))))
 
 (defn rakenna-luokittelulista [lista-elementti elementti tyypit]
   (let [tyypit (vec (.getArray tyypit))]
@@ -51,8 +59,7 @@
      "...sisältö BASE 64 encoodattuna..."]]])
 
 (defn rakenna-sijainti [data]
-  (when-let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti data)))]
-    (clojure.pprint/pprint koordinaatit)
+  (when-let [koordinaatit (:coordinates (geo/pg->clj (:sijainti data)))]
     [:turi:sijainti
      [:turi:koordinaatit
       ;; todo: Tällä hetkellä ei ole vielä tarjolla tienumeroa, kun se on, pitää välittää elementissä [:turi:tienumero "1"]
@@ -60,31 +67,16 @@
       [:turi:y (second koordinaatit)]]]))
 
 (defn rakenna-henkilovahinko [data]
-  ;; todo
   [:turi:henkilovahinko
    [:turi:tyontekijan-ammatti
-    [:turi:koodi
-     "Muu työntekijä"]
-    [:turi:selite
-     "Aura-auton kuljettaja"]]
-   [:turi:aiheutuneet-vammat
-    "Ranne murtui ja päähän tuli haava"]
-   [:turi:vamman-laatu
-    [:turi:vamma
-     "Luunmurtumat"]
-    [:turi:vamma
-     "Haavat ja pinnalliset vammat"]]
-   [:turi:vahingoittuneet-ruumiinosat
-    [:turi:ruumiinosa
-     "Pään alue (pl. silmät)"]
-    [:turi:ruumiinosa
-     "Ranne"]]
-   [:turi:sairauspoissaolopaivat
-    "3"]
-   [:turi:sairaalahoitovuorokaudet
-    "1"]
-   [:turi:jatkuuko-sairaspoissaolo
-    "false"]])
+    [:turi:koodi (:tyontekijanammatti data)]
+    [:turi:selite (:tyontekijanammattimuu data)]]
+   [:turi:aiheutuneet-vammat "Ranne murtui ja päähän tuli haava"]
+   (rakenna-lista :turi:vamman-laatu :turi:vamma (:vammat data))
+   (rakenna-lista :turi:vahingoittuneet-ruumiinosat :turi:ruumiinosa (:vahingoittuneetruumiinosat data))
+   [:turi:sairauspoissaolopaivat (:sairauspoissaolopaivat data)]
+   [:turi:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]
+   [:turi:jatkuuko-sairaspoissaolo (:sairauspoissaolojatkuu data)]])
 
 (defn muodosta-viesti [data]
   [:turi:turvallisuuspoikkeama
@@ -93,14 +85,14 @@
    [:turi:tapahtunut (when (:tapahtunut data) (xml/formatoi-aikaleima (:tapahtunut data)))]
    [:turi:paattynyt (when (:paattynyt data) (xml/formatoi-aikaleima (:paattynyt data)))]
    [:turi:kasitelty (when (:kasitelty data) (xml/formatoi-aikaleima (:kasitelty data)))]
-   [:turi:toteuttaja (:toteuttaja testidata)]
-   [:turi:tilaaja (:tilaaja testidata)]
+   [:turi:toteuttaja (:toteuttaja data)]
+   [:turi:tilaaja (:tilaaja data)]
    [:turi:turvallisuuskoordinaattori
-    [:turi:etunimi (:turvallisuuskoordinaattorietunimi testidata)]
-    [:turi:sukunimi (:turvallisuuskoordinaattorisukunimi testidata)]]
+    [:turi:etunimi (:turvallisuuskoordinaattorietunimi data)]
+    [:turi:sukunimi (:turvallisuuskoordinaattorisukunimi data)]]
    [:turi:laatija
-    [:turi:etunimi (:laatijaetunimi testidata)]
-    [:turi:sukunimi (:laatijasukunimi testidata)]]
+    [:turi:etunimi (:laatijaetunimi data)]
+    [:turi:sukunimi (:laatijasukunimi data)]]
    [:turi:ilmoittaja
     [:turi:etunimi (:ilmoittaja_etunimi data)]
     [:turi:sukunimi (:ilmoittaja_sukunimi data)]]

@@ -168,36 +168,36 @@
             <xs:element name="koodi" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:enumeration value="Aluksen päällikkö"/>
-                        <xs:enumeration value="Asentaja"/>
-                        <xs:enumeration value="Asfalttityöntekijä"/>
-                        <xs:enumeration value="Harjoittelija"/>
-                        <xs:enumeration value="Hitsaaja"/>
-                        <xs:enumeration value="Kunnossapitotyöntekijä"/>
-                        <xs:enumeration value="Kansimies"/>
-                        <xs:enumeration value="Kiskoilla liikkuvan työkoneen kuljettaja"/>
-                        <xs:enumeration value="Konemies"/>
-                        <xs:enumeration value="Kuorma-auton kuljettaja"/>
-                        <xs:enumeration value="Liikenteenohjaaja"/>
-                        <xs:enumeration value="Mittamies"/>
-                        <xs:enumeration value="Panostaja"/>
-                        <xs:enumeration value="Perämies"/>
-                        <xs:enumeration value="Porari"/>
-                        <xs:enumeration value="Rakennustyöntekijä (rakennusmies, purku-, muotti-, raudoitus-, betoni-)"/>
-                        <xs:enumeration value="Ratatyöntekijä"/>
-                        <xs:enumeration value="Ratatyöstä vastaava"/>
-                        <xs:enumeration value="Sukeltaja"/>
-                        <xs:enumeration value="Sähkötöiden ammattihenkilö"/>
-                        <xs:enumeration value="Tilaajan edustaja"/>
-                        <xs:enumeration value="Turvalaiteasentaja"/>
-                        <xs:enumeration value="Turvamies"/>
-                        <xs:enumeration value="Työkoneen kuljettaja"/>
-                        <xs:enumeration value="Työnjohtaja"/>
-                        <xs:enumeration value="Valvoja"/>
-                        <xs:enumeration value="Veneenkuljettaja"/>
-                        <xs:enumeration value="Väylänhoitaja"/>
-                        <xs:enumeration value="Muu työntekijä"/>
-                        <xs:enumeration value="Työmaan ulkopuolinen"/>
+                        <xs:enumeration value="aluksen_paallikko"/>
+                        <xs:enumeration value="asentaja"/>
+                        <xs:enumeration value="asfalttityontekija"/>
+                        <xs:enumeration value="harjoittelija"/>
+                        <xs:enumeration value="hitsaaja"/>
+                        <xs:enumeration value="kunnossapitotyontekija"/>
+                        <xs:enumeration value="kansimies"/>
+                        <xs:enumeration value="kiskoilla_liikkuvan_tyokoneen_kuljettaja"/>
+                        <xs:enumeration value="konemies"/>
+                        <xs:enumeration value="kuorma-autonkuljettaja"/>
+                        <xs:enumeration value="liikenteenohjaaja"/>
+                        <xs:enumeration value="mittamies"/>
+                        <xs:enumeration value="panostaja"/>
+                        <xs:enumeration value="peramies"/>
+                        <xs:enumeration value="porari"/>
+                        <xs:enumeration value="rakennustyontekija"/>
+                        <xs:enumeration value="ratatyontekija"/>
+                        <xs:enumeration value="ratatyosta_vastaava"/>
+                        <xs:enumeration value="sukeltaja"/>
+                        <xs:enumeration value="sahkotoiden_ammattihenkilo"/>
+                        <xs:enumeration value="tilaajan_edustaja"/>
+                        <xs:enumeration value="turvalaiteasentaja"/>
+                        <xs:enumeration value="turvamies"/>
+                        <xs:enumeration value="tyokoneen_kuljettaja"/>
+                        <xs:enumeration value="tyonjohtaja"/>
+                        <xs:enumeration value="valvoja"/>
+                        <xs:enumeration value="veneenkuljettaja"/>
+                        <xs:enumeration value="vaylanhoitaja"/>
+                        <xs:enumeration value="muu_tyontekija"/>
+                        <xs:enumeration value="tyomaan_ulkopuolinen"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -210,20 +210,20 @@
             <xs:element name="vamma" maxOccurs="unbounded" minOccurs="0">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:enumeration value="Haavat ja pinnalliset vammat"/>
-                        <xs:enumeration value="Luunmurtumat"/>
-                        <xs:enumeration value="Sijoiltaan menot nyrjähdykset ja venähdykset"/>
-                        <xs:enumeration value="Amputoitumiset ja irti repeämiset (ruumiinosan menetys)"/>
-                        <xs:enumeration value="Tärähdykset ja sisäiset vammat ruhjevammat"/>
-                        <xs:enumeration value="Palovammat syöpymät ja paleltumat"/>
-                        <xs:enumeration value="Myrkytykset ja tulehdukset"/>
-                        <xs:enumeration value="Hukkuminen ja tukehtuminen"/>
-                        <xs:enumeration value="Äänen ja värähtelyn vaikutukset"/>
-                        <xs:enumeration value="Äärilämpötilojen valon ja säteilyn vaikutukset"/>
-                        <xs:enumeration value="Sokki"/>
-                        <xs:enumeration value="Useita samantasoisia vammoja"/>
-                        <xs:enumeration value="Muut"/>
-                        <xs:enumeration value="Ei tietoa"/>
+                        <xs:enumeration value="haavat_ja_pinnalliset_vammat"/>
+                        <xs:enumeration value="luunmurtumat"/>
+                        <xs:enumeration value="sijoiltaan_menot_nyrjahdykset_ja_venahdykset"/>
+                        <xs:enumeration value="amputoitumiset_ja_irti_repeamiset"/>
+                        <xs:enumeration value="tarahdykset_ja_sisaiset_vammat_ruhjevammat"/>
+                        <xs:enumeration value="palovammat_syopymat_ja_paleltumat"/>
+                        <xs:enumeration value="myrkytykset_ja_tulehdukset"/>
+                        <xs:enumeration value="hukkuminen_ja_tukehtuminen"/>
+                        <xs:enumeration value="aanen_ja_varahtelyn_vaikutukset"/>
+                        <xs:enumeration value="aarilampotilojen_valon_ja_sateilyn_vaikutukset"/>
+                        <xs:enumeration value="sokki"/>
+                        <xs:enumeration value="useita_samantasoisia_vammoja"/>
+                        <xs:enumeration value="muut"/>
+                        <xs:enumeration value="ei_tietoa"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -235,19 +235,19 @@
             <xs:element name="ruumiinosa" maxOccurs="unbounded" minOccurs="0">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:enumeration value="Pään alue (pl. silmät)"/>
-                        <xs:enumeration value="Silmä(t)"/>
-                        <xs:enumeration value="Niska ja kaula"/>
-                        <xs:enumeration value="Selkä"/>
-                        <xs:enumeration value="Vartalo, mukaan lukien sisäelimet"/>
-                        <xs:enumeration value="Sormi (sormet), kämmen"/>
-                        <xs:enumeration value="Ranne"/>
-                        <xs:enumeration value="Muu käsi, mukaan lukien olkapää"/>
-                        <xs:enumeration value="Nilkka"/>
-                        <xs:enumeration value="Jalkaterä ja varvas (varpaat)"/>
-                        <xs:enumeration value="Muu jalka, mukaan lukien lonkka ja nivuset"/>
-                        <xs:enumeration value="Koko keho (useat kehon alueet)"/>
-                        <xs:enumeration value="Ei tietoa"/>
+                        <xs:enumeration value="paan_alue"/>
+                        <xs:enumeration value="silmat"/>
+                        <xs:enumeration value="niska_ja_kaula"/>
+                        <xs:enumeration value="selka"/>
+                        <xs:enumeration value="vartalo"/>
+                        <xs:enumeration value="sormi_kammen"/>
+                        <xs:enumeration value="ranne"/>
+                        <xs:enumeration value="muu_kasi"/>
+                        <xs:enumeration value="nilkka"/>
+                        <xs:enumeration value="jalkatera_ja_varvas"/>
+                        <xs:enumeration value="muu_jalka"/>
+                        <xs:enumeration value="koko_keho"/>
+                        <xs:enumeration value="ei_tietoa"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
