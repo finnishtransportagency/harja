@@ -22,15 +22,24 @@
                                                    :pvm pvm
                                                    :toimenpidekoodi toimenpidekoodi}))
 
-(defn hae-toteumatehtavien-paivakohtaiset-summat [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
-  (log "Haetaan " urakka-id sopimus-id toimenpide tehtava)
+(defn hae-toteumatehtavien-paivakohtaiset-summat [hakuparametrit]
   (k/post! :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
-           {:urakka-id  urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm    alkupvm
-            :loppupvm   loppupvm
-            :toimenpide toimenpide
-            :tehtava    tehtava}))
+           hakuparametrit))
+
+(defn kasaa-hakuparametrit
+  ([]
+   (kasaa-hakuparametrit (:id @nav/valittu-urakka)
+                         (first @urakka/valittu-sopimusnumero)
+                         (or @urakka/valittu-aikavali @urakka/valittu-hoitokausi)
+                         (:tpi_id @urakka/valittu-toimenpideinstanssi)
+                         (:id @urakka/valittu-kokonaishintainen-tehtava)))
+  ([urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
+   {:urakka-id  urakka-id
+    :sopimus-id sopimus-id
+    :alkupvm    alkupvm
+    :loppupvm   loppupvm
+    :toimenpide toimenpide
+    :tehtava    tehtava}))
 
 (defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] tehtava]
   (k/post! :urakan-kokonaishintaisten-toteumien-reitit
@@ -53,7 +62,7 @@
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when nakymassa?
-                (hae-toteumatehtavien-paivakohtaiset-summat urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava))))
+                (hae-toteumatehtavien-paivakohtaiset-summat (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
 
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
@@ -82,6 +91,8 @@
   (hae-toteuman-reitti! toteuma))
 
 (defn tallenna-kokonaishintainen-toteuma! [toteuma]
-  (go [{:id 1} {:id 2}]))
+  (k/post! :tallenna-kokonaishintainen-toteuma
+           (assoc toteuma
+             :hakuparametrit (kasaa-hakuparametrit))))
 
 (defn toteuman-tallennus-onnistui [tulos])
