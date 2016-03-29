@@ -59,4 +59,4 @@ SET likainen = TRUE
 WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
                      JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-                   WHERE m.tyyppi = 'kokonaishintainen' AND tpi.id IN (:toimenpideinstanssit));
+                   WHERE m.tyyppi = 'kokonaishintainen' AND tpi.id = ANY(:toimenpideinstanssit));

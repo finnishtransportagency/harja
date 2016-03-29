@@ -74,7 +74,7 @@ FROM ilmoitus i
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE
   -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
-  (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
+  (i.urakka IS NULL OR i.urakka = ANY(:urakat)) AND
 
   -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
   (
@@ -85,7 +85,7 @@ WHERE
   ) AND
 
   -- Tarkasta ilmoituksen tyypit
-  (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
+  (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT = ANY(:tyypit)) AND
 
   -- Tarkasta vapaatekstihakuehto
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
@@ -120,7 +120,7 @@ SELECT
   lahettaja_puhelinnumero,
   lahettaja_sahkoposti
 FROM ilmoitus
-WHERE ilmoitusid IN (:ilmoitusidt);
+WHERE ilmoitusid = ANY(:ilmoitusidt);
 
 -- name: hae-muuttuneet-ilmoitukset
 SELECT
