@@ -9,18 +9,15 @@
     (apply conj [] lista-elementti (mapv #(vector elementti %) tyypit))))
 
 (defn rakenna-korjaavat-toimenpiteet [data]
-  ;; todo
-  [:turi:korjaavat-toimenpiteet
-   [:turi:korjaava-toimenpide
-    [:turi:kuvaus
-     "Kaadetaan risteystä pimentävä pensaikko"]
-    [:turi:suoritettu
-     "2016-01-30T12:00:00Z"]
-    [:turi:vastaavahenkilo
-     [:turi:etunimi
-      "Henri"]
-     [:turi:sukunimi
-      "Hakkuri"]]]])
+  (apply conj []
+         :turi:korjaavat-toimenpiteet
+         (mapv #(vector
+                 :turi:korjaava-toimenpide
+                 [:turi:kuvaus (:kuvaus %)]
+                 [:turi:suoritettu (xml/formatoi-aikaleima (:suoritettu %))]
+                 [:turi:vastaavahenkilo
+                  [:turi:etunimi (:vastaavahenkilo %)]
+                  [:turi:sukunimi (:vastaavahenkilo %)]]) data)))
 
 (defn rakenna-kommentit [data]
   ;; todo
