@@ -23,13 +23,23 @@
 (def ie? (let [ua (-> js/window .-navigator .-userAgent)]
            (or (not= -1 (.indexOf ua "MSIE "))
                (not= -1 (.indexOf ua "Trident/"))
+               ;; Edge perustuu IE:hen, joskaan ei ole enää sama selain, mutta laskemme sen IE:ksi kaiken varalta
                (not= -1 (.indexOf ua "Edge/")))))
 
+(defn maarita-ie-versio-user-agentista
+  "Määrittää IE-version user-agentin tietojen perusteella. Jos käytössä ei ole IE, palauttaa versioksi nil."
+  [user-agent-text]
+  (let [ie? (not= -1 (.indexOf user-agent-text "MSIE "))
+        ie-versio (when ie?
+                    (let [ie-alku-index (.indexOf "MSIE ")
+                          ie-versio-teksti (subs user-agent-text ie-alku-index (+ ie-alku-index 10))
+                          ie-versio-teksti (re-find (re-pattern "\\d+") ie-versio-teksti)]
+                      (js/parseInt ie-versio-teksti)))]
+    ie-versio))
+
 (def ei-tuettu-ie? (let [ua (-> js/window .-navigator .-userAgent)
-                           ie-versio (.indexOf ua "MSIE ")]
-                       (and
-                         (not= -1 ie-versio)
-                         (<= 10 ie-versio))))
+                         ie-versio (maarita-ie-versio-user-agentista ua)]
+                       (and (integer? ie-versio) (<= 10 ie-versio))))
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
