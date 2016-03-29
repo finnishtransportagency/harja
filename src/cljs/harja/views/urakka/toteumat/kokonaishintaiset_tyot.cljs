@@ -119,7 +119,7 @@
            {:otsikko  (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
             :muokkaa! #(do (log "Toteuma: " (pr-str %)) (reset! muokattu %))
             :footer   [napit/palvelinkutsu-nappi
-                       "Tallenna turvallisuuspoikkeama"
+                       "Tallenna toteuma"
                        #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
                        {:luokka       "nappi-ensisijainen"
                         :ikoni        (ikonit/tallenna)
