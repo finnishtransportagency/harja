@@ -37,20 +37,21 @@
                  :error virhe})))))
 
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta url kayttajatunnus salasana]} id]
-  (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
-        integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
-        vastauskasittelija (fn [_ _] (kasittele-turin-vastaus db id))
-        turvallisuuspoikkeama (hae-turvallisuuspoikkeama liitteiden-hallinta db id)
-        xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
-    (if xml
-      (try
-        (http/POST integraatiopiste url xml vastauskasittelija)
-        (catch Exception e
-          (log/error e (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä tapahtui poikkeus." id))
-          (q/lokita-lahetys<! db false id)))
-      (do
-        (log/error (format "Turvallisuuspoikkeamaa  (id: %s) ei voida lähettää" id))
-        (q/lokita-lahetys<! db false id)))))
+  (when (not-empty url)
+    (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
+          integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
+          vastauskasittelija (fn [_ _] (kasittele-turin-vastaus db id))
+          turvallisuuspoikkeama (hae-turvallisuuspoikkeama liitteiden-hallinta db id)
+          xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
+      (if xml
+        (try
+          (http/POST integraatiopiste url xml vastauskasittelija)
+          (catch Exception e
+            (log/error e (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä tapahtui poikkeus." id))
+            (q/lokita-lahetys<! db false id)))
+        (do
+          (log/error (format "Turvallisuuspoikkeamaa  (id: %s) ei voida lähettää" id))
+          (q/lokita-lahetys<! db false id))))))
 
 (defrecord Turi [asetukset]
   component/Lifecycle
