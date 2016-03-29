@@ -52,15 +52,13 @@
      "...sisältö BASE 64 encoodattuna..."]]])
 
 (defn rakenna-sijainti [data]
-  ;; todo
-  [:turi:sijainti
-   [:turi:koordinaatit
-    [:turi:tienumero
-     "1"]
-    [:turi:x
-     "430198"]
-    [:turi:y
-     "7212292"]]])
+  (when-let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti data)))]
+    [:turi:sijainti
+     [:turi:koordinaatit
+      ;; todo
+      [:turi:tienumero "1"]
+      [:turi:x (first koordinaatit)]
+      [:turi:y (second koordinaatit)]]]))
 
 (defn rakenna-henkilovahinko [data]
   ;; todo
@@ -96,19 +94,14 @@
    [:turi:tapahtunut (when (:tapahtunut data) (xml/formatoi-aikaleima (:tapahtunut data)))]
    [:turi:paattynyt (when (:paattynyt data) (xml/formatoi-aikaleima (:paattynyt data)))]
    [:turi:kasitelty (when (:kasitelty data) (xml/formatoi-aikaleima (:kasitelty data)))]
-   ;; todo: puuttuu?
-   [:turi:toteuttaja "Yritys OY"]
-   ;; todo: puuttuu?
-   [:turi:tilaaja "POP ELY"]
-   ;; todo: puuttuu?
+   [:turi:toteuttaja (:toteuttaja testidata)]
+   [:turi:tilaaja (:tilaaja testidata)]
    [:turi:turvallisuuskoordinaattori
-    [:turi:etunimi "Tiina"]
-    [:turi:sukunimi "Turvallinen"]]
-   ;; todo lisää
+    [:turi:etunimi (:turvallisuuskoordinaattorietunimi testidata)]
+    [:turi:sukunimi (:turvallisuuskoordinaattorisukunimi testidata)]]
    [:turi:laatija
-    [:turi:etunimi "Lasse"]
-    [:turi:sukunimi "Laatija"]]
-   ;; todo: lisää
+    [:turi:etunimi (:laatijaetunimi testidata)]
+    [:turi:sukunimi (:laatijasukunimi testidata)]]
    [:turi:ilmoittaja
     [:turi:etunimi (:ilmoittaja_etunimi data)]
     [:turi:sukunimi (:ilmoittaja_sukunimi data)]]
