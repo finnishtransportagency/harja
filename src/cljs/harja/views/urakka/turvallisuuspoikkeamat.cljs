@@ -87,7 +87,6 @@
                :otsikko  "Tierekisteriosoite"
                :nimi :tr
                :tyyppi   :tierekisteriosoite
-               :tierekisteriosoite? true
                :sijainti (r/wrap (:sijainti @muokattu)
                                  #(swap! muokattu assoc :sijainti %))}
 

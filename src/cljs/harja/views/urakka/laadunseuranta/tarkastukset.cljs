@@ -210,7 +210,6 @@
         :palstoja 1}
 
        {:tyyppi   :sijainti
-        :tierekisteriosoite? true
         :nimi :tr
         :pakollinen? true
         :sijainti (r/wrap (:sijainti tarkastus)

@@ -681,7 +681,7 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :sijainti [{:keys [lomake? sijainti tierekisteriosoite?]} data]
+(defmethod tee-kentta :sijainti [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -767,51 +767,39 @@
               [:div {:class "virhe"}
                [:span (ikonit/warning-sign) [:span @virheet]]]])
            [:table
-            (when tierekisteriosoite?
-              [:thead
-               [:tr
-                [:th "Tie"]
-                [:th "aosa"]
-                [:th "aet"]
-                [:th "losa"]
-                [:th "let"]]])
+            [:thead
+             [:tr
+              [:th "Tie"]
+              [:th "aosa"]
+              [:th "aet"]
+              [:th "losa"]
+              [:th "let"]]]
             [:tbody
-             (vec (concat
-
-                    (into [:tr]
-                          (if tierekisteriosoite?
-                            [[tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
-                             [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa @karttavalinta-kaynnissa]
-                             [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
-                             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
-                             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]]
-
-                            []))
-                    [(if-not @karttavalinta-kaynnissa
-                       [:td.karttavalinta
-                        [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                                    (reset! osoite-ennen-karttavalintaa osoite)
-                                                                    (reset! data {})
-                                                                    (reset! karttavalinta-kaynnissa true))}
-                         (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]]
-                       (let [; Jos tierekisteriosoite? = false, palautetaan pelkästään geometria
-                             kasittele-payload (fn [tulos]
-                                                 (cond-> tulos
-                                                        (not tierekisteriosoite?)
-                                                        :geometria))]
-                         [tr/karttavalitsin {:kun-peruttu #(do
-                                                           (reset! data @osoite-ennen-karttavalintaa)
-                                                           (reset! karttavalinta-kaynnissa false))
-                                            :paivita     #(swap! data merge (kasittele-payload %))
-                                            :kun-valmis  #(do
-                                                           (reset! data (kasittele-payload %))
-                                                           (reset! karttavalinta-kaynnissa false)
-                                                           (log "Saatiin tr-osoite! " (pr-str %))
-                                                           (go (>! tr-osoite-ch %)))}]))
-
-                     (when-let [sijainti (and hae-sijainti @sijainti)]
-                       (when (vkm/virhe? sijainti)
-                         [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]))]]])))))
+             [:tr
+              [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
+              [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa @karttavalinta-kaynnissa]
+              [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
+              [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
+              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
+              (if-not @karttavalinta-kaynnissa
+                [:td.karttavalinta
+                 [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                             (reset! osoite-ennen-karttavalintaa osoite)
+                                                             (reset! data {})
+                                                             (reset! karttavalinta-kaynnissa true))}
+                  (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]]
+                [tr/karttavalitsin {:kun-peruttu #(do
+                                                   (reset! data @osoite-ennen-karttavalintaa)
+                                                   (reset! karttavalinta-kaynnissa false))
+                                    :paivita     #(swap! data merge %)
+                                    :kun-valmis  #(do
+                                                   (reset! data %)
+                                                   (reset! karttavalinta-kaynnissa false)
+                                                   (log "Saatiin tr-osoite! " (pr-str %))
+                                                   (go (>! tr-osoite-ch %)))}])
+              (when-let [sijainti (and hae-sijainti @sijainti)]
+                (when (vkm/virhe? sijainti)
+                  [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
 
 (defmethod nayta-arvo :sijainti [{:keys [tierekisteriosoite?]} data]
   (if tierekisteriosoite?
