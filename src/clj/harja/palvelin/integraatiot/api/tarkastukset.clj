@@ -7,7 +7,7 @@
             [clojure.string :refer [join]]
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
@@ -16,10 +16,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]))
 
 (defn tee-onnistunut-vastaus [varoitukset]
-  (let [vastauksen-data {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"}]
-    (if (not-empty varoitukset)
-      (assoc vastauksen-data :varoitukset varoitukset)
-      vastauksen-data)))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"
+                               :varoitukset (when-not (empty? varoitukset) varoitukset)}))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi

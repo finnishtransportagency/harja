@@ -4,7 +4,7 @@
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
@@ -17,10 +17,8 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus [varoitukset]
-  (let [vastauksen-data {:ilmoitukset "Laatupoikkeama kirjattu onnistuneesti"}]
-    (if (not-empty varoitukset)
-      (assoc vastauksen-data :varoitukset varoitukset)
-      vastauksen-data)))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Laatupoikkeama kirjattu onnistuneesti"
+                               :varoitukset (when-not (empty? varoitukset) varoitukset)}))
 
 (defn tallenna-laatupoikkeama [db urakka-id kirjaaja data tr-osoite geometria]
   (let [{:keys [tunniste kuvaus kohde aika]} data]

@@ -22,26 +22,6 @@
       "id": "urn:harja/viimeksipaivitetty",
       "type": "string"
     },
-    "toteuttaja": {
-      "id": "urn:harja/toteuttaja",
-      "type": "string"
-    },
-    "tilaaja": {
-      "id": "urn:harja/tilaaja",
-      "type": "string"
-    },
-    "turvallisuuskoordinaattori": {
-      "id": "urn:harja/turvallisuuskoordinaattori",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
-    },
-    "laatija": {
-      "id": "urn:harja/laatija",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
-    },
     "turvallisuuspoikkeamat": {
       "id": "urn:harja/turvallisuuspoikkeamat",
       "type": "array",
@@ -74,18 +54,21 @@
           },
           "vaylamuoto": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vaylamuoto",
-            "type": "string",
-            "required": true
+            "enum": [
+              "tie",
+              "vesi",
+              "rautatie"
+            ]
           },
           "luokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu",
             "type": "array",
-            "maxItems": 10,
             "items": {
-              "id": "urn:harja/turvallisuuspoikkeamat/0/luokittelu/0",
-              "type": "string",
-              "additionalProperties":false,
-              "$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeaman-luokittelu.schema.json"
+              "enum": [
+                "tyotapaturma",
+                "vaaratilanne",
+                "turvallisuushavainto"
+              ]
             }
           },
           "ilmoittaja": {
@@ -110,45 +93,59 @@
             "type": "string",
             "format": "date-time"
           },
-          "tyontekijanammatti": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijanammatti",
+          "toteuttaja": {
+            "id": "urn:harja/toteuttaja",
             "type": "string"
           },
-          "tyotehtava": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/tyotehtava",
+          "tilaaja": {
+            "id": "urn:harja/tilaaja",
             "type": "string"
+          },
+          "turvallisuuskoordinaattori": {
+            "id": "urn:harja/turvallisuuskoordinaattori",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+          },
+          "laatija": {
+            "id": "urn:harja/laatija",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
           },
           "kuvaus": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/kuvaus",
             "type": "string"
           },
-          "aiheutuneetVammat": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/aiheutuneetVammat",
-            "type": "string"
-          },
-          "sairauspoissaolopaivat": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/sairauspoissaolopaivat",
-            "type": "integer"
-          },
-          "sairaalahoitovuorokaudet": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/sairaalahoitovuorokaudet",
-            "type": "integer"
+          "henkilovahinko": {
+            "id": "urn:harja/turvallisuuspoikkeamat/0/henkilovahinko",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/henkilovahinko.schema.json"
           },
           "vahinkoluokittelu": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vahinkoluokittelu",
             "type": "array",
-            "maxItems": 10,
             "items": {
-              "id": "urn:harja/turvallisuuspoikkeamat/0/vahinkoluokittelu/0",
-              "type": "string",
-              "additionalProperties":false,
-              "$ref": "file:resources/api/schemas/entities/turvallisuuspoikkeaman-vahinkoluokittelu.schema.json"
+              "enum": [
+                "henkilovahinko",
+                "omaisuusvahinko",
+                "ymparistovahinko"
+              ]
             }
           },
           "vakavuusaste": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/vakavuusaste",
-            "type": "string",
+            "enum": [
+                "vakava",
+                "lieva"
+              ],
             "required": true
+          },
+          "seuraukset": {
+            "id": "urn:harja/turvallisuuspoikkeamat/0/seuraukset",
+            "type": "string",
+            "required": false
           },
           "korjaavatToimenpiteet": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet",

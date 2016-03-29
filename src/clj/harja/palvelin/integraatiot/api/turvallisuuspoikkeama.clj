@@ -5,7 +5,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
 
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus
+              tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
@@ -17,17 +18,43 @@
 
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.string :as str]
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"}]
-    vastauksen-data))
+(defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
+  (when (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
+                  (not (str/blank? (get-in % [:henkilovahinko :ammatinselite]))))
+            turvallisuuspoikkeamat)
+    "Ammatin selitettä ei tallennettu, sillä työntekijän ammatti ei ollut 'muu_tyontekija'."))
+
+(defn tarkista-henkilovahingon-tallennus [turvallisuuspoikkeamat]
+  (when (some #(not (some #{"henkilovahinko"} (:vahinkoluokittelu %)))
+              turvallisuuspoikkeamat)
+    "Henkilövahinkoja ei tallennettu, sillä turvallisuuspoikkeaman tyyppi ei ollut henkilövahinko."))
+
+(defn kasaa-varoitukset [turvallisuuspoikkeamat]
+  (keep identity (apply conj [] [(tarkista-ammatin-selitteen-tallennus turvallisuuspoikkeamat)
+                                 (tarkista-henkilovahingon-tallennus turvallisuuspoikkeamat)])))
+
+(defn vastaus [turvallisuuspoikkeamat]
+  (let [varoitukset (kasaa-varoitukset turvallisuuspoikkeamat)]
+    (tee-kirjausvastauksen-body {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"
+                                 :varoitukset (when-not (empty? varoitukset) (str/join " " varoitukset))})))
+
+(defn tallenna-ammatinselite? [turvallisuuspoikkeama]
+  (= (get-in turvallisuuspoikkeama [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija"))
+
+(defn tallenna-henkilovahinko? [turvallisuuspoikkeama]
+  (some #{"henkilovahinko"} (:vahinkoluokittelu turvallisuuspoikkeama)))
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
+  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko
+                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
+        {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeamaa ei löytynyt ulkoisella id:llä (" (:id tunniste) "). Luodaan uusi.")
@@ -37,19 +64,24 @@
                        (aika-string->java-sql-date tapahtumapaivamaara)
                        (aika-string->java-sql-date paattynyt)
                        (aika-string->java-sql-date kasitelty)
-                       tyontekijanammatti
-                       tyotehtava
+                       (when (tallenna-henkilovahinko? data) tyontekijanammatti)
+                       (when (and (tallenna-henkilovahinko? data)
+                                  (tallenna-ammatinselite? data))
+                         ammatinselite)
+                       (when (tallenna-henkilovahinko? data) tyotehtava)
                        kuvaus
-                       aiheutuneetVammat
-                       sairauspoissaolopaivat
-                       sairaalahoitovuorokaudet
-                       (konv/vec->array luokittelu)
+                       (when (tallenna-henkilovahinko? data) (konv/seq->array aiheutuneetVammat))
+                       (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
+                       (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
+                       (konv/seq->array luokittelu)
                        (:id kirjaaja)
-                       (konv/vec->array vahinkoluokittelu)
-                       vakavuusaste))]
+                       (konv/seq->array vahinkoluokittelu)
+                       vakavuusaste
+                       toteuttaja
+                       tilaaja))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
-      (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+      (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
         db
         (:x koordinaatit)
         (:y koordinaatit)
@@ -58,14 +90,26 @@
         (:let tie)
         (:aos tie)
         (:los tie)
+        (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
+        (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
+        seuraukset
+        (:etunimi ilmoittaja)
+        (:sukunimi ilmoittaja)
+        vaylamuoto
+        (:etunimi turvallisuuskoordinaattori)
+        (:sukunimi turvallisuuskoordinaattori)
+        (:etunimi laatija)
+        (:sukunimi laatija)
         (:id tunniste)
         (:id kirjaaja))
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
-  (let [{:keys [tunniste sijainti kuvaus kohde vaylamuoto luokittelu ilmoittaja
-                tapahtumapaivamaara paattynyt kasitelty tyontekijanammatti tyotehtava
-                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet vahinkoluokittelu vakavuusaste]} data
+  (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahinko
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste
+                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
+        {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
+                aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
@@ -75,19 +119,24 @@
       (aika-string->java-sql-date tapahtumapaivamaara)
       (aika-string->java-sql-date paattynyt)
       (aika-string->java-sql-date kasitelty)
-      tyontekijanammatti
-      tyotehtava
+      (when (tallenna-henkilovahinko? data) tyontekijanammatti)
+      (when (and (tallenna-henkilovahinko? data)
+                 (tallenna-ammatinselite? data))
+        ammatinselite)
+      (when (tallenna-henkilovahinko? data) tyotehtava)
       kuvaus
-      aiheutuneetVammat
-      sairauspoissaolopaivat
-      sairaalahoitovuorokaudet
-      (konv/vec->array luokittelu)
+      (when (tallenna-henkilovahinko? data) (konv/seq->array aiheutuneetVammat))
+      (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
+      (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
+      (konv/seq->array luokittelu)
       (:id kirjaaja)
-      (konv/vec->array vahinkoluokittelu)
+      (konv/seq->array vahinkoluokittelu)
       vakavuusaste
+      toteuttaja
+      tilaaja
       (:id tunniste)
       (:id kirjaaja))
-    (:id (turvallisuuspoikkeamat/aseta-turvallisuuspoikkeaman-sijainti-ulkoisella-idlla<!
+    (:id (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
            db
            (:x koordinaatit)
            (:y koordinaatit)
@@ -96,6 +145,16 @@
            (:let tie)
            (:aos tie)
            (:los tie)
+           (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
+           (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
+           seuraukset
+           (:etunimi ilmoittaja)
+           (:sukunimi ilmoittaja)
+           vaylamuoto
+           (:etunimi turvallisuuskoordinaattori)
+           (:sukunimi turvallisuuskoordinaattori)
+           (:etunimi laatija)
+           (:sukunimi laatija)
            (:id tunniste)
            (:id kirjaaja)))))
 
@@ -128,7 +187,6 @@
 
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
-  (jdbc/with-db-transaction [db db]
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
           kommentit (:kommentit data)
           korjaavat (:korjaavatToimenpiteet data)
@@ -136,7 +194,7 @@
       (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
       (tallenna-kommentit db tp-id kirjaaja kommentit)
       (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
-      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet))))
+      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)))
 
 (defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -144,9 +202,10 @@
                " uutta turvallisuuspoikkeamaa urakalle id:" urakka-id " kayttäjän:"
                (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) ") tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
-      (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
-    (tee-onnistunut-vastaus)))
+    (jdbc/with-db-transaction [db db]
+      (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
+        (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama)))
+    (vastaus (:turvallisuuspoikkeamat data))))
 
 (defrecord Turvallisuuspoikkeama []
   component/Lifecycle

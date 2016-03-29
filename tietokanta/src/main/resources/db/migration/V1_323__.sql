@@ -1,0 +1,1 @@
+ALTER TABLE laatupoikkeama ADD CONSTRAINT uniikki_ulkoinen_laatupoikkeama UNIQUE (ulkoinen_id, luoja);

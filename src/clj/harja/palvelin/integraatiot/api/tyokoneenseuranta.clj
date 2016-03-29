@@ -2,7 +2,7 @@
   (:require [compojure.core :refer [POST]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tyokoneseuranta :as tks]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]))
@@ -34,7 +34,7 @@
                                     (get-in havainto [:havainto :suunta])
                                     urakka-id
                                     (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat])))))
-  {:ilmoitukset "Kirjauksen tallennus onnistui"})
+  (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defrecord Tyokoneenseuranta []
   component/Lifecycle
