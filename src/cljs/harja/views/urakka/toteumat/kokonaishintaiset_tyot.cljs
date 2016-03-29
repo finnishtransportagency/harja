@@ -148,7 +148,7 @@
                :nimi :pituus
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
               (if-not (= (:reitti @muokattu) :hakee)
-               {:tyyppi              :sijainti
+               {:tyyppi              :tierekisteriosoite
                 :nimi                :reitti
                 :pakollinen?         true
                 :sijainti            (r/wrap (:reitti @muokattu)

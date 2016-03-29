@@ -209,7 +209,7 @@
                           "- valitse -")
         :palstoja 1}
 
-       {:tyyppi   :sijainti
+       {:tyyppi   :tierekisteriosoite
         :nimi :tr
         :pakollinen? true
         :sijainti (r/wrap (:sijainti tarkastus)

@@ -681,7 +681,7 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :sijainti [{:keys [lomake? sijainti]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -801,7 +801,7 @@
                 (when (vkm/virhe? sijainti)
                   [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
 
-(defmethod nayta-arvo :sijainti [_ data]
+(defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
     [:span.tierekisteriosoite
      [:span.tie "Tie " numero] " / "
