@@ -32,7 +32,7 @@
   [user-agent-text]
   (let [ie? (not= -1 (.indexOf user-agent-text "MSIE "))
         ie-versio (when ie?
-                    (let [ie-alku-index (.indexOf "MSIE " user-agent-text)
+                    (let [ie-alku-index (.indexOf user-agent-text "MSIE ")
                           ie-versio-ja-loput-teksti (subs user-agent-text ie-alku-index (+ ie-alku-index 10))
                           ie-versio-teksti (re-find (re-pattern "\\d+") ie-versio-ja-loput-teksti)]
                       (js/parseInt ie-versio-teksti)))]
