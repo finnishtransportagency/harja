@@ -65,10 +65,12 @@
                          (:tehtavat %))))))
 
 (defn toteuman-parametrit [toteuma kayttaja]
-  [(:urakka-id toteuma) (:sopimus-id toteuma)
-   (konv/sql-timestamp (:alkanut toteuma)) (konv/sql-timestamp (:paattynyt toteuma))
-   (name (:tyyppi toteuma)) (:id kayttaja)
-   (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil (geometriaksi (:reitti toteuma))])
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} (:tr toteuma)]
+    [(:urakka-id toteuma) (:sopimus-id toteuma)
+    (konv/sql-timestamp (:alkanut toteuma)) (konv/sql-timestamp (:paattynyt toteuma))
+    (name (:tyyppi toteuma)) (:id kayttaja)
+    (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil (geometriaksi (:reitti toteuma))
+     numero alkuosa alkuetaisyys loppuosa loppuetaisyys]))
 
 (defn toteumatehtavan-parametrit [toteuma kayttaja]
   [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
@@ -159,9 +161,10 @@
     (kasittele-toteumatehtava c user toteuma tehtava)))
 
 (defn paivita-toteuma [c user toteuma]
-  (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
-                      (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (geometriaksi (:reitti toteuma))
-                      (:toteuma-id toteuma) (:urakka-id toteuma))
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} (:tr toteuma)]
+    (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+                       (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (geometriaksi (:reitti toteuma))
+                       (:toteuma-id toteuma) (:urakka-id toteuma) numero alkuosa alkuetaisyys loppuosa loppuetaisyys))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
 

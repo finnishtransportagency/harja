@@ -255,7 +255,12 @@ SET alkanut           = :alkanut,
   suorittajan_nimi    = :suorittajan_nimi,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
-  reitti              = :reitti
+  reitti              = :reitti,
+  tr_numero = :num,
+  tr_alkuosa = :aos,
+  tr_alkuetaisyys = :aet,
+  tr_loppuosa = :los,
+  tr_loppuetaisyys = :let
 WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
@@ -278,9 +283,11 @@ WHERE ulkoinen_id = :id AND urakka = :urakka;
 INSERT
 INTO toteuma
 (urakka, sopimus, alkanut, paattynyt, tyyppi, luotu, luoja,
- poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id, reitti)
+ poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id, reitti,
+ tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
-                 FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti);
+                 FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti,
+        :num, :aos, :aet, :los, :let);
 
 -- name: poista-toteuma!
 UPDATE toteuma
