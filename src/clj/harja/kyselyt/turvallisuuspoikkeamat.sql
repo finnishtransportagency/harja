@@ -250,13 +250,16 @@ UPDATE turvallisuuspoikkeama
 SET ulkoinen_id = :ulk
 WHERE id = :id;
 
---name: luo-turvallisuuspoikkeama<!
+-- name: luo-turvallisuuspoikkeama<!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
 -- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
-(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyontekijanammatti_muu, tyotehtava, kuvaus, vammat,
- sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu, vahinkoluokittelu, vakavuusaste, toteuttaja, tilaaja)
+(urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyontekijanammatti_muu,
+ tyotehtava, kuvaus, vammat, sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu,
+ vahinkoluokittelu, vakavuusaste, toteuttaja, tilaaja)
 VALUES
-  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu, :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[],
-   :poissaolot, :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(), :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-   :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :toteuttaja, :tilaaja);
+  (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu,
+  :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissaolot,
+  :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(),
+  :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
+  :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :toteuttaja, :tilaaja);
