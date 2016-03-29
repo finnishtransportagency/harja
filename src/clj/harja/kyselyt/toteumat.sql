@@ -41,10 +41,15 @@ SELECT
   t.suorittajan_ytunnus AS suorittaja_ytunnus,
   t.lisatieto,
   t.luoja       AS luojaid,
-  t.reitti,
   o.nimi        AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma AS jarjestelmanlisaama,
+  t.reitti,
+  t.tr_numero,
+  t.tr_alkuosa,
+  t.tr_alkuetaisyys,
+  t.tr_loppuosa,
+  t.tr_loppuetaisyys,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
      LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
@@ -628,6 +633,16 @@ SELECT
 FROM reittipiste rp
 WHERE
   rp.toteuma = :toteuma_id;
+
+-- name: hae-toteuman-reitti-ja-tr-osoite
+SELECT
+  tr_numero,
+  tr_alkuetaisyys,
+  tr_alkuosa,
+  tr_loppuetaisyys,
+  tr_loppuosa,
+  reitti
+FROM toteuma WHERE id = :id;
 
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma materiaalin tiedot
