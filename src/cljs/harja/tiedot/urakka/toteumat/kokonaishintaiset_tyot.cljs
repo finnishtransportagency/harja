@@ -80,11 +80,18 @@
                      nil nil
                      (map #(assoc % :tyyppi-kartalla :toteuma)))))))
 
-(defn hae-toteuman-reitti! [toteuma]
-  (swap! valittu-kokonaishintainen-toteuma assoc :reitti :hakee)
-  (go (let [reitti nil]
-        (when (= (:id @valittu-kokonaishintainen-toteuma) (:id toteuma))
-          (swap! valittu-kokonaishintainen-toteuma assoc :reitti reitti)))))
+(defn hae-toteuman-reitti!
+  "Hakee reitin toteumalle, jos toteumalla ei ole vielä reittiä."
+  [toteuma]
+  (when (or (empty? (:reitti toteuma)) (empty? (:tr toteuma)))
+    (swap! valittu-kokonaishintainen-toteuma assoc :reitti :hakee)
+    (go (let [tulos (k/post! :hae-toteuman-reitti-ja-tr-osoite {:id (:id toteuma)
+                                                                :urakka-id (:id @nav/valittu-urakka)})]
+          ;; Eihän olla vaihdettu valittua tässä välissä?
+          (when (= (:id @valittu-kokonaishintainen-toteuma) (:id toteuma))
+            (swap! valittu-kokonaishintainen-toteuma assoc
+                   :reitti (:reitti tulos)
+                   :tr (:tr tulos)))))))
 
 (defn valitse-toteuma! [toteuma]
   (reset! valittu-kokonaishintainen-toteuma toteuma)
