@@ -12,6 +12,14 @@
             padding-top: 2px;
         }
     }
+
+
+}
+
+// Yleensä raporttien otsikkorivin otsikot tavutetaan, mutta tietyissä raporteissa
+// on dynaamisesti luotua sisältöä, joka pitää tavuttaa väkivalloin
+.materiaaliraportti thead > tr {
+    word-break: break-all;
 }
 
 .raportin-asetukset {

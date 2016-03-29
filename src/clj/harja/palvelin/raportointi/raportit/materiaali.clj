@@ -6,6 +6,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
+            [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.pvm :as pvm]))
 
@@ -81,7 +82,7 @@
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        materiaalit (distinct (map :materiaali_nimi toteumat))
+        materiaalit (sort-by materiaalidomain/materiaalien-jarjestys (distinct (map :materiaali_nimi toteumat)))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
 
     [:raportti {:nimi raportin-nimi}
