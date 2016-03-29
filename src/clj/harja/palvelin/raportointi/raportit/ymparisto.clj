@@ -4,6 +4,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.pvm :as pvm]
+            [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.kyselyt.konversio :as konv]
             [harja.fmt :as fmt]))
@@ -48,7 +49,10 @@
                     :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)]
+                  raportin-nimi alkupvm loppupvm)
+        materiaalit (sort-by #(materiaalidomain/materiaalien-jarjestys
+                               (get-in (first %) [:materiaali :nimi]))
+                             materiaalit)]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}

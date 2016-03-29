@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.toteumat :as toteumat]
@@ -19,11 +19,8 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
-  (let [vastauksen-data
-        {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))}]
-    (if uusi-id
-      (assoc vastauksen-data :id uusi-id)
-      vastauksen-data)))
+  (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
+                               :id (when uusi-id uusi-id)}))
 
 (defn lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")

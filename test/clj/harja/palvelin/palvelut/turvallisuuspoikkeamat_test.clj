@@ -59,6 +59,7 @@
             :sairauspoissaolopaivat 0
             :sairaalavuorokaudet 0
             :vakavuusaste :lieva
+            :vaylamuoto :tie
             :tyyppi #{:tyotapaturma}
             :vahinkoluokittelu #{:ymparistovahinko}
             :sijainti {:type :point :coordinates [0 0]}
