@@ -52,10 +52,10 @@
             :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
             :paattynyt (pvm/luo-pvm (+ 1900 105) 9 1)
             :kasitelty (pvm/luo-pvm (+ 1900 105) 9 1)
-            :tyontekijanammatti "Testaaja"
+            :tyontekijanammatti :kuorma-autonkuljettaja
             :tyotehtava "Testaus"
             :kuvaus    "e2e taas punaisena"
-            :vammat "Lähinnä tympäsee"
+            :vammat #{:luunmurtumat}
             :sairauspoissaolopaivat 0
             :sairaalavuorokaudet 0
             :vakavuusaste :lieva
