@@ -13,7 +13,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
-(def +uusi-turvallisuuspoikkeama+ {:vakavuusaste :lieva})
+(def +uusi-turvallisuuspoikkeama+ {:vakavuusaste :lieva
+                                   :vaylamuoto :tie})
 (defonce valittu-turvallisuuspoikkeama (atom nil))
 
 (defn hae-urakan-turvallisuuspoikkeamat
