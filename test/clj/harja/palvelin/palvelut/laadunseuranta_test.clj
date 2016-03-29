@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]))
@@ -12,11 +13,14 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :laadunseuranta (component/using
-                                          (ls/->Laadunseuranta)
-                                          [:http-palvelin :db])))))
+                       :db (tietokanta/luo-tietokanta testitietokanta)
+                       :http-palvelin (testi-http-palvelin)
+                       :karttakuvat (component/using
+                                     (karttakuvat/luo-karttakuvat)
+                                     [:http-palvelin :db])
+                       :laadunseuranta (component/using
+                                        (ls/->Laadunseuranta)
+                                        [:http-palvelin :db :karttakuvat])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -139,7 +143,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
-      (is (= #{:ok? :jarjestelma :havainnot :sijainti :aika :tr :tekija :id :tyyppi :tarkastaja}
+      (is (= #{:ok? :jarjestelma :havainnot :aika :tr :tekija :id :tyyppi :tarkastaja}
              (into #{} (keys tarkastus)))))))
 
 (deftest hae-tarkastus
