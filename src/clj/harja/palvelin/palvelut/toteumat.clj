@@ -92,7 +92,8 @@
                         toteumien-tehtavat->map-xf
                         (map konv/alaviiva->rakenne))
                       (q/hae-urakan-toteuma db urakka-id toteuma-id))]
-    toteuma))
+    ;; Palautetaan mäppi, ei vektori jossa on yksi mäppi
+    (first toteuma)))
 
 (defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id]}]
   (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id)
