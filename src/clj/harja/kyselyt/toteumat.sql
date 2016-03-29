@@ -696,6 +696,7 @@ SELECT
   t.suorittajan_nimi as suorittaja_nimi,
   k.jarjestelma,
   SUM(tt.maara)           AS tehtava_maara,
+  tt.id AS tehtava_id,
   tpk.yksikko              AS tehtava_yksikko,
   tpk.id                   AS tehtava_toimenpidekoodi_id,
   tpi.id AS tehtava_toimenpideinstanssi_id,

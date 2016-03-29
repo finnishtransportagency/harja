@@ -90,9 +90,27 @@
   (reset! valittu-kokonaishintainen-toteuma toteuma)
   (hae-toteuman-reitti! toteuma))
 
+(defn kasaa-toteuman-tiedot-tallennusta-varten [t]
+  {:suorittajan-nimi (get-in t [:suorittaja :nimi])
+   :suorittajan-ytunnus (get-in t [:suorittaja :ytunnus])
+   :urakka-id (:id @nav/valittu-urakka)
+   :sopimus-id (first @urakka/valittu-sopimusnumero)
+   :alkanut (:alkanut t)
+   :paattynyt (:paattynyt t)
+   :tyyppi :kokonaishintainen
+   :lisatieto (:lisatieto t)
+   :reitti (:reitti t)
+   :toteuma-id (:id t)
+   :tehtavat [{:tehtava-id (get-in t [:tehtava :id])
+               :poistettu false
+               :toimenpidekoodi (get-in t [:tehtava :toimenpidekoodi :id])
+               :maara (get-in t [:tehtava :maara])}]})
+
 (defn tallenna-kokonaishintainen-toteuma! [toteuma]
-  (k/post! :tallenna-kokonaishintainen-toteuma
-           (assoc toteuma
+  (k/post! :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+           (assoc {}
+             :toteuma (kasaa-toteuman-tiedot-tallennusta-varten toteuma)
              :hakuparametrit (kasaa-hakuparametrit))))
 
-(defn toteuman-tallennus-onnistui [tulos])
+(defn toteuman-tallennus-onnistui [tulos]
+  (reset! haetut-toteumat tulos))
