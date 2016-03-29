@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.tietokanta
-  (:require [com.stuartsierra.component :as component])
+  (:require [com.stuartsierra.component :as component]
+            [jeesql.array])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
            (java.util Properties)))
 
@@ -34,7 +35,5 @@
                   ;; ylimääräiset yhteydet suljetaan puolen tunnin inaktiivisuuden jälkeen
                   (.setMaxIdleTimeExcessConnections (* 30 60))
                   ;; yhteyden pisin inaktiivisuusaika 3 tuntia
-                  (.setMaxIdleTime (* 3 60 60))) 
+                  (.setMaxIdleTime (* 3 60 60)))
                 ))
-
-                
