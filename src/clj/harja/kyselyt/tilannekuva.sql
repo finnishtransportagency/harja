@@ -69,8 +69,8 @@ WHERE
    WHERE
    ilmoitus = i.id AND
    kuitattu BETWEEN :alku AND :loppu))) AND
-  (i.urakka IS NULL OR i.urakka = ANY(:urakat)) AND
-  i.ilmoitustyyppi :: TEXT = ANY(:tyypit);
+  (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
+  i.ilmoitustyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-laatupoikkeamat
 SELECT
@@ -96,12 +96,12 @@ SELECT
   l.tr_loppuetaisyys
 FROM laatupoikkeama l
   JOIN kayttaja k ON l.luoja = k.id
-WHERE (l.urakka = ANY(:urakat) OR l.urakka IS NULL)
+WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.luotu BETWEEN :alku AND :loppu OR
            l.muokattu BETWEEN :alku AND :loppu OR
            l.aika BETWEEN :alku AND :loppu OR
            l.kasittelyaika BETWEEN :alku AND :loppu) AND
-           l.tekija :: TEXT = ANY(:tekijat)
+           l.tekija :: TEXT IN (:tekijat)
       AND l.poistettu IS NOT TRUE;
 
 -- name: hae-tarkastukset
@@ -119,11 +119,11 @@ SELECT
   t.tyyppi
 FROM tarkastus t
 WHERE sijainti IS NOT NULL
-  AND (t.urakka = ANY(:urakat) OR t.urakka IS NULL)
+  AND (t.urakka IN (:urakat) OR t.urakka IS NULL)
   AND (t.luotu BETWEEN :alku AND :loppu OR
        t.muokattu BETWEEN :alku AND :loppu OR
        t.aika BETWEEN :alku AND :loppu) AND
-       t.tyyppi :: TEXT = ANY(:tyypit);
+       t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
@@ -155,7 +155,7 @@ FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama
                                     AND k.poistettu IS NOT TRUE
 WHERE
-  (t.urakka IS NULL OR t.urakka = ANY(:urakat)) AND
+  (t.urakka IS NULL OR t.urakka IN (:urakat)) AND
   (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
    t.paattynyt BETWEEN :alku AND :loppu OR
    t.kasitelty BETWEEN :alku AND :loppu OR
@@ -303,14 +303,14 @@ FROM toteuma_tehtava tt
      JOIN toteuma t ON tt.toteuma = t.id
                     AND t.alkanut >= :alku
                     AND t.paattynyt <= :loppu
-                    AND tt.toimenpidekoodi = ANY(:toimenpidekoodit)
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
 
      LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                                      AND tm.poistettu IS NOT TRUE
      LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-WHERE (t.urakka = ANY(:urakat) OR t.urakka IS NULL) AND
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
@@ -325,10 +325,10 @@ FROM toteuma_tehtava tt
      JOIN toteuma t ON tt.toteuma = t.id
                     AND t.alkanut >= :alku
                     AND t.paattynyt <= :loppu
-                    AND tt.toimenpidekoodi = ANY(:toimenpidekoodit)
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-WHERE (t.urakka = ANY(:urakat) OR t.urakka IS NULL) AND
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
@@ -358,7 +358,7 @@ FROM tyokonehavainto t
 WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
                   CAST(sijainti AS GEOMETRY)) AND
       (:valittugeometria :: GEOMETRY IS NULL OR ST_Contains(:valittugeometria, CAST(sijainti AS GEOMETRY))) AND
-      (t.urakkaid = ANY(:urakat) OR t.urakkaid IS NULL) AND
+      (t.urakkaid IN (:urakat) OR t.urakkaid IS NULL) AND
       /*
       Alunperin ajateltiin, että jos urakkaa ei ole valittuna, niin näytetään kaikki alueella
       toimivat työkoneet (informaation jako, työn läpinäkyvyys). Todettiin kuitenkin että ainakin
@@ -371,4 +371,4 @@ WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
 SELECT
   id
 FROM toimenpidekoodi
-WHERE suoritettavatehtava :: TEXT = ANY(:toimenpiteet);
+WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);

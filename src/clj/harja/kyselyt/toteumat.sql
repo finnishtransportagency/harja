@@ -91,7 +91,7 @@ SELECT
 FROM toteuma t
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-WHERE t.id = ANY(:id);
+WHERE t.id IN (:id);
 
 -- name: hae-urakan-toteuma-paivat
 -- Hakee päivät tietyllä aikavälillä, jolle urakalla on toteumia.
@@ -283,7 +283,7 @@ VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW()
 -- name: poista-toteuma!
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE id = ANY(:id) AND poistettu IS NOT TRUE;
+WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -300,7 +300,7 @@ WHERE toteuma = :id AND poistettu IS NOT TRUE;
 -- name: poista-tehtava!
 UPDATE toteuma_tehtava
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE id = ANY(:id) AND poistettu IS NOT TRUE;
+WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: onko-olemassa-ulkoisella-idlla
 -- Tarkistaa löytyykö toteumaa ulkoisella id:llä
@@ -383,7 +383,7 @@ WHERE
                JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
                JOIN toteuma_tehtava tt ON tt.toimenpidekoodi = tpk.id
                JOIN toteuma t ON t.id = tt.toteuma
-             WHERE tt.id = ANY(:toteuma_tehtava_idt) AND t.tyyppi :: TEXT = m.tyyppi :: TEXT);
+             WHERE tt.id IN (:toteuma_tehtava_idt) AND t.tyyppi :: TEXT = m.tyyppi :: TEXT);
 
 -- name: merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi!
 -- Merkitsee erilliskustannuksia vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä

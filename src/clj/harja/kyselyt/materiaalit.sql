@@ -279,7 +279,7 @@ WHERE toteuma = :toteuma AND id = :id;
 -- name: poista-toteuma-materiaali!
 UPDATE toteuma_materiaali
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE id = ANY(:id) AND poistettu IS NOT TRUE;
+WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: hae-materiaalikoodin-id-nimella
 SELECT id

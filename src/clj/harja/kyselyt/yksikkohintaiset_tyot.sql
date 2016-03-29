@@ -56,7 +56,7 @@ WHERE maksuera IN (SELECT m.numero
                      JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                      JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
                      JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
-                   WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka AND tpk.id = ANY(:tehtavat));
+                   WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka AND tpk.id IN (:tehtavat));
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna kuukausittain
