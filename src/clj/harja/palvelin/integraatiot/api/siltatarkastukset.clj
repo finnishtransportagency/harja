@@ -6,7 +6,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu
+                                                                             tee-kirjausvastauksen-body]]
             [harja.kyselyt.siltatarkastukset :as silta-q]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
@@ -115,7 +116,7 @@
                                       transaktio)]
               (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
               (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)
-              {:ilmoitukset "Siltatarkistus kirjattu onnistuneesti"}))
+              (tee-kirjausvastauksen-body {:ilmoitukset "Siltatarkistus kirjattu onnistuneesti"})))
           (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
                    :virheet [{:koodi  virheet/+tuntematon-silta+
                               :viesti (str "Siltaa ei löydy tunnuksella: " siltatunnus)}]}))))))

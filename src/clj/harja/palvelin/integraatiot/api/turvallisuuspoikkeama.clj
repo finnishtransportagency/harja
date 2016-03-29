@@ -5,7 +5,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
 
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus
+              tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
@@ -21,10 +22,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
-
-(defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"}]
-    vastauksen-data))
 
 (defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
   (when (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
@@ -43,9 +40,8 @@
 
 (defn vastaus [turvallisuuspoikkeamat]
   (let [varoitukset (kasaa-varoitukset turvallisuuspoikkeamat)]
-    (if (empty? varoitukset)
-     (tee-onnistunut-vastaus)
-     {:varoitukset (str/join " " varoitukset)})))
+    (tee-kirjausvastauksen-body {:ilmoitukset "Kaikki turvallisuuspoikkeamat kirjattu onnistuneesti"
+                                 :varoitukset (when-not (empty? varoitukset) (str/join " " varoitukset))})))
 
 (defn tallenna-ammatinselite? [turvallisuuspoikkeama]
   (= (get-in turvallisuuspoikkeama [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija"))
@@ -55,7 +51,8 @@
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko]} data
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko
+                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
@@ -79,7 +76,9 @@
                        (konv/seq->array luokittelu)
                        (:id kirjaaja)
                        (konv/seq->array vahinkoluokittelu)
-                       vakavuusaste))]
+                       vakavuusaste
+                       toteuttaja
+                       tilaaja))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       (turvallisuuspoikkeamat/aseta-ulkoinen-id<! db (:id tunniste) tp-id)
       (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
@@ -97,13 +96,18 @@
         (:etunimi ilmoittaja)
         (:sukunimi ilmoittaja)
         vaylamuoto
+        (:etunimi turvallisuuskoordinaattori)
+        (:sukunimi turvallisuuskoordinaattori)
+        (:etunimi laatija)
+        (:sukunimi laatija)
         (:id tunniste)
         (:id kirjaaja))
       tp-id)))
 
 (defn paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahinko
-                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste]} data
+                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste
+                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
@@ -128,6 +132,8 @@
       (:id kirjaaja)
       (konv/seq->array vahinkoluokittelu)
       vakavuusaste
+      toteuttaja
+      tilaaja
       (:id tunniste)
       (:id kirjaaja))
     (:id (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
@@ -145,6 +151,10 @@
            (:etunimi ilmoittaja)
            (:sukunimi ilmoittaja)
            vaylamuoto
+           (:etunimi turvallisuuskoordinaattori)
+           (:sukunimi turvallisuuskoordinaattori)
+           (:etunimi laatija)
+           (:sukunimi laatija)
            (:id tunniste)
            (:id kirjaaja)))))
 

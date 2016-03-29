@@ -16,18 +16,6 @@
     "id": 123
   },
   "viimeksipaivitetty": "2016-01-30T12:00:00Z",
-  "toteuttaja": "Yritys Oy",
-  "tilaaja": "Paula Projektipäällikkö",
-  "turvallisuuskoordinaattori": {
-    "id":235648,
-    "etunimi": "Mikko",
-    "sukunimi": "Meikäläinen"
-  },
-  "laatija": {
-    "id" : 654486,
-    "etunimi": "Urho",
-    "sukunimi": "Urakoitisja"
-  },
   "turvallisuuspoikkeamat": [
     {
       "tunniste": {
@@ -57,6 +45,18 @@
         "id":5468135,
         "etunimi": "Veera",
         "sukunimi": "Veistelijä"
+      },
+      "toteuttaja": "Yritys Oy",
+      "tilaaja": "Paula Projektipäällikkö",
+      "turvallisuuskoordinaattori": {
+        "id":235648,
+        "etunimi": "Mikko",
+        "sukunimi": "Meikäläinen"
+      },
+      "laatija": {
+        "id" : 654486,
+        "etunimi": "Urho",
+        "sukunimi": "Urakoitisja"
       },
       "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
       "paattynyt": "2016-01-30T12:00:00Z",
