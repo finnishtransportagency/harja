@@ -22,12 +22,11 @@
                       [:turi:sukunimi (:vastaavahenkilo %)]]) korjaavat-toimenpiteet)))))
 
 (defn rakenna-kommentit [data]
-  ;; todo
-  [:turi:kommentit
-   [:turi:kommentti
-    "Aika pahalta näytti."]
-   [:turi:kommentti
-    "Jatkossa ei tule tapahtumaan."]])
+  (let [kommentit (:kommentit data)]
+    (when (not-empty kommentit)
+      (apply conj []
+             :turi:kommentit
+             (mapv #(vector :turi:kommentti (:kommentti %)) kommentit)))))
 
 (defn rakenna-liitteet [data]
   ;; todo
@@ -53,10 +52,10 @@
 
 (defn rakenna-sijainti [data]
   (when-let [koordinaatit (:coordinates (harja.geo/pg->clj (:sijainti data)))]
+    (clojure.pprint/pprint koordinaatit)
     [:turi:sijainti
      [:turi:koordinaatit
-      ;; todo
-      [:turi:tienumero "1"]
+      ;; todo: Tällä hetkellä ei ole vielä tarjolla tienumeroa, kun se on, pitää välittää elementissä [:turi:tienumero "1"]
       [:turi:x (first koordinaatit)]
       [:turi:y (second koordinaatit)]]]))
 

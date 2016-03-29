@@ -135,9 +135,9 @@
 
     <xs:complexType name="koordinaatit">
         <xs:sequence>
-            <xs:element type="xs:integer" name="tienumero" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element type="xs:integer" name="x" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element type="xs:integer" name="y" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:integer" name="tienumero" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="xs:double" name="x" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:double" name="y" nillable="false" minOccurs="1" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
