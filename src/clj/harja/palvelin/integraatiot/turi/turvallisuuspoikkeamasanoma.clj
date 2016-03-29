@@ -127,6 +127,7 @@
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
+    (println xml)
     (if (xml/validoi +xsd-polku+ "turvallisuuspoikkeama.xsd" xml)
       xml
       (do
