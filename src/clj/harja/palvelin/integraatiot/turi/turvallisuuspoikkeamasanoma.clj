@@ -9,15 +9,17 @@
     (apply conj [] lista-elementti (mapv #(vector elementti %) tyypit))))
 
 (defn rakenna-korjaavat-toimenpiteet [data]
-  (apply conj []
-         :turi:korjaavat-toimenpiteet
-         (mapv #(vector
-                 :turi:korjaava-toimenpide
-                 [:turi:kuvaus (:kuvaus %)]
-                 [:turi:suoritettu (xml/formatoi-aikaleima (:suoritettu %))]
-                 [:turi:vastaavahenkilo
-                  [:turi:etunimi (:vastaavahenkilo %)]
-                  [:turi:sukunimi (:vastaavahenkilo %)]]) data)))
+  (let [korjaavat-toimenpiteet (:korjaavat-toimenpiteet data)]
+    (when (not-empty korjaavat-toimenpiteet)
+      (apply conj []
+             :turi:korjaavat-toimenpiteet
+             (mapv #(vector
+                     :turi:korjaava-toimenpide
+                     [:turi:kuvaus (:kuvaus %)]
+                     [:turi:suoritettu (when (:suoritettu %) (xml/formatoi-aikaleima (:suoritettu %)))]
+                     [:turi:vastaavahenkilo
+                      [:turi:etunimi (:vastaavahenkilo %)]
+                      [:turi:sukunimi (:vastaavahenkilo %)]]) korjaavat-toimenpiteet)))))
 
 (defn rakenna-kommentit [data]
   ;; todo
@@ -91,9 +93,9 @@
   [:turi:turvallisuuspoikkeama
    {:xmlns:turi "http://www.liikennevirasto.fi/xsd/turi"}
    [:turi:vaylamuoto (:vaylamuoto data)]
-   [:turi:tapahtunut (xml/formatoi-aikaleima (:tapahtunut data))]
-   [:turi:paattynyt (xml/formatoi-aikaleima (:paattynyt data))]
-   [:turi:kasitelty (xml/formatoi-aikaleima (:kasitelty data))]
+   [:turi:tapahtunut (when (:tapahtunut data) (xml/formatoi-aikaleima (:tapahtunut data)))]
+   [:turi:paattynyt (when (:paattynyt data) (xml/formatoi-aikaleima (:paattynyt data)))]
+   [:turi:kasitelty (when (:kasitelty data) (xml/formatoi-aikaleima (:kasitelty data)))]
    ;; todo: puuttuu?
    [:turi:toteuttaja "Yritys OY"]
    ;; todo: puuttuu?
