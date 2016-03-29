@@ -4,7 +4,7 @@
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.materiaalit :as materiaalit]
@@ -50,8 +50,7 @@
        geo/clj->pg geo/geometry))
 
 (defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}]
-    vastauksen-data))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}))
 
 (defn luo-reitin-tehtavat [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin tehtävät")

@@ -1,0 +1,1 @@
+DELETE FROM sanktiotyyppi where nimi = 'Laatuasiakirjojen, seurantaraprottien yms. vastavien tietojen paikkansa pitämättömyyt';

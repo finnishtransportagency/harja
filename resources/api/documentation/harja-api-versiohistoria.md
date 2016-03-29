@@ -2,7 +2,9 @@
 <b>Julkaistu: 11.2.2016</b>
 
 <b>Versiohistoria:</b>
-- Versionumero: 0.1.1. Julkaistu 21.3.2016
+- Versionumero: 0.1.2. Julkaistu 29.3.2016
+    - Turvallisuuspoikkeaman muotoa on korjattu.
+- Versionumero: 0.1.1. Julkaistu 24.3.2016
     - Turvallisuuspoikkeaman ammatin kirjaaminen tietystä enum-joukosta. Jos annetaan vaihtoehto muu_tyontekija, voidaan antaa tarkempi kuvaus ammatista. Muussa tapauksessa selitettä ei tallenneta.
     - Turvallisuuspoikkeaman aiheutuneiden vammojen kirjaaminen tietystä enum-joukosta entisen vapaatekstin sijaan
     - Turvallisuuspoikkeaman uusi kirjattava tieto: aiheutuneet seuraukset (vapaateksti)

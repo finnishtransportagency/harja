@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+ALTER TABLE turvallisuuspoikkeama
+ADD COLUMN lahetetty TIMESTAMP,
+ADD COLUMN lahetys_onnistunut BOOLEAN;
+
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('turi', 'laheta-turvallisuuspoikkeama');
+=======
 -- Lisää unohtuneet luojan (käyttäjä) foreign keyt
 ALTER TABLE paivystys ADD CONSTRAINT paivystys_luoja_fkey FOREIGN KEY (luoja) REFERENCES kayttaja (id);
 ALTER TABLE yhteyshenkilo ADD CONSTRAINT yhteyshenkilo_luoja_fkey FOREIGN KEY (luoja) REFERENCES kayttaja (id);
@@ -17,3 +24,4 @@ VALUES
   ('Muu tuote', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji], NULL),
   ('Talvihoito', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23104')),
   ('Laatuasiakirjojen, seurantaraprottien yms. vastavien tietojen paikkansa pitämättömyyt', ARRAY['C'::sanktiolaji], NULL);
+>>>>>>> develop

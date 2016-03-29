@@ -22,6 +22,7 @@
         (map #(konv/array->set % :vammat))
         (map #(konv/string-set->keyword-set % :vammat))
         (map #(konv/string->keyword % :vakavuusaste))
+        (map #(konv/string->keyword % :vaylamuoto))
         (map #(konv/string->keyword % :tyontekijanammatti))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
@@ -71,7 +72,8 @@
    {:keys
     [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu tyotehtava kuvaus vammat sairauspoissaolopaivat
      sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat
-     tyyppi sairauspoissaolojatkuu seuraukset]}]
+     tyyppi sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja laatijaetunimi laatijasukunimi
+     turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi]}]
   ;; Tässä on nyt se venäläinen homma.
   ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
   ;; Nämä kyselyt tarvitsevat enemmän argumentteja, joten kyselyt piti katkaista kahtia.
@@ -91,11 +93,20 @@
                                              (:id user)
                                              (konv/seq->array vahinkoluokittelu)
                                              (name vakavuusaste)
+                                             toteuttaja
+                                             tilaaja
                                              id)
           (q/paivita-turvallisuuspoikkeaman-muut-tiedot! db
                                                          sijainti
                                                          tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
-                                                         (konv/seq->array vahingoittuneetruumiinosat) sairauspoissaolojatkuu seuraukset
+                                                         (konv/seq->array vahingoittuneetruumiinosat)
+                                                         sairauspoissaolojatkuu
+                                                         seuraukset
+                                                         (name vaylamuoto)
+                                                         laatijaetunimi
+                                                         laatijasukunimi
+                                                         turvallisuuskoordinaattorietunimi
+                                                         turvallisuuskoordinaattorisukunimi
                                                          id)
           id)
       (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
@@ -104,10 +115,19 @@
                                                    (konv/seq->array tyyppi)
                                                    (:id user)
                                                    (konv/seq->array vahinkoluokittelu)
-                                                   (name vakavuusaste)))]
+                                                   (name vakavuusaste)
+                                                   toteuttaja
+                                                   tilaaja))]
         (q/paivita-turvallisuuspoikkeaman-muut-tiedot! db
                                                        sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa
-                                                       (konv/seq->array vahingoittuneetruumiinosat) sairauspoissaolojatkuu seuraukset
+                                                       (konv/seq->array vahingoittuneetruumiinosat)
+                                                       sairauspoissaolojatkuu
+                                                       seuraukset
+                                                       (name vaylamuoto)
+                                                       laatijaetunimi
+                                                       laatijasukunimi
+                                                       turvallisuuskoordinaattorietunimi
+                                                       turvallisuuskoordinaattorisukunimi
                                                        id)
         id))))
 

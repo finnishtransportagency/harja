@@ -6,7 +6,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus
                                                                              tee-viallinen-kutsu-virhevastaus
-                                                                             tee-vastaus]]
+                                                                             tee-vastaus
+                                                                             tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
@@ -101,20 +102,21 @@
         data (assoc-in data [:varuste :tunniste] livitunniste)
         lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
-    {:id livitunniste
-     :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)}))
+    (tee-kirjausvastauksen-body
+      {:id livitunniste
+      :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri data kayttaja]
   (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma data)]
     (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue))
-  {:ilmoitukset "Varuste päivitetty onnistuneesti"})
+  (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri data kayttaja]
   (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma data)]
     (tierekisteri/poista-tietue tierekisteri poistettava-tietue))
-  {:ilmoitukset "Varuste poistettu onnistuneesti"})
+  (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
 
 (defrecord Varusteet []
   component/Lifecycle
