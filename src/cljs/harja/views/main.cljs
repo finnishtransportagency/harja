@@ -7,7 +7,7 @@
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
-            [harja.ui.modal :refer [modal-container]]
+            [harja.ui.modal :as modal]
             [harja.ui.viesti :refer [viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
@@ -143,7 +143,7 @@
         :hallinta [hallinta/hallinta]
         :tilannekuva [tilannekuva/tilannekuva]
         :about [about/about])]]]
-   [modal-container]
+   [modal/modal-container]
    [viesti-container]
 
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
@@ -153,9 +153,21 @@
    [:div#kartta-container {:style {:position "absolute" :top (- korkeus)}}
     [kartta/kartta]]])
 
+(defn varoita-jos-vanha-ie []
+  (if dom/ei-tuettu-ie?
+    (modal/nayta! {:otsikko "Käytössä vanha Internet Explorer"
+                   :footer  [:span
+                             [:button.nappi-toissijainen {:type     "button"
+                                                          :on-click #(do (.preventDefault %)
+                                                                         (modal/piilota!))}
+                              "OK"]]}
+                  [:div
+                   [:p "Käytössäsi on vanhentunut Internet Explorer -selaimen versio. Emme voi taata, että kaikki Harjan ominaisuudet toimivat täysin oikein."]])))
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
+  (varoita-jos-vanha-ie)
   (komp/luo
     (fn []
       (if @nav/render-lupa?
