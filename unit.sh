@@ -25,7 +25,6 @@ done;)"
 echo "Step: 2/2.."
 
 notificationoutput=`find test2junit -name "*.xml" | xargs xmllint --xpath "string(/testsuite[not(@errors = '0') or not(@failures = '0')]/@name)"`
-if [ -n "$notificationoutput" ];
 
 echo "Done!"
 echo " ---- "
@@ -44,6 +43,7 @@ fi
 
 echo " ---- "
 
+if [ -n "$notificationoutput" ];
 then
   terminal-notifier -title "Harjan yksikkötesteissä virheitä!" -message "$notificationoutput" -open "file:///`pwd`/test2junit/html/index.html"
 
