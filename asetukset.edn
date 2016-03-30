@@ -53,7 +53,7 @@
                         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
                         :ilmoitukset {:google-static-maps-key "AIzaSyAHMEbpTzPW-H-qxvlUCH1rh8iKZCI6SBM"}}
 
- :turi                 {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi"
+ :turi                 {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/"
                         :kayttajatunnus "testi"
                         :salasana "6fO6GntBmkek"}
 

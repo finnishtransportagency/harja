@@ -16,13 +16,14 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clojure.string :as str]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
   (when (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
-                  (not (str/blank? (get-in % [:henkilovahinko :ammatinselite]))))
-            turvallisuuspoikkeamat)
+                    (not (str/blank? (get-in % [:henkilovahinko :ammatinselite]))))
+              turvallisuuspoikkeamat)
     "Ammatin selitettä ei tallennettu, sillä työntekijän ammatti ei ollut 'muu_tyontekija'."))
 
 (defn tarkista-henkilovahingon-tallennus [turvallisuuspoikkeamat]
@@ -183,16 +184,17 @@
 
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
-    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
-          kommentit (:kommentit data)
-          korjaavat (:korjaavatToimenpiteet data)
-          liitteet (:liitteet data)]
-      (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
-      (tallenna-kommentit db tp-id kirjaaja kommentit)
-      (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
-      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)))
+  (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
+        kommentit (:kommentit data)
+        korjaavat (:korjaavatToimenpiteet data)
+        liitteet (:liitteet data)]
+    (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
+    (tallenna-kommentit db tp-id kirjaaja kommentit)
+    (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
+    (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
+    tp-id))
 
-(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta db {id :id} data kirjaaja]
+(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan " (count (:turvallisuuspoikkeamat data))
                " uutta turvallisuuspoikkeamaa urakalle id:" urakka-id " kayttäjän:"
@@ -200,12 +202,13 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (jdbc/with-db-transaction [db db]
       (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
-        (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama)))
+        (let [id (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama)]
+          (turi/laheta-turvallisuuspoikkeama turi id))))
     (vastaus (:turvallisuuspoikkeamat data))))
 
 (defrecord Turvallisuuspoikkeama []
   component/Lifecycle
-  (start [{http            :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta
+  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta turi :turi
            integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :lisaa-turvallisuuspoikkeama
@@ -213,7 +216,7 @@
         (kasittele-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
                          json-skeemat/+turvallisuuspoikkeama-kirjaus+ json-skeemat/+kirjausvastaus+
                          (fn [parametrit data kayttaja db]
-                           (kirjaa-turvallisuuspoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
+                           (kirjaa-turvallisuuspoikkeama liitteiden-hallinta turi db parametrit data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
