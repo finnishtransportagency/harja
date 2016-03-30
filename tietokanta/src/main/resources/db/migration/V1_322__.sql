@@ -1,8 +1,11 @@
--- Lisää toteumille TR-tiedot (käytetään kun tallennetaan frontilta)
+-- Turpon lisämuutokset
 
-ALTER TABLE toteuma
-    ADD tr_numero INTEGER,
-    ADD tr_alkuosa INTEGER,
-    ADD tr_alkuetaisyys INTEGER,
-    ADD tr_loppuosa INTEGER,
-    ADD tr_loppuetaisyys INTEGER;
+UPDATE turvallisuuspoikkeama SET vaylamuoto = 'tie'::vaylamuoto WHERE vaylamuoto IS NULL;
+
+
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN toteuttaja VARCHAR(1024);
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN tilaaja VARCHAR(1024);
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN turvallisuuskoordinaattori_etunimi VARCHAR(1024);
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN turvallisuuskoordinaattori_sukunimi VARCHAR(1024);
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN laatija_etunimi VARCHAR(1024);
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN laatija_sukunimi VARCHAR(1024);

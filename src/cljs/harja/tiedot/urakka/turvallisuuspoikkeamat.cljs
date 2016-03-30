@@ -5,15 +5,14 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.geo :as geo]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
-(def +uusi-turvallisuuspoikkeama+ {:vakavuusaste :lieva})
+(def +uusi-turvallisuuspoikkeama+ {:vakavuusaste :lieva
+                                   :vaylamuoto :tie})
 (defonce valittu-turvallisuuspoikkeama (atom nil))
 
 (defn hae-urakan-turvallisuuspoikkeamat

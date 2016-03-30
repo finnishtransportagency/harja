@@ -13,6 +13,7 @@
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
     (component/start integraatioloki)
     (alk/hae-tiedoston-muutospaivamaara
+      testitietokanta
       integraatioloki
       "tieverkon-muutospaivamaaran-haku"
       "http://185.26.50.104/Tieosoiteverkko.zip")))

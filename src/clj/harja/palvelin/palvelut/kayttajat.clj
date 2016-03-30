@@ -94,7 +94,7 @@
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
 (defn hae-fim-kayttaja [db integraatioloki fim user tunnus]
-  (if-let [tulos (fim/hae-kayttajatunnus fim tunnus integraatioloki)]
+  (if-let [tulos (fim/hae-kayttajatunnus fim tunnus integraatioloki db)]
     (if-not (number? tulos) ;; Tulos on virhekoodi
       (let [org (first (into [] organisaatio-xf (q/hae-organisaatio-nimella db (:organisaatio tulos))))
             olemassaoleva (some->> tunnus

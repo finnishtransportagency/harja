@@ -22,26 +22,6 @@
       "id": "urn:harja/viimeksipaivitetty",
       "type": "string"
     },
-    "toteuttaja": {
-      "id": "urn:harja/toteuttaja",
-      "type": "string"
-    },
-    "tilaaja": {
-      "id": "urn:harja/tilaaja",
-      "type": "string"
-    },
-    "turvallisuuskoordinaattori": {
-      "id": "urn:harja/turvallisuuskoordinaattori",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
-    },
-    "laatija": {
-      "id": "urn:harja/laatija",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
-    },
     "turvallisuuspoikkeamat": {
       "id": "urn:harja/turvallisuuspoikkeamat",
       "type": "array",
@@ -112,6 +92,26 @@
             "id": "urn:harja/turvallisuuspoikkeamat/0/kasitelty",
             "type": "string",
             "format": "date-time"
+          },
+          "toteuttaja": {
+            "id": "urn:harja/toteuttaja",
+            "type": "string"
+          },
+          "tilaaja": {
+            "id": "urn:harja/tilaaja",
+            "type": "string"
+          },
+          "turvallisuuskoordinaattori": {
+            "id": "urn:harja/turvallisuuskoordinaattori",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
+          },
+          "laatija": {
+            "id": "urn:harja/laatija",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
           },
           "kuvaus": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/kuvaus",

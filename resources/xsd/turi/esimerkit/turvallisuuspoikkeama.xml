@@ -23,7 +23,7 @@
         <turi:luokittelu>tyotapaturma</turi:luokittelu>
     </turi:luokittelut>
     <turi:vahinkoluokittelut>
-        <turi:luokittelu>henkilostovahinko</turi:luokittelu>
+        <turi:luokittelu>henkilovahinko</turi:luokittelu>
         <turi:luokittelu>omaisuusvahinko</turi:luokittelu>
     </turi:vahinkoluokittelut>
     <turi:vakavuusaste>vakava</turi:vakavuusaste>
