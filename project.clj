@@ -127,7 +127,8 @@
 
   :profiles {:dev  {:dependencies []
                     :plugins      [[com.solita/lein-test-refresh-gui "0.10.3"]
-                                   [test2junit "1.1.0"]]}
+                                   [test2junit "1.1.0"]]
+                    :test2junit-run-ant true}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
@@ -239,6 +240,4 @@
              "Implementation-Version" "1.1"
              "Implementation-Vendor"  "Sun Microsystems, Inc."
              "Extension-Name"         "com.sun.media.imageio"}
-
-  :test2junit-run-ant true
   )
