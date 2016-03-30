@@ -239,4 +239,6 @@
              "Implementation-Version" "1.1"
              "Implementation-Vendor"  "Sun Microsystems, Inc."
              "Extension-Name"         "com.sun.media.imageio"}
+
+  :test2junit-run-ant true
   )

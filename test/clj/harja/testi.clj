@@ -9,6 +9,7 @@
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.liitteet :as liitteet]
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
     [clj-time.coerce :as tc]))
@@ -406,7 +407,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (harja.palvelin.komponentit.liitteet/->Liitteet)
+                                                  (liitteet/->Liitteet)
                                                   [:db])
 
                            ~@omat))))
