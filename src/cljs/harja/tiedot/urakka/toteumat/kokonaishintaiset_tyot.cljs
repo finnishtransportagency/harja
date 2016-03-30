@@ -14,6 +14,7 @@
 
 (def valittu-kokonaishintainen-toteuma (atom nil))
 (def uusi-kokonaishintainen-toteuma {})
+(def haetut-reitit (atom nil))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot
   "Hakee annetun toimenpidekoodin ja päivämäärän yksityiskohtaiset tiedot."
@@ -68,18 +69,39 @@
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
-(defonce kokonaishintainen-toteuma-kartalla
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               sopimus-id (first @urakka/valittu-sopimusnumero)
-               taso-paalla? @karttataso-kokonaishintainen-toteuma
-               valittu-paivakohtainen-tehtava @valittu-paivakohtainen-tehtava]
-              (when (and taso-paalla? valittu-paivakohtainen-tehtava)
-                (go (kartalla-esitettavaan-muotoon
-                     (<! (hae-toteumareitit urakka-id sopimus-id
-                                            (pvm/paivan-aikavali (:pvm valittu-paivakohtainen-tehtava))
-                                            (:toimenpidekoodi valittu-paivakohtainen-tehtava)))
-                     nil nil
-                     (map #(assoc % :tyyppi-kartalla :toteuma)))))))
+(def kokonaishintainen-toteuma-kartalla
+         (reaction<!
+           [urakka-id (:id @nav/valittu-urakka)
+            sopimus-id (first @urakka/valittu-sopimusnumero)
+            taso-paalla? @karttataso-kokonaishintainen-toteuma
+            valittu-paivakohtainen-tehtava @valittu-paivakohtainen-tehtava
+            valittu-toteuma @valittu-kokonaishintainen-toteuma]
+           (when (and taso-paalla? (or valittu-toteuma valittu-paivakohtainen-tehtava))
+             (go
+               (kartalla-esitettavaan-muotoon
+                 (let [haun-tulos (if valittu-paivakohtainen-tehtava
+                                    (<!
+                                     (hae-toteumareitit
+                                       urakka-id sopimus-id
+                                       (pvm/paivan-aikavali (:pvm valittu-paivakohtainen-tehtava))
+                                       (:toimenpidekoodi valittu-paivakohtainen-tehtava)))
+                                    [])
+                       ;; Esitettävillä asioilla on tietty muoto mitä se odottaa
+                       ;; Muokataan valittu-toteuma tähän muotoon
+                       valittu-tehtavilla (assoc valittu-toteuma
+                                            :tehtavat
+                                            [{:id (get-in valittu-toteuma [:tehtava :toimenpidekoodi :id])
+                                              :toimenpide (get-in valittu-toteuma [:tehtava :toimenpidekoodi :nimi])
+                                              :maara (get-in valittu-toteuma [:tehtava :maara])}])
+                       yhdistetyt-reitit (if-not
+                                           (some #(= (:id valittu-toteuma) (:toteumaid %)) haun-tulos)
+                                           (conj haun-tulos valittu-tehtavilla)
+                                           haun-tulos)]
+                   ;; Haetuissa reiteissä on klikatun summarivin reitit. Liitetään mukaan
+                   ;; Valitun toteuman reitti jos se ei jo ole tässä joukossa.
+                   (reset! haetut-reitit yhdistetyt-reitit))
+                 valittu-toteuma [[:toteumaid] [:id]]
+                 (map #(assoc % :tyyppi-kartalla :toteuma)))))))
 
 (defn hae-toteuman-reitti!
   "Hakee reitin toteumalle, jos toteumalla ei ole vielä reittiä."
