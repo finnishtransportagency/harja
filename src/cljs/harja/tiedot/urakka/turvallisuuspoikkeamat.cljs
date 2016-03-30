@@ -1,12 +1,10 @@
-(ns hae-urakan-turvallisuuspoikkeamaharja.tiedot.urakka.turvallisuuspoikkeamat
+(ns harja.tiedot.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.geo :as geo]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
