@@ -247,7 +247,8 @@ INSERT INTO turvallisuuspoikkeama
  tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  vahingoittuneet_ruumiinosat, sairauspoissaolo_jatkuu, aiheutuneet_seuraukset, vaylamuoto,
  laatija_etunimi, laatija_sukunimi,
- turvallisuuskoordinaattori_etunimi, turvallisuuskoordinaattori_sukunimi)
+ turvallisuuskoordinaattori_etunimi, turvallisuuskoordinaattori_sukunimi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ulkoinen_id)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu,
   :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissa,
@@ -258,4 +259,6 @@ VALUES
   :vahingoittuneet_ruumiinosat ::turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
   :sairauspoissaolo_jatkuu, :aiheutuneet_seuraukset, :vaylamuoto ::vaylamuoto,
   :laatija_etunimi, :laatija_sukunimi,
-  :turvallisuuskoordinaattori_etunimi, :turvallisuuskoordinaattori_sukunimi);
+  :turvallisuuskoordinaattori_etunimi, :turvallisuuskoordinaattori_sukunimi,
+  :ilmoittaja_etunimi, :ilmoittaja_sukunimi,
+  :ulkoinen_id);

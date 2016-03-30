@@ -67,6 +67,10 @@
 
     (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
 
+(def oletusparametrit {:ulkoinen_id nil
+                       :ilmoittaja_etunimi nil
+                       :ilmoittaja_sukunimi nil})
+
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu
                    tyotehtava kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
@@ -76,7 +80,8 @@
                    turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         parametrit
-        (merge tr
+        (merge oletusparametrit
+               tr
                {:urakka urakka
                 :tapahtunut (konv/sql-timestamp tapahtunut)
                 :paattynyt (konv/sql-timestamp paattynyt)
