@@ -33,12 +33,13 @@
                  [org.clojure/core.cache "0.6.4"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "9.3-1102-jdbc41"]
+                 [org.postgresql/postgresql "9.4-1206-jdbc41"]
+                 ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5"]
-                 [yesql "0.4.2" :exclusions [[instaparse :classifier "*"]]]
-                 [instaparse "1.4.1"]
+                 [webjure/jeesql "0.3.3"]
+
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "12.2"]

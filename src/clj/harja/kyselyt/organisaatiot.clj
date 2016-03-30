@@ -1,5 +1,6 @@
 (ns harja.kyselyt.organisaatiot
   "Organisaatioihin liittyvät tietokantakyselyt"
-  (:require [yesql.core :refer [defqueries]]))
+  (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/organisaatiot.sql")
+(defqueries "harja/kyselyt/organisaatiot.sql"
+  {:positional? true})

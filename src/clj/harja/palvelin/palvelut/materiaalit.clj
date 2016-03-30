@@ -49,7 +49,8 @@
         (let [tulos (q/hae-urakan-toteumat-materiaalille db
                                                          sopimus
                                                          materiaali-id
-                                                         (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi)))]
+                                                         (konv/sql-date (first hoitokausi))
+                                                         (konv/sql-date (second hoitokausi)))]
           (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE ("sopimus materiaali-id")")
           tulos)))
 
