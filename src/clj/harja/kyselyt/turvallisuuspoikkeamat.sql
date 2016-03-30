@@ -189,7 +189,13 @@ SET
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi
 WHERE id = :id;
 
---name: paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
+-- name: hae-turvallisuuspoikkeaman-id-ulkoisella-idlla
+-- single?: true
+SELECT id FROM turvallisuuspoikkeama
+ WHERE ulkoinen_id = :ulkoinen_id AND
+       luoja = :luoja
+
+--name: paivita-turvallisuuspoikkeama-ulkoisella-idlla!
 UPDATE turvallisuuspoikkeama
 SET urakka               = :urakka,
   tapahtunut             = :tapahtunut,

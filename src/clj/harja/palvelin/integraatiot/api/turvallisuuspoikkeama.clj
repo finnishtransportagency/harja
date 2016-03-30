@@ -113,7 +113,7 @@
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
     (log/debug "Turvallisuuspoikkeama on olemassa ulkoisella id:llä (" (:id tunniste) "). Päivitetään.")
-    (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla<!
+    (turvallisuuspoikkeamat/paivita-turvallisuuspoikkeama-ulkoisella-idlla!
      db
      {:urakka urakka-id
       :tapahtunut (aika-string->java-sql-date tapahtumapaivamaara)
@@ -153,7 +153,10 @@
       :laatija_etunimi (:etunimi laatija)
       :laatija_sukunimi (:sukunimi laatija)
       :ulkoinen_id (:id tunniste)
-      :luoja (:id kirjaaja)})))
+      :luoja (:id kirjaaja)})
+    (turvallisuuspoikkeamat/hae-turvallisuuspoikkeaman-id-ulkoisella-idlla
+     db {:ulkoinen_id (:id tunniste)
+         :luoja (:id kirjaaja)})))
 
 (defn luo-tai-paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti]} data]
@@ -175,12 +178,20 @@
   [db tp-id _ korjaavat]
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count korjaavat) " korjaavaa toimenpidettä.")
   (doseq [korjaava korjaavat]
-    (turvallisuuspoikkeamat/luo-korjaava-toimenpide<! db tp-id (:kuvaus korjaava)
-                                                      (aika-string->java-sql-date (:suoritettu korjaava))
-                                                      (str
-                                                        (get-in korjaava [:vastaavahenkilo :etunimi])
-                                                        " "
-                                                        (get-in korjaava [:vastaavahenkilo :sukunimi])))))
+    (log/info "luodaana korjaava, args: "  tp-id (:kuvaus korjaava)
+                                                           (aika-string->java-sql-date (:suoritettu korjaava))
+                                                           (str
+                                                            (get-in korjaava [:vastaavahenkilo :etunimi])
+                                                            " "
+                                                            (get-in korjaava [:vastaavahenkilo :sukunimi])))
+    (try (turvallisuuspoikkeamat/luo-korjaava-toimenpide<! db tp-id (:kuvaus korjaava)
+                                                           (aika-string->java-sql-date (:suoritettu korjaava))
+                                                           (str
+                                                            (get-in korjaava [:vastaavahenkilo :etunimi])
+                                                            " "
+                                                            (get-in korjaava [:vastaavahenkilo :sukunimi])))
+         (catch Throwable t
+           (log/info t " ONGELMa KORJAAVA TP")))))
 
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
