@@ -3,7 +3,6 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
              [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus
               tee-kirjausvastauksen-body]]
@@ -12,10 +11,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-turvallisuuspoikkeamalle]]
-
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
-
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clojure.string :as str]

@@ -30,30 +30,30 @@
     (fn [] ())))
 
 (defn tee-jms-lokiviesti [suunta sisalto otsikko]
-  {:suunta        suunta
+  {:suunta suunta
    :sisaltotyyppi "application/xml"
-   :siirtotyyppi  "JMS"
-   :sisalto       sisalto
-   :otsikko       (when otsikko (str otsikko))
-   :parametrit    nil})
+   :siirtotyyppi "JMS"
+   :sisalto sisalto
+   :otsikko (when otsikko (str otsikko))
+   :parametrit nil})
 
 (defn tee-rest-lokiviesti [suunta osoite sisaltotyyppi sisalto otsikko parametrit]
-  {:suunta        suunta
+  {:suunta suunta
    :sisaltotyyppi sisaltotyyppi
-   :siirtotyyppi  "HTTP"
-   :osoite        osoite
-   :sisalto       (str sisalto)
-   :otsikko       (when otsikko (str otsikko))
-   :parametrit    parametrit})
+   :siirtotyyppi "HTTP"
+   :osoite osoite
+   :sisalto (str sisalto)
+   :otsikko (when otsikko (str otsikko))
+   :parametrit parametrit})
 
 (defn tee-tiedoston-hakuviesti [osoite]
-  {:suunta        "sisään"
+  {:suunta "sisään"
    :sisaltotyyppi nil
-   :siirtotyyppi  nil
-   :osoite        osoite
-   :sisalto       nil
-   :otsikko       nil
-   :parametrit    nil})
+   :siirtotyyppi nil
+   :osoite osoite
+   :sisalto nil
+   :otsikko nil
+   :parametrit nil})
 
 (defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit]}]
   (integraatioloki/luo-integraatioviesti<! db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
@@ -154,5 +154,9 @@
           (kirjaa-lahteva-jms-kuittaus integraatioloki kuittaus tapahtuma-id onnistunut lisatietoja))
 
         :jms-viesti
-        (let [[tapahtuma-id viesti-id suunta sisalto]argumentit]
-          (kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id suunta sisalto))))))
+        (let [[tapahtuma-id viesti-id suunta sisalto] argumentit]
+          (kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id suunta sisalto))
+
+        :rest-viesti
+        (let [[tapahtuma-id suunta url sisaltotyyppi kutsudata otsikot parametrit] argumentit]
+          (kirjaa-rest-viesti integraatioloki tapahtuma-id suunta url sisaltotyyppi kutsudata otsikot parametrit))))))

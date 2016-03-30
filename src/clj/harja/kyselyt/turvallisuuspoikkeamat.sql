@@ -41,7 +41,7 @@ SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanamma
  WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
  ORDER BY t.tapahtunut DESC;
 
--- name: hae-turvallisuuspoikkeama
+-- name: hae-urakan-turvallisuuspoikkeama
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
 SELECT
   t.id,
@@ -121,6 +121,87 @@ FROM turvallisuuspoikkeama t
   LEFT JOIN liite koml ON kom.liite = koml.id
 
 WHERE t.id = :id AND t.urakka = :urakka;
+
+-- name: hae-turvallisuuspoikkeama
+-- Hakee yksittäisen urakan turvallisuuspoikkeaman
+SELECT
+  t.id,
+  t.urakka,
+  t.tapahtunut,
+  t.paattynyt,
+  t.kasitelty,
+  t.tyontekijanammatti,
+  t.tyontekijanammatti_muu as tyontekijanammattimuu,
+  t.tyotehtava,
+  t.kuvaus,
+  t.vammat,
+  t.sairauspoissaolopaivat,
+  t.sairaalavuorokaudet,
+  t.vahingoittuneet_ruumiinosat as vahingoittuneetruumiinosat,
+  t.sairauspoissaolo_jatkuu as sairauspoissaolojatkuu,
+  t.sijainti,
+  t.tr_numero,
+  t.tr_alkuetaisyys,
+  t.tr_loppuetaisyys,
+  t.tr_alkuosa,
+  t.tr_loppuosa,
+  t.vakavuusaste,
+  t.vahinkoluokittelu,
+  t.tyyppi,
+  t.vaylamuoto,
+  t.toteuttaja,
+  t.tilaaja,
+  t.laatija_etunimi as laatijaetunimi,
+  t.laatija_sukunimi as laatijasukunimi,
+  t.turvallisuuskoordinaattori_etunimi as turvallisuuskoordinaattorietunimi,
+  t.turvallisuuskoordinaattori_sukunimi as turvallisuuskoordinaattorisukunimi,
+  t.aiheutuneet_seuraukset as seuraukset,
+
+  k.id                   AS korjaavatoimenpide_id,
+  k.kuvaus               AS korjaavatoimenpide_kuvaus,
+  k.suoritettu           AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo      AS korjaavatoimenpide_vastaavahenkilo,
+
+  kom.id                 AS kommentti_id,
+  kom.tekija             AS kommentti_tekija,
+  kom.kommentti          AS kommentti_kommentti,
+  kom.luotu              AS kommentti_aika,
+  (SELECT CONCAT(etunimi, ' ', sukunimi)
+   FROM kayttaja
+   WHERE id = kom.luoja) AS kommentti_tekijanimi,
+
+  koml.id                AS kommentti_liite_id,
+  koml.tyyppi            AS kommentti_liite_tyyppi,
+  koml.koko              AS kommentti_liite_koko,
+  koml.nimi              AS kommentti_liite_nimi,
+  koml.liite_oid         AS kommentti_liite_oid,
+
+  l.id                   AS liite_id,
+  l.tyyppi               AS liite_tyyppi,
+  l.koko                 AS liite_koko,
+  l.nimi                 AS liite_nimi,
+  l.liite_oid            AS liite_oid,
+  l.pikkukuva            AS liite_pikkukuva
+
+FROM turvallisuuspoikkeama t
+  LEFT JOIN korjaavatoimenpide k
+    ON t.id = k.turvallisuuspoikkeama
+       AND k.poistettu IS NOT TRUE
+
+  LEFT JOIN turvallisuuspoikkeama_liite tl
+    ON t.id = tl.turvallisuuspoikkeama
+  LEFT JOIN liite l
+    ON l.id = tl.liite
+
+  LEFT JOIN turvallisuuspoikkeama_kommentti tpk
+    ON t.id = tpk.turvallisuuspoikkeama
+  LEFT JOIN kommentti kom
+    ON tpk.kommentti = kom.id
+       AND kom.poistettu IS NOT TRUE
+
+  LEFT JOIN liite koml ON kom.liite = koml.id
+
+WHERE t.id = :id;
 
 -- name: onko-olemassa-ulkoisella-idlla
 -- Tarkistaa löytyykö turvallisuuspoikkeamaa ulkoisella id:llä
@@ -262,3 +343,39 @@ VALUES
   :turvallisuuskoordinaattori_etunimi, :turvallisuuskoordinaattori_sukunimi,
   :ilmoittaja_etunimi, :ilmoittaja_sukunimi,
   :ulkoinen_id);
+
+--name: lokita-lahetys<!
+UPDATE turvallisuuspoikkeama
+SET lahetetty = now(), lahetys_onnistunut = :onnistunut
+WHERE id = :id;
+
+--name: hae-turvallisuuspoikkeaman-korjaavat-toimenpiteet
+SELECT
+  id,
+  kuvaus,
+  suoritettu,
+  vastaavahenkilo
+FROM korjaavatoimenpide
+WHERE turvallisuuspoikkeama = :id AND poistettu IS NOT TRUE;
+
+--name: hae-turvallisuuspoikkeaman-kommentit
+SELECT
+  k.id,
+  k.tekija,
+  k.kommentti
+FROM kommentti k
+  INNER JOIN turvallisuuspoikkeama_kommentti tpk ON tpk.kommentti = k.id
+WHERE tpk.turvallisuuspoikkeama = :id;
+
+--name: hae-turvallisuuspoikkeaman-liitteet
+SELECT
+  l.id,
+  l.tyyppi,
+  l.koko,
+  l.nimi,
+  l.liite_oid,
+  l.pikkukuva
+FROM liite l
+  INNER JOIN turvallisuuspoikkeama_liite tpl
+    ON l.id = tpl.liite
+WHERE tpl.turvallisuuspoikkeama = :id;
