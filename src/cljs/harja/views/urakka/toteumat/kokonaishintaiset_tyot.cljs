@@ -163,6 +163,7 @@
                 :sijainti            (r/wrap (:reitti @muokattu)
                                              #(swap! muokattu assoc :reitti %))}
                {:tyyppi :spinner
+                :nimi :spinner
                 :viesti "Haetaan reittiä"}))
             {:otsikko "Suorittaja"
              :uusi-rivi? true
