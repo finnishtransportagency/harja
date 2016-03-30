@@ -208,13 +208,7 @@ SET urakka               = :urakka,
   vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
   toteuttaja             = :toteuttaja,
   tilaaja                = :tilaaja,
-  muokattu               = NOW()
-WHERE ulkoinen_id = :id AND
-      luoja = :luoja;
-
---name: paivita-turvallisuuspoikkeaman-muut-tiedot-ulkoisella-idlla<!
-UPDATE turvallisuuspoikkeama
-SET
+  muokattu               = NOW(),
   sijainti         = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY,
   tr_numero        = :numero,
   tr_alkuetaisyys  = :aet,
@@ -231,7 +225,7 @@ SET
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
   laatija_etunimi = :laatija_etunimi,
   laatija_sukunimi = :laatija_sukunimi
-WHERE ulkoinen_id = :id AND
+WHERE ulkoinen_id = :ulkoinen_id AND
       luoja = :luoja;
 
 --name: aseta-ulkoinen-id<!
