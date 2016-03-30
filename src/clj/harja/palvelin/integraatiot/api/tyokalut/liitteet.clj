@@ -8,6 +8,9 @@
 (defn dekoodaa-base64 [data]
   (.decode (Base64/getDecoder) data))
 
+(defn enkoodaa-base64 [data]
+  (.encode (Base64/getEncoder) data))
+
 (defn- luo-liitteet [db liitteiden-hallinta urakan-id kirjaaja liitteet liite-luotu-fn]
   (doseq [liitteen-data liitteet]
     (when (:sisalto (:liite liitteen-data))

@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.turvallisuuspoikkeamat
+(ns hae-urakan-turvallisuuspoikkeamaharja.tiedot.urakka.turvallisuuspoikkeamat
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
