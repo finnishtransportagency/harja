@@ -12,7 +12,10 @@ if [ -z "$output" ]; then
   echo "$tulos" | tail -2
 fi
 
-if [ -n "$output" ]; then
+if [ -n "$output" ];
+then
   terminal-notifier -title "Harjan yksikkötesteissä virheitä!" -message "$output" -open "file:///`pwd`/test2junit/html/index.html"
   exit 1
+else
+  terminal-notifier -title "Harjan yksikkötestit ajettu onnistuneesti" -message "Kaikki testit ajettu onnistuneesti." -open "file:///`pwd`/test2junit/html/index.html"
 fi
