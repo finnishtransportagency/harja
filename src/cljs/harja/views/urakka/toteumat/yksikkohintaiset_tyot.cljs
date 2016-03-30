@@ -52,34 +52,53 @@
   (go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id toteuma-id))]
          (log "toteuma: " (pr-str toteuma))
          (if-not (k/virhe? toteuma)
-           (let [lomake-tiedot {:toteuma-id           (:id toteuma)
-                                :tehtavat             (zipmap (iterate inc 1)
-                                                              (mapv (fn [tehtava]
-                                                                      (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
-                                                                                                                   (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                                 @u/urakan-toimenpiteet-ja-tehtavat)) 3)
-                                                                            emo (get (first (filter (fn [tehtavat]
-                                                                                                      (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                    @u/urakan-toimenpiteet-ja-tehtavat)) 2)
-                                                                            tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
-                                                                        (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
-                                                                        (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
-                                                                        {:tehtava             {:id (:tpk-id tehtava)}
-                                                                         :maara               (:maara tehtava)
-                                                                         :tehtava-id          (:tehtava-id tehtava)
-                                                                         :toimenpideinstanssi (:tpi_id tpi)
-                                                                         :yksikko             (:yksikko tehtava-urakassa)}))
-                                                                    (:tehtavat toteuma)))
-                                :alkanut              (:alkanut toteuma)
-                                :reitti               (:reitti toteuma)
-                                :tr                   (:tr toteuma)
-                                :paattynyt            (:paattynyt toteuma)
-                                :lisatieto            (:lisatieto toteuma)
-                                :suorittajan-nimi     (:nimi (:suorittaja toteuma))
-                                :suorittajan-ytunnus  (:ytunnus (:suorittaja toteuma))
-                                :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
-                                :luoja                (:kayttajanimi toteuma)
-                                :organisaatio         (:organisaatio toteuma)}]
+           (let [lomake-tiedot
+                 {:toteuma-id           (:id toteuma)
+                  :tehtavat
+                                        (zipmap
+                                          (iterate inc 1)
+                                          (mapv
+                                            (fn [tehtava]
+                                              (let [tehtava-urakassa
+                                                    (get
+                                                      (first
+                                                        (filter
+                                                          (fn [tehtavat]
+                                                            (= (:id (get tehtavat 3))
+                                                               (:tpk-id tehtava)))
+                                                          @u/urakan-toimenpiteet-ja-tehtavat)) 3)
+                                                    emo
+                                                    (get (first
+                                                           (filter
+                                                             (fn [tehtavat]
+                                                               (= (:id (get tehtavat 3))
+                                                                  (:tpk-id tehtava)))
+                                                             @u/urakan-toimenpiteet-ja-tehtavat)) 2)
+                                                    tpi
+                                                    (first
+                                                      (filter
+                                                        (fn [tpi]
+                                                          (= (:t3_koodi tpi)
+                                                             (:koodi emo)))
+                                                        @u/urakan-toimenpideinstanssit))]
+                                                (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
+                                                (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
+                                                {:tehtava             {:id (:tpk-id tehtava)}
+                                                 :maara               (:maara tehtava)
+                                                 :tehtava-id          (:tehtava-id tehtava)
+                                                 :toimenpideinstanssi (:tpi_id tpi)
+                                                 :yksikko             (:yksikko tehtava-urakassa)}))
+                                            (:tehtavat toteuma)))
+                  :alkanut              (:alkanut toteuma)
+                  :reitti               (:reitti toteuma)
+                  :tr                   (:tr toteuma)
+                  :paattynyt            (:paattynyt toteuma)
+                  :lisatieto            (:lisatieto toteuma)
+                  :suorittajan-nimi     (:nimi (:suorittaja toteuma))
+                  :suorittajan-ytunnus  (:ytunnus (:suorittaja toteuma))
+                  :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
+                  :luoja                (:kayttajanimi toteuma)
+                  :organisaatio         (:organisaatio toteuma)}]
              (nav/aseta-valittu-valilehti! :urakat :toteumat)
              (nav/aseta-valittu-valilehti! :toteumat :yksikkohintaiset-tyot)
              (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma lomake-tiedot))))))
