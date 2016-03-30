@@ -110,7 +110,16 @@
   (let [muokattu (reaction @tiedot/valittu-kokonaishintainen-toteuma)
         jarjestelman-lisaama-toteuma? (true? (:jarjestelma @muokattu))
         nelostason-tehtavat (map #(nth % 3) @u/urakan-toimenpiteet-ja-tehtavat)
-        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
+        toimenpideinstanssit u/urakan-toimenpideinstanssit
+        ;; Tehtävät pitää kasata tässä erikseen, jotta kun lomakkeessa vaihtaa toimenpideinstanssia,
+        ;; myös tehtävät haetaan uudelleen..
+        tehtavat (reaction (let [valittu-tpi-id (get-in @muokattu [:tehtava :toimenpideinstanssi :id])
+                                 tpi-tiedot (some #(when (= valittu-tpi-id (:tpi_id %)) %) @u/urakan-toimenpideinstanssit)
+                                 kaikki-tehtavat @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
+                             (into [] (keep (fn [[_ _ t3 t4]]
+                                              (when (= (:koodi t3) (:t3_koodi tpi-tiedot))
+                                                t4))
+                                            kaikki-tehtavat))))]
     (fnc []
          [:div
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
@@ -141,7 +150,7 @@
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
              :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
              :varoita     [[:urakan-aikana-ja-hoitokaudella]]}
-            (if (:jarjestelma @muokattu)
+           (if (:jarjestelma @muokattu)
               {:tyyppi :string
                :otsikko "Pituus"
                :fmt fmt/pituus-opt
@@ -177,9 +186,9 @@
                :nimi          :toimenpide
                :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi        :valinta
-               :valinnat      toimenpideinstanssit
+               :valinnat      @toimenpideinstanssit
                :fmt           #(:tpi_nimi
-                                (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
+                                (urakan-toimenpiteet/toimenpideinstanssi-idlla % @toimenpideinstanssit))
                :valinta-arvo  :tpi_id
                :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
                :hae (comp :id :toimenpideinstanssi :tehtava)
@@ -193,7 +202,7 @@
                :nimi          :tehtava
                :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi        :valinta
-               :valinnat      @u/urakan-tpin-kokonaishintaiset-tehtavat
+               :valinnat      @tehtavat
                :valinta-arvo  :id
                :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
                :hae           (comp :id :toimenpidekoodi :tehtava)
