@@ -62,7 +62,8 @@
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when nakymassa?
-                (hae-toteumatehtavien-paivakohtaiset-summat (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
+                (hae-toteumatehtavien-paivakohtaiset-summat
+                  (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
 
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
