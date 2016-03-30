@@ -152,9 +152,7 @@ INSERT INTO korjaavatoimenpide
 VALUES
   (:tp, :kuvaus, :suoritettu, :vastaava, FALSE);
 
---name: paivita-turvallisuuspoikkeama<!
--- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
--- Clojuressa voi olla max 20.
+--name: paivita-turvallisuuspoikkeama!
 UPDATE turvallisuuspoikkeama
 SET
   urakka                 = :urakka,
@@ -174,28 +172,19 @@ SET
   vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
   vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
   toteuttaja             = :toteuttaja,
-  tilaaja                = :tilaaja
-WHERE id = :id;
-
---name: paivita-turvallisuuspoikkeaman-muut-tiedot!
--- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
--- Clojuressa voi olla max 20. Ei aseta muokkaajaa ja muokattua, koska:
--- * kyselyä kutsutaan heti paivita1:sen jälkeen, joka jo asettaa ne
--- * kyselyä kutsutaan heti luonnin jälkeen
-UPDATE turvallisuuspoikkeama
-SET
-  sijainti                            = :sijainti,
-  tr_numero                           = :numero,
-  tr_alkuetaisyys                     = :aet,
-  tr_loppuetaisyys                    = :let,
-  tr_alkuosa                          = :aos,
-  tr_loppuosa                         = :los,
-  vahingoittuneet_ruumiinosat         = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairauspoissaolo_jatkuu             = :sairauspoissaolo_jatkuu,
-  aiheutuneet_seuraukset              = :aiheutuneet_seuraukset,
-  vaylamuoto                          = :vaylamuoto :: vaylamuoto,
-  laatija_etunimi                     = :laatija_etunimi,
-  laatija_sukunimi                    = :laatija_sukunimi,
+  tilaaja                = :tilaaja,
+  sijainti               = :sijainti,
+  tr_numero              = :numero,
+  tr_alkuetaisyys        = :alkuetaisyys,
+  tr_loppuetaisyys       = :loppuetaisyys,
+  tr_alkuosa             = :alkuosa,
+  tr_loppuosa            = :loppuosa,
+  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
+  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
+  vaylamuoto                  = :vaylamuoto :: vaylamuoto,
+  laatija_etunimi             = :laatija_etunimi,
+  laatija_sukunimi            = :laatija_sukunimi,
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi
 WHERE id = :id;
@@ -251,15 +240,22 @@ SET ulkoinen_id = :ulk
 WHERE id = :id;
 
 -- name: luo-turvallisuuspoikkeama<!
--- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee vain positional parametreja, joita
--- Clojuressa voi olla max 20.
 INSERT INTO turvallisuuspoikkeama
 (urakka, tapahtunut, paattynyt, kasitelty, tyontekijanammatti, tyontekijanammatti_muu,
  tyotehtava, kuvaus, vammat, sairauspoissaolopaivat, sairaalavuorokaudet, tyyppi, luoja, luotu,
- vahinkoluokittelu, vakavuusaste, toteuttaja, tilaaja)
+ vahinkoluokittelu, vakavuusaste, toteuttaja, tilaaja, sijainti,
+ tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+ vahingoittuneet_ruumiinosat, sairauspoissaolo_jatkuu, aiheutuneet_seuraukset, vaylamuoto,
+ laatija_etunimi, laatija_sukunimi,
+ turvallisuuskoordinaattori_etunimi, turvallisuuskoordinaattori_sukunimi)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu,
-  :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissaolot,
+  :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissa,
   :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(),
   :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-  :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :toteuttaja, :tilaaja);
+  :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :toteuttaja, :tilaaja,
+  :sijainti, :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys,
+  :vahingoittuneet_ruumiinosat ::turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
+  :sairauspoissaolo_jatkuu, :aiheutuneet_seuraukset, :vaylamuoto ::vaylamuoto,
+  :laatija_etunimi, :laatija_sukunimi,
+  :turvallisuuskoordinaattori_etunimi, :turvallisuuskoordinaattori_sukunimi);
