@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Ajetaan unit-testit"
-#tulos="$(lein test2junit 2> /dev/null)"
+tulos="$(lein test2junit 2> /dev/null)"
 
 output=`find test2junit -name "*.xml" | xargs xmllint --xpath "string(/testsuite[not(@errors = '0') or not(@failures = '0')]/@name)"`
 
