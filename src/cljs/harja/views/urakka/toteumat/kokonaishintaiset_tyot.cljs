@@ -117,7 +117,7 @@
 
           [lomake/lomake
            {:otsikko  (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
-            :muokkaa! #(do (log "Toteuma: " (pr-str %)) (reset! muokattu %))
+            :muokkaa! #(do (reset! muokattu %))
             :footer   [napit/palvelinkutsu-nappi
                        "Tallenna toteuma"
                        #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
