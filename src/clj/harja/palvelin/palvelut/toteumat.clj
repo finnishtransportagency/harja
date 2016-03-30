@@ -553,11 +553,12 @@
 
 (defn hae-toteuman-reitti-ja-tr-osoite [db user {:keys [id urakka-id]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
-  (into []
-        (comp
-          (harja.geo/muunna-pg-tulokset :reitti)
-          (map konv/alaviiva->rakenne))
-        (q/hae-toteuman-reitti-ja-tr-osoite db id)))
+  (first
+    (into []
+          (comp
+            (harja.geo/muunna-pg-tulokset :reitti)
+            (map konv/alaviiva->rakenne))
+          (q/hae-toteuman-reitti-ja-tr-osoite db id))))
 
 (defrecord Toteumat []
   component/Lifecycle

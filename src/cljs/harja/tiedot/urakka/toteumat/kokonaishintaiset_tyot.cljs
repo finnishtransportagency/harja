@@ -86,8 +86,8 @@
   [toteuma]
   (when (or (empty? (:reitti toteuma)) (empty? (:tr toteuma)))
     (swap! valittu-kokonaishintainen-toteuma assoc :reitti :hakee)
-    (go (let [tulos (k/post! :hae-toteuman-reitti-ja-tr-osoite {:id (:id toteuma)
-                                                                :urakka-id (:id @nav/valittu-urakka)})]
+    (go (let [tulos (<! (k/post! :hae-toteuman-reitti-ja-tr-osoite {:id        (:id toteuma)
+                                                                 :urakka-id (:id @nav/valittu-urakka)}))]
           ;; Eihän olla vaihdettu valittua tässä välissä?
           (when (= (:id @valittu-kokonaishintainen-toteuma) (:id toteuma))
             (swap! valittu-kokonaishintainen-toteuma assoc
