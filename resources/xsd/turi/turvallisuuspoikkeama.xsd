@@ -9,6 +9,7 @@
     <xs:element name="turvallisuuspoikkeama">
         <xs:complexType>
             <xs:sequence>
+                <xs:element type="xs:int" name="tunniste" nillable="false" minOccurs="1" maxOccurs="1"/>
                 <xs:element type="vaylamuoto" name="vaylamuoto" nillable="false" minOccurs="1" maxOccurs="1"/>
                 <xs:element type="xs:dateTime" name="tapahtunut" nillable="false" minOccurs="1" maxOccurs="1"/>
                 <xs:element type="xs:dateTime" name="paattynyt" nillable="false" minOccurs="1" maxOccurs="1"/>

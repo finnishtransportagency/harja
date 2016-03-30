@@ -74,6 +74,7 @@
 (defn muodosta-viesti [data]
   [:turi:turvallisuuspoikkeama
    {:xmlns:turi "http://www.liikennevirasto.fi/xsd/turi"}
+   [:turi:tunniste (:id data)]
    [:turi:vaylamuoto (:vaylamuoto data)]
    [:turi:tapahtunut (when (:tapahtunut data) (xml/formatoi-aikaleima (:tapahtunut data)))]
    [:turi:paattynyt (when (:paattynyt data) (xml/formatoi-aikaleima (:paattynyt data)))]

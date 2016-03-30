@@ -1,4 +1,5 @@
 <turi:turvallisuuspoikkeama xmlns:turi="http://www.liikennevirasto.fi/xsd/turi">
+    <turi:tunniste>123456789</turi:tunniste>
     <turi:vaylamuoto>tie</turi:vaylamuoto>
     <turi:tapahtunut>2015-10-26T09:36:28</turi:tapahtunut>
     <turi:paattynyt>2015-02-14T20:44:14</turi:paattynyt>
