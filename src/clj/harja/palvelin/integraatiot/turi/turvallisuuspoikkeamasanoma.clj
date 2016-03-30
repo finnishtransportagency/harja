@@ -7,11 +7,12 @@
 (def +xsd-polku+ "xsd/turi/")
 
 (defn rakenna-lista [lista-avain elementti-avain data]
-  (let [lista (vec (.getArray data))]
-    (when (not-empty lista)
-      (apply conj []
-             lista-avain
-             (mapv #(vector elementti-avain %) lista)))))
+  (when data
+    (let [lista (vec (.getArray data))]
+      (when (not-empty lista)
+        (apply conj []
+               lista-avain
+               (mapv #(vector elementti-avain %) lista))))))
 
 (defn rakenna-luokittelulista [lista-elementti elementti tyypit]
   (let [tyypit (vec (.getArray tyypit))]
@@ -68,7 +69,7 @@
    (rakenna-lista :turi:vahingoittuneet-ruumiinosat :turi:ruumiinosa (:vahingoittuneetruumiinosat data))
    [:turi:sairauspoissaolopaivat (:sairauspoissaolopaivat data)]
    [:turi:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]
-   [:turi:jatkuuko-sairaspoissaolo (:sairauspoissaolojatkuu data)]])
+   [:turi:jatkuuko-sairaspoissaolo (true? (:sairauspoissaolojatkuu data))]])
 
 (defn muodosta-viesti [data]
   [:turi:turvallisuuspoikkeama
