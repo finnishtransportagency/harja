@@ -33,15 +33,13 @@ echo " ---- "
 # Me halutaan ainoastaan ne pari riviä, joilla lukee montako testiä ajettiin..
 if [ -z "$terminaloutput" ];
 then
-  echo "$tulos" | tail -16 | head -n 2;
+  echo "$tulos" | tail -15 | head -n 2; # Montako testiä / Montako virhettä
 else
   echo "$terminaloutput"
   echo ""
   echo " ---- "
-  echo "$tulos" | tail -16 | head -n 2
+  echo "$tulos" | tail -16 | head -n 2 # Montako testiä / Montako virhettä
 fi
-
-echo " ---- "
 
 if [ -n "$notificationoutput" ];
 then
@@ -49,8 +47,10 @@ then
 
   if [ -z "$AVAARAPORTTI" ];
   then
+    echo " ---- "
     echo "Voit avata raportin kommennolla: sh avaaunit.sh";
   else
+    echo " ---- "
     echo "Raportti avattu selainikkunaan."
     sh avaaunit.sh
   fi
