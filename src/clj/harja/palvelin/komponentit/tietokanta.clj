@@ -1,6 +1,5 @@
 (ns harja.palvelin.komponentit.tietokanta
-  (:require [com.stuartsierra.component :as component]
-            [jeesql.array])
+  (:require [com.stuartsierra.component :as component])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
            (java.util Properties)))
 
