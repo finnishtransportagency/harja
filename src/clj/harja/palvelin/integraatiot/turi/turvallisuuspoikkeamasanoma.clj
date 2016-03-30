@@ -47,7 +47,7 @@
                      :turi:liite
                      [:turi:tiedostonimi (:nimi %)]
                      [:turi:tyyppi (:tyyppi %)]
-                     ;; todo Lisää kuvaus, esim. [:turi:kuvaus "Kuva tilanteesta"]
+                     [:turi:kuvaus (:kuvaus %)]
                      [:turi:sisalto (String. (liitteet/enkoodaa-base64 (:data (:sisalto %))))])
                    liitteet)))))
 
@@ -104,7 +104,6 @@
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
-    (println xml)
     (if (xml/validoi +xsd-polku+ "turvallisuuspoikkeama.xsd" xml)
       xml
       (do
