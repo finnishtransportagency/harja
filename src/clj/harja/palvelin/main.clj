@@ -101,7 +101,7 @@
 
     (component/system-map
       :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
-      :db-replica (tietokanta/luo-tietokanta tietokanta-replica)
+      :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
                               (tapahtumat/luo-tapahtumat)
                               [:db])
