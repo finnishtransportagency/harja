@@ -1,11 +1,12 @@
 (ns harja.kyselyt.tarkastukset
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo])
   (:import (org.postgis PGgeometry)))
 
-(defqueries "harja/kyselyt/tarkastukset.sql")
+(defqueries "harja/kyselyt/tarkastukset.sql"
+  {:positional? true})
 
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."

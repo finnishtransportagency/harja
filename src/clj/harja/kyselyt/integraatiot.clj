@@ -1,9 +1,10 @@
 (ns harja.kyselyt.integraatiot
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [slingshot.slingshot :refer [throw+]]
             [taoensso.truss :refer [have]]))
 
-(defqueries "harja/kyselyt/integraatiot.sql")
+(defqueries "harja/kyselyt/integraatiot.sql"
+  {:positional? true})
 
 (defn integraatiotapahtuman-tila
   "Hakee integraatiotapahtuman tilan: alkanut, päättynyt ja onnistunut."
@@ -28,7 +29,7 @@
   (:onnistunut (integraatiotapahtuman-tila db integraatio ulkoinen-id)))
 
 (defn integraation-id
-  "Palauttaa integraation id:n annetulle järjestelmälle ja nimelle. 
+  "Palauttaa integraation id:n annetulle järjestelmälle ja nimelle.
   Jos integraatiota ei ole, heitetään poikkeus :tuntematon-integraatio."
   [db jarjestelma nimi]
   (if-let [id (first (hae-integraation-id db jarjestelma nimi))]

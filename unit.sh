@@ -25,7 +25,6 @@ done;)"
 echo "Step: 2/2.."
 
 notificationoutput=`find test2junit -name "*.xml" | xargs xmllint --xpath "string(/testsuite[not(@errors = '0') or not(@failures = '0')]/@name)"`
-if [ -n "$notificationoutput" ];
 
 echo "Done!"
 echo " ---- "
@@ -34,23 +33,24 @@ echo " ---- "
 # Me halutaan ainoastaan ne pari riviä, joilla lukee montako testiä ajettiin..
 if [ -z "$terminaloutput" ];
 then
-  echo "$tulos" | tail -16 | head -n 2;
+  echo "$tulos" | tail -15 | head -n 2; # Montako testiä / Montako virhettä
 else
   echo "$terminaloutput"
   echo ""
   echo " ---- "
-  echo "$tulos" | tail -16 | head -n 2
+  echo "$tulos" | tail -16 | head -n 2 # Montako testiä / Montako virhettä
 fi
 
-echo " ---- "
-
+if [ -n "$notificationoutput" ];
 then
   terminal-notifier -title "Harjan yksikkötesteissä virheitä!" -message "$notificationoutput" -open "file:///`pwd`/test2junit/html/index.html"
 
   if [ -z "$AVAARAPORTTI" ];
   then
+    echo " ---- "
     echo "Voit avata raportin kommennolla: sh avaaunit.sh";
   else
+    echo " ---- "
     echo "Raportti avattu selainikkunaan."
     sh avaaunit.sh
   fi

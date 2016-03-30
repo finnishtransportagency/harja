@@ -1,8 +1,9 @@
 (ns harja.kyselyt.raportit
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]))
 
-(defqueries "harja/kyselyt/raportit.sql")
+(defqueries "harja/kyselyt/raportit.sql"
+  {:positional? true})
 
 
 (defn raportit
@@ -31,4 +32,3 @@
                (comp (map konv/alaviiva->rakenne))
                (hae-raportit db))
          {:parametri :parametrit})))
-

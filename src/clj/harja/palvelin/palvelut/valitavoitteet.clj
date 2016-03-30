@@ -33,7 +33,10 @@
 
     ;; Luodaan uudet (FIXME: lisää kentät kun speksi valmis)
     (doseq [{:keys [takaraja nimi]} (filter #(< (:id %) 0) valitavoitteet)]
-      (q/lisaa-valitavoite<! c urakka-id (konv/sql-date takaraja) nimi (:id user)))
+      (q/lisaa-valitavoite<! c {:urakka urakka-id
+                                :takaraja (konv/sql-date takaraja)
+                                :nimi nimi
+                                :luoja (:id user)}))
 
     ;; Päivitetään olemassaolevat (FIXME: lisää kentät kun speksi valmis)
     (doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]

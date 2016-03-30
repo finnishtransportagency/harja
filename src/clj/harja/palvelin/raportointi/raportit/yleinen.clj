@@ -1,5 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.yleinen
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [clj-time.local :as l]
