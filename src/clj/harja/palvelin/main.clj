@@ -100,7 +100,7 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
-      :db (tietokanta/luo-tietokanta tietokanta)
+      :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta tietokanta-replica)
       :klusterin-tapahtumat (component/using
                               (tapahtumat/luo-tapahtumat)

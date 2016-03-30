@@ -1,21 +1,26 @@
 (ns harja.palvelin.komponentit.tietokanta
-  (:require [com.stuartsierra.component :as component])
+  (:require [com.stuartsierra.component :as component]
+            [jeesql.autoreload :as autoreload])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource DataSources)
            (java.util Properties)))
 
 ;; Tietokanta on pelkkä clojure.java.jdbc kirjaston mukainen db-spec, joka sisältää pelkään yhteyspoolin
-(defrecord Tietokanta [datasource]
+(defrecord Tietokanta [datasource kehitysmoodi]
   component/Lifecycle
   (start [this]
+    (when kehitysmoodi
+      (autoreload/start-autoreload))
     this)
   (stop [this]
     (DataSources/destroy  datasource)
+    (when kehitysmoodi
+      (autoreload/stop-autoreload))
     this))
 
 
 (defn luo-tietokanta
   "Luodaan Harja järjestelmälle tietokantakomponentti käyttäen yhteyspoolia PostgreSQL tietokantaan."
-  [{:keys [palvelin portti tietokanta kayttaja salasana yhteyspoolin-koko]}]
+  [{:keys [palvelin portti tietokanta kayttaja salasana yhteyspoolin-koko]} kehitysmoodi]
   ;; c3p0 voi käyttää loggaukseen esimerkiksi slf4j:sta, mutta fallbackina toimii aina stderr.
   ;; Tämä on ongelmallista, koska oletuksena c3p0 tuntuu loggaavan (lähes) kaiken, emmekä me halua
   ;; että stderriin tungetaan INFO-tason viestejä. Siksi tässä asetetaan ensiksi loggausmekanismi
@@ -35,4 +40,4 @@
                   (.setMaxIdleTimeExcessConnections (* 30 60))
                   ;; yhteyden pisin inaktiivisuusaika 3 tuntia
                   (.setMaxIdleTime (* 3 60 60)))
-                ))
+                kehitysmoodi))
