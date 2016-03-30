@@ -69,6 +69,8 @@
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
+;; Piirretään kartalle reitit, jotka haetaan kun summariviä klikataan JA
+;; valitun toteuman reitti.
 (def kokonaishintainen-toteuma-kartalla
          (reaction<!
            [urakka-id (:id @nav/valittu-urakka)
@@ -93,12 +95,12 @@
                                             [{:id (get-in valittu-toteuma [:tehtava :toimenpidekoodi :id])
                                               :toimenpide (get-in valittu-toteuma [:tehtava :toimenpidekoodi :nimi])
                                               :maara (get-in valittu-toteuma [:tehtava :maara])}])
+                       ;; Haetuissa reiteissä on klikatun summarivin reitit. Liitetään mukaan
+                       ;; Valitun toteuman reitti jos se ei jo ole tässä joukossa.
                        yhdistetyt-reitit (if-not
                                            (some #(= (:id valittu-toteuma) (:toteumaid %)) haun-tulos)
                                            (conj haun-tulos valittu-tehtavilla)
                                            haun-tulos)]
-                   ;; Haetuissa reiteissä on klikatun summarivin reitit. Liitetään mukaan
-                   ;; Valitun toteuman reitti jos se ei jo ole tässä joukossa.
                    (reset! haetut-reitit yhdistetyt-reitit))
                  valittu-toteuma [[:toteumaid] [:id]]
                  (map #(assoc % :tyyppi-kartalla :toteuma)))))))
