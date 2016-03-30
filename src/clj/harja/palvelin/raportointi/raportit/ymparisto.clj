@@ -143,7 +143,7 @@
                     [(:nimi materiaali)]
 
                     ;; Kuukausittaiset määrät
-                    (map #(or (kk-arvot %) 0) kuukaudet)
+                    (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
 
                     ;; Yhteensä, toteumaprosentti ja maksimimäärä
                     [yhteensa
@@ -162,7 +162,7 @@
                             [(str " - "
                                   (talvihoitoluokka luokka))]
 
-                            (map #(or (kk-arvot %) 0) kuukaudet)
+                            (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
 
                             [(reduce + (remove nil? (vals kk-arvot))) "-" "-"]))))
                  (sort-by first (group-by :luokka luokitellut))))))

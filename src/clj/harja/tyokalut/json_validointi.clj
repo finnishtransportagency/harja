@@ -35,6 +35,11 @@
            :virheet [{:koodi  virheet/+invalidi-json-koodi+
                       :viesti (str "JSON ei ole validia: " (formatoi-virhe "" virheet))}]}))
 
+(defn- lue-skeemaresurssi* [polku]
+  (cheshire/parse-string (slurp (io/resource polku))))
+
+(def lue-skeemaresurssi (memoize lue-skeemaresurssi*))
+
 (defn validoi
   "Validoi annetun JSON sisällön vasten annettua JSON-skeemaa. JSON-skeeman tulee olla tiedosto annettussa
   skeema-polussa. JSON on String, joka on sisältö. Jos annettu JSON ei ole validia, heitetään JSONException."
@@ -46,16 +51,16 @@
       (kasittele-validointivirheet (.getMessage e))))
   (log/debug "Validoidaan JSON dataa käytäen skeemaa:" skeemaresurssin-polku)
   (let [virheet (validate
-                  (cheshire/parse-string (slurp (io/resource skeemaresurssin-polku)))
-                  (cheshire/parse-string json)
-                  {:draft3-required true
-                   :ref-resolver    (fn [uri]
-                                      (log/debug "Ladataan linkattu schema: " uri)
-                                      (let [resurssipolku (.substring uri (count "file:resources/"))]
-                                        (log/debug "Resurssipolku: " resurssipolku)
-                                        (let [ladattu (cheshire/parse-string (slurp (io/resource resurssipolku)))]
-                                          (log/debug "Ladattiin: " ladattu)
-                                          ladattu)))})]
+                 (lue-skeemaresurssi skeemaresurssin-polku)
+                 (cheshire/parse-string json)
+                 {:draft3-required true
+                  :ref-resolver (fn [uri]
+                                  (log/debug "Ladataan linkattu schema: " uri)
+                                  (let [resurssipolku (.substring uri (count "file:resources/"))]
+                                    (log/debug "Resurssipolku: " resurssipolku)
+                                    (let [ladattu (lue-skeemaresurssi resurssipolku)]
+                                      (log/debug "Ladattiin: " ladattu)
+                                      ladattu)))})]
     (if-not virheet
       (log/debug "JSON data on validia")
       (kasittele-validointivirheet virheet))))

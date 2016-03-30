@@ -225,21 +225,22 @@
 (defn- hae-toteumien-reitit
   [db user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
   (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-    (konv/sarakkeet-vektoriin
-      (into []
-            (comp
-              (harja.geo/muunna-pg-tulokset :reitti)
-              (map konv/alaviiva->rakenne)
-              (map #(assoc % :tyyppi :toteuma)))
-            (q/hae-toteumat db toleranssi
-                            (konv/sql-date alku)
-                            (konv/sql-date loppu) toimenpidekoodit
-                            urakat
-                            (:xmin alue) (:ymin alue)
-                            (:xmax alue) (:ymax alue)))
-      {:tehtava :tehtavat
-       :materiaali :materiaalit
-       :reittipiste :reittipisteet})))
+    (into []
+          (comp
+           (harja.geo/muunna-pg-tulokset :reitti)
+           (map konv/alaviiva->rakenne)
+           (map #(assoc % :tyyppi :toteuma))
+           (map #(assoc % :tehtavat [(:tehtava %)])))
+          (q/hae-toteumat db
+                          {:toleranssi toleranssi
+                           :alku (konv/sql-date alku)
+                           :loppu (konv/sql-date loppu)
+                           :toimenpidekoodit toimenpidekoodit
+                           :urakat urakat
+                           :xmin (:xmin alue)
+                           :ymin (:ymin alue)
+                           :xmax (:xmax alue)
+                           :ymax (:ymax alue)}))))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
@@ -341,9 +342,9 @@
 (defn- hae-karttakuvan-tiedot [db user parametrit]
   (let [tiedot (karttakuvan-suodattimet parametrit)]
     (kartalla-esitettavaan-muotoon
-      (map #(assoc % :tyyppi-kartalla :toteuma)
-           (:toteumat-kuva (hae-tilannekuvaan db user tiedot #{:toteumat-kuva})))
-      nil nil)))
+     (map #(assoc % :tyyppi-kartalla :toteuma)
+          (:toteumat-kuva (hae-tilannekuvaan db user tiedot #{:toteumat-kuva})))
+     nil nil)))
 
 (defrecord Tilannekuva []
   component/Lifecycle
