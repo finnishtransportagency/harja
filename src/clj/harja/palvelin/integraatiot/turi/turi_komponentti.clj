@@ -19,7 +19,7 @@
 
 (defn hae-liitteet [liitteiden-hallinta db id]
   (let [liitteet (q/hae-turvallisuuspoikkeaman-liitteet db id)]
-    (mapv (fn [liite] (assoc :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite)) liite)) liitteet)))
+    (mapv (fn [liite] (assoc liite :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite)))) liitteet)))
 
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
   (let [turvallisuuspoikkeama (first (q/hae-turvallisuuspoikkeama db id))]

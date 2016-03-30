@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]))
 
 (def +xsd-polku+ "xsd/turi/")
 
@@ -37,26 +38,17 @@
              (mapv #(vector :turi:kommentti (:kommentti %)) kommentit)))))
 
 (defn rakenna-liitteet [data]
-  ;; todo
-  [:turi:liitteet
-   [:turi:liite
-    [:turi:tiedostonimi
-     "tilanne.png"]
-    [:turi:tyyppi
-     "image/png"]
-    [:turi:kuvaus
-     "Kuva tilanteesta"]
-    [:turi:sisalto
-     "...sisältö BASE 64 encoodattuna..."]]
-   [:turi:liite
-    [:turi:tiedostonimi
-     "auto.png"]
-    [:turi:tyyppi
-     "image/png"]
-    [:turi:kuvaus
-     "Kuva autosta"]
-    [:turi:sisalto
-     "...sisältö BASE 64 encoodattuna..."]]])
+  (let [liitteet (:liitteet data)]
+    (when (not-empty liitteet)
+      (apply conj []
+             :turi:liitteet
+             (mapv #(vector
+                     :turi:liite
+                     [:turi:tiedostonimi (:nimi %)]
+                     [:turi:tyyppi (:tyyppi %)]
+                     ;; todo Lisää kuvaus, esim. [:turi:kuvaus "Kuva tilanteesta"]
+                     [:turi:sisalto (String. (liitteet/enkoodaa-base64 (:data (:sisalto %))))])
+                   liitteet)))))
 
 (defn rakenna-sijainti [data]
   (when-let [koordinaatit (:coordinates (geo/pg->clj (:sijainti data)))]

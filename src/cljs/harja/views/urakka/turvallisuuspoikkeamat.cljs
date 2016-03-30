@@ -200,7 +200,7 @@
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (go
     (reset! tiedot/valittu-turvallisuuspoikkeama
-            (<! (tiedot/hae-urakan-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))))
+            (<! (tiedot/hae-turvallisuuspoikkeama urakka-id turvallisuuspoikkeama-id)))))
 
 (defn turvallisuuspoikkeamalistaus
   []

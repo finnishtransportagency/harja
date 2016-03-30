@@ -112,14 +112,7 @@
 
     <xs:complexType name="liite">
         <xs:sequence>
-            <xs:element name="tiedostonimi" nillable="false" minOccurs="1" maxOccurs="1">
-                <xs:simpleType>
-                    <xs:restriction base="xs:string">
-                        <xs:enumeration value="tilanne.png"/>
-                        <xs:enumeration value="auto.png"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
+            <xs:element type="xs:string" name="tiedostonimi" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element type="xs:string" name="tyyppi" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element type="xs:string" name="kuvaus" minOccurs="0" maxOccurs="1"/>
             <xs:element type="xs:string" name="sisalto" nillable="false" minOccurs="1" maxOccurs="1"/>
