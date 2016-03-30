@@ -721,7 +721,9 @@ SELECT
   tt.id                     AS tehtava_id,
   tpk.yksikko               AS tehtava_yksikko,
   tpk.id                    AS tehtava_toimenpidekoodi_id,
+  tpk.nimi                  AS tehtava_toimenpidekoodi_nimi,
   tpi.id                    AS tehtava_toimenpideinstanssi_id,
+  tpi.nimi                  AS tehtava_toimenpideinstanssi_nimi,
   ST_Length(reitti)         AS pituus
 FROM toteuma t
   JOIN kayttaja k ON t.luoja = k.id
