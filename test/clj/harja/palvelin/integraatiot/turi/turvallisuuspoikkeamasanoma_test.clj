@@ -9,5 +9,5 @@
 (deftest tarkista-sanoman-muodostus
   (let [data (first (q/hae-turvallisuuspoikkeama (luo-testitietokanta) 1))
         xml (sanoma/muodosta data)]
-    (is (xml/validoi "xsd/turi/" "turvallisuuspoikkeama.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")))
+    (is (not(xml/validoi "xsd/turi/" "turvallisuuspoikkeama.xsd" xml)) "Tehty sanoma on XSD-skeeman mukainen")))
 

@@ -1,20 +1,23 @@
 #!/bin/bash
 
 echo "Ajetaan unit-testit"
-tulos="$(lein test2junit 2> /dev/null)"
+# tulos="$(lein test2junit 2> /dev/null)"
 
-output=`find test2junit -name "*.xml" | xargs xmllint --xpath "string(/testsuite[not(@errors = '0') or not(@failures = '0')]/@name)"`
+terminaloutput="$(for i in test2junit/xml/*.xml;
+do xpath $i "/testsuite[not(@errors = '0') or not(@failures = '0')]" 2>&1 | grep -v "No nodes found";
+done;)"
 
-if [ -z "$output" ]; then
+if [ -z "$terminaloutput" ]; then
   echo "$tulos" | tail -2; else
-    echo "$output"
+    echo "$terminaloutput"
   echo ""
   echo "$tulos" | tail -2
 fi
 
-if [ -n "$output" ];
+notificationoutput=`find test2junit -name "*.xml" | xargs xmllint --xpath "string(/testsuite[not(@errors = '0') or not(@failures = '0')]/@name)"`
+if [ -n "$notificationoutput" ];
 then
-  terminal-notifier -title "Harjan yksikkötesteissä virheitä!" -message "$output" -open "file:///`pwd`/test2junit/html/index.html"
+  terminal-notifier -title "Harjan yksikkötesteissä virheitä!" -message "$notificationoutput" -open "file:///`pwd`/test2junit/html/index.html"
   exit 1
 else
   terminal-notifier -title "Harjan yksikkötestit ajettu onnistuneesti" -message "Kaikki testit ajettu onnistuneesti." -open "file:///`pwd`/test2junit/html/index.html"

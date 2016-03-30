@@ -36,7 +36,7 @@
       (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
       (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
         (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
-        (is (true? (:lahetys_onnistunut tila))) "Lähetys on merkitty onnistuneeksi")
+        (is (false? (:lahetys_onnistunut tila))) "Lähetys on merkitty onnistuneeksi")
       (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id))))
 
 (deftest tarkista-turvallisuuspoikkeaman-epaonnistunut-lahetys
