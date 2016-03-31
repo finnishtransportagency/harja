@@ -409,6 +409,7 @@
                         (log/debug "Pävitetään toteumaa " (:id t))
                         (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
                                             (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) nil
+                                            nil nil nil nil nil
                                             (:id t) (:urakka t))
                         t))
                     ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
@@ -422,7 +423,7 @@
                         (:suorittajan-ytunnus t)
                         (:lisatieto t)
                         nil
-                        nil)))]
+                        nil nil nil nil nil nil)))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
       (doseq [tm toteumamateriaalit]
