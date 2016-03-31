@@ -8,7 +8,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [reagent.core :as r]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [harja.ui.komponentti :as komp]))
 
 (defn tienumero [tienumero-atom]
   [:span.label-ja-kentta
@@ -52,32 +53,43 @@
                         ["Edelliset 3 viikkoa" #(aikavali-nyt-miinus 21)]
                         ["Valittu aikaväli" nil]])
 
-(defn aikavali-nykypvm-taakse []
+(defn aikavali-nykypvm-taakse
+  "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
+Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
+  [urakka]
   (let [alkuvalinta (first aikavali-valinnat)
         [_ aikavali-fn] alkuvalinta
         valinta (r/atom alkuvalinta)
-        vapaa-aikavali? (r/atom false)]
-    (reset! u/valittu-aikavali (aikavali-fn))
-    (fn []
-      [:span.aikavali-nykypvm-taakse
-       [:div.label-ja-alasveto
-        [:span.alasvedon-otsikko "Näytettävä aikaväli"]
-        [livi-pudotusvalikko {:valinta @valinta
-                              :format-fn first
-                              :class "suunnittelu-alasveto"
-                              :valitse-fn (fn [v]
-                                            (log "VALITSIT: " (pr-str v))
-                                            (reset! valinta v)
-                                            (if-let [aikavali-fn (second v)]
-                                              ;; Esiasetettu laskettava aikaväli
-                                              (do
-                                                (reset! vapaa-aikavali? false)
-                                                (reset! u/valittu-aikavali ((second v))))
-                                              ;; Käyttäjä haluaa asettaa itse aikavälin
-                                              (reset! vapaa-aikavali? true)))}
-         aikavali-valinnat]]
-       (when @vapaa-aikavali?
-         [aikavali])])))
+        vapaa-aikavali? (r/atom false)
+        valitse (fn [v]
+                  (reset! valinta v)
+                  (if-let [aikavali-fn (second v)]
+                    ;; Esiasetettu laskettava aikaväli
+                    (do
+                      (reset! vapaa-aikavali? false)
+                      (reset! u/valittu-aikavali ((second v))))
+                    ;; Käyttäjä haluaa asettaa itse aikavälin
+                    (reset! vapaa-aikavali? true)))]
+    (valitse alkuvalinta)
+    (komp/luo
+     {:component-will-receive-props
+      (fn [_ _ urakka]
+        (valitse @valinta))}
+
+     (fn [urakka]
+       (if-not (u/urakka-kaynnissa? urakka)
+         [urakan-hoitokausi-ja-kuukausi urakka]
+         [:span.aikavali-nykypvm-taakse
+          [:div.label-ja-alasveto
+           [:span.alasvedon-otsikko "Näytettävä aikaväli"]
+           [livi-pudotusvalikko {:valinta @valinta
+                                 :format-fn first
+                                 :class "suunnittelu-alasveto"
+                                 :valitse-fn valitse}
+            aikavali-valinnat]]
+          (when @vapaa-aikavali?
+            [aikavali])])))))
+
 (defn urakan-toimenpide []
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 

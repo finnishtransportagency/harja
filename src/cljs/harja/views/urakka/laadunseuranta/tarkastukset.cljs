@@ -54,7 +54,7 @@
            tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
        [:div.tarkastukset
 
-        [valinnat/aikavali-nykypvm-taakse]
+        [valinnat/aikavali-nykypvm-taakse urakka]
 
 
         [:span.label-ja-kentta

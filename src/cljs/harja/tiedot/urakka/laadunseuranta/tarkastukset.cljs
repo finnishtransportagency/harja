@@ -41,16 +41,21 @@
 
 (defonce urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               [alku loppu] @tiedot-urakka/valittu-aikavali
+               urakka-kaynnissa? @tiedot-urakka/valittu-urakka-kaynnissa?
+               kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi
+               aikavali @tiedot-urakka/valittu-aikavali
                laadunseurannassa? @laadunseuranta/laadunseurannassa?
                valilehti (nav/valittu-valilehti :laadunseuranta)
                tienumero @tienumero
                tyyppi @tarkastustyyppi]
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
-              (when (and laadunseurannassa? (= :tarkastukset valilehti)
-                         urakka-id alku loppu)
-                (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
+              (let [[alku loppu] (if urakka-kaynnissa?
+                                   aikavali
+                                   (or kuukausi aikavali))]
+                (when (and laadunseurannassa? (= :tarkastukset valilehti)
+                           urakka-id alku loppu)
+                  (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi))))))))
 
 (defonce valittu-tarkastus (atom nil))
 
