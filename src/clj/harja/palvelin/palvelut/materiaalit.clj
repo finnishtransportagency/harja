@@ -230,7 +230,7 @@
            "kokonaishintainen"
            (:id user) "" ""
            (:lisatieto toteuma)
-           nil nil)]
+           nil nil nil nil nil nil nil)]
     (toteumat/luo-toteuma-materiaali<!
      db (:id t) (:id (:materiaali toteuma))
      (:maara toteuma) (:id user))))
