@@ -132,10 +132,8 @@
 (defonce valittu-hoitokausi
          (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-(defonce valittu-aikavali (atom [nil nil]))
-(defonce paivita-aikavali-kun-hoitokausi-muuttuu
-  (add-watch valittu-hoitokausi :paivita-aikavali
-             (fn [_ _ _ hk] hk)))
+(defonce valittu-aikavali (reaction @valittu-hoitokausi))
+
 
 (defn valitse-hoitokausi! [hk]
   (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))

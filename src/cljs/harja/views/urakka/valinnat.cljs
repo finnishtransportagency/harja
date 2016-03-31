@@ -61,20 +61,21 @@ Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
         [_ aikavali-fn] alkuvalinta
         valinta (r/atom alkuvalinta)
         vapaa-aikavali? (r/atom false)
-        valitse (fn [v]
-                  (reset! valinta v)
-                  (if-let [aikavali-fn (second v)]
-                    ;; Esiasetettu laskettava aikaväli
-                    (do
-                      (reset! vapaa-aikavali? false)
-                      (reset! u/valittu-aikavali ((second v))))
-                    ;; Käyttäjä haluaa asettaa itse aikavälin
-                    (reset! vapaa-aikavali? true)))]
-    (valitse alkuvalinta)
+        valitse (fn [urakka v]
+                  (when (u/urakka-kaynnissa? urakka)
+                    (reset! valinta v)
+                    (if-let [aikavali-fn (second v)]
+                      ;; Esiasetettu laskettava aikaväli
+                      (do
+                        (reset! vapaa-aikavali? false)
+                        (reset! u/valittu-aikavali ((second v))))
+                      ;; Käyttäjä haluaa asettaa itse aikavälin
+                      (reset! vapaa-aikavali? true))))]
+    (valitse urakka alkuvalinta)
     (komp/luo
      {:component-will-receive-props
       (fn [_ _ urakka]
-        (valitse @valinta))}
+        (valitse urakka @valinta))}
 
      (fn [urakka]
        (if-not (u/urakka-kaynnissa? urakka)
@@ -85,7 +86,7 @@ Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
            [livi-pudotusvalikko {:valinta @valinta
                                  :format-fn first
                                  :class "suunnittelu-alasveto"
-                                 :valitse-fn valitse}
+                                 :valitse-fn (partial valitse urakka)}
             aikavali-valinnat]]
           (when @vapaa-aikavali?
             [aikavali])])))))
