@@ -39,25 +39,35 @@
                                      :tienumero tienumero
                                      :tyyppi    tyyppi}))
 
+(defn- naytettava-aikavali [urakka-kaynnissa? kuukausi aikavali]
+  (if urakka-kaynnissa?
+    aikavali
+    (or kuukausi aikavali)))
+
 (defonce urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               [alku loppu] @tiedot-urakka/valittu-aikavali
+               urakka-kaynnissa? @tiedot-urakka/valittu-urakka-kaynnissa?
+               kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi
+               aikavali @tiedot-urakka/valittu-aikavali
                laadunseurannassa? @laadunseuranta/laadunseurannassa?
                valilehti (nav/valittu-valilehti :laadunseuranta)
                tienumero @tienumero
                tyyppi @tarkastustyyppi]
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
-              (when (and laadunseurannassa? (= :tarkastukset valilehti)
-                         urakka-id alku loppu)
-                (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi)))))))
+              (let [[alku loppu] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)]
+                (when (and laadunseurannassa? (= :tarkastukset valilehti)
+                           urakka-id alku loppu)
+                  (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi))))))))
 
 (defonce valittu-tarkastus (atom nil))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
   [{:keys [aika id] :as tarkastus}]
-  (let [[alkupvm loppupvm] @tiedot-urakka/valittu-aikavali
+  (let [[alkupvm loppupvm] (naytettava-aikavali @tiedot-urakka/valittu-urakka-kaynnissa?
+                                                @tiedot-urakka/valittu-hoitokauden-kuukausi
+                                                @tiedot-urakka/valittu-aikavali)
         sijainti-listassa (first (keep-indexed (fn [i {tarkastus-id :id}]
                                                  (when (= id tarkastus-id) i))
                                                @urakan-tarkastukset))]
