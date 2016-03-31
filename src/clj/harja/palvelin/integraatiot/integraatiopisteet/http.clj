@@ -1,6 +1,4 @@
 (ns harja.palvelin.integraatiot.integraatiopisteet.http
-  "Yleiset apurit kutsujen lähettämiseen ulkoisiin järjestelmiin.
-  Sisältää automaattiset lokitukset integraatiolokiin."
   (:require [taoensso.timbre :as log]
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -139,7 +137,7 @@
     (laheta-kutsu lokittaja url :head otsikot parametrit (:kayttajatunnus asetukset) (:salasana asetukset) nil kasittele-vastaus-fn)))
 
 (defn luo-integraatiopiste
-  ([url]
-   (luo-integraatiopiste url nil))
-  ([url asetukset]
-   (->Http url asetukset)))
+  ([lokittaja]
+   (luo-integraatiopiste lokittaja nil))
+  ([lokittaja asetukset]
+   (->Http lokittaja asetukset)))
