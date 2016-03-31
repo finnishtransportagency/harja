@@ -669,11 +669,11 @@ SELECT
   tunniste,
   toimenpide,
   tietolaji,
-  tr_numero               AS tie,
-  tr_alkuosa              AS aosa,
-  tr_alkuetaisyys         AS aet,
-  tr_loppuosa             AS losa,
-  tr_loppuetaisyys        AS let,
+  vt.tr_numero               AS tie,
+  vt.tr_alkuosa              AS aosa,
+  vt.tr_alkuetaisyys         AS aet,
+  vt.tr_loppuosa             AS losa,
+  vt.tr_loppuetaisyys        AS let,
   piiri,
   kuntoluokka,
   karttapvm,
@@ -699,7 +699,7 @@ WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND alkanut >= :alkupvm
       AND alkanut <= :loppupvm
-      AND (:rajaa_tienumerolla = FALSE OR tr_numero = :tienumero)
+      AND (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
 ORDER BY t.alkanut DESC
