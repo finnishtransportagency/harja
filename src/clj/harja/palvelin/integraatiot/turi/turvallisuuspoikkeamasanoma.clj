@@ -71,6 +71,22 @@
    [:turi:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]
    [:turi:jatkuuko-sairaspoissaolo (true? (:sairauspoissaolojatkuu data))]])
 
+(defn rakenna-turvallisuuskoordinaattori [data]
+  [:turi:turvallisuuskoordinaattori
+   [:turi:etunimi (:turvallisuuskoordinaattorietunimi data)]
+   [:turi:sukunimi (:turvallisuuskoordinaattorisukunimi data)]])
+
+(defn rakenna-laatija [data]
+  [:turi:laatija
+   [:turi:etunimi (:laatijaetunimi data)]
+   [:turi:sukunimi (:laatijasukunimi data)]])
+
+(defn rakenna-ilmoittaja [data]
+  [:turi:ilmoittaja
+   [:turi:etunimi (:ilmoittaja_etunimi data)]
+   [:turi:sukunimi (:ilmoittaja_sukunimi data)]]
+  [:turi:kuvaus (:kuvaus data)])
+
 (defn muodosta-viesti [data]
   [:turi:turvallisuuspoikkeama
    {:xmlns:turi "http://www.liikennevirasto.fi/xsd/turi"}
@@ -81,16 +97,9 @@
    [:turi:kasitelty (when (:kasitelty data) (xml/formatoi-aikaleima (:kasitelty data)))]
    [:turi:toteuttaja (:toteuttaja data)]
    [:turi:tilaaja (:tilaaja data)]
-   [:turi:turvallisuuskoordinaattori
-    [:turi:etunimi (:turvallisuuskoordinaattorietunimi data)]
-    [:turi:sukunimi (:turvallisuuskoordinaattorisukunimi data)]]
-   [:turi:laatija
-    [:turi:etunimi (:laatijaetunimi data)]
-    [:turi:sukunimi (:laatijasukunimi data)]]
-   [:turi:ilmoittaja
-    [:turi:etunimi (:ilmoittaja_etunimi data)]
-    [:turi:sukunimi (:ilmoittaja_sukunimi data)]]
-   [:turi:kuvaus (:kuvaus data)]
+   (rakenna-turvallisuuskoordinaattori data)
+   (rakenna-laatija data)
+   (rakenna-ilmoittaja data)
    [:turi:tyotehtava (:tyotehtava data)]
    (rakenna-luokittelulista :turi:luokittelut :turi:luokittelu (:tyyppi data))
    (rakenna-luokittelulista :turi:vahinkoluokittelut :turi:luokittelu (:vahinkoluokittelu data))

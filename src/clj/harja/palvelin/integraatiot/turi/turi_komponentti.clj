@@ -2,10 +2,10 @@
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
-            [harja.palvelin.komponentit.liitteet :as liitteet])
+            [harja.palvelin.komponentit.liitteet :as liitteet]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
@@ -14,7 +14,7 @@
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
-(defn kasittele-turin-vastaus [db id]
+(defn kasittele-turin-vastaus [db id vastaus]
   (q/lokita-lahetys<! db true id))
 
 (defn hae-liitteet [liitteiden-hallinta db id]
@@ -36,28 +36,25 @@
         (throw+ {:type :tuntematon-turvallisuuspoikkeama
                  :error virhe})))))
 
+
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta url kayttajatunnus salasana]} id]
-  (when (not-empty url)
-    (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
-          integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
-          vastauskasittelija (fn [_ _] (kasittele-turin-vastaus db id))
-          turvallisuuspoikkeama (hae-turvallisuuspoikkeama liitteiden-hallinta db id)
-          xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
-      (if xml
-        (try
-          (http/POST integraatiopiste url xml vastauskasittelija)
-          (catch Exception e
-            (log/error e (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä tapahtui poikkeus." id))
-            (q/lokita-lahetys<! db false id)))
-        (do
-          (log/error (format "Turvallisuuspoikkeamaa  (id: %s) ei voida lähettää" id))
-          (q/lokita-lahetys<! db false id))))))
+  (when-not (empty? url)
+    (let [virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))
+          asetukset {:virhekasittelija virhekasittelija}
+          http-asetukset {:metodi :POST :url url :kayttajatunnus kayttajatunnus :salasana salasana}
+          tyonkulku (fn [konteksti]
+                      (->> id
+                           (hae-turvallisuuspoikkeama liitteiden-hallinta db)
+                           sanoma/muodosta
+                           (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                           (kasittele-turin-vastaus db id)))]
+      (integraatiotapahtuma/suorita-integraatio
+        db integraatioloki "turi" "laheta-turvallisuuspoikkeama" tyonkulku asetukset))))
 
 (defrecord Turi [asetukset]
   component/Lifecycle
   (start [this]
-    (let [turi (:turi asetukset)
-          {url :url kayttajatunnus :kayttajatunnus salasana :salasana} turi]
+    (let [{url :url kayttajatunnus :kayttajatunnus salasana :salasana} asetukset]
       (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" url))
       (assoc this
         :url url

@@ -87,7 +87,7 @@
 
     <xs:complexType name="korjaavat-toimenpiteet">
         <xs:sequence>
-            <xs:element type="korjaava-toimenpide" name="korjaava-toimenpide"/>
+            <xs:element type="korjaava-toimenpide" name="korjaava-toimenpide" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
