@@ -1,3 +1,6 @@
+(def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
+                     (.getHostName (java.net.InetAddress/getLocalHost))))
+
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
@@ -129,7 +132,7 @@
   :profiles {:dev  {:dependencies []
                     :plugins      [[com.solita/lein-test-refresh-gui "0.10.3"]
                                    [test2junit "1.1.0"]]
-                    :test2junit-run-ant true}
+                    :test2junit-run-ant ~(not jenkinsissa?)}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
