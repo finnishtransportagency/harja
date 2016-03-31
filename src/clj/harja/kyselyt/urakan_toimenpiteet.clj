@@ -1,10 +1,11 @@
 (ns harja.kyselyt.urakan-toimenpiteet
   (:require
     [taoensso.timbre :as log]
-    [yesql.core :refer [defqueries]]
+    [jeesql.core :refer [defqueries]]
     [harja.kyselyt.konversio :as konv]))
 
-(defqueries "harja/kyselyt/urakan_toimenpiteet.sql")
+(defqueries "harja/kyselyt/urakan_toimenpiteet.sql"
+  {:positional? true})
 
 (defn hae-urakan-toimenpiteet-ja-tehtavat-tasot
   "Palauttaa hae-urakan-toimenpiteet-ja-tehtavat kyselyn tulokset tasoittain. Jokainen rivi on

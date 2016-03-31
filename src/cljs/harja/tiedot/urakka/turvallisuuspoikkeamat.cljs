@@ -5,8 +5,6 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.geo :as geo]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
