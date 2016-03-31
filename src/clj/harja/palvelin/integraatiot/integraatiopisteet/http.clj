@@ -15,11 +15,13 @@
         (cond-> (not-empty otsikot) (assoc :headers otsikot)
                 (not-empty parametrit) (assoc :query-params parametrit)
                 (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
-                (or (= metodi "post") (= metodi "put")) (assoc :body kutsudata)
+                (or (= metodi :post) (= metodi :put)) (assoc :body kutsudata)
                 timeout (assoc :timeout timeout)))))
 
 (defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
   (try
+
+
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
                                      :parametrit parametrit

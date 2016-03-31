@@ -58,10 +58,11 @@
          (tee-tapahtuma db integraatioloki jarjestelma integraatio ulkoinen-id)
          lisatietoja (when lisatietoja (str/join "\n" @lisatietoja))]
      (try
-       (tyonkulku-fn konteksti)
-       (lokittaja :onnistunut nil lisatietoja tapahtuma-id ulkoinen-id)
+       (let [vastaus (tyonkulku-fn konteksti)]
+         (lokittaja :onnistunut nil lisatietoja tapahtuma-id ulkoinen-id)
+         vastaus)
 
        (catch Throwable t
          (when virhekasittelija
            (virhekasittelija konteksti t))
-         (lokittaja :epaonnistunut nil (str/join "\n" @lisatietoja) tapahtuma-id ulkoinen-id))))))
+         (lokittaja :epaonnistunut nil lisatietoja tapahtuma-id ulkoinen-id))))))

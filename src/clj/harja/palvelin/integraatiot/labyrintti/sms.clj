@@ -23,19 +23,20 @@
 (defn laheta-sms [db integraatioloki kayttajatunnus salasana url numero viesti]
   (if (or (empty? kayttajatunnus) (empty? salasana) (empty? url))
     (log/warn "Käyttäjätunnusta, salasanaa tai URL Labyrintin SMS Gatewayhyn ei ole annettu. Viestiä ei voida lähettää.")
-    (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
-          parametrit {"dests" numero
-                      "text" viesti}
-          http-asetukset {:metodi :GET
-                          :url url
-                          :kayttajatunnus kayttajatunnus
-                          :salasana salasana
-                          :otsikot otsikot
-                          :parametrit parametrit}
-          tyonkulku (fn [konteksti]
-                      (let [{body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                        (kasittele-vastaus body headers)))]
-      (integraatiotapahtuma/suorita-integraatio db integraatioloki "labyrintti" "laheta" tyonkulku))))
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "labyrintti" "laheta"
+      (fn [konteksti]
+        (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
+              parametrit {"dests" numero
+                          "text" viesti}
+              http-asetukset {:metodi :GET
+                              :url url
+                              :kayttajatunnus kayttajatunnus
+                              :salasana salasana
+                              :otsikot otsikot
+                              :parametrit parametrit}
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+          (kasittele-vastaus body headers))))))
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
   (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))
