@@ -54,9 +54,7 @@
            tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
        [:div.tarkastukset
 
-
-        [valinnat/urakan-hoitokausi urakka]
-        [valinnat/aikavali]
+        [valinnat/aikavali-nykypvm-taakse urakka]
 
 
         [:span.label-ja-kentta
@@ -81,9 +79,14 @@
 
         [grid/grid
          {:otsikko "Tarkastukset"
-          :tyhja "Ei tarkastuksia"
+          :tyhja (if (nil? @tarkastukset/urakan-tarkastukset)
+                   [yleiset/ajax-loader "Tarkastuksia ladataan"]
+                   "Ei tarkastuksia")
           :rivi-klikattu #(valitse-tarkastus %)
-          :jarjesta :aika}
+          :jarjesta :aika
+          :max-rivimaara 500
+          :max-rivimaaran-ylitys-viesti
+          "Tarkastuksia yli 500, tarkenna aikaväliä tai muita hakuehtoja."}
 
          [{:otsikko "Pvm ja aika"
            :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
