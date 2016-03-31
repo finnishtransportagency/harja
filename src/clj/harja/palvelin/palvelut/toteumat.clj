@@ -164,7 +164,8 @@
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} (:tr toteuma)]
     (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
                        (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (geometriaksi (:reitti toteuma))
-                       (:toteuma-id toteuma) (:urakka-id toteuma) numero alkuosa alkuetaisyys loppuosa loppuetaisyys))
+                        numero alkuosa alkuetaisyys loppuosa loppuetaisyys
+                       (:toteuma-id toteuma) (:urakka-id toteuma)))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
 
@@ -338,6 +339,7 @@
       (apply q/poista-toteuma! params))
     (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
                             (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil
+                            nil nil nil nil nil
                             (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
         (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
                                                    :tehtava-id (get-in toteuma [:tehtava :id]))))))

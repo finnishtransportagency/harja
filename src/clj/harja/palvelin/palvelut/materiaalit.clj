@@ -255,6 +255,7 @@
                                          (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma)
                                          (:lisatieto toteuma)
                                          (:reitti toteuma)
+                                         nil nil nil nil nil
                                          (:tid toteuma)
                                          urakka-id)
               (toteumat/paivita-toteuma-materiaali!
