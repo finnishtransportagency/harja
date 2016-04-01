@@ -196,7 +196,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                          ui-kasittelijat (mapv :fn @kasittelijat)
                          uikasittelija (-> (apply compojure/routes ui-kasittelijat)
                                            (wrap-anti-forgery))]
-                     
+
                      (or (reitita req (mapv :fn ei-todennettavat))
                          (reitita (todennus/todenna-pyynto todennus req)
                                   (-> (mapv :fn todennettavat)
@@ -207,7 +207,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
                                 {:port     (or (:portti asetukset) asetukset)
                                  :thread   (or (:threads asetukset) 8)
-                                 :max-body (or (:max-body-size asetukset) (* 1024 1024 8))})))
+                                 :max-body (or (:max-body-size asetukset) (* 1024 1024 8))
+                                 :max-line 40960})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
