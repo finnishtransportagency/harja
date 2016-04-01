@@ -13,7 +13,6 @@ SELECT
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
-  i.suljettu,
 
   ST_Simplify(i.sijainti, :toleranssi) AS sijainti,
   i.tr_numero,
@@ -53,7 +52,14 @@ SELECT
   it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
   it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
   it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus,
+
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'vastaanotto'::kuittaustyyppi) as vastaanotettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'aloitus'::kuittaustyyppi) as aloitettu,
+  EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
+                                                AND kuittaustyyppi = 'lopetus'::kuittaustyyppi) as lopetettu
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE
@@ -64,10 +70,7 @@ WHERE
    ilmoitus = i.id AND
    kuitattu BETWEEN :alku AND :loppu))) AND
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
-  ((:avoimet IS TRUE AND i.suljettu IS NOT TRUE) OR
-   (:suljetut IS TRUE AND i.suljettu IS TRUE)) AND
   i.ilmoitustyyppi :: TEXT IN (:tyypit);
-
 
 -- name: hae-laatupoikkeamat
 SELECT
@@ -115,11 +118,12 @@ SELECT
   t.havainnot,
   t.tyyppi
 FROM tarkastus t
-WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
-      AND (t.luotu BETWEEN :alku AND :loppu OR
-           t.muokattu BETWEEN :alku AND :loppu OR
-           t.aika BETWEEN :alku AND :loppu) AND
-           t.tyyppi :: TEXT IN (:tyypit);
+WHERE sijainti IS NOT NULL
+  AND (t.urakka IN (:urakat) OR t.urakka IS NULL)
+  AND (t.luotu BETWEEN :alku AND :loppu OR
+       t.muokattu BETWEEN :alku AND :loppu OR
+       t.aika BETWEEN :alku AND :loppu) AND
+       t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
@@ -265,6 +269,7 @@ WHERE pk.poistettu IS NOT TRUE AND
        (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
+-- FIXME: poista tästä "turhaa" tietoa, jota ei renderöinti tarvi
 SELECT
   t.id,
   t.urakka,
@@ -274,7 +279,7 @@ SELECT
   t.tyyppi,
   t.lisatieto,
   ST_Simplify(t.reitti, :toleranssi) as reitti,
-  
+
   t.suorittajan_ytunnus           AS suorittaja_ytunnus,
   t.suorittajan_nimi              AS suorittaja_nimi,
   t.ulkoinen_id                   AS ulkoinenid,
@@ -308,7 +313,26 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
-      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
+
+-- name: hae-toteumien-selitteet
+SELECT
+  DISTINCT(tt.toimenpidekoodi) AS toimenpidekoodi,
+  (SELECT nimi
+   FROM toimenpidekoodi tpk
+   WHERE id = tt.toimenpidekoodi) AS toimenpide
+FROM toteuma_tehtava tt
+     JOIN toteuma t ON tt.toteuma = t.id
+                    AND t.alkanut >= :alku
+                    AND t.paattynyt <= :loppu
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                    AND tt.poistettu IS NOT TRUE
+                    AND t.poistettu IS NOT TRUE
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.alkanut BETWEEN :alku AND :loppu) AND
+      (t.paattynyt BETWEEN :alku AND :loppu) AND
+      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
+
 
 -- name: hae-tyokoneet
 SELECT
@@ -334,8 +358,13 @@ FROM tyokonehavainto t
 WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
                   CAST(sijainti AS GEOMETRY)) AND
       (:valittugeometria :: GEOMETRY IS NULL OR ST_Contains(:valittugeometria, CAST(sijainti AS GEOMETRY))) AND
-      (:urakka :: INTEGER IS NULL OR
-       t.urakkaid = :urakka OR t.urakkaid IS NULL) AND
+      (t.urakkaid IN (:urakat) OR t.urakkaid IS NULL) AND
+      /*
+      Alunperin ajateltiin, että jos urakkaa ei ole valittuna, niin näytetään kaikki alueella
+      toimivat työkoneet (informaation jako, työn läpinäkyvyys). Todettiin kuitenkin että ainakin
+      alkuun pidetään urakoitsijen työkoneiden liikkeet salassa.
+      */
+      -- (:urakka :: INTEGER IS NULL OR t.urakkaid = :urakka OR t.urakkaid IS NULL) AND
       t.tehtavat && :toimenpiteet :: suoritettavatehtava[];
 
 -- name: hae-toimenpidekoodit

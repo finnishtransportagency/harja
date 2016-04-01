@@ -254,11 +254,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
    (when-not piilota-toiminnot?
      [:td.toiminnot
       (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
-        (if (or (nil? esta-poistaminen?) (false? (esta-poistaminen? rivi)))
+        (if (and esta-poistaminen? (esta-poistaminen? rivi))
+          [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]
           [:span.klikattava {:on-click #(do (.preventDefault %)
                                             (muokkaa! id assoc :poistettu true))}
-           (ikonit/trash)]
-          [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]))
+           (ikonit/trash)]))
       (when-not (empty? rivin-virheet)                       ; true ;-not (empty? rivin-virheet)
         [:span.rivilla-virheita
          (ikonit/warning-sign)])])])
@@ -314,6 +314,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
   :esta-poistaminen?                    funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
+  :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   :ohjaus                               gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
@@ -351,7 +352,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema tiedot]
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip] :as opts} skeema tiedot]
   (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
@@ -562,7 +563,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       :component-will-unmount
       (fn []
         (nollaa-muokkaustiedot!))}
-     (fn [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
+     (fn [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                   muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
                   korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
        (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -579,11 +580,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                   [:span.pull-right.muokkaustoiminnot
                                    (when (and tallenna
                                               (not (nil? tiedot)))
-                                     [:button.nappi-ensisijainen {:disabled (or (= :ei-mahdollinen tallenna)
-                                                                                @gridia-muokataan?)
-                                                                  :on-click #(do (.preventDefault %)
-                                                                                 (aloita-muokkaus! tiedot))}
-                                      [:span.livicon-pen.grid-muokkaa " Muokkaa"]])]
+                                     [:div (when (= :ei-mahdollinen tallenna)
+                                             {:title (tallennus-ei-mahdollinen-tooltip)})
+                                      [:button.nappi-ensisijainen
+                                       {:disabled (or (= :ei-mahdollinen tallenna)
+                                                      @gridia-muokataan?)
+                                        :on-click #(do (.preventDefault %)
+                                                       (aloita-muokkaus! tiedot))}
+                                       [:span.livicon-pen.grid-muokkaa " Muokkaa"]]])]
                                   [:span.pull-right.muokkaustoiminnot
                                    [:button.nappi-toissijainen
                                     {:disabled (empty? @historia)
@@ -606,7 +610,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                     (let [kaikki-rivit (mapv second @muokatut)
                                                           tallennettavat
                                                           (if tallenna-vain-muokatut
-                                                            (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit)
+                                                            (do (log "TALLENNA VAIN MUOKATUT")
+                                                                (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
                                                             kaikki-rivit)]
                                                       (do (.preventDefault %)
                                                           (reset! tallennus-kaynnissa true)
@@ -724,7 +729,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                          skeema rivi]
                                         (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
                                  rivit-jarjestetty)))))))]])
-                   (log "Max rivimäärä " max-rivimaara (count tiedot))
 
            (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
              [:div.alert-warning (or max-rivimaaran-ylitys-viesti
@@ -746,8 +750,8 @@ Optiot on mappi optioita:
   :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                    Parametrina Grid ohjauskahva
-  :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla 
-  :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan 
+  :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla
+  :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan
   :voi-lisata?     jos false, uusia rivejä ei voi lisätä
   :voi-kumota?     jos false, kumoa-nappia ei näytetä
   :voi-poistaa?    funktio, joka palauttaa true tai false.
@@ -812,7 +816,7 @@ Optiot on mappi optioita:
                                                (update-in muokatut [id]
                                                           (fn [rivi]
                                                             (apply funktio (dissoc rivi :koskematon) argumentit)))))]
-                     
+
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
                        (swap! virheet (fn [virheet]

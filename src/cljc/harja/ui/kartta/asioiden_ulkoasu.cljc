@@ -1,17 +1,17 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
-            [harja.ui.dom :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
-            [clojure.string :as str]
-
-            [harja.loki :refer [log]]))
+            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
+            [clojure.string :as str]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
 (def +zindex+ 4)
-(def +normaali-leveys+ 6) ;;Openlayers default
+(def +normaali-leveys+ 6)
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
+
+
 
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
   "[varit/musta 0 {} varit/punainen 2 {} varit/sininen 4 {:dash [10 10]}]
@@ -30,7 +30,7 @@
       ;; Kasvatetaan kaikkien viivojen leveyttä, jos kapein viiva oli 0 tai alle
       (let [lisattava-leveys (- (- kapein-viiva 2))]
         (map
-          (fn[{:keys [width] :as viiva}]
+          (fn [{:keys [width] :as viiva}]
             (assoc viiva :width (+ lisattava-leveys width)))
           viivat)))))
 
@@ -81,15 +81,15 @@
 
 (def ikonien-varit
   {;; Tilallisten sijainti-ikonien sisempi väri
-   :tiedotus                   "syaani"
-   :kysely                     "magenta"
-   :toimenpidepyynto           "oranssi"
-   :turvallisuuspoikkeama      "punainen"
+   :tiedoitus                  "oranssi"
+   :kysely                     "syaani"
+   :toimenpidepyynto           "punainen"
+   :turvallisuuspoikkeama      "magenta"
 
    ;; tilaa osoittavat värit (sijaint-ikonin ulompi väri)
-   :ilmoitus-lopetettu         "harmaa"
-   :ilmoitus-kaynnissa         "musta"
    :ilmoitus-auki              "punainen"
+   :ilmoitus-kaynnissa         "musta"
+   :ilmoitus-lopetettu         "harmaa"
 
    :kt-tyhja                   "oranssi"
    :kt-avoimia                 "punainen"
@@ -101,18 +101,27 @@
    :laatupoikkeama-konsultti   "tummansininen"
    :laatupoikkeama-urakoitsija "sininen"
    :tarkastus                  "punainen"
+   :tarkastus-tilaaja          "punainen"
+   :tarkastus-konsultti        "punainen"
+   :tarkastus-urakoitsija      "punainen"
    :varustetoteuma             "violetti"
    :yllapito                   "pinkki"})
 
 (def viivojen-varit
-  {:yllapito-aloitettu puhtaat/keltainen
-   :yllapito-valmis puhtaat/lime
-   :yllapito-muu puhtaat/syaani
-   :yllapito-pohja puhtaat/musta
-   :yllapito-katkoviiva puhtaat/tummanharmaa
+  {:yllapito-aloitettu          puhtaat/keltainen
+   :yllapito-valmis             puhtaat/lime
+   :yllapito-muu                puhtaat/syaani
+   :yllapito-pohja              puhtaat/musta
+   :yllapito-katkoviiva         puhtaat/tummanharmaa
 
-   :ok-tarkastus puhtaat/musta
-   :ei-ok-tarkastus puhtaat/punainen})
+   :ok-tarkastus                puhtaat/musta
+   :ok-tarkastus-tilaaja        puhtaat/musta
+   :ok-tarkastus-konsultti      puhtaat/musta
+   :ok-tarkastus-urakoitsija    puhtaat/musta
+   :ei-ok-tarkastus             puhtaat/punainen
+   :ei-ok-tarkastus-tilaaja     puhtaat/punainen
+   :ei-ok-tarkastus-konsultti   puhtaat/punainen
+   :ei-ok-tarkastus-urakoitsija puhtaat/punainen})
 
 
 (def auraus-tasaus-ja-kolmas [(monivarinen-viiva-leveyksilla puhtaat/musta 0 puhtaat/oranssi 2 puhtaat/violetti 6) "oranssi"])
@@ -176,15 +185,15 @@
    :img    (nuoli-ikoni nuolen-vari)})
 
 (defn tyokoneen-ikoni [nuolen-vari rotaatio]
-  {:paikka   :loppu
+  {:paikka   [:loppu]
    :tyyppi   :nuoli
    :img      (nuoli-ikoni nuolen-vari)
    :rotation rotaatio})
 
 (defn yllapidon-ikoni []
-  {:paikka :loppu
+  {:paikka [:loppu]
    :tyyppi :merkki
-   :img (:yllapito ikonien-varit)})
+   :img    (:yllapito ikonien-varit)})
 
 (defn yllapidon-viiva [valittu? avoin? tila tyyppi]
   (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
@@ -197,35 +206,48 @@
                tila
                (keyword (str/lower-case (or tila "muu"))))]
     [{:color (:yllapito-pohja viivojen-varit)
-     :width (nth leveydet 0)}
+      :width (nth leveydet 0)}
      {:color (case tila
                :aloitettu (:yllapito-aloitettu viivojen-varit)
                :valmis (:yllapito-valmis viivojen-varit)
                (:yllapito-muu viivojen-varit))
       :width (nth leveydet 1)}
      {:color (:yllapito-katkoviiva viivojen-varit)
-      :dash (if (= tyyppi :paikkaus) [3 9] [10 5])
+      :dash  (if (= tyyppi :paikkaus) [3 9] [10 5])
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
-  (sijainti-ikoni (case kt-tila
+  (sijainti-ikoni (:turvallisuuspoikkeama ikonien-varit)
+                  (case kt-tila
                     :tyhja (:kt-tyhja ikonien-varit)
                     :avoimia (:kt-avoimia ikonien-varit)
-                    :valmis (:kt-valmis ikonien-varit)) (:turvallisuuspoikkeama ikonien-varit)))
+                    :valmis (:kt-valmis ikonien-varit))))
 
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
 
-(defn tarkastuksen-ikoni [valittu? ok? reitti?]
+(defn tarkastuksen-ikoni [valittu? ok? reitti? tekija]
   (cond
     reitti? nil
-    (not ok?) (pinni-ikoni (:tarkastus ikonien-varit))
+    (not ok?) (pinni-ikoni (case tekija
+                             :tilaaja (:tarkastus-tilaaja ikonien-varit)
+                             :konsultti (:tarkastus-konsultti ikonien-varit)
+                             :urakoitsija (:tarkastus-urakoitsija ikonien-varit)
+                             (:tarkastus ikonien-varit)))
     (and valittu? ok?) (pinni-ikoni (:tarkastus ikonien-varit)))) ;; Ei näytetä ok-tarkastuksia jos ei ole valittu
 
-(defn tarkastuksen-reitti [ok?]
-  (if ok? {:color (:ok-tarkastus viivojen-varit)
-           :width 2}
-          {:color (:ei-ok-tarkastus viivojen-varit)}))
+(defn tarkastuksen-reitti [valittu? ok? tekija]
+  (if ok? {:color (case tekija
+                    :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
+                    :konsultti (:ok-tarkastus-konsultti viivojen-varit)
+                    :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
+                    (:ok-tarkastus viivojen-varit))
+           :width (if valittu? 4 2)}
+          {:color (case tekija
+                    :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
+                    :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
+                    :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
+                    (:ei-ok-tarkastus viivojen-varit))}))
 
 (defn laatupoikkeaman-ikoni [tekija]
   (pinni-ikoni (case tekija
@@ -234,17 +256,39 @@
                  :urakoitsija (:laatupoikkeama-urakoitsija ikonien-varit)
                  (:laatupoikkeama ikonien-varit))))
 
-(defn toimenpidepyynnon-ikoni [lopetettu? vastaanotettu?]
-  (cond
-    lopetettu? (sijainti-ikoni (:ilmoitus-lopetettu ikonien-varit) (:toimenpidepyynto ikonien-varit))
-    vastaanotettu? (sijainti-ikoni (:toimenpidepyynto ikonien-varit))
-    :else (sijainti-ikoni (:ilmoitus-auki ikonien-varit) (:toimenpidepyynto ikonien-varit))))
+(defn kyselyn-ikoni [tila]
+  (case tila
+    :kuittaamaton (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :vastaanotto (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :aloitus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :lopetus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
 
-(defn kyselyn-ikoni [lopetettu? aloitettu?]
-  (cond
-    lopetettu? (sijainti-ikoni (:ilmoitus-lopetettu ikonien-varit) (:kysely ikonien-varit))
-    aloitettu? (sijainti-ikoni (:ilmoitus-kaynnissa ikonien-varit) (:kysely ikonien-varit))
-    :else (sijainti-ikoni (:ilmoitus-auki ikonien-varit) (:kysely ikonien-varit))))
+(defn toimenpidepyynnon-ikoni [tila]
+  (case tila
+    :kuittaamaton (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-auki ikonien-varit))
+    :vastaanotto (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :aloitus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :lopetus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
 
-(defn tiedotuksen-ikoni []
-  (sijainti-ikoni (:tiedotus ikonien-varit)))
+
+(defn tiedotuksen-ikoni [tila]
+  (case tila
+    :kuittaamaton (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-auki ikonien-varit))
+    :vastaanotto (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :aloitus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
+    :lopetus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+
+(defn ilmoituksen-ikoni [{:keys [ilmoitustyyppi tila] :as ilmoitus}]
+  (case ilmoitustyyppi
+    :kysely (kyselyn-ikoni tila)
+    :toimenpidepyynto (toimenpidepyynnon-ikoni tila)
+    :tiedoitus (tiedotuksen-ikoni tila)))
+
+(def ^{:doc "TR-valinnan viivatyyli"}
+tr-viiva {:color  puhtaat/tummanharmaa
+          :dash   [15 15]
+          :zindex 20})
+
+(def ^{:doc "TR-valinnan ikoni"}
+tr-ikoni {:img    (pinni-ikoni "musta")
+          :zindex 21})

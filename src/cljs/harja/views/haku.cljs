@@ -9,6 +9,7 @@
             [harja.ui.yleiset :refer [tietoja kaksi-palstaa-otsikkoja-ja-arvoja]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakat :as urakat]
             [harja.atom :refer-macros [reaction<!]])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -105,10 +106,15 @@
   (go (when-let [valitun-tyyppi (:tyyppi tulos)]
         (case valitun-tyyppi
           :urakka
-          (let [haettu-urakka (<! (k/post! :hae-urakka (:id tulos)))]
+          (let [haettu-urakka (<! (k/post! :hae-urakka (:id tulos)))
+                ;; hae hallintayksikön urakat jo tässä, jottei urakkaa aseteta ennen kuin
+                ;; urakkalista on päivittynyt. Muuten voi tulla ajoitusongelma toisinaan HAR-2044
+                hallintayksikon-urakkalista (<! (urakat/hae-hallintayksikon-urakat
+                                                  {:id (get-in haettu-urakka [:hallintayksikko :id])}))]
+            (reset! nav/hallintayksikon-urakkalista hallintayksikon-urakkalista)
             (nav/aseta-hallintayksikko-ja-urakka
               (get-in haettu-urakka [:hallintayksikko :id])
-              (:id haettu-urakka)))
+              haettu-urakka))
           :kayttaja (let [haettu-kayttaja (<! (k/post! :hae-kayttajan-tiedot (:id tulos)))]
                       (nayta-kayttaja haettu-kayttaja))
           :organisaatio
@@ -122,26 +128,27 @@
 
 (defn haku
   []
-  (let [tulokset @hakutulokset
-        termi @hakutermi]
-    [:form.navbar-form.navbar-left {:role "search"}
-     [:div.form-group.haku
-      [suodatettu-lista {:format         :hakusanat
-                         :haku           :hakusanat
-                         :term           (r/wrap termi (fn [uusi-termi]
-                                                         (reset! hakutermi
-                                                                 (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
-                         :ryhmittely     :tyyppi
-                         :ryhman-otsikko #(case %
-                                           :urakka "Urakat"
-                                           :kayttaja "Käyttäjät"
-                                           :organisaatio "Organisaatiot"
-                                           "Muut")
-                         :on-select      #(valitse-hakutulos %)
-                         :aputeksti      "Hae Harjasta"
-                         :tunniste       #((juxt :tyyppi :id) %)
-                         :vinkki         #(if (liikaa-osumia? tulokset)
-                                           "Paljon osumia, tarkenna hakua..."
-                                           (when (= [] tulokset)
-                                             (str "Ei tuloksia haulla " termi)))}
-       tulokset]]]))
+  (fn []
+    (let [tulokset @hakutulokset
+          termi @hakutermi]
+      [:form.navbar-form.navbar-left {:role "search"}
+       [:div.form-group.haku
+        [suodatettu-lista {:format         :hakusanat
+                           :haku           :hakusanat
+                           :term           (r/wrap termi (fn [uusi-termi]
+                                                           (reset! hakutermi
+                                                                   (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
+                           :ryhmittely     :tyyppi
+                           :ryhman-otsikko #(case %
+                                             :urakka "Urakat"
+                                             :kayttaja "Käyttäjät"
+                                             :organisaatio "Organisaatiot"
+                                             "Muut")
+                           :on-select      #(valitse-hakutulos %)
+                           :aputeksti      "Hae Harjasta"
+                           :tunniste       #((juxt :tyyppi :id) %)
+                           :vinkki         #(if (liikaa-osumia? tulokset)
+                                             "Paljon osumia, tarkenna hakua..."
+                                             (when (= [] tulokset)
+                                               (str "Ei tuloksia haulla " termi)))}
+         tulokset]]])))

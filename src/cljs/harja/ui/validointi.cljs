@@ -75,7 +75,7 @@
         (or viesti
             (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm hoitokausi-alku)
                  " - " (pvm/pvm hoitokausi-loppu)))
-        (when-not valitun-kkn-aikana?
+        (when (and valittu-kk-alkupvm (not valitun-kkn-aikana?))
           (or viesti
               (str "Päivämäärä ei ole valitun kuukauden aikana (" (pvm/pvm valittu-kk-alkupvm)
                    " \u2014 " (pvm/pvm valittu-kk-loppupvm) ")")))))))

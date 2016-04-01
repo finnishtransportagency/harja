@@ -1,4 +1,3 @@
-
 /* closure liima, jolla saadaan kätevästi funktio kuvatasoksi */
 
 goog.provide('kuvataso.Lahde');

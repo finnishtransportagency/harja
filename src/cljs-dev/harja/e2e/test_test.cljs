@@ -14,7 +14,7 @@
 (deftest ^:async e2e-testaus
   (nav/vaihda-sivu! :urakat)
   (tu/muokkaa-atomia (nav/valittu-valilehti-atom :urakat) :siltatarkastukset)
-  (wait-reactions [sillat/sillat]
+  (wait-reactions [sillat/sillat-kartalla]
                  (is (= (dommy/text (aget (sel [:.grid :tr :td]) 0)) "Oulujoen silta"))
                  (is (= (dommy/text (aget (sel [:.grid :tr :td]) 1)) "902"))))
 

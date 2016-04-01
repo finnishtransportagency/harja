@@ -3,15 +3,15 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.toteumat :as toteumat]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
-            [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
@@ -19,11 +19,8 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
-  (let [vastauksen-data
-        {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))}]
-    (if uusi-id
-      (assoc vastauksen-data :id uusi-id)
-      vastauksen-data)))
+  (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
+                               :id (when uusi-id uusi-id)}))
 
 (defn lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
@@ -58,8 +55,7 @@
       "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
       "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
       "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
-      ;; toistaiseksi tarkastuksia ei viedä Tierekisteriin
-      "tarkastus" :default)))
+      "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
 
 (defn poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -68,12 +64,11 @@
     toteuma-id))
 
 (defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                            kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm
-                                            tarkastusaika]} toteuma-id]
+                                            kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
   (jdbc/with-db-transaction
     [db db]
     (let [tr (:tie sijainti)
-          ;; yesql 20 parametrin rajoituksen vuoksi luonti kahdessa erässä
+          ;; jeesql 20 parametrin rajoituksen vuoksi luonti kahdessa erässä
           id (:id (toteumat/luo-varustetoteuma<!
                     db
                     tunniste
@@ -87,7 +82,6 @@
                     piiri
                     kuntoluokitus
                     tierekisteriurakkakoodi
-                    (aika-string->java-sql-date tarkastusaika)
                     (:id kirjaaja)))]
       (toteumat/paivita-varustetoteuman-tr-osoite! db
                                                    (:numero tr)
@@ -130,7 +124,7 @@
     (julkaise-reitti
       http :lisaa-varustetoteuma
       (POST "/api/urakat/:id/toteumat/varuste" request
-        (kasittele-kutsu db
+        (kasittele-kutsu-async db
                          integraatioloki
                          :lisaa-varustetoteuma
                          request

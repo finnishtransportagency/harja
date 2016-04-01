@@ -1,0 +1,107 @@
+<yha:urakan-kohteiden-toteumatietojen-kirjaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
+  <!--Zero or more repetitions:-->
+  <yha:urakka>
+    <yha:yha-id>3</yha:yha-id>
+    <yha:harja-id>3</yha:harja-id>
+    <yha:sampo-id>string</yha:sampo-id>
+    <yha:ely>POP</yha:ely>
+    <yha:vuosi>2016</yha:vuosi>
+    <yha:nimi>string</yha:nimi>
+    <yha:kohteet>
+      <!--Zero or more repetitions:-->
+      <yha:kohde>
+        <yha:yha-id>3</yha:yha-id>
+        <yha:harja-id>3</yha:harja-id>
+        <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
+        <yha:nimi>string</yha:nimi>
+        <!--Optional:-->
+        <yha:toiden-aloituspaivamaara>2007-10-26</yha:toiden-aloituspaivamaara>
+        <!--Optional:-->
+        <yha:paallystyksen-valmistumispaivamaara>2004-02-14</yha:paallystyksen-valmistumispaivamaara>
+        <!--Optional:-->
+        <yha:kohteen-valmistumispaivamaara>2018-11-01+02:00</yha:kohteen-valmistumispaivamaara>
+        <!--Optional:-->
+        <yha:takuupaivamaara>2013-05-22+03:00</yha:takuupaivamaara>
+        <!--Optional:-->
+        <yha:toteutunuthinta>1000.00</yha:toteutunuthinta>
+        <yha:tierekisteriosoitevali>
+          <yha:tienumero>3</yha:tienumero>
+          <yha:ajorata>yksiajoratainen</yha:ajorata>
+          <yha:kaista>paakaista</yha:kaista>
+          <!--Optional:-->
+          <yha:suunta>tierekisterin suunta</yha:suunta>
+          <yha:aosa>3</yha:aosa>
+          <yha:aet>3</yha:aet>
+          <yha:losa>3</yha:losa>
+          <yha:let>3</yha:let>
+        </yha:tierekisteriosoitevali>
+        <yha:alustalle-tehdyt-toimet>
+          <!--Zero or more repetitions:-->
+          <yha:alustalle-tehty-toimenpide>
+            <yha:tierekisteriosoitevali>
+              <yha:tienumero>3</yha:tienumero>
+              <yha:ajorata>kaksiajorataisen toinen</yha:ajorata>
+              <yha:kaista>paakaista</yha:kaista>
+              <!--Optional:-->
+              <yha:suunta>molemmat suunnat samassa</yha:suunta>
+              <yha:aosa>3</yha:aosa>
+              <yha:aet>3</yha:aet>
+              <yha:losa>3</yha:losa>
+              <yha:let>3</yha:let>
+            </yha:tierekisteriosoitevali>
+            <yha:kasittelymenetelma>Kantavan kerroksen AB</yha:kasittelymenetelma>
+            <yha:kasittelypaksuus>1000.00</yha:kasittelypaksuus>
+            <yha:verkkotyyppi>Muu</yha:verkkotyyppi>
+            <yha:tekninen-toimenpide>Raskas rakenteen parantaminen</yha:tekninen-toimenpide>
+          </yha:alustalle-tehty-toimenpide>
+        </yha:alustalle-tehdyt-toimet>
+        <yha:alikohteet>
+          <!--Zero or more repetitions:-->
+          <yha:alikohde>
+            <yha:yha-id>3</yha:yha-id>
+            <yha:harja-id>3</yha:harja-id>
+            <yha:tierekisteriosoitevali>
+              <yha:tienumero>3</yha:tienumero>
+              <yha:ajorata>kaksiajorataisen ensimmainen</yha:ajorata>
+              <yha:kaista>kolmas kaista</yha:kaista>
+              <!--Optional:-->
+              <yha:suunta>tierekisterin vastainen suunta</yha:suunta>
+              <yha:aosa>3</yha:aosa>
+              <yha:aet>3</yha:aet>
+              <yha:losa>3</yha:losa>
+              <yha:let>3</yha:let>
+            </yha:tierekisteriosoitevali>
+            <!--Optional:-->
+            <yha:tunniste>string</yha:tunniste>
+            <!--Optional:-->
+            <yha:paallystystoimenpide>
+              <yha:uusi-paallyste>Sora</yha:uusi-paallyste>
+              <yha:edellinen-paallyste>Soratien pintaus</yha:edellinen-paallyste>
+              <yha:raekoko>1000.00</yha:raekoko>
+              <yha:aluemassamaara>1000.00</yha:aluemassamaara>
+              <yha:kokonaismassamaara>1000.00</yha:kokonaismassamaara>
+              <yha:rc-prosentti>1000.00</yha:rc-prosentti>
+              <!--Optional:-->
+              <yha:kuulamylly>string</yha:kuulamylly>
+              <yha:paallystetyomenetelma>ART-pintaus</yha:paallystetyomenetelma>
+              <yha:leveys>1000.00</yha:leveys>
+              <yha:pinta-ala>1000.00</yha:pinta-ala>
+            </yha:paallystystoimenpide>
+            <!--Optional:-->
+            <yha:materiaalit>
+              <!--Zero or more repetitions:-->
+              <yha:materiaali>
+                <yha:kiviainesesiintyman-nimi>string</yha:kiviainesesiintyman-nimi>
+                <yha:kiviaineksen-km-arvo>string</yha:kiviaineksen-km-arvo>
+                <yha:kiviaineksen-muotoarvo>string</yha:kiviaineksen-muotoarvo>
+                <yha:sidainetyyppi>string</yha:sidainetyyppi>
+                <yha:sideainepitoisuus>1000.00</yha:sideainepitoisuus>
+                <yha:lisa-aineet>string</yha:lisa-aineet>
+              </yha:materiaali>
+            </yha:materiaalit>
+          </yha:alikohde>
+        </yha:alikohteet>
+      </yha:kohde>
+    </yha:kohteet>
+  </yha:urakka>
+</yha:urakan-kohteiden-toteumatietojen-kirjaus>

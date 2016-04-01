@@ -58,54 +58,24 @@ WHERE maksuera IN (SELECT m.numero
                      JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
                    WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka AND tpk.id IN (:tehtavat));
 
-
--- name: hae-yksikkohintaiset-tyot-per-paiva
--- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna päivittäin.
--- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
-SELECT date_trunc('day', tot.alkanut) as pvm,
-  t4.nimi,
-  yht.yksikko,
-  yht.yksikkohinta,
-       yht.maara as suunniteltu_maara,
-       SUM(tt.maara) as toteutunut_maara,
-       (yht.maara * yksikkohinta) as suunnitellut_kustannukset,
-       (SUM(tt.maara) * yksikkohinta) as toteutuneet_kustannukset,
-  tpi.nimi as toimenpide
-FROM toteuma tot
-  JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
-  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
-                                    yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
-  JOIN toimenpideinstanssi tpi ON (tpi.toimenpide = t4.emo AND tpi.urakka = :urakka)
- WHERE tot.urakka = :urakka
-       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
-       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
- GROUP BY pvm, t4.nimi, yht.yksikko, yht.yksikkohinta,yht.maara, tpi.nimi
- ORDER BY pvm ASC;
-       
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna kuukausittain
 -- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
 SELECT
   extract(YEAR FROM tot.alkanut)::INT as vuosi,
   extract(MONTH FROM tot.alkanut)::INT as kuukausi,
+  t4.id as tehtava_id,
   t4.nimi,
   t4.yksikko,
-  yht.yksikkohinta,
-  yht.maara as suunniteltu_maara,
-  SUM(tt.maara) as toteutunut_maara,
-  ROUND(SUM(tt.maara) / yht.maara, 2) as toteumaprosentti
+  SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
-  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi=yht.tehtava AND yht.urakka=tot.urakka AND
-                                    yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, t4.yksikko, yht.yksikkohinta, yht.maara, vuosi, kuukausi
+GROUP BY t4.nimi, t4.yksikko, vuosi, kuukausi, t4.id;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle
 -- Hakee yksikköhintaiset työt annetulle hallintayksikolle ja aikavälille summattuna kuukausittain
@@ -125,24 +95,7 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi
-
--- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle
--- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain
--- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
-SELECT
-  extract(YEAR FROM tot.alkanut)::INT as vuosi,
-  extract(MONTH FROM tot.alkanut)::INT as kuukausi,
-  t4.nimi,
-  t4.yksikko,
-  SUM(tt.maara) as toteutunut_maara
-FROM toteuma tot
-  JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
-WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
-      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain
 -- Hakee yksikköhintaiset työt annetulle hallintayksikolle ja aikavälille summattuna kuukausittain, eriteltynä urakoittain
@@ -165,7 +118,24 @@ WHERE tot.urakka IN (SELECT id
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id;
+
+-- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle
+-- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain
+-- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
+SELECT
+  extract(YEAR FROM tot.alkanut)::INT as vuosi,
+  extract(MONTH FROM tot.alkanut)::INT as kuukausi,
+  t4.nimi,
+  t4.yksikko,
+  SUM(tt.maara) as toteutunut_maara
+FROM toteuma tot
+  JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi;
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain
 -- Hakee yksikköhintaiset työt koko maalle ja aikavälille summattuna kuukausittain, eriteltynä urakoittain
@@ -185,31 +155,24 @@ FROM toteuma tot
 WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
+GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-urakalle
 -- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille, summattuna tehtävittäin
 SELECT
   t4.nimi,
-  yht.yksikko,
-  yht.yksikkohinta,
-  yht.maara                      AS suunniteltu_maara,
-  SUM(tt.maara)                  AS toteutunut_maara,
-  (yht.maara * yksikkohinta)     AS suunnitellut_kustannukset,
-  (SUM(tt.maara) * yksikkohinta) AS toteutuneet_kustannukset
+  t4.id                      AS tehtava_id,
+  SUM(tt.maara)              AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
-  JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava AND yht.urakka = tot.urakka AND
-                                    yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut)
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, yht.yksikko, yht.yksikkohinta, yht.maara
-ORDER BY toteutuneet_kustannukset;
+GROUP BY t4.nimi, t4.id;
 
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle
 -- Hakee yksikköhintaiset työt annetulle hallintayksikölle aikavälille, summattuna tehtävittäin
@@ -224,22 +187,6 @@ WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
-                                                        WHERE tpk.emo = :tpi))
-      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
-GROUP BY t4.nimi, t4.yksikko;
-
--- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle
--- Hakee yksikköhintaiset työt koko maasta aikavälille, summattuna tehtävittäin
-SELECT
-  t4.nimi,
-  t4.yksikko,
-  SUM(tt.maara)                  AS toteutunut_maara
-FROM toteuma tot
-  JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
-WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
                                                         WHERE tpk.emo = :tpi))
@@ -269,6 +216,22 @@ WHERE tot.urakka IN (SELECT id
 GROUP BY t4.nimi, t4.yksikko, u.id
 ORDER BY urakka_nimi;
 
+-- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle
+-- Hakee yksikköhintaiset työt koko maasta aikavälille, summattuna tehtävittäin
+SELECT
+  t4.nimi,
+  t4.yksikko,
+  SUM(tt.maara)                  AS toteutunut_maara
+FROM toteuma tot
+  JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+      AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
+                                                        FROM toimenpidekoodi tpk
+                                                        WHERE tpk.emo = :tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
+GROUP BY t4.nimi, t4.yksikko;
+
 -- name: hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain
 -- Hakee yksikköhintaiset työt koko maasta aikavälille, summattuna tehtävittäin ja eriteltynä urakoittain
 SELECT
@@ -288,3 +251,22 @@ WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, t4.yksikko, u.id
 ORDER BY urakka_nimi;
+
+-- name: hae-yksikkohintaiset-tyot-per-paiva
+-- Hakee yksikköhintaiset työt annetulle urakalle ja aikavälille summattuna päivittäin.
+-- Optionaalisesti voidaan antaa vain tietty toimenpide, jonka työt haetaan.
+SELECT date_trunc('day', tot.alkanut) AS pvm,
+  t4.nimi,
+  t4.id                          AS tehtava_id,
+  tpi.nimi                       AS toimenpide,
+  SUM(tt.maara)                  AS toteutunut_maara
+FROM toteuma tot
+  JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN toimenpideinstanssi tpi ON (tpi.toimenpide = t4.emo AND tpi.urakka = :urakka)
+WHERE tot.urakka = :urakka
+      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
+GROUP BY pvm, t4.nimi, tpi.nimi, tehtava_id
+ORDER BY pvm ASC;

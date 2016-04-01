@@ -4,7 +4,8 @@
             [harja.palvelin.palvelut.muut-tyot :refer :all]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -39,8 +40,8 @@
                ;; :urakka 1, :yksikkohinta 4.5, :toimenpideinstanssi 1, :id 8,
                ;; :tehtavan_nimi I rampit, :sopimus 1, :alkupvm #inst "2005-09-30T21:00:00.000-00:00"
                ramppitehtava (first (filter #(= (:tehtava %) ramppitehtavan-id) muutoshintaiset-tyot))
-               urakan-alkupvm (java.sql.Date. 105 9 1) ;;1.10.2005
-               urakan-loppupvm (java.sql.Date. 110 8 30)] ;;30.9.2010
+               urakan-alkupvm (pvm/luo-pvm 2005 9 1) ;;1.10.2005
+               urakan-loppupvm (pvm/luo-pvm 2012 8 30)] ;;30.9.2010
            (is (= (:yksikkohinta ramppitehtava) 4.5) "muutoshintaisen yksikköhinta")
            (is (= (:yksikko ramppitehtava) "tiekm") "muutoshintaisen yksikköhinta")
            (is (= (:tehtavanimi ramppitehtava) "I rampit") "muutoshintaisen tehtävän nimi")
@@ -56,7 +57,7 @@
                                        (str "SELECT count(*)
                                                        FROM muutoshintainen_tyo
                                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
-                                            ") AND alkupvm >= '2005-10-01' AND loppupvm <= '2010-09-30'")))
+                                            ") AND alkupvm >= '2005-10-01' AND loppupvm <= '2012-09-30'")))
 
         muokattavan-tyon-tehtava (ffirst (q (str "select id from toimenpidekoodi where nimi = 'I rampit'")))
         muokattava-tyo (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) muutoshintaiset-tyot))

@@ -16,18 +16,6 @@
     "id": 123
   },
   "viimeksipaivitetty": "2016-01-30T12:00:00Z",
-  "toteuttaja": "Yritys Oy",
-  "tilaaja": "Paula Projektipäällikkö",
-  "turvallisuuskoordinaattori": {
-    "id":235648,
-    "etunimi": "Mikko",
-    "sukunimi": "Meikäläinen"
-  },
-  "laatija": {
-    "id" : 654486,
-    "etunimi": "Urho",
-    "sukunimi": "Urakoitisja"
-  },
   "turvallisuuspoikkeamat": [
     {
       "tunniste": {
@@ -58,15 +46,32 @@
         "etunimi": "Veera",
         "sukunimi": "Veistelijä"
       },
+      "toteuttaja": "Yritys Oy",
+      "tilaaja": "Paula Projektipäällikkö",
+      "turvallisuuskoordinaattori": {
+        "id":235648,
+        "etunimi": "Mikko",
+        "sukunimi": "Meikäläinen"
+      },
+      "laatija": {
+        "id" : 654486,
+        "etunimi": "Urho",
+        "sukunimi": "Urakoitisja"
+      },
       "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
       "paattynyt": "2016-01-30T12:00:00Z",
       "kasitelty": "2016-01-30T12:00:00Z",
-      "tyontekijanammatti": "Aura-auton kuljettaja",
-      "tyotehtava": "Auraus",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
-      "aiheutuneetVammat": "Tikattava haava otsassa",
-      "sairauspoissaolopaivat": 2,
-      "sairaalahoitovuorokaudet": 0,
+      "henkilovahinko": {
+        "tyontekijanammatti": "muu_tyontekija",
+        "ammatinselite": "Auraaja",
+        "tyotehtava": "Auraus",
+        "aiheutuneetVammat": ["luunmurtumat"],
+        "vahingoittuneetRuumiinosat": ["selka", "vartalo"],
+        "sairauspoissaoloJatkuu": true,
+        "sairauspoissaolopaivat": 2,
+        "sairaalahoitovuorokaudet": 0
+      },
       "vahinkoluokittelu": ["henkilovahinko"],
       "vakavuusaste": "vakava",
       "korjaavatToimenpiteet": [

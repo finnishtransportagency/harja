@@ -4,24 +4,27 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.urakat :as urakat-q]
-
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
 
 (def turvallisuuspoikkeama-xf
   (comp (map konv/alaviiva->rakenne)
         (geo/muunna-pg-tulokset :sijainti)
-        (map #(konv/array->vec % :tyyppi))
-        (map #(konv/array->vec % :vahinkoluokittelu))
-        (map #(konv/string-vector->keyword-vector % :tyyppi))
+        (map #(konv/array->set % :tyyppi))
+        (map #(konv/string-set->keyword-set % :tyyppi))
+        (map #(konv/array->set % :vahinkoluokittelu))
+        (map #(konv/string-set->keyword-set % :vahinkoluokittelu))
+        (map #(konv/array->set % :vahingoittuneetruumiinosat))
+        (map #(konv/string-set->keyword-set % :vahingoittuneetruumiinosat))
+        (map #(konv/array->set % :vammat))
+        (map #(konv/string-set->keyword-set % :vammat))
         (map #(konv/string->keyword % :vakavuusaste))
-        (map #(konv/string-vector->keyword-vector % :vahinkoluokittelu))
+        (map #(konv/string->keyword % :vaylamuoto))
+        (map #(konv/string->keyword % :tyontekijanammatti))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
@@ -35,19 +38,20 @@
 (defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
-  (-> (first (konv/sarakkeet-vektoriin (into []
-                                             turvallisuuspoikkeama-xf
-                                             (q/hae-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
-                                       {:kommentti          :kommentit
-                                        :korjaavatoimenpide :korjaavattoimenpiteet
-                                        :liite              :liitteet}))
+  (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
+                                              turvallisuuspoikkeama-xf
+                                              (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                        {:kommentti          :kommentit
+                                         :korjaavatoimenpide :korjaavattoimenpiteet
+                                         :liite              :liitteet}))
 
-      (update-in [:kommentit]
-                 (fn [kommentit]
-                   (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                         (dissoc % :liite)
-                                         %)
-                                       kommentit))))))
+       (update-in [:kommentit]
+                  (fn [kommentit]
+                    (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                          (dissoc % :liite)
+                                          %)
+                                        kommentit)))))]
+    tulos))
 
 (defn luo-tai-paivita-korjaavatoimenpide
   [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu]}]
@@ -64,52 +68,53 @@
 
     (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
 
+(def oletusparametrit {:ulkoinen_id nil
+                       :ilmoittaja_etunimi nil
+                       :ilmoittaja_sukunimi nil})
+
 (defn luo-tai-paivita-turvallisuuspoikkeama
-  [db user
-   {:keys
-    [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyotehtava kuvaus vammat sairauspoissaolopaivat
-     sairaalavuorokaudet sijainti tr vahinkoluokittelu vakavuusaste
-     tyyppi]}]
-
-  (log/debug "tallennetaan tyypit: " (konv/vec->array tyyppi))
-
-  ;; Tässä on nyt se venäläinen homma.
-  ;; Yesql <0.5 tukee ainoastaan "positional" argumentteja, joita Clojuressa voi olla max 20.
-  ;; Nämä kyselyt enemmän argumentteja, joten kyselyt piti katkaista kahtia.
-  ;; Toteuttamisen hetkellä Yesql 0.5 oli vasta betassa. Migraatio on sen verran iso homma,
-  ;; että betan vuoksi sitä ei liene järkevää tehdä.
+  [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu
+                   tyotehtava kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
+                   vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
+                   sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
+                   laatijaetunimi laatijasukunimi
+                   turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
-        tr_numero (:numero tr)
-        tr_alkuetaisyys (:alkuetaisyys tr)
-        tr_loppuetaisyys (:loppuetaisyys tr)
-        tr_alkuosa (:alkuosa tr)
-        tr_loppuosa (:loppuosa tr)]
+        parametrit
+        (merge oletusparametrit
+               tr
+               {:urakka urakka
+                :tapahtunut (konv/sql-timestamp tapahtunut)
+                :paattynyt (konv/sql-timestamp paattynyt)
+                :kasitelty (konv/sql-timestamp kasitelty)
+                :ammatti (some-> tyontekijanammatti name)
+                :ammatti_muu tyontekijanammattimuu
+                :tehtava tyotehtava
+                :kuvaus kuvaus
+                :vammat (konv/seq->array vammat)
+                :poissa sairauspoissaolopaivat
+                :sairaalassa sairaalavuorokaudet
+                :tyyppi (konv/seq->array tyyppi)
+                :kayttaja (:id user)
+                :vahinkoluokittelu (konv/seq->array vahinkoluokittelu)
+                :vakavuusaste (name vakavuusaste)
+                :toteuttaja toteuttaja
+                :tilaaja tilaaja
+                :sijainti sijainti
+                :vahingoittuneet_ruumiinosat (konv/seq->array vahingoittuneetruumiinosat)
+                :sairauspoissaolo_jatkuu sairauspoissaolojatkuu
+                :aiheutuneet_seuraukset seuraukset
+                :vaylamuoto (name vaylamuoto)
+                :laatija_etunimi laatijaetunimi
+                :laatija_sukunimi laatijasukunimi
+                :turvallisuuskoordinaattori_etunimi turvallisuuskoordinaattorietunimi
+                :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi})]
     (if id
-      (do (q/paivita-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                             (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                             kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                             (konv/vec->array tyyppi)
-                                             (:id user)
-                                             (konv/vec->array vahinkoluokittelu)
-                                             (name vakavuusaste)
-                                             id)
-          (q/aseta-turvallisuuspoikkeaman-sijainti! db
-                                                    sijainti
-                                                    tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
+      (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
+      (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
 
-      (let [id (:id (q/luo-turvallisuuspoikkeama<! db urakka (konv/sql-timestamp tapahtunut) (konv/sql-timestamp paattynyt)
-                                                   (konv/sql-timestamp kasitelty) tyontekijanammatti tyotehtava
-                                                   kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet
-                                                   (konv/vec->array tyyppi)
-                                                   (:id user)
-                                                   (konv/vec->array vahinkoluokittelu)
-                                                   (name vakavuusaste)))]
-        (q/aseta-turvallisuuspoikkeaman-sijainti! db
-                                                  sijainti tr_numero tr_alkuetaisyys tr_loppuetaisyys tr_alkuosa tr_loppuosa id)
-        id))))
-
-(defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
+(defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
   (jdbc/with-db-transaction [c db]
     (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
@@ -135,6 +140,8 @@
 
           (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
 
+      (when turi (turi/laheta-turvallisuuspoikkeama turi id))
+
       (hae-turvallisuuspoikkeamat c user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))))
 
 (defrecord Turvallisuuspoikkeamat []
@@ -152,7 +159,7 @@
 
                        :tallenna-turvallisuuspoikkeama
                        (fn [user tiedot]
-                         (tallenna-turvallisuuspoikkeama (:db this) user tiedot)))
+                         (tallenna-turvallisuuspoikkeama (:turi this) (:db this) user tiedot)))
     this)
 
   (stop [this]

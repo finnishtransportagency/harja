@@ -278,8 +278,8 @@ SELECT
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
-  LEFT JOIN tarkastus_liite ON lp.id = tarkastus_liite.tarkastus
-  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+  LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
+  LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE lp.urakka = :urakka
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
@@ -299,8 +299,8 @@ FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON lp.urakka = u.id
-  LEFT JOIN tarkastus_liite ON lp.id = tarkastus_liite.tarkastus
-  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+  LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
+  LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
@@ -320,7 +320,7 @@ FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON lp.urakka = u.id
-  LEFT JOIN tarkastus_liite ON lp.id = tarkastus_liite.tarkastus
-  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+  LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
+  LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);

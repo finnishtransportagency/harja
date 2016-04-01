@@ -52,6 +52,7 @@
 (defn varustetoteuma-klikattu [_ toteuma]
   (popupit/nayta-popup
     (assoc toteuma
+      :toimenpide (varustetiedot/varuste-toimenpide->string (keyword (:toimenpide toteuma)))
       :aihe :varustetoteuma-klikattu
       :varustekortti-url (kommunikaatio/varustekortti-url (:alkupvm toteuma) (:tietolaji toteuma) (:tunniste toteuma)))))
 
@@ -76,12 +77,7 @@
                              [varustetoteuman-tehtavat toteuma]))
                          toteumat))}
       [{:tyyppi :vetolaatikon-tila :leveys 5}
-       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm
-        :nimi    :alkupvm :leveys 10
-        :hae     (fn [rivi]
-                   (if (= :tarkastus (:toimenpide rivi))
-                     (:tarkastusaika rivi)
-                     (:alkupvm rivi)))}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
         :hae     (fn [rivi]
@@ -95,6 +91,7 @@
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}
+       {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
        {:otsikko     "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
         :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
       (take nayta-max-toteumaa valitut-toteumat)]

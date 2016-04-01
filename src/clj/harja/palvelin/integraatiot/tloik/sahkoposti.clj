@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.tloik.sahkoposti
   "Ilmoitusten lähettäminen urakoitsijalle ja kuittausten vastaanottaminen"
   (:require [hiccup.core :refer [html]]
-            [harja.domain.ilmoitusapurit :as apurit]
+            [harja.domain.ilmoitukset :as apurit]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]

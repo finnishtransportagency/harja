@@ -5,7 +5,6 @@
 
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/suorittaja"
                schemaLocation="suorittaja.xsd"/>
-
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="tietue.xsd"/>
 
     <xs:element name="lisaaTietue">

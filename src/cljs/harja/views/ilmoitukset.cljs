@@ -4,9 +4,10 @@
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitusapurit :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
+            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                                  +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
-                                                 +ilmoitusten-selitteet+ parsi-selitteet]]
+                                                 +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
+                                                 kuittaustyypin-selite]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -33,9 +34,8 @@
 
 (defn nayta-tierekisteriosoite
   [tr]
-  (if tr
+  (if (and tr (:numero tr))
     (str "Tie " (:numero tr) " / " (:alkuosa tr) " / " (:alkuetaisyys tr) " / " (:loppuosa tr) " / " (:loppuetaisyys tr))
-
     (str "Ei tierekisteriosoitetta")))
 
 (defn ilmoituksen-tiedot []
@@ -111,20 +111,22 @@
             :valinnat      @u/valitun-urakan-hoitokaudet
             :valinta-nayta fmt/pvm-vali-opt})
 
-         (lomake/ryhma {:ulkoasu :rivi :palstoja 2}
-                       {:nimi     :saapunut-alkaen
-                        :hae      (comp first :aikavali)
-                        :aseta    #(assoc-in %1 [:aikavali 0] %2)
-                        :otsikko  "Alkaen"
-                        :palstoja 1
-                        :tyyppi   :pvm}
+         (lomake/ryhma
+           {:ulkoasu  :rivi
+            :palstoja 2}
+           {:nimi     :saapunut-alkaen
+            :hae      (comp first :aikavali)
+            :aseta    #(assoc-in %1 [:aikavali 0] %2)
+            :otsikko  "Alkaen"
+            :palstoja 1
+            :tyyppi   :pvm}
 
-                       {:nimi     :saapunut-paattyen
-                        :otsikko  "Päättyen"
-                        :palstoja 1
-                        :hae      (comp second :aikavali)
-                        :aseta    #(assoc-in %1 [:aikavali 1] %2)
-                        :tyyppi   :pvm})
+           {:nimi     :saapunut-paattyen
+            :otsikko  "Päättyen"
+            :palstoja 1
+            :hae      (comp second :aikavali)
+            :aseta    #(assoc-in %1 [:aikavali 1] %2)
+            :tyyppi   :pvm})
 
          {:nimi        :hakuehto :otsikko "Hakusana"
           :placeholder "Hae tekstillä..."
@@ -147,17 +149,31 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
                                            (vec (sort itemit))))))}
-
-         (lomake/ryhma {:ulkoasu :rivi}
-                       {:nimi        :tilat :otsikko "Tila"
-                        :tyyppi      :checkbox-group
-                        :vaihtoehdot [:suljetut :avoimet]}
-
-                       {:nimi             :tyypit :otsikko "Tyyppi"
-                        :tyyppi           :checkbox-group
-                        :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
-                        :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi})]
-
+         (lomake/ryhma
+           {:rivi? true}
+           {:nimi             :kuittaustyypit
+            :otsikko          "Tila"
+            :tyyppi           :checkbox-group
+            :vaihtoehdot      tiedot/kuittaustyyppi-filtterit
+            :vaihtoehto-nayta kuittaustyypin-selite}
+           {:nimi             :tyypit
+            :otsikko          "Tyyppi"
+            :tyyppi           :checkbox-group
+            :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
+            :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
+           {:nimi             :vain-myohassa?
+            :otsikko          "Kuittaukset"
+            :tyyppi           :checkbox
+            :teksti           "Myöhästyneet"}
+           {:nimi             :aloituskuittauksen-ajankohta
+            :otsikko          "Aloituskuittaus annettu"
+            :tyyppi           :radio-group
+            :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
+            :vaihtoehto-nayta (fn [arvo]
+                                ({:kaikki     "Kaikki"
+                                  :alle-tunti "Alle tunnin kuluessa"
+                                  :myohemmin  "Yli tunnin päästä"}
+                                  arvo))})]
         @tiedot/valinnat]
 
        [:div
@@ -172,8 +188,7 @@
           {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "15%"}
           {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %)) :leveys "15%"}
           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "15%"}
-          {:otsikko "Vast." :tyyppi :boolean :nimi :suljettu :leveys "10%"}]
-
+          {:otsikko "Tila" :nimi :tila :leveys "10%" :hae #(kuittaustyypin-selite (:tila %))}]
          @tiedot/haetut-ilmoitukset]]])))
 
 (defn ilmoitukset []

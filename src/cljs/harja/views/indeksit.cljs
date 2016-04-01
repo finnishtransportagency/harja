@@ -8,7 +8,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (declare tallenna-indeksi)
@@ -33,7 +34,7 @@
        :valinta-arvo  identity
        :valinta-nayta #(if (nil? %) "- valitse -" %)
 
-       :valinnat      (vec (filter #(not (varatut-vuodet %)) (range 2010 2045)))
+       :valinnat      (vec (filter #(not (varatut-vuodet %)) (range 2010 (inc (t/year (t/now))))))
 
        :validoi       [[:ei-tyhja "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
        :muokattava?   #(not (:kannassa? %))}

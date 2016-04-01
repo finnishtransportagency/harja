@@ -3,7 +3,7 @@
   (:require [taoensso.timbre :as log]
             [clojure.string :as string]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
-            [harja.domain.ilmoitusapurit :as apurit]
+            [harja.domain.ilmoitukset :as apurit]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.tyokalut.merkkijono :as merkkijono]

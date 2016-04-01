@@ -2,8 +2,8 @@
 SELECT
   i.id,
   i.urakka,
-  hy.id                               AS hallintayksikko_id,
-  hy.nimi                             AS hallintayksikko_nimi,
+  hy.id                                                              AS hallintayksikko_id,
+  hy.nimi                                                            AS hallintayksikko_nimi,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
@@ -15,7 +15,6 @@ SELECT
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
-  i.suljettu,
 
   i.sijainti,
   i.tr_numero,
@@ -36,28 +35,39 @@ SELECT
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
 
-  it.id                               AS kuittaus_id,
-  it.kuitattu                         AS kuittaus_kuitattu,
-  it.vapaateksti                      AS kuittaus_vapaateksti,
-  it.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
+  it.id                                                              AS kuittaus_id,
+  it.kuitattu                                                        AS kuittaus_kuitattu,
+  it.vapaateksti                                                     AS kuittaus_vapaateksti,
+  it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
 
-  it.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
-  it.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,
-  it.kuittaaja_henkilo_matkapuhelin   AS kuittaus_kuittaaja_matkapuhelin,
-  it.kuittaaja_henkilo_tyopuhelin     AS kuittaus_kuittaaja_tyopuhelin,
-  it.kuittaaja_henkilo_sahkoposti     AS kuittaus_kuittaaja_sahkoposti,
-  it.kuittaaja_organisaatio_nimi      AS kuittaus_kuittaaja_organisaatio,
-  it.kuittaaja_organisaatio_ytunnus   AS kuittaus_kuittaaja_ytunnus,
+  it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
+  it.kuittaaja_henkilo_matkapuhelin                                  AS kuittaus_kuittaaja_matkapuhelin,
+  it.kuittaaja_henkilo_tyopuhelin                                    AS kuittaus_kuittaaja_tyopuhelin,
+  it.kuittaaja_henkilo_sahkoposti                                    AS kuittaus_kuittaaja_sahkoposti,
+  it.kuittaaja_organisaatio_nimi                                     AS kuittaus_kuittaaja_organisaatio,
+  it.kuittaaja_organisaatio_ytunnus                                  AS kuittaus_kuittaaja_ytunnus,
 
-  it.kasittelija_henkilo_etunimi      AS kuittaus_kasittelija_etunimi,
-  it.kasittelija_henkilo_sukunimi     AS kuittaus_kasittelija_sukunimi,
-  it.kasittelija_henkilo_matkapuhelin AS kuittaus_kasittelija_matkapuhelin,
-  it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
-  it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
-  it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_henkilo_etunimi                                     AS kuittaus_kasittelija_etunimi,
+  it.kasittelija_henkilo_sukunimi                                    AS kuittaus_kasittelija_sukunimi,
+  it.kasittelija_henkilo_matkapuhelin                                AS kuittaus_kasittelija_matkapuhelin,
+  it.kasittelija_henkilo_tyopuhelin                                  AS kuittaus_kasittelija_tyopuhelin,
+  it.kasittelija_henkilo_sahkoposti                                  AS kuittaus_kasittelija_sahkoposti,
+  it.kasittelija_organisaatio_nimi                                   AS kuittaus_kasittelija_organisaatio,
+  it.kasittelija_organisaatio_ytunnus                                AS kuittaus_kasittelija_ytunnus,
 
-
+  EXISTS(SELECT *
+         FROM ilmoitustoimenpide
+         WHERE ilmoitus = i.id
+               AND kuittaustyyppi = 'vastaanotto' :: kuittaustyyppi) AS vastaanotettu,
+  EXISTS(SELECT *
+         FROM ilmoitustoimenpide
+         WHERE ilmoitus = i.id
+               AND kuittaustyyppi = 'aloitus' :: kuittaustyyppi)     AS aloitettu,
+  EXISTS(SELECT *
+         FROM ilmoitustoimenpide
+         WHERE ilmoitus = i.id
+               AND kuittaustyyppi = 'lopetus' :: kuittaustyyppi)     AS lopetettu
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
@@ -81,15 +91,7 @@ WHERE
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
 
   -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY[:selite ::ilmoituksenselite])) AND
-
-  -- Tarkasta ilmoituksen tilat
-  (
-    (:suljetut IS TRUE AND :avoimet IS TRUE) OR
-    (:suljetut IS FALSE AND :avoimet IS FALSE) OR
-    (:suljetut IS TRUE AND i.suljettu IS TRUE) OR
-    (:avoimet IS TRUE AND i.suljettu IS NOT TRUE)
-  )
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite]))
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 -- name: hae-ilmoitukset-idlla
@@ -310,13 +312,29 @@ VALUES
    :kasittelija_organisaatio_nimi,
    :kasittelija_organisaatio_ytunnus);
 
--- name: merkitse-ilmoitustoimenpide-suljetuksi!
-UPDATE ilmoitus
-SET suljettu = TRUE
-WHERE id = :id;
-
 -- name: hae-ilmoitus-ilmoitus-idlla
 -- Hakee ilmoituksen T-LOIK ilmoitus id:n perusteella
-SELECT id,ilmoitusid,ilmoitustyyppi,urakka
-  FROM ilmoitus
- WHERE ilmoitusid = :ilmoitusid
+SELECT
+  id,
+  ilmoitusid,
+  ilmoitustyyppi,
+  urakka
+FROM ilmoitus
+WHERE ilmoitusid = :ilmoitusid;
+
+-- name: hae-ilmoitukset-asiakaspalauteluokittain
+-- Hakee summat kaikille asiakaspalauteluokille jaoteltuina ilmoitustyypeittäin
+SELECT
+  apl.nimi,
+  i.ilmoitustyyppi,
+  (coalesce(SUM(1), 0)) AS numero
+FROM asiakaspalauteluokka apl
+  JOIN ilmoitus i
+    ON i.selitteet && apl.selitteet AND
+       (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
+       (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
+                                                               FROM urakka
+                                                               WHERE hallintayksikko = :hallintayksikko_id)) AND
+       (:alkupvm :: DATE IS NULL OR i.ilmoitettu >= :alkupvm) AND
+       (:loppupvm :: DATE IS NULL OR i.ilmoitettu <= :loppupvm)
+GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);

@@ -44,7 +44,7 @@
       "http://185.26.50.104/Pohjavesialue.zip"
       "/Users/jarihan/Desktop/Pohjavesialue-testi/"
       (fn []
-        (pohjavesialueen-tuonti/vie-pohjavesialue-kantaan
+        (pohjavesialueen-tuonti/vie-pohjavesialueet-kantaan
           testitietokanta
           "file:///Users/jarihan/Desktop/Pohjavesialue-testi/Pohjavesialue.shp")))))
 
@@ -94,7 +94,8 @@
 
     (with-fake-http
       [{:url fake-tiedosto-url :method :head} fake-vastaus]
-      (let [muokkausaika (alk/hae-tiedoston-muutospaivamaara integraatioloki "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
+      (let [muokkausaika (alk/hae-tiedoston-muutospaivamaara
+                           testitietokanta integraatioloki "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
         (is (= muokkausaika (time-coerce/to-sql-time (Date. fake-muokkausaika))))))))
 
 (deftest testaa-tiedoston-lataus-alk-alustalla

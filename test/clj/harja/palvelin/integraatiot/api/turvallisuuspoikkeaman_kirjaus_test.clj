@@ -5,7 +5,8 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
 
 (def kayttaja "yit-rakennus")
 
@@ -13,8 +14,11 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
+    :turi (component/using
+            (turi/->Turi {})
+            [:db :integraatioloki :liitteiden-hallinta])
     :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
+                                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta :turi])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -31,7 +35,7 @@
           liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testitp36934853.jpg';")))
           tp-id (ffirst (q (str "SELECT id FROM turvallisuuspoikkeama WHERE kuvaus ='Aura-auto suistui tieltä väistäessä jalankulkijaa.'")))
           kommentti-id (ffirst (q (str "SELECT id FROM kommentti WHERE kommentti='Testikommentti';")))]
-      
+
       (is (= (+ tp-kannassa-ennen-pyyntoa 1) tp-kannassa-pyynnon-jalkeen))
       (is (number? liite-id))
       (is (number? tp-id))

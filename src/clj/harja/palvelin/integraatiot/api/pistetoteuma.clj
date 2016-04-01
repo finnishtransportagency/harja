@@ -4,7 +4,7 @@
             [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
@@ -15,8 +15,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
-  (let [vastauksen-data {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}]
-    vastauksen-data))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}))
 
 (defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja pistetoteuma]
   (log/debug "Käsitellään yksittäinen pistetoteuma tunnisteella " (get-in pistetoteuma [:toteuma :tunniste :id]))

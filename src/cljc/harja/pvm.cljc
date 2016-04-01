@@ -1,5 +1,7 @@
 (ns harja.pvm
-  "Yleiset päivämääräkäsittelyn asiat."
+  "Yleiset päivämääräkäsittelyn asiat.
+  Frontin puolella käytetään yleisesti tyyppiä goog.date.DateTime.
+  Backendissä käytetään yleisesti org.joda.time:n pvm-tyyppejä (muutamat java.util.Date-poikkeukset dokumentoitu erikseen)"
   (:require
     #?(:cljs [cljs-time.format :as df])
     #?(:cljs [cljs-time.core :as t])
@@ -19,7 +21,7 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-           (:import (java.util Date Calendar)
+           (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat))))
 
 
@@ -29,6 +31,12 @@
      IHash
      (-hash [o]
        (hash (tc/to-long o)))))
+
+#?(:clj
+   (defn joda-time? [pvm]
+     (or (instance? org.joda.time.DateTime pvm)
+         (instance? org.joda.time.LocalDate pvm)
+         (instance? org.joda.time.LocalDateTime pvm))))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -42,15 +50,24 @@
        (.setMilliseconds millisekunnit))
 
      :clj
-     (.getTime (doto (Calendar/getInstance)
-                 (.setTime dt)
-                 (.set Calendar/HOUR_OF_DAY tunnit)
-                 (.set Calendar/MINUTE minuutit)
-                 (.set Calendar/SECOND sekunnit)
-                 (.set Calendar/MILLISECOND millisekunnit)))))
+     (cond (instance? java.util.Date dt)
+           (.getTime (doto (Calendar/getInstance)
+                       (.setTime dt)
+                       (.set Calendar/HOUR_OF_DAY tunnit)
+                       (.set Calendar/MINUTE minuutit)
+                       (.set Calendar/SECOND sekunnit)
+                       (.set Calendar/MILLISECOND millisekunnit)))
+           (joda-time? dt)
+           (t/local-date-time
+             (t/year dt)
+             (t/month dt)
+             (t/day dt)
+             tunnit
+             minuutit
+             sekunnit
+             millisekunnit))))
 
 (defn paivan-alussa [dt]
-  (assert dt "Päivämäärä puuttuu!")
   (aikana dt 0 0 0 0))
 
 (defn paivan-alussa-opt [dt]
@@ -58,7 +75,6 @@
     (aikana dt 0 0 0 0)))
 
 (defn paivan-lopussa [dt]
-  (assert dt "Päivämäärä puuttuu!")
   (aikana dt 23 59 59 999))
 
 (defn paivan-lopussa-opt [dt]
@@ -66,14 +82,19 @@
     (aikana dt 23 59 59 999)))
 
 (defn millisekunteina [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (tc/to-long pvm))
 
-(defn nyt []
+(defn nyt
+  "Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten"
+  []
   #?(:cljs (DateTime.)
      :clj  (Date.)))
 
-(defn luo-pvm [vuosi kk pv]
+(defn luo-pvm
+  "Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten"
+  [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj  (Date. (- vuosi 1900) kk pv)))
 
@@ -94,27 +115,44 @@
    :clj
    (defn ennen? [eka toka]
      (if (and eka toka)
-       (.before eka toka)
+       (cond
+         (or (instance? java.util.Date eka)
+             (instance? java.util.Date toka))
+         (.before eka toka)
+         (or (joda-time? eka)
+             (joda-time? toka))
+         (t/before? eka toka))
        false)))
 
+
 (defn sama-tai-ennen?
+  "Tarkistaa, onko ensimmäisenä annettu pvm sama tai ennen toista annettua pvm:ää.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([eka toka] (sama-tai-ennen? eka toka true))
   ([eka toka ilman-kellonaikaa?]
-   (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
-         toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
-     (if-not (or (nil? eka) (nil? toka))
-       (or (ennen? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
-       false))))
+   (if (and eka toka)
+     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
+       (or (ennen? eka toka)
+           (= (millisekunteina eka) (millisekunteina toka))))
+     false)))
 
 (defn jalkeen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
+  (if (and eka toka)
     (t/after? eka toka)
     false))
 
-(defn sama-tai-jalkeen? [eka toka]
-  (if-not (or (nil? eka) (nil? toka))
-    (or (t/after? eka toka) (= (millisekunteina eka) (millisekunteina toka)))
-    false))
+(defn sama-tai-jalkeen?
+  "Tarkistaa, onko ensimmäisenä annettu pvm sama tai toisena annettun pvm:n jälkeen.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
+  ([eka toka] (sama-tai-jalkeen? eka toka true))
+  ([eka toka ilman-kellonaikaa?]
+   (if (and eka toka)
+     (let [eka (if ilman-kellonaikaa? (paivan-alussa eka) eka)
+           toka (if ilman-kellonaikaa? (paivan-alussa toka) toka)]
+       (or (jalkeen? eka toka)
+           (= (millisekunteina eka) (millisekunteina toka))))
+     false)))
 
 (defn sama-kuukausi?
   "Tarkistaa onko ensimmäinen ja toinen päivämäärä saman vuoden samassa kuukaudessa."
@@ -125,9 +163,12 @@
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
-  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä."
-  [pvm alkupvm loppupvm]
-  (and (sama-tai-jalkeen? pvm alkupvm) (sama-tai-ennen? pvm loppupvm)))
+  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä. Mahdollisuus verrata ilman kellonaikaa,
+  joka on oletuksena true."
+  ([pvm alkupvm loppupvm] (valissa? pvm alkupvm loppupvm true))
+  ([pvm alkupvm loppupvm ilman-kellonaikaa?]
+   (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
+        (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
@@ -179,7 +220,6 @@
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi fi-pvm-aika pvm))
 
 (defn pvm-aika-opt
@@ -192,13 +232,11 @@
 (defn pvm-aika-sek
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa sekuntitarkkuudella"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi fi-pvm-aika-sek pvm))
 
 (defn pvm
   "Formatoi päivämäärän suomalaisessa muodossa"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi fi-pvm pvm))
 
 (defn pvm-opt
@@ -211,35 +249,29 @@
 (defn aika
   "Formatoi ajan suomalaisessa muodossa"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi fi-aika pvm))
 
 (defn aika-sek
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi fi-aika-sek pvm))
 
 (defn aika-iso8601
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi iso8601-aikaleimalla pvm))
 
 (defn kuukausi-ja-vuosi-valilyonnilla
   "Formatoi pvm:n muotoon: MM / yy"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi kuukausi-ja-vuosi-fmt-valilyonnilla pvm))
 
 (defn kuukausi-ja-vuosi
   "Formatoi pvm:n muotoon: MM/yy"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi kuukausi-ja-vuosi-fmt pvm))
 
 (defn kokovuosi-ja-kuukausi
   "Formatoi pvm:n muotoon: yyyy/mm"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (formatoi kokovuosi-ja-kuukausi-fmt pvm))
 
 (defn ->pvm-aika [teksti]
@@ -302,30 +334,25 @@
 (defn vuoden-eka-pvm
   "Palauttaa vuoden ensimmäisen päivän 1.1.vuosi"
   [vuosi]
-  (assert vuosi "Vuosi puuttuu!")
   (luo-pvm vuosi 0 1))
 
 (defn vuoden-viim-pvm
   "Palauttaa vuoden viimeisen päivän 31.12.vuosi"
   [vuosi]
-  (assert vuosi "Vuosi puuttuu!")
   (luo-pvm vuosi 11 31))
 
 (defn vuoden-aikavali [vuosi]
-  (assert vuosi "Vuosi puuttuu!")
   [(paivan-alussa (vuoden-eka-pvm vuosi))
    (paivan-lopussa (vuoden-viim-pvm vuosi))])
 
 (defn hoitokauden-alkupvm
   "Palauttaa hoitokauden alkupvm:n 1.10.vuosi"
   [vuosi]
-  (assert vuosi "Vuosi puuttuu!")
   (luo-pvm vuosi 9 1))
 
 (defn hoitokauden-loppupvm
   "Palauttaa hoitokauden loppupvm:n 30.9.vuosi"
   [vuosi]
-  (assert vuosi "Vuosi puuttuu!")
   (luo-pvm vuosi 8 30))
 
 (defn- d [x]
@@ -337,13 +364,11 @@
 (defn vuosi
   "Palauttaa annetun DateTimen vuoden, esim 2015."
   [pvm]
-  (assert pvm "Vuosi puuttuu!")
   (t/year (d pvm)))
 
 (defn kuukausi
   "Palauttaa annetun DateTime kuukauden."
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   ;; PENDING: tämä ei clj puolella toimi, jos ollaan kk alussa
   ;; esim 2015-09-30T21:00:00.000-00:00 (joka olisi keskiyöllä meidän aikavyöhykkeellä)
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
@@ -352,13 +377,11 @@
 (defn paiva
   "Palauttaa annetun DateTime päivän."
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (t/day (d pvm)))
 
 (defn paivamaaran-hoitokausi
   "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (let [vuosi (vuosi pvm)]
     (if (ennen? pvm (hoitokauden-alkupvm vuosi))
       [(hoitokauden-alkupvm (dec vuosi))
@@ -369,7 +392,6 @@
 (defn paiva-kuukausi
   "Palauttaa päivän ja kuukauden suomalaisessa muodossa pp.kk."
   [pvm]
-  (assert pvm "Päivämäärä puuttuu!")
   (str (paiva pvm) "." (kuukausi pvm) "."))
 
 (defn hoitokauden-edellinen-vuosi-kk [vuosi-kk]
@@ -474,9 +496,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   - Valittu: Keyword joka kertoo, kumpi aikavälin arvoista valittiin, eli kumpi pysyy vakiona,
     jos palautettavaa aikaväliä joudutaan muokkaamaan."
   ([[alku loppu] [n yksikko :as maksimi] valittu]
-  (assertoi-aikavalin-yksikko maksimi)
-  (assert (#{:alku :loppu} valittu)
-          "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
+   (assertoi-aikavalin-yksikko maksimi)
+   (assert (#{:alku :loppu} valittu)
+           "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
    (cond
      (jalkeen? alku loppu)
      (if (= valittu :alku)
@@ -495,14 +517,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (samalle-kuukaudelle (if (= valittu :alku) alku loppu) valittu)
      [(paivan-alussa alku) (paivan-lopussa loppu)])))
 
+(defn varmista-aikavali-opt [[alku loppu] & args]
+  (if (and alku loppu)
+    (apply varmista-aikavali [alku loppu] args)
+    [alku loppu]))
+
 
 #?(:cljs
    (defn hoitokauden-kuukausivalit
      "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun hoitokauden
    jokaiselle kuukaudelle."
      [[alkupvm loppupvm]]
-     (assert alkupvm "Ensimmäinen päivämäärä puuttuu!")
-     (assert loppupvm "Toinen päivämäärä puuttuu!")
      (let [alku (t/first-day-of-the-month alkupvm)]
        (loop [kkt [(kuukauden-aikavali alkupvm)]
               kk (t/plus alku (t/months 1))]
@@ -516,7 +541,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn vuoden-kuukausivalit
      "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
      [alkuvuosi]
-     (assert alkuvuosi "Alkuvuosi puuttuu!")
      (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
        (loop [kkt [(kuukauden-aikavali alku)]
               kk (t/plus alku (t/months 1))]
@@ -529,7 +553,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 #?(:cljs
    (defn ed-kk-aikavalina
      [p]
-     (assert p "Päivämäärä puuttuu")
      (let [pvm-ed-kkna (t/minus p (t/months 1))]
        [(t/first-day-of-the-month pvm-ed-kkna)
         (t/last-day-of-the-month pvm-ed-kkna)])))
@@ -538,8 +561,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kyseessa-kk-vali?
      "Kertoo onko annettu pvm-väli täysi kuukausi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
      [alkupvm loppupvm]
-     (assert alkupvm "Ensimmäinen päivämäärä puuttuu!")
-     (assert loppupvm "Toinen päivämäärä puuttuu!")
      (let [alku (l/to-local-date-time alkupvm)
            loppu (l/to-local-date-time loppupvm)
            paivia-kkssa (t/number-of-days-in-the-month alku)
@@ -556,8 +577,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kyseessa-hoitokausi-vali?
      "Kertoo onko annettu pvm-väli täysi hoitokausi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
      [alkupvm loppupvm]
-     (assert alkupvm "Ensimmäinen päivämäärä puuttuu!")
-     (assert loppupvm "Toinen päivämäärä puuttuu!")
      (let [alku (l/to-local-date-time alkupvm)
            loppu (l/to-local-date-time loppupvm)]
        (and (= 1 (paiva alku))
@@ -570,8 +589,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kyseessa-vuosi-vali?
      "Kertoo onko annettu pvm-väli täysi vuosi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
      [alkupvm loppupvm]
-     (assert alkupvm "Ensimmäinen päivämäärä puuttuu!")
-     (assert loppupvm "Toinen päivämäärä puuttuu!")
      (let [alku (l/to-local-date-time alkupvm)
            loppu (l/to-local-date-time loppupvm)
            _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu )]
@@ -585,14 +602,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kuukautena-ja-vuonna
      "Palauttaa tekstiä esim tammikuussa 2016"
      [alkupvm]
-     (assert alkupvm "Alkupäivämäärä puuttuu")
      (str (kuukauden-nimi (kuukausi alkupvm)) "ssa "
           (vuosi alkupvm))))
 
 
 (defn urakan-vuodet [alkupvm loppupvm]
-  (assert alkupvm "Ensimmäinen päivämäärä puuttuu!")
-  (assert loppupvm "Toinen päivämäärä puuttuu!")
   (let [ensimmainen-vuosi (vuosi alkupvm)
         viimeinen-vuosi (vuosi loppupvm)]
     (if (= ensimmainen-vuosi viimeinen-vuosi)
@@ -606,3 +620,19 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 
 (def paivan-aikavali (juxt paivan-alussa paivan-lopussa))
+
+(defn paivia-valissa
+  "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
+  [[alkupvm loppupvm] [vali-alkupvm vali-loppupvm]]
+  (let [pvm-vector (sort t/before? [alkupvm loppupvm vali-alkupvm vali-loppupvm])]
+    (if (or (and (t/before? vali-alkupvm alkupvm)
+                 (t/before? vali-alkupvm loppupvm)
+                 (t/before? vali-loppupvm alkupvm)
+                 (t/before? vali-loppupvm loppupvm))
+            (and (t/after? vali-alkupvm alkupvm)
+                 (t/after? vali-alkupvm loppupvm)
+                 (t/after? vali-loppupvm alkupvm)
+                 (t/after? vali-loppupvm loppupvm)))
+      0
+      (t/in-days (t/interval (nth pvm-vector 1)
+                             (nth pvm-vector 2))))))

@@ -1,61 +1,93 @@
 (ns harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot
-  (:require [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.yksikkohintaiset-tyot :refer [hae-yksikkohintaiset-tyot-per-paiva]]
+  (:require [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
-;; oulu au 2014 - 2019:
-;; 1.10.2014-30.9.2015 elokuu 2015 kaikki
-;;
-;; Päivämäärä	Tehtävä	Yksikkö	Yksikköhinta	Suunniteltu määrä hoitokaudella	Toteutunut määrä	Suunnitellut kustannukset hoitokaudella	Toteutuneet kustannukset
-;; 01.08.2015	Vesakonraivaus	ha	100,00 €	240	10	24 000,00 €	1 000,00 €
-;; 19.08.2015	Vesakonraivaus	ha	100,00 €	240	10	24 000,00 €	1 000,00 €
-;; 20.08.2015	Vesakonraivaus	ha	100,00 €	240	10	24 000,00 €	1 000,00 €
-;; Yhteensä					72 000,00 €	3 000,00 €
+(defn yhdista-suunnittelurivit-hoitokausiksi
+  "Ottaa vectorin hoitokausien syksyn ja kevään osuutta kuvaavia rivejä.
+  Yhdistää syksy-kevät parit yhdeksi riviksi, joka kuvaa kokonaista hoitokautta.
+  Palauttaa ainoastaan ne rivit, jotka voitiin yhdistää."
+  [suunnittelurivit]
+  (let [syksyrivi? (fn [rivi]
+                     (and (= (t/month (c/from-sql-date (:alkupvm rivi))) 9)
+                          (= (t/day (c/from-sql-date (:alkupvm rivi))) 30)))
+        syksyrivit (filter syksyrivi? suunnittelurivit)
+        syksya-vastaava-kevatrivi (fn [syksyrivi]
+                                    (first (filter
+                                             (fn [suunnittelurivi]
+                                               (and (= (t/day (c/from-sql-date (:alkupvm suunnittelurivi))) 31)
+                                                    (= (t/month (c/from-sql-date (:alkupvm suunnittelurivi))) 12)
+                                                    (= (t/year (c/from-sql-date (:alkupvm suunnittelurivi)))
+                                                       (t/year (c/from-sql-date (:alkupvm syksyrivi))))
+                                                    (= (:tehtava syksyrivi) (:tehtava suunnittelurivi))))
+                                             suunnittelurivit)))]
+    (keep (fn [syksyrivi]
+            (let [kevatrivi (syksya-vastaava-kevatrivi syksyrivi)]
+              (when kevatrivi
+                (-> syksyrivi
+                    (assoc :loppupvm (:loppupvm kevatrivi))
+                    (assoc :maara (+ (or (:maara syksyrivi)
+                                         0)
+                                     (or (:maara kevatrivi)
+                                         0)))))))
+          syksyrivit)))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
-  (let [naytettavat-rivit (reverse (sort-by :pvm (hae-yksikkohintaiset-tyot-per-paiva db
-                                                                                      urakka-id alkupvm loppupvm
-                                                                                      (not (nil? toimenpide-id)) toimenpide-id)))
+(defn hae-urakan-hoitokaudet [db urakka-id]
+  (yhdista-suunnittelurivit-hoitokausiksi
+    (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
-        raportin-nimi "Yksikköhintaiset työt päivittäin"
-        konteksti :urakka
-        otsikko (raportin-otsikko
-                  (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id))))
-                  raportin-nimi alkupvm loppupvm)]
-    [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi}
-     [:taulukko {:otsikko                    otsikko
-                 :viimeinen-rivi-yhteenveto? true
-                 :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")
-                 :oikealle-tasattavat-kentat #{3 6 7}}
-      [{:leveys 10 :otsikko "Päivämäärä"}
-       {:leveys 25 :otsikko "Tehtävä"}
-       {:leveys 5 :otsikko "Yks."}
-       {:leveys 10 :otsikko "Yksikkö\u00adhinta €"}
-       {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella"}
-       {:leveys 10 :otsikko "Toteutunut määrä"}
-       {:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella €"}
-       {:leveys 15 :otsikko "Toteutuneet kustannukset €"}]
+(defn liita-toteumiin-suunnittelutiedot
+  "Ottaa hoitokauden alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot.
+  Liittää toteumiin niiden suunnittelutiedot, jos sellainen löytyy suunnittelutiedoista valitulta hoitokaudelta."
+  [alkupvm loppupvm toteumat hoitokaudet]
+  (map
+    (fn [toteuma]
+      (let [suunnittelutieto (first (filter
+                                      (fn [hoitokausi]
+                                        (and (pvm/valissa?
+                                               (c/from-date alkupvm)
+                                               (c/from-sql-date (:alkupvm hoitokausi))
+                                               (c/from-sql-date (:loppupvm hoitokausi)))
+                                             (pvm/valissa?
+                                               (c/from-date loppupvm)
+                                               (c/from-sql-date (:alkupvm hoitokausi))
+                                               (c/from-sql-date (:loppupvm hoitokausi)))
+                                             (= (:tehtava hoitokausi) (:tehtava_id toteuma))))
+                                      hoitokaudet))]
+        (if suunnittelutieto
+          (-> toteuma
+              (assoc :yksikko (:yksikko suunnittelutieto))
+              (assoc :yksikkohinta (:yksikkohinta suunnittelutieto))
+              (assoc :suunniteltu_maara (:maara suunnittelutieto))
+              (assoc :suunnitellut_kustannukset (when (and (:maara suunnittelutieto) (:yksikkohinta suunnittelutieto))
+                                                  (* (:maara suunnittelutieto)
+                                                     (:yksikkohinta suunnittelutieto))))
+              (assoc :toteutuneet_kustannukset (when (and (:toteutunut_maara toteuma) (:yksikkohinta suunnittelutieto))
+                                                 (* (:toteutunut_maara toteuma)
+                                                    (:yksikkohinta suunnittelutieto)))))
+          toteuma)))
+    toteumat))
 
-      (keep identity
-            (conj (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                    naytettavat-rivit :toimenpide (juxt (comp pvm/pvm :pvm)
-                                                        :nimi
-                                                        :yksikko
-                                                        (comp #(fmt/euro-opt false %) :yksikkohinta)
-                                                        (comp #(fmt/desimaaliluku % 1) :suunniteltu_maara)
-                                                        (comp #(fmt/desimaaliluku % 1) :toteutunut_maara)
-                                                        (comp #(fmt/euro-opt false %) :suunnitellut_kustannukset)
-                                                        (comp #(fmt/euro-opt false %) :toteutuneet_kustannukset)))
-                  (when (not (empty? naytettavat-rivit))
-                    ["Yhteensä" nil nil nil nil nil
-                     (fmt/euro-opt false (reduce + (keep :suunnitellut_kustannukset naytettavat-rivit)))
-                     (fmt/euro-opt false (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit)))])))]]))
+(defn aikavali-kasittaa-yhden-hoitokauden? [alkupvm loppupvm hoitokaudet]
+  (some
+    (fn [hoitokausi]
+      (and (pvm/valissa?
+             (c/from-date alkupvm)
+             (c/from-sql-date (:alkupvm hoitokausi))
+             (c/from-sql-date (:loppupvm hoitokausi)))
+           (pvm/valissa?
+             (c/from-date loppupvm)
+             (c/from-sql-date (:alkupvm hoitokausi))
+             (c/from-sql-date (:loppupvm hoitokausi)))))
+    hoitokaudet))
 
+
+(defn suunnitelutietojen-nayttamisilmoitus [konteksti alkupvm loppupvm hoitokaudet]
+  (when (and (not (aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm hoitokaudet))
+             (= konteksti :urakka))
+    [:teksti "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]))

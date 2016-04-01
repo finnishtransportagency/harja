@@ -1,3 +1,6 @@
+(def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
+                     (.getHostName (java.net.InetAddress/getLocalHost))))
+
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
@@ -33,12 +36,13 @@
                  [org.clojure/core.cache "0.6.4"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "9.3-1102-jdbc41"]
+                 [org.postgresql/postgresql "9.4-1206-jdbc41"]
+                 ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5"]
-                 [yesql "0.4.2" :exclusions [[instaparse :classifier "*"]]]
-                 [instaparse "1.4.1"]
+                 [webjure/jeesql "0.3.3"]
+
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "12.2"]
@@ -51,7 +55,7 @@
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
-                 
+
                  ;; Sonja-väylän JMS riippuvuudet
                  [progress/sonic-client "7.6.2"]
                  [progress/sonic-crypto "7.6.2"]
@@ -127,7 +131,8 @@
 
   :profiles {:dev  {:dependencies []
                     :plugins      [[com.solita/lein-test-refresh-gui "0.10.3"]
-                                   [test2junit "1.1.0"]]}
+                                   [test2junit "1.1.0"]]
+                    :test2junit-run-ant ~(not jenkinsissa?)}
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
@@ -144,14 +149,9 @@
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
-            [lein-pdo "0.1.1"]
-            ;;[mvxcvi/whidbey "0.5.1"]
+            [lein-pdo "0.1.1"]]
 
-            ;; CIDER kehitykseen
-            [cider/cider-nrepl "0.10.2"]
-            [refactor-nrepl "2.0.0"]
-
-            ]                                               ;; Asiakaspuolen cljs buildin tietoja
+  ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id           "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]

@@ -11,11 +11,14 @@
             [harja.domain.roolit :as roolit]
             [clojure.string :as str]
             [harja.virhekasittely :as vk]
-            [cljs-time.core :as time])
+            [cljs-time.core :as time]
+            [goog.string :as gstr])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (def +polku+ (let [host (.-host js/location)]
-               (if (#{"10.0.2.2" "10.0.2.2:8000" "10.0.2.2:3000" "localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host)
+               (if (or (gstr/startsWith host "10.10.")
+                       (#{"localhost" "localhost:3000" "localhost:8000"
+                          "harja-test.solitaservices.fi"} host))
                  "/"
                  "/harja/")))
 (defn polku []
@@ -89,7 +92,7 @@
     chan))
 
 (defn post!
-  "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
+  "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
 Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service payload] (post! service payload nil false))
   ([service payload transducer] (post! service payload transducer false))
@@ -97,7 +100,7 @@ Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori mu
    (kysely service :post payload transducer paasta-virhe-lapi?)))
 
 (defn get!
-  "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea. 
+  "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
 Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service] (get! service nil false))
   ([service transducer] (get! service transducer false))
@@ -216,10 +219,16 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
           sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
         (recur)))))
 
+(defn url-parametri
+  "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
+  [clj-data]
+  (-> clj-data
+      transit/clj->transit
+      gstr/urlEncode))
+
 (defn varustekortti-url [alkupvm tietolaji tunniste]
   (->
     "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))
-

@@ -14,11 +14,11 @@
   (instance? EiOikeutta arvo))
 
 ;; Roolit kätevämpää käyttöä varten
-(def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo")
+(def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo") ;; UHA: jvh
 (def tilaajan-kayttaja                 "tilaajan kayttaja")
-(def urakanvalvoja                     "urakanvalvoja")
+(def urakanvalvoja                     "urakanvalvoja") ;; UHA: uv
 ;;(def vaylamuodon-vastuuhenkilo         "vaylamuodon vastuuhenkilo")
-(def hallintayksikon-vastuuhenkilo     "hallintayksikon vastuuhenkilo")
+(def hallintayksikon-vastuuhenkilo     "hallintayksikon vastuuhenkilo") ;; UHA: vk
 (def liikennepaivystaja                "liikennepaivystaja")
 (def tilaajan-asiantuntija             "tilaajan asiantuntija")
 (def tilaajan-laadunvalvontakonsultti  "tilaajan laadunvalvontakonsultti")
@@ -26,7 +26,16 @@
 (def urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
 (def urakoitsijan-kayttaja             "urakoitsijan kayttaja")
 (def urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
-(def urakan-tiemerkitsija                "urakan tiemerkitsija")
+(def urakan-tiemerkitsija              "urakan tiemerkitsija")
+
+;; Rooleja mitä tuodaan UHA:sta (Liito, Urre, rakkaalla lapselle monta nimeä)
+(def liikennekeskuspaivystaja           "liikennekeskuspaivystaja") ;; UHA: lkp
+(def urakoitsijan-paivystaja           "urakoitsijan paivystaja") ;; UHA: uy
+(def raportoija-tiehallinto            "raportoija tiehallinto") ;; UHA: r
+
+
+
+
 
 ;; Esimääriteltyjä settejä rooleista
 (def urakoitsijan-urakkaroolit-kirjoitus #{urakoitsijan-paakayttaja urakoitsijan-urakan-vastuuhenkilo

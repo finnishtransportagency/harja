@@ -12,7 +12,8 @@
 (defrecord Ryhma [otsikko optiot skeemat])
 
 (defn ryhma [otsikko-tai-optiot & skeemat]
-  (if-let [optiot (and (map? otsikko-tai-optiot) otsikko-tai-optiot)]
+  (if-let [optiot (and (map? otsikko-tai-optiot)
+                       otsikko-tai-optiot)]
     (->Ryhma (:otsikko optiot)
              (merge {:ulkoasu :oletus}
                     optiot)
@@ -47,17 +48,22 @@
   (not (empty? (::virheet data))))
 
 (defn validi?
-  "Tarkista onko lomake validi, palauttaa true jos lomakkeella ei ole validointivirheitä 
+  "Tarkista onko lomake validi, palauttaa true jos lomakkeella ei ole validointivirheitä
 ja kaikki pakolliset kentät on täytetty"
   [data]
   (and (not (virheita? data))
        (not (pakollisia-kenttia-puuttuu? data))))
 
-(defn voi-tallentaa?
-  "Tarkista onko lomakkeen tallennus sallittu"
+(defn voi-tallentaa-ja-muokattu?
+  "Tarkista voiko lomakkeen tallentaa ja onko sitä muokattu"
   [data]
   (and (muokattu? data)
        (validi? data)))
+
+(defn voi-tallentaa?
+  "Tarkista onko lomakkeen tallennus sallittu"
+  [data]
+  (validi? data))
 
 (defn ilman-lomaketietoja
   "Palauttaa lomakkeen datan ilman lomakkeen ohjaustietoja"
@@ -93,13 +99,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                skeemat)))))
 
 (defn- rivita
-  "Rivittää kentät siten, että kaikki palstat tulee täyteen. 
+  "Rivittää kentät siten, että kaikki palstat tulee täyteen.
   Uusi rivi alkaa kun palstat ovat täynnä, :uusi-rivi? true on annettu tai tulee uusi ryhmän otsikko."
   [skeemat]
   (loop [rivit []
          rivi []
          palstoja 0
-         [s & skeemat] (remove nil? skeemat)             
+         [s & skeemat] (remove nil? skeemat)
          ]
     (if-not s
       (if-not (empty? rivi)
@@ -120,12 +126,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  []
                  0
                  skeemat)
-          
+
           (ryhma? s)
           ;; Muuten lisätään ryhmän otsikko ja jatketaan rivitystä normaalisti
           (recur rivit rivi palstoja
                  (concat [(->Otsikko (:otsikko s))] (remove nil? (:skeemat s)) skeemat))
-          
+
           :default
           ;; Rivitä skeema
           (if (or (otsikko? s)
@@ -196,7 +202,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
      (when (and muokattu?
                 (not (empty? varoitukset)))
        [virheen-ohje varoitukset :varoitus])
-     
+
      [kentan-vihje s]]))
 
 (def ^:private col-luokat
@@ -205,7 +211,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   ;; määrän colleja kuin 2 palstaa ja sen sisällä on jaettu osien width 100%/(count skeemat)
   {2 "col-xs-6 col-md-5 col-lg-3"
    3 "col-xs-3 col-sm-2 col-md-3 col-lg-2"
-   4 "col-xs-3"})
+   4 "col-xs-3"
+   5 "col-xs-1"})
 
 (defn nayta-rivi
   "UI yhdelle riville"
@@ -248,7 +255,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                   submit nappi tms.
 
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
-                  funktiolle annetaan virheet ja varoitukset parametrina 
+                  funktiolle annetaan virheet ja varoitukset parametrina
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
   "
@@ -265,7 +272,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                             true)
              muokkaa-kenttaa-fn (fn [nimi]
                                   (fn [uudet-tiedot]
-                                    
+
                                     (let [kaikki-skeemat (pura-ryhmat skeema)
                                           kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
                                           kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)
@@ -278,8 +285,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                        ::virheet kaikki-virheet
                                                        ::varoitukset kaikki-varoitukset
                                                        ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
-         ;(log "RENDER! fokus = " (pr-str @fokus))
-         [:form.lomake
+         ;(lovg "RENDER! fokus = " (pr-str @fokus))
+         [:div.lomake
           (when otsikko
             [:h3.lomake-otsikko otsikko])
           (doall
@@ -306,7 +313,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                    rivi-ui]
                   (with-meta rivi-ui {:key i}))))
             (rivita skeema)))
-          
+
           (when-let [footer (if footer-fn
                               (footer-fn virheet varoitukset)
                               footer)]

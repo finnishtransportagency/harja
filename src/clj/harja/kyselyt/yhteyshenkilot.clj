@@ -1,8 +1,9 @@
 (ns harja.kyselyt.yhteyshenkilot
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [harja.domain.puhelinnumero :as puhelinnumero]))
 
-(defqueries "harja/kyselyt/yhteyshenkilot.sql")
+(defqueries "harja/kyselyt/yhteyshenkilot.sql"
+  {:positional? true})
 
 (defn onko-olemassa-yhteyshenkilo-ulkoisella-idlla? [db ulkoinen-id]
   (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla db ulkoinen-id))))
@@ -41,13 +42,3 @@
                            sahkoposti
                            organisaatio
                            id))
-
-(defn paivita-yhteyshenkilo-ulkoisella-idlla [db etunimi sukunimi tyopuhelin matkapuhelin sahkoposti organisaatio ulkoinen_id]
-  (harja.kyselyt.yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db
-                                            etunimi
-                                            sukunimi
-                                            (puhelinnumero/kanonisoi tyopuhelin)
-                                            (puhelinnumero/kanonisoi matkapuhelin)
-                                            sahkoposti
-                                            organisaatio
-                                            ulkoinen_id))

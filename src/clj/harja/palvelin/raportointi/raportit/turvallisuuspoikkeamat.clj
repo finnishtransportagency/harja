@@ -1,6 +1,6 @@
 (ns harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat
   (:require [clojure.string :as str]
-            [yesql.core :refer [defqueries]]
+            [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat-kuukausittain]]
@@ -14,13 +14,14 @@
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
 
-(defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
-
+(defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql"
+  {:positional? true})
 
 (def turvallisuuspoikkeama-tyyppi
   {"tyotapaturma" "Ty\u00ADö\u00ADta\u00ADpa\u00ADtur\u00ADma"
    "vaaratilanne" "Vaa\u00ADra\u00ADti\u00ADlan\u00ADne"
-   "turvallisuushavainto" "Tur\u00ADval\u00ADli\u00ADsuus\u00ADha\u00ADvain\u00ADto"})
+   "turvallisuushavainto" "Tur\u00ADval\u00ADli\u00ADsuus\u00ADha\u00ADvain\u00ADto"
+   "muu" "Muu"})
 
 (defn ilmoituksen-tyyppi [{tyyppi :tyyppi}]
   (into {}
@@ -37,6 +38,7 @@
                      (comp
                        (map #(konv/array->vec % :tyyppi))
                        (map #(konv/string->keyword % :vakavuusaste))
+                       (map #(konv/string->keyword % :tyontekijanammatti))
                        (map konv/alaviiva->rakenne))
                      (hae-turvallisuuspoikkeamat db
                                                  (if urakka-id true false) urakka-id
@@ -54,7 +56,8 @@
                                         kk
                                         [(get maarat "tyotapaturma")
                                          (get maarat "vaaratilanne")
-                                         (get maarat "turvallisuushavainto")])))
+                                         (get maarat "turvallisuushavainto")
+                                         (get maarat "muu")])))
                                   {} turpo-maarat-kuukausittain)
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
@@ -70,26 +73,30 @@
                       [{:otsikko "Urakka"}])
                     [{:otsikko "Tyyppi"}
                      {:otsikko "Määrä"}]))
-      
+
       (concat (mapcat (fn [[urakka turpot]]
                         (let [turpo-maarat-per-tyyppi (frequencies (mapcat :tyyppi turpot))]
                           [(rivi (:nimi urakka) "Työtapaturma" (or (turpo-maarat-per-tyyppi "tyotapaturma") 0))
                            (rivi (:nimi urakka) "Vaaratilanne" (or (turpo-maarat-per-tyyppi "vaaratilanne") 0))
-                           (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))]))
+                           (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))
+                           (rivi (:nimi urakka) "Muu" (or (turpo-maarat-per-tyyppi "muu") 0))]))
                       (if urakoittain?
                         (group-by :urakka turpot)
                         [[nil turpot]]))
               (if urakoittain?
                 [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
                 [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))]
-     
-     (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+
+
+     (if (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
                 (> (count turpot) 0))
-       (pylvaat-kuukausittain {:otsikko "Turvallisuuspoikkeamat kuukausittain"
-                 :alkupvm               alkupvm :loppupvm loppupvm
-                 :kuukausittainen-data  turpomaarat-tyypeittain
-                 :piilota-arvo?         #{0}
-                 :legend                ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot"]}))
+       (pylvaat-kuukausittain {:otsikko              "Turvallisuuspoikkeamat kuukausittain"
+                               :alkupvm              alkupvm :loppupvm loppupvm
+                               :kuukausittainen-data turpomaarat-tyypeittain
+                               :piilota-arvo?        #{0}
+                               :legend               ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot" "Muut"]})
+       ;; estää nillin pääsyn PDF:ään
+       [:teksti ""])
      [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
                  :viimeinen-rivi-yhteenveto? true}
       (into []
@@ -98,7 +105,6 @@
                     [{:otsikko "Pvm" :leveys 14}
                      {:otsikko "Tyyppi" :leveys 24}
                      {:otsikko "Vakavuusaste" :leveys 15}
-                     {:otsikko "Tyyppi" :leveys 24}
                      {:otsikko "Ammatti" :leveys 14}
                      {:otsikko "Työ\u00ADtehtävä" :leveys 14}
                      {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
@@ -109,7 +115,7 @@
                                (pvm/pvm-aika (:tapahtunut %))
                                (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                                (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
-                               (or (:tyontekijanammatti %) "")
+                               (or (turpodomain/kuvaile-tyontekijan-ammatti %) "")
                                (or (:tyotehtava %) "")
                                (or (:sairaalavuorokaudet %) "")
                                (or (:sairauspoissaolopaivat %) ""))

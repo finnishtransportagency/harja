@@ -10,7 +10,7 @@
             [harja.ui.openlayers.taso :refer [Taso]]))
 
 (defn- ol-kuva [extent resolution url]
-  (ol.Image. extent resolution 1 nil url ""
+  (ol.Image. extent resolution 1 nil url "use-credentials"
              ol.source.Image/defaultImageLoadFunction))
 
 (defn hae-fn [parametrit]
@@ -26,7 +26,7 @@
                                                parametrit))]
                   (if (= uusi-url url)
                     [url image]
-                    (do (log "UUSI KUVA URL: " uusi-url)
+                    (do (log "KUVA URL: " url " => " uusi-url)
                         [uusi-url
                          (ol-kuva extent resolution uusi-url)])))))))))
 
@@ -36,6 +36,7 @@
     (assoc this :z-index z-index))
   (extent [this]
     extent)
+  (opacity [this] 1)
   (selitteet [this]
     selitteet)
   (paivita [this ol3 ol-layer aiempi-paivitystieto]
@@ -46,7 +47,7 @@
                    (kuvataso.Lahde. (hae-fn parametrit)
                                     #js {:projection projection
                                          :imageExtent extent}))
-          
+
           ol-layer (or ol-layer
                        (ol.layer.Image.
                         #js {:source source
@@ -57,15 +58,15 @@
 
       (when z-index
         (.setZIndex ol-layer z-index))
-      
+
       (when (and (not luo?) (not sama?))
         ;; Jos ei luoda ja parametrit eivät ole samat
         ;; asetetaan uusi source ol layeriiin
-        (.setSource ol-layer source)))))
+        (.setSource ol-layer source))
+      [ol-layer ::kuvataso])))
 
 
 
 
-(defn luo-kuvataso [projection extent parametrit]
-  (->Kuvataso projection extent 99 nil parametrit))
-
+(defn luo-kuvataso [projection extent selitteet parametrit]
+  (->Kuvataso projection extent 99 selitteet parametrit))

@@ -1,5 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.yleinen
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [clj-time.local :as l]
@@ -71,7 +71,7 @@
                                     0))))
          (kuukaudet alkupvm loppupvm))])
 
-(defn rivit-kuukausipylvaille-summattuna [rivit pvm-avain & arvo-avaimet]
+(defn rivit-kuukausipylvaille-summattuna
   "Muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon.
   Tekee tämän ryhmittelemällä rivit kuukausille ja summaamalla riveiltä löytyvät arvo-avaimet.
 
@@ -83,6 +83,7 @@
   järjestyksessä:
   {2015/02 [1 2]
    2015/03 [3 4]}"
+  [rivit pvm-avain & arvo-avaimet]
   (let [kuukaudet (group-by
                  (fn [rivi]
                    (pvm/kokovuosi-ja-kuukausi (c/to-date (pvm-avain rivi))))
@@ -99,7 +100,7 @@
             {kuukausi summat}))
         (keys kuukaudet)))))
 
-(defn rivit-kuukausipylvaille-arvoa-laskien [rivit pvm-avain arvo-avain mahdolliset-arvot]
+(defn rivit-kuukausipylvaille-kentan-eri-arvojen-maaraa-laskien
   "Muuttaa rivit kuukausivälit sisältävälle pylväsdiagrammille sopivaan muotoon.
   Tekee tämän ryhmittelemällä rivit kuukausille ja laskemalla, kuinka monta kertaa arvo-avaimen
   jokainen mahdollinen arvo esiintyy kuukauden aikana.
@@ -113,6 +114,7 @@
   Lopputuloksena on map, jossa kuukaudet ovat avaimia ja arvona on vectori, jossa mahdolliset-arvot laskettuna:
   {2015/02 [1 2]
    2015/03 [3 4]}"
+  [rivit pvm-avain arvo-avain mahdolliset-arvot]
   (let [kuukaudet (group-by
                     (fn [rivi]
                       (pvm/kokovuosi-ja-kuukausi (c/to-date (pvm-avain rivi))))

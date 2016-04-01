@@ -24,7 +24,8 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi);
+      AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+LIMIT :maxrivimaara;
 
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
@@ -45,6 +46,10 @@ SELECT
   o.nimi        AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END AS tekija,
   stm.hoitoluokka      AS soratiemittaus_hoitoluokka,
   stm.tasaisuus        AS soratiemittaus_tasaisuus,
   stm.kiinteys         AS soratiemittaus_kiinteys,

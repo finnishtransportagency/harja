@@ -1,8 +1,9 @@
 (ns harja.kyselyt.toimenpideinstanssit
   "Toimenpideinstansseihin liittyvät tietokantakyselyt"
-  (:require [yesql.core :refer [defqueries]]))
+  (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/toimenpideinstanssit.sql")
+(defqueries "harja/kyselyt/toimenpideinstanssit.sql"
+  {:positional? true})
 
 (defn onko-tuotu-samposta? [db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid]
   (:exists (first (harja.kyselyt.toimenpideinstanssit/onko-tuotu-samposta db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid))))

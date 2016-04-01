@@ -5,7 +5,7 @@
     [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
     [harja.palvelin.raportointi.raportit.ilmoitus :as ilmoitus]
     [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat :as turvallisuus]
-    [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint]
+    [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain :as yks-hint]
     [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]))
 
 (defn osat [raportti]

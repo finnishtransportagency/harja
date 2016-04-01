@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.liikennevirasto.fi/xsd/turi"
+           version="1.0"
+           attributeFormDefault="unqualified"
+           elementFormDefault="qualified"
+           xmlns="http://www.liikennevirasto.fi/xsd/turi"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="turvallisuuspoikkeama">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element type="xs:int" name="tunniste" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="vaylamuoto" name="vaylamuoto" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:dateTime" name="tapahtunut" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:dateTime" name="paattynyt" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:dateTime" name="kasitelty" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="xs:string" name="toteuttaja" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="xs:string" name="tilaaja" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="henkilo" name="turvallisuuskoordinaattori" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="henkilo" name="laatija" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="henkilo" name="ilmoittaja" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="xs:string" name="kuvaus" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:string" name="tyotehtava" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="luokittelut" name="luokittelut" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="vahinkoluokittelut" name="vahinkoluokittelut" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="vakavuusaste" name="vakavuusaste" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="xs:string" name="aiheutuneet-seuraukset" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="korjaavat-toimenpiteet" name="korjaavat-toimenpiteet" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="kommentit" name="kommentit" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="liitteet" name="liitteet" minOccurs="0" maxOccurs="1"/>
+                <xs:element type="sijainti" name="sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
+                <xs:element type="henkilovahinko" name="henkilovahinko" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="vaylamuoto">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="tie"/>
+            <xs:enumeration value="rata"/>
+            <xs:enumeration value="vesi"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="henkilo">
+        <xs:sequence>
+            <xs:element type="xs:string" name="etunimi" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:string" name="sukunimi" nillable="false" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="luokittelut">
+        <xs:sequence>
+            <xs:element name="luokittelu" maxOccurs="unbounded" minOccurs="1">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="tyotapaturma"/>
+                        <xs:enumeration value="vaaratilanne"/>
+                        <xs:enumeration value="turvallisuushavainto"/>
+                        <xs:enumeration value="muu"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="vahinkoluokittelut">
+        <xs:sequence>
+            <xs:element name="luokittelu" maxOccurs="unbounded" minOccurs="1">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="henkilovahinko"/>
+                        <xs:enumeration value="omaisuusvahinko"/>
+                        <xs:enumeration value="ymparistovahinko"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:simpleType name="vakavuusaste">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="vakava"/>
+            <xs:enumeration value="lieva"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="korjaavat-toimenpiteet">
+        <xs:sequence>
+            <xs:element type="korjaava-toimenpide" name="korjaava-toimenpide" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="korjaava-toimenpide">
+        <xs:sequence>
+            <xs:element type="xs:string" name="kuvaus" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:string" name="suoritettu" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="henkilo" name="vastaavahenkilo" nillable="false" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="kommentit">
+        <xs:sequence>
+            <xs:element name="kommentti" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="liitteet">
+        <xs:sequence>
+            <xs:element type="liite" name="liite" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="liite">
+        <xs:sequence>
+            <xs:element type="xs:string" name="tiedostonimi" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:string" name="tyyppi" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:string" name="kuvaus" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="xs:string" name="sisalto" nillable="false" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="sijainti">
+        <xs:choice>
+            <xs:element type="koordinaatit" name="koordinaatit"/>
+            <xs:element type="tierekisteriosoite" name="tierekisteriosoite"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="koordinaatit">
+        <xs:sequence>
+            <xs:element type="xs:integer" name="tienumero" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="xs:double" name="x" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:double" name="y" nillable="false" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tierekisteriosoite">
+        <xs:sequence>
+            <xs:element type="xs:integer" name="tienumero" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:integer" name="aosa" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:integer" name="aet" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:integer" name="losa" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:integer" name="let" nillable="false" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="henkilovahinko">
+        <xs:sequence>
+            <xs:element type="tyontekijan-ammatti" name="tyontekijan-ammatti" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="xs:string" name="aiheutuneet-vammat" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="vamman-laatu" name="vamman-laatu" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="vahingoittuneet-ruumiinosat" name="vahingoittuneet-ruumiinosat" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="xs:integer" name="sairauspoissaolopaivat" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="xs:integer" name="sairaalahoitovuorokaudet" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="xs:boolean" name="jatkuuko-sairaspoissaolo" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tyontekijan-ammatti">
+        <xs:sequence>
+            <xs:element name="koodi" nillable="false" minOccurs="1" maxOccurs="1">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="aluksen_paallikko"/>
+                        <xs:enumeration value="asentaja"/>
+                        <xs:enumeration value="asfalttityontekija"/>
+                        <xs:enumeration value="harjoittelija"/>
+                        <xs:enumeration value="hitsaaja"/>
+                        <xs:enumeration value="kunnossapitotyontekija"/>
+                        <xs:enumeration value="kansimies"/>
+                        <xs:enumeration value="kiskoilla_liikkuvan_tyokoneen_kuljettaja"/>
+                        <xs:enumeration value="konemies"/>
+                        <xs:enumeration value="kuorma-autonkuljettaja"/>
+                        <xs:enumeration value="liikenteenohjaaja"/>
+                        <xs:enumeration value="mittamies"/>
+                        <xs:enumeration value="panostaja"/>
+                        <xs:enumeration value="peramies"/>
+                        <xs:enumeration value="porari"/>
+                        <xs:enumeration value="rakennustyontekija"/>
+                        <xs:enumeration value="ratatyontekija"/>
+                        <xs:enumeration value="ratatyosta_vastaava"/>
+                        <xs:enumeration value="sukeltaja"/>
+                        <xs:enumeration value="sahkotoiden_ammattihenkilo"/>
+                        <xs:enumeration value="tilaajan_edustaja"/>
+                        <xs:enumeration value="turvalaiteasentaja"/>
+                        <xs:enumeration value="turvamies"/>
+                        <xs:enumeration value="tyokoneen_kuljettaja"/>
+                        <xs:enumeration value="tyonjohtaja"/>
+                        <xs:enumeration value="valvoja"/>
+                        <xs:enumeration value="veneenkuljettaja"/>
+                        <xs:enumeration value="vaylanhoitaja"/>
+                        <xs:enumeration value="muu_tyontekija"/>
+                        <xs:enumeration value="tyomaan_ulkopuolinen"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element type="xs:string" name="selite" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="vamman-laatu">
+        <xs:sequence>
+            <xs:element name="vamma" maxOccurs="unbounded" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="haavat_ja_pinnalliset_vammat"/>
+                        <xs:enumeration value="luunmurtumat"/>
+                        <xs:enumeration value="sijoiltaan_menot_nyrjahdykset_ja_venahdykset"/>
+                        <xs:enumeration value="amputoitumiset_ja_irti_repeamiset"/>
+                        <xs:enumeration value="tarahdykset_ja_sisaiset_vammat_ruhjevammat"/>
+                        <xs:enumeration value="palovammat_syopymat_ja_paleltumat"/>
+                        <xs:enumeration value="myrkytykset_ja_tulehdukset"/>
+                        <xs:enumeration value="hukkuminen_ja_tukehtuminen"/>
+                        <xs:enumeration value="aanen_ja_varahtelyn_vaikutukset"/>
+                        <xs:enumeration value="aarilampotilojen_valon_ja_sateilyn_vaikutukset"/>
+                        <xs:enumeration value="sokki"/>
+                        <xs:enumeration value="useita_samantasoisia_vammoja"/>
+                        <xs:enumeration value="muut"/>
+                        <xs:enumeration value="ei_tietoa"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="vahingoittuneet-ruumiinosat">
+        <xs:sequence>
+            <xs:element name="ruumiinosa" maxOccurs="unbounded" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="paan_alue"/>
+                        <xs:enumeration value="silmat"/>
+                        <xs:enumeration value="niska_ja_kaula"/>
+                        <xs:enumeration value="selka"/>
+                        <xs:enumeration value="vartalo"/>
+                        <xs:enumeration value="sormi_kammen"/>
+                        <xs:enumeration value="ranne"/>
+                        <xs:enumeration value="muu_kasi"/>
+                        <xs:enumeration value="nilkka"/>
+                        <xs:enumeration value="jalkatera_ja_varvas"/>
+                        <xs:enumeration value="muu_jalka"/>
+                        <xs:enumeration value="koko_keho"/>
+                        <xs:enumeration value="ei_tietoa"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

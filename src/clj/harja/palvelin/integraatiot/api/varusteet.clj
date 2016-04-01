@@ -4,9 +4,12 @@
             [compojure.core :refer [POST GET DELETE PUT]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus
+                                                                             tee-viallinen-kutsu-virhevastaus
+                                                                             tee-vastaus
+                                                                             tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
@@ -31,33 +34,33 @@
   (tarkista-parametrit
     parametrit
     [{:parametri "tunniste"
-      :tyyppi    :string}]))
+      :tyyppi :string}]))
 
 (defn tarkista-tietueiden-haun-parametrit [parametrit]
   (tarkista-parametrit
     parametrit
     [{:parametri "tietolajitunniste"
-      :tyyppi    :string}
+      :tyyppi :string}
      {:parametri "numero"
-      :tyyppi    :int}
+      :tyyppi :int}
      {:parametri "aosa"
-      :tyyppi    :int}
+      :tyyppi :int}
      {:parametri "aet"
-      :tyyppi    :int}
+      :tyyppi :int}
      {:parametri "aet"
-      :tyyppi    :int}
+      :tyyppi :int}
      {:parametri "let"
-      :tyyppi    :int}
+      :tyyppi :int}
      {:parametri "voimassaolopvm"
-      :tyyppi    :date}]))
+      :tyyppi :date}]))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
   (tarkista-parametrit
     parametrit
     [{:parametri "tunniste"
-      :tyyppi    :string}
+      :tyyppi :string}
      {:parametri "tietolajitunniste"
-      :tyyppi    :string}]))
+      :tyyppi :string}]))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
@@ -99,20 +102,21 @@
         data (assoc-in data [:varuste :tunniste] livitunniste)
         lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
-    {:id          livitunniste
-     :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)}))
+    (tee-kirjausvastauksen-body
+      {:id livitunniste
+      :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri data kayttaja]
   (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma data)]
     (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue))
-  {:ilmoitukset "Varuste päivitetty onnistuneesti"})
+  (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri data kayttaja]
   (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma data)]
     (tierekisteri/poista-tietue tierekisteri poistettava-tietue))
-  {:ilmoitukset "Varuste poistettu onnistuneesti"})
+  (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
 
 (defrecord Varusteet []
   component/Lifecycle
@@ -120,44 +124,44 @@
     (julkaise-reitti
       http :hae-tietolaji
       (GET "/api/varusteet/tietolaji" request
-        (kasittele-kutsu db integraatioloki :hae-tietolaji request nil json-skeemat/+tietolajien-haku+
-                         (fn [parametrit _ kayttaja _]
-                           (hae-tietolaji tierekisteri parametrit kayttaja)))))
+        (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/+tietolajien-haku+
+                               (fn [parametrit _ kayttaja _]
+                                 (hae-tietolaji tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/haku" request
-        (kasittele-kutsu db integraatioloki :hae-tietueet request nil json-skeemat/+varusteiden-haku-vastaus+
-                         (fn [parametrit _ kayttaja _]
-                           (hae-varusteet tierekisteri parametrit kayttaja)))))
+        (kasittele-kutsu-async db integraatioloki :hae-tietueet request nil json-skeemat/+varusteiden-haku-vastaus+
+                               (fn [parametrit _ kayttaja _]
+                                 (hae-varusteet tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :hae-tietue request nil json-skeemat/+varusteen-haku-vastaus+
-                         (fn [parametrit _ kayttaja _]
-                           (hae-varuste tierekisteri parametrit kayttaja)))))
+        (kasittele-kutsu-async db integraatioloki :hae-tietue request nil json-skeemat/+varusteen-haku-vastaus+
+                               (fn [parametrit _ kayttaja _]
+                                 (hae-varuste tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
       (POST "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :lisaa-tietue request json-skeemat/+varusteen-lisays+ json-skeemat/+kirjausvastaus+
-                         (fn [_ data kayttaja _]
-                           (lisaa-varuste tierekisteri db data kayttaja)))))
+        (kasittele-kutsu-async db integraatioloki :lisaa-tietue request json-skeemat/+varusteen-lisays+ json-skeemat/+kirjausvastaus+
+                               (fn [_ data kayttaja _]
+                                 (lisaa-varuste tierekisteri db data kayttaja)))))
 
     (julkaise-reitti
       http :paivita-tietue
       (PUT "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :paivita-tietue request json-skeemat/+varusteen-paivitys+ json-skeemat/+kirjausvastaus+
-                         (fn [_ data kayttaja _]
-                           (paivita-varuste tierekisteri data kayttaja)))))
+        (kasittele-kutsu-async db integraatioloki :paivita-tietue request json-skeemat/+varusteen-paivitys+ json-skeemat/+kirjausvastaus+
+                               (fn [_ data kayttaja _]
+                                 (paivita-varuste tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :poista-tietue
       (DELETE "/api/varusteet/varuste" request
-        (kasittele-kutsu db integraatioloki :poista-tietue request json-skeemat/+varusteen-poisto+ json-skeemat/+kirjausvastaus+
-                         (fn [_ data kayttaja _]
-                           (poista-varuste tierekisteri data kayttaja)))))
+        (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/+varusteen-poisto+ json-skeemat/+kirjausvastaus+
+                               (fn [_ data kayttaja _]
+                                 (poista-varuste tierekisteri data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

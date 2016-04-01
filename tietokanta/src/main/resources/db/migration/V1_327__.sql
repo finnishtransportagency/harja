@@ -1,0 +1,1 @@
+ALTER TABLE tarkastusreitti DROP COLUMN havainnot;

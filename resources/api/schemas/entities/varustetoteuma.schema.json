@@ -75,12 +75,6 @@
         6002,
         9001
       ]
-    },
-    "tarkastusaika": {
-      "id": "urn:harja/tarkastusaika",
-      "type": "string",
-      "format": "date-time",
-      "required": false
     }
   }
 }

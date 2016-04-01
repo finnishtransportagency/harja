@@ -16,12 +16,14 @@
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
+            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
-            [alandipert.storage-atom :refer [local-storage]])
+            [alandipert.storage-atom :refer [local-storage]]
+            [clojure.string :as str])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -45,9 +47,9 @@
                                           #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
                                           (vals @raporttityypit))]
               (sort-by :kuvaus
-                       (into []
-                             (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                             urakkatyypin-raportit)))))
+                         (into []
+                               (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                               urakkatyypin-raportit)))))
 
 (add-watch mahdolliset-raporttityypit :konteksti-muuttui
            (fn [_ _ old new]
@@ -81,9 +83,11 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
-(defonce valittu-vuosi (reaction
-                        (when-not @hoitourakassa?
-                          (pvm/vuosi (pvm/nyt)))))
+(def valittu-vuosi (reaction
+                         (let [hoitourakassa? @hoitourakassa?
+                               valittu-urakka @nav/valittu-urakka]
+                           (when-not hoitourakassa?
+                            (pvm/vuosi (pvm/nyt))))))
 (defonce valittu-hoitokausi (reaction (when @hoitourakassa?
                                         @u/valittu-hoitokausi)))
 (defonce kuukaudet (reaction
@@ -222,10 +226,9 @@
                        (reset! arvo {:laatupoikkeamatekija %}))
       :format-fn  #(case %
                     :kaikki "Kaikki"
-                    :urakoitsija "Urakoitsija"
-                    :tilaaja "Tilaaja")}
+                    (laatupoikkeamat/kuvaile-tekija %))}
 
-     [:kaikki :urakoitsija :tilaaja]]))
+     [:kaikki :urakoitsija :tilaaja :konsultti]]))
 
 (def tyomaakokousraportit
   {"Laskutusyhteenveto" :laskutusyhteenveto
@@ -381,6 +384,7 @@
   (komp/luo
     (fn []
       (let [v-ur @nav/valittu-urakka
+            v-ur-tyyppi @nav/valittu-urakkatyyppi
             v-hal @nav/valittu-hallintayksikko
             konteksti (cond
                         v-ur "urakka"
@@ -400,12 +404,18 @@
                         (:nimi v-ur))
              "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
                                  (:nimi v-hal))
-             "Raportti" [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
-                                              ;;\u2014 on väliviivan unikoodi
-                                              :format-fn  #(if % (:kuvaus %) "Valitse")
-                                              :valitse-fn #(reset! valittu-raporttityyppi %)
-                                              :class      "valitse-raportti-alasveto"}
-                         @mahdolliset-raporttityypit]]])
+             "Raportti" (cond
+                          (nil? @raporttityypit)
+                          [:span "Raportteja haetaan..."]
+                          (empty? @mahdolliset-raporttityypit)
+                          [:span (str "Ei raportteja saatavilla urakkatyypissä " (str/lower-case (:nimi v-ur-tyyppi)))]
+                          :default
+                          [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
+                                                ;;\u2014 on väliviivan unikoodi
+                                                :format-fn  #(if % (:kuvaus %) "Valitse")
+                                                :valitse-fn #(reset! valittu-raporttityyppi %)
+                                                :class      "valitse-raportti-alasveto"}
+                           @mahdolliset-raporttityypit])]])
          
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset

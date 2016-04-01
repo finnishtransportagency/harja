@@ -17,11 +17,14 @@
 
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
-                                               korosta-rivit korostustyyli oikealle-tasattavat-kentat]} sarakkeet data]]
+                                               korosta-rivit korostustyyli oikealle-tasattavat-kentat]}
+                                     sarakkeet data]]
   (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
-                :tunniste           hash
+                :tunniste           (fn [rivi] (str "raportti_rivi_"
+                                                    (or (::rivin-indeksi rivi)
+                                                        (hash rivi))))
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
@@ -40,13 +43,15 @@
                (map-indexed (fn [index rivi]
                               (if-let [otsikko (:otsikko rivi)]
                                 (grid/otsikko otsikko)
-                                (let [mappina (zipmap (range (count sarakkeet))
-                                                      rivi)]
+                                (let [mappina (assoc
+                                                (zipmap (range (count sarakkeet))
+                                                       rivi)
+                                                ::rivin-indeksi index)]
                                   (cond-> mappina
                                           (and viimeinen-rivi-yhteenveto?
                                                (= viimeinen-rivi rivi))
                                           (assoc :yhteenveto true)
-                                          (some #(= index %) korosta-rivit)
+                                          (when korosta-rivit (korosta-rivit index))
                                           (assoc :korosta true))))))
                data)))]))
 

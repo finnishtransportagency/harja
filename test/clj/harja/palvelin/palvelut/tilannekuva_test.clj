@@ -8,7 +8,8 @@
             [harja.kyselyt.konversio :as konv]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.domain.tilannekuva :as tk]))
+            [harja.domain.tilannekuva :as tk]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -18,9 +19,12 @@
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
+          :karttakuvat (component/using
+                        (karttakuvat/luo-karttakuvat)
+                        [:http-palvelin :db])
           :toteumat (component/using
-                      (->Tilannekuva)
-                      [:http-palvelin :db])))))
+                     (->Tilannekuva)
+                      [:http-palvelin :db :karttakuvat])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -43,7 +47,7 @@
    :ilmoitukset     {:tyypit {tk/tpp true
                               tk/urk true
                               tk/tur true}
-                     :tilat  #{:avoimet :suljetut}}
+                     :tilat  #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
    :turvallisuus    {tk/turvallisuuspoikkeamat true}
    :laatupoikkeamat {tk/laatupoikkeama-tilaaja     true
                      tk/laatupoikkeama-urakoitsija true
@@ -96,9 +100,8 @@
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk parametrit-laaja-historia)]
     (is (>= (count (:toteumat vastaus)) 1))
-    ;; Testaa, että toteumat tulivat useasta urakasta
-    (is (not-every? #(= (first (:urakka (:toteumat vastaus))) %)
-                       (mapv :urakka (:toteumat vastaus))))
+    ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
+    (is (> (count (distinct (map :toimenpidekoodi (:toteumat vastaus)))) 1))
     (is (>= (count (:turvallisuuspoikkeamat vastaus)) 1))
     (is (>= (count (:tarkastukset vastaus)) 1))
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
@@ -106,13 +109,6 @@
     (is (>= (count (:paallystys vastaus)) 1))
     (is (>= (count (:ilmoitukset vastaus)) 1))))
 
-
-(deftest hae-urakan-toteumat
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
-        parametrit (assoc parametrit-laaja-historia :urakka-id urakka-id)
-        vastaus (hae-tk parametrit)]
-    (is (true? (every? #(= % urakka-id)
-                       (mapv :urakka (:toteumat vastaus)))))))
 
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)

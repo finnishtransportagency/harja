@@ -42,15 +42,14 @@
                                                                 (if (false? @on-off-tila)
                                                                   :nykytilanne
                                                                   :historiakuva))
-                                                        ;; Nykytilanteessa haetaan vain avoimet ilmoitukset, historiakuvassa myös suljetut
                                                         (reset! tiedot/suodattimet
                                                                 (if (= :nykytilanne @tiedot/valittu-tila)
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
-                                                                            #{:avoimet})
+                                                                            tiedot/ilmoitusten-tilat-nykytilanteessa)
                                                                   (assoc-in @tiedot/suodattimet
                                                                             [:ilmoitukset :tilat]
-                                                                            #{:avoimet :suljetut}))))}]])))
+                                                                            tiedot/ilmoitusten-tilat-historiakuvassa))))}]])))
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
@@ -103,18 +102,22 @@
                                   (= otsikko @kokoelma-atom))))]
         [:div.tk-checkbox-ryhma
          [:div.tk-checkbox-ryhma-otsikko
-          [:span {:class    (str
-                              "tk-checkbox-ryhma-tila chevron-rotate "
-                              (when-not (auki?) "chevron-rotate-down"))
-                  :on-click (fn []
-                              (if kokoelma-atom
-                                ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
-                                (if (= otsikko @kokoelma-atom)
-                                  (reset! kokoelma-atom nil)
-                                  (reset! kokoelma-atom otsikko))
-                                ;; Ylläpitää itse omaa auki/kiinni-tilaansa
-                                (swap! oma-auki-tila not))
-                              (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
+          {:on-click (fn [event]
+                       ;; Estetään eventti jos klikkaus osui checkbox-laatikkoon tai sen tekstiin
+                       (if (or (.matches (.-target event) ".tk-checkbox-ryhma-otsikko")
+                               (.matches (.-target event) ".tk-checkbox-ryhma-tila")
+                               (.matches (.-target event) ".livicon-chevron"))
+                         (if kokoelma-atom
+                           ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
+                           (if (= otsikko @kokoelma-atom)
+                             (reset! kokoelma-atom nil)
+                             (reset! kokoelma-atom otsikko))
+                           ;; Ylläpitää itse omaa auki/kiinni-tilaansa
+                           (swap! oma-auki-tila not))
+                         (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet"))))}
+          [:span {:class (str
+                           "tk-checkbox-ryhma-tila chevron-rotate "
+                           (when-not (auki?) "chevron-rotate-down"))}
            (if (auki?)
              (ikonit/chevron-down) (ikonit/chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox
@@ -184,13 +187,11 @@
 (defn tilannekuva []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
-    (komp/sisaan-ulos #(do (murupolku/aseta-murupolku-muotoon :tilannekuva)
-                           (reset! kartta/pida-geometriat-nakyvilla? false)
+    (komp/sisaan-ulos #(do (reset! kartta/pida-geometriat-nakyvilla? false)
                            (kartta/aseta-paivitetaan-karttaa-tila! true))
-                      #(do (murupolku/aseta-murupolku-perusmuotoon)
-                           (reset! kartta/pida-geometriat-nakyvilla? true)
+                      #(do (reset! kartta/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)))
-    (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
+    (komp/kuuntelija [:toteuma-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
                       :uusi-tyokonedata]

@@ -261,9 +261,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                 #(swap! laatupoikkeama assoc :sijainti %))}
 
              (when-not (= :urakoitsija (:tekija @laatupoikkeama))
-               {:otsikko "Urakoitsijan selvitystä pyydetään"
-                :nimi    :selvitys-pyydetty
-                :tyyppi  :boolean})
+               {:nimi    :selvitys-pyydetty
+                :tyyppi  :checkbox
+                :teksti  "Urakoitsijan selvitystä pyydetään"})
              
              {:otsikko     "Kuvaus"
               :uusi-rivi? true

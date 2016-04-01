@@ -3,19 +3,24 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :laadunseuranta (component/using
-                                          (ls/->Laadunseuranta)
-                                          [:http-palvelin :db])))))
+                       :db (tietokanta/luo-tietokanta testitietokanta)
+                       :http-palvelin (testi-http-palvelin)
+                       :karttakuvat (component/using
+                                     (karttakuvat/luo-karttakuvat)
+                                     [:http-palvelin :db])
+                       :laadunseuranta (component/using
+                                        (ls/->Laadunseuranta)
+                                        [:http-palvelin :db :karttakuvat])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -107,21 +112,21 @@
                                 :hae-urakan-laatupoikkeamat +kayttaja-jvh+
                                 {:listaus   :kaikki
                                  :urakka-id urakka-id
-                                 :alku      (java.sql.Date. 100 9 1)
-                                 :loppu     (java.sql.Date. 110 8 30)})]
+                                 :alku      (pvm/luo-pvm (+ 1900 100) 9 1)
+                                 :loppu     (pvm/luo-pvm (+ 1900 110) 8 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-(deftest hae-urakan-sanktiot 
+(deftest hae-urakan-sanktiot
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku      (java.sql.Date. 100 9 1)
-                                                                     :loppu     (java.sql.Date. 110 8 30)})]
+                                                                     :alku      (pvm/luo-pvm (+ 1900 100) 9 1)
+                                                                     :loppu     (pvm/luo-pvm (+ 1900 110) 8 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
-(deftest hae-sanktiotyypit 
+(deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-sanktiotyypit +kayttaja-jvh+)]
     (is (not (empty? vastaus)))
@@ -131,17 +136,17 @@
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-tarkastukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                         :alkupvm   (java.sql.Date. 100 9 1)
-                                                                         :loppupvm  (java.sql.Date. 110 8 30)
+                                                                         :alkupvm   (pvm/luo-pvm (+ 1900 100) 9 1)
+                                                                         :loppupvm  (pvm/luo-pvm (+ 1900 110) 8 30)
                                                                          :tienumero nil
                                                                          :tyyppi    nil})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
-      (is (= #{:ok? :jarjestelma :havainnot :sijainti :aika :tr :tekija :id :tyyppi :tarkastaja}
+      (is (= #{:ok? :jarjestelma :havainnot :aika :tr :tekija :id :tyyppi :tarkastaja}
              (into #{} (keys tarkastus)))))))
 
-(deftest hae-tarkastus 
+(deftest hae-tarkastus
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tarkastus +kayttaja-jvh+ {:urakka-id    urakka-id
@@ -163,6 +168,6 @@
          [:laatupoikkeama :tr :alkuetaisyys] [:laatupoikkeama :tr :loppuetaisyys]]
         :hae-urakan-sanktiot
         {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
-         :alku      (java.sql.Date. 100 0 1)
-         :loppu    (java.sql.Date. 110 0 1)
+         :alku      (pvm/luo-pvm (+ 1900 100) 0 1)
+         :loppu    (pvm/luo-pvm (+ 1900 110) 0 1)
          :tpi 1})))

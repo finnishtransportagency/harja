@@ -26,7 +26,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.ui.napit :as napit]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -51,33 +52,53 @@
   (go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id toteuma-id))]
          (log "toteuma: " (pr-str toteuma))
          (if-not (k/virhe? toteuma)
-           (let [lomake-tiedot {:toteuma-id           (:id toteuma)
-                                :tehtavat             (zipmap (iterate inc 1)
-                                                              (mapv (fn [tehtava]
-                                                                      (let [tehtava-urakassa (get (first (filter (fn [tehtavat]
-                                                                                                                   (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                                 @u/urakan-toimenpiteet-ja-tehtavat)) 3)
-                                                                            emo (get (first (filter (fn [tehtavat]
-                                                                                                      (= (:id (get tehtavat 3)) (:tpk-id tehtava)))
-                                                                                                    @u/urakan-toimenpiteet-ja-tehtavat)) 2)
-                                                                            tpi (first (filter (fn [tpi] (= (:t3_koodi tpi) (:koodi emo))) @u/urakan-toimenpideinstanssit))]
-                                                                        (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
-                                                                        (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
-                                                                        {:tehtava             {:id (:tpk-id tehtava)}
-                                                                         :maara               (:maara tehtava)
-                                                                         :tehtava-id          (:tehtava-id tehtava)
-                                                                         :toimenpideinstanssi (:tpi_id tpi)
-                                                                         :yksikko             (:yksikko tehtava-urakassa)}))
-                                                                    (:tehtavat toteuma)))
-                                :alkanut              (:alkanut toteuma)
-                                :paattynyt            (:paattynyt toteuma)
-                                :lisatieto            (:lisatieto toteuma)
-                                :suorittajan-nimi     (:nimi (:suorittaja toteuma))
-                                :suorittajan-ytunnus  (:ytunnus (:suorittaja toteuma))
-                                :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
-                                :luoja                (:kayttajanimi toteuma)
-                                :reittipisteet        (:reittipisteet toteuma)
-                                :organisaatio         (:organisaatio toteuma)}]
+           (let [lomake-tiedot
+                 {:toteuma-id           (:id toteuma)
+                  :tehtavat
+                                        (zipmap
+                                          (iterate inc 1)
+                                          (mapv
+                                            (fn [tehtava]
+                                              (let [tehtava-urakassa
+                                                    (get
+                                                      (first
+                                                        (filter
+                                                          (fn [tehtavat]
+                                                            (= (:id (get tehtavat 3))
+                                                               (:tpk-id tehtava)))
+                                                          @u/urakan-toimenpiteet-ja-tehtavat)) 3)
+                                                    emo
+                                                    (get (first
+                                                           (filter
+                                                             (fn [tehtavat]
+                                                               (= (:id (get tehtavat 3))
+                                                                  (:tpk-id tehtava)))
+                                                             @u/urakan-toimenpiteet-ja-tehtavat)) 2)
+                                                    tpi
+                                                    (first
+                                                      (filter
+                                                        (fn [tpi]
+                                                          (= (:t3_koodi tpi)
+                                                             (:koodi emo)))
+                                                        @u/urakan-toimenpideinstanssit))]
+                                                (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
+                                                (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
+                                                {:tehtava             {:id (:tpk-id tehtava)}
+                                                 :maara               (:maara tehtava)
+                                                 :tehtava-id          (:tehtava-id tehtava)
+                                                 :toimenpideinstanssi (:tpi_id tpi)
+                                                 :yksikko             (:yksikko tehtava-urakassa)}))
+                                            (:tehtavat toteuma)))
+                  :alkanut              (:alkanut toteuma)
+                  :reitti               (:reitti toteuma)
+                  :tr                   (:tr toteuma)
+                  :paattynyt            (:paattynyt toteuma)
+                  :lisatieto            (:lisatieto toteuma)
+                  :suorittajan-nimi     (:nimi (:suorittaja toteuma))
+                  :suorittajan-ytunnus  (:ytunnus (:suorittaja toteuma))
+                  :jarjestelman-lisaama (:jarjestelmanlisaama toteuma)
+                  :luoja                (:kayttajanimi toteuma)
+                  :organisaatio         (:organisaatio toteuma)}]
              (nav/aseta-valittu-valilehti! :urakat :toteumat)
              (nav/aseta-valittu-valilehti! :toteumat :yksikkohintaiset-tyot)
              (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma lomake-tiedot))))))
@@ -244,6 +265,13 @@
             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
 
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+
+           (when-not jarjestelman-lisaama-toteuma?
+             {:tyyppi      :tierekisteriosoite
+             :nimi        :tr
+             :pakollinen? true
+             :sijainti    (r/wrap (:reitti @lomake-toteuma)
+                                  #(swap! lomake-toteuma assoc :reitti %))})
            
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2
@@ -263,7 +291,21 @@
   (let [urakka-id (:id @nav/valittu-urakka)
         [sopimus-id _] @u/valittu-sopimusnumero
         aikavali [(first @u/valittu-aikavali) (second @u/valittu-aikavali)]
-        toteutuneet-tehtavat (atom nil)]
+        toteutuneet-tehtavat (atom nil)
+        tallenna (reaction
+                   (if (or (nil? @toteutuneet-tehtavat)
+                          (every? :jarjestelmanlisaama @toteutuneet-tehtavat))
+                    :ei-mahdollinen
+                    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat
+                                             urakka-id
+                                             sopimus-id
+                                             aikavali
+                                             :yksikkohintainen
+                                             %
+                                             (:tpi_id @u/valittu-toimenpideinstanssi)))]
+                           (log "Tehtävät tallennettu: " (pr-str vastaus))
+                           (reset! toteutuneet-tehtavat (:tehtavat vastaus))
+                           (reset! tehtavien-summat (:tehtavien-summat vastaus))))))]
     (go (reset! toteutuneet-tehtavat
                 (<! (toteumat/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla urakka-id sopimus-id aikavali
                                                                                  :yksikkohintainen (:tpk_id rivi)))))
@@ -273,17 +315,11 @@
        [grid/grid
         {:otsikko     (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja       (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
-         :tallenna    #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat
-                                               urakka-id
-                                               sopimus-id
-                                               aikavali
-                                               :yksikkohintainen
-                                               %
-                                               (:tpi_id @u/valittu-toimenpideinstanssi)))]
-                             (log "Tehtävät tallennettu: " (pr-str vastaus))
-                             (reset! toteutuneet-tehtavat (:tehtavat vastaus))
-                             (reset! tehtavien-summat (:tehtavien-summat vastaus))))
+         :tallenna    @tallenna
+         :tallennus-ei-mahdollinen-tooltip (constantly "Kaikki toteumat ovat järjestelmän lisäämiä.")
          :voi-lisata? false
+         :esta-poistaminen?        (fn [rivi] (:jarjestelmanlisaama rivi))
+         :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
          :max-rivimaara 300
          :max-rivimaaran-ylitys-viesti "Liikaa hakutuloksia, rajaa hakua"
          :tunniste    :tehtava_id}

@@ -21,7 +21,8 @@
             [harja.views.kartta.tasot :as tasot]
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kartta.varit.alpha :as varit])
+            [harja.ui.kartta.varit.alpha :as varit]
+            [harja.ui.openlayers.taso :as taso])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -272,7 +273,8 @@
 
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
-                          (keep (comp :selitteet meta) (vals @tasot/geometriat)))
+                          (keep #(when % (taso/selitteet %))
+                                (vals @tasot/geometriat-kartalle)))
         varilaatikon-koko 20]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
@@ -382,7 +384,7 @@
   (reset! kartan-ohjelaatikko-sisalto nil))
 
 (defn nayta-popup!
-  "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng], 
+  "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng],
 joka kertoo karttakoordinaatit. Sisältö annetaan sisalto-hiccup muodossa ja se renderöidään
 HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiverinen komponentti)"
   [sijainti sisalto-hiccup]
@@ -483,7 +485,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
     ;; extentiä siten, että kaikki mahtuvat.
     ;; Jos extentiä tasoista ei ole, zoomataan urakkaan tai hallintayksikköön.
     (let [extent (reduce geo/yhdista-extent
-                         (keep #(-> % meta :extent) (vals @tasot/geometriat)))
+                         (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))
           extentin-margin-metreina geo/pisteen-extent-laajennus]
       (log "EXTENT TASOISTA: " (pr-str extent))
       (if extent
@@ -534,9 +536,15 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
       (fn [_]
         (zoomaa-geometrioihin)
 
+        (add-watch nav/kartan-koko :muuttuvan-kartan-koon-kuuntelija
+                   (fn [_ _ _ _]
+                     (when @pida-geometriat-nakyvilla?
+                       (log "Kartan koko muuttui, zoomataan!")
+                       (zoomaa-geometrioihin))))
+
         ;; Hallintayksiköt ja valittu urakka ovat nykyään :organisaatio
         ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
-        (add-watch tasot/geometriat :muuttuvien-geometrioiden-kuuntelija
+        (add-watch tasot/geometriat-kartalle :muuttuvien-geometrioiden-kuuntelija
                    (fn [_ _ vanha uusi]
                      ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
                      ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
@@ -612,7 +620,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                     (and geom
                                          [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
 
-          :geometries         @tasot/geometriat
+          :geometries         @tasot/geometriat-kartalle
           :layers             [{:type  :mml
                                 :url   (str (k/wmts-polku) "maasto/wmts")
                                 :layer "taustakartta"}]}]))))

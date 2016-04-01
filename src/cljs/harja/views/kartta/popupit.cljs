@@ -9,6 +9,7 @@
             [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
@@ -119,8 +120,8 @@
                        (tee-arvolistaus-popup "Työkone"
                                               [["Tyyppi" (:tyokonetyyppi tapahtuma)]
                                                ["Viimeisin paikka\u00ADtieto" (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
-                                               ["Organisaatio" (:organisaationimi tapahtuma)]
-                                               ["Urakka" (:urakkanimi tapahtuma)]
+                                               ["Organisaatio" (or (:organisaationimi tapahtuma) "Ei organisaatiotietoja")]
+                                               ["Urakka" (or (:urakkanimi tapahtuma) "Ei urakkatietoja")]
                                                ["Tehtävät" (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
                                                              [:span tehtavat])]])))
 
@@ -146,7 +147,7 @@
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-arvolistaus-popup (str/capitalize (name (:tyyppi tapahtuma)))
+                       (tee-arvolistaus-popup (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tapahtuma))
                                               [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
                                                ["Mittaaja" (:mittaaja tapahtuma)]])))
 
@@ -231,7 +232,8 @@
                                               [["Päivämäärä: " (pvm/pvm (:alkupvm tapahtuma))]
                                                ["Tunniste: " (:tunniste tapahtuma)]
                                                ["Tietolaji: " (:tietolaji tapahtuma)]
-                                               ["Toimenpide: " (:Toimepide tapahtuma)]]
+                                               ["Toimenpide: " (:toimenpide tapahtuma)]
+                                               ["Kuntoluokka" (:kuntoluokka tapahtuma)]]
                                               {:linkki {:nimi   "Avaa varustekortti"
                                                         :href   (:varustekortti-url tapahtuma)
                                                         :target "_blank"}})))
