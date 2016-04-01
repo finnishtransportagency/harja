@@ -47,6 +47,7 @@
     (geo/muunna-pg-tulokset :sijainti)
     (map laadunseuranta/tarkastus-tiedolla-onko-ok)
     (map konv/alaviiva->rakenne)
+    (map #(konv/array->set % :vakiohavainnot))
     (map #(konv/string->keyword % :tyyppi :tekija))
     (map #(dissoc % :sopimus))
     (map (fn [tarkastus]
@@ -210,7 +211,6 @@
    (hae-urakan-tarkastukset db user parametrit false 501))
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]} palauta-reitti? max-rivimaara]
    (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
-   (log/debug "HAE TARKASTUKSET VÄLILLE " (pvm/pvm alkupvm) " -- " (pvm/pvm loppupvm))
    (into []
          (comp tarkastus-xf
                (if palauta-reitti?
