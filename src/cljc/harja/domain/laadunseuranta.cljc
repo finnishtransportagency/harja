@@ -88,9 +88,6 @@
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus})
 
-(defn validoi-tarkastus [data]
-  (skeema/tarkista Tarkastus data))
-
 (defn tarkastus-tiedolla-onko-ok
   "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
   eikä tarkastuksella ole vakiohavaintoja"
