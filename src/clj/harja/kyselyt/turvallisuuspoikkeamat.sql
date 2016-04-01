@@ -374,7 +374,8 @@ SELECT
   l.koko,
   l.nimi,
   l.liite_oid,
-  l.pikkukuva
+  l.pikkukuva,
+  l.kuvaus
 FROM liite l
   INNER JOIN turvallisuuspoikkeama_liite tpl
     ON l.id = tpl.liite

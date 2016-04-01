@@ -8,7 +8,8 @@
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
 
 (def turvallisuuspoikkeama-xf
   (comp (map konv/alaviiva->rakenne)
@@ -113,7 +114,7 @@
           id)
       (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
 
-(defn tallenna-turvallisuuspoikkeama [db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
+(defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
   (jdbc/with-db-transaction [c db]
     (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
@@ -139,6 +140,8 @@
 
           (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
 
+      (when turi (turi/laheta-turvallisuuspoikkeama turi id))
+
       (hae-turvallisuuspoikkeamat c user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))))
 
 (defrecord Turvallisuuspoikkeamat []
@@ -156,7 +159,7 @@
 
                        :tallenna-turvallisuuspoikkeama
                        (fn [user tiedot]
-                         (tallenna-turvallisuuspoikkeama (:db this) user tiedot)))
+                         (tallenna-turvallisuuspoikkeama (:turi this) (:db this) user tiedot)))
     this)
 
   (stop [this]

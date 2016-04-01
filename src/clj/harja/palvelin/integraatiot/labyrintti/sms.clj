@@ -4,9 +4,9 @@
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [compojure.core :refer [POST GET]]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol Sms
@@ -23,13 +23,20 @@
 (defn laheta-sms [db integraatioloki kayttajatunnus salasana url numero viesti]
   (if (or (empty? kayttajatunnus) (empty? salasana) (empty? url))
     (log/warn "Käyttäjätunnusta, salasanaa tai URL Labyrintin SMS Gatewayhyn ei ole annettu. Viestiä ei voida lähettää.")
-    (let [lokittaja (integraatioloki/lokittaja integraatioloki db "labyrintti" "laheta")
-          integraatipiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
-          vastauskasittelija (fn [body headers] (kasittele-vastaus body headers))
-          otsikot {"Content-Type" "application/x-www-form-urlencoded"}
-          parametrit {"dests" numero
-                      "text" viesti}]
-      (http/GET integraatipiste url otsikot parametrit vastauskasittelija))))
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "labyrintti" "laheta"
+      (fn [konteksti]
+        (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
+              parametrit {"dests" numero
+                          "text" viesti}
+              http-asetukset {:metodi :GET
+                              :url url
+                              :kayttajatunnus kayttajatunnus
+                              :salasana salasana
+                              :otsikot otsikot
+                              :parametrit parametrit}
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+          (kasittele-vastaus body headers))))))
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
   (log/error (format "Tekstiviestin vastaanotossa tapahtui poikkeus." poikkeus))

@@ -12,7 +12,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :turi (component/using
-            (turi/->Turi {:turi {:url +turi-url+ :kayttajatunnus "kayttajatunnus" :salasana "salasana"}})
+            (turi/->Turi {:url +turi-url+ :kayttajatunnus "kayttajatunnus" :salasana "salasana"})
             [:db :http-palvelin :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -47,7 +47,3 @@
         (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
         (is (false? (:lahetys_onnistunut tila)) "Lähetys on merkitty epäonnistuneeksi")
         (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id)))))
-
-(deftest tarkista-tuntemattoman-turvallisuuspoikkeaman
-  (let [turpo-id 1890123]
-    (is (thrown? Exception (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)))))
