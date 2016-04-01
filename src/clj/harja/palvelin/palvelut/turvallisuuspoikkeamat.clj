@@ -158,7 +158,7 @@
 
           (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
 
-      (turi/laheta-turvallisuuspoikkeama turi id)
+      (when turi (turi/laheta-turvallisuuspoikkeama turi id))
 
       (hae-turvallisuuspoikkeamat c user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))))
 

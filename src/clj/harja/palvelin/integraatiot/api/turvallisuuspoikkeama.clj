@@ -196,8 +196,9 @@
       tp-id)))
 
 (defn laheta-poikkeamat-turin [turi idt]
-  (doseq [id idt]
-    (turi/laheta-turvallisuuspoikkeama turi id)))
+  (when turi
+    (doseq [id idt]
+      (turi/laheta-turvallisuuspoikkeama turi id))))
 
 (defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

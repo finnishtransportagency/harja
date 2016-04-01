@@ -5,7 +5,8 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
 
 (def kayttaja "yit-rakennus")
 
@@ -13,8 +14,11 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
+    :turi (component/using
+            (turi/->Turi {})
+            [:db :integraatioloki :liitteiden-hallinta])
     :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
+                                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta :turi])))
 
 (use-fixtures :once jarjestelma-fixture)
 

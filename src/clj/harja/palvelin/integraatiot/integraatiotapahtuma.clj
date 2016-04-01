@@ -68,4 +68,5 @@
                               jarjestelma integraatio))
          (when virhekasittelija
            (virhekasittelija konteksti t))
-         (lokittaja :epaonnistunut nil (str lisatietoja " " t) tapahtuma-id ulkoinen-id))))))
+         (lokittaja :epaonnistunut nil (str lisatietoja " " t) tapahtuma-id ulkoinen-id)
+         (throw t))))))
