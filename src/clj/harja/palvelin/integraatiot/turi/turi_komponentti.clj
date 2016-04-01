@@ -66,8 +66,10 @@
   (if paivittainen-lahetysaika
     (do
       (log/debug "Ajastetaan turvallisuuspoikkeamien lähettäminen joka päivä kello: " paivittainen-lahetysaika)
-      (ajastettu-tehtava/ajasta-paivittain paivittainen-lahetysaika #(laheta-turvallisuuspoikkeamat-turiin this)))
-    #()))
+      (ajastettu-tehtava/ajasta-paivittain
+        paivittainen-lahetysaika
+        (fn [_] (laheta-turvallisuuspoikkeamat-turiin this))))
+    (fn [])))
 
 (defrecord Turi [asetukset]
   component/Lifecycle
