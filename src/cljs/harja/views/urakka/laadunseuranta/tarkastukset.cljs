@@ -228,7 +228,8 @@
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
 
-       {:otsikko "Tar\u00ADkastaja" :nimi :tarkastaja
+       {:otsikko "Tar\u00ADkastaja"
+        :nimi :tarkastaja
         :tyyppi :string :pituus-max 256
         :pakollinen? true
         :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
@@ -239,12 +240,19 @@
          :soratie (soratiemittaus)
          nil)
 
-       {:otsikko "Havain\u00ADnot" :nimi :havainnot
+       {:otsikko "Havain\u00ADnot"
+        :nimi :havainnot
         :koko [80 :auto]
         :tyyppi :text
         :palstoja 2}
 
-
+       (when (not (empty? (:vakiohavainnot tarkastus)))
+         {:otsikko "Vakio\u00ADhavainnot"
+          :nimi :vakiohavainnot
+          :tyyppi :komponentti
+          :komponentti (fn [rivi]
+                         [:span (str/join ", " (:vakiohavainnot rivi))])
+          :palstoja 2})
 
        {:otsikko     "Liitteet" :nimi :liitteet
         :tyyppi :komponentti

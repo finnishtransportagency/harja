@@ -53,6 +53,9 @@ SELECT
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END AS tekija,
+  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
+    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+  WHERE tarkastus = t.id) as vakiohavainnot,
   stm.hoitoluokka      AS soratiemittaus_hoitoluokka,
   stm.tasaisuus        AS soratiemittaus_tasaisuus,
   stm.kiinteys         AS soratiemittaus_kiinteys,
