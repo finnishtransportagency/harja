@@ -64,8 +64,8 @@
          vastaus)
 
        (catch Throwable t
-         ;; todo: selvitä miksi ei toimi
+         (log/error t (format "Integraatiotapahtuman (järjestelmä: %s, integraatio: %s) suorituksessa tapahtui poikkeus"
+                              jarjestelma integraatio))
          (when virhekasittelija
            (virhekasittelija konteksti t))
-         (log/debug "JEEJEE")
          (lokittaja :epaonnistunut nil (str lisatietoja " " t) tapahtuma-id ulkoinen-id))))))

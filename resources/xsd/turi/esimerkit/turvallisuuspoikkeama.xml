@@ -23,7 +23,7 @@
         <turi:luokittelu>tyotapaturma</turi:luokittelu>
     </turi:luokittelut>
     <turi:vahinkoluokittelut>
-        <turi:luokittelu>henkilostovahinko</turi:luokittelu>
+        <turi:luokittelu>henkilovahinko</turi:luokittelu>
         <turi:luokittelu>omaisuusvahinko</turi:luokittelu>
     </turi:vahinkoluokittelut>
     <turi:vakavuusaste>vakava</turi:vakavuusaste>
@@ -65,17 +65,17 @@
     </turi:sijainti>
     <turi:henkilovahinko>
         <turi:tyontekijan-ammatti>
-            <turi:koodi>Muu työntekijä</turi:koodi>
+            <turi:koodi>muu_tyontekija</turi:koodi>
             <turi:selite>Aura-auton kuljettaja</turi:selite>
         </turi:tyontekijan-ammatti>
         <turi:aiheutuneet-vammat>Ranne murtui ja päähän tuli haava</turi:aiheutuneet-vammat>
         <turi:vamman-laatu>
-            <turi:vamma>Luunmurtumat</turi:vamma>
-            <turi:vamma>Haavat ja pinnalliset vammat</turi:vamma>
+            <turi:vamma>luunmurtumat</turi:vamma>
+            <turi:vamma>haavat_ja_pinnalliset_vammat</turi:vamma>
         </turi:vamman-laatu>
         <turi:vahingoittuneet-ruumiinosat>
-            <turi:ruumiinosa>Pään alue (pl. silmät)</turi:ruumiinosa>
-            <turi:ruumiinosa>Ranne</turi:ruumiinosa>
+            <turi:ruumiinosa>paan_alue</turi:ruumiinosa>
+            <turi:ruumiinosa>ranne</turi:ruumiinosa>
         </turi:vahingoittuneet-ruumiinosat>
         <turi:sairauspoissaolopaivat>3</turi:sairauspoissaolopaivat>
         <turi:sairaalahoitovuorokaudet>1</turi:sairaalahoitovuorokaudet>
