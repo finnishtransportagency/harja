@@ -308,7 +308,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
 
   :nimi                                 kentän hakufn
-  :fmt                                  kentän näyttämis fn (oletus str)
+  :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
+  :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
   :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
