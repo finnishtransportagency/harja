@@ -97,17 +97,15 @@
     #?(:cljs (log "tarkastus virheet: " (pr-str virheet)))
     (nil? virheet)))
 
-(defn tarkastus-tiedolla-onko-ok [tarkastus]
-  ;; Sisältää kentän "havainnot"
-  (if (some #(= :havainnot %) (keys tarkastus))
-    (let [havainnot (:havainnot tarkastus)
-          ;; Tarkastus on OK jos ei havaintoja, tai tekstinä on "Ok", "OK" tai "ok"
-          ;; Muita inhottavia taikasanoja pitänee tänne lisäillä kun tulee vastaan.
-          ok? (if (or (empty? havainnot) (#{"OK"} (clojure.string/upper-case havainnot)))
-                true
-                false)]
-      (assoc tarkastus :ok? ok?))
-    tarkastus))
+(defn tarkastus-tiedolla-onko-ok
+  "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
+  eikä tarkastuksella ole vakiohavaintoja"
+  [tarkastus]
+  (if (and (or (nil? (:havainnot tarkastus))
+               (= "ok" (clojure.string/lower-case (:havainnot tarkastus)))
+           (empty? (:vakiohavainnot tarkastus))))
+    (assoc tarkastus :ok? true)
+    (assoc tarkastus :ok? false)))
 
 (defn tarkastukset-tiedoilla-onko-ok [tarkastukset]
   (map tarkastus-tiedolla-onko-ok tarkastukset))
