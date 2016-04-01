@@ -99,7 +99,6 @@ datan kartalla esitettävässä muodossa.")
                                     [vasen ala oikea yla]))
         karttakuvadata (when lahde
                          (lahde user parametrit))]
-    (log/debug "KUVA " lahteen-nimi " HAKI " (count karttakuvadata) " ASIAA")
     karttakuvadata))
 
 (defn karttakuva [lahteet user parametrit]

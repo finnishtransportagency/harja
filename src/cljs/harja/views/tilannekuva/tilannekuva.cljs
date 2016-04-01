@@ -191,7 +191,7 @@
                            (kartta/aseta-paivitetaan-karttaa-tila! true))
                       #(do (reset! kartta/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)))
-    (komp/kuuntelija [:toteuma-klikattu :reittipiste-klikattu :ilmoitus-klikattu
+    (komp/kuuntelija [:toteuma-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
                       :uusi-tyokonedata]

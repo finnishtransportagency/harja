@@ -84,7 +84,8 @@
                                        [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
 
               {:rivi? true
-               :otsikko  "Tierekisteriosoite" :nimi :tr
+               :otsikko  "Tierekisteriosoite"
+               :nimi :tr
                :tyyppi   :tierekisteriosoite
                :sijainti (r/wrap (:sijainti @muokattu)
                                  #(swap! muokattu assoc :sijainti %))}
@@ -130,7 +131,6 @@
                              :nimi     :laatijasukunimi
                              :tyyppi   :string
                              :palstoja 1})
-
               (when henkilovahinko-valittu?
                 (lomake/ryhma
                   "Henkilövahingon tiedot"

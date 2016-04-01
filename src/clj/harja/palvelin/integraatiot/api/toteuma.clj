@@ -57,7 +57,8 @@
          (get-in toteuma [:suorittaja :ytunnus])
          ""
          (get-in toteuma [:tunniste :id])
-         (:reitti toteuma))))
+         (:reitti toteuma)
+         nil nil nil nil nil)))
 
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
