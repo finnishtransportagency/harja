@@ -250,8 +250,7 @@
          {:otsikko "Vakio\u00ADhavainnot"
           :nimi :vakiohavainnot
           :tyyppi :komponentti
-          :komponentti (fn [rivi]
-                         [:span (str/join ", " (:vakiohavainnot rivi))])
+          :komponentti [:span (str/join ", " (:vakiohavainnot tarkastus))]
           :palstoja 2})
 
        {:otsikko     "Liitteet" :nimi :liitteet
