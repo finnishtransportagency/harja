@@ -12,7 +12,8 @@
 
 (def nakymassa? (atom false))
 (def +uusi-turvallisuuspoikkeama+ {:vakavuusaste :lieva
-                                   :vaylamuoto :tie})
+                                   :vaylamuoto :tie
+                                   :tyontekijanammatti :muu_tyontekija})
 (defonce valittu-turvallisuuspoikkeama (atom nil))
 
 (defn hae-urakan-turvallisuuspoikkeamat
@@ -46,18 +47,20 @@
 
 (defn kasaa-tallennettava-turpo
   [tp]
-  {:tp                    (-> tp
-                              (dissoc :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
-                              (assoc :urakka (:id @nav/valittu-urakka))
-                              (cond-> (not= (:tyontekijanammatti tp) :muu_tyontekija)
-                                      (dissoc :tyontekijanammattimuu)))
+  {:tp (-> tp
+           (dissoc :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
+           (assoc :urakka (:id @nav/valittu-urakka))
+           (cond-> (not= (:tyontekijanammatti tp) :muu_tyontekija)
+                   (dissoc :tyontekijanammattimuu)
+                   (not (some #{:henkikovahinko} (:vahinkoluokittelu tp)))
+                   (dissoc :tyontekijanammatti)))
    :korjaavattoimenpiteet (remove #(empty? (dissoc % :id :koskematon)) (:korjaavattoimenpiteet tp))
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
    ;; Täten tallennukseen ei tarvita :liitteitä eikä :kommentteja
    ;:liitteet           (:liitteet tp)
    ;:kommentit          (:kommentit tp)
-   :uusi-kommentti        (:uusi-kommentti tp)
-   :hoitokausi            @urakka/valittu-hoitokausi})
+   :uusi-kommentti (:uusi-kommentti tp)
+   :hoitokausi @urakka/valittu-hoitokausi})
 
 (defn tallenna-turvallisuuspoikkeama
   [tp]
