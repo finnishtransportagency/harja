@@ -15,7 +15,7 @@
             (turi/->Turi {:url +turi-url+ :kayttajatunnus "kayttajatunnus" :salasana "salasana"})
             [:db :http-palvelin :integraatioloki :liitteiden-hallinta])))
 
-(use-fixtures :each jarjestelma-fixture)                 Korjaa
+(use-fixtures :each jarjestelma-fixture)
 
 (defn hae-turvallisuuspoikkeaman-tila [id]
   (let [tila (first (q (format "select lahetetty, lahetys_onnistunut from turvallisuuspoikkeama where id = %s" id)))]
@@ -42,12 +42,8 @@
 (deftest tarkista-turvallisuuspoikkeaman-epaonnistunut-lahetys
   (let [turpo-id 1]
     (with-fake-http [{:url +turi-url+ :method :post} 500]
-      (is (thrown? Exception (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)))
+      (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
       (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
         (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
         (is (false? (:lahetys_onnistunut tila)) "Lähetys on merkitty epäonnistuneeksi")
         (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id)))))
-
-(deftest tarkista-tuntemattoman-turvallisuuspoikkeaman
-  (let [turpo-id 1890123]
-    (is (thrown? Exception (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)))))

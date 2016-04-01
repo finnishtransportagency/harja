@@ -39,15 +39,18 @@
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta url kayttajatunnus salasana]} id]
   (when-not (empty? url)
     (log/debug (format "Lähetetään turvallisuuspoikkeama (id: %s) TURI:n" id))
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "turi" "laheta-turvallisuuspoikkeama" nil
-      (fn [konteksti]
-        (->> id
-             (hae-turvallisuuspoikkeama liitteiden-hallinta db)
-             sanoma/muodosta
-             (integraatiotapahtuma/laheta konteksti :http {:metodi :POST :url url :kayttajatunnus kayttajatunnus :salasana salasana})
-             (kasittele-turin-vastaus db id)))
-      {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})))
+    (try
+      (integraatiotapahtuma/suorita-integraatio
+        db integraatioloki "turi" "laheta-turvallisuuspoikkeama" nil
+        (fn [konteksti]
+          (->> id
+               (hae-turvallisuuspoikkeama liitteiden-hallinta db)
+               sanoma/muodosta
+               (integraatiotapahtuma/laheta konteksti :http {:metodi :POST :url url :kayttajatunnus kayttajatunnus :salasana salasana})
+               (kasittele-turin-vastaus db id)))
+        {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
+      (catch Throwable t
+        (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
 
 (defrecord Turi [asetukset]
   component/Lifecycle
