@@ -271,4 +271,4 @@
                                   :toimenpide nil
                                   :tehtava    nil})]
     (is (>= (count toteumat) 2))
-    (is (some #(> (count (:reittipisteet %)) 3) toteumat))))
+    (is (= :line (get-in toteumat [0 :reitti :type])))))

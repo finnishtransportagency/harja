@@ -68,7 +68,7 @@
   (jdbc/with-db-transaction
     [db db]
     (let [tr (:tie sijainti)
-          ;; yesql 20 parametrin rajoituksen vuoksi luonti kahdessa erässä
+          ;; jeesql 20 parametrin rajoituksen vuoksi luonti kahdessa erässä
           id (:id (toteumat/luo-varustetoteuma<!
                     db
                     tunniste

@@ -46,7 +46,7 @@
                                (- y2 y1)
                                (- x2 x1))}))
           []
-          (partition 2 pisteet)))
+          (partition 2 1 pisteet)))
 
 
 

@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+ALTER TABLE liite ADD COLUMN kuvaus VARCHAR(254);
+=======
 ALTER TABLE vakiohavainto ADD COLUMN jatkuva BOOLEAN;
 
 INSERT INTO vakiohavainto (nimi, jatkuva) VALUES
@@ -18,3 +21,4 @@ INSERT INTO vakiohavainto (nimi, jatkuva) VALUES
 ('Sohjoa', false),
 ('Irtolunta', false),
 ('Lumikielekkeitä', false);
+>>>>>>> develop

@@ -18,7 +18,7 @@
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
-                   
+
                    ))
 
 (defonce valittu-sopimusnumero (let [val (atom nil)]
@@ -95,6 +95,17 @@
          (reaction (when-let [ur @nav/valittu-urakka]
                      (hoitokaudet ur))))
 
+(defn hoitokausi-kaynnissa? [[alku loppu]]
+  (pvm/valissa? (pvm/nyt) alku loppu))
+
+(defn urakka-kaynnissa? [urakka]
+  (->> urakka
+       hoitokaudet
+       (some hoitokausi-kaynnissa?)))
+
+(defonce valittu-urakka-kaynnissa?
+  (reaction (some hoitokausi-kaynnissa? @valitun-urakan-hoitokaudet)))
+
 (defn paattele-valittu-hoitokausi [hoitokaudet]
   (when-not (empty? hoitokaudet)
     (let [[alku-pvm _] (first hoitokaudet)
@@ -121,7 +132,8 @@
 (defonce valittu-hoitokausi
          (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-(defonce valittu-aikavali (reaction [(first @valittu-hoitokausi) (second @valittu-hoitokausi)]))
+(defonce valittu-aikavali (reaction @valittu-hoitokausi))
+
 
 (defn valitse-hoitokausi! [hk]
   (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))
@@ -254,13 +266,10 @@
          (reaction (let [tpi @valittu-toimenpideinstanssi
                          tehtavat @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
                      (reset! valittu-kokonaishintainen-tehtava nil)
-                     (filter
-                       (fn [rivi]
-                         (if (:t3_koodi tpi)
-                           (= (:t3_koodi rivi)
-                              (:t3_koodi @valittu-toimenpideinstanssi))
-                           true))
-                       tehtavat))))
+                     (into [] (keep (fn [[_ _ t3 t4]]
+                                      (when (= (:koodi t3) (:t3_koodi tpi))
+                                        t4))
+                                    tehtavat)))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)

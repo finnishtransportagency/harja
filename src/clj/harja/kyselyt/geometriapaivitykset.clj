@@ -1,11 +1,12 @@
 (ns harja.kyselyt.geometriapaivitykset
   "Geometriapäivityksiin liittyvät tietokantakyselyt"
   (:require [taoensso.timbre :as log]
-            [yesql.core :refer [defqueries]]
+            [jeesql.core :refer [defqueries]]
             [harja.pvm :as pvm]
             [clj-time.coerce :as time-coerce]))
 
-(defqueries "harja/kyselyt/geometriapaivitykset.sql")
+(defqueries "harja/kyselyt/geometriapaivitykset.sql"
+  {:positional? true})
 
 (defn pitaako-paivittaa? [db paivitystunnus tiedoston-muutospvm]
   (let [paivityksen-tiedot (first (harja.kyselyt.geometriapaivitykset/hae-paivitys db paivitystunnus))

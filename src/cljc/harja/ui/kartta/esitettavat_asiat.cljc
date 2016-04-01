@@ -233,10 +233,14 @@
       :alue (maarittele-feature laatupoikkeama (valittu-fn? laatupoikkeama)
                                 ikoni))))
 
+(def tarkastus-selitteet
+  #{{:teksti "Tarkastus (ok)" :vari (:ok-tarkastus ulkoasu/viivojen-varit)}
+    {:teksti "Tarkastus (havaintoja)" :vari (:ei-ok-tarkastus ulkoasu/viivojen-varit)}})
+
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
-                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
-                (:tekija tarkastus))
+               (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
+               (:tekija tarkastus))
         viiva (ulkoasu/tarkastuksen-reitti (valittu-fn? tarkastus) (:ok? tarkastus)
                                            (:tekija tarkastus))]
     (assoc tarkastus

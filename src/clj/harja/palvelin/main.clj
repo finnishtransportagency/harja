@@ -101,8 +101,8 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
-      :db (tietokanta/luo-tietokanta tietokanta)
-      :db-replica (tietokanta/luo-tietokanta tietokanta-replica)
+      :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
+      :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
                               (tapahtumat/luo-tapahtumat)
                               [:db])
@@ -261,7 +261,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db])
+                        [:http-palvelin :db :karttakuvat])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)

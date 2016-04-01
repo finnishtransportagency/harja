@@ -49,7 +49,8 @@
         (let [tulos (q/hae-urakan-toteumat-materiaalille db
                                                          sopimus
                                                          materiaali-id
-                                                         (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi)))]
+                                                         (konv/sql-date (first hoitokausi))
+                                                         (konv/sql-date (second hoitokausi)))]
           (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE ("sopimus materiaali-id")")
           tulos)))
 
@@ -229,7 +230,7 @@
            "kokonaishintainen"
            (:id user) "" ""
            (:lisatieto toteuma)
-           nil nil)]
+           nil nil nil nil nil nil nil)]
     (toteumat/luo-toteuma-materiaali<!
      db (:id t) (:id (:materiaali toteuma))
      (:maara toteuma) (:id user))))
@@ -254,6 +255,7 @@
                                          (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma)
                                          (:lisatieto toteuma)
                                          (:reitti toteuma)
+                                         nil nil nil nil nil
                                          (:tid toteuma)
                                          urakka-id)
               (toteumat/paivita-toteuma-materiaali!

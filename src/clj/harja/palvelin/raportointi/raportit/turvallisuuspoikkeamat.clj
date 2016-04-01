@@ -1,6 +1,6 @@
 (ns harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat
   (:require [clojure.string :as str]
-            [yesql.core :refer [defqueries]]
+            [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat-kuukausittain]]
@@ -14,7 +14,8 @@
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
 
-(defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql")
+(defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql"
+  {:positional? true})
 
 (def turvallisuuspoikkeama-tyyppi
   {"tyotapaturma" "Ty\u00ADö\u00ADta\u00ADpa\u00ADtur\u00ADma"
@@ -72,7 +73,7 @@
                       [{:otsikko "Urakka"}])
                     [{:otsikko "Tyyppi"}
                      {:otsikko "Määrä"}]))
-      
+
       (concat (mapcat (fn [[urakka turpot]]
                         (let [turpo-maarat-per-tyyppi (frequencies (mapcat :tyyppi turpot))]
                           [(rivi (:nimi urakka) "Työtapaturma" (or (turpo-maarat-per-tyyppi "tyotapaturma") 0))

@@ -14,11 +14,16 @@
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
+            [harja.transit :as transit]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.laadunseuranta :as laadunseuranta]))
+            [harja.domain.laadunseuranta :as laadunseuranta]
+
+            [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.pvm :as pvm]))
 
 (def laatupoikkeama-xf
   (comp
@@ -201,16 +206,23 @@
 
 (defn hae-urakan-tarkastukset
   "Palauttaa urakan tarkastukset annetulle aikavälille."
-  [db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]}]
-  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
-  (jdbc/with-db-transaction [db db]
-    (into []
-          tarkastus-xf
-          (tarkastukset/hae-urakan-tarkastukset db urakka-id
-                                                (konv/sql-timestamp alkupvm)
-                                                (konv/sql-timestamp loppupvm)
-                                                (if tienumero true false) tienumero
-                                                (if tyyppi true false) (and tyyppi (name tyyppi))))))
+  ([db user parametrit]
+   (hae-urakan-tarkastukset db user parametrit false 501))
+  ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]} palauta-reitti? max-rivimaara]
+   (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+   (log/debug "HAE TARKASTUKSET VÄLILLE " (pvm/pvm alkupvm) " -- " (pvm/pvm loppupvm))
+   (into []
+         (comp tarkastus-xf
+               (if palauta-reitti?
+                 identity
+                 (map #(dissoc % :sijainti))))
+         (tarkastukset/hae-urakan-tarkastukset
+          db urakka-id
+          (konv/sql-timestamp alkupvm)
+          (konv/sql-timestamp loppupvm)
+          (if tienumero true false) tienumero
+          (if tyyppi true false) (and tyyppi (name tyyppi))
+          max-rivimaara))))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
@@ -226,10 +238,18 @@
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
         (condp = (:tyyppi tarkastus)
-          :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus c id uusi? (-> (:talvihoitomittaus tarkastus)
-                                                                                     (assoc :lampotila-tie (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
-                                                                                     (assoc :lampotila-ilma (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))))
-          :soratie (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
+          :talvihoito
+          (tarkastukset/luo-tai-paivita-talvihoitomittaus
+           c id uusi?
+           (-> (:talvihoitomittaus tarkastus)
+               (assoc :lampotila-tie
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
+               (assoc :lampotila-ilma
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))))
+
+          :soratie
+          (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
+
           nil)
 
         (when-let [uusi-liite (:uusi-liite tarkastus)]
@@ -244,7 +264,8 @@
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
-  (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaon " (:id laatupoikkeama) ", urakassa " urakka)
+  (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
+            ", urakassa " urakka)
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka)
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
 
@@ -270,9 +291,26 @@
       ;; Jos tämä muuttuu, pitää frontillekin tehdä muutokset.
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
+(defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
+  (let [hakuparametrit (some-> parametrit (get "tr") transit/lue-transit-string)
+        tarkastukset (hae-urakan-tarkastukset db user hakuparametrit true Long/MAX_VALUE)]
+
+    (try
+      (esitettavat-asiat/kartalla-esitettavaan-muotoon
+       tarkastukset
+       nil :id
+       (comp (filter #(not (nil? (:sijainti %))))
+             (map #(assoc % :tyyppi-kartalla :tarkastus))))
+      (catch Exception e
+        (log/debug "TARKASTUSREITTI FIXME: " e)))))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
+  (start [{:keys [http-palvelin db karttakuvat] :as this}]
+
+    (karttakuvat/rekisteroi-karttakuvan-lahde!
+     karttakuvat :tarkastusreitit
+     (partial #'hae-tarkastusreitit-kartalle db))
 
     (julkaise-palvelut
       http-palvelin
@@ -287,7 +325,8 @@
 
       :tallenna-suorasanktio
       (fn [user tiedot]
-        (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot) (get-in tiedot [:laatupoikkeama :urakka])))
+        (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot)
+                               (get-in tiedot [:laatupoikkeama :urakka])))
 
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
@@ -327,4 +366,3 @@
                      :tallenna-suorasanktio
                      :hae-tarkastus)
     this))
-            

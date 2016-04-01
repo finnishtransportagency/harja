@@ -1,4 +1,5 @@
 (ns harja.kyselyt.kommentit
-  (:require [yesql.core :refer [defqueries]]))
+  (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/kommentit.sql")
+(defqueries "harja/kyselyt/kommentit.sql"
+  {:positional? true})

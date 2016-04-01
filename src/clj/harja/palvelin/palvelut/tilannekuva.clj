@@ -225,7 +225,6 @@
 
 (defn- hae-toteumien-reitit
   [db user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
-  (println "HAE REITIT: " (pr-str tiedot))
   (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
     (konv/sarakkeet-vektoriin
      (into []
@@ -258,10 +257,11 @@
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
-  (hae-toteumien-selitteet db user tiedot urakat))
+  (tulosta-tulos! "toteuman selitettä"
+                  (hae-toteumien-selitteet db user tiedot urakat)))
 
 (defmethod hae-osio :toteumat-kuva [db user tiedot urakat _]
-  (tulosta-tulos! "toteumaa"
+  (tulosta-tulos! "toteuman reittiä"
                   (hae-toteumien-reitit db user tiedot urakat)))
 
 (defmethod hae-osio :tyokoneet [db user tiedot urakat _]
@@ -317,8 +317,8 @@
      ;; TAI b) ilmoitus kuuluu listassa olevaan urakkaan _jos lista urakoita ei ole
      ;; tyhjä_. i.urakka IN (:urakat) epäonnistuu, jos annettu lista on tyhjä.
      (when-not (empty? urakat)
-       (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
        (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
+         (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
          (into {}
                (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
                osiot))))))

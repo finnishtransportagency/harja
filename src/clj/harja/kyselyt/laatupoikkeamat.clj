@@ -1,9 +1,10 @@
 (ns harja.kyselyt.laatupoikkeamat
   "Laatupoikkeamiin liittyvät tietokantakyselyt"
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]))
 
-(defqueries "harja/kyselyt/laatupoikkeamat.sql")
+(defqueries "harja/kyselyt/laatupoikkeamat.sql"
+  {:positional? true})
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))

@@ -235,7 +235,7 @@ SELECT
   tulos,
   lisatieto
 FROM siltatarkastuskohde
-WHERE siltatarkastus IN (:siltatarkastus_idt);
+WHERE siltatarkastus = ANY(:siltatarkastus_idt);
 
 -- name: paivita-siltatarkastuksen-kohteet!
 -- Päivittää olemassaolevan siltatarkastuksen kohteet

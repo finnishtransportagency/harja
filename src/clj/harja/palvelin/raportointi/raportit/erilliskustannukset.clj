@@ -1,7 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.erilliskustannukset
   "Erilliskustannusten raportti"
   (:require [taoensso.timbre :as log]
-            [yesql.core :refer [defqueries]]
+            [jeesql.core :refer [defqueries]]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
                                                                  pylvaat-kuukausittain ei-osumia-aikavalilla-teksti rivi]]
             [harja.domain.roolit :as roolit]
@@ -11,7 +11,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.fmt :as fmt]))
 
-(defqueries "harja/palvelin/raportointi/raportit/erilliskustannukset.sql")
+(defqueries "harja/palvelin/raportointi/raportit/erilliskustannukset.sql"
+  {:positional? true})
 
 
 (defn erilliskustannuksen-nimi
@@ -95,5 +96,3 @@
                                              "" "" ""
                                              (fmt/euro-opt false (reduce + (keep :rahasumma erilliskustannukset)))
                                              (fmt/euro-opt false (reduce + (keep :indeksikorotus erilliskustannukset)))])))))]]))
-
-
