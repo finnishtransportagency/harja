@@ -111,13 +111,14 @@
                           (let [havainnot (:havainnot rivi)
                                 havainnot-max-pituus 50
                                 havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
-                                                 (str (.substring havainnot 0 havainnot-max-pituus) "...")
-                                                 havainnot)
+                                                    (str (.substring havainnot 0 havainnot-max-pituus) "...")
+                                                    havainnot)
                                 vakiohavainnot (str/join ", " (:vakiohavainnot rivi))]
                             [:ul.tarkastuksen-havaintolista
                              (when (not (str/blank? vakiohavainnot))
                                [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
-                             [:li.tarkastuksen-havainnot havainnot-rajattu]]))}]
+                             (when (not (str/blank? havainnot-rajattu))
+                               [:li.tarkastuksen-havainnot havainnot-rajattu])]))}]
          tarkastukset]])))
 
 
