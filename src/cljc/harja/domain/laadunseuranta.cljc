@@ -91,12 +91,6 @@
 (defn validoi-tarkastus [data]
   (skeema/tarkista Tarkastus data))
 
-(defn validi-tarkastus? [data]
-  #?(:cljs (log (pr-str data)))
-  (let [virheet (validoi-tarkastus data)]
-    #?(:cljs (log "tarkastus virheet: " (pr-str virheet)))
-    (nil? virheet)))
-
 (defn tarkastus-tiedolla-onko-ok
   "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
   eikä tarkastuksella ole vakiohavaintoja"
@@ -106,9 +100,6 @@
            (empty? (:vakiohavainnot tarkastus))))
     (assoc tarkastus :ok? true)
     (assoc tarkastus :ok? false)))
-
-(defn tarkastukset-tiedoilla-onko-ok [tarkastukset]
-  (map tarkastus-tiedolla-onko-ok tarkastukset))
 
 (defn validoi-laatupoikkeama [data]
   (skeema/tarkista Laatupoikkeama data))
