@@ -59,8 +59,6 @@
                            urakka-id alku loppu)
                   (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi))))))))
 
-(tarkkaile! "Tarkastukset: " urakan-tarkastukset)
-
 (defonce valittu-tarkastus (atom nil))
 
 (defn paivita-tarkastus-listaan!
