@@ -1,39 +1,84 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <turi:turvallisuuspoikkeama xmlns:turi="http://www.liikennevirasto.fi/xsd/turi">
-    <turi:tunniste>10</turi:tunniste>
     <turi:vaylamuoto>tie</turi:vaylamuoto>
-    <turi:tapahtunut>2016-03-31T12:00:00.0</turi:tapahtunut>
-    <turi:paattynyt>2016-03-31T13:00:00.0</turi:paattynyt>
-    <turi:kasitelty>2016-03-31T14:00:00.0</turi:kasitelty>
-    <turi:toteuttaja></turi:toteuttaja>
-    <turi:tilaaja></turi:tilaaja>
+    <turi:tapahtunut>2015-10-26T09:36:28</turi:tapahtunut>
+    <turi:paattynyt>2015-02-14T20:44:14</turi:paattynyt>
+    <turi:kasitelty>2018-11-01T07:36:46+02:00</turi:kasitelty>
+    <turi:toteuttaja>Yritys OY</turi:toteuttaja>
+    <turi:tilaaja>POP ELY</turi:tilaaja>
     <turi:turvallisuuskoordinaattori>
-        <turi:etunimi></turi:etunimi>
-        <turi:sukunimi></turi:sukunimi>
+        <turi:etunimi>Tiina</turi:etunimi>
+        <turi:sukunimi>Turvallinen</turi:sukunimi>
     </turi:turvallisuuskoordinaattori>
     <turi:laatija>
-        <turi:etunimi></turi:etunimi>
-        <turi:sukunimi></turi:sukunimi>
+        <turi:etunimi>Lasse</turi:etunimi>
+        <turi:sukunimi>Laatija</turi:sukunimi>
     </turi:laatija>
-    <turi:kuvaus>Jepa jepa</turi:kuvaus>
-    <turi:tyotehtava></turi:tyotehtava>
+    <turi:ilmoittaja>
+        <turi:etunimi>Irma</turi:etunimi>
+        <turi:sukunimi>Ilmiantaja</turi:sukunimi>
+    </turi:ilmoittaja>
+    <turi:kuvaus></turi:kuvaus>
+    <turi:tyotehtava>Aura-auto suistui tieltä väistäessä jalankulkijaa ja törmäsi autoon.</turi:tyotehtava>
     <turi:luokittelut>
-        <turi:luokittelu>turvallisuushavainto</turi:luokittelu>
-        <turi:luokittelu>vaaratilanne</turi:luokittelu>
+        <turi:luokittelu>tyotapaturma</turi:luokittelu>
     </turi:luokittelut>
     <turi:vahinkoluokittelut>
+        <turi:luokittelu>henkilostovahinko</turi:luokittelu>
         <turi:luokittelu>omaisuusvahinko</turi:luokittelu>
     </turi:vahinkoluokittelut>
     <turi:vakavuusaste>vakava</turi:vakavuusaste>
-    <turi:aiheutuneet-seuraukset></turi:aiheutuneet-seuraukset>
+    <turi:aiheutuneet-seuraukset>Tehdään asialle jotain</turi:aiheutuneet-seuraukset>
+    <turi:korjaavat-toimenpiteet>
+        <turi:korjaava-toimenpide>
+            <turi:kuvaus>Kaadetaan risteystä pimentävä pensaikko</turi:kuvaus>
+            <turi:suoritettu>2016-01-30T12:00:00Z</turi:suoritettu>
+            <turi:vastaavahenkilo>
+                <turi:etunimi>Henri</turi:etunimi>
+                <turi:sukunimi>Hakkuri</turi:sukunimi>
+            </turi:vastaavahenkilo>
+        </turi:korjaava-toimenpide>
+    </turi:korjaavat-toimenpiteet>
+    <turi:kommentit>
+        <turi:kommentti>Aika pahalta näytti.</turi:kommentti>
+        <turi:kommentti>Jatkossa ei tule tapahtumaan.</turi:kommentti>
+    </turi:kommentit>
+    <turi:liitteet>
+        <turi:liite>
+            <turi:tiedostonimi>tilanne.png</turi:tiedostonimi>
+            <turi:tyyppi>image/png</turi:tyyppi>
+            <turi:kuvaus>Kuva tilanteesta</turi:kuvaus>
+            <turi:sisalto>...sisältö BASE 64 encoodattuna...</turi:sisalto>
+        </turi:liite>
+        <turi:liite>
+            <turi:tiedostonimi>auto.png</turi:tiedostonimi>
+            <turi:tyyppi>image/png</turi:tyyppi>
+            <turi:kuvaus>Kuva autosta</turi:kuvaus>
+            <turi:sisalto>...sisältö BASE 64 encoodattuna...</turi:sisalto>
+        </turi:liite>
+    </turi:liitteet>
+    <turi:sijainti>
+        <turi:koordinaatit>
+            <turi:tienumero>1</turi:tienumero>
+            <turi:x>430198</turi:x>
+            <turi:y>7212292</turi:y>
+        </turi:koordinaatit>
+    </turi:sijainti>
     <turi:henkilovahinko>
         <turi:tyontekijan-ammatti>
-            <turi:koodi></turi:koodi>
-            <turi:selite></turi:selite>
+            <turi:koodi>Muu työntekijä</turi:koodi>
+            <turi:selite>Aura-auton kuljettaja</turi:selite>
         </turi:tyontekijan-ammatti>
         <turi:aiheutuneet-vammat>Ranne murtui ja päähän tuli haava</turi:aiheutuneet-vammat>
-        <turi:sairauspoissaolopaivat></turi:sairauspoissaolopaivat>
-        <turi:sairaalahoitovuorokaudet></turi:sairaalahoitovuorokaudet>
+        <turi:vamman-laatu>
+            <turi:vamma>Luunmurtumat</turi:vamma>
+            <turi:vamma>Haavat ja pinnalliset vammat</turi:vamma>
+        </turi:vamman-laatu>
+        <turi:vahingoittuneet-ruumiinosat>
+            <turi:ruumiinosa>Pään alue (pl. silmät)</turi:ruumiinosa>
+            <turi:ruumiinosa>Ranne</turi:ruumiinosa>
+        </turi:vahingoittuneet-ruumiinosat>
+        <turi:sairauspoissaolopaivat>3</turi:sairauspoissaolopaivat>
+        <turi:sairaalahoitovuorokaudet>1</turi:sairaalahoitovuorokaudet>
         <turi:jatkuuko-sairaspoissaolo>false</turi:jatkuuko-sairaspoissaolo>
     </turi:henkilovahinko>
 </turi:turvallisuuspoikkeama>

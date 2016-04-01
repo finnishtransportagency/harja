@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/turi/")
 
@@ -90,7 +91,8 @@
 (defn muodosta-viesti [data]
   [:turi:turvallisuuspoikkeama
    {:xmlns:turi "http://www.liikennevirasto.fi/xsd/turi"}
-   [:turi:tunniste (:id data)]
+   ;; todo: palauta tunnisteeksi
+   [:turi:pottukattila! (:id data)]
    [:turi:vaylamuoto (:vaylamuoto data)]
    [:turi:tapahtunut (when (:tapahtunut data) (xml/formatoi-aikaleima (:tapahtunut data)))]
    [:turi:paattynyt (when (:paattynyt data) (xml/formatoi-aikaleima (:paattynyt data)))]
@@ -116,6 +118,7 @@
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "turvallisuuspoikkeama.xsd" xml)
       xml
-      (do
-        (log/error "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia.")
-        nil))))
+      (let [virheviesti "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia."]
+        (log/error virheviesti)
+        (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
+                 :error virheviesti})))))

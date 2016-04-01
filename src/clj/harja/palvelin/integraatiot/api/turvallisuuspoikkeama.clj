@@ -184,27 +184,36 @@
 
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
-  (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
-        kommentit (:kommentit data)
-        korjaavat (:korjaavatToimenpiteet data)
-        liitteet (:liitteet data)]
-    (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
-    (tallenna-kommentit db tp-id kirjaaja kommentit)
-    (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
-    (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
-    tp-id))
+  (jdbc/with-db-transaction [db db]
+    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
+          kommentit (:kommentit data)
+          korjaavat (:korjaavatToimenpiteet data)
+          liitteet (:liitteet data)]
+      (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
+      (tallenna-kommentit db tp-id kirjaaja kommentit)
+      (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
+      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
+      tp-id)))
 
-(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} data kirjaaja]
+(defn laheta-poikkeamat-turin [turi idt]
+  (doseq [id idt]
+    (turi/laheta-turvallisuuspoikkeama turi id)))
+
+(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
-    (log/debug "Kirjataan " (count (:turvallisuuspoikkeamat data))
-               " uutta turvallisuuspoikkeamaa urakalle id:" urakka-id " kayttäjän:"
-               (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) ") tekemänä.")
+    (log/debug (format "Kirjataan: %s uutta turvallisuuspoikkeamaa urakalle id: %s kayttäjän: %s (id: %s) tekemänä."
+                       (count turvallisuuspoikkeamat)
+                       urakka-id
+                       (:kayttajanimi kirjaaja)
+                       (:id kirjaaja)))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (jdbc/with-db-transaction [db db]
-      (doseq [turvallisuuspoikkeama (:turvallisuuspoikkeamat data)]
-        (let [id (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama)]
-          (turi/laheta-turvallisuuspoikkeama turi id))))
-    (vastaus (:turvallisuuspoikkeamat data))))
+
+
+    (let [idt (mapv (fn [turvallisuuspoikkeama]
+                      (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
+                    turvallisuuspoikkeamat)]
+      (laheta-poikkeamat-turin turi idt))
+    (vastaus turvallisuuspoikkeamat)))
 
 (defrecord Turvallisuuspoikkeama []
   component/Lifecycle

@@ -57,7 +57,7 @@
                               :url url
                               :parametrit parametrit}
               {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (first (lue-fim-vastaus (lue-xml vastaus)))))§)))
+          (first (lue-fim-vastaus (lue-xml vastaus))))))))
 
 (defrecord FIM [url]
   component/Lifecycle

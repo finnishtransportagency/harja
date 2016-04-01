@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.integraatiotapahtuma
-  (:require [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
+  (:require [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [clojure.string :as str]))
 
@@ -63,6 +64,8 @@
          vastaus)
 
        (catch Throwable t
+         ;; todo: selvitä miksi ei toimi
          (when virhekasittelija
            (virhekasittelija konteksti t))
-         (lokittaja :epaonnistunut nil lisatietoja tapahtuma-id ulkoinen-id))))))
+         (log/debug "JEEJEE")
+         (lokittaja :epaonnistunut nil (str lisatietoja " " t) tapahtuma-id ulkoinen-id))))))
