@@ -1,45 +1,98 @@
 -- name: hae-urakan-turvallisuuspoikkeamat
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
-       t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
-       t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
-       k.id              AS korjaavatoimenpide_id,
-       k.kuvaus          AS korjaavatoimenpide_kuvaus,
-       k.suoritettu      AS korjaavatoimenpide_suoritettu,
-       k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
-  FROM turvallisuuspoikkeama t
-       LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
- WHERE t.urakka = :urakka
-       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
- ORDER BY t.tapahtunut DESC;
+SELECT
+  t.id,
+  t.urakka,
+  t.tapahtunut,
+  t.paattynyt,
+  t.kasitelty,
+  t.tyontekijanammatti,
+  t.tyontekijanammatti_muu AS tyontekijanammattimuu,
+  t.tyotehtava,
+  t.kuvaus,
+  t.vammat,
+  t.sairauspoissaolopaivat,
+  t.sairaalavuorokaudet,
+  t.sijainti,
+  t.tr_numero,
+  t.tr_alkuetaisyys,
+  t.tr_loppuetaisyys,
+  t.tr_alkuosa,
+  t.tr_loppuosa,
+  t.tyyppi,
+  k.id                     AS korjaavatoimenpide_id,
+  k.kuvaus                 AS korjaavatoimenpide_kuvaus,
+  k.suoritettu             AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo        AS korjaavatoimenpide_vastaavahenkilo
+FROM turvallisuuspoikkeama t
+  LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
+WHERE t.urakka = :urakka
+      AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
+ORDER BY t.tapahtunut DESC;
 
 -- name: hae-hallintayksikon-turvallisuuspoikkeamat
 -- Hakee turvallisuuspoikkeamat, jotka ovat annetun hallintayksikön urakoissa raportoituja
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
-       t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
-       t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
-       k.id AS korjaavatoimenpide_id,
-       k.kuvaus AS korjaavatoimenpide_kuvaus,
-       k.suoritettu AS korjaavatoimenpide_suoritettu,
-       k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
-  FROM turvallisuuspoikkeama t
-      LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
- WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
-       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
- ORDER BY t.tapahtunut DESC;
+SELECT
+  t.id,
+  t.urakka,
+  t.tapahtunut,
+  t.paattynyt,
+  t.kasitelty,
+  t.tyontekijanammatti,
+  t.tyontekijanammatti_muu AS tyontekijanammattimuu,
+  t.tyotehtava,
+  t.kuvaus,
+  t.vammat,
+  t.sairauspoissaolopaivat,
+  t.sairaalavuorokaudet,
+  t.sijainti,
+  t.tr_numero,
+  t.tr_alkuetaisyys,
+  t.tr_loppuetaisyys,
+  t.tr_alkuosa,
+  t.tr_loppuosa,
+  t.tyyppi,
+  k.id                     AS korjaavatoimenpide_id,
+  k.kuvaus                 AS korjaavatoimenpide_kuvaus,
+  k.suoritettu             AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo        AS korjaavatoimenpide_vastaavahenkilo
+FROM turvallisuuspoikkeama t
+  LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
+WHERE t.urakka IN (SELECT id
+                   FROM urakka
+                   WHERE hallintayksikko = :hallintayksikko)
+      AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
+ORDER BY t.tapahtunut DESC;
 
 -- name: hae-turvallisuuspoikkeamat
 -- Hakee kaikki turvallisuuspoikkeamat aikavälillä ilman aluerajausta
-SELECT t.id, t.urakka, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
-       t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.sijainti,
-       t.tr_numero, t.tr_alkuetaisyys, t.tr_loppuetaisyys, t.tr_alkuosa, t.tr_loppuosa, t.tyyppi,
-       k.id AS korjaavatoimenpide_id,
-       k.kuvaus AS korjaavatoimenpide_kuvaus,
-       k.suoritettu AS korjaavatoimenpide_suoritettu,
-       k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
-  FROM turvallisuuspoikkeama t
-      LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
- WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
- ORDER BY t.tapahtunut DESC;
+SELECT
+  t.id,
+  t.urakka,
+  t.tapahtunut,
+  t.paattynyt,
+  t.kasitelty,
+  t.tyontekijanammatti,
+  t.tyontekijanammatti_muu AS tyontekijanammattimuu,
+  t.tyotehtava,
+  t.kuvaus,
+  t.vammat,
+  t.sairauspoissaolopaivat,
+  t.sairaalavuorokaudet,
+  t.sijainti,
+  t.tr_numero,
+  t.tr_alkuetaisyys,
+  t.tr_loppuetaisyys,
+  t.tr_alkuosa,
+  t.tr_loppuosa,
+  t.tyyppi,
+  k.id                     AS korjaavatoimenpide_id,
+  k.kuvaus                 AS korjaavatoimenpide_kuvaus,
+  k.suoritettu             AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo        AS korjaavatoimenpide_vastaavahenkilo
+FROM turvallisuuspoikkeama t
+  LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
+WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
+ORDER BY t.tapahtunut DESC;
 
 -- name: hae-urakan-turvallisuuspoikkeama
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
@@ -50,14 +103,14 @@ SELECT
   t.paattynyt,
   t.kasitelty,
   t.tyontekijanammatti,
-  t.tyontekijanammatti_muu as tyontekijanammattimuu,
+  t.tyontekijanammatti_muu              AS tyontekijanammattimuu,
   t.tyotehtava,
   t.kuvaus,
   t.vammat,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
-  t.vahingoittuneet_ruumiinosat as vahingoittuneetruumiinosat,
-  t.sairauspoissaolo_jatkuu as sairauspoissaolojatkuu,
+  t.vahingoittuneet_ruumiinosat         AS vahingoittuneetruumiinosat,
+  t.sairauspoissaolo_jatkuu             AS sairauspoissaolojatkuu,
   t.sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
@@ -70,37 +123,37 @@ SELECT
   t.vaylamuoto,
   t.toteuttaja,
   t.tilaaja,
-  t.laatija_etunimi as laatijaetunimi,
-  t.laatija_sukunimi as laatijasukunimi,
-  t.turvallisuuskoordinaattori_etunimi as turvallisuuskoordinaattorietunimi,
-  t.turvallisuuskoordinaattori_sukunimi as turvallisuuskoordinaattorisukunimi,
-  t.aiheutuneet_seuraukset as seuraukset,
+  t.laatija_etunimi                     AS laatijaetunimi,
+  t.laatija_sukunimi                    AS laatijasukunimi,
+  t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
+  t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
+  t.aiheutuneet_seuraukset              AS seuraukset,
 
-  k.id                   AS korjaavatoimenpide_id,
-  k.kuvaus               AS korjaavatoimenpide_kuvaus,
-  k.suoritettu           AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo      AS korjaavatoimenpide_vastaavahenkilo,
+  k.id                                  AS korjaavatoimenpide_id,
+  k.kuvaus                              AS korjaavatoimenpide_kuvaus,
+  k.suoritettu                          AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo                     AS korjaavatoimenpide_vastaavahenkilo,
 
-  kom.id                 AS kommentti_id,
-  kom.tekija             AS kommentti_tekija,
-  kom.kommentti          AS kommentti_kommentti,
-  kom.luotu              AS kommentti_aika,
+  kom.id                                AS kommentti_id,
+  kom.tekija                            AS kommentti_tekija,
+  kom.kommentti                         AS kommentti_kommentti,
+  kom.luotu                             AS kommentti_aika,
   (SELECT CONCAT(etunimi, ' ', sukunimi)
    FROM kayttaja
-   WHERE id = kom.luoja) AS kommentti_tekijanimi,
+   WHERE id = kom.luoja)                AS kommentti_tekijanimi,
 
-  koml.id                AS kommentti_liite_id,
-  koml.tyyppi            AS kommentti_liite_tyyppi,
-  koml.koko              AS kommentti_liite_koko,
-  koml.nimi              AS kommentti_liite_nimi,
-  koml.liite_oid         AS kommentti_liite_oid,
+  koml.id                               AS kommentti_liite_id,
+  koml.tyyppi                           AS kommentti_liite_tyyppi,
+  koml.koko                             AS kommentti_liite_koko,
+  koml.nimi                             AS kommentti_liite_nimi,
+  koml.liite_oid                        AS kommentti_liite_oid,
 
-  l.id                   AS liite_id,
-  l.tyyppi               AS liite_tyyppi,
-  l.koko                 AS liite_koko,
-  l.nimi                 AS liite_nimi,
-  l.liite_oid            AS liite_oid,
-  l.pikkukuva            AS liite_pikkukuva
+  l.id                                  AS liite_id,
+  l.tyyppi                              AS liite_tyyppi,
+  l.koko                                AS liite_koko,
+  l.nimi                                AS liite_nimi,
+  l.liite_oid                           AS liite_oid,
+  l.pikkukuva                           AS liite_pikkukuva
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
@@ -131,14 +184,14 @@ SELECT
   t.paattynyt,
   t.kasitelty,
   t.tyontekijanammatti,
-  t.tyontekijanammatti_muu as tyontekijanammattimuu,
+  t.tyontekijanammatti_muu              AS tyontekijanammattimuu,
   t.tyotehtava,
   t.kuvaus,
   t.vammat,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
-  t.vahingoittuneet_ruumiinosat as vahingoittuneetruumiinosat,
-  t.sairauspoissaolo_jatkuu as sairauspoissaolojatkuu,
+  t.vahingoittuneet_ruumiinosat         AS vahingoittuneetruumiinosat,
+  t.sairauspoissaolo_jatkuu             AS sairauspoissaolojatkuu,
   t.sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
@@ -151,37 +204,37 @@ SELECT
   t.vaylamuoto,
   t.toteuttaja,
   t.tilaaja,
-  t.laatija_etunimi as laatijaetunimi,
-  t.laatija_sukunimi as laatijasukunimi,
-  t.turvallisuuskoordinaattori_etunimi as turvallisuuskoordinaattorietunimi,
-  t.turvallisuuskoordinaattori_sukunimi as turvallisuuskoordinaattorisukunimi,
-  t.aiheutuneet_seuraukset as seuraukset,
+  t.laatija_etunimi                     AS laatijaetunimi,
+  t.laatija_sukunimi                    AS laatijasukunimi,
+  t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
+  t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
+  t.aiheutuneet_seuraukset              AS seuraukset,
 
-  k.id                   AS korjaavatoimenpide_id,
-  k.kuvaus               AS korjaavatoimenpide_kuvaus,
-  k.suoritettu           AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo      AS korjaavatoimenpide_vastaavahenkilo,
+  k.id                                  AS korjaavatoimenpide_id,
+  k.kuvaus                              AS korjaavatoimenpide_kuvaus,
+  k.suoritettu                          AS korjaavatoimenpide_suoritettu,
+  k.vastaavahenkilo                     AS korjaavatoimenpide_vastaavahenkilo,
 
-  kom.id                 AS kommentti_id,
-  kom.tekija             AS kommentti_tekija,
-  kom.kommentti          AS kommentti_kommentti,
-  kom.luotu              AS kommentti_aika,
+  kom.id                                AS kommentti_id,
+  kom.tekija                            AS kommentti_tekija,
+  kom.kommentti                         AS kommentti_kommentti,
+  kom.luotu                             AS kommentti_aika,
   (SELECT CONCAT(etunimi, ' ', sukunimi)
    FROM kayttaja
-   WHERE id = kom.luoja) AS kommentti_tekijanimi,
+   WHERE id = kom.luoja)                AS kommentti_tekijanimi,
 
-  koml.id                AS kommentti_liite_id,
-  koml.tyyppi            AS kommentti_liite_tyyppi,
-  koml.koko              AS kommentti_liite_koko,
-  koml.nimi              AS kommentti_liite_nimi,
-  koml.liite_oid         AS kommentti_liite_oid,
+  koml.id                               AS kommentti_liite_id,
+  koml.tyyppi                           AS kommentti_liite_tyyppi,
+  koml.koko                             AS kommentti_liite_koko,
+  koml.nimi                             AS kommentti_liite_nimi,
+  koml.liite_oid                        AS kommentti_liite_oid,
 
-  l.id                   AS liite_id,
-  l.tyyppi               AS liite_tyyppi,
-  l.koko                 AS liite_koko,
-  l.nimi                 AS liite_nimi,
-  l.liite_oid            AS liite_oid,
-  l.pikkukuva            AS liite_pikkukuva
+  l.id                                  AS liite_id,
+  l.tyyppi                              AS liite_tyyppi,
+  l.koko                                AS liite_koko,
+  l.nimi                                AS liite_nimi,
+  l.liite_oid                           AS liite_oid,
+  l.pikkukuva                           AS liite_pikkukuva
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
@@ -236,82 +289,83 @@ VALUES
 --name: paivita-turvallisuuspoikkeama!
 UPDATE turvallisuuspoikkeama
 SET
-  urakka                 = :urakka,
-  tapahtunut             = :tapahtunut,
-  paattynyt              = :paattynyt,
-  kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
-  tyontekijanammatti_muu = :ammatti_muu,
-  tyotehtava             = :tehtava,
-  kuvaus                 = :kuvaus,
-  vammat                 = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
-  sairauspoissaolopaivat = :poissa,
-  sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  muokkaaja              = :kayttaja,
-  muokattu               = NOW(),
-  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
-  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  toteuttaja             = :toteuttaja,
-  tilaaja                = :tilaaja,
-  sijainti               = :sijainti,
-  tr_numero              = :numero,
-  tr_alkuetaisyys        = :alkuetaisyys,
-  tr_loppuetaisyys       = :loppuetaisyys,
-  tr_alkuosa             = :alkuosa,
-  tr_loppuosa            = :loppuosa,
-  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
-  vaylamuoto                  = :vaylamuoto :: vaylamuoto,
-  laatija_etunimi             = :laatija_etunimi,
-  laatija_sukunimi            = :laatija_sukunimi,
+  urakka                              = :urakka,
+  tapahtunut                          = :tapahtunut,
+  paattynyt                           = :paattynyt,
+  kasitelty                           = :kasitelty,
+  tyontekijanammatti                  = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu              = :ammatti_muu,
+  tyotehtava                          = :tehtava,
+  kuvaus                              = :kuvaus,
+  vammat                              = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
+  sairauspoissaolopaivat              = :poissa,
+  sairaalavuorokaudet                 = :sairaalassa,
+  tyyppi                              = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  muokkaaja                           = :kayttaja,
+  muokattu                            = NOW(),
+  vahinkoluokittelu                   = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste                        = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  toteuttaja                          = :toteuttaja,
+  tilaaja                             = :tilaaja,
+  sijainti                            = :sijainti,
+  tr_numero                           = :numero,
+  tr_alkuetaisyys                     = :alkuetaisyys,
+  tr_loppuetaisyys                    = :loppuetaisyys,
+  tr_alkuosa                          = :alkuosa,
+  tr_loppuosa                         = :loppuosa,
+  vahingoittuneet_ruumiinosat         = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu             = :sairauspoissaolo_jatkuu,
+  aiheutuneet_seuraukset              = :aiheutuneet_seuraukset,
+  vaylamuoto                          = :vaylamuoto :: vaylamuoto,
+  laatija_etunimi                     = :laatija_etunimi,
+  laatija_sukunimi                    = :laatija_sukunimi,
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi
 WHERE id = :id;
 
 -- name: hae-turvallisuuspoikkeaman-id-ulkoisella-idlla
 -- single?: true
-SELECT id FROM turvallisuuspoikkeama
- WHERE ulkoinen_id = :ulkoinen_id AND
-       luoja = :luoja
+SELECT id
+FROM turvallisuuspoikkeama
+WHERE ulkoinen_id = :ulkoinen_id AND
+      luoja = :luoja
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla!
 UPDATE turvallisuuspoikkeama
-SET urakka               = :urakka,
-  tapahtunut             = :tapahtunut,
-  paattynyt              = :paattynyt,
-  kasitelty              = :kasitelty,
-  tyontekijanammatti     = :ammatti :: tyontekijanammatti,
-  tyontekijanammatti_muu = :ammatti_muu,
-  tyotehtava             = :tehtava,
-  kuvaus                 = :kuvaus,
-  vammat                 = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
-  sairauspoissaolopaivat = :poissa,
-  sairaalavuorokaudet    = :sairaalassa,
-  tyyppi                 = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
-  muokkaaja              = :kayttaja,
-  vahinkoluokittelu      = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
-  vakavuusaste           = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
-  toteuttaja             = :toteuttaja,
-  tilaaja                = :tilaaja,
-  muokattu               = NOW(),
-  sijainti         = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY,
-  tr_numero        = :numero,
-  tr_alkuetaisyys  = :aet,
-  tr_loppuetaisyys = :let,
-  tr_alkuosa       = :aos,
-  tr_loppuosa      = :los,
-  vahingoittuneet_ruumiinosat = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
-  sairauspoissaolo_jatkuu     = :sairauspoissaolo_jatkuu,
-  aiheutuneet_seuraukset      = :aiheutuneet_seuraukset,
-  ilmoittaja_etunimi = :ilmoittaja_etunimi,
-  ilmoittaja_sukunimi = :ilmoittaja_sukunimi,
-  vaylamuoto = :vaylamuoto :: vaylamuoto,
-  turvallisuuskoordinaattori_etunimi = :turvallisuuskoordinaattori_etunimi,
+SET urakka                            = :urakka,
+  tapahtunut                          = :tapahtunut,
+  paattynyt                           = :paattynyt,
+  kasitelty                           = :kasitelty,
+  tyontekijanammatti                  = :ammatti :: tyontekijanammatti,
+  tyontekijanammatti_muu              = :ammatti_muu,
+  tyotehtava                          = :tehtava,
+  kuvaus                              = :kuvaus,
+  vammat                              = :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [],
+  sairauspoissaolopaivat              = :poissa,
+  sairaalavuorokaudet                 = :sairaalassa,
+  tyyppi                              = :tyyppi :: turvallisuuspoikkeama_luokittelu [],
+  muokkaaja                           = :kayttaja,
+  vahinkoluokittelu                   = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+  vakavuusaste                        = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
+  toteuttaja                          = :toteuttaja,
+  tilaaja                             = :tilaaja,
+  muokattu                            = NOW(),
+  sijainti                            = POINT(:x_koordinaatti, :y_koordinaatti) :: GEOMETRY,
+  tr_numero                           = :numero,
+  tr_alkuetaisyys                     = :aet,
+  tr_loppuetaisyys                    = :let,
+  tr_alkuosa                          = :aos,
+  tr_loppuosa                         = :los,
+  vahingoittuneet_ruumiinosat         = :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+  sairauspoissaolo_jatkuu             = :sairauspoissaolo_jatkuu,
+  aiheutuneet_seuraukset              = :aiheutuneet_seuraukset,
+  ilmoittaja_etunimi                  = :ilmoittaja_etunimi,
+  ilmoittaja_sukunimi                 = :ilmoittaja_sukunimi,
+  vaylamuoto                          = :vaylamuoto :: vaylamuoto,
+  turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
-  laatija_etunimi = :laatija_etunimi,
-  laatija_sukunimi = :laatija_sukunimi
+  laatija_etunimi                     = :laatija_etunimi,
+  laatija_sukunimi                    = :laatija_sukunimi
 WHERE ulkoinen_id = :ulkoinen_id AND
       luoja = :luoja;
 
@@ -332,17 +386,19 @@ INSERT INTO turvallisuuspoikkeama
  ilmoittaja_etunimi, ilmoittaja_sukunimi, ulkoinen_id)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu,
-  :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat[], :poissa,
-  :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(),
-  :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu[],
-  :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :toteuttaja, :tilaaja,
-  :sijainti, :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys,
-  :vahingoittuneet_ruumiinosat ::turvallisuuspoikkeama_vahingoittunut_ruumiinosa[],
-  :sairauspoissaolo_jatkuu, :aiheutuneet_seuraukset, :vaylamuoto ::vaylamuoto,
-  :laatija_etunimi, :laatija_sukunimi,
-  :turvallisuuskoordinaattori_etunimi, :turvallisuuskoordinaattori_sukunimi,
-  :ilmoittaja_etunimi, :ilmoittaja_sukunimi,
-  :ulkoinen_id);
+            :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [], :poissa,
+            :sairaalassa, :tyyppi :: turvallisuuspoikkeama_luokittelu [], :kayttaja, NOW(),
+                          :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
+                          :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste, :toteuttaja, :tilaaja,
+                          :sijainti, :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys,
+                                                        :vahingoittuneet_ruumiinosat :: turvallisuuspoikkeama_vahingoittunut_ruumiinosa [],
+                                                        :sairauspoissaolo_jatkuu, :aiheutuneet_seuraukset,
+                                                        :vaylamuoto :: vaylamuoto,
+                                                        :laatija_etunimi, :laatija_sukunimi,
+                                                        :turvallisuuskoordinaattori_etunimi,
+   :turvallisuuskoordinaattori_sukunimi,
+   :ilmoittaja_etunimi, :ilmoittaja_sukunimi,
+   :ulkoinen_id);
 
 --name: lokita-lahetys<!
 UPDATE turvallisuuspoikkeama
@@ -380,3 +436,8 @@ FROM liite l
   INNER JOIN turvallisuuspoikkeama_liite tpl
     ON l.id = tpl.liite
 WHERE tpl.turvallisuuspoikkeama = :id;
+
+--name: hae-lahettamattomat-turvallisuuspoikkeamat
+SELECT id
+FROM turvallisuuspoikkeama
+WHERE lahetys_onnistunut IS NOT TRUE;

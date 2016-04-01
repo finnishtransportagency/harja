@@ -5,7 +5,8 @@
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
             [harja.palvelin.komponentit.liitteet :as liitteet]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
@@ -46,23 +47,42 @@
           (->> id
                (hae-turvallisuuspoikkeama liitteiden-hallinta db)
                sanoma/muodosta
-               (integraatiotapahtuma/laheta konteksti :http {:metodi :POST :url url :kayttajatunnus kayttajatunnus :salasana salasana})
+               (integraatiotapahtuma/laheta
+                 konteksti :http {:metodi :POST
+                                  :url url
+                                  :kayttajatunnus kayttajatunnus
+                                  :salasana salasana})
                (kasittele-turin-vastaus db id)))
         {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
       (catch Throwable t
         (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
 
+(defn laheta-turvallisuuspoikkeamat-turiin [this]
+  (let [idt (q/hae-lahettamattomat-turvallisuuspoikkeamat (:db this))]
+    (doseq [id idt]
+      (laheta-turvallisuuspoikkeama this id))))
+
+(defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika]
+  (if paivittainen-lahetysaika
+    (do
+      (log/debug "Ajastetaan turvallisuuspoikkeamien lähettäminen joka päivä kello: " paivittainen-lahetysaika)
+      (ajastettu-tehtava/ajasta-paivittain paivittainen-lahetysaika #(laheta-turvallisuuspoikkeamat-turiin this)))
+    #()))
+
 (defrecord Turi [asetukset]
   component/Lifecycle
   (start [this]
-    (let [{url :url kayttajatunnus :kayttajatunnus salasana :salasana} asetukset]
+    (let [{url :url kayttajatunnus :kayttajatunnus salasana :salasana paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
       (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" url))
-      (assoc this
-        :url url
-        :kayttajatunnus kayttajatunnus
-        :salasana salasana)))
+      (assoc
+        (assoc this
+          :url url
+          :kayttajatunnus kayttajatunnus
+          :salasana salasana)
+        :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika))))
 
   (stop [this]
+    (:paivittainen-lahetys-tehtava this)
     this)
 
   TurvallisuusPoikkeamanLahetys
