@@ -27,7 +27,7 @@ fi
 
 echo " ---- "
 echo "Aloitetaan ajo.."
-#tulos="$(lein test2junit 2> /dev/null)"
+tulos="$(lein test2junit 2> /dev/null)"
 
 echo "Testit ajettu. Analysoidaan tulokset."
 echo "Step: 1/2.."
