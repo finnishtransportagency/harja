@@ -189,6 +189,12 @@ SET aika            = :aika,
   selvitys_pyydetty = :selvitys,
   muokkaaja         = :muokkaaja,
   kuvaus            = :kuvaus,
+  sijainti = :sijainti,
+  tr_numero = :numero,
+  tr_alkuosa = :alkuosa,
+  tr_loppuosa = :loppuosa,
+  tr_alkuetaisyys = :alkuetaisyys,
+  tr_loppuetaisyys = :loppuetaisyys,
   muokattu          = current_timestamp
 WHERE id = :id;
 
