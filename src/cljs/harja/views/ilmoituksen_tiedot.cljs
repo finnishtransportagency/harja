@@ -11,10 +11,7 @@
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.ui.ikonit :as ikonit]))
 
-(defn ilmoitus
-  ([ilmoitus haku-fn] (ilmoitus ilmoitus haku-fn haku-fn))
-  ([ilmoitus] (ilmoitus ilmoitus nil nil))
-  ([ilmoitus kun-aloitetaan-kuittaus-fn kun-tallennetaan-fn]
+(defn ilmoitus [ilmoitus]
   [:div
    [bs/panel {}
     (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
@@ -47,11 +44,10 @@
     [:h3 "Kuittaukset"]
     [:div
      (if @tiedot/uusi-kuittaus-auki?
-       [kuittaukset/uusi-kuittaus-lomake kun-tallennetaan-fn]
+       [kuittaukset/uusi-kuittaus-lomake]
        [:button.nappi-ensisijainen
         {:class    "uusi-kuittaus-nappi"
          :on-click #(do
-                     (when kun-aloitetaan-kuittaus-fn (kun-aloitetaan-kuittaus-fn))
                      (tiedot/avaa-uusi-kuittaus!)
                      (.preventDefault %))}
         (ikonit/plus) " Uusi kuittaus"])
@@ -59,4 +55,4 @@
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div
         (for [kuittaus (sort-by :kuitattu pvm/jalkeen? (:kuittaukset ilmoitus))]
-          (kuittaukset/kuittauksen-tiedot kuittaus))])]]]))
+          (kuittaukset/kuittauksen-tiedot kuittaus))])]]])
