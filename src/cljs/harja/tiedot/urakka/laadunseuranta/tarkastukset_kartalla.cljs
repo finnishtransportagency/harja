@@ -22,8 +22,9 @@
                             :loppupvm loppu
                             :tienumero tienumero
                             :tyyppi tyyppi}))))
-(defonce tarkastusreitit
-  (reaction
+
+(defonce tarkastusreitit-kartalla
+         (reaction
    (luo-tarkastusreitit-kuvataso
     @karttataso-tarkastukset
     @nav/valittu-urakka @tiedot-urakka/valittu-aikavali
