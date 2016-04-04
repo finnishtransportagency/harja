@@ -96,6 +96,7 @@ ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 -- name: hae-ilmoitukset-idlla
 SELECT
+  urakka,
   ilmoitusid,
   ilmoitettu,
   yhteydenottopyynto,
