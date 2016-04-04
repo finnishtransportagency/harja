@@ -45,9 +45,9 @@
 (def tarkastus-xf
   (comp
     (geo/muunna-pg-tulokset :sijainti)
-    (map laadunseuranta/tarkastus-tiedolla-onko-ok)
     (map konv/alaviiva->rakenne)
     (map #(konv/array->set % :vakiohavainnot))
+    (map laadunseuranta/tarkastus-tiedolla-onko-ok)
     (map #(konv/string->keyword % :tyyppi :tekija))
     (map #(dissoc % :sopimus))
     (map (fn [tarkastus]
