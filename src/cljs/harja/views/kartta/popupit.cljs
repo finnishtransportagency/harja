@@ -117,7 +117,7 @@
                                                                                  (.preventDefault e)
                                                                                  (modal/piilota!))}
                                          "Sulje"]}
-                              (ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue))))}})))
+                              [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}})))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))

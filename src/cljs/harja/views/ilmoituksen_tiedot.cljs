@@ -3,16 +3,18 @@
             [harja.pvm :as pvm]
             [harja.ui.bootstrap :as bs]
             [clojure.string :refer [capitalize]]
-
+            [harja.tiedot.ilmoitukset :as tiedot]
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
                                               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
                                               kuittaustyypin-selite nayta-tierekisteriosoite]]
-            [harja.views.ilmoituskuittaukset :as kuittaukset]))
+            [harja.views.ilmoituskuittaukset :as kuittaukset]
+            [harja.ui.ikonit :as ikonit]))
 
 (defn ilmoitus
-  ([ilm] (ilmoitus ilm nil))
-  ([ilmoitus kuittauslomake]
+  ([ilmoitus haku-fn] (ilmoitus ilmoitus haku-fn haku-fn))
+  ([ilmoitus] (ilmoitus ilmoitus nil nil))
+  ([ilmoitus kun-aloitetaan-kuittaus-fn kun-tallennetaan-fn]
   [:div
    [bs/panel {}
     (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
@@ -44,7 +46,15 @@
    [:div.kuittaukset
     [:h3 "Kuittaukset"]
     [:div
-     (when kuittauslomake [kuittauslomake])
+     (if @tiedot/uusi-kuittaus-auki?
+       [kuittaukset/uusi-kuittaus-lomake kun-tallennetaan-fn]
+       [:button.nappi-ensisijainen
+        {:class    "uusi-kuittaus-nappi"
+         :on-click #(do
+                     (when kun-aloitetaan-kuittaus-fn (kun-aloitetaan-kuittaus-fn))
+                     (tiedot/avaa-uusi-kuittaus!)
+                     (.preventDefault %))}
+        (ikonit/plus) " Uusi kuittaus"])
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div

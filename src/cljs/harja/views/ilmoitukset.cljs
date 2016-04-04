@@ -38,12 +38,7 @@
      [:span
       [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus!)]
       (pollauksen-merkki)
-      [it/ilmoitus ilmoitus (fn [] (if @tiedot/uusi-kuittaus-auki?
-                                     [kuittaukset/uusi-kuittaus-lomake]
-                                     [:button.nappi-ensisijainen
-                                      {:class    "uusi-kuittaus-nappi"
-                                       :on-click #(tiedot/avaa-uusi-kuittaus!)}
-                                      (ikonit/plus) " Uusi kuittaus"]))]]]))
+      [it/ilmoitus ilmoitus]]]))
 
 (defn ilmoitusten-paanakyma
   []

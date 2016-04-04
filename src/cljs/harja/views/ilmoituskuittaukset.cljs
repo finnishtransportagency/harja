@@ -31,7 +31,9 @@
     (or (empty? (:vapaateksti kuittaus))
         (not (some #(= (:tyyppi kuittaus) %) apurit/kuittaustyypit)))))
 
-(defn uusi-kuittaus []
+(defn uusi-kuittaus
+  ([] (uusi-kuittaus nil))
+  ([kun-tallennus-valmis-fn]
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
@@ -43,7 +45,9 @@
                  #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
                  {:ikoni        (ikonit/tallenna)
                   :disabled     (esta-lahetys?)
-                  :kun-onnistuu (fn [vastaus] (kasittele-kuittauskasityksen-vastaus vastaus))
+                  :kun-onnistuu (fn [vastaus]
+                                  (when kun-tallennus-valmis-fn (kun-tallennus-valmis-fn))
+                                  (kasittele-kuittauskasityksen-vastaus vastaus))
                   :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
                   :luokka       "nappi-ensisijainen"}]
                 [napit/peruuta
@@ -96,11 +100,13 @@
                     :otsikko    "Organisaation y-tunnus"
                     :leveys-col 3
                     :tyyppi     :string})]
-    @tiedot/uusi-kuittaus]])
+    @tiedot/uusi-kuittaus]]))
 
-(defn uusi-kuittaus-lomake []
+(defn uusi-kuittaus-lomake
+  ([] (uusi-kuittaus-lomake nil))
+  ([kun-tallennus-valmis-fn]
   (komp/luo
-    uusi-kuittaus))
+    uusi-kuittaus kun-tallennus-valmis-fn)))
 
 (defn kuittauksen-tiedot [kuittaus]
   ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
