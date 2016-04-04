@@ -56,44 +56,44 @@
   (let [haettavat (haettavat tyypit)]
     (when-not (empty? haettavat)
       (mapv
-       #(assoc % :uusinkuittaus
-               (when-not (empty? (:kuittaukset %))
-                 (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-       (konv/sarakkeet-vektoriin
-        (into []
-              (comp
-               (geo/muunna-pg-tulokset :sijainti)
-               (map konv/alaviiva->rakenne)
-               (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
-               (filter #(tilat (:tila %)))
-               (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-               (map #(konv/array->vec % :selitteet))
-               (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-               (map #(assoc-in
-                      %
-                      [:kuittaus :kuittaustyyppi]
-                      (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-               (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-               (map #(assoc-in % [:ilmoittaja :tyyppi]
-                               (keyword (get-in % [:ilmoittaja :tyyppi])))))
-              (q/hae-ilmoitukset db
-                                 toleranssi
-                                 (when-not (:nykytilanne? tiedot)
-                                   (konv/sql-date (:alku tiedot)))
-                                 (when-not (:nykytilanne? tiedot)
-                                   (konv/sql-date (:loppu tiedot)))
-                                 urakat
-                                 (mapv name haettavat)))
-        {:kuittaus :kuittaukset})))))
+        #(assoc % :uusinkuittaus
+                  (when-not (empty? (:kuittaukset %))
+                    (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+        (konv/sarakkeet-vektoriin
+          (into []
+                (comp
+                  (geo/muunna-pg-tulokset :sijainti)
+                  (map konv/alaviiva->rakenne)
+                  (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
+                  (filter #(tilat (:tila %)))
+                  (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                  (map #(konv/array->vec % :selitteet))
+                  (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                  (map #(assoc-in
+                         %
+                         [:kuittaus :kuittaustyyppi]
+                         (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                  (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                  (map #(assoc-in % [:ilmoittaja :tyyppi]
+                                  (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                (q/hae-ilmoitukset db
+                                   toleranssi
+                                   (when-not (:nykytilanne? tiedot)
+                                     (konv/sql-date (:alku tiedot)))
+                                   (when-not (:nykytilanne? tiedot)
+                                     (konv/sql-date (:loppu tiedot)))
+                                   urakat
+                                   (mapv name haettavat)))
+          {:kuittaus :kuittaukset})))))
 
 (defn- hae-paallystystyot
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
   (when (tk/valittu? yllapito tk/paallystys)
     (into []
           (comp
-           (geo/muunna-pg-tulokset :sijainti)
-           (map konv/alaviiva->rakenne)
-           (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
+            (geo/muunna-pg-tulokset :sijainti)
+            (map konv/alaviiva->rakenne)
+            (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
           (if nykytilanne?
             (q/hae-paallystykset-nykytilanteeseen db toleranssi)
             (q/hae-paallystykset-historiakuvaan db
@@ -106,9 +106,9 @@
   (when (tk/valittu? yllapito tk/paikkaus)
     (into []
           (comp
-           (geo/muunna-pg-tulokset :sijainti)
-           (map konv/alaviiva->rakenne)
-           (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
+            (geo/muunna-pg-tulokset :sijainti)
+            (map konv/alaviiva->rakenne)
+            (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
           (if nykytilanne?
             (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
             (q/hae-paikkaukset-historiakuvaan db
@@ -121,29 +121,29 @@
   (let [haettavat (haettavat laatupoikkeamat)]
     (when-not (empty? haettavat)
       (into []
-              (comp
-                (map konv/alaviiva->rakenne)
-                (map #(update-in % [:paatos :paatos]
-                                 (fn [p]
-                                   (when p (keyword p)))))
-                (remove (fn [lp]
-                          (if nykytilanne?
-                            (#{:hylatty :ei_sanktiota} (get-in lp [:paatos :paatos]))
-                            false)))
-                (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
-                (map #(dissoc % :selvityspyydetty))
-                (map #(assoc % :tekija (keyword (:tekija %))))
-                (map #(update-in % [:paatos :kasittelytapa]
-                                 (fn [k]
-                                   (when k (keyword k)))))
-                (map #(if (nil? (:kasittelyaika (:paatos %)))
-                       (dissoc % :paatos)
-                       %))
-                (geo/muunna-pg-tulokset :sijainti))
-              (q/hae-laatupoikkeamat db toleranssi urakat
-                                     (konv/sql-date alku)
-                                     (konv/sql-date loppu)
-                                     (map name haettavat))))))
+            (comp
+              (map konv/alaviiva->rakenne)
+              (map #(update-in % [:paatos :paatos]
+                               (fn [p]
+                                 (when p (keyword p)))))
+              (remove (fn [lp]
+                        (if nykytilanne?
+                          (#{:hylatty :ei_sanktiota} (get-in lp [:paatos :paatos]))
+                          false)))
+              (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
+              (map #(dissoc % :selvityspyydetty))
+              (map #(assoc % :tekija (keyword (:tekija %))))
+              (map #(update-in % [:paatos :kasittelytapa]
+                               (fn [k]
+                                 (when k (keyword k)))))
+              (map #(if (nil? (:kasittelyaika (:paatos %)))
+                     (dissoc % :paatos)
+                     %))
+              (geo/muunna-pg-tulokset :sijainti))
+            (q/hae-laatupoikkeamat db toleranssi urakat
+                                   (konv/sql-date alku)
+                                   (konv/sql-date loppu)
+                                   (map name haettavat))))))
 
 (defn- hae-tarkastukset
   [db user {:keys [toleranssi alku loppu tarkastukset]} urakat]
@@ -151,18 +151,19 @@
     (when-not (empty? haettavat)
       (into []
             (comp
-             (map laadunseuranta/tarkastus-tiedolla-onko-ok)
-             (geo/muunna-pg-tulokset :sijainti)
-             (map konv/alaviiva->rakenne)
-             (map #(konv/string->keyword % :tyyppi))
-             (map (fn [tarkastus]
-                    (condp = (:tyyppi tarkastus)
-                      :talvihoito (dissoc tarkastus :soratiemittaus)
-                      :soratie (dissoc tarkastus :talvihoitomittaus)
-                      :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                      :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                      :pistokoe (dissoc tarkastus :soratiemittaus
-                                        :talvihoitomittaus)))))
+              (map #(konv/array->set % :vakiohavainnot))
+              (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+              (geo/muunna-pg-tulokset :sijainti)
+              (map konv/alaviiva->rakenne)
+              (map #(konv/string->keyword % :tyyppi))
+              (map (fn [tarkastus]
+                     (condp = (:tyyppi tarkastus)
+                       :talvihoito (dissoc tarkastus :soratiemittaus)
+                       :soratie (dissoc tarkastus :talvihoitomittaus)
+                       :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                       :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
+                       :pistokoe (dissoc tarkastus :soratiemittaus
+                                         :talvihoitomittaus)))))
             (q/hae-tarkastukset db
                                 toleranssi
                                 urakat
@@ -174,16 +175,16 @@
   [db user {:keys [toleranssi alku loppu turvallisuus]} urakat]
   (when (tk/valittu? turvallisuus tk/turvallisuuspoikkeamat)
     (konv/sarakkeet-vektoriin
-     (into []
-           (comp
-            (map konv/alaviiva->rakenne)
-            (geo/muunna-pg-tulokset :sijainti)
-            (map #(konv/array->vec % :tyyppi))
-            (map #(konv/string-vector->keyword-vector % :tyyppi))
-            (map #(konv/string->keyword % :vakavuusaste)))
-           (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
-                                         (konv/sql-date loppu)))
-     {:korjaavatoimenpide :korjaavattoimenpiteet})))
+      (into []
+            (comp
+              (map konv/alaviiva->rakenne)
+              (geo/muunna-pg-tulokset :sijainti)
+              (map #(konv/array->vec % :tyyppi))
+              (map #(konv/string-vector->keyword-vector % :tyyppi))
+              (map #(konv/string->keyword % :vakavuusaste)))
+            (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
+                                          (konv/sql-date loppu)))
+      {:korjaavatoimenpide :korjaavattoimenpiteet})))
 
 (defn- hae-tyokoneet
   [db user {:keys [alue alku loppu talvi kesa urakka-id
@@ -195,21 +196,21 @@
               valitun-alueen-geometria
               (if urakka-id
                 (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria
-                                                db urakka-id))]
+                                                 db urakka-id))]
                   (or (:urakka_alue urakan-aluetiedot)
                       (:alueurakka_alue urakan-aluetiedot)))
                 (when hallintayksikko
                   (:alue (first (hal-q/hae-hallintayksikon-geometria
-                                 db hallintayksikko)))))]
+                                  db hallintayksikko)))))]
           (into {}
                 (comp
-                 (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
-                 (map #(update-in % [:edellinensijainti]
-                                  (fn [pos] (when pos
-                                              (geo/piste-koordinaatit pos)))))
-                 (map #(assoc % :tyyppi :tyokone))
-                 (map #(konv/array->set % :tehtavat))
-                 (map (juxt :tyokoneid identity)))
+                  (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
+                  (map #(update-in % [:edellinensijainti]
+                                   (fn [pos] (when pos
+                                               (geo/piste-koordinaatit pos)))))
+                  (map #(assoc % :tyyppi :tyokone))
+                  (map #(konv/array->set % :tehtavat))
+                  (map (juxt :tyokoneid identity)))
                 (q/hae-tyokoneet db (:xmin alue) (:ymin alue)
                                  (:xmax alue) (:ymax alue)
                                  valitun-alueen-geometria urakat tpi-str)))))))
@@ -227,20 +228,20 @@
   [db user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
   (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
     (konv/sarakkeet-vektoriin
-     (into []
-           (comp
-            (harja.geo/muunna-pg-tulokset :reitti)
-            (map konv/alaviiva->rakenne)
-            (map #(assoc % :tyyppi :toteuma)))
-           (q/hae-toteumat db toleranssi
-                           (konv/sql-date alku)
-                           (konv/sql-date loppu) toimenpidekoodit
-                           urakat
-                           (:xmin alue) (:ymin alue)
-                           (:xmax alue) (:ymax alue)))
-     {:tehtava     :tehtavat
-      :materiaali  :materiaalit
-      :reittipiste :reittipisteet})))
+      (into []
+            (comp
+              (harja.geo/muunna-pg-tulokset :reitti)
+              (map konv/alaviiva->rakenne)
+              (map #(assoc % :tyyppi :toteuma)))
+            (q/hae-toteumat db toleranssi
+                            (konv/sql-date alku)
+                            (konv/sql-date loppu) toimenpidekoodit
+                            urakat
+                            (:xmin alue) (:ymin alue)
+                            (:xmax alue) (:ymax alue)))
+      {:tehtava :tehtavat
+       :materiaali :materiaalit
+       :reittipiste :reittipisteet})))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
@@ -304,9 +305,9 @@
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
    (let [urakat (urakat/kayttajan-urakat-aikavalilta
-                 db user
-                 (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-                 (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
+                  db user
+                  (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+                  (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
 
      ;; Teoriassa on mahdollista, että käyttäjälle ei (näillä parametreilla)
      ;; palauteta yhtään urakkaa.
@@ -342,9 +343,9 @@
 (defn- hae-karttakuvan-tiedot [db user parametrit]
   (let [tiedot (karttakuvan-suodattimet parametrit)]
     (kartalla-esitettavaan-muotoon
-     (map #(assoc % :tyyppi-kartalla :toteuma)
-          (:toteumat-kuva (hae-tilannekuvaan db user tiedot #{:toteumat-kuva})))
-     nil nil)))
+      (map #(assoc % :tyyppi-kartalla :toteuma)
+           (:toteumat-kuva (hae-tilannekuvaan db user tiedot #{:toteumat-kuva})))
+      nil nil)))
 
 (defrecord Tilannekuva []
   component/Lifecycle
@@ -356,9 +357,9 @@
                       (fn [user tiedot]
                         (hae-tilannekuvaan db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
-     karttakuvat :tilannekuva
-     ;; Viitataan var kautta funktioon, jotta sen voi RPELissä määritellä uudestaan
-     (partial #'hae-karttakuvan-tiedot db))
+      karttakuvat :tilannekuva
+      ;; Viitataan var kautta funktioon, jotta sen voi RPELissä määritellä uudestaan
+      (partial #'hae-karttakuvan-tiedot db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
