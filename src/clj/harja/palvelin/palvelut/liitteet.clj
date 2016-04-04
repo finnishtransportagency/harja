@@ -19,8 +19,8 @@
 
     (roolit/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
     (if liite
-      (let [{:keys [filename content-type tempfile size]} liite
-            uusi-liite (liitteet/luo-liite liitteet (:id (:kayttaja req)) urakka filename content-type size tempfile)]
+      (let [{:keys [filename content-type tempfile size kuvaus]} liite
+            uusi-liite (liitteet/luo-liite liitteet (:id (:kayttaja req)) urakka filename content-type size tempfile kuvaus)]
         (log/debug "Tallennettu liite " filename " (" size " tavua)")
         (transit-vastaus (-> uusi-liite
                              (dissoc :liite_oid :pikkukuva :luoja :luotu))))

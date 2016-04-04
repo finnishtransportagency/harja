@@ -31,7 +31,7 @@
                              :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
                              :hakuehto        ""
                              :selite          [nil ""]
-                             :vain-myohassa?  #{}
+                             :vain-myohassa?  false
                              :aloituskuittauksen-ajankohta :kaikki}))
 
 (defonce ilmoitushaku (atom 0))
@@ -40,14 +40,14 @@
   (go (swap! ilmoitushaku inc)))
 
 (defn jarjesta-ilmoitukset [tulos]
-  (sort-by
-    :ilmoitettu
-    pvm/ennen?
-    (mapv
-      (fn [ilmo]
-        (assoc ilmo :kuittaukset
-                    (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
-      tulos)))
+  (reverse (sort-by
+             :ilmoitettu
+             pvm/ennen?
+             (mapv
+               (fn [ilmo]
+                 (assoc ilmo :kuittaukset
+                             (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
+               tulos))))
 
 (defn lisaa-kuittaus-valitulle-ilmoitukselle [kuittaus]
   (let [nykyiset-kuittaukset (:kuittaukset @valittu-ilmoitus)]
@@ -68,9 +68,7 @@
                                             (update :tyypit
                                                     #(if (empty? %) +ilmoitustyypit+ %))
                                             (update :kuittaustyypit
-                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))
-                                            (update :vain-myohassa?
-                                                    #(if (empty? %) false true)))))]
+                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))]
 
                  (when-not (k/virhe? tulos)
                    (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta

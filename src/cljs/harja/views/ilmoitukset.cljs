@@ -123,9 +123,8 @@
             :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
            {:nimi             :vain-myohassa?
             :otsikko          "Kuittaukset"
-            :tyyppi           :checkbox-group
-            :vaihtoehdot      [:vain-myohassa?]
-            :vaihtoehto-nayta (constantly "Myöhästyneet")}
+            :tyyppi           :checkbox
+            :teksti           "Myöhästyneet"}
            {:nimi             :aloituskuittauksen-ajankohta
             :otsikko          "Aloituskuittaus annettu"
             :tyyppi           :radio-group

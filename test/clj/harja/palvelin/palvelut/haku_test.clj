@@ -67,7 +67,7 @@
     (is (> (count organisaatiot) 0) "haku: organisaatioiden määrä")
     (is (= :organisaatio (:tyyppi pop-ely)) "haku: org tyyppi")
     (is (= "hallintayksikko" (:organisaatiotyyppi pop-ely)) "haku: org organisaatiotyyppi")
-    (is (= "Pohjois-Pohjanmaa, hallintayksikko" (:hakusanat pop-ely)) "haku: org organisaatiotyyppi")
+    (is (= "POP Pohjois-Pohjanmaa, hallintayksikko" (:hakusanat pop-ely)) "haku: org organisaatiotyyppi")
     (is (number? (:id pop-ely)) "haku: urakan hallintayksikkö")))
 
 

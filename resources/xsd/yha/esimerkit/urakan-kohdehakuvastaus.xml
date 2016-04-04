@@ -1,0 +1,60 @@
+<yha:urakan-kohdehakuvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
+  <yha:kohteet>
+    <!--Zero or more repetitions:-->
+    <yha:kohde>
+      <yha:yha-id>3</yha:yha-id>
+      <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
+      <yha:nimi>string</yha:nimi>
+      <!--Optional:-->
+      <yha:yllapitoluokka>string</yha:yllapitoluokka>
+      <!--Optional:-->
+      <yha:keskimaarainen-vuorokausiilikenne>1000.00</yha:keskimaarainen-vuorokausiilikenne>
+      <!--Optional:-->
+      <yha:nykyinen-paallyste>Soratien pintaus</yha:nykyinen-paallyste>
+      <yha:tierekisteriosoitevali>
+        <yha:tienumero>3</yha:tienumero>
+        <yha:ajorata>kaksiajorataisen ensimmainen</yha:ajorata>
+        <yha:kaista>paakaista</yha:kaista>
+        <!--Optional:-->
+        <yha:suunta>tierekisterin vastainen suunta</yha:suunta>
+        <yha:aosa>3</yha:aosa>
+        <yha:aet>3</yha:aet>
+        <yha:losa>3</yha:losa>
+        <yha:let>3</yha:let>
+      </yha:tierekisteriosoitevali>
+      <yha:alikohteet>
+        <!--Zero or more repetitions:-->
+        <yha:alikohde>
+          <yha:yha-id>3</yha:yha-id>
+          <yha:tierekisteriosoitevali>
+            <yha:tienumero>3</yha:tienumero>
+            <yha:ajorata>kaksiajorataisen ensimmainen</yha:ajorata>
+            <yha:kaista>kolmas kaista</yha:kaista>
+            <!--Optional:-->
+            <yha:suunta>tierekisterin suunta</yha:suunta>
+            <yha:aosa>3</yha:aosa>
+            <yha:aet>3</yha:aet>
+            <yha:losa>3</yha:losa>
+            <yha:let>3</yha:let>
+          </yha:tierekisteriosoitevali>
+          <!--Optional:-->
+          <yha:tunniste>string</yha:tunniste>
+          <!--Optional:-->
+          <yha:paallystystoimenpide>
+            <yha:uusi-paallyste>Soratien pintaus</yha:uusi-paallyste>
+            <yha:edellinen-paallyste>Soratien pintaus</yha:edellinen-paallyste>
+            <yha:raekoko>1000.00</yha:raekoko>
+            <yha:aluemassamaara>1000.00</yha:aluemassamaara>
+            <yha:kokonaismassamaara>1000.00</yha:kokonaismassamaara>
+            <yha:rc-prosentti>1000.00</yha:rc-prosentti>
+            <!--Optional:-->
+            <yha:kuulamylly>string</yha:kuulamylly>
+            <yha:paallystetyomenetelma>2-kerroksinen remix-pintaus</yha:paallystetyomenetelma>
+          </yha:paallystystoimenpide>
+        </yha:alikohde>
+      </yha:alikohteet>
+    </yha:kohde>
+  </yha:kohteet>
+  <!--Optional:-->
+  <yha:virhe>string</yha:virhe>
+</yha:urakan-kohdehakuvastaus>

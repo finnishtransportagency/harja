@@ -27,12 +27,10 @@ UPDATE valitavoite
 INSERT
   INTO valitavoite
        (urakka,takaraja,nimi,luoja,luotu)
-VALUES (?, ?, ?, ?, NOW())
+VALUES (:urakka, :takaraja, :nimi, :luoja, NOW())
 
 -- name: paivita-valitavoite!
 -- Päivittää välitavoitteen tiedot
 UPDATE valitavoite
    SET nimi = :nimi, takaraja = :takaraja, muokattu = NOW(), muokkaaja = :user
  WHERE urakka = :urakka AND id = :id
- 
- 

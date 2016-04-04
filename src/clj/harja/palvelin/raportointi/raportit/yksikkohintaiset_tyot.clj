@@ -31,7 +31,10 @@
               (when kevatrivi
                 (-> syksyrivi
                     (assoc :loppupvm (:loppupvm kevatrivi))
-                    (assoc :maara (+ (:maara syksyrivi) (:maara kevatrivi)))))))
+                    (assoc :maara (+ (or (:maara syksyrivi)
+                                         0)
+                                     (or (:maara kevatrivi)
+                                         0)))))))
           syksyrivit)))
 
 (defn hae-urakan-hoitokaudet [db urakka-id]
@@ -61,10 +64,12 @@
               (assoc :yksikko (:yksikko suunnittelutieto))
               (assoc :yksikkohinta (:yksikkohinta suunnittelutieto))
               (assoc :suunniteltu_maara (:maara suunnittelutieto))
-              (assoc :suunnitellut_kustannukset (* (:maara suunnittelutieto)
-                                                   (:yksikkohinta suunnittelutieto)))
-              (assoc :toteutuneet_kustannukset (* (:toteutunut_maara toteuma)
-                                                  (:yksikkohinta suunnittelutieto))))
+              (assoc :suunnitellut_kustannukset (when (and (:maara suunnittelutieto) (:yksikkohinta suunnittelutieto))
+                                                  (* (:maara suunnittelutieto)
+                                                     (:yksikkohinta suunnittelutieto))))
+              (assoc :toteutuneet_kustannukset (when (and (:toteutunut_maara toteuma) (:yksikkohinta suunnittelutieto))
+                                                 (* (:toteutunut_maara toteuma)
+                                                    (:yksikkohinta suunnittelutieto)))))
           toteuma)))
     toteumat))
 

@@ -70,19 +70,22 @@ datan kartalla esitettävässä muodossa.")
 
 
 (defn- luo-kuva [{:keys [extent resoluutio kuva] :as parametrit} asiat]
-  (let [[w h] (:kuva parametrit)
-        img (BufferedImage. w h BufferedImage/TYPE_INT_ARGB)
-        g (doto (.createGraphics img)
-            (.addRenderingHints (RenderingHints.
-                                 RenderingHints/KEY_ANTIALIASING
-                                 RenderingHints/VALUE_ANTIALIAS_ON)))
-        [x1 _ x2 _] extent]
-    (aseta-kuvan-koordinaatisto g kuva extent)
-    (piirra-karttakuvaan extent (/ (- x2 x1) w) g asiat)
+  (try
+    (let [[w h] (:kuva parametrit)
+          img (BufferedImage. w h BufferedImage/TYPE_INT_ARGB)
+          g (doto (.createGraphics img)
+              (.addRenderingHints (RenderingHints.
+                                   RenderingHints/KEY_ANTIALIASING
+                                   RenderingHints/VALUE_ANTIALIAS_ON)))
+          [x1 _ x2 _] extent]
+      (aseta-kuvan-koordinaatisto g kuva extent)
+      (piirra-karttakuvaan extent (/ (- x2 x1) w) g asiat)
 
     ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
-    ;(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
-    img))
+                                        ;(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
+      img)
+    (catch Exception e
+      (log/debug "Karttakuvan luonnissa poikkeus" e))))
 
 (defn- hae-karttakuvadata
   "Hakee karttakuvadatan oikeasti lähteestä"
@@ -96,7 +99,6 @@ datan kartalla esitettävässä muodossa.")
                                     [vasen ala oikea yla]))
         karttakuvadata (when lahde
                          (lahde user parametrit))]
-    (log/debug "KUVA " lahteen-nimi " HAKI " (count karttakuvadata) " ASIAA")
     karttakuvadata))
 
 (defn karttakuva [lahteet user parametrit]

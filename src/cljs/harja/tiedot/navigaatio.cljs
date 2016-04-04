@@ -186,9 +186,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
          (not= sivu :urakat)
          (some? @valittu-urakka))))))
 
-(defn aseta-hallintayksikko-ja-urakka [hy-id u-id]
+(defn aseta-hallintayksikko-ja-urakka [hy-id ur]
   (reset! valittu-hallintayksikko-id hy-id)
-  (reset! valittu-urakka-id u-id))
+  (valitse-urakka ur))
 
 (defn valitse-urakoitsija! [u]
    (reset! valittu-urakoitsija u))

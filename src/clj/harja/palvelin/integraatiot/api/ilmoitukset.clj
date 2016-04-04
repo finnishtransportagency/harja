@@ -5,7 +5,8 @@
             [compojure.core :refer [PUT GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
+             [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
@@ -26,8 +27,7 @@
        :viesti (format "Ilmoitus id:llä %s. ei löydy ilmoitusta." ilmoitusid)})))
 
 (defn tee-onnistunut-ilmoitustoimenpidevastaus []
-  (let [vastauksen-data {:ilmoitukset "Ilmoitustoimenpide kirjattu onnistuneesti"}]
-    vastauksen-data))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Ilmoitustoimenpide kirjattu onnistuneesti"}))
 
 (defn kirjaa-ilmoitustoimenpide [db tloik parametrit data]
   (let [ilmoitusid (Integer/parseInt (:id parametrit))

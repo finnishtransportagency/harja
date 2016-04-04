@@ -86,8 +86,7 @@
                             (reset! korostus-idx nil)))
            :on-change   #(do
                            (reset! korostus-idx nil)
-                           (reset! term (.-value (.-target %)))
-                           (.log js/console (-> % .-target .-value)))}]
+                           (reset! term (.-value (.-target %))))}]
          [:div.haku-lista-container
           (when-let [vinkki-fn (:vinkki opts)]
             (when (vinkki-fn) [:div.haku-vinkki (vinkki-fn)]))

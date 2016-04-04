@@ -1,5 +1,6 @@
 (ns harja.kyselyt.muokkauslukko
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]))
 
-(defqueries "harja/kyselyt/muokkauslukko.sql")
+(defqueries "harja/kyselyt/muokkauslukko.sql"
+  {:positional? true})

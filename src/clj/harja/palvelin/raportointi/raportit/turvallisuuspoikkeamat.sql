@@ -1,6 +1,6 @@
 -- name: hae-turvallisuuspoikkeamat
 -- Hakee turvallisuuspoikkeamat aikavälillä
-SELECT t.id, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti,
+SELECT t.id, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyontekijanammatti_muu as tyontekijanammattimuu,
        t.tyotehtava, t.kuvaus, t.vammat, t.sairauspoissaolopaivat, t.sairaalavuorokaudet, t.tyyppi,
       t.vakavuusaste,
        u.nimi as urakka_nimi,

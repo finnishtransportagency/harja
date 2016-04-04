@@ -8,6 +8,9 @@
 (defn dekoodaa-base64 [data]
   (.decode (Base64/getDecoder) data))
 
+(defn enkoodaa-base64 [data]
+  (.encode (Base64/getEncoder) data))
+
 (defn- luo-liitteet [db liitteiden-hallinta urakan-id kirjaaja liitteet liite-luotu-fn]
   (doseq [liitteen-data liitteet]
     (when (:sisalto (:liite liitteen-data))
@@ -16,7 +19,8 @@
             tiedostonimi (:nimi liite)
             data (dekoodaa-base64 (:sisalto liite))
             koko (alength data)
-            liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data))]
+            kuvaus (:kuvaus liite)
+            liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data kuvaus))]
         (liite-luotu-fn liite-id)))))
 
 (defn tallenna-liitteet-laatupoikkeamalle [db liitteiden-hallinta urakan-id laatupoikkeama-id kirjaaja liitteet]

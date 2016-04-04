@@ -26,7 +26,8 @@
                                        (k-q/hae-kayttajien-tunnistetiedot db termi)))
         loytyneet-organisaatiot (into []
                                       (map #(assoc % :tyyppi :organisaatio
-                                                     :hakusanat (str (:nimi %) ", " (:organisaatiotyyppi %)))
+                                                     :hakusanat (str (when (:lyhenne %) (str (:lyhenne %) " "))
+                                                                  (:nimi %) ", " (:organisaatiotyyppi %)))
                                            (org-q/hae-organisaation-tunnistetiedot db termi)))
         tulokset (into []
                        (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))
