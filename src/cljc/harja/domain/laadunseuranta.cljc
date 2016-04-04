@@ -4,7 +4,9 @@
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
     #?(:cljs [harja.loki :refer [log]]
-       :clj [taoensso.timbre :as log])))
+       :clj
+            [taoensso.timbre :as log])
+            [clojure.string :as str]))
 
 (def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
 (def Paatostyyppi (s/enum :sanktio :ei_sanktiota :hylatty))
@@ -92,9 +94,9 @@
   "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
   eikä tarkastuksella ole vakiohavaintoja"
   [tarkastus]
-  (if (and (or (nil? (:havainnot tarkastus))
-               (= "ok" (clojure.string/lower-case (:havainnot tarkastus)))
-           (empty? (:vakiohavainnot tarkastus))))
+  (if (and (or (str/blank? (:havainnot tarkastus))
+               (= "ok" (clojure.string/lower-case (:havainnot tarkastus))))
+           (empty? (:vakiohavainnot tarkastus)))
     (assoc tarkastus :ok? true)
     (assoc tarkastus :ok? false)))
 
