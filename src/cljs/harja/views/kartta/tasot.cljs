@@ -45,11 +45,13 @@
     :nakyman-geometriat
     :tilannekuva})
 
-(def kartan-asioiden-z-indeksit
-  {:hallintayksikko 0
-   :urakka 1
-   :pohjavesialueet 2
-   :sillat 3})
+(defn kartan-asioiden-z-indeksit [taso]
+  (case taso
+    :hallintayksikko 0
+    :urakka 1
+    :pohjavesialueet 2
+    :sillat 3
+    4))
 
 (def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut
   piirretään pienemmällä zindexillä." :const true}
