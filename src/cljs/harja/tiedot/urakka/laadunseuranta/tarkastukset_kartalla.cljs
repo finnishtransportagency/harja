@@ -28,5 +28,5 @@
   (reaction
     (luo-tarkastusreitit-kuvataso
       @karttataso-tarkastukset
-      @nav/valittu-urakka @tiedot-urakka/valittu-aikavali
+      @nav/valittu-urakka (or @tiedot-urakka/valittu-hoitokauden-kuukausi @tiedot-urakka/valittu-aikavali)
       @tarkastukset/tienumero @tarkastukset/tarkastustyyppi)))
