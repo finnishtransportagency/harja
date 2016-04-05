@@ -16,10 +16,15 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
-  (str "Päivämäärä ei ole hoitokaudella " alku " - " loppu))
+  (str "Olet tallentamassa valitun hoitokauden ulkopuolelle (" alku " \u2014 " loppu ").
+  Nähdäksesi tuloksen, vaihda tallennuksen jälkeen valittua hoitokautta."))
 
 (defn ei-urakan-aikana-str [alku loppu]
-  (str "Päivämäärä ei ole urakan aikana (" alku " \u2014 " loppu ")"))
+  (str "Olet tallentamassa urakan ulkopuolelle (" alku " \u2014 " loppu ")!."))
+
+(defn ei-kuukauden-aikana-str [alku loppu]
+  (str "Olet tallentamassa valitun kuukauden ulkopuolelle (" alku " \u2014 " loppu ").
+  Nähdäksesi tuloksen, vaihda tallennuksen jälkeen valittua aikaväliä."))
 
 ;; Validointi
 ;; Rivin skeema voi määritellä validointisääntöjä.
@@ -80,8 +85,7 @@
             (ei-hoitokaudella-str (pvm/pvm hoitokausi-alku) (pvm/pvm hoitokausi-loppu)))
         (when (and valittu-kk-alkupvm (not valitun-kkn-aikana?))
           (or viesti
-              (str "Päivämäärä ei ole valitun kuukauden aikana (" (pvm/pvm valittu-kk-alkupvm)
-                   " \u2014 " (pvm/pvm valittu-kk-loppupvm) ")")))))))
+              (ei-kuukauden-aikana-str (pvm/pvm valittu-kk-alkupvm) (pvm/pvm valittu-kk-loppupvm))))))))
 
 (defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi taulukko & [setti-atom viesti]]
   "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
