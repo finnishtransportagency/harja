@@ -13,7 +13,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]))
+            [harja.ui.dom :as dom]
+            [harja.pvm :as pvm]))
 
 (defn koko-maa []
   [:li
@@ -73,14 +74,17 @@
        ;; Alasvetovalikko urakan nopeaa vaihtamista varten
        [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
 
-        (let [muut-urakat (filter #(not= % valittu) @nav/suodatettu-urakkalista)]
+        (let [muut-kaynnissaolevat-urakat (filter #(and
+                                                    (not= % valittu)
+                                                    (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
+                                                  @nav/suodatettu-urakkalista)]
 
-          (if (empty? muut-urakat)
+          (if (empty? muut-kaynnissaolevat-urakat)
             [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita valituilla hakukriteereillä."]
 
-            (for [muu-urakka muut-urakat]
-              ^{:key (str "ur-" (:id muu-urakka))}
-              [:li.harja-alasvetolistaitemi [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])))
+            (for [urakka muut-kaynnissaolevat-urakat]
+              ^{:key (str "urakka-" (:id urakka))}
+              [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka urakka)]])))]])))
 
 (defn urakoitsija []
   [:div.murupolku-urakoitsija
@@ -98,15 +102,6 @@
 
                           @urakoitsijat/urakoitsijat-hoito)) ;;defaulttina hoito
                nil))]])
-
-(defn urakkatyyppi-murupolussa []
-  [:li
-   [livi-pudotusvalikko {:valinta    @nav/valittu-urakkatyyppi
-                         :format-fn  #(if % (:nimi %) "Kaikki")
-                         :valitse-fn nav/vaihda-urakkatyyppi!
-                         :class      (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
-                         :disabled   (boolean @nav/valittu-urakka)}
-    nav/+urakkatyypit+]])
 
 (defn urakkatyyppi []
   [:div.murupolku-urakkatyyppi
