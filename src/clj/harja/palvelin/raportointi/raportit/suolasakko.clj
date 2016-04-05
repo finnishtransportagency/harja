@@ -74,18 +74,18 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         laske-sakko (fn [rivi]
-                      (when (and (> (:ylitys rivi) 0)
-                                 (:ylitys rivi) (:sakko_maara_per_tonni rivi))
+                      (when (and (:ylitys rivi)
+                                 (> (:ylitys rivi) 0)
+                                 (:sakko_maara_per_tonni rivi))
                         (* (:ylitys rivi)
                            (:sakko_maara_per_tonni rivi))))
         laske-indeksikorotettu-sakko (fn [rivi]
-                                       (when (and (> (:ylitys rivi) 0)
+                                       (when (and (:ylitys rivi)
+                                                  (> (:ylitys rivi) 0)
                                                   (:kerroin rivi) (:ylitys rivi) (:sakko_maara_per_tonni rivi))
                                          (* (:kerroin rivi)
                                             (* (:ylitys rivi)
-                                               (:sakko_maara_per_tonni rivi)))))
-
-        ]
+                                               (:sakko_maara_per_tonni rivi)))))]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
