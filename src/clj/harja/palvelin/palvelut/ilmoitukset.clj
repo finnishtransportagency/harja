@@ -210,20 +210,23 @@
         (assoc-in [:kasittelija :ytunnus] (:kasittelija_organisaatio_ytunnus toimenpide)))))
 
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
+  (log/debug "Haetaan päivitetyt tiedot ilmoituksille " (pr-str id))
   (let [id-vektori (if (vector? id) id [id])
-        kayttajan-urakat (set (map #(get-in % [:urakka :id]) (:urakka-roolit (kayttajat/hae-kayttajan-tiedot db user (:id user)))))]
-    (into []
-          (comp
-            (filter #(kayttajan-urakat (:urakka %)))
-            (harja.geo/muunna-pg-tulokset :sijainti)
-            (map konv/alaviiva->rakenne)
-            (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
-            (map #(konv/array->vec % :selitteet))
-            (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-            (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-            (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-            (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-          (q/hae-ilmoitukset-idlla db id-vektori))))
+        kayttajan-urakat (set (urakat/kayttajan-urakat-aikavalilta db user))
+        tiedot (q/hae-ilmoitukset-idlla db id-vektori)
+        tulos (into []
+                    (comp
+                      (filter #(kayttajan-urakat (:urakka %)))
+                      (harja.geo/muunna-pg-tulokset :sijainti)
+                      (map konv/alaviiva->rakenne)
+                      (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
+                      (map #(konv/array->vec % :selitteet))
+                      (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                      (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                      (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                      (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                    tiedot)]
+    tulos))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
