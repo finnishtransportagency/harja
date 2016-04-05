@@ -16,7 +16,8 @@
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.ui.modal :as modal]
-            [harja.ui.napit :as napit]))
+            [harja.ui.napit :as napit]
+            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]))
 
 (def klikattu-tyokone (atom nil))
 
@@ -97,27 +98,31 @@
                                                               (:lisatieto tapahtuma))]])))
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
-  (kartta/nayta-popup!
-    (geometrian-koordinaatti tapahtuma)
-    (tee-arvolistaus-popup
-      (condp = (:ilmoitustyyppi tapahtuma)
-        :toimenpidepyynto "Toimenpidepyyntö"
-        :tiedoitus "Tiedotus"
-        (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
-      [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-       ["Selite" (:lyhytselite tapahtuma)]
-       ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-      {:linkki {:nimi     "Tarkemmat tiedot"
-                :on-click #(do
-                            (.preventDefault %)
-                            (modal/nayta!
-                              {:otsikko "Ilmoituksen tiedot"
-                               :leveys  "1000px"
-                               :footer  [:button.nappi-toissijainen {:on-click (fn [e]
-                                                                                 (.preventDefault e)
-                                                                                 (modal/piilota!))}
-                                         "Sulje"]}
-                              [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}})))
+  (let [sulje-fn (fn []
+                   (ilmoitukset/sulje-ilmoitus!))]
+    (kartta/nayta-popup!
+     (geometrian-koordinaatti tapahtuma)
+     (tee-arvolistaus-popup
+       (condp = (:ilmoitustyyppi tapahtuma)
+         :toimenpidepyynto "Toimenpidepyyntö"
+         :tiedoitus "Tiedotus"
+         (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
+       [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+        ["Selite" (:lyhytselite tapahtuma)]
+        ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
+       {:linkki {:nimi     "Tarkemmat tiedot"
+                 :on-click #(do
+                             (.preventDefault %)
+                             (ilmoitukset/avaa-ilmoitus! (dissoc tapahtuma :type :alue))
+                             (modal/nayta!
+                               {:otsikko "Ilmoituksen tiedot"
+                                :leveys  "1000px"
+                                :sulje   sulje-fn
+                                :footer  [:button.nappi-toissijainen {:on-click (fn [e]
+                                                                                  (.preventDefault e)
+                                                                                  (modal/piilota!))}
+                                          "Sulje"]}
+                               [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}}))))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
