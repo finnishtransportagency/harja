@@ -15,6 +15,12 @@
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn ei-hoitokaudella-str [alku loppu]
+  (str "Päivämäärä ei ole hoitokaudella " alku " - " loppu))
+
+(defn ei-urakan-aikana-str [alku loppu]
+  (str "Päivämäärä ei ole urakan aikana (" alku " \u2014 " loppu ")"))
+
 ;; Validointi
 ;; Rivin skeema voi määritellä validointisääntöjä.
 ;; validoi-saanto multimetodi toteuttaa tarkastuksen säännön keyword tyypin mukaan
@@ -27,8 +33,7 @@
 (defmethod validoi-saanto :hoitokaudella [_ _ data _ _ & [viesti]]
   (when (and data (not (pvm/valissa? data (first @u/valittu-hoitokausi) (second @u/valittu-hoitokausi))))
     (or viesti
-        (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm (first @u/valittu-hoitokausi))
-             " - " (pvm/pvm (second @u/valittu-hoitokausi))))))
+        (ei-hoitokaudella-str (pvm/pvm (first @u/valittu-hoitokausi)) (pvm/pvm (second @u/valittu-hoitokausi))))))
 
 (defmethod validoi-saanto :urakan-aikana [_ _ data _ _ & [viesti]]
   (let [urakka @nav/valittu-urakka
@@ -37,7 +42,7 @@
     (when (and data alkupvm loppupvm
                (not (pvm/valissa? data alkupvm loppupvm)))
       (or viesti
-          (str "Päivämäärä ei ole urakan aikana (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")")))))
+          (ei-urakan-aikana-str (pvm/pvm alkupvm) (pvm/pvm loppupvm))))))
 
 (defmethod validoi-saanto :urakan-aikana-ja-hoitokaudella [_ _ data _ _ & [viesti]]
   (let [urakka @nav/valittu-urakka
@@ -50,11 +55,10 @@
         hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))]
     (if (false? urakan-aikana?)
       (or viesti
-          (str "Päivämäärä ei ole urakan aikana (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")"))
+          (ei-urakan-aikana-str (pvm/pvm alkupvm) (pvm/pvm loppupvm)))
       (if (false? hoitokaudella?)
         (or viesti
-            (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm hoitokausi-alku)
-                 " - " (pvm/pvm hoitokausi-loppu)))))))
+            (ei-hoitokaudella-str (pvm/pvm hoitokausi-alku) (pvm/pvm hoitokausi-loppu)))))))
 
 (defmethod validoi-saanto :valitun-kkn-aikana-urakan-hoitokaudella [_ _ data _ _ & [viesti]]
   (let [urakka @nav/valittu-urakka
@@ -70,11 +74,10 @@
                                 (pvm/valissa? data valittu-kk-alkupvm valittu-kk-loppupvm))]
     (if (false? urakan-aikana?)
       (or viesti
-          (str "Päivämäärä ei ole urakan aikana (" (pvm/pvm alkupvm) " \u2014 " (pvm/pvm loppupvm) ")"))
+          (ei-urakan-aikana-str (pvm/pvm alkupvm) (pvm/pvm loppupvm)))
       (if (false? hoitokaudella?)
         (or viesti
-            (str "Päivämäärä ei ole hoitokaudella " (pvm/pvm hoitokausi-alku)
-                 " - " (pvm/pvm hoitokausi-loppu)))
+            (ei-hoitokaudella-str (pvm/pvm hoitokausi-alku) (pvm/pvm hoitokausi-loppu)))
         (when (and valittu-kk-alkupvm (not valitun-kkn-aikana?))
           (or viesti
               (str "Päivämäärä ei ole valitun kuukauden aikana (" (pvm/pvm valittu-kk-alkupvm)
