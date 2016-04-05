@@ -213,7 +213,7 @@
 (defn random []
   [:span.glyphicon.glyphicon-random])
 (defn kommentti [] ; koska comment on myös coressa
-  [:span.glyphicon.glyphicon-comment])
+  [:span.livicon-comment])
 (defn magnet []
   [:span.glyphicon.glyphicon-magnet])
 (defn retweet []
@@ -517,6 +517,14 @@
   [:span.livicon-download])
 (defn info-sign []
   [:span.livicon-info-circle])
+(defn info []
+  [:span.livicon-info])
+(defn info-circle []
+  [:span.livicon-info-circle])
+(defn question []
+  [:span.livicon-question])
+(defn question-circle []
+  [:span.livicon-question-circle])
 (defn peru []
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []
