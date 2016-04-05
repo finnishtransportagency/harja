@@ -15,8 +15,8 @@
 
 (def valittu-kokonaishintainen-toteuma (atom nil))
 (def uusi-kokonaishintainen-toteuma (reaction
-                                      {:suorittaja {:nimi    (get-in @kayttaja [:organisaatio :nimi])
-                                                    :ytunnus (get-in @kayttaja [:organisaatio :ytunnus])}}))
+                                      {:suorittaja {:nimi    (:nimi @u/urakan-organisaatio)
+                                                    :ytunnus (:ytunnus @u/urakan-organisaatio)}}))
 (def haetut-reitit (atom nil))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot
