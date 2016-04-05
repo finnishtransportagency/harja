@@ -25,8 +25,8 @@
                             :tyyppi tyyppi}))))
 
 (defonce tarkastusreitit-kartalla
-         (reaction
-   (luo-tarkastusreitit-kuvataso
-    @karttataso-tarkastukset
-    @nav/valittu-urakka @tiedot-urakka/valittu-aikavali
-    @tarkastukset/tienumero @tarkastukset/tarkastustyyppi)))
+  (reaction
+    (luo-tarkastusreitit-kuvataso
+      @karttataso-tarkastukset
+      @nav/valittu-urakka @tiedot-urakka/valittu-aikavali
+      @tarkastukset/tienumero @tarkastukset/tarkastustyyppi)))
