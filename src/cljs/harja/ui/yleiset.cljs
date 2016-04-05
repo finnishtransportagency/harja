@@ -74,7 +74,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
      (for [v virheet]
        ^{:key (hash v)}
        [:span
-        (ikonit/warning-sign)
+        (ikonit/info-circle)
         [:span (str " " v)]])]]))
 
 
