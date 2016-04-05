@@ -101,7 +101,7 @@
             tapahtumat
             urakka-id
             (fn [ilmoitus-id]
-              (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-idlla db [(Integer/parseInt ilmoitus-id)]))))))))))
+              (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-ilmoitusidlla db [(Integer/parseInt ilmoitus-id)]))))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
