@@ -9,6 +9,7 @@
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera])
+  (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID Calendar TimeZone)))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
@@ -54,14 +55,14 @@
                   loppu (Calendar/getInstance)]
               (aseta-pvm alku (:alkupvm vuosi) Calendar/JANUARY 1)
               (aseta-pvm loppu (:loppupvm vuosi) Calendar/DECEMBER 31)
-              {:alkupvm  (pvm/aika-iso8601 (.getTime alku))
+              {:alkupvm (pvm/aika-iso8601 (.getTime alku))
                :loppupvm (pvm/aika-iso8601 (.getTime loppu))
-               :summa    summa}))
+               :summa summa}))
           vuodet)))
 
 (defn tee-vuosittaiset-summat [db numero maksueran-tiedot]
   (let [vuodet (mapv (fn [vuosi]
-                       {:alkupvm  (first vuosi)
+                       {:alkupvm (first vuosi)
                         :loppupvm (second vuosi)})
                      (pvm/urakan-vuodet (:alkupvm (:toimenpideinstanssi maksueran-tiedot))
                                         (:loppupvm (:toimenpideinstanssi maksueran-tiedot))))]
@@ -70,11 +71,41 @@
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
       (tee-oletus-vuosisummat vuodet))))
 
+
+(defn valitse-lkp-tilinumero [toimenpidekoodi tuotenumero]
+  (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
+    "43020000"
+    ; Hoitotuotteet 110 - 150, 536
+    (if (nil? tuotenumero)
+      (let [viesti "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui."]
+        (log/error viesti)
+        (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
+                 :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
+                            :viesti viesti}]}))
+
+      (if (or (and (>= tuotenumero 110) (<= tuotenumero 150)) (= tuotenumero 536) (= tuotenumero 31))
+        "43020000"
+        ; Ostotuotteet: 210, 240-271 ja 310-321
+        (if (or (= tuotenumero 21)
+                (= tuotenumero 30)
+                (= tuotenumero 210)
+                (and (>= tuotenumero 240) (<= tuotenumero 271))
+                (and (>= tuotenumero 310) (<= tuotenumero 321)))
+          "12980010"
+          (let [viesti
+                (format "Toimenpidekoodilla '%1$s' ja tuonenumerolla '%2$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle"
+                        toimenpidekoodi tuotenumero)]
+            (log/error viesti)
+            (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
+                     :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
+                                :viesti viesti}]})))))))
+
 (defn muodosta-kustannussuunnitelma [db numero]
   (if (lukitse-kustannussuunnitelma db numero)
     (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
           vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
-          maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat)
+          lkp-tilinnumero (valitse-lkp-tilinumero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
+          maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)
           kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
       (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
         kustannussuunnitelma-xml
