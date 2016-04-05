@@ -125,7 +125,8 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko  (if (:id @muokattu) "Luo uusi kokonaishintainen toteuma" "Muokkaa kokonaishintaista toteumaa")
+           {:otsikko  (if (:id @muokattu) "Luo uusi kokonaishintainen toteuma"
+                                          "Muokkaa kokonaishintaista toteumaa")
             :muokkaa! #(do (reset! muokattu %))
             :footer   [napit/palvelinkutsu-nappi
                        "Tallenna toteuma"
