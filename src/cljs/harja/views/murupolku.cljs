@@ -74,11 +74,11 @@
        ;; Alasvetovalikko urakan nopeaa vaihtamista varten
        [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
 
-        (let [muut-kaynnissaolevat-urakat (filter #(and
-                                                    (not= % valittu)
-                                                    (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
-                                                  @nav/suodatettu-urakkalista)]
-
+        (let [muut-kaynnissaolevat-urakat (sort-by :nimi
+                                                   (filter #(and
+                                                             (not= % valittu)
+                                                             (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
+                                                           @nav/suodatettu-urakkalista))]
           (if (empty? muut-kaynnissaolevat-urakat)
             [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita valituilla hakukriteereillä."]
 
