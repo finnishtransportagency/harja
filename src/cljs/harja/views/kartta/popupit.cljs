@@ -121,7 +121,7 @@
                                 :footer  [:button.nappi-toissijainen {:on-click (fn [e]
                                                                                   (.preventDefault e)
                                                                                   (modal/piilota!))}
-                                          "Sulje"]}
+                                          "Takaisin tilannekuvaan"]}
                                [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}}))))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
