@@ -14,12 +14,29 @@
             [harja.ui.napit :as napit]
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
-            [harja.geo :as geo]
             [harja.views.kartta :as kartta])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+(defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama]
+  (r/wrap
+    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet turvallisuuspoikkeama)))
+    ;swap! muokattu assoc :korjaavattoimenpiteet
+    (fn [uusi]
+      (swap!
+        turvallisuuspoikkeama
+        assoc
+        :korjaavattoimenpiteet
+        (vals
+          (filter
+            (fn [kartta]
+              (not
+                (and
+                  (neg? (key kartta))
+                  (:poistettu (val kartta)))))
+            uusi))))))
 
 (defn korjaavattoimenpiteet
   [toimenpiteet]
@@ -72,21 +89,19 @@
                              :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                              :validoi          [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
                              :vaihtoehdot      (keys turpodomain/turpo-vakavuusasteet)})
-              (lomake/ryhma {:rivi? true}
-                            {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+              (lomake/ryhma {:rivi? true
+                             :otsikko "Tapahtuma-aika"}
+                            {:otsikko "Alkanut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
                              :varoita [[:urakan-aikana-ja-hoitokaudella]]}
                             {:otsikko "Päättynyt" :pakollinen? true :nimi :paattynyt :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
-                                       [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
-                            {:otsikko "Käsitelty" :pakollinen? true :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-                             :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
-                                       [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})
-
+                                       [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]})
               {:rivi? true
                :otsikko  "Tierekisteriosoite"
                :nimi :tr
                :tyyppi   :tierekisteriosoite
+               :uusi-rivi? true
                :sijainti (r/wrap (:sijainti @muokattu)
                                  #(swap! muokattu assoc :sijainti %))}
 
@@ -168,24 +183,6 @@
                    :disabloi         henkilovahinkojen-disablointi-fn
                    :vaihtoehdot      turpodomain/vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}))
-              {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
-               :palstoja    2
-               :komponentti [korjaavattoimenpiteet (r/wrap
-                                                     (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @muokattu)))
-                                                     ;swap! muokattu assoc :korjaavattoimenpiteet
-                                                     (fn [uusi]
-                                                       (swap!
-                                                         muokattu
-                                                         assoc
-                                                         :korjaavattoimenpiteet
-                                                         (vals
-                                                           (filter
-                                                             (fn [kartta]
-                                                               (not
-                                                                 (and
-                                                                   (neg? (key kartta))
-                                                                   (:poistettu (val kartta)))))
-                                                             uusi)))))]}
               {:otsikko     "Kommentit" :nimi :kommentit
                :tyyppi      :komponentti
                :palstoja    2
@@ -194,7 +191,22 @@
                                                   :placeholder      "Kirjoita kommentti..."
                                                   :uusi-kommentti   (r/wrap (:uusi-kommentti @muokattu)
                                                                             #(swap! muokattu assoc :uusi-kommentti %))}
-                             (:kommentit @muokattu)]}]
+                             (:kommentit @muokattu)]}
+              (lomake/ryhma {:otsikko "Poikkeaman käsittely"}
+                            {:otsikko "Poikkeama kirjattu" :nimi :luotu :fmt pvm/pvm-aika-opt :tyyppi :string
+                             :muokattava? (constantly false)
+                             :uusi-rivi? true
+                             }
+                            {:otsikko     "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
+                             :palstoja    2
+                             :uusi-rivi? true
+                             :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet @muokattu)]}
+                            {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+                             :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                                       [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
+                            {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+                             :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                                       [:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})]
              @muokattu]]))))
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]

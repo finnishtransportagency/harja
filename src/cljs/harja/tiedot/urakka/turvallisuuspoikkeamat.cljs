@@ -15,6 +15,8 @@
                                    :vaylamuoto :tie})
 (defonce valittu-turvallisuuspoikkeama (atom nil))
 
+(tarkkaile! "TURPO!!!" valittu-turvallisuuspoikkeama)
+
 (defn hae-urakan-turvallisuuspoikkeamat
   [urakka-id [alku loppu]]
   (k/post! :hae-turvallisuuspoikkeamat {:urakka-id urakka-id

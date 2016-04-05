@@ -78,7 +78,8 @@
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
                    laatijaetunimi laatijasukunimi
-                   turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi]}]
+                   turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
+                   ilmoituksetlahetetty]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         parametrit
         (merge oletusparametrit
@@ -108,7 +109,8 @@
                 :laatija_etunimi laatijaetunimi
                 :laatija_sukunimi laatijasukunimi
                 :turvallisuuskoordinaattori_etunimi turvallisuuskoordinaattorietunimi
-                :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi})]
+                :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi
+                :ilmoitukset_lahetetty (konv/sql-timestamp ilmoituksetlahetetty)})]
     (if id
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
@@ -118,7 +120,6 @@
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
   (jdbc/with-db-transaction [c db]
     (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
-
       (when uusi-kommentti
         (log/debug "Turvallisuuspoikkeamalle lisätään uusi kommentti.")
         (let [liite (some->> uusi-kommentti
