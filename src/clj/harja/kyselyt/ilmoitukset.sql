@@ -157,6 +157,19 @@ SELECT
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
 
+  EXISTS(SELECT *
+         FROM ilmoitustoimenpide
+         WHERE ilmoitus = i.id
+               AND kuittaustyyppi = 'vastaanotto' :: kuittaustyyppi) AS vastaanotettu,
+  EXISTS(SELECT *
+         FROM ilmoitustoimenpide
+         WHERE ilmoitus = i.id
+               AND kuittaustyyppi = 'aloitus' :: kuittaustyyppi)     AS aloitettu,
+  EXISTS(SELECT *
+         FROM ilmoitustoimenpide
+         WHERE ilmoitus = i.id
+               AND kuittaustyyppi = 'lopetus' :: kuittaustyyppi)     AS lopetettu,
+
   it.id                                                              AS kuittaus_id,
   it.kuitattu                                                        AS kuittaus_kuitattu,
   it.vapaateksti                                                     AS kuittaus_vapaateksti,
