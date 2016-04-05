@@ -94,7 +94,7 @@ WHERE
   (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite]))
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
--- name: hae-ilmoitukset-idlla
+-- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
   urakka,
   ilmoitusid,
@@ -122,6 +122,35 @@ SELECT
   lahettaja_sahkoposti
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
+
+-- name: hae-ilmoitukset-idlla
+SELECT
+  urakka,
+  ilmoitusid,
+  ilmoitettu,
+  yhteydenottopyynto,
+  lyhytselite,
+  pitkaselite,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE id IN (:idt);
 
 -- name: hae-muuttuneet-ilmoitukset
 SELECT
