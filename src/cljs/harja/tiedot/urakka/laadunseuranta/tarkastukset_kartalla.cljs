@@ -24,8 +24,9 @@
                             :tienumero tienumero
                             :tyyppi tyyppi}))))
 
-(defonce tarkastusreitit-kartalla
+(def tarkastusreitit-kartalla
   (reaction
+    @tarkastukset/urakan-tarkastukset
     (luo-tarkastusreitit-kuvataso
       @karttataso-tarkastukset
       @nav/valittu-urakka (or @tiedot-urakka/valittu-hoitokauden-kuukausi @tiedot-urakka/valittu-aikavali)
