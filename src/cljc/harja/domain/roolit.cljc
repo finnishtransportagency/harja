@@ -170,7 +170,7 @@ rooleista."
 
 (defn organisaation-urakka?
   "Tarkistaa onko annettu urakka käyttäjän organisaation oma urakka.
-Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai 
+Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai
 urakoitsija."
   [{urakat :organisaation-urakat} urakka-id]
   (and urakat
@@ -184,7 +184,7 @@ urakoitsija."
       (rooli-urakassa? kayttaja urakoitsijan-urakan-vastuuhenkilo urakka-id)))
 
 (defn voi-kirjata-toteumia?
-  "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli 
+  "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli
   tai jos hän on urakan urakoitsijaorganisaation pääkäyttäjä"
   #?(:cljs ([urakka-id] (voi-kirjata-toteumia? @istunto/kayttaja urakka-id)))
   ([kayttaja urakka-id]
