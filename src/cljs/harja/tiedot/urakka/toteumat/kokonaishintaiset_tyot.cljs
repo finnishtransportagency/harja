@@ -7,13 +7,16 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
             [harja.pvm :as pvm]
+            [harja.tiedot.istunto :refer [kayttaja]]
             [harja.tiedot.urakka :as u])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-kokonaishintainen-toteuma (atom nil))
-(def uusi-kokonaishintainen-toteuma {})
+(def uusi-kokonaishintainen-toteuma (reaction
+                                      {:suorittaja {:nimi    (get-in @kayttaja [:organisaatio :nimi])
+                                                    :ytunnus (get-in @kayttaja [:organisaatio :ytunnus])}}))
 (def haetut-reitit (atom nil))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot
