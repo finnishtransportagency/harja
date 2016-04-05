@@ -6,7 +6,8 @@
             [harja.ui.openlayers :as openlayers]
             [harja.ui.kartta.varit.puhtaat :as varit]
 
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.loki :refer [log]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -24,7 +25,11 @@
                             :tyyppi tyyppi}))))
 (defonce tarkastusreitit
   (reaction
-   (luo-tarkastusreitit-kuvataso
-    @karttataso-tarkastukset
-    @nav/valittu-urakka @tiedot-urakka/valittu-aikavali
-    @tarkastukset/tienumero @tarkastukset/tarkastustyyppi)))
+   (let [aikavali (tarkastukset/naytettava-aikavali @tiedot-urakka/valittu-urakka-kaynnissa?
+                                                    @tiedot-urakka/valittu-hoitokauden-kuukausi
+                                                    @tiedot-urakka/valittu-aikavali)]
+     (log "tarkastusreitteillään")
+     (luo-tarkastusreitit-kuvataso
+      @karttataso-tarkastukset
+      @nav/valittu-urakka aikavali
+      @tarkastukset/tienumero @tarkastukset/tarkastustyyppi))))

@@ -39,7 +39,7 @@
                                      :tienumero tienumero
                                      :tyyppi    tyyppi}))
 
-(defn- naytettava-aikavali [urakka-kaynnissa? kuukausi aikavali]
+(defn naytettava-aikavali [urakka-kaynnissa? kuukausi aikavali]
   (if urakka-kaynnissa?
     aikavali
     (or kuukausi aikavali)))

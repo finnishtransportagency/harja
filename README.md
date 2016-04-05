@@ -143,7 +143,6 @@ Dumppi on nyt siirretty työpöydällesi. Siirrä se haluamaasi paikkaan.
 Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
 Mene vagrant-kansioon ja aja komennot:
 
-> cd vagrant
 > vagrant ssh
 > sudo -u postgres psql
 > (sulje kaikki kantaa käyttävät sovellukset)
