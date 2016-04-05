@@ -6,7 +6,8 @@
             [harja.ui.openlayers :as openlayers]
             [harja.ui.kartta.varit.puhtaat :as varit]
 
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.loki :refer [log]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))

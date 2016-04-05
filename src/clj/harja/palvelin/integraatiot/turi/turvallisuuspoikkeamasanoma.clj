@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/turi/")
 
@@ -47,7 +48,7 @@
                      :turi:liite
                      [:turi:tiedostonimi (:nimi %)]
                      [:turi:tyyppi (:tyyppi %)]
-                     ;; todo Lisää kuvaus, esim. [:turi:kuvaus "Kuva tilanteesta"]
+                     [:turi:kuvaus (:kuvaus %)]
                      [:turi:sisalto (String. (liitteet/enkoodaa-base64 (:data (:sisalto %))))])
                    liitteet)))))
 
@@ -71,25 +72,35 @@
    [:turi:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]
    [:turi:jatkuuko-sairaspoissaolo (true? (:sairauspoissaolojatkuu data))]])
 
+(defn rakenna-turvallisuuskoordinaattori [data]
+  [:turi:turvallisuuskoordinaattori
+   [:turi:etunimi (:turvallisuuskoordinaattorietunimi data)]
+   [:turi:sukunimi (:turvallisuuskoordinaattorisukunimi data)]])
+
+(defn rakenna-laatija [data]
+  [:turi:laatija
+   [:turi:etunimi (:laatijaetunimi data)]
+   [:turi:sukunimi (:laatijasukunimi data)]])
+
+(defn rakenna-ilmoittaja [data]
+  [:turi:ilmoittaja
+   [:turi:etunimi (:ilmoittaja_etunimi data)]
+   [:turi:sukunimi (:ilmoittaja_sukunimi data)]]
+  [:turi:kuvaus (:kuvaus data)])
+
 (defn muodosta-viesti [data]
   [:turi:turvallisuuspoikkeama
    {:xmlns:turi "http://www.liikennevirasto.fi/xsd/turi"}
+   [:turi:tunniste (:id data)]
    [:turi:vaylamuoto (:vaylamuoto data)]
    [:turi:tapahtunut (when (:tapahtunut data) (xml/formatoi-aikaleima (:tapahtunut data)))]
    [:turi:paattynyt (when (:paattynyt data) (xml/formatoi-aikaleima (:paattynyt data)))]
    [:turi:kasitelty (when (:kasitelty data) (xml/formatoi-aikaleima (:kasitelty data)))]
    [:turi:toteuttaja (:toteuttaja data)]
    [:turi:tilaaja (:tilaaja data)]
-   [:turi:turvallisuuskoordinaattori
-    [:turi:etunimi (:turvallisuuskoordinaattorietunimi data)]
-    [:turi:sukunimi (:turvallisuuskoordinaattorisukunimi data)]]
-   [:turi:laatija
-    [:turi:etunimi (:laatijaetunimi data)]
-    [:turi:sukunimi (:laatijasukunimi data)]]
-   [:turi:ilmoittaja
-    [:turi:etunimi (:ilmoittaja_etunimi data)]
-    [:turi:sukunimi (:ilmoittaja_sukunimi data)]]
-   [:turi:kuvaus (:kuvaus data)]
+   (rakenna-turvallisuuskoordinaattori data)
+   (rakenna-laatija data)
+   (rakenna-ilmoittaja data)
    [:turi:tyotehtava (:tyotehtava data)]
    (rakenna-luokittelulista :turi:luokittelut :turi:luokittelu (:tyyppi data))
    (rakenna-luokittelulista :turi:vahinkoluokittelut :turi:luokittelu (:vahinkoluokittelu data))
@@ -104,9 +115,9 @@
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
-    (println xml)
     (if (xml/validoi +xsd-polku+ "turvallisuuspoikkeama.xsd" xml)
       xml
-      (do
-        (log/error "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia.")
-        nil))))
+      (let [virheviesti "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia."]
+        (log/error virheviesti)
+        (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
+                 :error virheviesti})))))

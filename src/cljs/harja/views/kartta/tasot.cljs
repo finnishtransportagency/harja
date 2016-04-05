@@ -6,6 +6,8 @@
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
              :as tarkastukset]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla
+             :as laatupoikkeamat]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat
@@ -33,6 +35,7 @@
     :pohjavesi
     :sillat
     :tarkastusreitit
+    :laatupoikkeamat
     :turvallisuus
     :ilmoitukset
     :yks-hint-toteumat
@@ -159,6 +162,7 @@
    :turvallisuus turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
    :ilmoitukset ilmoitukset/ilmoitukset-kartalla
    :tarkastusreitit tarkastukset/tarkastusreitit-kartalla
+   :laatupoikkeamat laatupoikkeamat/laatupoikkeamat-kartalla
    :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
    :kok-hint-toteumat kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
    :varusteet varusteet/varusteet-kartalla
@@ -197,6 +201,7 @@
       :pohjavesi (taso :pohjavesi :pohjavesialueet)
       :sillat (taso :sillat :sillat)
       :tarkastusreitit (taso :tarkastusreitit)
+      :laatupoikkeamat (taso :laatupoikkeamat)
       :turvallisuus (taso :turvallisuus)
       :ilmoitukset (taso :ilmoitukset)
       :yks-hint-toteumat (taso :yks-hint-toteumat)
@@ -222,6 +227,7 @@
    :pohjavesi pohjavesialueet/karttataso-pohjavesialueet
    :sillat sillat/karttataso-sillat
    :tarkastusreitit tarkastukset/karttataso-tarkastukset
+   :laatupoikkeamat laatupoikkeamat/karttataso-laatupoikkeamat
    :turvallisuus turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
    :ilmoitukset ilmoitukset/karttataso-ilmoitukset
    :yks-hint-toteumat yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma

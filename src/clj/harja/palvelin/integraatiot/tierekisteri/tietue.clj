@@ -4,11 +4,16 @@
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as lisays-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-paivityskutsu :as paivitys-kutsusanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :as poisto-kutsusanoma]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.tierekisteri.vastauksenkasittely :refer :all]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
 
   (:use [slingshot.slingshot :only [try+ throw+]]))
+
+(def +otsikot+
+  {"Content-Type" "text/xml; charset=utf-8"})
+
+(defn http-asetukset[url]
+  {:metodi :POST :url url :otsikot +otsikot+})
 
 (defn aseta-tunniste-arvoihin [tiedot]
   (assoc-in tiedot
@@ -49,44 +54,48 @@
     :tietueen-poisto-epaonnistui
     (str "Tietueen poisto palautti virheitä (URL: " url ")")))
 
-(defn luo-integraatiopiste [db integraatioloki integraatio]
-  (http/luo-integraatiopiste (integraatioloki/lokittaja integraatioloki db "tierekisteri" integraatio)))
 
 (defn hae-tietue [db integraatioloki url id tietolaji]
   (log/debug "Haetaan tietue: " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
-  (let [integraatiopiste (luo-integraatiopiste db integraatioloki "hae-tietue")
-        vastauskasittelija (fn [xml _] (kasittele-tietueen-hakuvastaus url id tietolaji xml))
-        kutsudata (haku-kutsusanoma/muodosta-kutsu id tietolaji)
-        url (str url "/haetietue")
-        otsikot {"Content-Type" "text/xml; charset=utf-8"}]
-    (http/POST integraatiopiste url otsikot nil kutsudata vastauskasittelija)))
+  (let [url (str url "/haetietue")]
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "tierekisteri" "hae-tietue"
+      (fn [konteksti]
+        (let [kutsudata (haku-kutsusanoma/muodosta-kutsu id tietolaji)
+              http-asetukset (http-asetukset url)
+              {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset  kutsudata)]
+          (kasittele-tietueen-hakuvastaus url id tietolaji xml))))))
 
 (defn lisaa-tietue [db integraatioloki url tiedot]
   (log/debug "Lisätään tietue")
-  (let [integraatiopiste (luo-integraatiopiste db integraatioloki "lisaa-tietue")
-        vastauskasittelija (fn [xml _] (kasittele-tietueen-lisaysvastaus xml url))
-        tiedot (aseta-tunniste-arvoihin tiedot)
-        kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
-        url (str url "/lisaatietue")
-        otsikot {"Content-Type" "text/xml"}]
-    (http/POST integraatiopiste url otsikot nil kutsudata vastauskasittelija)))
+  (let [url (str url "/lisaatietue")]
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "tierekisteri" "lisaa-tietue"
+      (fn [konteksti]
+        (let [tiedot (aseta-tunniste-arvoihin tiedot)
+              kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
+              http-asetukset (http-asetukset url)
+              {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+          (kasittele-tietueen-lisaysvastaus xml url))))))
 
 (defn paivita-tietue [db integraatioloki url tiedot]
   (log/debug "Päivitetään tietue")
-  (let [integraatiopiste (luo-integraatiopiste db integraatioloki "paivita-tietue")
-        vastauskasittelija (fn [xml _] (kasittele-tietueen-paivitysvastaus xml url))
-        kutsudata (paivitys-kutsusanoma/muodosta-kutsu tiedot)
-        url (str url "/paivitatietue")
-        otsikot {"Content-Type" "text/xml"}]
-    (http/POST integraatiopiste url otsikot nil kutsudata vastauskasittelija)))
-
-
+  (let [url (str url "/paivitatietue")]
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "tierekisteri" "paivita-tietue"
+      (fn [konteksti]
+        (let [kutsudata (paivitys-kutsusanoma/muodosta-kutsu tiedot)
+              http-asetukset (http-asetukset url)
+              {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+          (kasittele-tietueen-paivitysvastaus xml url))))))
 
 (defn poista-tietue [db integraatioloki url tiedot]
   (log/debug "Poistetaan tietue")
-  (let [integraatiopiste (luo-integraatiopiste db integraatioloki "poista-tietue")
-        vastauskasittelija (fn [xml _] (kasittele-tietueen-poistovastaus xml url))
-        kutsudata (poisto-kutsusanoma/muodosta-kutsu tiedot)
-        url (str url "/poistatietue")
-        otsikot {"Content-Type" "text/xml"}]
-    (http/POST integraatiopiste url otsikot nil kutsudata vastauskasittelija)))
+  (let [url (str url "/poistatietue")]
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "tierekisteri" "poista-tietue"
+      (fn [konteksti]
+        (let [kutsudata (poisto-kutsusanoma/muodosta-kutsu tiedot)
+              http-asetukset (http-asetukset url)
+              {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+          (kasittele-tietueen-poistovastaus xml url))))))

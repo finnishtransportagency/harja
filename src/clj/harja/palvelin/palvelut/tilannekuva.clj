@@ -338,7 +338,7 @@
         hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string)]
     (merge hakuparametrit
            {:alue {:xmin x1 :ymin y1
-                   :xmax x2 :ymax x2}})))
+                   :xmax x2 :ymax y2}})))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit]
   (let [tiedot (karttakuvan-suodattimet parametrit)]

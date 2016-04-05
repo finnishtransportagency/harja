@@ -5,7 +5,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta])
+  (:import (org.apache.commons.io IOUtils)))
 
 (defn poista-liite [liite-id]
   (u (str "DELETE FROM liite WHERE id = " liite-id ";")))
@@ -27,8 +28,8 @@
   (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
         tiedosto "test/resurssit/sampo/maksuera_ack.xml"
         tiedoston-sisalto-tekstina (slurp tiedosto)
-        tiedoston-sisalto (org.apache.commons.io.IOUtils/toByteArray (io/input-stream tiedosto))
-        luotu-liite (liitteet/luo-liite liitteiden-hallinta nil 1 "maksuera_ack.xml" "text/xml" 581 tiedoston-sisalto)
+        tiedoston-sisalto (IOUtils/toByteArray (io/input-stream tiedosto))
+        luotu-liite (liitteet/luo-liite liitteiden-hallinta nil 1 "maksuera_ack.xml" "text/xml" 581 tiedoston-sisalto nil)
         liite-id (:id luotu-liite)
         luettu-liite (liitteet/lataa-liite liitteiden-hallinta liite-id)
         liitteen-sisalto-tekstina (slurp (:data luettu-liite))]
@@ -43,8 +44,8 @@
 (deftest tallenna-kuvaliite
   (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
         tiedosto "dev-resources/images/harja-brand-text.png"
-        tiedoston-sisalto (org.apache.commons.io.IOUtils/toByteArray (io/input-stream tiedosto))
-        luotu-liite (liitteet/luo-liite liitteiden-hallinta nil 1 "harja-brand-text.png" "image/png" 3 tiedoston-sisalto)
+        tiedoston-sisalto (IOUtils/toByteArray (io/input-stream tiedosto))
+        luotu-liite (liitteet/luo-liite liitteiden-hallinta nil 1 "harja-brand-text.png" "image/png" 3 tiedoston-sisalto nil)
         liite-id (:id luotu-liite)
         luettu-pikkukuva (liitteet/lataa-pikkukuva liitteiden-hallinta liite-id)]
 
