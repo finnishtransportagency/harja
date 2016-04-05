@@ -11,10 +11,11 @@
 (defn osat [raportti]
   ;; Pudotetaan pois :raportti keyword ja string tai map optiot.
   ;; Palautetaan vain sen jälkeen tulevat raporttielementit
-  (mapcat #(if (and (seq? %) (not (vector? %)))
-             %
-             [%])
-          (drop 2 raportti)))
+  (remove nil?
+          (mapcat #(if (and (seq? %) (not (vector? %)))
+                    %
+                    [%])
+                  (drop 2 raportti))))
 
 (defn suorita [db user {:keys [kuukausi urakka-id] :as tiedot}]
   [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
