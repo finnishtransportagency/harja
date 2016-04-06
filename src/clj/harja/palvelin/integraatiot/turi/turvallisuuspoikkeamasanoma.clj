@@ -56,15 +56,15 @@
   [:turi:sijainti
    (if-let [koordinaatit (:coordinates (geo/pg->clj (:sijainti data)))]
      [:turi:koordinaatit
-      (when (:tr_numero testidata) [:turi:tienumero (:tr_numero testidata)])
+      (when (:tr_numero data) [:turi:tienumero (:tr_numero data)])
       [:turi:x (first koordinaatit)]
       [:turi:y (second koordinaatit)]]
      [:turi:tierekisteriosoite
-      [:turi:tienumero (:tr_numero testidata)]
-      [:turi:aosa (:tr_alkuosa testidata)]
-      [:turi:aet (:tr_alkuetaisyys testidata)]
-      [:turi:losa (:tr_loppuosa testidata)]
-      [:turi:let (:tr_loppuetaisyys testidata)]])])
+      [:turi:tienumero (:tr_numero data)]
+      [:turi:aosa (:tr_alkuosa data)]
+      [:turi:aet (:tr_alkuetaisyys data)]
+      [:turi:losa (:tr_loppuosa data)]
+      [:turi:let (:tr_loppuetaisyys data)]])])
 
 (defn rakenna-henkilovahinko [data]
   [:turi:henkilovahinko
