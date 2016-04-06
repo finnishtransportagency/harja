@@ -37,9 +37,7 @@
           suolasakot (:suolasakot tulos)
           lampotilat (:lampotilat tulos)
           hk-2014-2015-lt (first (filter #(= (pvm/->pvm "01.10.2014") (:alkupvm %)) lampotilat))
-          _ (log/debug " hk-2014-2015-lt" hk-2014-2015-lt)
-          suolasakko (first (filter #(= (:hoitokauden_alkuvuosi %) 2014) suolasakot))
-          _ (log/debug " lämöpötilat " lampotilat)]
+          suolasakko (first (filter #(= (:hoitokauden_alkuvuosi %) 2014) suolasakot))]
       (is (= (:maksukuukausi suolasakko) 8) "maksukuukausi")
       (is (= (:urakka suolasakko) urakka-id) "urakka")
       (is (> (count lampotilat) 0) "lampotilat saatiin")
