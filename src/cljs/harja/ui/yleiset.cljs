@@ -66,15 +66,23 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         (enter)))))
 
 (defn virheen-ohje
-  "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu) tai :varoitus."
+  "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu), :varoitus, tai :huomautus."
   ([virheet] (virheen-ohje virheet :virhe))
   ([virheet tyyppi]
-   [:div {:class (if (= tyyppi :varoitus) "varoitukset" "virheet")}
-    [:div {:class (if (= tyyppi :varoitus) "varoitus" "virhe")}
+   [:div {:class (case tyyppi
+                   :varoitus "varoitukset"
+                   :virhe "virheet"
+                   :huomautus "huomautukset"}
+    [:div {:class (case tyyppi
+                    :varoitus "varoitus"
+                    :virhe "virhe"
+                    :huomautus "huomautus")}
      (for [v virheet]
        ^{:key (hash v)}
        [:span
-        (ikonit/info-circle)
+        (case tyyppi
+          :huomautus (ikonit/info-circle)
+          (ikonit/warning-sign))
         [:span (str " " v)]])]]))
 
 
