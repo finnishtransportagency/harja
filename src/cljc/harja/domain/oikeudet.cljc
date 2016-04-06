@@ -26,7 +26,7 @@
      ([oikeus urakka-id]
       (voi-lukea? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
-   (on-oikeus? :luku oikeus kayttaja urakka-id)))
+   (on-oikeus? :luku oikeus urakka-id kayttaja)))
 
 (defn voi-kirjoittaa?
   #?(:cljs
@@ -36,7 +36,7 @@
      ([oikeus urakka-id]
       (voi-kirjoittaa? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
-   (on-oikeus? :kirjoitus oikeus kayttaja urakka-id)))
+   (on-oikeus? :kirjoitus oikeus urakka-id kayttaja)))
 
 #?(:clj
    (defn lue
