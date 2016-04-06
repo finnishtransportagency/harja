@@ -80,25 +80,68 @@ on nil."
 ;; KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
 (def kayttajatiedot (atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
 
-(defn koka-remote-id->kayttajatiedot [db koka-remote-id]
-  (get (swap! kayttajatiedot
-              #(cache/through
-                (fn [id]
-                  (let [kt (first  (q/hae-kirjautumistiedot db id))]
-                    (if (nil? kt)
-                      nil
-                      (-> kt
-                          konv/alaviiva->rakenne
-                          (konv/array->set :organisaation-urakat)
-                          (assoc :roolit
-                                 (into #{} (:roolit (konv/array->vec
-                                                     (first (q/hae-kayttajan-roolit db (:id kt)))
-                                                     :roolit)))
-                                 :urakkaroolit
-                                 (map konv/alaviiva->rakenne (q/hae-kayttajan-urakka-roolit db (:id kt))))))))
-                %
-                koka-remote-id))
-       koka-remote-id))
+(defn- koka-headerit [headerit]
+  (select-keys headerit
+               [;; Käyttäjätunnus ja ryhmät
+                "oam_remote_user" "oam_groups"
+                ;; ELY-numero (tai null) ja org nimi
+                "oam_departmentnumber" "oam_organization"
+                ;; Etu- ja sukunimi
+                "oam_user_first_name" "oam_user_last_name"
+                ;; Sähköposti ja puhelin (FIXME: tarkista header nimet)
+                "oam_user_email" "oam_user_mobile"]))
+
+(defn- hae-kayttajalle-organisaatio
+  [ely db organisaatio]
+  (or
+   ;; Jos ELY-numero haetaan se
+   (some->> ely
+            (re-matches #"\d+")
+            Long/parseLong
+            (q/hae-ely-numerolla db)
+            first)
+   ;; Muuten haetaan org. nimellä
+   (first (q/hae-organisaatio-nimella db organisaatio))))
+
+(defn- varmista-kayttajatiedot
+  "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
+ja palauttaa käyttäjätiedot"
+  [db {id "oam_remote_user" ryhmat "oam_groups"
+       ely "oam_departmentnumber"
+       organisaatio "oam_organization"
+       etunimi "oam_user_first_name"
+       sukunimi "oam_user_last_name"
+       sahkoposti "oam_user_email"
+       puhelin "oam_user_mobile"}]
+
+  (let [organisaatio (hae-kayttajalle-organisaatio ely db organisaatio)
+
+        kayttaja {:kayttajanimi  id
+                  :etunimi etunimi
+                  :sukunimi sukunimi
+                  :sahkoposti sahkoposti
+                  :puhelin puhelin
+                  :organisaatio (:id organisaatio)}
+        kayttaja-id (q/varmista-kayttaja
+                     db
+                     (assoc kayttaja
+                            :organisaatio (:id organisaatio)))]
+
+    (merge (assoc kayttaja
+                  :id kayttaja-id)
+           (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
+                             (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                             oikeudet/roolit
+                             ryhmat))))
+
+(defn koka->kayttajatiedot [db headerit]
+  (let [{koka-remote-id "oam_remote_user" :as oam-tiedot} (koka-headerit headerit)]
+    (get (swap! kayttajatiedot
+                #(cache/through
+                  (partial varmista-kayttajatiedot db)
+                  %
+                  oam-tiedot))
+         oam-tiedot)))
 
 
 (defprotocol Todennus
@@ -135,14 +178,14 @@ on nil."
   Todennus
   (todenna-pyynto [{db :db :as this} req]
     (let [headerit (:headers req)
-          ryhmat (headerit "oam_groups") ; PENDING: Sähke ryhmät synkataan täältä
           kayttaja-id (headerit "oam_remote_user")]
 
       (if (nil? kayttaja-id)
         (throw+ todennusvirhe)
-        (if-let [kayttajatiedot (koka-remote-id->kayttajatiedot db kayttaja-id)]
-          (assoc req :kayttaja
-                 (testikaytto db req kayttajatiedot testikayttajat))
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit)]
+          (do (println "KÄYTTÄJÄTIEDOT: " kayttajatiedot)
+              (assoc req :kayttaja
+                     (testikaytto db req kayttajatiedot testikayttajat)))
           (throw+ todennusvirhe))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
