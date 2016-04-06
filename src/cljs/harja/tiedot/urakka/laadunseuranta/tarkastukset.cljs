@@ -6,12 +6,11 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
-
-
 
 (def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
 

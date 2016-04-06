@@ -102,7 +102,7 @@
                              (and kokoelma-atom
                                   (= otsikko @kokoelma-atom))))]
         [:div.tk-checkbox-ryhma
-         [:div.tk-checkbox-ryhma-otsikko
+         [:div.tk-checkbox-ryhma-otsikko.klikattava
           {:on-click (fn [event]
                        ;; Estetään eventti jos klikkaus osui checkbox-laatikkoon tai sen tekstiin
                        (if (or (.matches (.-target event) ".tk-checkbox-ryhma-otsikko")
