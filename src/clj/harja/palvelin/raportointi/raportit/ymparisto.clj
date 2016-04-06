@@ -13,33 +13,36 @@
   {:positional? true})
 
 
-(defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id]
+(defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi]
   (sort-by (comp :nimi :materiaali first)
            (group-by #(select-keys % [:materiaali])
                      (into []
                            (map konv/alaviiva->rakenne)
                            (hae-ymparistoraportti db alkupvm loppupvm
-                                                  (if urakka-id true false) urakka-id
-                                                  (if hallintayksikko-id true false) hallintayksikko-id)))))
+                                                  (some? urakka-id) urakka-id
+                                                  (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                                                  (some? hallintayksikko-id) hallintayksikko-id)))))
 
 
-(defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id]
+(defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id urakkatyyppi]
   (sort-by (comp :nimi :urakka first)
            (seq (group-by #(select-keys % [:materiaali :urakka])
                           (into []
                                 (map konv/alaviiva->rakenne)
                                 (hae-ymparistoraportti-urakoittain db alkupvm loppupvm
-                                                                   (if hallintayksikko-id true false) hallintayksikko-id))))))
+                                                                   (some? hallintayksikko-id) hallintayksikko-id
+                                                                   (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))))))))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
-                               urakoittain?] :as parametrit}]
-  (let [konteksti (cond urakka-id :urakka
+                               urakoittain? urakkatyyppi] :as parametrit}]
+  (let [urakoittain? (if urakka-id false urakoittain?)
+        konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         materiaalit (if urakoittain?
-                      (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id)
-                      (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id))
+                      (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id urakkatyyppi)
+                      (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi))
         kk-lev (if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5%")
