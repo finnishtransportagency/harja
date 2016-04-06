@@ -224,7 +224,7 @@
         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
-      @tiedot/haetut-turvallisuuspoikkeamat]]))
+      (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
 
 (defn turvallisuuspoikkeamat []
   (komp/luo
