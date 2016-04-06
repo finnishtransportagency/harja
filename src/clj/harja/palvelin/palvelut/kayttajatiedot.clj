@@ -3,9 +3,8 @@
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.palvelut.kayttajat :as k]
-            [harja.domain.roolit :as roolit]))
-
-(declare hae-kayttajatiedot)
+            [harja.domain.roolit :as roolit]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defrecord Kayttajatiedot [testikayttajat]
   component/Lifecycle
@@ -13,29 +12,8 @@
     (julkaise-palvelu (:http-palvelin this)
                       :kayttajatiedot
                       (fn [user alku]
-                        (let [kt (hae-kayttajatiedot (:db this) user alku)
-                              oikea-kayttaja (:oikea-kayttaja user)]
-                          (if (and testikayttajat
-                                   (or (roolit/jvh? user)
-                                       (and oikea-kayttaja
-                                            (roolit/jvh? oikea-kayttaja))))
-                            (assoc kt
-                              :testikayttajat testikayttajat)
-                            kt))))
+                        user))
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :kayttajatiedot)
     this))
-
-
-(defn hae-kayttajatiedot
-  "Hae tämänhetkisen käyttäjän tiedot frontille varten"
-  [db user alku]
-  (if (nil? user)
-    ;; Jos käyttäjää ei ole löytynyt, palautetaan frontille tieto
-    {:poistettu true}
-    (let [user (merge user
-                      (k/hae-kayttajan-tiedot db user (:id user)))]
-      user)))
-  
-  
