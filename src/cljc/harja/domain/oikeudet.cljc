@@ -8,61 +8,56 @@
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
-(defrecord KayttoOikeus [kuvaus luku-roolit kirjoitus-roolit])
+(defrecord KayttoOikeus [kuvaus luku kirjoitus])
 (maarittele-oikeudet!)
 
-(defn sallitut-roolit [tyyppi osio nakyma]
-  (get-in oikeudet [osio nakyma tyyppi]))
 
-(def sallitut-luku-roolit (partial sallitut-roolit :luku))
-(def sallitut-kirjoitus-roolit (partial sallitut-roolit :kirjoitus))
-
-(defn on-oikeus? [tyyppi osio nakyma urakka-id kayttaja]
-  (let [sallitut (sallitut-roolit tyyppi osio nakyma)]
-    (or (roolit/roolissa? kayttaja (sallitut-luku-roolit))
+(defn on-oikeus? [tyyppi oikeus urakka-id kayttaja]
+  (let [sallitut (tyyppi oikeus)]
+    (or (roolit/roolissa? kayttaja sallitut)
         (and urakka-id
              (roolit/rooli-urakassa? kayttaja sallitut urakka-id)))))
 
 (defn voi-lukea?
   #?(:cljs
-     ([osio nakyma]
-      (voi-lukea? osio nakyma nil istunto/kayttaja)))
+     ([oikeus]
+      (voi-lukea? oikeus nil istunto/kayttaja)))
   #?(:cljs
-     ([osio nakyma urakka-id]
+     ([oikeus urakka-id]
       (voi-lukea osio nakyma urakka-id istunto/kayttaja)))
-  ([osio nakyma urakka-id kayttaja]
-   (on-oikeus? :luku osio nakyma kayttaja urakka-id)))
+  ([oikeus urakka-id kayttaja]
+   (on-oikeus? :luku oikeus kayttaja urakka-id)))
 
 (defn voi-kirjoittaa?
   #?(:cljs
-     ([osio nakyma]
-      (voi-kirjoittaa? osio nakyma nil istunto/kayttaja)))
+     ([oikeus]
+      (voi-kirjoittaa? oikeus nil istunto/kayttaja)))
   #?(:cljs
-     ([osio nakyma urakka-id]
-      (voi-kirjoittaa? osio nakyma urakka-id istunto/kayttaja)))
-  ([osio nakyma urakka-id kayttaja]
-   (on-oikeus? :kirjoitus osio nakyma kayttaja urakka-id)))
+     ([oikeus urakka-id]
+      (voi-kirjoittaa? oikeus urakka-id istunto/kayttaja)))
+  ([oikeus urakka-id kayttaja]
+   (on-oikeus? :kirjoitus oikeus kayttaja urakka-id)))
 
 #?(:clj
    (defn lue
-     ([osio nakyma kayttaja]
-      (lue osio nakyma kayttaja nil))
-     ([osio nakyma kayttaja urakka-id]
-      (when-not (voi-lukea? osio nakyma kayttaja urakka-id)
+     ([oikeus kayttaja]
+      (lue oikeus kayttaja nil))
+     ([oikeus kayttaja urakka-id]
+      (when-not (voi-lukea? oikeus kayttaja urakka-id)
         (throw+ (roolit/->EiOikeutta
                  (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei lukuoikeutta "
-                      osio " näkymään " nakyma
+                      (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
 
 #?(:clj
    (defn kirjoita
-     ([osio nakyma kayttaja]
-      (kirjoita osio nakyma kayttaja nil))
-     ([osio nakyma kayttaja urakka-id]
-      (when-not (voi-lukea? osio nakyma kayttaja urakka-id)
+     ([oikeus kayttaja]
+      (kirjoita oikeus kayttaja nil))
+     ([oikeus kayttaja urakka-id]
+      (when-not (voi-lukea? oikeus kayttaja urakka-id)
         (throw+ (roolit/->EiOikeutta
                  (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei kirjoitusoikeutta "
-                      osio " näkymään " nakyma
+                      (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
