@@ -450,8 +450,9 @@
 (defn raportit []
   (komp/luo
     (komp/lippu raportit/raportit-nakymassa?)
-    (komp/sisaan #(when (nil? @raporttityypit)
-                   (go (reset! raporttityypit (<! (raportit/hae-raportit))))))
+    (komp/sisaan #(do (when (nil? @raporttityypit)
+                        (go (reset! raporttityypit (<! (raportit/hae-raportit)))))
+                      (nav/valitse-urakoitsija! nil)))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
