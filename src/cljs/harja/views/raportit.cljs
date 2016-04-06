@@ -286,7 +286,8 @@
                                     arvot))
                                 @parametri-arvot))
         arvot-nyt (merge arvot-nyt
-                         (get @muistetut-parametrit (:nimi raporttityyppi)))
+                         (get @muistetut-parametrit (:nimi raporttityyppi))
+                         {:urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)})
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)]
@@ -350,16 +351,16 @@
           {:type     "submit"
            :disabled (not voi-suorittaa?)
            :on-click #(do
-                        (let [input (-> js/document
-                                        (.getElementById "raporttipdf")
-                                        (aget "parametrit"))
-                              parametrit (case konteksti
-                                           "koko maa" (raportit/suorita-raportti-koko-maa-parametrit (:nimi raporttityyppi) arvot-nyt)
-                                           "hallintayksikko" (raportit/suorita-raportti-hallintayksikko-parametrit (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
-                                           "urakka" (raportit/suorita-raportti-urakka-parametrit (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
-                          (set! (.-value input)
-                                (t/clj->transit parametrit)))
-                        true)}
+                       (let [input (-> js/document
+                                       (.getElementById "raporttipdf")
+                                       (aget "parametrit"))
+                             parametrit (case konteksti
+                                          "koko maa" (raportit/koko-maa-raportin-parametrit (:nimi raporttityyppi) arvot-nyt)
+                                          "hallintayksikko" (raportit/hallintayksikon-raportin-parametrit (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
+                                          "urakka" (raportit/urakkaraportin-parametrit (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
+                         (set! (.-value input)
+                               (t/clj->transit parametrit)))
+                       true)}
           (ikonit/print) " Tallenna PDF"]]
         (when-not raportissa?
           [napit/palvelinkutsu-nappi " Tee raportti"
