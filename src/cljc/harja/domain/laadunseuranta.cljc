@@ -94,7 +94,7 @@
   "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
   eikä tarkastuksella ole vakiohavaintoja"
   [tarkastus]
-  (if (and (or (str/blank? (:havainnot tarkastus))
+  (if (and (or (empty? (:havainnot tarkastus))
                (= "ok" (clojure.string/lower-case (:havainnot tarkastus))))
            (empty? (:vakiohavainnot tarkastus)))
     (assoc tarkastus :ok? true)
