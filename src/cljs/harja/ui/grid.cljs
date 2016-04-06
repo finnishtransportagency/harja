@@ -214,7 +214,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
             [:td {:class (str "muokattava " tasaus-luokka (cond
                                                             (not (empty? kentan-virheet)) " sisaltaa-virheen"
                                                             (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                                            (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen")}
+                                                            (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))}
              (cond
                (not (empty? kentan-virheet)) (virheen-ohje kentan-virheet)
                (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus)

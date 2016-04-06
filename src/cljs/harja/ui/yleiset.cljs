@@ -72,7 +72,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    [:div {:class (case tyyppi
                    :varoitus "varoitukset"
                    :virhe "virheet"
-                   :huomautus "huomautukset"}
+                   :huomautus "huomautukset")}
     [:div {:class (case tyyppi
                     :varoitus "varoitus"
                     :virhe "virhe"
