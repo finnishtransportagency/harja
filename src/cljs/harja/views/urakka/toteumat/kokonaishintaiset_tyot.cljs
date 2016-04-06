@@ -150,7 +150,7 @@
                           (assoc :alkanut arvo)))
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
              :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
-             :varoita     [[:urakan-aikana-ja-hoitokaudella]]}
+             :huomauta     [[:urakan-aikana-ja-hoitokaudella]]}
            (if (:jarjestelma @muokattu)
               {:tyyppi :string
                :otsikko "Pituus"

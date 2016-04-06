@@ -196,7 +196,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
              {:otsikko     "Aloitus" :pakollinen? true :uusi-rivi? true
               :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
-              :varoita     [[:urakan-aikana-ja-hoitokaudella]]
+              :huomauta     [[:urakan-aikana-ja-hoitokaudella]]
               :muokattava? muokattava-pred
               :aseta       (fn [rivi arvo]
                              (assoc

@@ -345,7 +345,7 @@
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
                       #(when (@olemassa-olevat-tarkastus-pvmt %1)
                         "Tälle päivälle on jo kirjattu tarkastus.")]
-            :varoita [[:urakan-aikana]]}
+            :huomauta [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
            {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
             :tyyppi :string :pituus-max 128

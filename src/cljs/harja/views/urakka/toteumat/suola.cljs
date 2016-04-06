@@ -74,7 +74,7 @@
            :valinnat @materiaalit}
           {:otsikko "Pvm" :nimi :alkanut :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
            :validoi [[:ei-tyhja "Anna päivämäärä"]]
-           :varoita [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
+           :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
           {:otsikko "Käytetty määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
            :validoi [[:ei-tyhja "Anna määrä"]]}
           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
