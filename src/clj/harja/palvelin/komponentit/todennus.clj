@@ -143,7 +143,11 @@ ja palauttaa käyttäjätiedot"
   (let [oam-tiedot (koka-headerit headerit)]
     (get (swap! kayttajatiedot
                 #(cache/through
-                  (partial varmista-kayttajatiedot db)
+                  (fn [oam-tiedot]
+                    (try
+                      (varmista-kayttajatiedot db oam-tiedot)
+                      (catch Throwable t
+                        (log/warn t "Käyttäjätietojen varmistuksessa virhe!"))))
                   %
                   oam-tiedot))
          oam-tiedot)))
