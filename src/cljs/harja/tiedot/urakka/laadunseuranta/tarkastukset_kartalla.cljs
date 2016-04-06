@@ -7,7 +7,8 @@
             [harja.ui.kartta.varit.puhtaat :as varit]
 
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [cljs-time.core :as t])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -19,17 +20,16 @@
     (openlayers/luo-kuvataso
      :tarkastusreitit esitettavat-asiat/tarkastus-selitteet
      "tr" (k/url-parametri {:urakka-id (:id urakka)
-                            :alkupvm alku
-                            :loppupvm loppu
+                            :alkupvm   alku
+                            :loppupvm  loppu
                             :tienumero tienumero
-                            :tyyppi tyyppi}))))
-(defonce tarkastusreitit
+                            :tyyppi    tyyppi
+                            :timestamp (t/now)}))))
+
+(def tarkastusreitit-kartalla
   (reaction
-   (let [aikavali (tarkastukset/naytettava-aikavali @tiedot-urakka/valittu-urakka-kaynnissa?
-                                                    @tiedot-urakka/valittu-hoitokauden-kuukausi
-                                                    @tiedot-urakka/valittu-aikavali)]
-     (log "tarkastusreitteillään")
-     (luo-tarkastusreitit-kuvataso
+    @tarkastukset/urakan-tarkastukset
+    (luo-tarkastusreitit-kuvataso
       @karttataso-tarkastukset
-      @nav/valittu-urakka aikavali
-      @tarkastukset/tienumero @tarkastukset/tarkastustyyppi))))
+      @nav/valittu-urakka (or @tiedot-urakka/valittu-hoitokauden-kuukausi @tiedot-urakka/valittu-aikavali)
+      @tarkastukset/tienumero @tarkastukset/tarkastustyyppi)))

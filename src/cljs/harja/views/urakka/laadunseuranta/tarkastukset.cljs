@@ -21,7 +21,8 @@
             [harja.views.urakka.valinnat :as valinnat]
 
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset-kartalla]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat])
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -105,10 +106,19 @@
           {:otsikko "Havainnot"
            :nimi :havainnot
            :leveys 4
-           :tyyppi :string
-           :fmt #(if (> (count %) 50)
-                   (str (.substring % 0 50) "...")
-                   %)}]
+           :tyyppi :komponentti
+           :komponentti (fn [rivi]
+                          (let [havainnot (:havainnot rivi)
+                                havainnot-max-pituus 50
+                                havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
+                                                    (str (.substring havainnot 0 havainnot-max-pituus) "...")
+                                                    havainnot)
+                                vakiohavainnot (str/join ", " (:vakiohavainnot rivi))]
+                            [:ul.tarkastuksen-havaintolista
+                             (when (not (str/blank? vakiohavainnot))
+                               [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
+                             (when (not (str/blank? havainnot-rajattu))
+                               [:li.tarkastuksen-havainnot havainnot-rajattu])]))}]
          tarkastukset]])))
 
 
@@ -218,7 +228,8 @@
         :sijainti (r/wrap (:sijainti tarkastus)
                           #(swap! tarkastus-atom assoc :sijainti %))}
 
-       {:otsikko "Tar\u00ADkastaja" :nimi :tarkastaja
+       {:otsikko "Tar\u00ADkastaja"
+        :nimi :tarkastaja
         :tyyppi :string :pituus-max 256
         :pakollinen? true
         :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
@@ -229,12 +240,18 @@
          :soratie (soratiemittaus)
          nil)
 
-       {:otsikko "Havain\u00ADnot" :nimi :havainnot
+       {:otsikko "Havain\u00ADnot"
+        :nimi :havainnot
         :koko [80 :auto]
         :tyyppi :text
         :palstoja 2}
 
-
+       (when (not (empty? (:vakiohavainnot tarkastus)))
+         {:otsikko "Vakio\u00ADhavainnot"
+          :nimi :vakiohavainnot
+          :tyyppi :komponentti
+          :komponentti [:span (str/join ", " (:vakiohavainnot tarkastus))]
+          :palstoja 2})
 
        {:otsikko     "Liitteet" :nimi :liitteet
         :tyyppi :komponentti
