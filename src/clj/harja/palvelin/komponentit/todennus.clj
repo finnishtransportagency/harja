@@ -1,5 +1,8 @@
 (ns harja.palvelin.komponentit.todennus
-  "Tämä namespace määrittelee käyttäjäidentiteetin todentamisen. Käyttäjän todentaminen WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei huolehdi käyttöoikeuksista, vaan pelkästään tarkistaa käyttäjän identiteetin."
+  "Tämä namespace määrittelee käyttäjäidentiteetin todentamisen. Käyttäjän todentaminen
+  WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei tee
+  käyttöoikeustarkistuksia, vaan pelkästään hakee käyttäjälle sallitut käyttöoikeudet
+  ja tarkistaa käyttäjän identiteetin."
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clojure.core.cache :as cache]
@@ -76,8 +79,9 @@ on nil."
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
-;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta uudestaan.
-;; KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
+
+;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta
+;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
 (def kayttajatiedot (atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
 
 (defn- koka-headerit [headerit]
@@ -88,7 +92,7 @@ on nil."
                 "oam_departmentnumber" "oam_organization"
                 ;; Etu- ja sukunimi
                 "oam_user_first_name" "oam_user_last_name"
-                ;; Sähköposti ja puhelin (FIXME: tarkista header nimet)
+                ;; Sähköposti ja puhelin
                 "oam_user_email" "oam_user_mobile"]))
 
 (defn- hae-kayttajalle-organisaatio
@@ -106,7 +110,8 @@ on nil."
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
 ja palauttaa käyttäjätiedot"
-  [db {id "oam_remote_user" ryhmat "oam_groups"
+  [db {kayttajanimi "oam_remote_user"
+       ryhmat "oam_groups"
        ely "oam_departmentnumber"
        organisaatio "oam_organization"
        etunimi "oam_user_first_name"
@@ -116,7 +121,7 @@ ja palauttaa käyttäjätiedot"
 
   (let [organisaatio (hae-kayttajalle-organisaatio ely db organisaatio)
 
-        kayttaja {:kayttajanimi  id
+        kayttaja {:kayttajanimi kayttajanimi
                   :etunimi etunimi
                   :sukunimi sukunimi
                   :sahkoposti sahkoposti
@@ -135,7 +140,7 @@ ja palauttaa käyttäjätiedot"
                              ryhmat))))
 
 (defn koka->kayttajatiedot [db headerit]
-  (let [{koka-remote-id "oam_remote_user" :as oam-tiedot} (koka-headerit headerit)]
+  (let [oam-tiedot (koka-headerit headerit)]
     (get (swap! kayttajatiedot
                 #(cache/through
                   (partial varmista-kayttajatiedot db)
@@ -146,15 +151,19 @@ ja palauttaa käyttäjätiedot"
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
-  (todenna-pyynto [this req] "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
+  (todenna-pyynto [this req] "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
+req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (def todennusvirhe {:virhe :todennusvirhe})
 
 (defn testikaytto
-  "Tekee mahdollisen testikäyttäjän korvaamisen. Jos testikäyttäjiä on konfiguroitu ja autentikoitu käyttäjä on järjestelmävastuuhenkilö ja hänellä on testikäyttäjä eväste, korvataan käyttäjätiedot evästeen nimeämän käyttäjätunnuksen tiedoilla."
+  "Tekee mahdollisen testikäyttäjän korvaamisen. Jos testikäyttäjiä on konfiguroitu ja autentikoitu
+  käyttäjä on järjestelmävastuuhenkilö ja hänellä on testikäyttäjä eväste, korvataan käyttäjätiedot
+  evästeen nimeämän käyttäjätunnuksen tiedoilla."
   [db req kayttajatiedot testikayttajat]
   (if-let [testitunnus (and testikayttajat
-                            (oikeudet/voi-kirjoittaa? oikeudet/testaus-testikaytto nil kayttajatiedot)
+                            (oikeudet/voi-kirjoittaa? oikeudet/testaus-testikaytto
+                                                      nil kayttajatiedot)
                             (get-in req [:cookies "testikayttaja" :value]))]
     (if-let [testikayttajan-tiedot (get testikayttajat testitunnus)]
       (assoc (koka->kayttajatiedot db testikayttajan-tiedot)
@@ -162,7 +171,8 @@ ja palauttaa käyttäjätiedot"
              ;; "su" tilanne voidaan tunnistaa
              :oikea-kayttaja kayttajatiedot)
       (do
-        (log/warn "Käyttäjä " (:kayttajanimi kayttajatiedot) " yritti ei-sallittua testikäyttäjää: " testitunnus)
+        (log/warn "Käyttäjä " (:kayttajanimi kayttajatiedot)
+                  " yritti ei-sallittua testikäyttäjää: " testitunnus)
         (throw+ todennusvirhe)))
     kayttajatiedot))
 
