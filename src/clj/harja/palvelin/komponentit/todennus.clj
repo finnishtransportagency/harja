@@ -8,9 +8,74 @@
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
             [harja.domain.roolit :as roolit]
-            ))
+            [harja.domain.oikeudet :as oikeudet]
 
+            [clojure.string :as str]))
 
+(defn- ryhman-rooli-ja-linkki
+  "Etsii annetulle OAM ryhmälle roolin. Ryhmä voi olla suoraan roolin nimi
+tai linkitetyssä roolissa muotoa <linkitetty id>_<roolin nimi>. Palauttaa
+roolin tiedot ja linkitetyn id:n vektorissa, jos rooli ei ole linkitetty id
+on nil."
+  [roolit ryhma]
+  (some (fn [{:keys [nimi linkki] :as rooli}]
+          (cond
+            (= nimi ryhma)
+            [rooli nil]
+
+            (and linkki (str/ends-with? ryhma (str "_" nimi)))
+            [rooli (first (str/split ryhma #"_"))]))
+        (vals roolit)))
+
+(defn- yleisroolit [roolit-ja-linkit]
+  (into #{}
+        ;; Haetaan kaikki roolit, joilla ei ole linkkiä
+        (comp (map first)
+              (filter (comp empty? :linkki))
+              (map :nimi))
+        roolit-ja-linkit))
+
+(defn- roolien-nimet
+  [roolit]
+  (into #{}
+        (map (comp :nimi first))
+        roolit))
+
+(defn- urakkaroolit [urakan-id roolit-ja-linkit]
+  (into {}
+        (comp
+         ;; Muuta key Sampo id:stä Harjan urakka id:ksi
+         (map #(update-in % [0] urakan-id))
+
+         ;; Muuta [[rooli id] ...] -> #{nimi ...}
+         (map #(update-in % [1] roolien-nimet)))
+        ;; Valitaan vain "urakka" linkitetyt roolit ja
+        ;; ryhmitellään ne id:n perusteella
+        (group-by second
+                  (filter (comp #(= "urakka" %)
+                                :linkki
+                                first)
+                          roolit-ja-linkit))))
+
+(defn organisaatioroolit [urakoitsijan-id roolit-ja-linkit]
+  (into {}
+        (comp
+         (map #(update-in % [0] urakoitsijan-id))
+         (map #(update-in % [1] roolien-nimet)))
+        (group-by second
+                  (filter (comp #(= "urakoitsija" %) :linkki first)
+                          roolit-ja-linkit))))
+(defn kayttajan-roolit
+  "Palauttaa annetun käyttäjän roolit OAM_GROUPS header arvon perusteella.
+  Roolit on mäppäys roolinimestä sen tietoihin. Sähken antama urakan tai
+  urakoitsijan id muutetaan harjan id:ksi kutsumalla annettuja urakan-id
+  ja urakoitsijan-id funktioita."
+  [urakan-id urakoitsijan-id roolit oam-groups]
+  (let [roolit-ja-linkit (->> (str/split oam-groups #",")
+                              (map (partial ryhman-rooli-ja-linkki roolit)))]
+    {:roolit (yleisroolit roolit-ja-linkit)
+     :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
+     :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
 ;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta uudestaan.
 ;; KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
 (def kayttajatiedot (atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
@@ -35,7 +100,7 @@
                 koka-remote-id))
        koka-remote-id))
 
-  
+
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
   (todenna-pyynto [this req] "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
@@ -72,7 +137,7 @@
     (let [headerit (:headers req)
           ryhmat (headerit "oam_groups") ; PENDING: Sähke ryhmät synkataan täältä
           kayttaja-id (headerit "oam_remote_user")]
-      
+
       (if (nil? kayttaja-id)
         (throw+ todennusvirhe)
         (if-let [kayttajatiedot (koka-remote-id->kayttajatiedot db kayttaja-id)]
@@ -100,5 +165,3 @@
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))
-
-
