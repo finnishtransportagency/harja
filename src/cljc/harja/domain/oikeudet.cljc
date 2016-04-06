@@ -24,7 +24,7 @@
       (voi-lukea? oikeus nil istunto/kayttaja)))
   #?(:cljs
      ([oikeus urakka-id]
-      (voi-lukea osio nakyma urakka-id istunto/kayttaja)))
+      (voi-lukea oikeus urakka-id istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
    (on-oikeus? :luku oikeus kayttaja urakka-id)))
 

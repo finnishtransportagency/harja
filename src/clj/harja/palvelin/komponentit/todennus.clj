@@ -154,15 +154,16 @@ ja palauttaa käyttäjätiedot"
   "Tekee mahdollisen testikäyttäjän korvaamisen. Jos testikäyttäjiä on konfiguroitu ja autentikoitu käyttäjä on järjestelmävastuuhenkilö ja hänellä on testikäyttäjä eväste, korvataan käyttäjätiedot evästeen nimeämän käyttäjätunnuksen tiedoilla."
   [db req kayttajatiedot testikayttajat]
   (if-let [testitunnus (and testikayttajat
-                            (roolit/roolissa? kayttajatiedot roolit/jarjestelmavastuuhenkilo)
+                            (oikeudet/voi-kirjoittaa? oikeudet/testaus-testikaytto nil kayttajatiedot)
                             (get-in req [:cookies "testikayttaja" :value]))]
-    (do (when-not (some #(= testitunnus (:kayttajanimi %)) testikayttajat)
-          (log/warn "Käyttäjä " kayttajatiedot " yritti ei-sallittua testikäyttäjää: " testitunnus)
-          (throw+ todennusvirhe))
-        (assoc (koka-remote-id->kayttajatiedot db testitunnus)
-               ;; asetetaan myös oikea käyttäjä talteen, käyttäjätiedot tarvitsee sitä, jotta
-               ;; "su" tilanne voidaan tunnistaa
-               :oikea-kayttaja kayttajatiedot))
+    (if-let [testikayttajan-tiedot (get testikayttajat testitunnus)]
+      (assoc (koka->kayttajatiedot db testikayttajan-tiedot)
+             ;; asetetaan myös oikea käyttäjä talteen, käyttäjätiedot tarvitsee sitä, jotta
+             ;; "su" tilanne voidaan tunnistaa
+             :oikea-kayttaja kayttajatiedot)
+      (do
+        (log/warn "Käyttäjä " (:kayttajanimi kayttajatiedot) " yritti ei-sallittua testikäyttäjää: " testitunnus)
+        (throw+ todennusvirhe)))
     kayttajatiedot))
 
 (defrecord HttpTodennus [testikayttajat]
