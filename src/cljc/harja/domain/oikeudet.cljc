@@ -8,6 +8,7 @@
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
+(defrecord KayttoOikeus [kuvaus luku-roolit kirjoitus-roolit])
 (maarittele-oikeudet!)
 
 (defn sallitut-roolit [tyyppi osio nakyma]

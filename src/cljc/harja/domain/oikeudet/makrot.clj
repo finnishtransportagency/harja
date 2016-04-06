@@ -43,14 +43,29 @@
               {:osio osio :nakyma nakyma :rivi rivi})))
         (range 7 100)))
 
+(defn- kanonisoi [teksti]
+  (-> teksti
+      str/lower-case
+      (str/replace " " "")
+      (str/replace "/" "-")
+      (str/replace "ä" "a")
+      (str/replace "ö" "o")))
+
+(defn- oikeus-sym
+  "Tekee symbol nimen oikeudelle osion ja näkymän yhdistämällä"
+  [osio nakyma]
+  (symbol (str (kanonisoi osio)
+               "-"
+               (kanonisoi nakyma))))
+
 (defn- oikeudet [roolit sheet]
   (let [sarakkeet (roolien-sarakkeet sheet)
         rivit (oikeuksien-rivit sheet)
         kuvaus->rooli (into {}
                             (map (juxt :kuvaus :nimi))
                             roolit)]
-    (reduce
-     (fn [oikeudet {:keys [osio nakyma rivi]}]
+    (map
+     (fn [{:keys [osio nakyma rivi]}]
        (let [roolien-oikeudet (keep (fn [{:keys [sarake rooli]}]
                                       (when-let [oikeus (some-> (str sarake rivi)
                                                                 (xls/select-cell sheet)
@@ -58,16 +73,15 @@
                                         {:rooli (kuvaus->rooli rooli)
                                          :luku? (.contains oikeus "R")
                                          :kirjoitus? (.contains oikeus "W")}))
-                                   sarakkeet)]
-         (assoc-in oikeudet
-                   [osio nakyma]
-                   {:luku (into #{}
-                                (keep :rooli
-                                     (filter :luku? roolien-oikeudet)))
-                    :kirjoitus (into #{}
-                                     (keep :rooli
-                                          (filter :kirjoitus? roolien-oikeudet)))})))
-     {}
+                                    sarakkeet)]
+         {:sym (oikeus-sym osio nakyma)
+          :kuvaus (str "Osio '" osio "' näkymä '" nakyma "'")
+          :luku (into #{}
+                      (keep :rooli
+                            (filter :luku? roolien-oikeudet)))
+          :kirjoitus (into #{}
+                           (keep :rooli
+                                 (filter :kirjoitus? roolien-oikeudet)))}))
      rivit)))
 
 (defn- lue-oikeudet []
@@ -83,4 +97,10 @@
        (def ~'roolit ~(into {}
                             (map (juxt :nimi identity))
                             roolimappaus))
-       (def ~'oikeudet ~oikeudet))))
+       ~@(mapv
+          (fn [oikeudet]
+            `(do
+               ~@(mapv (fn [{:keys [sym kuvaus luku kirjoitus]}]
+                         `(def ~sym (harja.domain.oikeudet/->KayttoOikeus ~kuvaus ~luku ~kirjoitus)))
+                       oikeudet)))
+          (partition 16 16 [] oikeudet)))))
