@@ -23,11 +23,13 @@
 
 (defn hae-erilliskustannukset-aikavalille
   [db user urakka-annettu? urakka-id
+   urakkatyyppi-annettu? urakkatyyppi
    hallintayksikko-annettu? hallintayksikko-id
    toimenpide-id alkupvm loppupvm]
   (let [kustannukset (hae-erilliskustannukset
                        db
                        urakka-annettu? urakka-id
+                       urakkatyyppi-annettu? urakkatyyppi
                        hallintayksikko-annettu? hallintayksikko-id
                        toimenpide-id
                        alkupvm loppupvm)]
@@ -44,15 +46,17 @@
             (map konv/alaviiva->rakenne))
           kustannukset)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id alkupvm loppupvm] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        urakka-annettu? (if urakka-id true false)
-        hallintayksikko-annettu? (if hallintayksikko-id true false)
+        urakka-annettu? (boolean urakka-id)
+        hallintayksikko-annettu? (boolean hallintayksikko-id)
+        urakkatyyppi-annettu? (boolean urakkatyyppi)
         erilliskustannukset (reverse (sort-by (juxt (comp :id :urakka) :pvm)
                                               (hae-erilliskustannukset-aikavalille db user
                                                                                    urakka-annettu? urakka-id
+                                                                                   urakkatyyppi-annettu? (when urakkatyyppi-annettu? (name urakkatyyppi))
                                                                                    hallintayksikko-annettu? hallintayksikko-id
                                                                                    toimenpide-id
                                                                                    alkupvm loppupvm)))
