@@ -73,7 +73,8 @@ FROM (SELECT
          END) as kohtuullistarkistettu_sakkoraja,
         (SELECT SUM(maara)
          FROM materiaalin_kaytto mk
-         WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+         WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+                             AND (:urakkatyyppi_annettu is false OR tyyppi = :urakkatyyppi::urakkatyyppi))
                AND mk.materiaali IN (SELECT id FROM materiaalikoodi
          WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
                AND mk.alkupvm >= :alkupvm
@@ -92,14 +93,16 @@ FROM (SELECT
            JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
            JOIN toteuma t ON tm.toteuma = t.id
          WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
-               AND t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+               AND t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+                                AND (:urakkatyyppi_annettu is false OR tyyppi = :urakkatyyppi::urakkatyyppi))
                AND t.alkanut >= :alkupvm
                AND t.alkanut <= :loppupvm) AS suola_kaytetty
       FROM lampotilat lt
         LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
         LEFT JOIN urakka u ON lt.urakka = u.id
-      WHERE lt.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+      WHERE lt.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+                          AND (:urakkatyyppi_annettu is false OR tyyppi = :urakkatyyppi::urakkatyyppi))
             AND ss.hoitokauden_alkuvuosi = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;
@@ -112,9 +115,9 @@ FROM (SELECT
         ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
         ss.maksukuukausi AS sakko_maksukuukausi,
         ss.indeksi AS sakko_indeksi,
+        ss.maara AS sakko_maara_per_tonni,
         lt.urakka,
         ss.indeksi,
-        ss.maara AS sakko_maara_per_tonni,
         lt.alkupvm AS lampotila_alkupvm,
         lt.loppupvm AS lampotila_loppupvm,
         lt.keskilampotila as keskilampotila,
@@ -126,7 +129,8 @@ FROM (SELECT
          END) as kohtuullistarkistettu_sakkoraja,
         (SELECT SUM(maara)
          FROM materiaalin_kaytto mk
-         WHERE mk.materiaali IN (SELECT id FROM materiaalikoodi
+         WHERE mk.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi_annettu is false OR tyyppi = :urakkatyyppi::urakkatyyppi))
+               AND mk.materiaali IN (SELECT id FROM materiaalikoodi
          WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
                AND mk.alkupvm >= :alkupvm
                AND mk.alkupvm <= :loppupvm) AS suola_suunniteltu,
@@ -144,12 +148,14 @@ FROM (SELECT
            JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
            JOIN toteuma t ON tm.toteuma = t.id
          WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
+               AND t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi_annettu is false OR tyyppi = :urakkatyyppi::urakkatyyppi))
                AND t.alkanut >= :alkupvm
                AND t.alkanut <= :loppupvm) AS suola_kaytetty
       FROM lampotilat lt
         LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
         LEFT JOIN urakka u ON lt.urakka = u.id
-      WHERE ss.hoitokauden_alkuvuosi = :alkuvuosi
+      WHERE lt.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi_annettu is false OR tyyppi = :urakkatyyppi::urakkatyyppi))
+            AND ss.hoitokauden_alkuvuosi = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;
