@@ -59,8 +59,7 @@
               (:pohjavesialueet ss))))
 
 (defonce lampotilat
-         (reaction (let [ss @suolasakot-ja-lampotilat]
-                     (:lampotilat ss))))
+  (reaction (:lampotilat @suolasakot-ja-lampotilat)))
 
 (defn tallenna-suolasakko
   []
