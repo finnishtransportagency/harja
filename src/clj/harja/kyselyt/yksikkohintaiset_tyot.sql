@@ -91,7 +91,8 @@ FROM toteuma tot
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE hallintayksikko = :hallintayksikko)
+                     WHERE hallintayksikko = :hallintayksikko
+                           AND (:rajaa_urakkatyyppi = false OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
@@ -114,7 +115,8 @@ FROM toteuma tot
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE hallintayksikko = :hallintayksikko)
+                     WHERE hallintayksikko = :hallintayksikko
+                           AND (:rajaa_urakkatyyppi = false OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
@@ -132,7 +134,10 @@ SELECT
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
-WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+WHERE tot.urakka IN (SELECT id
+                 FROM urakka
+                 WHERE (:rajaa_urakkatyyppi = false OR tyyppi = :urakkatyyppi::urakkatyyppi))
+      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi;
@@ -152,7 +157,10 @@ FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
   JOIN urakka u ON tot.urakka = u.id
-WHERE (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
+WHERE tot.urakka IN (SELECT id
+                     FROM urakka
+                     WHERE (:rajaa_urakkatyyppi = false OR tyyppi = :urakkatyyppi::urakkatyyppi))
+      AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id;
