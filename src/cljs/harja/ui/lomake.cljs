@@ -163,6 +163,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [teksti]
   [:div.lomake-yleinen-huomautus (harja.ui.ikonit/info-sign) (str " " teksti)])
 
+(defn yleinen-varoitus
+  "Yleinen varoitus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
+  [teksti]
+  [:div.lomake-yleinen-varoitus (harja.ui.ikonit/warning-sign) (str " " teksti)])
+
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 
 (defn kentta

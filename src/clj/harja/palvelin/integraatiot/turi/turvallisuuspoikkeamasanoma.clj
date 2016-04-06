@@ -53,23 +53,33 @@
                    liitteet)))))
 
 (defn rakenna-sijainti [data]
-  (when-let [koordinaatit (:coordinates (geo/pg->clj (:sijainti data)))]
-    [:turi:sijainti
+  [:turi:sijainti
+   (if-let [koordinaatit (:coordinates (geo/pg->clj (:sijainti data)))]
      [:turi:koordinaatit
-      ;; todo: Tällä hetkellä ei ole vielä tarjolla tienumeroa, kun se on, pitää välittää elementissä [:turi:tienumero "1"]
+      (when (:tr_numero testidata) [:turi:tienumero (:tr_numero testidata)])
       [:turi:x (first koordinaatit)]
-      [:turi:y (second koordinaatit)]]]))
+      [:turi:y (second koordinaatit)]]
+     [:turi:tierekisteriosoite
+      [:turi:tienumero (:tr_numero testidata)]
+      [:turi:aosa (:tr_alkuosa testidata)]
+      [:turi:aet (:tr_alkuetaisyys testidata)]
+      [:turi:losa (:tr_loppuosa testidata)]
+      [:turi:let (:tr_loppuetaisyys testidata)]])])
 
 (defn rakenna-henkilovahinko [data]
   [:turi:henkilovahinko
-   [:turi:tyontekijan-ammatti
-    [:turi:koodi (:tyontekijanammatti data)]
-    [:turi:selite (:tyontekijanammattimuu data)]]
-   [:turi:aiheutuneet-vammat "Ranne murtui ja päähän tuli haava"]
+
+   (when (:tyontekijanammatti data)
+     [:turi:tyontekijan-ammatti
+      [:turi:koodi (:tyontekijanammatti data)]
+      [:turi:selite (:tyontekijanammattimuu data)]])
+
    (rakenna-lista :turi:vamman-laatu :turi:vamma (:vammat data))
    (rakenna-lista :turi:vahingoittuneet-ruumiinosat :turi:ruumiinosa (:vahingoittuneetruumiinosat data))
-   [:turi:sairauspoissaolopaivat (:sairauspoissaolopaivat data)]
-   [:turi:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]
+
+   (when (:sairauspoissaolopaivat data) [:turi:sairauspoissaolopaivat (:sairauspoissaolopaivat data)])
+   (when (:sairaalavuorokaudet data) [:turi:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)])
+
    [:turi:jatkuuko-sairaspoissaolo (true? (:sairauspoissaolojatkuu data))]])
 
 (defn rakenna-turvallisuuskoordinaattori [data]
@@ -93,9 +103,9 @@
    {:xmlns:turi "http://www.liikennevirasto.fi/xsd/turi"}
    [:turi:tunniste (:id data)]
    [:turi:vaylamuoto (:vaylamuoto data)]
-   [:turi:tapahtunut (when (:tapahtunut data) (xml/formatoi-aikaleima (:tapahtunut data)))]
-   [:turi:paattynyt (when (:paattynyt data) (xml/formatoi-aikaleima (:paattynyt data)))]
-   [:turi:kasitelty (when (:kasitelty data) (xml/formatoi-aikaleima (:kasitelty data)))]
+   (when (:tapahtunut data) [:turi:tapahtunut (xml/formatoi-aikaleima (:tapahtunut data))])
+   (when (:paattynyt data) [:turi:paattynyt (xml/formatoi-aikaleima (:paattynyt data))])
+   (when (:kasitelty data) [:turi:kasitelty (xml/formatoi-aikaleima (:kasitelty data))])
    [:turi:toteuttaja (:toteuttaja data)]
    [:turi:tilaaja (:tilaaja data)]
    (rakenna-turvallisuuskoordinaattori data)
