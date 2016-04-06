@@ -21,20 +21,20 @@
 (defn voi-lukea?
   #?(:cljs
      ([oikeus]
-      (voi-lukea? oikeus nil istunto/kayttaja)))
+      (voi-lukea? oikeus nil @istunto/kayttaja)))
   #?(:cljs
      ([oikeus urakka-id]
-      (voi-lukea oikeus urakka-id istunto/kayttaja)))
+      (voi-lukea? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
    (on-oikeus? :luku oikeus kayttaja urakka-id)))
 
 (defn voi-kirjoittaa?
   #?(:cljs
      ([oikeus]
-      (voi-kirjoittaa? oikeus nil istunto/kayttaja)))
+      (voi-kirjoittaa? oikeus nil @istunto/kayttaja)))
   #?(:cljs
      ([oikeus urakka-id]
-      (voi-kirjoittaa? oikeus urakka-id istunto/kayttaja)))
+      (voi-kirjoittaa? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
    (on-oikeus? :kirjoitus oikeus kayttaja urakka-id)))
 
