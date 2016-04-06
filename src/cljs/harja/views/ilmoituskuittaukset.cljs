@@ -17,7 +17,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
-            [harja.ui.viesti :as viesti]))
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.tapahtumat :as tapahtumat]))
 
 (defn kasittele-kuittauskasityksen-vastaus [vastaus]
   (when vastaus
@@ -43,7 +44,11 @@
                  #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
                  {:ikoni        (ikonit/tallenna)
                   :disabled     (esta-lahetys?)
-                  :kun-onnistuu (fn [vastaus] (kasittele-kuittauskasityksen-vastaus vastaus))
+                  :kun-onnistuu (fn [vastaus]
+                                  (kasittele-kuittauskasityksen-vastaus vastaus)
+                                  (tapahtumat/julkaise!
+                                    {:aihe :ilmoituksen-kuittaustiedot-päivitetty
+                                     :id (:id @ilmoitukset/valittu-ilmoitus)}))
                   :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
                   :luokka       "nappi-ensisijainen"}]
                 [napit/peruuta

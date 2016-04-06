@@ -228,6 +228,21 @@ hakutiheys-historiakuva 1200000)
               (when nakymassa?
                 (hae-asiat hakuparametrit))))
 
+(defn paivita-ilmoituksen-tiedot [id]
+  (log "Haetaan tarkemmat tiedot ilmoitukselle " (pr-str id))
+  (go (let [tiedot (<! (k/post! :hae-ilmoituksia-idlla {:id [id]}))
+            _ (log "Tulos on: " (pr-str tiedot))
+            tiedot (first tiedot)]
+        (when tiedot
+          (swap! tilannekuva-kartalla/haetut-asiat
+                (fn [asiat]
+                  (assoc asiat :ilmoitukset
+                               (map (fn [ilmoitus]
+                                      (if-not (= (:id ilmoitus) id)
+                                        ilmoitus
+                                        (merge ilmoitus tiedot)))
+                                    (:ilmoitukset asiat)))))))))
+
 ;; Säilöö funktion jolla pollaus lopetetaan
 (defonce lopeta-haku (atom nil))
 
