@@ -18,25 +18,31 @@
         toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat-suunnittelutiedoilla))
 
-(defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
+(defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
-                                                                                       hallintayksikko-id alkupvm loppupvm
+                                                                                       hallintayksikko-id
+                                                                                       (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                                       alkupvm loppupvm
                                                                                        (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
-                                                                           hallintayksikko-id alkupvm loppupvm
+                                                                           hallintayksikko-id
+                                                                           (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                           alkupvm loppupvm
                                                                            (not (nil? toimenpide-id)) toimenpide-id)))
 
-(defn hae-summatut-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
+(defn hae-summatut-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain db
+                                                                                 (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
                                                                                  alkupvm loppupvm
                                                                                  (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
+                                                                     (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
                                                                      alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -45,24 +51,26 @@
         naytettavat-rivit (case konteksti
                             :urakka
                             (hae-summatut-tehtavat-urakalle db
-                                                            {:urakka-id     urakka-id
-                                                             :alkupvm       alkupvm
-                                                             :loppupvm      loppupvm
+                                                            {:urakka-id urakka-id
+                                                             :alkupvm alkupvm
+                                                             :loppupvm loppupvm
                                                              :toimenpide-id toimenpide-id
                                                              :suunnittelutiedot suunnittelutiedot})
                             :hallintayksikko
                             (hae-summatut-tehtavat-hallintayksikolle db
                                                                      {:hallintayksikko-id hallintayksikko-id
-                                                                      :alkupvm            alkupvm
-                                                                      :loppupvm           loppupvm
-                                                                      :toimenpide-id      toimenpide-id
-                                                                      :urakoittain?       urakoittain?})
+                                                                      :alkupvm alkupvm
+                                                                      :loppupvm loppupvm
+                                                                      :toimenpide-id toimenpide-id
+                                                                      :urakoittain? urakoittain?
+                                                                      :urakkatyyppi urakkatyyppi})
                             :koko-maa
                             (hae-summatut-tehtavat-koko-maalle db
-                                                               {:alkupvm       alkupvm
-                                                                :loppupvm      loppupvm
+                                                               {:alkupvm alkupvm
+                                                                :loppupvm loppupvm
                                                                 :toimenpide-id toimenpide-id
-                                                                :urakoittain?  urakoittain?}))
+                                                                :urakoittain? urakoittain?
+                                                                :urakkatyyppi urakkatyyppi}))
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
         otsikko (raportin-otsikko
                   (case konteksti
