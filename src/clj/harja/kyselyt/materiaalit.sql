@@ -32,9 +32,7 @@ SELECT
   m.id      AS materiaali_id,
   m.nimi    AS materiaali_nimi,
   m.yksikko AS materiaali_yksikko,
-  pa.id     AS pohjavesialue_id,
-  pa.nimi   AS pohjavesialue_nimi,
-  pa.tunnus AS pohjavesialue_tunnus,
+
   (SELECT SUM(maara) AS kokonaismaara
    FROM toteuma_materiaali
    WHERE materiaalikoodi = mk.id AND toteuma IN (SELECT id
@@ -42,7 +40,6 @@ SELECT
                                                  WHERE urakka = :urakka))
 FROM materiaalin_kaytto mk
   LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
-  LEFT JOIN pohjavesialue pa ON mk.pohjavesialue = pa.id
 WHERE mk.urakka = :urakka AND
       mk.poistettu = FALSE AND
       m.materiaalityyppi != 'talvisuola' :: materiaalityyppi;
@@ -165,9 +162,6 @@ SELECT
   tm.maara           AS toteuma_maara,
   t.alkanut          AS toteuma_alkanut,
   t.paattynyt        AS toteuma_paattynyt,
-  pa.id              AS pohjavesialue_id,
-  pa.nimi            AS pohjavesialue_nimi,
-  pa.tunnus          AS pohjavesialue_tunnus,
   tm.id              AS tmid,
   t.lisatieto        AS toteuma_lisatieto,
   t.suorittajan_nimi AS toteuma_suorittaja,
@@ -190,9 +184,7 @@ FROM toteuma_materiaali tm
        AND mk.sopimus = :sopimus
        AND mk.poistettu IS NOT TRUE
 
-  LEFT JOIN pohjavesialue pa
-    ON mk.pohjavesialue = pa.id
-    ORDER BY t.alkanut DESC;
+ORDER BY t.alkanut DESC;
 
 -- name: hae-toteuman-materiaalitiedot
 SELECT
@@ -225,8 +217,8 @@ WHERE t.id = :toteuma_id AND
 -- Luo uuden materiaalin käytön
 INSERT
 INTO materiaalin_kaytto
-(alkupvm, loppupvm, maara, materiaali, urakka, sopimus, pohjavesialue, luotu, luoja, poistettu)
-VALUES (:alku, :loppu, :maara, :materiaali, :urakka, :sopimus, :pohjavesialue, NOW(), :kayttaja, FALSE);
+(alkupvm, loppupvm, maara, materiaali, urakka, sopimus, luotu, luoja, poistettu)
+VALUES (:alku, :loppu, :maara, :materiaali, :urakka, :sopimus, NOW(), :kayttaja, FALSE);
 
 -- name: paivita-materiaalinkaytto-maara!
 -- Päivittää yhden materiaalin määrän id:n perusteella
@@ -235,13 +227,12 @@ SET muokattu = NOW(), muokkaaja = :kayttaja, maara = :maara
 WHERE id = :id;
 
 -- name: poista-materiaalinkaytto!
--- Poistaa urakan sopimuksen materiaalin päivämäärien, materiaalin ja pohjavesialueen mukaan
+-- Poistaa urakan sopimuksen materiaalin päivämäärien ja materiaalin mukaan
 UPDATE materiaalin_kaytto
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE urakka = :urakka AND sopimus = :sopimus
       AND alkupvm = :alkupvm AND loppupvm = :loppupvm
-      AND materiaali = :materiaali
-      AND pohjavesialue IS NULL;
+      AND materiaali = :materiaali;
 
 -- name: poista-materiaalinkaytto-id!
 -- Poistaa materiaalin käytön id:llä.
@@ -249,20 +240,11 @@ UPDATE materiaalin_kaytto
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE id = :id;
 
--- name: poista-pohjavesialueen-materiaalinkaytto!
--- Poistaa materiaalin käytön pohjavesialueella
-UPDATE materiaalin_kaytto
-SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE urakka = :urakka AND sopimus = :sopimus
-      AND alkupvm = :alkupvm AND loppupvm = :loppupvm
-      AND materiaali = :materiaali
-      AND pohjavesialue = :pohjavesialue;
-
 -- name: poista-urakan-materiaalinkaytto!
 UPDATE materiaalin_kaytto
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE urakka = :urakka AND sopimus = :sopimus
-      AND alkupvm = :alkupvm AND loppupvm = :loppupvm
+      AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
 
 -- name: luo-toteuma-materiaali<!
 -- Luo uuden materiaalin toteumalle
@@ -287,11 +269,17 @@ SELECT id
 FROM materiaalikoodi
 WHERE nimi = :nimi;
 
-
 -- name: hae-suolatoteumat
 -- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
-SELECT tmid, tid, materiaali_id, materiaali_nimi, alkanut, maara,
-       lisatieto, koneellinen
+SELECT
+  tmid,
+  tid,
+  materiaali_id,
+  materiaali_nimi,
+  alkanut,
+  maara,
+  lisatieto,
+  koneellinen
 FROM (SELECT
         tm.id   AS tmid,
         t.id    AS tid,
@@ -312,18 +300,18 @@ FROM (SELECT
             AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
       UNION
       SELECT
-        NULL                                             AS tmid,
-        NULL                                             AS tid,
-        mk.id                                            AS materiaali_id,
-        mk.nimi                                          AS materiaali_nimi,
-        date_trunc('day', t.alkanut) 			 AS alkanut,
-        SUM(tm.maara)                                    AS maara,
-        ''                                               AS lisatieto,
-        TRUE                                             AS koneellinen
+        NULL                         AS tmid,
+        NULL                         AS tid,
+        mk.id                        AS materiaali_id,
+        mk.nimi                      AS materiaali_nimi,
+        date_trunc('day', t.alkanut) AS alkanut,
+        SUM(tm.maara)                AS maara,
+        ''                           AS lisatieto,
+        TRUE                         AS koneellinen
       FROM toteuma_materiaali tm
-	   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-           JOIN toteuma t ON tm.toteuma = t.id
-           JOIN kayttaja k ON tm.luoja = k.id
+        JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+        JOIN toteuma t ON tm.toteuma = t.id
+        JOIN kayttaja k ON tm.luoja = k.id
       WHERE k.jarjestelma = TRUE
             AND t.urakka = :urakka
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)

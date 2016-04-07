@@ -89,11 +89,11 @@
                                                                           (and (= tunnus (:pohjavesialue pv-raja) )
                                                                                i))
                                                                         pohjavesialue-talvisuola))]
-                                  
+
                                   (log "PV paivitettava " paivitettava)
                                   (if paivitettava
                                     ;; olemassaoleva raja, päivitä sen arvo
-                                    (update-in pohjavesialue-talvisuola [paivitettava] 
+                                    (update-in pohjavesialue-talvisuola [paivitettava]
                                                (fn [pv-raja]
                                                  (assoc pv-raja
                                                         :talvisuolaraja (:talvisuolaraja (get % tunnus)))))
@@ -104,6 +104,12 @@
                                            :talvisuolaraja (:talvisuolaraja (get % tunnus))}))))
                               (vec pohjavesialue-talvisuola)
                               (keys %)))))))
+
+(defn hae-pohjavesialueen-nimi [p]
+  (let [nimi (:nimi p)]
+    (if (empty? nimi)
+      "Nimi ei saatavilla aineistosta"
+      nimi)))
 
 (defn suolasakko-lomake
   []
@@ -166,7 +172,8 @@
                                                 :voi-poistaa?       (constantly false)
                                                 :voi-lisata?        false
                                                 :jos-tyhja          "Urakan alueella ei pohjavesialueita"}
-                            [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}
+                            [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
+                              :hae #(hae-pohjavesialueen-nimi %)}
                              {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
                              {:otsikko     "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
                               :aseta       (fn [rivi arvo]
@@ -191,7 +198,6 @@
             :tasaa   :oikea :leveys 2}]
           lampotilat]
          [yleiset/vihje "Järjestelmän vastuuhenkilö tuo lämpötilatiedot Harjaan"]]))))
-
 
 (defn suola []
   (komp/luo
