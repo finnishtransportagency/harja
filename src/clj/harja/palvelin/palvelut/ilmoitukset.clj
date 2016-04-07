@@ -7,6 +7,7 @@
             [harja.kyselyt.ilmoitukset :as q]
             [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.palvelin.palvelut.urakat :as urakat]
+            [harja.palvelin.palvelut.kayttajat :as kayttajat]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clj-time.core :as t]
             [harja.pvm :as pvm]
@@ -208,6 +209,28 @@
         (assoc-in [:kasittelija :organisaatio] (:kasittelija_organisaatio_nimi toimenpide))
         (assoc-in [:kasittelija :ytunnus] (:kasittelija_organisaatio_ytunnus toimenpide)))))
 
+(defn hae-ilmoituksia-idlla [db user {:keys [id]}]
+  (log/debug "Haetaan päivitetyt tiedot ilmoituksille " (pr-str id))
+  (let [id-vektori (if (vector? id) id [id])
+        kayttajan-urakat (set (urakat/kayttajan-urakat-aikavalilta db user))
+        tiedot (q/hae-ilmoitukset-idlla db id-vektori)
+        tulos (konv/sarakkeet-vektoriin
+                (into []
+                     (comp
+                       (filter #(or (nil? (:urakka %)) (kayttajan-urakat (:urakka %))))
+                       (harja.geo/muunna-pg-tulokset :sijainti)
+                       (map konv/alaviiva->rakenne)
+                       (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
+                       (map #(konv/array->vec % :selitteet))
+                       (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                       (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                       (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                       (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                     tiedot)
+                {:kuittaus :kuittaukset})]
+    (log/debug "Löydettiin tiedot " (count tulos) " ilmoitukselle.")
+    tulos))
+
 (defrecord Ilmoitukset []
   component/Lifecycle
   (start [this]
@@ -219,8 +242,15 @@
                       :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]
                         (tallenna-ilmoitustoimenpide (:db this) (:tloik this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-ilmoituksia-idlla
+                      (fn [user tiedot]
+                        (hae-ilmoituksia-idlla (:db this) user tiedot)))
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :hae-ilmoitukset :tallenna-ilmoitustoimenpide)
+    (poista-palvelut (:http-palvelin this)
+                     :hae-ilmoitukset
+                     :tallenna-ilmoitustoimenpide
+                     :hae-ilmoituksia-idlla)
     this))

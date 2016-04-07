@@ -7,21 +7,24 @@ UPDATE lampotilat SET
   urakka = :urakka, alkupvm = :alku, loppupvm = :loppu, keskilampotila = :keskilampo, pitka_keskilampotila = :pitkalampo
 WHERE id = :id;
 
--- name: hae-urakan-suokasakot-ja-lampotilat
+-- name: hae-urakan-suolasakot
 -- Hakee urakan suolasakot urakan id:llä
 SELECT
   ss.id, ss.maara, ss.hoitokauden_alkuvuosi, ss.maksukuukausi, ss.indeksi, ss.urakka,
-  ss.kaytossa, ss.talvisuolaraja,
-  lt.id AS lt_id,
-  lt.alkupvm AS lt_alkupvm,
-  lt.loppupvm AS lt_loppupvm,
-  lt.keskilampotila as keskilampotila,
-  lt.pitka_keskilampotila as pitkakeskilampotila
+  ss.kaytossa, ss.talvisuolaraja
 FROM suolasakko ss
-  LEFT JOIN lampotilat lt ON ss.urakka = lt.urakka
-                             AND (ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
-                                  OR lt.id IS null)
   WHERE ss.urakka = :urakka;
+
+-- name: hae-urakan-lampotilat
+-- Hakee urakan lämpotilat urakan id:llä
+SELECT
+  id,
+  alkupvm,
+  loppupvm,
+  keskilampotila,
+  pitka_keskilampotila as pitkakeskilampotila
+FROM lampotilat
+WHERE urakka = :urakka;
 
 -- name: hae-urakan-pohjavesialue-talvisuolarajat
 SELECT *

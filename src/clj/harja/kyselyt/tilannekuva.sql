@@ -114,6 +114,9 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   ST_Simplify(t.sijainti, :toleranssi) AS sijainti,
+  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
+    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+  WHERE tarkastus = t.id) as vakiohavainnot,
   t.tarkastaja,
   t.havainnot,
   t.tyyppi

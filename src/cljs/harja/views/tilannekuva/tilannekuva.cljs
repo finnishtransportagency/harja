@@ -17,7 +17,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.checkbox :as checkbox]
             [harja.ui.on-off-valinta :as on-off]
-            [harja.domain.tilannekuva :as tk])
+            [harja.domain.tilannekuva :as tk]
+            [harja.ui.modal :as modal])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
@@ -101,7 +102,7 @@
                              (and kokoelma-atom
                                   (= otsikko @kokoelma-atom))))]
         [:div.tk-checkbox-ryhma
-         [:div.tk-checkbox-ryhma-otsikko
+         [:div.tk-checkbox-ryhma-otsikko.klikattava
           {:on-click (fn [event]
                        ;; Estetään eventti jos klikkaus osui checkbox-laatikkoon tai sen tekstiin
                        (if (or (.matches (.-target event) ".tk-checkbox-ryhma-otsikko")
@@ -196,7 +197,12 @@
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
                       :uusi-tyokonedata]
                      (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
-                     :popup-suljettu #(reset! popupit/klikattu-tyokone nil))
+                     :popup-suljettu
+                     #(reset! popupit/klikattu-tyokone nil)
+                     :ilmoituksen-kuittaustiedot-päivitetty
+                     (fn [_ ilmoitus]
+                       (modal/piilota!)
+                       (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
     {:component-will-mount   (fn [_]
                                (kartta/aseta-yleiset-kontrollit!
                                  [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false

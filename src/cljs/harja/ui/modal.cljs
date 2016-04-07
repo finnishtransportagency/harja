@@ -29,7 +29,8 @@
        [:div.modal.fade.in.harja-modal {:style {:display "block"}
                                         :on-click piilota!}
         [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
-        [:div.modal-dialog.modal-sm {:style {:width (or leveys "600px")}}
+        [:div.modal-dialog.modal-sm {:style {:width "90%"
+                                             :max-width (or leveys "600px")}}
          [:div {:class (str "modal-content " (or luokka "")) :style {:width "100%"}
                 :on-click #(do
                             (.preventDefault %)
