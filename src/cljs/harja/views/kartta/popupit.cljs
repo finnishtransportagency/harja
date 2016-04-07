@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.views.ilmoituksen-tiedot :as ilmoituksen-tiedot]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
@@ -13,7 +14,10 @@
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
-            [harja.domain.paallystys.pot :as paallystys-pot]))
+            [harja.domain.paallystys.pot :as paallystys-pot]
+            [harja.ui.modal :as modal]
+            [harja.ui.napit :as napit]
+            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]))
 
 (def klikattu-tyokone (atom nil))
 
@@ -94,23 +98,31 @@
                                                               (:lisatieto tapahtuma))]])))
 
 (defmethod nayta-popup :ilmoitus-klikattu [tapahtuma]
-  (kartta/nayta-popup!
-    (geometrian-koordinaatti tapahtuma)
-    (tee-arvolistaus-popup
-      (condp = (:ilmoitustyyppi tapahtuma)
-        :toimenpidepyynto "Toimenpidepyyntö"
-        :tiedoitus "Tiedotus"
-        (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
-      [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-       ["Selite" (:lyhytselite tapahtuma)]
-       ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
-      {:linkki {:nimi     "Siirry ilmoitusnäkymään"
-                :on-click #(do
-                            (.preventDefault %)
-                            (let [putsaa (fn [asia]
-                                           (dissoc asia :type :alue))]
-                              (nav/vaihda-sivu! :ilmoitukset)
-                              (ilmoitukset/avaa-ilmoitus! (putsaa tapahtuma))))}})))
+  (let [sulje-fn (fn []
+                   (ilmoitukset/sulje-ilmoitus!))]
+    (kartta/nayta-popup!
+     (geometrian-koordinaatti tapahtuma)
+     (tee-arvolistaus-popup
+       (condp = (:ilmoitustyyppi tapahtuma)
+         :toimenpidepyynto "Toimenpidepyyntö"
+         :tiedoitus "Tiedotus"
+         (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
+       [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+        ["Selite" (:lyhytselite tapahtuma)]
+        ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
+       {:linkki {:nimi     "Tarkemmat tiedot"
+                 :on-click #(do
+                             (.preventDefault %)
+                             (ilmoitukset/avaa-ilmoitus! (dissoc tapahtuma :type :alue))
+                             (modal/nayta!
+                               {:otsikko "Ilmoituksen tiedot"
+                                :leveys  "1000px"
+                                :sulje   sulje-fn
+                                :footer  [:button.nappi-toissijainen {:on-click (fn [e]
+                                                                                  (.preventDefault e)
+                                                                                  (modal/piilota!))}
+                                          "Takaisin tilannekuvaan"]}
+                               [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}}))))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))

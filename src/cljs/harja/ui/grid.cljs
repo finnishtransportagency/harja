@@ -308,7 +308,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
 
   :nimi                                 kentän hakufn
-  :fmt                                  kentän näyttämis fn (oletus str)
+  :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
+  :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
   :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
@@ -933,7 +934,8 @@ Optiot on mappi optioita:
                                              kentan-virheet (get rivin-virheet nimi)]
                                          (if (or (nil? muokattava?) (muokattava? rivi i))
                                            ^{:key (str nimi)}
-                                           [:td {:class (str (when-not (empty? kentan-virheet)
+                                           [:td {:class (str "muokattava "
+                                                             (when-not (empty? kentan-virheet)
                                                                "sisaltaa-virheen"))}
                                             (when-not (empty? kentan-virheet)
                                               (virheen-ohje kentan-virheet))
@@ -950,9 +952,10 @@ Optiot on mappi optioita:
                                               [nayta-arvo s (vain-luku-atomina arvo)])]
 
                                            ^{:key (str nimi)}
-                                           [:td ((or fmt str) (if hae
-                                                                (hae rivi)
-                                                                (get rivi nimi)))]))))
+                                           [:td {:class (str "ei-muokattava")}
+                                            ((or fmt str) (if hae
+                                                            (hae rivi)
+                                                            (get rivi nimi)))]))))
                                    (when-not piilota-toiminnot?
                                      [:td.toiminnot
                                       (when (and (not= false voi-muokata?)
