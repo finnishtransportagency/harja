@@ -20,22 +20,24 @@
                                                                        (not (nil? laatupoikkeamatekija))
                                                                        laatupoikkeamatekija))
 
-(defn hae-laatupoikkeamat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija]}]
+(defn hae-laatupoikkeamat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (laatupoikkeamat-q/hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille db
                                                                                 hallintayksikko-id
+                                                                                (when urakkatyyppi (name urakkatyyppi))
                                                                                 alkupvm
                                                                                 loppupvm
                                                                                 (not (nil? laatupoikkeamatekija))
                                                                                 laatupoikkeamatekija))
 
-(defn hae-laatupoikkeamat-koko-maalle [db {:keys [alkupvm loppupvm laatupoikkeamatekija]}]
+(defn hae-laatupoikkeamat-koko-maalle [db {:keys [alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (laatupoikkeamat-q/hae-koko-maan-laatupoikkeamat-liitteineen-raportille db
+                                                                          (when urakkatyyppi (name urakkatyyppi))
                                                                           alkupvm
                                                                           loppupvm
                                                                           (not (nil? laatupoikkeamatekija))
                                                                           laatupoikkeamatekija))
 
-(defn hae-laatupoikkeamat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija]}]
+(defn hae-laatupoikkeamat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (case konteksti
     :urakka
     (hae-laatupoikkeamat-urakalle db
@@ -48,27 +50,30 @@
                                            {:hallintayksikko-id   hallintayksikko-id
                                             :alkupvm              alkupvm
                                             :loppupvm             loppupvm
-                                            :laatupoikkeamatekija laatupoikkeamatekija})
+                                            :laatupoikkeamatekija laatupoikkeamatekija
+                                            :urakkatyyppi urakkatyyppi})
     :koko-maa
     (hae-laatupoikkeamat-koko-maalle db
                                      {:alkupvm              alkupvm
                                       :loppupvm             loppupvm
-                                      :laatupoikkeamatekija laatupoikkeamatekija})))
+                                      :laatupoikkeamatekija laatupoikkeamatekija
+                                      :urakkatyyppi urakkatyyppi})))
 
 
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         laatupoikkeamarivit (map konv/alaviiva->rakenne
-                               (hae-laatupoikkeamat db {:konteksti            konteksti
-                                                        :urakka-id            urakka-id
-                                                        :hallintayksikko-id   hallintayksikko-id
-                                                        :alkupvm              alkupvm
-                                                        :loppupvm             loppupvm
-                                                        :laatupoikkeamatekija (when (not= laatupoikkeamatekija :kaikki)
-                                                                                (name laatupoikkeamatekija))}))
+                                 (hae-laatupoikkeamat db {:konteksti konteksti
+                                                          :urakka-id urakka-id
+                                                          :hallintayksikko-id hallintayksikko-id
+                                                          :alkupvm alkupvm
+                                                          :loppupvm loppupvm
+                                                          :laatupoikkeamatekija (when (not= laatupoikkeamatekija :kaikki)
+                                                                                  (name laatupoikkeamatekija))
+                                                          :urakkatyyppi urakkatyyppi}))
         laatupoikkeamarivit (konv/sarakkeet-vektoriin
                             laatupoikkeamarivit
                             {:liite :liitteet})

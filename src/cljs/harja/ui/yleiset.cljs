@@ -116,7 +116,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         (when rasti-funktio sulkemisnappi)]))))
 
 (defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti max-korkeus-atom suunta-atom]
-  (let [solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
+  (let [ikkunan-reunaan-jaava-tyhja-tila 15
+        solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
         etaisyys-alareunaan (dom/elementin-etaisyys-alareunaan solmu)
         etaisyys-ylareunaan (dom/elementin-etaisyys-ylareunaan solmu)
         suunta (if (< etaisyys-alareunaan 75)
@@ -124,8 +125,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                  :alas)]
     (reset! suunta-atom suunta)
     (if (= suunta :alas)
-      (reset! max-korkeus-atom (- etaisyys-alareunaan 5))
-      (reset! max-korkeus-atom etaisyys-ylareunaan))))
+      (reset! max-korkeus-atom (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila))
+      (reset! max-korkeus-atom (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila)))))
 
 
 (defn avautumissuunta-ja-korkeus-tyylit

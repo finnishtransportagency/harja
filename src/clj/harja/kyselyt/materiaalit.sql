@@ -132,7 +132,7 @@ FROM toteuma_materiaali
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
   LEFT JOIN urakka ON urakka.id = toteuma.urakka
-WHERE urakka.hallintayksikko = :hallintayksikko
+WHERE urakka.hallintayksikko = :hallintayksikko AND (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko, toteuma_materiaali.id;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
@@ -151,6 +151,7 @@ FROM toteuma_materiaali
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
   LEFT JOIN urakka ON urakka.id = toteuma.urakka
+  WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
 GROUP BY materiaali_nimi, urakka_nimi, materiaalikoodi.yksikko;
 
 -- name: hae-urakan-toteumat-materiaalille

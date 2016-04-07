@@ -12,6 +12,7 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [harja.pvm :as pvm]))
@@ -89,11 +90,12 @@
 (defn urakoitsija []
   [:div.murupolku-urakoitsija
    [:div.livi-valikkonimio.murupolku-urakoitsija-otsikko "Urakoitsija"]
-   [livi-pudotusvalikko {:valinta    @nav/valittu-urakoitsija
-                         :format-fn  #(if % (:nimi %) "Kaikki")
+   [livi-pudotusvalikko {:valinta @nav/valittu-urakoitsija
+                         :format-fn #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/valitse-urakoitsija!
-                         :class      (str "alasveto-urakoitsija" (when (boolean @nav/valittu-urakka) " disabled"))
-                         :disabled   (boolean @nav/valittu-urakka)}
+                         :class (str "alasveto-urakoitsija" (when (boolean @nav/valittu-urakka) " disabled"))
+                         :disabled (or (some? @nav/valittu-urakka)
+                                       (= (:sivu @reitit/url-navigaatio) :raportit))}
     (vec (conj (into [] (case (:arvo @nav/valittu-urakkatyyppi)
                           :hoito @urakoitsijat/urakoitsijat-hoito
                           :paallystys @urakoitsijat/urakoitsijat-paallystys
