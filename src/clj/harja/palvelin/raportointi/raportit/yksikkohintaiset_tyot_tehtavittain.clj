@@ -22,23 +22,23 @@
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
                                                                                        hallintayksikko-id
-                                                                                       (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                                       (when urakkatyyppi (name urakkatyyppi))
                                                                                        alkupvm loppupvm
                                                                                        (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
                                                                            hallintayksikko-id
-                                                                           (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                           (when urakkatyyppi (name urakkatyyppi))
                                                                            alkupvm loppupvm
                                                                            (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn hae-summatut-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle-urakoittain db
-                                                                                 (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                                 (when urakkatyyppi (name urakkatyyppi))
                                                                                  alkupvm loppupvm
                                                                                  (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-koko-maalle db
-                                                                     (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                     (when urakkatyyppi (name urakkatyyppi))
                                                                      alkupvm loppupvm
                                                                      (not (nil? toimenpide-id)) toimenpide-id)))
 
