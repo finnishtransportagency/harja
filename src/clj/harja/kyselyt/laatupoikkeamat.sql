@@ -308,7 +308,7 @@ FROM laatupoikkeama lp
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
-                    AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+                    AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
 
@@ -329,6 +329,6 @@ FROM laatupoikkeama lp
   JOIN urakka u ON lp.urakka = u.id
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
-WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);

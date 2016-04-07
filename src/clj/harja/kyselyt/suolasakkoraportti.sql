@@ -74,7 +74,7 @@ FROM (SELECT
         (SELECT SUM(maara)
          FROM materiaalin_kaytto mk
          WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
-                             AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                             AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
                AND mk.materiaali IN (SELECT id FROM materiaalikoodi
          WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
                AND mk.alkupvm >= :alkupvm
@@ -94,7 +94,7 @@ FROM (SELECT
            JOIN toteuma t ON tm.toteuma = t.id
          WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
                AND t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
-                                AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                                AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
                AND t.alkanut >= :alkupvm
                AND t.alkanut <= :loppupvm) AS suola_kaytetty
       FROM lampotilat lt
@@ -102,7 +102,7 @@ FROM (SELECT
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
         LEFT JOIN urakka u ON lt.urakka = u.id
       WHERE lt.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
-                          AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                          AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
             AND ss.hoitokauden_alkuvuosi = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;
@@ -129,7 +129,7 @@ FROM (SELECT
          END) as kohtuullistarkistettu_sakkoraja,
         (SELECT SUM(maara)
          FROM materiaalin_kaytto mk
-         WHERE mk.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+         WHERE mk.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
                AND mk.materiaali IN (SELECT id FROM materiaalikoodi
          WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
                AND mk.alkupvm >= :alkupvm
@@ -148,14 +148,14 @@ FROM (SELECT
            JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
            JOIN toteuma t ON tm.toteuma = t.id
          WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
-               AND t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+               AND t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
                AND t.alkanut >= :alkupvm
                AND t.alkanut <= :loppupvm) AS suola_kaytetty
       FROM lampotilat lt
         LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
         LEFT JOIN urakka u ON lt.urakka = u.id
-      WHERE lt.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+      WHERE lt.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
             AND ss.hoitokauden_alkuvuosi = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.loppupvm)) = :loppuvuosi) AS raportti;

@@ -92,7 +92,7 @@ FROM toteuma tot
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko
-                           AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                           AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
@@ -116,7 +116,7 @@ FROM toteuma tot
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko
-                           AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                           AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
@@ -136,7 +136,7 @@ FROM toteuma tot
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
 WHERE tot.urakka IN (SELECT id
                  FROM urakka
-                 WHERE (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                 WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
@@ -159,7 +159,7 @@ FROM toteuma tot
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                     WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
@@ -194,7 +194,7 @@ FROM toteuma tot
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko
-                           AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                           AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
@@ -217,7 +217,7 @@ FROM toteuma tot
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko
-                           AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                           AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
@@ -237,7 +237,7 @@ FROM toteuma tot
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE(:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+                     WHERE(:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk
@@ -259,7 +259,7 @@ FROM toteuma tot
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+                     WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                         FROM toimenpidekoodi tpk

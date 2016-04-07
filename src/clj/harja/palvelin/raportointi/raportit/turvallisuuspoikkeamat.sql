@@ -9,5 +9,5 @@ SELECT t.id, t.tapahtunut, t.paattynyt, t.kasitelty, t.tyontekijanammatti, t.tyo
        JOIN urakka u ON t.urakka = u.id 
  WHERE (:urakka_annettu IS FALSE OR t.urakka = :urakka)
        AND (:hallintayksikko_annettu IS FALSE OR t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko))
-       AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
+       AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
        AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu;
