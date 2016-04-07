@@ -22,8 +22,7 @@
 
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama]
   (r/wrap
-    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet turvallisuuspoikkeama)))
-    ;swap! muokattu assoc :korjaavattoimenpiteet
+    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama)))
     (fn [uusi]
       (swap!
         turvallisuuspoikkeama
@@ -200,7 +199,7 @@
                             {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                              :palstoja 2
                              :uusi-rivi? true
-                             :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet @muokattu)]}
+                             :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet muokattu)]}
                             {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                             {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
