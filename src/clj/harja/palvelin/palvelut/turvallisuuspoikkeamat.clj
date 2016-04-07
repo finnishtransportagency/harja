@@ -39,18 +39,18 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
   (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
-                                              turvallisuuspoikkeama-xf
-                                              (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
-                                        {:kommentti          :kommentit
-                                         :korjaavatoimenpide :korjaavattoimenpiteet
-                                         :liite              :liitteet}))
+                                                         turvallisuuspoikkeama-xf
+                                                         (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                                   {:kommentti :kommentit
+                                                    :korjaavatoimenpide :korjaavattoimenpiteet
+                                                    :liite :liitteet}))
 
-       (update-in [:kommentit]
-                  (fn [kommentit]
-                    (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                          (dissoc % :liite)
-                                          %)
-                                        kommentit)))))]
+                  (update-in [:kommentit]
+                             (fn [kommentit]
+                               (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                                     (dissoc % :liite)
+                                                     %)
+                                                   kommentit)))))]
     tulos))
 
 (defn luo-tai-paivita-korjaavatoimenpide
@@ -70,7 +70,12 @@
 
 (def oletusparametrit {:ulkoinen_id nil
                        :ilmoittaja_etunimi nil
-                       :ilmoittaja_sukunimi nil})
+                       :ilmoittaja_sukunimi nil
+                       :alkuosa nil
+                       :numero nil
+                       :alkuetaisyys nil
+                       :loppuetaisyys nil
+                       :loppuosa nil})
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu
