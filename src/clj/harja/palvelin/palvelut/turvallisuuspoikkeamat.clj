@@ -75,7 +75,8 @@
                        :numero nil
                        :alkuetaisyys nil
                        :loppuetaisyys nil
-                       :loppuosa nil})
+                       :loppuosa nil
+                       :ilmoitukset_lahetetty nil})
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu

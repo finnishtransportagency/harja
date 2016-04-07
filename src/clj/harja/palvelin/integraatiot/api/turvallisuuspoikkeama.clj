@@ -97,7 +97,8 @@
                         :turvallisuuskoordinaattori_sukunimi (:sukunimi turvallisuuskoordinaattori)
                         :laatija_etunimi (:etunimi laatija)
                         :laatija_sukunimi (:sukunimi laatija)
-                        :ulkoinen_id (:id tunniste)}))]
+                        :ulkoinen_id (:id tunniste)
+                        :ilmoitukset_lahetetty nil}))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       tp-id)))
 
