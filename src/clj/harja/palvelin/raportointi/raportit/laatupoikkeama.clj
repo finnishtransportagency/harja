@@ -23,7 +23,7 @@
 (defn hae-laatupoikkeamat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (laatupoikkeamat-q/hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille db
                                                                                 hallintayksikko-id
-                                                                                (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                                                                                (when urakkatyyppi (name urakkatyyppi))
                                                                                 alkupvm
                                                                                 loppupvm
                                                                                 (not (nil? laatupoikkeamatekija))
@@ -31,7 +31,7 @@
 
 (defn hae-laatupoikkeamat-koko-maalle [db {:keys [alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (laatupoikkeamat-q/hae-koko-maan-laatupoikkeamat-liitteineen-raportille db
-                                                                          (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                                                                          (when urakkatyyppi (name urakkatyyppi))
                                                                           alkupvm
                                                                           loppupvm
                                                                           (not (nil? laatupoikkeamatekija))

@@ -20,7 +20,7 @@
                            (map konv/alaviiva->rakenne)
                            (hae-ymparistoraportti db alkupvm loppupvm
                                                   (some? urakka-id) urakka-id
-                                                  (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                                                  (when urakkatyyppi (name urakkatyyppi))
                                                   (some? hallintayksikko-id) hallintayksikko-id)))))
 
 
@@ -31,7 +31,7 @@
                                 (map konv/alaviiva->rakenne)
                                 (hae-ymparistoraportti-urakoittain db alkupvm loppupvm
                                                                    (some? hallintayksikko-id) hallintayksikko-id
-                                                                   (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))))))))
+                                                                   (when urakkatyyppi (name urakkatyyppi))))))))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id

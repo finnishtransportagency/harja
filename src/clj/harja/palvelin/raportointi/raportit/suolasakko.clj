@@ -29,7 +29,7 @@
   (log/debug "Haetaan tiedot suolasakon raportille hallintayksikkö-kontekstissa: " hallintayksikko-id alkupvm loppupvm urakkatyyppi)
   (let [parametrit [db
                     hallintayksikko-id
-                    (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                    (when urakkatyyppi (name urakkatyyppi))
                     (konv/sql-timestamp alkupvm)
                     (konv/sql-timestamp loppupvm)
                     (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
@@ -40,7 +40,7 @@
 (defn muodosta-suolasakkoraportti-koko-maalle [db user {:keys [alkupvm loppupvm urakkatyyppi]}]
   (log/debug "Haetaan tiedot suolasakon raportille koko maa -kontekstissa: " alkupvm loppupvm urakkatyyppi)
   (let [parametrit [db
-                    (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                    (when urakkatyyppi (name urakkatyyppi))
                     (konv/sql-timestamp alkupvm)
                     (konv/sql-timestamp loppupvm)
                     (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)

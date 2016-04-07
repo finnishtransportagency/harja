@@ -43,7 +43,7 @@
                      (hae-turvallisuuspoikkeamat db
                                                  (some? urakka-id) urakka-id
                                                  (some? hallintayksikko-id) hallintayksikko-id
-                                                 (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                                                 (when urakkatyyppi (name urakkatyyppi))
                                                  alkupvm loppupvm))
         turpo-maarat-kuukausittain (group-by
                                      (comp vuosi-ja-kk :tapahtunut)

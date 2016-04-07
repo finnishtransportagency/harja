@@ -100,7 +100,7 @@
 (defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
   (tarkastukset-q/hae-hallintayksikon-soratietarkastukset-raportille db
                                                                      hallintayksikko-id
-                                                                     (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                                                                     (when urakkatyyppi (name urakkatyyppi))
                                                                      alkupvm
                                                                      loppupvm
                                                                      (not (nil? tienumero))
@@ -108,7 +108,7 @@
 
 (defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero urakkatyyppi]}]
   (tarkastukset-q/hae-koko-maan-soratietarkastukset-raportille db
-                                                               (some? urakkatyyppi) (when urakkatyyppi (name urakkatyyppi))
+                                                               (when urakkatyyppi (name urakkatyyppi))
                                                                alkupvm
                                                                loppupvm
                                                                (not (nil? tienumero))

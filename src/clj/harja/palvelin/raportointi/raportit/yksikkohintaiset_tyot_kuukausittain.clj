@@ -25,23 +25,23 @@
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain db
                                                                              hallintayksikko-id
-                                                                             (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                             (when urakkatyyppi (name urakkatyyppi))
                                                                              alkupvm loppupvm
                                                                              (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle db
                                                                  hallintayksikko-id
-                                                                 (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                 (when urakkatyyppi (name urakkatyyppi))
                                                                  alkupvm loppupvm
                                                                  (not (nil? toimenpide-id)) toimenpide-id)))
 
 (defn hae-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain db
-                                                                       (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                                       (when urakkatyyppi (name urakkatyyppi))
                                                                        alkupvm loppupvm
                                                                        (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle db
-                                                           (not (nil? urakkatyyppi)) (when urakkatyyppi (name urakkatyyppi))
+                                                           (when urakkatyyppi (name urakkatyyppi))
                                                            alkupvm loppupvm
                                                            (not (nil? toimenpide-id)) toimenpide-id)))
 

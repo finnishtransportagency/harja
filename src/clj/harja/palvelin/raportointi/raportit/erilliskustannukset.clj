@@ -23,13 +23,12 @@
 
 (defn hae-erilliskustannukset-aikavalille
   [db user urakka-annettu? urakka-id
-   urakkatyyppi-annettu? urakkatyyppi
-   hallintayksikko-annettu? hallintayksikko-id
+   urakkatyyppi hallintayksikko-annettu? hallintayksikko-id
    toimenpide-id alkupvm loppupvm]
   (let [kustannukset (hae-erilliskustannukset
                        db
                        urakka-annettu? urakka-id
-                       urakkatyyppi-annettu? urakkatyyppi
+                       urakkatyyppi
                        hallintayksikko-annettu? hallintayksikko-id
                        toimenpide-id
                        alkupvm loppupvm)]
@@ -52,11 +51,10 @@
                         :default :koko-maa)
         urakka-annettu? (boolean urakka-id)
         hallintayksikko-annettu? (boolean hallintayksikko-id)
-        urakkatyyppi-annettu? (boolean urakkatyyppi)
         erilliskustannukset (reverse (sort-by (juxt (comp :id :urakka) :pvm)
                                               (hae-erilliskustannukset-aikavalille db user
                                                                                    urakka-annettu? urakka-id
-                                                                                   urakkatyyppi-annettu? (when urakkatyyppi-annettu? (name urakkatyyppi))
+                                                                                   (when urakkatyyppi (name urakkatyyppi))
                                                                                    hallintayksikko-annettu? hallintayksikko-id
                                                                                    toimenpide-id
                                                                                    alkupvm loppupvm)))

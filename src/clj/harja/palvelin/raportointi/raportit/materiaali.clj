@@ -41,7 +41,6 @@
                                                                                                             (konv/sql-timestamp alkupvm)
                                                                                                             (konv/sql-timestamp loppupvm)
                                                                                                             hallintayksikko-id
-                                                                                                            (some? urakkatyyppi)
                                                                                                             (when urakkatyyppi (name urakkatyyppi))))]
     toteutuneet-materiaalit))
 
@@ -51,7 +50,6 @@
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                       (konv/sql-timestamp alkupvm)
                                                                                                       (konv/sql-timestamp loppupvm)
-                                                                                                      (some? urakkatyyppi)
                                                                                                       (when urakkatyyppi (name urakkatyyppi))))]
     toteutuneet-materiaalit))
 
