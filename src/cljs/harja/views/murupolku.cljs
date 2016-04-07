@@ -116,8 +116,7 @@
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
-  (let [valinta-auki (atom nil)
-        sivu (nav/sivu)]
+  (let [valinta-auki (atom nil)]
     (komp/luo
      (komp/kuuntelija
       [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
@@ -140,21 +139,17 @@
                               (= :urakoitsija))]
          [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                           (cond
-                            (= sivu :hallinta) "hide"
-                            (= sivu :about) "hide"
+                            (= @nav/valittu-sivu :hallinta) "hide"
+                            (= @nav/valittu-sivu :about) "hide"
                             :default ""))}
-          (if (or ei-urakkaa? (= sivu :raportit))
+          (if (or ei-urakkaa? (= @nav/valittu-sivu :raportit))
             [:ol.murupolku
              [:div.col-sm-6.murupolku-vasen
-              [koko-maa]
-              [hallintayksikko valinta-auki]
-              [urakka valinta-auki]]
+              [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
              [:div.col-sm-6.murupolku-oikea
               (when-not urakoitsija?
                 [urakoitsija])
               [urakkatyyppi]]]
             [:ol.murupolku
              [:div.col-sm-12.murupolku-vasen
-              [koko-maa]
-              [hallintayksikko valinta-auki]
-              [urakka valinta-auki]]])])))))
+              [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))
