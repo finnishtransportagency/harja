@@ -133,6 +133,7 @@ ja palauttaa käyttäjätiedot"
                             :organisaatio (:id organisaatio)))]
 
     (merge (assoc kayttaja
+                  :organisaatio organisaatio
                   :id kayttaja-id)
            (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
                              (partial q/hae-urakoitsijan-id-ytunnuksella db)
@@ -198,9 +199,8 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
       (if (nil? kayttaja-id)
         (throw+ todennusvirhe)
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit)]
-          (do (println "KÄYTTÄJÄTIEDOT: " kayttajatiedot)
-              (assoc req :kayttaja
-                     (testikaytto db req kayttajatiedot testikayttajat)))
+          (assoc req :kayttaja
+                 (testikaytto db req kayttajatiedot testikayttajat))
           (throw+ todennusvirhe))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
