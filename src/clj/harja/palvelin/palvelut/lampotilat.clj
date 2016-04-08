@@ -57,11 +57,13 @@
   (log/debug "hae-urakan-suolasakot-ja-lampotilat")
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   {:suolasakot (into []
-                     (comp
                       (map #(konv/decimal->double % :maara))
-                      (map #(konv/decimal->double % :keskilampotila))
-                      (map #(konv/decimal->double % :pitkakeskilampotila)))
-                     (q/hae-urakan-suokasakot-ja-lampotilat db urakka-id))
+                     (q/hae-urakan-suolasakot db urakka-id))
+   :lampotilat (into []
+                     (comp
+                       (map #(konv/decimal->double % :keskilampotila))
+                       (map #(konv/decimal->double % :pitkakeskilampotila)))
+                     (q/hae-urakan-lampotilat db urakka-id))
    :pohjavesialueet (into []
                           (geo/muunna-pg-tulokset :alue)
                           (pohjavesialueet-q/hae-urakan-pohjavesialueet db urakka-id))

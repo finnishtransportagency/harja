@@ -17,7 +17,10 @@ SELECT
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
-  END AS tekija
+  END AS tekija,
+  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
+    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+  WHERE tarkastus = t.id) as vakiohavainnot
 FROM tarkastus t
   JOIN kayttaja k ON t.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -50,6 +53,9 @@ SELECT
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END AS tekija,
+  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
+    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+  WHERE tarkastus = t.id) as vakiohavainnot,
   stm.hoitoluokka      AS soratiemittaus_hoitoluokka,
   stm.tasaisuus        AS soratiemittaus_tasaisuus,
   stm.kiinteys         AS soratiemittaus_kiinteys,
@@ -204,7 +210,8 @@ FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
-WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+                   AND (:rajaa_urakkatyyppi = FALSE OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'tiesto'::tarkastustyyppi;
@@ -230,7 +237,8 @@ FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
-WHERE (t.aika >= :alku AND t.aika <= :loppu)
+WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+      AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'tiesto'::tarkastustyyppi;
 
@@ -295,7 +303,8 @@ FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
-WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+                   AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
@@ -330,7 +339,8 @@ FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
-WHERE (t.aika >= :alku AND t.aika <= :loppu)
+WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+      AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
 
@@ -385,7 +395,8 @@ SELECT
 FROM tarkastus t
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
   JOIN urakka u ON t.urakka = u.id
-WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+                   AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi;
@@ -414,6 +425,7 @@ SELECT
 FROM tarkastus t
   JOIN soratiemittaus stm ON t.id = stm.tarkastus
   JOIN urakka u ON t.urakka = u.id
-WHERE (t.aika >= :alku AND t.aika <= :loppu)
+WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+      AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi;

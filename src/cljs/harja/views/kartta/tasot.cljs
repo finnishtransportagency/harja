@@ -34,7 +34,7 @@
   #{:organisaatio
     :pohjavesi
     :sillat
-    :tarkastukset
+    :tarkastusreitit
     :laatupoikkeamat
     :turvallisuus
     :ilmoitukset
@@ -48,11 +48,13 @@
     :nakyman-geometriat
     :tilannekuva})
 
-(def kartan-asioiden-z-indeksit
-  {:hallintayksikko 0
-   :urakka 1
-   :pohjavesialueet 2
-   :sillat 3})
+(defn kartan-asioiden-z-indeksit [taso]
+  (case taso
+    :hallintayksikko 0
+    :urakka 1
+    :pohjavesialueet 2
+    :sillat 3
+    4))
 
 (def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut
   piirretään pienemmällä zindexillä." :const true}
@@ -88,7 +90,7 @@
          (let [hals @hal/hallintayksikot
                v-hal @nav/valittu-hallintayksikko
                v-ur @nav/valittu-urakka
-               sivu (nav/sivu)]
+               sivu @nav/valittu-sivu]
            (cond
              ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin
              ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
@@ -154,21 +156,22 @@
 (declare tasojen-nakyvyys-atomit)
 
 (def geometrioiden-atomit
-  {:organisaatio       urakat-ja-organisaatiot-kartalla
-   :pohjavesi          pohjavesialueet/pohjavesialueet-kartalla
-   :sillat             sillat/sillat-kartalla
-   :turvallisuus       turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
-   :ilmoitukset        ilmoitukset/ilmoitukset-kartalla
-   :yks-hint-toteumat  yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
-   :kok-hint-toteumat  kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
-   :laatupoikkeamat    laatupoikkeamat/laatupoikkeamat-kartalla
-   :varusteet          varusteet/varusteet-kartalla
-   :muut-tyot          muut-tyot/muut-tyot-kartalla
-   :paallystyskohteet  paallystys/paallystyskohteet-kartalla
-   :paikkauskohteet    paikkaus/paikkauskohteet-kartalla
-   :tr-valitsin        tierekisteri/tr-alkupiste-kartalla
+  {:organisaatio urakat-ja-organisaatiot-kartalla
+   :pohjavesi pohjavesialueet/pohjavesialueet-kartalla
+   :sillat sillat/sillat-kartalla
+   :turvallisuus turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
+   :ilmoitukset ilmoitukset/ilmoitukset-kartalla
+   :tarkastusreitit tarkastukset/tarkastusreitit-kartalla
+   :laatupoikkeamat laatupoikkeamat/laatupoikkeamat-kartalla
+   :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
+   :kok-hint-toteumat kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
+   :varusteet varusteet/varusteet-kartalla
+   :muut-tyot muut-tyot/muut-tyot-kartalla
+   :paallystyskohteet paallystys/paallystyskohteet-kartalla
+   :paikkauskohteet paikkaus/paikkauskohteet-kartalla
+   :tr-valitsin tierekisteri/tr-alkupiste-kartalla
    :nakyman-geometriat nakyman-geometriat
-   :tilannekuva        tilannekuva/tilannekuvan-asiat-kartalla})
+   :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla})
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
@@ -188,8 +191,8 @@
                                       (kartan-asioiden-z-indeksit z-index))))
   ([nimi z-index opacity]
    (aseta-opacity
-    (taso nimi z-index)
-    0.7)))
+     (taso nimi z-index)
+     opacity)))
 
 (def geometriat-kartalle
   (reaction
@@ -197,7 +200,7 @@
      {:organisaatio (taso :organisaatio :urakka 0.7)
       :pohjavesi (taso :pohjavesi :pohjavesialueet)
       :sillat (taso :sillat :sillat)
-      :tarkastusreitit @tarkastukset/tarkastusreitit
+      :tarkastusreitit (taso :tarkastusreitit)
       :laatupoikkeamat (taso :laatupoikkeamat)
       :turvallisuus (taso :turvallisuus)
       :ilmoitukset (taso :ilmoitukset)
@@ -208,9 +211,11 @@
       :paallystyskohteet (taso :paallystyskohteet)
       :paikkauskohteet (taso :paikkauskohteet)
       :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
+      ;; Yksittäisen näkymän omat mahdolliset geometriat
       :nakyman-geometriat
       (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
                      (inc oletus-zindex))}
+      ;; Tilannekuvan geometriat muodostetaan hieman eri tavalla
       (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
@@ -218,21 +223,21 @@
                    @(geometrioiden-atomit :tilannekuva)))))))
 
 (def ^{:private true} tasojen-nakyvyys-atomit
-  {:organisaatio       (atom true)
-   :pohjavesi          pohjavesialueet/karttataso-pohjavesialueet
-   :sillat             sillat/karttataso-sillat
-   :tarkastukset       tarkastukset/karttataso-tarkastukset
+  {:organisaatio (atom true)
+   :pohjavesi pohjavesialueet/karttataso-pohjavesialueet
+   :sillat sillat/karttataso-sillat
+   :tarkastusreitit tarkastukset/karttataso-tarkastukset
    :laatupoikkeamat laatupoikkeamat/karttataso-laatupoikkeamat
-   :turvallisuus       turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
-   :ilmoitukset        ilmoitukset/karttataso-ilmoitukset
-   :yks-hint-toteumat  yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
-   :kok-hint-toteumat  kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
-   :varusteet          varusteet/karttataso-varustetoteuma
-   :muut-tyot          muut-tyot/karttataso-muut-tyot
-   :paallystyskohteet  paallystys/karttataso-paallystyskohteet
-   :paikkauskohteet    paikkaus/karttataso-paikkauskohteet
-   :tr-valitsin        tierekisteri/karttataso-tr-alkuosoite
-   :tilannekuva        tilannekuva/karttataso-tilannekuva
+   :turvallisuus turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
+   :ilmoitukset ilmoitukset/karttataso-ilmoitukset
+   :yks-hint-toteumat yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
+   :kok-hint-toteumat kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
+   :varusteet varusteet/karttataso-varustetoteuma
+   :muut-tyot muut-tyot/karttataso-muut-tyot
+   :paallystyskohteet paallystys/karttataso-paallystyskohteet
+   :paikkauskohteet paikkaus/karttataso-paikkauskohteet
+   :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
+   :tilannekuva tilannekuva/karttataso-tilannekuva
    :nakyman-geometriat (atom true)})
 
 (defonce nykyiset-karttatasot

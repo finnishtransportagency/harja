@@ -102,29 +102,24 @@
                              (and kokoelma-atom
                                   (= otsikko @kokoelma-atom))))]
         [:div.tk-checkbox-ryhma
-         [:div.tk-checkbox-ryhma-otsikko
-          {:on-click (fn [event]
-                       ;; Estetään eventti jos klikkaus osui checkbox-laatikkoon tai sen tekstiin
-                       (if (or (.matches (.-target event) ".tk-checkbox-ryhma-otsikko")
-                               (.matches (.-target event) ".tk-checkbox-ryhma-tila")
-                               (.matches (.-target event) ".livicon-chevron"))
-                         (if kokoelma-atom
+         [:div.tk-checkbox-ryhma-otsikko.klikattava
+          {:on-click (fn [_]
+                       (if kokoelma-atom
                            ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
                            (if (= otsikko @kokoelma-atom)
                              (reset! kokoelma-atom nil)
                              (reset! kokoelma-atom otsikko))
                            ;; Ylläpitää itse omaa auki/kiinni-tilaansa
                            (swap! oma-auki-tila not))
-                         (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet"))))}
+                         (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
           [:span {:class (str
                            "tk-checkbox-ryhma-tila chevron-rotate "
                            (when-not (auki?) "chevron-rotate-down"))}
            (if (auki?)
              (ikonit/chevron-down) (ikonit/chevron-right))]
-          [:div.tk-checkbox-ryhma-checkbox
+          [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
            [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
-            {:display   "inline-block"
-             :on-change (fn [uusi-tila]
+            {:on-change (fn [uusi-tila]
                           ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
                           (when (not= :osittain-valittu uusi-tila)
                             (reset! suodattimet-atom

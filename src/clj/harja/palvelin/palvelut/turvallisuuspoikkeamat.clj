@@ -70,7 +70,13 @@
 
 (def oletusparametrit {:ulkoinen_id nil
                        :ilmoittaja_etunimi nil
-                       :ilmoittaja_sukunimi nil})
+                       :ilmoittaja_sukunimi nil
+                       :alkuosa nil
+                       :numero nil
+                       :alkuetaisyys nil
+                       :loppuetaisyys nil
+                       :loppuosa nil
+                       :ilmoitukset_lahetetty nil})
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu

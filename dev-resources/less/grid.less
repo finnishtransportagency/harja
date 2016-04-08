@@ -65,7 +65,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       }
 
       .varoitukset,
-      .virheet {
+      .virheet,
+      .huomautukset {
         display: none;
         position: relative;
       }
@@ -75,11 +76,15 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       .virhe {
         .virhe-tai-varoitus-grid(@vaara, @valkoinen);
       }
+      .huomautus {
+        .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
+      }
     }
 
     td:hover {
       .varoitukset,
-      .virheet {
+      .virheet,
+      .huomautukset {
         display: block;
       }
     }
@@ -124,6 +129,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
   .sisaltaa-varoituksen {
     .sisaltaa-virheen-tai-varoituksen(@varoitus);
+  }
+  .sisaltaa-huomautuksen {
+    .sisaltaa-virheen-tai-varoituksen(@huomautus)
   }
   .grid-muokkaa {
     margin-bottom: 1px;

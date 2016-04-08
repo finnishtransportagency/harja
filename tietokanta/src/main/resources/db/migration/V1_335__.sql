@@ -1,0 +1,1 @@
+ALTER TABLE materiaalin_kaytto DROP COLUMN pohjavesialue;

@@ -46,7 +46,7 @@
       {:leveys 2 :otsikko "Yhteensä"}]
      rivit]))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -56,7 +56,7 @@
 
         ilmoitukset (hae-ilmoitukset-raportille
                       db user hallintayksikko-id urakka-id
-                      nil nil
+                      nil urakkatyyppi
                       +ilmoitustilat+ +ilmoitustyypit+
                       [alkupvm loppupvm] "" selite)
 

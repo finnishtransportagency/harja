@@ -22,8 +22,7 @@
 
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama]
   (r/wrap
-    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet turvallisuuspoikkeama)))
-    ;swap! muokattu assoc :korjaavattoimenpiteet
+    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama)))
     (fn [uusi]
       (swap!
         turvallisuuspoikkeama
@@ -95,7 +94,7 @@
                              :otsikko "Tapahtuma-aika"}
                             {:otsikko "Alkanut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
-                             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+                             :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
                             {:otsikko "Päättynyt" :pakollinen? true :nimi :paattynyt :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                        [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]})
@@ -236,7 +235,7 @@
         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
-      @tiedot/haetut-turvallisuuspoikkeamat]]))
+      (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
 
 (defn turvallisuuspoikkeamat []
   (komp/luo

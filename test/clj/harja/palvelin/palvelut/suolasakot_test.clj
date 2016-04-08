@@ -4,7 +4,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.lampotilat :refer :all]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -34,15 +35,15 @@
                                      +kayttaja-jvh+
                                      urakka-id)
           suolasakot (:suolasakot tulos)
-          suolasakko (first (filter #(= (:hoitokauden_alkuvuosi %) 2014) suolasakot))
-          hoitokauden-alkupvm (java.sql.Date. 114 9 1)       ;;1.10.2005
-          hoitokauden-loppupvm (java.sql.Date. 115 8 30)]    ;;30.9.2006
+          lampotilat (:lampotilat tulos)
+          hk-2014-2015-lt (first (filter #(= (pvm/->pvm "01.10.2014") (:alkupvm %)) lampotilat))
+          suolasakko (first (filter #(= (:hoitokauden_alkuvuosi %) 2014) suolasakot))]
       (is (= (:maksukuukausi suolasakko) 8) "maksukuukausi")
       (is (= (:urakka suolasakko) urakka-id) "urakka")
-      (is (= (:keskilampotila suolasakko) -6.2) "keskilampotila")
-      (is (= (:pitkakeskilampotila suolasakko) -9.0) "pitkakeskilampotila")
-      (is (= (:lt_alkupvm suolasakko) hoitokauden-alkupvm) "hoitokauden-alkupvm")
-      (is (= (:lt_loppupvm suolasakko) hoitokauden-loppupvm) "hoitokauden-loppupvm")
+      (is (> (count lampotilat) 0) "lampotilat saatiin")
+      (is (= (:keskilampotila hk-2014-2015-lt) -6.2 ) "lampotila hk-2014-2015-lt")
+      (is (= (:pitkakeskilampotila hk-2014-2015-lt) -9.0 ) "lampotila hk-2014-2015-lt")
+      (is (= (:loppupvm hk-2014-2015-lt) (pvm/->pvm "30.9.2015") ) "lampotila hk-2014-2015-lt")
       (is (= (:indeksi suolasakko) "MAKU 2010") "indeksi")
       (is (= (:hoitokauden_alkuvuosi suolasakko) 2014) "hoitokauden alkuvuosi")
       (is (= (:maara suolasakko) 30.0))))

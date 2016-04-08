@@ -4,7 +4,9 @@
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
     #?(:cljs [harja.loki :refer [log]]
-       :clj [taoensso.timbre :as log])))
+       :clj
+            [taoensso.timbre :as log])
+            [clojure.string :as str]))
 
 (def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
 (def Paatostyyppi (s/enum :sanktio :ei_sanktiota :hylatty))
@@ -88,29 +90,15 @@
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus})
 
-(defn validoi-tarkastus [data]
-  (skeema/tarkista Tarkastus data))
-
-(defn validi-tarkastus? [data]
-  #?(:cljs (log (pr-str data)))
-  (let [virheet (validoi-tarkastus data)]
-    #?(:cljs (log "tarkastus virheet: " (pr-str virheet)))
-    (nil? virheet)))
-
-(defn tarkastus-tiedolla-onko-ok [tarkastus]
-  ;; Sisältää kentän "havainnot"
-  (if (some #(= :havainnot %) (keys tarkastus))
-    (let [havainnot (:havainnot tarkastus)
-          ;; Tarkastus on OK jos ei havaintoja, tai tekstinä on "Ok", "OK" tai "ok"
-          ;; Muita inhottavia taikasanoja pitänee tänne lisäillä kun tulee vastaan.
-          ok? (if (or (empty? havainnot) (#{"OK"} (clojure.string/upper-case havainnot)))
-                true
-                false)]
-      (assoc tarkastus :ok? ok?))
-    tarkastus))
-
-(defn tarkastukset-tiedoilla-onko-ok [tarkastukset]
-  (map tarkastus-tiedolla-onko-ok tarkastukset))
+(defn tarkastus-tiedolla-onko-ok
+  "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
+  eikä tarkastuksella ole vakiohavaintoja"
+  [tarkastus]
+  (if (and (or (empty? (:havainnot tarkastus))
+               (= "ok" (clojure.string/lower-case (:havainnot tarkastus))))
+           (empty? (:vakiohavainnot tarkastus)))
+    (assoc tarkastus :ok? true)
+    (assoc tarkastus :ok? false)))
 
 (defn validoi-laatupoikkeama [data]
   (skeema/tarkista Laatupoikkeama data))

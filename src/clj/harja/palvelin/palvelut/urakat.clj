@@ -10,9 +10,6 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
 
-;; Tämä funktio on toteutettu alunperin tilannekuvan palveluun, ja tämän takia haluaa esimerkiksi aina
-;; aikavälin. En alkanut kehittämään tätä eteenpäin, koska kirjoittamisen hetkellä ainoat paikat missä tätä
-;; käytetään on ilmoitukset ja tilannekuva.
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa parametrien mukaiset urakoiden id:t vektorissa."
   ([db user] (kayttajan-urakat-aikavalilta db user nil nil nil nil (pvm/nyt) (pvm/nyt)))

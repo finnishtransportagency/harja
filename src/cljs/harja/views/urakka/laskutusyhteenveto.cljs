@@ -35,7 +35,7 @@
                   [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
                   nakymassa? @laskutusyhteenveto-nakyvissa?]
               (when (and ur alkupvm loppupvm nakymassa?)
-                (raportit/suorita-raportti-urakka-parametrit
+                (raportit/urakkaraportin-parametrit
                  (:id ur)
                  :laskutusyhteenveto
                  {:alkupvm  alkupvm
