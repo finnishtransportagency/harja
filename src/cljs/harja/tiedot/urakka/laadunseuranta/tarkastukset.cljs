@@ -88,9 +88,9 @@
   "Lisää tarkastukselle laatupoikkeaman"
   [tarkastus]
   (go
-    (if (nil? (:laatupoikkeama-id tarkastus))
+    (if (nil? (:laatupoikkeamaid tarkastus))
       (assoc tarkastus
-        :laatupoikkeama-id (<! (k/post! :lisaa-tarkastukselle-laatupoikkeama
+        :laatupoikkeamaid (<! (k/post! :lisaa-tarkastukselle-laatupoikkeama
                                         {:urakka-id (:id @nav/valittu-urakka)
                                          :tarkastus-id (:id tarkastus)})))
       tarkastus)))

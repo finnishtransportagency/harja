@@ -272,12 +272,14 @@
         :nimi :laatupoikkeama
         :tyyppi :komponentti
         :komponentti [napit/palvelinkutsu-nappi
-                      (if (:laatupoikkeama-id tarkastus) "Avaa laatupoikkeama" "Lisää laatupoikkeama")
-                      (fn [] (tarkastukset/lisaa-laatupoikkeama tarkastus))
+                      (if (:laatupoikkeamaid tarkastus) "Avaa laatupoikkeama" "Lisää laatupoikkeama")
+                      (fn []
+                        (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus)
+                        (tarkastukset/lisaa-laatupoikkeama tarkastus))
                       {:disabled (nil? (:id tarkastus))
                        :kun-onnistuu (fn [tarkastus]
                                        (reset! tarkastus-atom tarkastus)
-                                       (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeama-id tarkastus)))}]}]
+                                       (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))}]}]
       tarkastus]]))
 
 
