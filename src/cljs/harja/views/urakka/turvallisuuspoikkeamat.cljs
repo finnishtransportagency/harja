@@ -20,12 +20,12 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama]
+(defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
   (r/wrap
-    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama)))
+    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama-atom)))
     (fn [uusi]
       (swap!
-        turvallisuuspoikkeama
+        turvallisuuspoikkeama-atom
         assoc
         :korjaavattoimenpiteet
         (vals
@@ -201,7 +201,7 @@
                             {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                              :palstoja 2
                              :uusi-rivi? true
-                             :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet @turvallisuuspoikkeama)]}
+                             :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)]}
                             {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                             {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
