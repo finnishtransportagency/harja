@@ -92,7 +92,7 @@
                              :otsikko "Tapahtuma-aika"}
                             {:otsikko "Alkanut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
-                             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+                             :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
                             {:otsikko "Päättynyt" :pakollinen? true :nimi :paattynyt :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                        [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]})
