@@ -33,3 +33,21 @@
     (is (= 6 (count vuosittaiset-summat)))
     (is (= odotettu vuosittaiset-summat))))
 
+(deftest tarkista-lkp-tilinnumeron-paattely
+  (is (= "43020000" (valitse-lkp-tilinumero "20112" nil))
+      "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "43020000" (valitse-lkp-tilinumero nil 112))
+      "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "43020000" (valitse-lkp-tilinumero nil 536))
+      "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12980010" (valitse-lkp-tilinumero nil 30))
+      "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
+  (is (= "12980010" (valitse-lkp-tilinumero nil 242))
+      "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (= "12980010" (valitse-lkp-tilinumero nil 318))
+      "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
+  (is (thrown? RuntimeException (valitse-lkp-tilinumero nil nil))
+      "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
+  (is (thrown? RuntimeException (valitse-lkp-tilinumero nil 1))
+      "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
+

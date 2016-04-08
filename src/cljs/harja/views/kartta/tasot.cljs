@@ -90,7 +90,7 @@
          (let [hals @hal/hallintayksikot
                v-hal @nav/valittu-hallintayksikko
                v-ur @nav/valittu-urakka
-               sivu (nav/sivu)]
+               sivu @nav/valittu-sivu]
            (cond
              ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin
              ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on

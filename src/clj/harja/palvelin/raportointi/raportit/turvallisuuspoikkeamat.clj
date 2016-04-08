@@ -29,7 +29,7 @@
         tyyppi))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
-                               alkupvm loppupvm] :as parametrit}]
+                               alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (log/info "PARAMS: " parametrit)
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
@@ -41,8 +41,9 @@
                        (map #(konv/string->keyword % :tyontekijanammatti))
                        (map konv/alaviiva->rakenne))
                      (hae-turvallisuuspoikkeamat db
-                                                 (if urakka-id true false) urakka-id
-                                                 (if hallintayksikko-id true false) hallintayksikko-id
+                                                 (some? urakka-id) urakka-id
+                                                 (some? hallintayksikko-id) hallintayksikko-id
+                                                 (when urakkatyyppi (name urakkatyyppi))
                                                  alkupvm loppupvm))
         turpo-maarat-kuukausittain (group-by
                                      (comp vuosi-ja-kk :tapahtunut)
