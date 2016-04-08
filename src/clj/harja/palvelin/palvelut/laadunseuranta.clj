@@ -318,7 +318,6 @@
             laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama t user laatupoikkeama)]
         (tarkastukset/liita-tarkastukselle-laatupoikkeama<! t {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
         (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<! t {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
-        ;; todo: liitä liitteet myös laatupoikkeamalle
         laatupoikkeama-id))))
 
 (defrecord Laadunseuranta []
