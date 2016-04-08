@@ -18,7 +18,9 @@
             [harja.domain.laadunseuranta :refer [validi-laatupoikkeama?]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.navigaatio.reitit :as reitit]
+            [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -27,7 +29,6 @@
   "Onko annetussa laatupoikkeamassa päätös?"
   [laatupoikkeama]
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
-
 
 (defn tallenna-laatupoikkeama
   "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja 
@@ -146,6 +147,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :palstoja 1}]
 
         sanktiot-atom]])))
+
+(defn avaa-tarkastus [tarkastus-id]
+  (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
+  (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :tarkastukset))
 
 (defn laatupoikkeamalomake [asetukset laatupoikkeama]
   (let [sanktio-virheet (atom {})
@@ -312,7 +317,15 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :komponentti [laatupoikkeaman-sanktiot
                                   (r/wrap (:sanktiot @laatupoikkeama)
                                           #(swap! laatupoikkeama assoc :sanktiot %))
-                                  sanktio-virheet]})))]
+                                  sanktio-virheet]})
+                 (when (:tarkastusid @laatupoikkeama)
+                   {:rivi? true
+                   :uusi-rivi? true
+                   :nimi :laatupoikkeama
+                   :tyyppi :komponentti
+                   :komponentti [napit/yleinen
+                                 "Avaa tarkastus"
+                                 (fn [] (avaa-tarkastus (:tarkastusid @laatupoikkeama)))]})))]
             @laatupoikkeama]])))))
 
 (defn laatupoikkeama []

@@ -43,10 +43,10 @@
    :aika (pvm/nyt)
    :tarkastaja @istunto/kayttajan-nimi})
 
-(defn valitse-tarkastus [tarkastus]
+(defn valitse-tarkastus [tarkastus-id]
   (go
     (reset! tarkastukset/valittu-tarkastus
-            (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) (:id tarkastus))))))
+            (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) tarkastus-id)))))
 
 (defn tarkastuslistaus
   "Tarkastuksien listauskomponentti"
@@ -84,7 +84,7 @@
          :tyhja (if (nil? @tarkastukset/urakan-tarkastukset)
                   [yleiset/ajax-loader "Tarkastuksia ladataan"]
                   "Ei tarkastuksia")
-         :rivi-klikattu #(valitse-tarkastus %)
+         :rivi-klikattu #(valitse-tarkastus (:id %))
          :jarjesta :aika
          :max-rivimaara 500
          :max-rivimaaran-ylitys-viesti

@@ -144,4 +144,20 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      (ikonit/ban)
      (str " " teksti)]]))
 
+(defn yleinen
+  "Yleinen toimintopainike
+  Asetukset on optionaalinen mäppi ja voi sisältää:
+  :disabled jos true, nappi on disabloitu
+  :ikoni näytettävä ikoni"
+  ([teksti toiminto-fn] (yleinen teksti toiminto-fn {}))
+  ([teksti toiminto-fn {:keys [disabled luokka ikoni]}]
+   [:button.nappi-ensisijainen
+    {:class (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                 (.preventDefault %)
+                 (toiminto-fn))}
+    (if ikoni
+      [:span ikoni (str " " teksti)]
+      teksti)]))
 
