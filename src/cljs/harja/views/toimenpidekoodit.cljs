@@ -10,7 +10,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -132,9 +133,9 @@
              [grid/grid
               {:otsikko  "Tehtävät"
                :tyhja    (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
-               :tallenna (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
-                                           #(tallenna-tehtavat tehtavat %)
-                                           :ei-mahdollinen)
+               :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-tehtavat)
+                           #(tallenna-tehtavat tehtavat %)
+                           :ei-mahdollinen)
                :tunniste :id}
 
               [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :validoi [[:ei-tyhja "Anna tehtävän nimi"]] :leveys "70%"}
@@ -150,6 +151,3 @@
      :component-did-mount (fn [this]
                             (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
                                   (resetoi-koodit res))))}))
-
-  
- 

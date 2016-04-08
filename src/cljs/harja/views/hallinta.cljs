@@ -24,29 +24,29 @@
    "Käyttäjät"
    :kayttajat
    ^{:key "kayttajat"}
-   (when (oikeudet/voi-lukea? oikeudet/hallinta-kayttajat)
+   (when (oikeudet/hallinta-kayttajat)
      [kayttajat/kayttajat])
 
    "Indeksit"
    :indeksit
-   (when (oikeudet/voi-lukea? oikeudet/hallinta-indeksit)
+   (when (oikeudet/hallinta-indeksit)
      ^{:key "indeksit"}
      [i/indeksit-elementti])
 
    "Tehtävät"
    :tehtavat
-   (when (oikeudet/voi-lukea? oikeudet/hallinta-tehtavat)
+   (when (oikeudet/hallinta-tehtavat)
      ^{:key "tehtävät"}
      [tp/toimenpidekoodit])
 
    "Lämpötilat"
    :lampotilat
-   (when (oikeudet/voi-lukea? oikeudet/hallinta-lampotilat)
+   (when (oikeudet/hallinta-lampotilat)
      ^{:key "lämpötilat"}
      [lampotilat/lampotilat])
 
    "Integraatioloki"
    :integraatioloki
-   (when (oikeudet/voi-lukea? oikeudet/hallinta-lampotilat)
+   (when (oikeudet/hallinta-lampotilat)
      ^{:key "integraatioloki"}
      [integraatioloki/integraatioloki])])
