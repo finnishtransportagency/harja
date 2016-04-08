@@ -303,21 +303,19 @@
       (catch Exception e
         (log/debug "TARKASTUSREITTI FIXME: " e)))))
 
-(defn lisaa-tarkastukselle-laatupoikkeama [db user urakka tarkastus]
-  (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus))
-  (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka)
-  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka)
-  (when-let [tarkastus (hae-tarkastus db user urakka tarkastus)]
+(defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
+  (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
+  (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+  (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
     (let [laatupoikkeama {:sijainti (:sijainti tarkastus)
                           :kuvaus (:havainnot tarkastus)
                           :aika (:aika tarkastus)
                           :tr (:tr tarkastus)
-                          :urakka urakka
+                          :urakka urakka-id
                           :tekija (:tekija tarkastus)}
-          _ (println "----->  " laatupoikkeama)
-          laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)
-          ;; todo linkitä liitteet
-          ]
+          laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)]
+      (tarkastukset/liita-tarkastukselle-laatupoikkeama tarkastus-id laatupoikkeama-id)
       laatupoikkeama-id)))
 
 (defrecord Laadunseuranta []
