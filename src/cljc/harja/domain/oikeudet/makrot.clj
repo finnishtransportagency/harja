@@ -1,5 +1,6 @@
 (ns harja.domain.oikeudet.makrot
-  "Makro, joka lukee oikeusmatriisin Excelistä ja määrittelee sen Clojure datana"
+  "Makro, joka lukee oikeusmatriisin Excelistä ja määrittelee sen Clojure datana.
+  Täällä ei ole mitään muuta kutsuttavaa kuin maarittele-oikeudet!"
   (:require [dk.ative.docjure.spreadsheet :as xls]
             [clojure.string :as str]))
 
@@ -29,7 +30,7 @@
             {:sarake (char sarake) :rooli rooli}))
         (range (int \C) (int \Z))))
 
-(defn oikeuksien-rivit
+(defn- oikeuksien-rivit
   "Palauttaa eri oikeudet ja niiden rivinumerot."
   [sheet]
   (keep (fn [rivi]
