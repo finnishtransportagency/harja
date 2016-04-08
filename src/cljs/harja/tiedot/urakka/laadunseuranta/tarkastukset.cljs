@@ -1,13 +1,13 @@
 (ns harja.tiedot.urakka.laadunseuranta.tarkastukset
   (:require [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.geo :as geo]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset])
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [cljs.core.async :refer [<!]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -82,3 +82,12 @@
                                      (into []
                                            (remove #(= (:id %) id))
                                            tarkastukset)))))))
+
+
+(defn lisaa-laatupoikkeama
+  "Lisää tarkastukselle laatupoikkeaman"
+  [tarkastus]
+  (go
+    (if (nil? (:laatupoikkeama-id tarkastus))
+      (assoc tarkastus :laatupoikkeama-id (<! (k/post! :lisaa-tarkastukselle-laatupoikkeama (:id tarkastus))))
+      tarkastus)))
