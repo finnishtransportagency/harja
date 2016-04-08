@@ -224,6 +224,7 @@
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
   (let [ikoni (ulkoasu/laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+        ;; Laatupoikkeamat ovat pistemäisiä, mutta annetaan viivamäärittely fallbackina.
         viiva (ulkoasu/laatupoikkeaman-reitti (:tekija laatupoikkeama))
         otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
     (assoc laatupoikkeama

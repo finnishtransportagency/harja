@@ -79,6 +79,7 @@
 ;;; Kaikki värit pitäisi olla määriteltynä näillä muutamilla riveillä.
 ;;;;;;;;;;
 
+;; Merkkijono, koska tämä on osa tiedoston nimeä
 (def ikonien-varit
   {;; Tilallisten sijainti-ikonien sisempi väri
    :tiedoitus                  "oranssi"
