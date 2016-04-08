@@ -1,1 +1,2 @@
-ALTER TABLE turvallisuuspoikkeama ADD COLUMN ilmoitukset_lahetetty TIMESTAMP;
+ALTER TABLE lampotilat ALTER COLUMN alkupvm SET NOT NULL;
+ALTER TABLE lampotilat ALTER COLUMN loppupvm SET NOT NULL;
