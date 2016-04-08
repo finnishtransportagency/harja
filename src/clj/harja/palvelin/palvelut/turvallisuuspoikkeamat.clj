@@ -122,8 +122,7 @@
           id)
       (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
 
-(defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
-  (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
+(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi]
   (jdbc/with-db-transaction [c db]
     (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
       (when uusi-kommentti
@@ -144,12 +143,15 @@
       (when-not (empty? korjaavattoimenpiteet)
         (doseq [korjaavatoimenpide korjaavattoimenpiteet]
           (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
-
           (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
+      id)))
 
-      (when turi (turi/laheta-turvallisuuspoikkeama turi id))
-
-      (hae-turvallisuuspoikkeamat c user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))))
+(defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
+  (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
+  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi)]
+    (when turi
+      (turi/laheta-turvallisuuspoikkeama turi id)))
+  (hae-turvallisuuspoikkeamat db user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle
