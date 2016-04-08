@@ -67,12 +67,15 @@
     (map
      (fn [{:keys [osio nakyma rivi]}]
        (let [roolien-oikeudet (keep (fn [{:keys [sarake rooli]}]
-                                      (when-let [oikeus (some-> (str sarake rivi)
-                                                                (xls/select-cell sheet)
-                                                                xls/read-cell)]
+                                      (when-let [oikeus (into #{}
+                                                              (some-> (str sarake rivi)
+                                                                      (xls/select-cell sheet)
+                                                                      xls/read-cell
+                                                                      (str/split #",")))]
                                         {:rooli (kuvaus->rooli rooli)
-                                         :luku? (.contains oikeus "R")
-                                         :kirjoitus? (.contains oikeus "W")}))
+                                         :luku? (oikeus "R")
+                                         :kirjoitus? (oikeus "W")
+                                         :muu (disj oikeus "R" "W")}))
                                     sarakkeet)]
          {:sym (oikeus-sym osio nakyma)
           :kuvaus (str "Osio '" osio "' näkymä '" nakyma "'")
@@ -81,7 +84,12 @@
                             (filter :luku? roolien-oikeudet)))
           :kirjoitus (into #{}
                            (keep :rooli
-                                 (filter :kirjoitus? roolien-oikeudet)))}))
+                                 (filter :kirjoitus? roolien-oikeudet)))
+          :muu (into {}
+                     (keep (fn [{:keys [rooli muu]}]
+                             (when-not (empty? muu)
+                               [rooli muu])))
+                     roolien-oikeudet)}))
      rivit)))
 
 (defn- lue-oikeudet []
@@ -100,7 +108,8 @@
        ~@(mapv
           (fn [oikeudet]
             `(do
-               ~@(mapv (fn [{:keys [sym kuvaus luku kirjoitus]}]
-                         `(def ~sym (harja.domain.oikeudet/->KayttoOikeus ~kuvaus ~luku ~kirjoitus)))
+               ~@(mapv (fn [{:keys [sym kuvaus luku kirjoitus muu]}]
+                         `(def ~sym (harja.domain.oikeudet/->KayttoOikeus ~kuvaus
+                                                                          ~luku ~kirjoitus ~muu)))
                        oikeudet)))
           (partition 16 16 [] oikeudet)))))

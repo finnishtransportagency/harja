@@ -8,16 +8,37 @@
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
-(defrecord KayttoOikeus [kuvaus luku kirjoitus])
+(declare on-oikeus? on-muu-oikeus?)
+(defrecord KayttoOikeus [kuvaus luku kirjoitus muu]
+  #?@(:cljs
+      [cljs.core/IFn
+       (-invoke
+        ([this] (or (on-oikeus? :luku this nil @istunto/kayttaja)
+                    (on-oikeus? :kirjoitus this nil @istunto/kayttaja)))
+        ([this urakka-id] (or (on-oikeus? :luku this urakka-id @istunto/kayttaja)
+                              (on-oikeus? :kirjoitus this urakka-id @istunto/kayttaja)))
+        ([this urakka-id muu-oikeustyyppi]
+         (on-muu-oikeus? muu-oikeustyyppi this urakka-id @istunto/kayttaja)))]))
+
 (maarittele-oikeudet!)
 
 
-(defn on-oikeus? [tyyppi oikeus urakka-id kayttaja]
+(defn on-oikeus?
+  "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
+  [tyyppi oikeus urakka-id kayttaja]
   (let [sallitut (tyyppi oikeus)]
     (or (roolit/roolissa? kayttaja sallitut)
         (and urakka-id
              (roolit/rooli-urakassa? kayttaja sallitut urakka-id)))))
 
+(defn on-muu-oikeus?
+  "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
+  [tyyppi oikeus urakka-id kayttaja]
+  (let [roolit-joilla-oikeus (get-in oikeus [:muu tyyppi])]
+    (and (not (empty? roolit-joilla-oikeus))
+         (or (roolit/roolissa? kayttaja roolit-joilla-oikeus)
+             (and urakka-id
+                  (roolit/rooli-urakassa? kayttaja roolit-joilla-oikeus urakka-id))))))
 (defn voi-lukea?
   #?(:cljs
      ([oikeus]
