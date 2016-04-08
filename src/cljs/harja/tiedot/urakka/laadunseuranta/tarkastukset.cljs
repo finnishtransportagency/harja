@@ -31,19 +31,23 @@
 
 (defn hae-urakan-tarkastukset
   "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."
-  [urakka-id alkupvm loppupvm tienumero tyyppi]
-  (k/post! :hae-urakan-tarkastukset {:urakka-id urakka-id
-                                     :alkupvm   alkupvm
-                                     :loppupvm  loppupvm
-                                     :tienumero tienumero
-                                     :tyyppi    tyyppi}))
+  [parametrit]
+  (k/post! :hae-urakan-tarkastukset parametrit))
 
 (defn naytettava-aikavali [urakka-kaynnissa? kuukausi aikavali]
   (if urakka-kaynnissa?
     aikavali
     (or kuukausi aikavali)))
 
-(defonce urakan-tarkastukset
+(defn kasaa-haun-parametrit [urakka-kaynnissa? urakka-id kuukausi aikavali tienumero tyyppi]
+  (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)]
+    {:urakka-id urakka-id
+     :alkupvm   alkupvm
+     :loppupvm  loppupvm
+     :tienumero tienumero
+     :tyyppi    tyyppi}))
+
+(def urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                urakka-kaynnissa? @tiedot-urakka/valittu-urakka-kaynnissa?
                kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi
@@ -54,10 +58,11 @@
                tyyppi @tarkastustyyppi]
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
-              (let [[alku loppu] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)]
+              (let [parametrit (kasaa-haun-parametrit urakka-kaynnissa? urakka-id
+                                                      kuukausi aikavali tienumero tyyppi)]
                 (when (and laadunseurannassa? (= :tarkastukset valilehti)
-                           urakka-id alku loppu)
-                  (go (into [] (<! (hae-urakan-tarkastukset urakka-id alku loppu tienumero tyyppi))))))))
+                           (:urakka-id parametrit) (:alkupvm parametrit) (:loppupvm parametrit))
+                  (go (into [] (<! (hae-urakan-tarkastukset parametrit))))))))
 
 (defonce valittu-tarkastus (atom nil))
 
