@@ -12,8 +12,10 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.tapahtumat :as t]
+            [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]))
+            [harja.ui.dom :as dom]
+            [harja.pvm :as pvm]))
 
 (defn koko-maa []
   [:li
@@ -73,23 +75,27 @@
        ;; Alasvetovalikko urakan nopeaa vaihtamista varten
        [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
 
-        (let [muut-urakat (filter #(not= % valittu) @nav/suodatettu-urakkalista)]
-
-          (if (empty? muut-urakat)
+        (let [muut-kaynnissaolevat-urakat (sort-by :nimi
+                                                   (filter #(and
+                                                             (not= % valittu)
+                                                             (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
+                                                           @nav/suodatettu-urakkalista))]
+          (if (empty? muut-kaynnissaolevat-urakat)
             [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita valituilla hakukriteereillä."]
 
-            (for [muu-urakka muut-urakat]
-              ^{:key (str "ur-" (:id muu-urakka))}
-              [:li.harja-alasvetolistaitemi [linkki (:nimi muu-urakka) #(nav/valitse-urakka muu-urakka)]])))]])))
+            (for [urakka muut-kaynnissaolevat-urakat]
+              ^{:key (str "urakka-" (:id urakka))}
+              [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka urakka)]])))]])))
 
 (defn urakoitsija []
   [:div.murupolku-urakoitsija
    [:div.livi-valikkonimio.murupolku-urakoitsija-otsikko "Urakoitsija"]
-   [livi-pudotusvalikko {:valinta    @nav/valittu-urakoitsija
-                         :format-fn  #(if % (:nimi %) "Kaikki")
+   [livi-pudotusvalikko {:valinta @nav/valittu-urakoitsija
+                         :format-fn #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/valitse-urakoitsija!
-                         :class      (str "alasveto-urakoitsija" (when (boolean @nav/valittu-urakka) " disabled"))
-                         :disabled   (boolean @nav/valittu-urakka)}
+                         :class (str "alasveto-urakoitsija" (when (boolean @nav/valittu-urakka) " disabled"))
+                         :disabled (or (some? @nav/valittu-urakka)
+                                       (= (:sivu @reitit/url-navigaatio) :raportit))}
     (vec (conj (into [] (case (:arvo @nav/valittu-urakkatyyppi)
                           :hoito @urakoitsijat/urakoitsijat-hoito
                           :paallystys @urakoitsijat/urakoitsijat-paallystys
@@ -98,15 +104,6 @@
 
                           @urakoitsijat/urakoitsijat-hoito)) ;;defaulttina hoito
                nil))]])
-
-(defn urakkatyyppi-murupolussa []
-  [:li
-   [livi-pudotusvalikko {:valinta    @nav/valittu-urakkatyyppi
-                         :format-fn  #(if % (:nimi %) "Kaikki")
-                         :valitse-fn nav/vaihda-urakkatyyppi!
-                         :class      (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
-                         :disabled   (boolean @nav/valittu-urakka)}
-    nav/+urakkatyypit+]])
 
 (defn urakkatyyppi []
   [:div.murupolku-urakkatyyppi
@@ -121,8 +118,7 @@
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"
   []
-  (let [valinta-auki (atom nil)
-        sivu (nav/sivu)]
+  (let [valinta-auki (atom nil)]
     (komp/luo
      (komp/kuuntelija
       [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
@@ -145,21 +141,17 @@
                               (= :urakoitsija))]
          [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                           (cond
-                            (= sivu :hallinta) "hide"
-                            (= sivu :about) "hide"
+                            (= @nav/valittu-sivu :hallinta) "hide"
+                            (= @nav/valittu-sivu :about) "hide"
                             :default ""))}
-          (if (or ei-urakkaa? (= sivu :raportit))
+          (if (or ei-urakkaa? (= @nav/valittu-sivu :raportit))
             [:ol.murupolku
              [:div.col-sm-6.murupolku-vasen
-              [koko-maa]
-              [hallintayksikko valinta-auki]
-              [urakka valinta-auki]]
+              [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
              [:div.col-sm-6.murupolku-oikea
               (when-not urakoitsija?
                 [urakoitsija])
               [urakkatyyppi]]]
             [:ol.murupolku
              [:div.col-sm-12.murupolku-vasen
-              [koko-maa]
-              [hallintayksikko valinta-auki]
-              [urakka valinta-auki]]])])))))
+              [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))

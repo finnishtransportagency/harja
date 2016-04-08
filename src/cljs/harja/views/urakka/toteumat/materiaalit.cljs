@@ -196,7 +196,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
              {:otsikko     "Aloitus" :pakollinen? true :uusi-rivi? true
               :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
-              :varoita     [[:urakan-aikana-ja-hoitokaudella]]
+              :huomauta     [[:urakan-aikana-ja-hoitokaudella]]
               :muokattava? muokattava-pred
               :aseta       (fn [rivi arvo]
                              (assoc
@@ -265,7 +265,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
     (ikonit/plus) " Lisää toteuma"]
 
    [grid/grid
-    {:otsikko  "Suunnitellut ja toteutuneet materiaalit"
+    {:otsikko  "Materiaalien käyttö"
      :tyhja    (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Materiaaleja haetaan"] "Ei löytyneitä tietoja.")
      :tunniste #(:id (:materiaali %))
      :luokat   ["toteumat-paasisalto"]
@@ -284,8 +284,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
     ;; sarakkeet
     [{:tyyppi :vetolaatikon-tila :leveys "5%"}
      {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys "50%"}
-     {:otsikko "Yksikkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys "10%"}
-     {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys "20%"}
+     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys "10%"}
+     {:otsikko "Maksimi\u00ADmäärä" :nimi :sovittu_maara :hae :maara :leveys "20%"}
      {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys "20%"}
      {:otsikko     "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti
       :muokattava? (constantly false) :leveys "20%"

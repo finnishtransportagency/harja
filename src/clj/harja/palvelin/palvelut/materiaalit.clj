@@ -19,9 +19,6 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(if (:id (:pohjavesialue %))
-                      %
-                      (dissoc % :pohjavesialue)))
               (map #(assoc % :maara (double (:maara %))))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
         (let [tulos (q/hae-urakan-materiaalit db urakka-id)]
@@ -42,9 +39,6 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(if (:id (:pohjavesialue %))
-                     %
-                     (dissoc % :pohjavesialue)))
               (map #(assoc-in % [:toteuma :maara] (when (:maara (:toteuma %)) (double (:maara (:toteuma %)))))))
         (let [tulos (q/hae-urakan-toteumat-materiaalille db
                                                          sopimus
@@ -86,15 +80,6 @@
                                           urakka-id sopimus-id
                                           (konv/sql-date (first hoitokausi)) (konv/sql-date (second hoitokausi))))))
 
-(defn poista-pohjavesialueiden-materiaalit-joita-ei-enaa-ole
-  [poistetut-materiaalit urakka-id sopimus-id user c]
-  (doseq [{:keys [alkupvm loppupvm materiaali pohjavesialue]} poistetut-materiaalit
-          :when pohjavesialue]
-    (q/poista-pohjavesialueen-materiaalinkaytto! c (:id user)
-                                                 urakka-id sopimus-id
-                                                 (konv/sql-date alkupvm) (konv/sql-date loppupvm)
-                                                 (:id materiaali) (:id pohjavesialue))))
-
 (defn poista-materiaalit-joita-ei-sisaan-tulevissa
   [materiaalit materiaalit-sisaan user c]
   (doseq [[avain {id :id}] materiaalit
@@ -128,10 +113,6 @@
               materiaalit-sisaan (into #{} (map materiaali-avain materiaalit))
               ]
 
-          ;; Käydään läpi poistot
-          ;; Poistetaan kaikki pohjavesialueen materiaalit, joita ei enää ole
-          (poista-pohjavesialueiden-materiaalit-joita-ei-enaa-ole (filter :poistettu materiaalit) urakka-id sopimus-id user c)
-
           ;; Muille materiaaleille, poistetaan jos ei ole enää sisääntulevissa
           (poista-materiaalit-joita-ei-sisaan-tulevissa materiaalit-kannassa materiaalit-sisaan user c)
 
@@ -151,10 +132,10 @@
                         (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
                         )))
 
-              (let [{:keys [alkupvm loppupvm maara materiaali pohjavesialue]} materiaali]
-                (log/debug "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali pohjavesialue)
+              (let [{:keys [alkupvm loppupvm maara materiaali]} materiaali]
+                (log/debug "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali)
                 (q/luo-materiaalinkaytto<! c (konv/sql-date alkupvm) (konv/sql-date loppupvm) maara (:id materiaali)
-                                    urakka-id sopimus-id (:id pohjavesialue) (:id user)))))))
+                                    urakka-id sopimus-id (:id user)))))))
 
 
       ;; Ihan lopuksi haetaan koko urakan materiaalit uusiksi

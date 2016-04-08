@@ -110,7 +110,7 @@ pienemmällä zindexillä." :const true}
                           (if-not (empty? @taitokset)
                             @taitokset
                             (reset! taitokset
-                                    (apurit/pisteiden-taitokset points))))
+                                    (apurit/pisteiden-taitokset points false))))
         tee-ikoni (partial tee-ikonille-tyyli kasvava-zindex laske-taitokset)
         tee-viiva (partial tee-viivalle-tyyli kasvava-zindex)
         tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]

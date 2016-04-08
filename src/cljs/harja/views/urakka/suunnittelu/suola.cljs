@@ -1,7 +1,6 @@
 (ns harja.views.urakka.suunnittelu.suola
   "Urakan suolan käytön suunnittelu"
   (:require [reagent.core :refer [atom wrap]]
-            [harja.views.urakka.valinnat :as valinnat]
             [harja.tiedot.urakka.toteumat.suola :as suola]
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
@@ -59,6 +58,9 @@
   (reaction (let [ss @suolasakot-ja-lampotilat]
               (:pohjavesialueet ss))))
 
+(defonce lampotilat
+  (reaction (:lampotilat @suolasakot-ja-lampotilat)))
+
 (defn tallenna-suolasakko
   []
   (k/post! :tallenna-suolasakko-ja-pohjavesialueet
@@ -87,11 +89,11 @@
                                                                           (and (= tunnus (:pohjavesialue pv-raja) )
                                                                                i))
                                                                         pohjavesialue-talvisuola))]
-                                  
+
                                   (log "PV paivitettava " paivitettava)
                                   (if paivitettava
                                     ;; olemassaoleva raja, päivitä sen arvo
-                                    (update-in pohjavesialue-talvisuola [paivitettava] 
+                                    (update-in pohjavesialue-talvisuola [paivitettava]
                                                (fn [pv-raja]
                                                  (assoc pv-raja
                                                         :talvisuolaraja (:talvisuolaraja (get % tunnus)))))
@@ -103,6 +105,12 @@
                               (vec pohjavesialue-talvisuola)
                               (keys %)))))))
 
+(defn hae-pohjavesialueen-nimi [p]
+  (let [nimi (:nimi p)]
+    (if (empty? nimi)
+      "Nimi ei saatavilla aineistosta"
+      nimi)))
+
 (defn suolasakko-lomake
   []
   (let [urakka @nav/valittu-urakka
@@ -112,8 +120,10 @@
 
     (fn []
       (let [{:keys [pohjavesialueet]} @suolasakot-ja-lampotilat
-            tiedot (:suolasakko @syotettavat-tiedot)]
+            tiedot (:suolasakko @syotettavat-tiedot)
+            lampotilat @lampotilat]
         [:span.suolasakkolomake
+         [:h5 "Urakan suolasakkotiedot hoitokautta kohden"]
          [lomake {:muokkaa! (fn [uusi]
                               (log "lomaketta muokattu, tiedot:" (pr-str uusi))
                               (swap! syotettavat-tiedot assoc :suolasakko uusi :muokattu true))
@@ -162,33 +172,32 @@
                                                 :voi-poistaa?       (constantly false)
                                                 :voi-lisata?        false
                                                 :jos-tyhja          "Urakan alueella ei pohjavesialueita"}
-                            [{:otsikko "Pohjavesialue" :nimi :nimi :muokattava? (constantly false) :leveys "40%"}
+                            [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
+                              :hae #(hae-pohjavesialueen-nimi %)}
                              {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
                              {:otsikko     "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
                               :aseta       (fn [rivi arvo]
                                              (reset! pohjavesialueita-muokattu? true)
                                              (assoc rivi :talvisuolaraja arvo))
                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
-                            (pohjavesialueet-muokkausdata)]})
-           
-           {:otsikko "Sydäntalven keskilämpötila" :palstoja 2
-            :nimi :lampotilat :tyyppi :komponentti
-            :vihje "Lämpötiloja ei tarvitse syöttää, järjestelmän vastuuhenkilö syöttää lämpötilatiedot"
-            :komponentti [grid/grid {}
-                          [{:otsikko "Tämä talvikausi" :nimi :keskilampotila :fmt #(if % (fmt/asteina %) "-")
-                            :tasaa :oikea}
-                           {:otsikko "Pitkä aikaväli" :nimi :pitkakeskilampotila :fmt #(if % (fmt/asteina %) "-")
-                            :tasaa :oikea}
-                           {:otsikko "Erotus" :nimi :erotus :fmt #(if % (fmt/asteina %) "-")
-                            :tasaa :oikea}]
+                            (pohjavesialueet-muokkausdata)]})]
+          tiedot]
 
-                          [(let [{:keys [keskilampotila pitkakeskilampotila] :as hk}
-                                 tiedot]
-                             (assoc hk
-                                    :id 1
-                                    :erotus (and keskilampotila pitkakeskilampotila
-                                                 (.toFixed (- keskilampotila pitkakeskilampotila) 1))))]]}]
-          tiedot]]))))
+         [grid/grid
+          {:otsikko "Sydäntalven keskilämpötilat urakan aikana"}
+          [{:otsikko "Hoitokausi" :nimi :hoitokausi
+            :hae #(str (pvm/vuosi (:alkupvm %)) "-" (pvm/vuosi (:loppupvm %)))
+            :leveys 3}
+           {:otsikko "Keski\u00ADlämpötila" :nimi :keskilampotila :fmt #(if % (fmt/asteina %) "-")
+            :tasaa   :oikea :leveys 2}
+           {:otsikko "Pitkän aikavälin ka" :nimi :pitkakeskilampotila :fmt #(if % (fmt/asteina %) "-")
+            :tasaa   :oikea :leveys 2}
+           {:otsikko      "Erotus" :nimi :erotus :fmt #(if % (fmt/asteina %) "-")
+            :hae          #(.toFixed (- (:keskilampotila %) (:pitkakeskilampotila %)) 1)
+            :tyyppi       :string
+            :tasaa   :oikea :leveys 2}]
+          lampotilat]
+         [yleiset/vihje "Järjestelmän vastuuhenkilö tuo lämpötilatiedot Harjaan"]]))))
 
 (defn suola []
   (komp/luo

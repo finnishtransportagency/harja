@@ -20,6 +20,7 @@ SELECT *
               WHERE tm.materiaalikoodi = mk.id
          AND t.poistettu IS NOT TRUE
      	   AND (:urakka_annettu is false OR t.urakka = :urakka)
+     	   AND (:urakka_annettu is true OR (:urakka_annettu is false AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)))
      	   AND (:hal_annettu is false OR u.hallintayksikko = :hal) 
      	   AND date_trunc('month', t.alkanut) = kkt.kk) as maara
        FROM kuukaudet kkt
@@ -36,6 +37,7 @@ SELECT *
      	   AND t1.poistettu IS NOT TRUE
      	   AND rp1.talvihoitoluokka = hl.column1
      	   AND (:urakka_annettu is false OR t1.urakka = :urakka)
+     	   AND (:urakka_annettu is true OR (:urakka_annettu is false AND (:urakkatyyppi::urakkatyyppi IS NULL OR u1.tyyppi = :urakkatyyppi::urakkatyyppi)))
      	   AND (:hal_annettu is false OR u1.hallintayksikko = :hal)
      	   AND date_trunc('month', rp1.aika) = kkt.kk) as maara
        FROM kuukaudet kkt
@@ -73,8 +75,8 @@ SELECT *
         WHERE (:alkupvm BETWEEN alkupvm AND loppupvm
                OR
      	  :loppupvm BETWEEN alkupvm AND loppupvm)
-     	 AND
-     	 (:hal_annettu = false OR hallintayksikko = :hal)
+     	 AND (:hal_annettu = false OR hallintayksikko = :hal)
+     	 AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi)
      ), hoitoluokat AS (
        --      Is   I    Ib   TIb  II  III  K1   K2
        VALUES (1), (2), (3), (4), (5), (6), (7), (8)

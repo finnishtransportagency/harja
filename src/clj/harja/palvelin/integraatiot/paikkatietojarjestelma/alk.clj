@@ -6,14 +6,10 @@
     [harja.palvelin.tyokalut.lukot :as lukko]
     [harja.palvelin.tyokalut.kansio :as kansio]
     [harja.palvelin.tyokalut.arkisto :as arkisto]
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
     [harja.palvelin.integraatiot.integraatiopisteet.tiedosto :as tiedosto]
-    [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset])
+    [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
+    [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
-(defn- lokittaja [integraatioloki db integraatio]
-  (integraatioloki/lokittaja integraatioloki db "ptj" integraatio))
 
 (defn kasittele-tiedoston-muutospaivamaaran-hakuvastaus [otsikko]
   (let [muutospaivamaara (:last-modified otsikko)]
@@ -23,10 +19,12 @@
 
 (defn hae-tiedoston-muutospaivamaara [db integraatioloki integraatio url]
   (log/debug "Haetaan tiedoston muutospäivämäärä ALK:sta URL:lla: " url)
-  (let [lokittaja (lokittaja integraatioloki db integraatio)
-        integraatipiste (http/luo-integraatiopiste lokittaja)
-        vastaus-kasittelija (fn [_ otsikko] (kasittele-tiedoston-muutospaivamaaran-hakuvastaus otsikko))]
-    (http/HEAD integraatipiste url vastaus-kasittelija)))
+  (let [http-asetukset {:metodi :HEAD :url url}]
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "ptj" integraatio
+      (fn [konteksti]
+        (let [{otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+          (kasittele-tiedoston-muutospaivamaaran-hakuvastaus otsikot))))))
 
 (defn hae-tiedosto [integraatioloki integraatio url kohde]
   (log/debug "Haetaan tiedosto ALK:sta URL:lla: " url " kohteeseen: " kohde)

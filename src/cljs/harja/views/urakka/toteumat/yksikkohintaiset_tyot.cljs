@@ -254,7 +254,7 @@
                          :alkanut
                          arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-            :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+            :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
 
            {:otsikko "Lopetus" :nimi :paattynyt :pakollinen? true :tyyppi :pvm
             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))

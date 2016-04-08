@@ -3,6 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla :as lp-kartalla]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
@@ -28,51 +29,16 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce listaus (atom :kaikki))
-
-(defonce urakan-laatupoikkeamat
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               [alku loppu] @tiedot-urakka/valittu-aikavali
-               laadunseurannassa? @laadunseuranta/laadunseurannassa?
-               valilehti (nav/valittu-valilehti :laadunseuranta)
-               listaus @listaus]
-              {:nil-kun-haku-kaynnissa? true}
-              (log "urakka-id: " urakka-id "; alku: " alku "; loppu: " loppu "; laadunseurannassa? " laadunseurannassa? "; valilehti: " (pr-str valilehti) "; listaus: " (pr-str listaus))
-              (when (and laadunseurannassa? (= :laatupoikkeamat valilehti)
-                         urakka-id alku loppu)
-                (laatupoikkeamat/hae-urakan-laatupoikkeamat listaus urakka-id alku loppu))))
-
-
-(defonce valittu-laatupoikkeama-id (atom nil))
-
-(defn uusi-laatupoikkeama []
-  {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))})
-
-(defonce valittu-laatupoikkeama
-  (reaction<! [id @valittu-laatupoikkeama-id]
-              {:nil-kun-haku-kaynnissa? true}
-              (when id
-                (go (let [laatupoikkeama (if (= :uusi id)
-                                           (uusi-laatupoikkeama)
-                                           (<! (laatupoikkeamat/hae-laatupoikkeaman-tiedot (:id @nav/valittu-urakka) id)))]
-                      (-> laatupoikkeama
-
-                          ;; Tarvitsemme urakan liitteen linkitystä varten
-
-                          (assoc :urakka (:id @nav/valittu-urakka))
-                          (assoc :sanktiot (into {}
-                                                 (map (juxt :id identity) (:sanktiot laatupoikkeama))))))))))
-
 (defn laatupoikkeamalistaus
   "Listaa urakan laatupoikkeamat"
   []
-  (let [poikkeamat (reverse (sort-by :aika @urakan-laatupoikkeamat))]
+  (let [poikkeamat (reverse (sort-by :aika @laatupoikkeamat/urakan-laatupoikkeamat))]
     [:div.laatupoikkeamat
      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
      [yleiset/pudotusvalikko
       "Näytä laatupoikkeamat"
-      {:valinta    @listaus
-       :valitse-fn #(reset! listaus %)
+      {:valinta    @laatupoikkeamat/listaus
+       :valitse-fn #(reset! laatupoikkeamat/listaus %)
        :format-fn  #(case %
                      :kaikki "Kaikki"
                      :kasitellyt "Käsitellyt (päätös tehty)"
@@ -84,10 +50,10 @@
      [urakka-valinnat/aikavali]
 
      (when @laatupoikkeamat/voi-kirjata?
-       [napit/uusi "Uusi laatupoikkeama" #(reset! valittu-laatupoikkeama-id :uusi)])
+       [napit/uusi "Uusi laatupoikkeama" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)])
 
      [grid/grid
-      {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! valittu-laatupoikkeama-id (:id %))
+      {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %))
        :tyhja   "Ei laatupoikkeamia."}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
        {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1}
@@ -123,14 +89,14 @@
               ;; Kuuluu aikavälille, lisätään tai päivitetään
               (if (:id laatupoikkeama)
                 ;; Päivitetty olemassaolevaa
-                (swap! urakan-laatupoikkeamat
+                (swap! laatupoikkeamat/urakan-laatupoikkeamat
                        (fn [laatupoikkeamat]
                          (mapv (fn [h]
                                  (if (= (:id h) (:id uusi-laatupoikkeama))
                                    uusi-laatupoikkeama
                                    h)) laatupoikkeamat)))
                 ;; Luotu uusi
-                (swap! urakan-laatupoikkeamat
+                (swap! laatupoikkeamat/urakan-laatupoikkeamat
                        conj uusi-laatupoikkeama)))
             true))))))
 
@@ -237,7 +203,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               uusi? (not (:id alkuperainen))]
 
           [:div.laatupoikkeama
-           [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! valittu-laatupoikkeama-id nil)]
+           [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
            
            [lomake/lomake
             {:otsikko "Laatupoikkeaman tiedot"
@@ -257,14 +223,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                             #(tallenna-laatupoikkeama @laatupoikkeama)
                             {:ikoni        (ikonit/tallenna)
                              :disabled     (not (lomake/voi-tallentaa? @laatupoikkeama))
-                             :kun-onnistuu (fn [_] (reset! valittu-laatupoikkeama-id nil))}]}
+                             :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]}
 
             [{:otsikko     "Päivämäärä ja aika"
               :pakollinen? true
               :tyyppi      :pvm-aika
               :nimi        :aika
               :validoi     [[:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
-              :varoita     [[:urakan-aikana-ja-hoitokaudella]]
+              :huomauta     [[:urakan-aikana-ja-hoitokaudella]]
               :palstoja  1}
 
              
@@ -286,6 +252,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :palstoja 1
               :muokattava?   muokattava?
               :validoi       [[:ei-tyhja "Valitse laatupoikkeaman tehnyt osapuoli"]]}
+
+             {:tyyppi :tierekisteriosoite
+              :nimi :tr
+              :muokattava? muokattava?
+              :pakollinen? true
+              :sijainti (r/wrap (:sijainti @laatupoikkeama)
+                                #(swap! laatupoikkeama assoc :sijainti %))}
 
              (when-not (= :urakoitsija (:tekija @laatupoikkeama))
                {:nimi    :selvitys-pyydetty
@@ -391,6 +364,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 (defn laatupoikkeamat []
   (komp/luo
+    (komp/lippu lp-kartalla/karttataso-laatupoikkeamat)
+    (komp/kuuntelija :laatupoikkeama-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %2)))
+    (komp/ulos (kartta/kuuntele-valittua! laatupoikkeamat/valittu-laatupoikkeama))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
@@ -398,6 +374,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
     (fn []
      [:span.laatupoikkeamat
       [kartta/kartan-paikka]
-      (if @valittu-laatupoikkeama
-        [laatupoikkeama {} valittu-laatupoikkeama]
+      (if @laatupoikkeamat/valittu-laatupoikkeama
+        [laatupoikkeama {} laatupoikkeamat/valittu-laatupoikkeama]
         [laatupoikkeamalistaus])])))

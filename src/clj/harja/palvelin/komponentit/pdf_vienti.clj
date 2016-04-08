@@ -96,11 +96,15 @@
       (try
         (log/debug "Luodaan " tyyppi " PDF käyttäjälle " (:kayttajanimi kayttaja)
                    " parametreilla " params)
-        {:status 200
+        {:status  200
          :headers {"Content-Type" "application/pdf"} ;; content-disposition!
-         :body (piped-input-stream
-                (fn [out]
-                  (hiccup->pdf fop-factory (kasittelija kayttaja params) out)))}
+         :body    (piped-input-stream
+                    (fn [out]
+                      (try
+                        (let [pdf (kasittelija kayttaja params)]
+                          (hiccup->pdf fop-factory pdf out))
+                        (catch Throwable t
+                          (log/warn t "Poikkeus piped-input-streamissä hiccup->PDF")))))}
         (catch Exception e
           (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja)
           {:status 500

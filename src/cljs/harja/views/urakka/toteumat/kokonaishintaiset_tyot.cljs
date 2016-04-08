@@ -50,10 +50,14 @@
          :tyyppi      :komponentti
          :leveys      2
          :komponentti (fn [rivi]
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(tiedot/valitse-toteuma! rivi)
-                          :disabled (:jarjestelma rivi)}
-                         (ikonit/eye-open) " Toteuma"])}]
+                        [:div
+                         {:title (if (:jarjestelma rivi)
+                                   "Järjestelmän raportoimaa toteumaa ei voi muokata."
+                                   "Muokkaa toteumaa.")}
+                         [:button.nappi-toissijainen.nappi-grid
+                          {:on-click #(tiedot/valitse-toteuma! rivi)
+                           :disabled (:jarjestelma rivi)}
+                          (ikonit/eye-open) " Toteuma"]])}]
        (sort-by :alkanut @tiedot)])))
 
 (defn tee-taulukko []
@@ -102,7 +106,7 @@
   [:div
    (tee-valinnat)
    [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
-                                        tiedot/uusi-kokonaishintainen-toteuma)
+                                        @tiedot/uusi-kokonaishintainen-toteuma)
     {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
    (tee-taulukko)])
 
@@ -125,7 +129,8 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko  (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
+           {:otsikko  (if (:id @muokattu) "Luo uusi kokonaishintainen toteuma"
+                                          "Muokkaa kokonaishintaista toteumaa")
             :muokkaa! #(do (reset! muokattu %))
             :footer   [napit/palvelinkutsu-nappi
                        "Tallenna toteuma"
@@ -149,7 +154,7 @@
                           (assoc :alkanut arvo)))
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
              :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
-             :varoita     [[:urakan-aikana-ja-hoitokaudella]]}
+             :huomauta     [[:urakan-aikana-ja-hoitokaudella]]}
            (if (:jarjestelma @muokattu)
               {:tyyppi :string
                :otsikko "Pituus"

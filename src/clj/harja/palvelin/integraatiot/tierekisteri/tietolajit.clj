@@ -1,9 +1,8 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tietolajit
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu :as kutsusanoma]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.tierekisteri.vastauksenkasittely :refer :all]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-tietolajin-hakuvastaus [url tunniste muutospvm vastaus-xml]
@@ -17,10 +16,11 @@
 
 (defn hae-tietolajit [db integraatioloki url tunniste muutospvm]
   (log/debug "Hae tietolajin: " tunniste " ominaisuudet muutospäivämäärällä: " muutospvm " Tierekisteristä")
-  (let [lokittaja (integraatioloki/lokittaja integraatioloki db "tierekisteri" "hae-tietolaji")
-        integraatiopiste (http/luo-integraatiopiste lokittaja)
-        kutsudata (kutsusanoma/muodosta-kutsu tunniste muutospvm)
-        vastauskasittelija (fn [vastaus-xml _] (kasittele-tietolajin-hakuvastaus url tunniste muutospvm vastaus-xml))
-        palvelu-url (str url "/haetietolaji")
-        otsikot {"Content-Type" "text/xml; charset=utf-8"}]
-    (http/POST integraatiopiste palvelu-url otsikot nil kutsudata vastauskasittelija)))
+  (let [url (str url "/haetietolaji")
+        otsikot {"Content-Type" "text/xml; charset=utf-8"}
+        http-asetukset {:metodi :POST :url url :otsikot otsikot}
+        tyonkulku (fn [konteksti]
+                    (let [kutsudata (kutsusanoma/muodosta-kutsu tunniste muutospvm)
+                          {vastaus-xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+                      (kasittele-tietolajin-hakuvastaus url tunniste muutospvm vastaus-xml)))]
+    (integraatiotapahtuma/suorita-integraatio db integraatioloki "tierekisteri" "hae-tietolaji" tyonkulku)))

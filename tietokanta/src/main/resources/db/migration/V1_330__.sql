@@ -1,0 +1,1 @@
+ALTER TABLE liite ADD COLUMN kuvaus VARCHAR(254);

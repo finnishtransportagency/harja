@@ -2,10 +2,11 @@
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
-            [harja.palvelin.komponentit.liitteet :as liitteet])
+            [harja.palvelin.komponentit.liitteet :as liitteet]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
@@ -14,7 +15,7 @@
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
-(defn kasittele-turin-vastaus [db id]
+(defn kasittele-turin-vastaus [db id _]
   (q/lokita-lahetys<! db true id))
 
 (defn hae-liitteet [liitteiden-hallinta db id]
@@ -37,34 +38,53 @@
                  :error virhe})))))
 
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta url kayttajatunnus salasana]} id]
-  (when (not-empty url)
-    (let [lokittaja (integraatioloki/lokittaja integraatioloki db "turi" "laheta-turvallisuuspoikkeama")
-          integraatiopiste (http/luo-integraatiopiste lokittaja {:kayttajatunnus kayttajatunnus :salasana salasana})
-          vastauskasittelija (fn [_ _] (kasittele-turin-vastaus db id))
-          turvallisuuspoikkeama (hae-turvallisuuspoikkeama liitteiden-hallinta db id)
-          xml (when turvallisuuspoikkeama (sanoma/muodosta turvallisuuspoikkeama))]
-      (if xml
-        (try
-          (http/POST integraatiopiste url xml vastauskasittelija)
-          (catch Exception e
-            (log/error e (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä tapahtui poikkeus." id))
-            (q/lokita-lahetys<! db false id)))
-        (do
-          (log/error (format "Turvallisuuspoikkeamaa  (id: %s) ei voida lähettää" id))
-          (q/lokita-lahetys<! db false id))))))
+  (when-not (empty? url)
+    (log/debug (format "Lähetetään turvallisuuspoikkeama (id: %s) TURI:n" id))
+    (try
+      (integraatiotapahtuma/suorita-integraatio
+        db integraatioloki "turi" "laheta-turvallisuuspoikkeama" nil
+        (fn [konteksti]
+          (->> id
+               (hae-turvallisuuspoikkeama liitteiden-hallinta db)
+               sanoma/muodosta
+               (integraatiotapahtuma/laheta
+                 konteksti :http {:metodi :POST
+                                  :url url
+                                  :kayttajatunnus kayttajatunnus
+                                  :salasana salasana})
+               (kasittele-turin-vastaus db id)))
+        {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
+      (catch Throwable t
+        (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
+
+(defn laheta-turvallisuuspoikkeamat-turiin [this]
+  (let [idt (q/hae-lahettamattomat-turvallisuuspoikkeamat (:db this))]
+    (doseq [id idt]
+      (laheta-turvallisuuspoikkeama this id))))
+
+(defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika]
+  (if paivittainen-lahetysaika
+    (do
+      (log/debug "Ajastetaan turvallisuuspoikkeamien lähettäminen joka päivä kello: " paivittainen-lahetysaika)
+      (ajastettu-tehtava/ajasta-paivittain
+        paivittainen-lahetysaika
+        (fn [_] (laheta-turvallisuuspoikkeamat-turiin this))))
+    (fn [])))
 
 (defrecord Turi [asetukset]
   component/Lifecycle
   (start [this]
-    (let [turi (:turi asetukset)
-          {url :url kayttajatunnus :kayttajatunnus salasana :salasana} turi]
+    (let [{url :url kayttajatunnus :kayttajatunnus salasana :salasana paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
       (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" url))
-      (assoc this
-        :url url
-        :kayttajatunnus kayttajatunnus
-        :salasana salasana)))
+      (assoc
+        (assoc this
+          :url url
+          :kayttajatunnus kayttajatunnus
+          :salasana salasana)
+        :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika))))
 
   (stop [this]
+    (:paivittainen-lahetys-tehtava this)
     this)
 
   TurvallisuusPoikkeamanLahetys

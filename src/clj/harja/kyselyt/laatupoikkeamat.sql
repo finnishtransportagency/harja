@@ -130,7 +130,12 @@ SELECT
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.perustelu                        AS paatos_perustelu,
   h.muu_kasittelytapa                AS paatos_muukasittelytapa,
-  h.selvitys_pyydetty                AS selvityspyydetty
+  h.selvitys_pyydetty                AS selvityspyydetty,
+  h.tr_numero,
+  h.tr_alkuosa,
+  h.tr_alkuetaisyys,
+  h.tr_loppuosa,
+  h.tr_loppuetaisyys
 FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
 WHERE h.urakka = :urakka
@@ -184,6 +189,12 @@ SET aika            = :aika,
   selvitys_pyydetty = :selvitys,
   muokkaaja         = :muokkaaja,
   kuvaus            = :kuvaus,
+  sijainti = :sijainti,
+  tr_numero = :numero,
+  tr_alkuosa = :alkuosa,
+  tr_loppuosa = :loppuosa,
+  tr_alkuetaisyys = :alkuetaisyys,
+  tr_loppuetaisyys = :loppuetaisyys,
   muokattu          = current_timestamp
 WHERE id = :id;
 
@@ -296,7 +307,8 @@ FROM laatupoikkeama lp
   JOIN urakka u ON lp.urakka = u.id
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
-WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+                    AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
 
@@ -317,5 +329,6 @@ FROM laatupoikkeama lp
   JOIN urakka u ON lp.urakka = u.id
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
-WHERE (lp.aika >= :alku AND lp.aika <= :loppu)
+WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+      AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);

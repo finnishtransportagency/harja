@@ -21,21 +21,27 @@
         toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat-suunnittelutiedoilla))
 
-(defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?]}]
+(defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain db
-                                                                             hallintayksikko-id alkupvm loppupvm
+                                                                             hallintayksikko-id
+                                                                             (when urakkatyyppi (name urakkatyyppi))
+                                                                             alkupvm loppupvm
                                                                              (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle db
-                                                                 hallintayksikko-id alkupvm loppupvm
+                                                                 hallintayksikko-id
+                                                                 (when urakkatyyppi (name urakkatyyppi))
+                                                                 alkupvm loppupvm
                                                                  (not (nil? toimenpide-id)) toimenpide-id)))
 
-(defn hae-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain?]}]
+(defn hae-tehtavat-koko-maalle [db {:keys [alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle-urakoittain db
+                                                                       (when urakkatyyppi (name urakkatyyppi))
                                                                        alkupvm loppupvm
                                                                        (not (nil? toimenpide-id)) toimenpide-id)
     (q/hae-yksikkohintaiset-tyot-kuukausittain-koko-maalle db
+                                                           (when urakkatyyppi (name urakkatyyppi))
                                                            alkupvm loppupvm
                                                            (not (nil? toimenpide-id)) toimenpide-id)))
 
@@ -84,44 +90,47 @@
         (into #{} (map :nimi kuukausittaiset-summat))))))
 
 (defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id hallintayksikko-id suunnittelutiedot alkupvm loppupvm toimenpide-id
-                                             urakoittain?]}]
+                                             urakoittain? urakkatyyppi]}]
   (case konteksti
     :urakka
     (hae-tehtavat-urakalle db
-                           {:urakka-id         urakka-id
+                           {:urakka-id urakka-id
                             :suunnittelutiedot suunnittelutiedot
-                            :alkupvm           alkupvm
-                            :loppupvm          loppupvm
-                            :toimenpide-id     toimenpide-id})
+                            :alkupvm alkupvm
+                            :loppupvm loppupvm
+                            :toimenpide-id toimenpide-id})
     :hallintayksikko
     (hae-tehtavat-hallintayksikolle db
                                     {:hallintayksikko-id hallintayksikko-id
-                                     :alkupvm            alkupvm
-                                     :loppupvm           loppupvm
-                                     :toimenpide-id      toimenpide-id
-                                     :urakoittain?       urakoittain?})
+                                     :alkupvm alkupvm
+                                     :loppupvm loppupvm
+                                     :toimenpide-id toimenpide-id
+                                     :urakoittain? urakoittain?
+                                     :urakkatyyppi urakkatyyppi})
     :koko-maa
     (hae-tehtavat-koko-maalle db
-                              {:alkupvm       alkupvm
-                               :loppupvm      loppupvm
+                              {:alkupvm alkupvm
+                               :loppupvm loppupvm
                                :toimenpide-id toimenpide-id
-                               :urakoittain?  urakoittain?})))
+                               :urakoittain? urakoittain?
+                               :urakkatyyppi urakkatyyppi})))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain?] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
   (log/debug "Parametrit on " (pr-str parametrit))
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         suunnittelutiedot (when (= :urakka konteksti)
                             (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id))
-        kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti          konteksti
-                                                               :urakka-id          urakka-id
+        kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti konteksti
+                                                               :urakka-id urakka-id
                                                                :hallintayksikko-id hallintayksikko-id
                                                                :suunnittelutiedot suunnittelutiedot
-                                                               :alkupvm            alkupvm
-                                                               :loppupvm           loppupvm
-                                                               :toimenpide-id      toimenpide-id
-                                                               :urakoittain?       urakoittain?})
+                                                               :alkupvm alkupvm
+                                                               :loppupvm loppupvm
+                                                               :toimenpide-id toimenpide-id
+                                                               :urakoittain? urakoittain?
+                                                               :urakkatyyppi urakkatyyppi})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
         aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm suunnittelutiedot)
         listattavat-pvmt (take-while (fn [pvm]
@@ -144,9 +153,9 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
-                :nimi        raportin-nimi}
+                :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
+                 :tyhja (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys 15 :otsikko "Urakka"})
                                {:leveys 10 :otsikko "Tehtävä"}

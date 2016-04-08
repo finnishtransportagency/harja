@@ -6,25 +6,27 @@
             [harja.ui.openlayers :as openlayers]
             [harja.ui.kartta.varit.puhtaat :as varit]
 
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.loki :refer [log]]
+            [cljs-time.core :as t])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce karttataso-tarkastukset (atom false))
 
-(defn- luo-tarkastusreitit-kuvataso [taso-paalla? urakka [alku loppu] tienumero tyyppi]
+(defn- luo-tarkastusreitit-kuvataso [taso-paalla? parametrit]
   (when taso-paalla?
     (openlayers/luo-kuvataso
      :tarkastusreitit esitettavat-asiat/tarkastus-selitteet
-     "tr" (k/url-parametri {:urakka-id (:id urakka)
-                            :alkupvm alku
-                            :loppupvm loppu
-                            :tienumero tienumero
-                            :tyyppi tyyppi}))))
-(defonce tarkastusreitit
+     "tr" (k/url-parametri (assoc parametrit :timestamp (t/now))))))
+
+(def tarkastusreitit-kartalla
   (reaction
-   (luo-tarkastusreitit-kuvataso
-    @karttataso-tarkastukset
-    @nav/valittu-urakka @tiedot-urakka/valittu-aikavali
-    @tarkastukset/tienumero @tarkastukset/tarkastustyyppi)))
+    @tarkastukset/urakan-tarkastukset
+    (luo-tarkastusreitit-kuvataso
+      @karttataso-tarkastukset
+      (tarkastukset/kasaa-haun-parametrit
+        @tiedot-urakka/valittu-urakka-kaynnissa?
+        @nav/valittu-urakka-id @tiedot-urakka/valittu-hoitokauden-kuukausi @tiedot-urakka/valittu-aikavali
+        @tarkastukset/tienumero @tarkastukset/tarkastustyyppi))))
