@@ -326,5 +326,4 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
     (fn []
       [:span.laatupoikkeamat
        [kartta/kartan-paikka]
-       [laatupoikkeamalistaus]
        [laatupoikkeamalomake {} laatupoikkeamat/valittu-laatupoikkeama]])))
