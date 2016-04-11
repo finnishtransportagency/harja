@@ -334,4 +334,5 @@ SELECT exists(
 SELECT id FROM urakka WHERE hanke_sampoid = :sampoid
 
 -- name: hae-urakoitsijan-id-ytunnuksella
+-- single?: true
 SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus
