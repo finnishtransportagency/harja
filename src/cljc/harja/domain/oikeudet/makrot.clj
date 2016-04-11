@@ -2,7 +2,8 @@
   "Makro, joka lukee oikeusmatriisin Excelistä ja määrittelee sen Clojure datana.
   Täällä ei ole mitään muuta kutsuttavaa kuin maarittele-oikeudet!"
   (:require [dk.ative.docjure.spreadsheet :as xls]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.set :refer [union]]))
 
 (defn- lue-workbook []
   (xls/load-workbook-from-file "resources/roolit.xlsx"))
@@ -79,6 +80,7 @@
                                          :muu (disj oikeus "R" "W")}))
                                     sarakkeet)]
          {:sym (oikeus-sym osio nakyma)
+          :osio osio
           :kuvaus (str "Osio '" osio "' näkymä '" nakyma "'")
           :luku (into #{}
                       (keep :rooli
@@ -113,4 +115,17 @@
                          `(def ~sym (harja.domain.oikeudet/->KayttoOikeus ~kuvaus
                                                                           ~luku ~kirjoitus ~muu)))
                        oikeudet)))
-          (partition 16 16 [] oikeudet)))))
+          (partition 16 16 [] oikeudet))
+
+       ;; Määritellään osioille vielä roolit, jotka on union kaikista osion oikeuksista.
+       ;; Näillä voi testata osion näkyvyyttä.
+       (do
+         ~@(mapv
+            (fn [[osio oikeudet]]
+              (let [luku (reduce union #{} (map :luku oikeudet))
+                    kirjoitus (reduce union #{} (map :kirjoitus oikeudet))
+                    sym (symbol (kanonisoi osio))]
+                `(def ~sym
+                   (harja.domain.oikeudet/->KayttoOikeus (str "Osio " ~osio)
+                                                         ~luku ~kirjoitus {}))))
+            (group-by :osio oikeudet))))))
