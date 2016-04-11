@@ -40,10 +40,12 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn transit-vastaus [data]
-  {:status  200
-   :headers {"Content-Type" "application/transit+json"}
-   :body    (transit/clj->transit data)})
+(defn transit-vastaus
+  ([data] (transit-vastaus 200 data))
+  ([status data]
+   {:status  status
+    :headers {"Content-Type" "application/transit+json"}
+    :body    (transit/clj->transit data)}))
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
@@ -69,15 +71,14 @@
           (if (= kysely ::ei-validi-kysely)
             {:status 400
              :body   "Ei validi kysely"}
-            (let [vastaus (try+
-                            (palvelu-fn (:kayttaja req) kysely)
-                            (catch harja.domain.roolit.EiOikeutta eo
-                              ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
-                              eo)
-                            (catch Throwable e
-                              (log/warn e "Virhe POST palvelussa " nimi)
-                              {:virhe (.getMessage e)}))]
-              (transit-vastaus vastaus))))))))
+            (try+
+             (transit-vastaus (palvelu-fn (:kayttaja req) kysely))
+             (catch harja.domain.roolit.EiOikeutta eo
+               ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
+               (transit-vastaus 403 eo))
+             (catch Throwable e
+               (log/warn e "Virhe POST palvelussa " nimi)
+               {:virhe (.getMessage e)}))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 
@@ -116,8 +117,8 @@
     [this nimi palvelu-fn]
     [this nimi palvelu-fn optiot]
     "Julkaise uusi palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
-sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure 
-tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. 
+sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure
+tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi.
 Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
   polkuun /edn/nimi (ilman keywordin kaksoispistettä).
 
@@ -130,7 +131,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                       Palvelun tulee palauttaa Ring response mäppi.
 
   :tarkista-polku?    Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
-                      ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa 
+                      ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa
                       käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
 
   (poista-palvelu [this nimi]
@@ -260,4 +261,3 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 (defn poista-palvelut [http & palvelut]
   (doseq [p palvelut]
     (poista-palvelu http p)))
-
