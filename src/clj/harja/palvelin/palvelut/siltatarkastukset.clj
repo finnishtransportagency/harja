@@ -3,10 +3,10 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.siltatarkastukset :as q]
-            [harja.domain.roolit :as roolit]
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.domain.oikeudet :as oikeudet]))
 
 ;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi
 (def kohteet-xf (map (fn [rivi]
@@ -29,7 +29,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
   :korjatut  hakee sillat, joilla on ollut puutteita ja jotka on korjattu"
 
   [db user urakka-id listaus]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/lue oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (case listaus
     :kaikki
     (into []
@@ -98,7 +98,8 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
   siltatarkastus)
 
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
-  (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika) tarkastaja (:id user) nil)
+  (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika)
+                                                tarkastaja (:id user) nil)
         id (:id luotu-tarkastus)]
     (doseq [[kohde [tulos lisatieto]] kohteet]
       (q/luo-siltatarkastuksen-kohde<! db tulos lisatieto id kohde))
@@ -108,7 +109,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
-  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (jdbc/with-db-transaction [c db]
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
@@ -125,7 +126,7 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
   [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
-  (roolit/vaadi-toteumien-kirjaus-urakkaan user urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (jdbc/with-db-transaction [c db]
     (do
       (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
