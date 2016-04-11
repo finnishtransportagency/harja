@@ -24,7 +24,8 @@
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla :as tarkastukset-kartalla]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat]
             [clojure.string :as str]
-            [harja.tiedot.navigaatio.reitit :as reitit])
+            [harja.tiedot.navigaatio.reitit :as reitit]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -283,7 +284,9 @@
                       (fn []
                         (go
                           (let [tarkastus (<! (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-                                tarkastus-ja-laatupoikkeama (<! (tarkastukset/lisaa-laatupoikkeama tarkastus))]
+                                tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
+                                                              tarkastus
+                                                              (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
                             tarkastus-ja-laatupoikkeama)))
                       {:disabled (validoi-tarkastuslomake tarkastus)
                        :kun-onnistuu (fn [tarkastus]
