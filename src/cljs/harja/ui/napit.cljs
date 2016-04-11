@@ -151,7 +151,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
   :ikoni näytettävä ikoni"
   ([teksti toiminto-fn] (yleinen teksti toiminto-fn {}))
   ([teksti toiminto-fn {:keys [disabled luokka ikoni]}]
-   [:button.nappi-ensisijainen
+   [:button.nappi-toissijainen
     {:class (str (when disabled "disabled ") (or luokka ""))
      :disabled disabled
      :on-click #(do
