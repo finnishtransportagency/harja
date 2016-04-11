@@ -8,6 +8,7 @@
             [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
+            [harja.ui.palaute :as palaute]
             [harja.ui.viesti :refer [viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
@@ -73,6 +74,7 @@
     [:li {:role "presentation" :class (when (= s :hallinta) "active")}
      [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
    :right
+   [palaute/palaute-linkki]
    [kayttajatiedot istunto/kayttaja]])
 
 (defn ladataan []
