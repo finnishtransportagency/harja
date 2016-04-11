@@ -234,7 +234,7 @@
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
       (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
-                                                   3
+
 (defn turvallisuuspoikkeamat []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
