@@ -25,5 +25,4 @@
 (defn tarkkaile!
   [nimi atomi]
   (add-watch atomi :tarkkailija (fn [_ _ vanha uusi]
-                                  (log nimi ": " (pr-str vanha) " => " (pr-str uusi))
-                                  )))
+                                  (log nimi ": " (pr-str vanha) " => " (pr-str uusi)))))
