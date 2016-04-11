@@ -171,7 +171,7 @@
   (komp/luo
     (fn []
       (if @nav/render-lupa?
-        (let [sivu (nav/hae-valittu-sivu)
+        (let [sivu @nav/valittu-sivu
               aikakatkaistu? @istunto/istunto-aikakatkaistu?
               korkeus @dom/korkeus
               kayttaja @istunto/kayttaja]
