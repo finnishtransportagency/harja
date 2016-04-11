@@ -130,7 +130,6 @@ rooleista."
    (let [roolit (if (set? rooli)
                   rooli
                   #{rooli})]
-     ;; Järjestelmän vastuuhenkilöllä on kaikki roolit eli saa tehdä kaiken
      (if (or (some roolit (:roolit kayttaja))
              (some (fn [organisaatioroolit]
                      (some roolit organisaatioroolit))
@@ -147,10 +146,7 @@ rooleista."
   ([kayttaja rooli urakka-id]
    (let [roolit (if (set? rooli)
                   rooli
-                  #{rooli})
-         urakkaroolit (urakkaroolit kayttaja urakka-id)
-         organisaatioroolit (when ((:organisaation-urakat kayttaja) urakka-id)
-                              (organisaatioroolit kayttaja))]
+                  #{rooli})]
      (or
       ;; Jos käyttäjällä on suoraan rooli annetussa urakassa
       (some roolit (urakkaroolit kayttaja urakka-id))
