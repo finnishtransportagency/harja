@@ -23,7 +23,8 @@
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (def laatupoikkeama-xf
   (comp
@@ -59,7 +60,8 @@
              :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus))))))
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
-  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  ;(when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  (oikeudet/lue oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (jdbc/with-db-transaction [db db]
     (into []
           laatupoikkeama-xf

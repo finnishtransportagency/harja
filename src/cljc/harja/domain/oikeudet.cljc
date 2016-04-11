@@ -9,16 +9,20 @@
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
 (declare on-oikeus? on-muu-oikeus?)
-(defrecord KayttoOikeus [kuvaus luku kirjoitus muu]
-  #?@(:cljs
-      [cljs.core/IFn
-       (-invoke
-        ([this] (or (on-oikeus? :luku this nil @istunto/kayttaja)
-                    (on-oikeus? :kirjoitus this nil @istunto/kayttaja)))
-        ([this urakka-id] (or (on-oikeus? :luku this urakka-id @istunto/kayttaja)
-                              (on-oikeus? :kirjoitus this urakka-id @istunto/kayttaja)))
-        ([this urakka-id muu-oikeustyyppi]
-         (on-muu-oikeus? muu-oikeustyyppi this urakka-id @istunto/kayttaja)))]))
+(defrecord KayttoOikeus [kuvaus luku kirjoitus muu])
+
+#?(:cljs
+   (extend-type KayttoOikeus
+     cljs.core/IFn
+     (-invoke
+       ([this]
+        (or (on-oikeus? :luku this nil @istunto/kayttaja)
+            (on-oikeus? :kirjoitus this nil @istunto/kayttaja)))
+       ([this urakka-id]
+        (or (on-oikeus? :luku this urakka-id @istunto/kayttaja)
+            (on-oikeus? :kirjoitus this urakka-id @istunto/kayttaja)))
+       ([this urakka-id muu-oikeustyyppi]
+        (on-muu-oikeus? muu-oikeustyyppi this urakka-id @istunto/kayttaja)))))
 
 (maarittele-oikeudet!)
 

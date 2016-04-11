@@ -14,7 +14,8 @@
 
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -29,7 +30,8 @@
   (komp/luo
     (komp/lippu tiedot/lampotilojen-hallinnassa?)
     (fn []
-      (let [valitun-kauden-alkuvuosi (pvm/vuosi (first @tiedot/valittu-hoitokausi))
+      (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat)
+            valitun-kauden-alkuvuosi (pvm/vuosi (first @tiedot/valittu-hoitokausi))
             valittu-talvikausi (str valitun-kauden-alkuvuosi
                                     "-"
                                     (pvm/vuosi (second @tiedot/valittu-hoitokausi)))
@@ -38,7 +40,7 @@
          [valinnat/hoitokausi tiedot/hoitokaudet tiedot/valittu-hoitokausi tiedot/valitse-hoitokausi!]
          [grid/muokkaus-grid
           {:otsikko           "Teiden hoitourakoiden sydäntalven keskilämpötilat"
-           :voi-muokata?      (constantly true)
+           :voi-muokata?      voi-muokata?
            :voi-poistaa?      (constantly false)
            :piilota-toiminnot? true
            :voi-lisata?       false
@@ -93,4 +95,3 @@
           [:span "Voit myös katsella lämpötiloja "]
           [:a {:href "http://weather.weatherproof.fi/tieindeksi2/index.php?"}
            "Ilmatieteenlaitoksen palvelussa"]]]))))
-

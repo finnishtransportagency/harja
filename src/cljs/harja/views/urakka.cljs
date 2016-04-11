@@ -19,7 +19,7 @@
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.oikeudet])
+            [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -58,7 +58,7 @@
               :active (nav/valittu-valilehti-atom :urakat)}
      "Yleiset"
      :yleiset
-     (when (oikeudet/urakka-yleiset urakka-id)
+     (when (oikeudet/urakat-yleiset (:id ur))
        ^{:key "yleiset"}
        [urakka-yleiset/yleiset ur])
 
