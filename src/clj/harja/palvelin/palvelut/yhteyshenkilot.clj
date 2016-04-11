@@ -73,18 +73,20 @@
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (let [tulokset (q/hae-urakan-yhteyshenkilot db urakka-id)
-        yhteyshenkilot (into []
-                             (comp
-                               ;; Muodostetaan organisaatiosta parempi
-                               (map #(if-let [org-id (:organisaatio_id %)]
-                                      (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
-                                                              :id org-id
-                                                              :nimi (:organisaatio_nimi %)
-                                                              :lyhenne (:organisaatio_lyhenne %)})
-                                      %))
-                               ;; Poistetaan kenttiä, joita emme halua frontille välittää
-                               (map #(dissoc % :yu :organisaatio_id :urakoitsija_nimi :organisaatio_tyyppi :organisaatio_lyhenne)))
-                             tulokset)]
+        yhteyshenkilot
+        (into []
+              (comp
+               ;; Muodostetaan organisaatiosta parempi
+               (map #(if-let [org-id (:organisaatio_id %)]
+                       (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
+                                               :id org-id
+                                               :nimi (:organisaatio_nimi %)
+                                               :lyhenne (:organisaatio_lyhenne %)})
+                       %))
+               ;; Poistetaan kenttiä, joita emme halua frontille välittää
+               (map #(dissoc % :yu :organisaatio_id :urakoitsija_nimi
+                             :organisaatio_tyyppi :organisaatio_lyhenne)))
+              tulokset)]
     ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
 
@@ -109,7 +111,8 @@
         (if (> id 0)
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
-            (log/warn "Yritettiin päivittää urakan " urakka-id " yhteyshenkilöä " id", joka ei ole liitetty urakkaan!")
+            (log/warn "Yritettiin päivittää urakan " urakka-id " yhteyshenkilöä " id
+                      ", joka ei ole liitetty urakkaan!")
             (do (q/paivita-yhteyshenkilo c
                                           (:etunimi yht) (:sukunimi yht)
                                           (:tyopuhelin yht) (:matkapuhelin yht)
@@ -166,11 +169,13 @@
                                        nil
                                        nil)]
           (q/luo-paivystys<! c
-                             (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
+                             (java.sql.Date. (.getTime (:alku p)))
+                             (java.sql.Date. (.getTime (:loppu p)))
                              urakka-id (:id yht) true false))
 
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
-        (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p) urakka-id)))]
+        (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p)
+                                                                                 urakka-id)))]
           (log/debug "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
           (q/paivita-yhteyshenkilo c
                                    (:etunimi p) (:sukunimi p)
@@ -178,7 +183,8 @@
                                    (:sahkoposti p) (:id (:organisaatio p))
                                    yht-id)
           (q/paivita-paivystys! c
-                                (java.sql.Date. (.getTime (:alku p))) (java.sql.Date. (.getTime (:loppu p)))
+                                (java.sql.Date. (.getTime (:alku p)))
+                                (java.sql.Date. (.getTime (:loppu p)))
                                 (:id p) urakka-id))))
 
     ;; Haetaan lopuksi uuden päivystäjät
