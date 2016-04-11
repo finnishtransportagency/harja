@@ -1,18 +1,13 @@
 (ns harja.palvelin.palvelut.urakan-toimenpiteet
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]
-            [clojure.java.jdbc :as jdbc]
-
             [harja.kyselyt.urakan-toimenpiteet :as q]
-            [harja.domain.roolit :as roolit]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-urakan-toimenpiteet
   "Palvelu, joka palauttaa urakan toimenpiteet"
   [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/lue oikeudet/urakat user urakka-id)
   (into []
         (q/hae-urakan-toimenpiteet db urakka-id)))
 
@@ -20,7 +15,7 @@
   "Palvelu, joka palauttaa urakan toimenpiteet ja tehtävät"
   ([db user urakka-id] (hae-urakan-toimenpiteet-ja-tehtavat db user urakka-id nil))
   ([db user urakka-id tyyppi]
-   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+   (oikeudet/lue oikeudet/urakat user urakka-id)
    (into []
          (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id tyyppi))))
 
