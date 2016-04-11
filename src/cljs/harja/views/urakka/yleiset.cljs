@@ -159,7 +159,8 @@
        :tyhja "Ei yhteyshenkilöitä."
        :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
       [{:otsikko       "Rooli" :nimi :rooli :tyyppi :valinta :leveys "17%"
-        :hae #(str/capitalize (:rooli %))
+        :hae #(do (when (:rooli %)
+                  (str/capitalize (:rooli %))))
         :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
 
         :valinnat      (vec (concat [nil] @yhteyshenkilotyypit))
