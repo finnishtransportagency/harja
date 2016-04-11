@@ -9,7 +9,8 @@
             [taoensso.timbre :as log]
 
             [harja.domain.roolit :as roolit]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (declare hae-urakan-yhteyshenkilot
          hae-yhteyshenkilotyypit
@@ -57,7 +58,7 @@
     this))
 
 (defn hae-urakan-kayttajat [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
         (q/hae-urakan-kayttajat db urakka-id)))
@@ -70,6 +71,7 @@
 
 (defn hae-urakan-yhteyshenkilot [db user urakka-id]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
+  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (let [tulokset (q/hae-urakan-yhteyshenkilot db urakka-id)
         yhteyshenkilot (into []
                              (comp
@@ -89,6 +91,7 @@
 (defn tallenna-urakan-yhteyshenkilot [db user {:keys [urakka-id yhteyshenkilot poistettu]}]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (assert (vector? yhteyshenkilot) "Yhteyshenkilöiden tulee olla vektori")
+  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
     ;; käyttäjän oikeudet urakkaan
 
@@ -133,6 +136,7 @@
 
 (defn hae-urakan-paivystajat [db user urakka-id]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
+  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (into []
         ;; munklaukset tässä
         (map #(if-let [org-id (:organisaatio %)]
@@ -144,6 +148,7 @@
 
 
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]
+  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
 
     (log/debug "SAATIIN päivystäjät: " paivystajat)
@@ -178,10 +183,3 @@
 
     ;; Haetaan lopuksi uuden päivystäjät
     (hae-urakan-paivystajat c user urakka-id)))
-
-
-
-
-
-
-
