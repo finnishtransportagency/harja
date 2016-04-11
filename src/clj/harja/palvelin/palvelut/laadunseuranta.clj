@@ -308,16 +308,16 @@
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
   (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
   (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
-    (jdbc/with-db-transaction [t db]
+    (jdbc/with-db-transaction [db db]
       (let [laatupoikkeama {:sijainti (:sijainti tarkastus)
                             :kuvaus (:havainnot tarkastus)
                             :aika (:aika tarkastus)
                             :tr (:tr tarkastus)
                             :urakka urakka-id
                             :tekija (:tekija tarkastus)}
-            laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama t user laatupoikkeama)]
-        (tarkastukset/liita-tarkastukselle-laatupoikkeama<! t {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
-        (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<! t {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
+            laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)]
+        (tarkastukset/liita-tarkastukselle-laatupoikkeama<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
+        (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
         laatupoikkeama-id))))
 
 (defrecord Laadunseuranta []

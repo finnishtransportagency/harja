@@ -188,6 +188,10 @@
   [:span.livicon-arrow-up])
 (defn arrow-down []
   [:span.livicon-arrow-down])
+(defn arrow-beginning []
+  [:span.livicon-arrow-beginning])
+(defn arrow-end []
+  [:span.livicon-arrow-end])
 (defn share-alt []
   [:span.glyphicon.glyphicon-share-alt])
 (defn resize-full []
