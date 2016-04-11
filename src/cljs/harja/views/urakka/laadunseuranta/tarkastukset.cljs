@@ -183,6 +183,11 @@
   (reset! tiedot-laatupoikkeamat/valittu-laatupoikkeama-id laatupoikkeama-id)
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :laatupoikkeamat))
 
+(defn validoi-tarkastuslomake [tarkastus]
+  (let [validi? (lomake/voi-tallentaa? tarkastus)]
+    (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
+    (not validi?)))
+
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)]
@@ -199,10 +204,7 @@
                 "Tallenna tarkastus"
                 (fn []
                   (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-
-                {:disabled (let [validi? (lomake/voi-tallentaa? tarkastus)]
-                             (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
-                             (not validi?))
+                {:disabled (validoi-tarkastuslomake tarkastus)
                  :kun-onnistuu (fn [tarkastus]
                                  (reset! tarkastukset/valittu-tarkastus nil)
                                  (tarkastukset/paivita-tarkastus-listaan! tarkastus))
@@ -273,12 +275,17 @@
         :uusi-rivi? true
         :nimi :laatupoikkeama
         :tyyppi :komponentti
+        :vihje (if (:laatupoikkeamaid tarkastus)
+                 "Tallenna ja avaa tarkastuksen pohjalta luotu laatupoikkeama."
+                 "Tallenna ja kirjaa tarkastuksen pohjalta uusi laatupoikkeama.")
         :komponentti [napit/palvelinkutsu-nappi
                       (if (:laatupoikkeamaid tarkastus) "Avaa laatupoikkeama" "Lisää laatupoikkeama")
                       (fn []
-                        (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus)
-                        (tarkastukset/lisaa-laatupoikkeama tarkastus))
-                      {:disabled (nil? (:id tarkastus))
+                        (go
+                          (let [tarkastus (<! (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
+                                tarkastus-ja-laatupoikkeama (<! (tarkastukset/lisaa-laatupoikkeama tarkastus))]
+                            tarkastus-ja-laatupoikkeama)))
+                      {:disabled (validoi-tarkastuslomake tarkastus)
                        :kun-onnistuu (fn [tarkastus]
                                        (reset! tarkastus-atom tarkastus)
                                        (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))

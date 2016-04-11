@@ -320,13 +320,16 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                   sanktio-virheet]})
                  (when (:tarkastusid @laatupoikkeama)
                    {:rivi? true
-                   :uusi-rivi? true
-                   :nimi :laatupoikkeama
-                   :tyyppi :komponentti
-                   :komponentti [napit/yleinen
-                                 "Avaa tarkastus"
-                                 (fn [] (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
-                                 {:ikoni (ikonit/arrow-left)}]})))]
+                    :uusi-rivi? true
+                    :nimi :laatupoikkeama
+                    :vihje "Tallenna muutokset ja avaa tarkastus, jonka pohjalta laatupoikkeama on tehty."
+                    :tyyppi :komponentti
+                    :komponentti [napit/yleinen
+                                  "Avaa tarkastus"
+                                  (fn []
+                                    (tallenna-laatupoikkeama @laatupoikkeama)
+                                    (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
+                                  {:ikoni (ikonit/arrow-left)}]})))]
             @laatupoikkeama]])))))
 
 (defn laatupoikkeama []
