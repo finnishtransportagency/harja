@@ -17,7 +17,7 @@
                                 :linkki "urakka"}})
 
 (def urakat {"u123" 666})
-(def urakoitsijat {"Y123456" 42})
+(def urakoitsijat {"Y123456-7" 42})
 
 (def oikeudet (partial todennus/kayttajan-roolit urakat urakoitsijat testiroolit))
 
@@ -31,4 +31,4 @@
 
   (is (= {:roolit #{} :urakkaroolit {666 #{"paivystaja"}}
           :organisaatioroolit {42 #{"urakoitsija"}}}
-         (oikeudet "Y123456_urakoitsija,u123_paivystaja"))))
+         (oikeudet "Y123456-7_urakoitsija,u123_paivystaja"))))
