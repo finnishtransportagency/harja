@@ -86,3 +86,11 @@
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
+#?(:clj
+   (defn vaadi-oikeus [tyyppi oikeus kayttaja urakka-id]
+     (when-not (on-muu-oikeus? tyyppi oikeus urakka-id kayttaja)
+       (throw+ (roolit/->EiOikeutta
+                (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei oikeutta '" tyyppi "' "
+                     (:kuvaus oikeus)
+                     (when urakka-id
+                       (str " urakassa " urakka-id))))))))
