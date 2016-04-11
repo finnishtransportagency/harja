@@ -5,6 +5,7 @@
             [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.dom :as dom]
+            [harja.loki :refer [log error]]
             [goog.events :as events]
             [harja.virhekasittely :as virhekasittely]
             [goog.events.EventType :as EventType]))
@@ -34,6 +35,8 @@
      {:reagent-render (fn [& args] (try
                                      (apply render args)
                                      (catch :default e
+                                       (error "VIRHE RENDERÖITÄESSÄ KOMPONENTTIA!")
+                                       (error e)
                                        [virhekasittely/rendaa-virhe e])))
       :get-initial-state (fn [this]
                            (reduce merge (map #(% this) get-initial-state)))
