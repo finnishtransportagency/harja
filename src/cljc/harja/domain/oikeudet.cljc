@@ -68,7 +68,7 @@
      ([oikeus kayttaja]
       (lue oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
-      (when-not (voi-lukea? oikeus kayttaja urakka-id)
+      (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
                  (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei lukuoikeutta "
                       (:kuvaus oikeus)
@@ -80,7 +80,7 @@
      ([oikeus kayttaja]
       (kirjoita oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
-      (when-not (voi-lukea? oikeus kayttaja urakka-id)
+      (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
                  (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei kirjoitusoikeutta "
                       (:kuvaus oikeus)
