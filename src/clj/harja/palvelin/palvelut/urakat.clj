@@ -23,15 +23,20 @@
       (not (nil? urakka-id)) [urakka-id]
 
       (roolit/lukuoikeus-kaikkiin-urakoihin? user)
-      (mapv :id (q/hae-kaikki-urakat-aikavalilla db (konv/sql-date alku) (konv/sql-date loppu)
-                                                 (when urakoitsija urakoitsija)
-                                                 (when urakkatyyppi (name urakkatyyppi)) hallintayksikko))
+      (mapv :id
+            (q/hae-kaikki-urakat-aikavalilla
+             db (konv/sql-date alku) (konv/sql-date loppu)
+             (when urakoitsija urakoitsija)
+             (when urakkatyyppi (name urakkatyyppi)) hallintayksikko))
 
-      :else (mapv :urakka_id (kayttajat-q/hae-kayttajan-urakat-aikavalilta db (:id user)
-                                                                           (konv/sql-date alku) (konv/sql-date loppu)
-                                                                           (when urakoitsija urakoitsija)
-                                                                           (when urakkatyyppi (name urakkatyyppi))
-                                                                           hallintayksikko))))))
+      :else
+      (mapv :urakka_id
+            (kayttajat-q/hae-kayttajan-urakat-aikavalilta
+             db (:id user)
+             (konv/sql-date alku) (konv/sql-date loppu)
+             (when urakoitsija urakoitsija)
+             (when urakkatyyppi (name urakkatyyppi))
+             hallintayksikko))))))
 
 (defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y))]
@@ -43,21 +48,21 @@
 
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
-        
+
         ;; Jos alueurakan alue on olemassa, käytetään sitä alueena
         (map #(if-let [alueurakka (:alueurakan_alue %)]
                 (-> %
                     (dissoc :alueurakan_alue)
                     (assoc  :alue alueurakka))
                 (dissoc % :alueurakan_alue)))
-        
+
         (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                      :nimi (:urakoitsija_nimi %)
                                      :ytunnus (:urakoitsija_ytunnus %)}))
 
         (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
-        
-        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja 
+
+        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja
         ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"}
         (map #(update-in % [:sopimukset] (fn [jdbc-array]
                                            (if (nil? jdbc-array)
@@ -71,7 +76,7 @@
         (map #(assoc %
                 :tyyppi (keyword (:tyyppi %))
                 :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
-        
+
         (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
                       :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))))
 
