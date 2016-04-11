@@ -63,16 +63,18 @@
               ;; insert
               (do
                 (log/debug "--> LISÄTÄÄN UUSI!")
-                (q/lisaa-urakan-yksikkohintainen-tyo<! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                                     urakka-id sopimusnumero (:tehtava tyo)
-                                                     (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                     (java.sql.Date. (.getTime (:loppupvm tyo)))))
+                (q/lisaa-urakan-yksikkohintainen-tyo<!
+                 c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                 urakka-id sopimusnumero (:tehtava tyo)
+                 (java.sql.Date. (.getTime (:alkupvm tyo)))
+                 (java.sql.Date. (.getTime (:loppupvm tyo)))))
               ;;update
               (do (log/debug " --> päivitetään vanha")
-                  (q/paivita-urakan-yksikkohintainen-tyo! c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
-                                                          urakka-id sopimusnumero (:tehtava tyo)
-                                                          (java.sql.Date. (.getTime (:alkupvm tyo)))
-                                                          (java.sql.Date. (.getTime (:loppupvm tyo)))))))
+                  (q/paivita-urakan-yksikkohintainen-tyo!
+                   c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
+                   urakka-id sopimusnumero (:tehtava tyo)
+                   (java.sql.Date. (.getTime (:alkupvm tyo)))
+                   (java.sql.Date. (.getTime (:loppupvm tyo)))))))
           (log/debug "Merkitään kustannussuunnitelmat likaiseksi tehtäville: " uniikit-tehtavat)
           (q/merkitse-kustannussuunnitelmat-likaisiksi! c urakka-id uniikit-tehtavat))
       (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
