@@ -134,6 +134,9 @@ ja palauttaa käyttäjätiedot"
 
     (merge (assoc kayttaja
                   :organisaatio organisaatio
+                  :organisaation-urakat (into #{}
+                                              (map :id)
+                                              (q/hae-organisaation-urakat db (:id organisaatio)))
                   :id kayttaja-id)
            (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
                              (partial q/hae-urakoitsijan-id-ytunnuksella db)

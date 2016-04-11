@@ -106,18 +106,35 @@
            (map :rooli)
            (into #{}))))
 
+(defn organisaatioroolit
+  "Palauttaa setin rooleja, joita käyttäjällä on annetussa organisaatiossa."
+  ([kayttaja]
+   (organisaatioroolit kayttaja (get-in kayttaja [:organisaatio :id])))
+  ([kayttaja organisaatio-id]
+   (get (:organisaatioroolit kayttaja) organisaatio-id)))
+
+(defn organisaation-urakka?
+  "Tarkistaa onko annettu urakka käyttäjän organisaation oma urakka.
+Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai
+urakoitsija."
+  [{urakat :organisaation-urakat} urakka-id]
+  (and urakat
+       (urakat urakka-id)))
+
 (defn roolissa?
   "Tarkistaa onko käyttäjällä tietty rooli. Rooli voi olla joko yksittäinen rooli
 tai setti rooleja. Jos annetaan setti, tarkistetaan onko käyttäjällä joku annetuista
 rooleista."
   #?(:cljs ([rooli] (roolissa? @istunto/kayttaja rooli)))
   ([kayttaja rooli]
-    ;; Järjestelmän vastuuhenkilöllä on kaikki roolit eli saa tehdä kaiken
-   (if (contains? (:roolit kayttaja) jarjestelmavastuuhenkilo)
-     true
-     (if (some (if (set? rooli)
-                 rooli
-                 #{rooli}) (:roolit kayttaja))
+   (let [roolit (if (set? rooli)
+                  rooli
+                  #{rooli})]
+     ;; Järjestelmän vastuuhenkilöllä on kaikki roolit eli saa tehdä kaiken
+     (if (or (some roolit (:roolit kayttaja))
+             (some (fn [organisaatioroolit]
+                     (some roolit organisaatioroolit))
+                   (vals (:organisaatioroolit kayttaja))))
        true
        false))))
 
@@ -128,14 +145,19 @@ rooleista."
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   #?(:cljs ([rooli urakka-id] (rooli-urakassa? @istunto/kayttaja rooli urakka-id)))
   ([kayttaja rooli urakka-id]
-    (if (roolissa? kayttaja jarjestelmavastuuhenkilo)
-      true
-      (if-let [urakkaroolit (urakkaroolit kayttaja urakka-id)]
-        (cond
-          (string? rooli) (if (urakkaroolit rooli) true false)
-          (set? rooli) (not (empty? (intersection urakkaroolit rooli)))
-          :default false)
-        false))))
+   (let [roolit (if (set? rooli)
+                  rooli
+                  #{rooli})
+         urakkaroolit (urakkaroolit kayttaja urakka-id)
+         organisaatioroolit (when ((:organisaation-urakat kayttaja) urakka-id)
+                              (organisaatioroolit kayttaja))]
+     (or
+      ;; Jos käyttäjällä on suoraan rooli annetussa urakassa
+      (some roolit (urakkaroolit kayttaja urakka-id))
+
+      ;; Tai käyttäjällä on rooli organisaatiossa ja urakka on organisaation urakka
+      (and (organisaation-urakka? kayttaja urakka-id)
+           (some roolit (organisaatioroolit kayttaja)))))))
 
 ;; VAIN BACKILLÄ
 
@@ -168,13 +190,6 @@ rooleista."
                tilaajan-asiantuntija
                tilaajan-laadunvalvontakonsultti}))
 
-(defn organisaation-urakka?
-  "Tarkistaa onko annettu urakka käyttäjän organisaation oma urakka.
-Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai
-urakoitsija."
-  [{urakat :organisaation-urakat} urakka-id]
-  (and urakat
-       (urakat urakka-id)))
 
 (defn lukuoikeus-urakassa?
   [kayttaja urakka-id]

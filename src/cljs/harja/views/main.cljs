@@ -170,6 +170,12 @@
                   [:div
                    [:p "Käytössäsi on vanhentunut Internet Explorer -selaimen versio. Emme voi taata, että kaikki Harjan ominaisuudet toimivat täysin oikein."]])))
 
+(defn ei-kayttooikeutta? [kayttaja]
+  (or (:poistettu kayttaja)
+      (and (empty? (:roolit kayttaja))
+           (empty? (:urakkaroolit kayttaja))
+           (empty? (:organisaatioroolit kayttaja)))))
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
@@ -185,8 +191,7 @@
             [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
             (if (nil? kayttaja)
               [ladataan]
-              (if (or (:poistettu kayttaja)
-                      (empty? (:roolit kayttaja)))
+              (if (ei-kayttooikeutta? kayttaja)
                 [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))

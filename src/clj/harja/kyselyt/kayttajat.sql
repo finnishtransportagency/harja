@@ -35,6 +35,13 @@ RETURNING id
 SELECT id,nimi,tyyppi FROM organisaatio
  WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
 
+-- name: hae-organisaation-urakat
+-- Palauttaa organisaation (hallintayksikkö tai urakoitsija) omien urakoiden id:t
+SELECT u.id
+  FROM urakka u
+ WHERE u.urakoitsija = :org OR u.hallintayksikko = :org
+
+
 -- name: hae-kayttajat
 -- Hakee käyttäjiä käyttäjähallinnan listausta varten.
 -- Haun suorittava käyttäjä annetaan parametrina ja vain käyttäjät, jotka hän saa nähdä palautetaan.
