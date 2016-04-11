@@ -9,15 +9,18 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 ;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi
-(def kohteet-xf (map (fn [rivi]
-                       (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
-                         (assoc rivi
-                           :kohteet (into {}
-                                          (map (fn [kohde]
-                                                 (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$" kohde)]
-                                                   [(Integer/parseInt nro) [tulos lisatieto]]))
-                                               kohteet)))
-                         rivi))))
+(def kohteet-xf
+  (map (fn [rivi]
+         (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
+           (assoc rivi
+                  :kohteet
+                  (into {}
+                        (map (fn [kohde]
+                               (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$"
+                                                                         kohde)]
+                                 [(Integer/parseInt nro) [tulos lisatieto]]))
+                             kohteet)))
+           rivi))))
 
 (defn hae-urakan-sillat
   "Hakee annetun urakan alueen sillat sekä niiden viimeisimmän tarkastuspäivän ja tarkastajan.
