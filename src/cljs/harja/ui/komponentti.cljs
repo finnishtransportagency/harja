@@ -35,7 +35,8 @@
      {:reagent-render (fn [& args] (try
                                      (apply render args)
                                      (catch :default e
-                                       (error "VIRHE RENDERÖITÄESSÄ KOMPONENTTIA: " e)
+                                       (error "VIRHE RENDERÖITÄESSÄ KOMPONENTTIA!")
+                                       (error e) ;; Logita erikseen, jotta helpompi tarkistaa
                                        [virhekasittely/rendaa-virhe e])))
       :get-initial-state (fn [this]
                            (reduce merge (map #(% this) get-initial-state)))
