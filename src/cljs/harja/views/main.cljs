@@ -22,7 +22,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -33,7 +34,7 @@
        etunimi " " sukunimi]]
     (if-not (istunto/testikaytto-mahdollista?)
       kayttajainfo
-      
+
       (let [testikayttaja @istunto/testikayttaja]
         [:span
          (if testikayttaja
@@ -58,20 +59,25 @@
 
    [:ul#sivut.nav.nav-pills
 
-    [:li {:role "presentation" :class (when (= s :urakat) "active")}
-     [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]]
+    (when (oikeudet/urakat)
+      [:li {:role "presentation" :class (when (= s :urakat) "active")}
+       [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]])
 
-    [:li {:role "presentation" :class (when (= s :raportit) "active")}
-     [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]]
+    (when (oikeudet/raportit)
+      [:li {:role "presentation" :class (when (= s :raportit) "active")}
+       [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]])
 
-    [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
-     [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]]
+    (when (oikeudet/tilannekuva)
+      [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
+       [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]])
 
-    [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
-     [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]]
+    (when (oikeudet/ilmoitukset)
+      [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
+       [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
 
-    [:li {:role "presentation" :class (when (= s :hallinta) "active")}
-     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
+    (when (oikeudet/hallinta)
+      [:li {:role "presentation" :class (when (= s :hallinta) "active")}
+       [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])]
    :right
    [kayttajatiedot istunto/kayttaja]])
 
@@ -184,4 +190,3 @@
                 [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))
-
