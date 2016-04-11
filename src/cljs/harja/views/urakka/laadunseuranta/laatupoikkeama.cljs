@@ -326,7 +326,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                    :komponentti [napit/yleinen
                                  "Avaa tarkastus"
                                  (fn [] (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
-                                 {:ikoni (ikonit/arrow-beginning)}]})))]
+                                 {:ikoni (ikonit/arrow-left)}]})))]
             @laatupoikkeama]])))))
 
 (defn laatupoikkeama []

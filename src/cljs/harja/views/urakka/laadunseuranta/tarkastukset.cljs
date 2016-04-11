@@ -16,6 +16,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
+            [harja.ui.ikonit :as ikonit]
 
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
@@ -204,7 +205,8 @@
                              (not validi?))
                  :kun-onnistuu (fn [tarkastus]
                                  (reset! tarkastukset/valittu-tarkastus nil)
-                                 (tarkastukset/paivita-tarkastus-listaan! tarkastus))}]}
+                                 (tarkastukset/paivita-tarkastus-listaan! tarkastus))
+                 :ikoni (ikonit/tallenna)}]}
       [(when jarjestelmasta?
          {:otsikko "Lähde" :nimi :luoja :tyyppi :string
           :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
@@ -279,7 +281,8 @@
                       {:disabled (nil? (:id tarkastus))
                        :kun-onnistuu (fn [tarkastus]
                                        (reset! tarkastus-atom tarkastus)
-                                       (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))}]}]
+                                       (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
+                       :ikoni (ikonit/arrow-right)}]}]
       tarkastus]]))
 
 
