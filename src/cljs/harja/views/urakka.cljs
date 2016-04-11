@@ -24,25 +24,26 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn valilehti-mahdollinen? [valilehti urakkatyyppi sopimustyyppi]
+(defn valilehti-mahdollinen? [valilehti {:keys [urakkatyyppi sopimustyyppi id]}]
   ;; FIXME: siirrä navigaatioon
   (case valilehti
     :yleiset true
-    :suunnittelu (not= sopimustyyppi :kokonaisurakka)
-    :toteumat (not= sopimustyyppi :kokonaisurakka)
-    :aikataulu (= urakkatyyppi :paallystys)
-    :kohdeluettelo-paallystys (= urakkatyyppi :paallystys)
-    :kohdeluettelo-paikkaus (= urakkatyyppi :paikkaus)
-    :laadunseuranta true
-    :valitavoitteet true
-    :turvallisuuspoikkeamat (= urakkatyyppi :hoito)
-    :laskutus))
+    ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
+    :suunnittelu (and (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id) (not= sopimustyyppi :kokonaisurakka))
+    :toteumat (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id) (not= sopimustyyppi :kokonaisurakka))
+    :aikataulu (and (oikeudet/urakat-aikataulu id) (= urakkatyyppi :paallystys))
+    :kohdeluettelo-paallystys (and (oikeudet/urakat-kohdeluettelo-paallystyskohteet id) (= urakkatyyppi :paallystys))
+    :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo-paikkauskohteet id) (= urakkatyyppi :paikkaus))
+    :laadunseuranta (oikeudet/urakat-laadunseuranta-tarkastukset id)
+    :valitavoitteet (oikeudet/urakat-valitavoitteet id)
+    :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= urakkatyyppi :hoito))
+    :laskutus (oikeudet/urakat-laskutus-laskutusyhteenveto id)))
 
 (defn urakka
   "Urakkanäkymä"
   []
   (let [ur @nav/valittu-urakka
-        _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) (:tyyppi ur) (:sopimustyyppi ur))
+        _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         hae-urakan-tyot (fn [ur]
                           (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
@@ -64,53 +65,55 @@
 
      "Suunnittelu"
      :suunnittelu
-     (when (valilehti-mahdollinen? :suunnittelu (:tyyppi ur) (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :suunnittelu ur)
        ^{:key "suunnittelu"}
        [suunnittelu/suunnittelu ur])
 
      "Toteumat"
      :toteumat
-     (when (valilehti-mahdollinen? :toteumat (:tyyppi ur) (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :toteumat ur)
        ^{:key "toteumat"}
        [toteumat/toteumat ur])
 
 
      "Aikataulu"
      :aikataulu
-     (when (valilehti-mahdollinen? :aikataulu (:tyyppi ur) (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :aikataulu ur)
        ^{:key "aikataulu"}
        [aikataulu/aikataulu])
 
      "Kohdeluettelo"
      :kohdeluettelo-paallystys
-     (when (valilehti-mahdollinen? :kohdeluettelo-paallystys (:tyyppi ur) (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
        ^{:key "kohdeluettelo"}
        [paallystyksen-kohdeluettelo/kohdeluettelo])
 
      "Kohdeluettelo"
      :kohdeluettelo-paikkaus
-     (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus (:tyyppi ur) (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
        ^{:key "kohdeluettelo"}
        [paikkauksen-kohdeluettelo/kohdeluettelo])
 
      "Laadunseuranta"
      :laadunseuranta
-     ^{:key "laadunseuranta"}
-     [laadunseuranta/laadunseuranta]
+     (when (valilehti-mahdollinen? :laadunseuranta ur)
+       ^{:key "laadunseuranta"}
+       [laadunseuranta/laadunseuranta])
 
      "Välitavoitteet"
      :valitavoitteet
-     (when (valilehti-mahdollinen? :valitavoitteet (:tyyppi ur) (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :valitavoitteet ur)
        ^{:key "valitavoitteet"}
        [valitavoitteet/valitavoitteet ur])
 
      "Turvallisuus"
      :turvallisuuspoikkeamat
-     (when (valilehti-mahdollinen? :turvallisuuspoikkeamat (:tyyppi ur) (:sopimustyyppi ur))
+     (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
        ^{:key "turvallisuuspoikkeamat"}
        [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
 
      "Laskutus"
      :laskutus
+     (when (valilehti-mahdollinen? :laskutus ur))
      ^{:key "laskutus"}
      [laskutus/laskutus]]))
