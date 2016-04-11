@@ -39,9 +39,12 @@
                          (reset! tila-atom uusi-tila)
                          (when on-change
                            (on-change uusi-tila))))]
-     [:div.harja-checkbox {:on-click vaihda-tila}
-      [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka tila)}
-       [:div.harja-checkbox-laatikko-sisalto
-        (when (= :valittu @tila-atom)
-          [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]
-      [:div.harja-checkbox-teksti nimi]])))
+     [:div.harja-checkbox
+      [:div.harja-checkbox-sisalto {:on-click (fn [event]
+                                                (vaihda-tila)
+                                                (.stopPropagation event))}
+       [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka tila)}
+        [:div.harja-checkbox-laatikko-sisalto
+         (when (= :valittu @tila-atom)
+           [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]
+       [:div.harja-checkbox-teksti nimi]]])))

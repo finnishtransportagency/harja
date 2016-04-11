@@ -32,8 +32,8 @@ INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus
 INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2015-01-02 16:02:00', 4 ,364, 8012, null, null, point(430877.5189858716, 7200994.6888509365)::GEOMETRY, 'Tarmo Tarkastaja', 'tiesto'::tarkastustyyppi, 'Tiessä oli pieni kuoppa', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'yit_uuvh'));
 INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2015-01-05 16:18:00', 4 ,364, 8012, null, null, point(430999.34049970115, 7202184.240103625)::GEOMETRY, 'Tarmo Tarkastaja', 'tiesto'::tarkastustyyppi, 'Tiessä oli muutamia pieniä kuoppia, ei kuitenkaan mitään vakavaa ongelmaa aiheuta', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'yit_uuvh'));
 
-INSERT INTO liite (nimi) VALUES ('tiestotarkastus_456.jpg');
-INSERT INTO liite (nimi) VALUES ('tiesto5667858.jpg');
+INSERT INTO liite (nimi, tyyppi) VALUES ('tiestotarkastus_456.jpg', 'image/jpeg');
+INSERT INTO liite (nimi, tyyppi) VALUES ('tiesto5667858.jpg', 'image/jpeg');
 INSERT INTO tarkastus_liite (tarkastus, liite) VALUES ((SELECT id FROM tarkastus WHERE havainnot ='Tiessä oli pieni kuoppa'), (SELECT id FROM liite WHERE nimi ='tiestotarkastus_456.jpg'));
 INSERT INTO tarkastus_liite (tarkastus, liite) VALUES ((SELECT id FROM tarkastus WHERE havainnot ='Tiessä oli pieni kuoppa'), (SELECT id FROM liite WHERE nimi ='tiesto5667858.jpg'));
 

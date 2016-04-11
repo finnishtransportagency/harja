@@ -68,7 +68,7 @@
                         :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
                         :fmt     pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-                        :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+                        :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
                        {:otsikko "Käsitelty" :nimi :kasittelyaika
                         :pakollinen? true
                         :hae     (comp :kasittelyaika :paatos :laatupoikkeama)

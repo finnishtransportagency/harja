@@ -20,12 +20,12 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama]
+(defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
   (r/wrap
-    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama)))
+    (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama-atom)))
     (fn [uusi]
       (swap!
-        turvallisuuspoikkeama
+        turvallisuuspoikkeama-atom
         assoc
         :korjaavattoimenpiteet
         (vals
@@ -47,10 +47,10 @@
    toimenpiteet])
 
 (defn turvallisuuspoikkeaman-tiedot []
-  (let [muokattu (reaction @tiedot/valittu-turvallisuuspoikkeama)]
+  (let [turvallisuuspoikkeama (reaction @tiedot/valittu-turvallisuuspoikkeama)]
     (fnc []
-         (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @muokattu))
-                                            ((:vahinkoluokittelu @muokattu) :henkilovahinko))
+         (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
+                                            ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
                henkilovahinkojen-disablointi-fn (fn [valitut vaihtoehto]
                                                   (or (and (valitut :ei_tietoa)
                                                            (not= vaihtoehto :ei_tietoa))
@@ -59,19 +59,21 @@
                                                            (= vaihtoehto :ei_tietoa))))]
            [:div
             [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
-
+            (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
+              (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:n epäonnistui "
+                                            (pvm/pvm-aika (:lahetetty @turvallisuuspoikkeama)))))
             [lomake/lomake
-             {:otsikko (if (:id @muokattu) "Luo uusi turvallisuuspoikkeama" "Muokkaa turvallisuuspoikkeamaa")
-              :muokkaa! #(do (log "TURPO: " (pr-str %)) (reset! muokattu %))
+             {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
+              :muokkaa! #(reset! turvallisuuspoikkeama %)
               :footer [napit/palvelinkutsu-nappi
                        "Tallenna turvallisuuspoikkeama"
-                       #(tiedot/tallenna-turvallisuuspoikkeama @muokattu)
+                       #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
                        {:luokka "nappi-ensisijainen"
                         :ikoni (ikonit/tallenna)
                         :kun-onnistuu #(do
                                         (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                         (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                        :disabled (not (lomake/voi-tallentaa? @muokattu))}]}
+                        :disabled (not (lomake/voi-tallentaa? @turvallisuuspoikkeama))}]}
              [(lomake/ryhma {:rivi? true}
                             {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
                              :pakollinen? true
@@ -92,7 +94,7 @@
                              :otsikko "Tapahtuma-aika"}
                             {:otsikko "Alkanut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
-                             :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+                             :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
                             {:otsikko "Päättynyt" :pakollinen? true :nimi :paattynyt :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
                                        [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]})
@@ -101,8 +103,8 @@
                :nimi :tr
                :tyyppi :tierekisteriosoite
                :uusi-rivi? true
-               :sijainti (r/wrap (:sijainti @muokattu)
-                                 #(swap! muokattu assoc :sijainti %))}
+               :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
+                                 #(swap! turvallisuuspoikkeama assoc :sijainti %))}
 
               {:uusi-rivi? true
                :otsikko "Kuvaus"
@@ -156,7 +158,7 @@
                    :valinta-nayta #(or (turpodomain/turpo-tyontekijan-ammatit %) "- valitse -")
                    :uusi-rivi? true}
                   {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
-                  (when (= :muu_tyontekija (:tyontekijanammatti @muokattu))
+                  (when (= :muu_tyontekija (:tyontekijanammatti @turvallisuuspoikkeama))
                     {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
                   (lomake/ryhma {:rivi? true}
                                 {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
@@ -188,9 +190,9 @@
                :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                   :voi-liittaa true
                                                   :placeholder "Kirjoita kommentti..."
-                                                  :uusi-kommentti (r/wrap (:uusi-kommentti @muokattu)
-                                                                          #(swap! muokattu assoc :uusi-kommentti %))}
-                             (:kommentit @muokattu)]}
+                                                  :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
+                                                                          #(swap! turvallisuuspoikkeama assoc :uusi-kommentti %))}
+                             (:kommentit @turvallisuuspoikkeama)]}
               (lomake/ryhma {:otsikko "Poikkeaman käsittely"}
                             {:otsikko "Poikkeama kirjattu" :nimi :luotu :fmt pvm/pvm-aika-opt :tyyppi :string
                              :muokattava? (constantly false)
@@ -199,12 +201,12 @@
                             {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                              :palstoja 2
                              :uusi-rivi? true
-                             :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet muokattu)]}
+                             :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)]}
                             {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                             {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})]
-             @muokattu]]))))
+             @turvallisuuspoikkeama]]))))
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (go

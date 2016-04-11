@@ -20,7 +20,7 @@
   Nähdäksesi tuloksen, vaihda tallennuksen jälkeen valittua hoitokautta."))
 
 (defn ei-urakan-aikana-str [alku loppu]
-  (str "Olet tallentamassa urakan ulkopuolelle (" alku " \u2014 " loppu ")!."))
+  (str "Olet tallentamassa urakan ulkopuolelle (" alku " \u2014 " loppu ")!"))
 
 (defn ei-kuukauden-aikana-str [alku loppu]
   (str "Olet tallentamassa valitun kuukauden ulkopuolelle (" alku " \u2014 " loppu ").

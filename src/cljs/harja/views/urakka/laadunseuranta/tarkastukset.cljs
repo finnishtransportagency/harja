@@ -219,7 +219,7 @@
 
 
        {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
-        :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+        :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
 
        {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
         :pakollinen? true

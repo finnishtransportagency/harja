@@ -31,6 +31,9 @@
   .virhe {
     .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
   }
+  .huomautus {
+    .virhe-tai-varoitus-lomake(@huomautus, @valkoinen);
+  }
   .puuttuva-arvo {
     border-bottom: solid 1px @vaara;
   }
@@ -164,6 +167,13 @@
   .glyphicon {
     color: @sininen5;
   }
+
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.lomake-yleinen-varoitus {
+  color: @varoitus;
 
   margin-top: 8px;
   margin-bottom: 8px;

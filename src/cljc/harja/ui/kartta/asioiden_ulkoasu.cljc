@@ -79,6 +79,7 @@
 ;;; Kaikki värit pitäisi olla määriteltynä näillä muutamilla riveillä.
 ;;;;;;;;;;
 
+;; Merkkijono, koska tämä on osa tiedoston nimeä
 (def ikonien-varit
   {;; Tilallisten sijainti-ikonien sisempi väri
    :tiedoitus                  "oranssi"
@@ -113,6 +114,11 @@
    :yllapito-muu                puhtaat/syaani
    :yllapito-pohja              puhtaat/musta
    :yllapito-katkoviiva         puhtaat/tummanharmaa
+
+   :laatupoikkeama                puhtaat/tummansininen
+   :laatupoikkeama-tilaaja        puhtaat/tummansininen
+   :laatupoikkeama-konsultti      puhtaat/tummansininen
+   :laatupoikkeama-urakoitsija    puhtaat/sininen
 
    :ok-tarkastus                puhtaat/musta
    :ok-tarkastus-tilaaja        puhtaat/musta
@@ -255,6 +261,13 @@
                  :konsultti (:laatupoikkeama-konsultti ikonien-varit)
                  :urakoitsija (:laatupoikkeama-urakoitsija ikonien-varit)
                  (:laatupoikkeama ikonien-varit))))
+
+(defn laatupoikkeaman-reitti [tekija]
+  {:color (case tekija
+            :tilaaja (:laatupoikkeama-tilaaja viivojen-varit)
+            :konsultti (:laatupoikkeama-konsultti viivojen-varit)
+            :urakoitsija (:laatupoikkeama-urakoitsija viivojen-varit)
+            (:laatupoikkeama viivojen-varit))})
 
 (defn kyselyn-ikoni [tila]
   (case tila
