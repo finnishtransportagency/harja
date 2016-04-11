@@ -19,6 +19,7 @@
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
 (def +tuntematon-silta+ "tuntematon-silta")
+(def +duplikaatti-siltatarkastus+ "duplikaatti-siltatarkastus")
 (def +tuntematon-materiaali+ "tuntematon-materiaali")
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
 (def +tyhja-vastaus+ "tyhja-vastaus")
