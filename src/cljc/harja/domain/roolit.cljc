@@ -121,6 +121,10 @@ urakoitsija."
   (and urakat
        (urakat urakka-id)))
 
+(defn oma-urakka? [kayttaja urakka-id]
+  (or (organisaation-urakka? kayttaja urakka-id)
+      (not (empty? (urakkaroolit kayttaja urakka-id)))))
+
 (defn roolissa?
   "Tarkistaa onko käyttäjällä tietty rooli. Rooli voi olla joko yksittäinen rooli
 tai setti rooleja. Jos annetaan setti, tarkistetaan onko käyttäjällä joku annetuista
