@@ -19,6 +19,10 @@ SELECT
   t.tr_alkuosa,
   t.tr_loppuosa,
   t.tyyppi,
+  t.luotu,
+  t.lahetetty,
+  t.lahetys_onnistunut     AS lahetysonnistunut,
+  t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
   k.suoritettu             AS korjaavatoimenpide_suoritettu,
@@ -51,6 +55,10 @@ SELECT
   t.tr_alkuosa,
   t.tr_loppuosa,
   t.tyyppi,
+  t.luotu,
+  t.lahetetty,
+  t.lahetys_onnistunut     AS lahetysonnistunut,
+  t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
   k.suoritettu             AS korjaavatoimenpide_suoritettu,
@@ -85,6 +93,10 @@ SELECT
   t.tr_alkuosa,
   t.tr_loppuosa,
   t.tyyppi,
+  t.luotu,
+  t.lahetetty,
+  t.lahetys_onnistunut     AS lahetysonnistunut,
+  t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
   k.suoritettu             AS korjaavatoimenpide_suoritettu,
@@ -123,6 +135,10 @@ SELECT
   t.vaylamuoto,
   t.toteuttaja,
   t.tilaaja,
+  t.luotu,
+  t.lahetetty,
+  t.lahetys_onnistunut                  AS lahetysonnistunut,
+  t.ilmoitukset_lahetetty               AS ilmoituksetlahetetty,
   t.laatija_etunimi                     AS laatijaetunimi,
   t.laatija_sukunimi                    AS laatijasukunimi,
   t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
@@ -204,6 +220,10 @@ SELECT
   t.vaylamuoto,
   t.toteuttaja,
   t.tilaaja,
+  t.luotu,
+  t.lahetetty,
+  t.lahetys_onnistunut                  AS lahetysonnistunut,
+  t.ilmoitukset_lahetetty               AS ilmoituksetlahetetty,
   t.laatija_etunimi                     AS laatijaetunimi,
   t.laatija_sukunimi                    AS laatijasukunimi,
   t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
@@ -320,7 +340,8 @@ SET
   laatija_etunimi                     = :laatija_etunimi,
   laatija_sukunimi                    = :laatija_sukunimi,
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
-  turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi
+  turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
+  ilmoitukset_lahetetty               = :ilmoitukset_lahetetty
 WHERE id = :id;
 
 -- name: hae-turvallisuuspoikkeaman-id-ulkoisella-idlla
@@ -383,7 +404,7 @@ INSERT INTO turvallisuuspoikkeama
  vahingoittuneet_ruumiinosat, sairauspoissaolo_jatkuu, aiheutuneet_seuraukset, vaylamuoto,
  laatija_etunimi, laatija_sukunimi,
  turvallisuuskoordinaattori_etunimi, turvallisuuskoordinaattori_sukunimi,
- ilmoittaja_etunimi, ilmoittaja_sukunimi, ulkoinen_id)
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ulkoinen_id, ilmoitukset_lahetetty)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu,
             :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [], :poissa,
@@ -398,7 +419,7 @@ VALUES
                                                         :turvallisuuskoordinaattori_etunimi,
    :turvallisuuskoordinaattori_sukunimi,
    :ilmoittaja_etunimi, :ilmoittaja_sukunimi,
-   :ulkoinen_id);
+   :ulkoinen_id, :ilmoitukset_lahetetty);
 
 --name: lokita-lahetys<!
 UPDATE turvallisuuspoikkeama

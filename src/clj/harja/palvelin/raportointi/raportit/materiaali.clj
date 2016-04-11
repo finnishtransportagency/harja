@@ -34,27 +34,29 @@
                            (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
     lopullinen-tulos))
 
-(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
+(defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm urakkatyyppi]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
                                                                                                             (konv/sql-timestamp alkupvm)
                                                                                                             (konv/sql-timestamp loppupvm)
-                                                                                                            hallintayksikko-id))]
+                                                                                                            hallintayksikko-id
+                                                                                                            (when urakkatyyppi (name urakkatyyppi))))]
     toteutuneet-materiaalit))
 
-(defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
+(defn muodosta-materiaaliraportti-koko-maalle [db user {:keys [alkupvm loppupvm urakkatyyppi]}]
   (log/debug "Haetaan koko maan toteutuneet materiaalit raporttia varten: " alkupvm loppupvm)
   (let [toteutuneet-materiaalit (into []
                                       (materiaalit-q/hae-koko-maan-toteutuneet-materiaalit-raportille db
                                                                                                       (konv/sql-timestamp alkupvm)
-                                                                                                      (konv/sql-timestamp loppupvm)))]
+                                                                                                      (konv/sql-timestamp loppupvm)
+                                                                                                      (when urakkatyyppi (name urakkatyyppi))))]
     toteutuneet-materiaalit))
 
 
 
 (defn suorita [db user {:keys [urakka-id 
-                               hallintayksikko-id alkupvm loppupvm] :as parametrit}]
+                               hallintayksikko-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -70,10 +72,13 @@
           (muodosta-materiaaliraportti-hallintayksikolle db user
                                                          {:hallintayksikko-id hallintayksikko-id
                                                           :alkupvm alkupvm
-                                                          :loppupvm loppupvm})
+                                                          :loppupvm loppupvm
+                                                          :urakkatyyppi urakkatyyppi})
                     
           (and alkupvm loppupvm)
-          (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm}))
+          (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm
+                                                            :loppupvm loppupvm
+                                                            :urakkatyyppi urakkatyyppi}))
 
         raportin-nimi "Materiaaliraportti"
         otsikko (raportin-otsikko

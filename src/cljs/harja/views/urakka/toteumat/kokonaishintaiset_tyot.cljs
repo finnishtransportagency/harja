@@ -50,10 +50,14 @@
          :tyyppi      :komponentti
          :leveys      2
          :komponentti (fn [rivi]
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(tiedot/valitse-toteuma! rivi)
-                          :disabled (:jarjestelma rivi)}
-                         (ikonit/eye-open) " Toteuma"])}]
+                        [:div
+                         {:title (if (:jarjestelma rivi)
+                                   "Järjestelmän raportoimaa toteumaa ei voi muokata."
+                                   "Muokkaa toteumaa.")}
+                         [:button.nappi-toissijainen.nappi-grid
+                          {:on-click #(tiedot/valitse-toteuma! rivi)
+                           :disabled (:jarjestelma rivi)}
+                          (ikonit/eye-open) " Toteuma"]])}]
        (sort-by :alkanut @tiedot)])))
 
 (defn tee-taulukko []
@@ -150,7 +154,7 @@
                           (assoc :alkanut arvo)))
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
              :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
-             :varoita     [[:urakan-aikana-ja-hoitokaudella]]}
+             :huomauta     [[:urakan-aikana-ja-hoitokaudella]]}
            (if (:jarjestelma @muokattu)
               {:tyyppi :string
                :otsikko "Pituus"

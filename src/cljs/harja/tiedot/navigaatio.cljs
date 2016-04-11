@@ -33,10 +33,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def valittu-valilehti-atom reitit/valittu-valilehti-atom)
 (def aseta-valittu-valilehti! reitit/aseta-valittu-valilehti!)
 
-(defn sivu
-  "Palauttaa nykyisen päätason sivun"
-  []
-  (reitit/valittu-valilehti :sivu))
+(def valittu-sivu (reaction (get @reitit/url-navigaatio :sivu)))
 
 (declare kasittele-url! paivita-url valitse-urakka)
 

@@ -97,40 +97,44 @@
                                                             (not (nil? tienumero))
                                                             tienumero))
 
-(defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero]}]
+(defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
   (tarkastukset-q/hae-hallintayksikon-soratietarkastukset-raportille db
                                                                      hallintayksikko-id
+                                                                     (when urakkatyyppi (name urakkatyyppi))
                                                                      alkupvm
                                                                      loppupvm
                                                                      (not (nil? tienumero))
                                                                      tienumero))
 
-(defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero]}]
+(defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero urakkatyyppi]}]
   (tarkastukset-q/hae-koko-maan-soratietarkastukset-raportille db
+                                                               (when urakkatyyppi (name urakkatyyppi))
                                                                alkupvm
                                                                loppupvm
                                                                (not (nil? tienumero))
                                                                tienumero))
 
-(defn hae-tarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
+(defn hae-tarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
   (case konteksti
     :urakka
     (hae-tarkastukset-urakalle db
                                {:urakka-id urakka-id
-                                :alkupvm   alkupvm
-                                :loppupvm  loppupvm
+                                :alkupvm alkupvm
+                                :loppupvm loppupvm
                                 :tienumero tienumero})
     :hallintayksikko
     (hae-tarkastukset-hallintayksikolle db
                                         {:hallintayksikko-id hallintayksikko-id
-                                         :alkupvm            alkupvm
-                                         :loppupvm           loppupvm
-                                         :tienumero          tienumero})
+                                         :alkupvm alkupvm
+                                         :loppupvm loppupvm
+                                         :tienumero tienumero
+                                         :urakkatyyppi urakkatyyppi})
     :koko-maa
     (hae-tarkastukset-koko-maalle db
-                                  {:alkupvm   alkupvm
-                                   :loppupvm  loppupvm
-                                   :tienumero tienumero})))
+                                  {:alkupvm alkupvm
+                                   :loppupvm loppupvm
+                                   :tienumero tienumero
+                                   :urakkatyyppi urakkatyyppi})))
 
 (def taulukon-otsikot
   [{:leveys 8 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
@@ -195,17 +199,18 @@
                   (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
                   nil]))))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         tarkastukset (map konv/alaviiva->rakenne
-                          (hae-tarkastukset db {:konteksti          konteksti
-                                                :urakka-id          urakka-id
+                          (hae-tarkastukset db {:konteksti konteksti
+                                                :urakka-id urakka-id
                                                 :hallintayksikko-id hallintayksikko-id
-                                                :alkupvm            alkupvm
-                                                :loppupvm           loppupvm
-                                                :tienumero          tienumero}))
+                                                :alkupvm alkupvm
+                                                :loppupvm loppupvm
+                                                :tienumero tienumero
+                                                :urakkatyyppi urakkatyyppi}))
         naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
         ainakin-yksi-poikkeama? (true? (some
                                         #(not (empty? (:laatupoikkeamat %)))

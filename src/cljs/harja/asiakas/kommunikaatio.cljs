@@ -39,12 +39,10 @@
 (defn virhe?
   "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, statuksen 500 tai on EiOikeutta viesti"
   [vastaus]
-  (or (roolit/ei-oikeutta? vastaus)
+  (or (nil? vastaus)
+      (roolit/ei-oikeutta? vastaus)
       (and (map? vastaus)
            (some (partial contains? vastaus) [:failure :virhe :error]))))
-           ; Aiemmin oli hellempi tapa tarkistaa, että näiden avainten
-           ; sisällä on jokin loogisesti tosi arvo. On kuitenkin mahdollista,
-           ; että serveri palauttaa esim. {:error nil}
 
 (def testmode {})
 

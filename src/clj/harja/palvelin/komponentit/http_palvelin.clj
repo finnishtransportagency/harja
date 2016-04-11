@@ -74,7 +74,7 @@
                             (catch harja.domain.roolit.EiOikeutta eo
                               ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                               eo)
-                            (catch Exception e
+                            (catch Throwable e
                               (log/warn e "Virhe POST palvelussa " nimi)
                               {:virhe (.getMessage e)}))]
               (transit-vastaus vastaus))))))))

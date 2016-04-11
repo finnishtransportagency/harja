@@ -39,18 +39,18 @@
   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
   (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
-                                              turvallisuuspoikkeama-xf
-                                              (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
-                                        {:kommentti          :kommentit
-                                         :korjaavatoimenpide :korjaavattoimenpiteet
-                                         :liite              :liitteet}))
+                                                         turvallisuuspoikkeama-xf
+                                                         (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                                   {:kommentti :kommentit
+                                                    :korjaavatoimenpide :korjaavattoimenpiteet
+                                                    :liite :liitteet}))
 
-       (update-in [:kommentit]
-                  (fn [kommentit]
-                    (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                          (dissoc % :liite)
-                                          %)
-                                        kommentit)))))]
+                  (update-in [:kommentit]
+                             (fn [kommentit]
+                               (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                                     (dissoc % :liite)
+                                                     %)
+                                                   kommentit)))))]
     tulos))
 
 (defn luo-tai-paivita-korjaavatoimenpide
@@ -70,7 +70,13 @@
 
 (def oletusparametrit {:ulkoinen_id nil
                        :ilmoittaja_etunimi nil
-                       :ilmoittaja_sukunimi nil})
+                       :ilmoittaja_sukunimi nil
+                       :alkuosa nil
+                       :numero nil
+                       :alkuetaisyys nil
+                       :loppuetaisyys nil
+                       :loppuosa nil
+                       :ilmoitukset_lahetetty nil})
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu
@@ -78,7 +84,8 @@
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
                    laatijaetunimi laatijasukunimi
-                   turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi]}]
+                   turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
+                   ilmoituksetlahetetty]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         parametrit
         (merge oletusparametrit
@@ -108,17 +115,16 @@
                 :laatija_etunimi laatijaetunimi
                 :laatija_sukunimi laatijasukunimi
                 :turvallisuuskoordinaattori_etunimi turvallisuuskoordinaattorietunimi
-                :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi})]
+                :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi
+                :ilmoitukset_lahetetty (konv/sql-timestamp ilmoituksetlahetetty)})]
     (if id
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
       (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
 
-(defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
-  (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
+(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi]
   (jdbc/with-db-transaction [c db]
     (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
-
       (when uusi-kommentti
         (log/debug "Turvallisuuspoikkeamalle lisätään uusi kommentti.")
         (let [liite (some->> uusi-kommentti
@@ -137,12 +143,15 @@
       (when-not (empty? korjaavattoimenpiteet)
         (doseq [korjaavatoimenpide korjaavattoimenpiteet]
           (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
-
           (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
+      id)))
 
-      (when turi (turi/laheta-turvallisuuspoikkeama turi id))
-
-      (hae-turvallisuuspoikkeamat c user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))))
+(defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
+  (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
+  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi)]
+    (when turi
+      (turi/laheta-turvallisuuspoikkeama turi id)))
+  (hae-turvallisuuspoikkeamat db user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle

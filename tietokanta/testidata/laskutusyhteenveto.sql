@@ -39,12 +39,11 @@ VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (S
 
 -- Suolauksen sallittu määrä
 INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali,
-                                urakka, sopimus,
-                                pohjavesialue, luotu, muokattu, luoja, muokkaaja, poistettu)
+                                urakka, sopimus, luotu, muokattu, luoja, muokkaaja, poistettu)
      VALUES ('20141001', '20150930', 800, (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'),
              (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
              (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
-             null, '2004-10-19 10:23:54+02', null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, false);
+             '2004-10-19 10:23:54+02', null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, false);
 
 -- Suolauksen toteuma (materiaalitoteuma)
 INSERT INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)

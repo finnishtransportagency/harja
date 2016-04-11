@@ -220,7 +220,7 @@
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :pakollinen?   true
             :validoi [[:ei-tyhja "Anna kustannuksen päivämäärä"]]
-            :varoita [[:urakan-aikana-ja-hoitokaudella]]}
+            :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
            {:otsikko     "Rahamäärä"
             :nimi        :rahasumma
             :pakollinen? true

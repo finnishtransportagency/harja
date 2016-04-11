@@ -25,10 +25,11 @@
     raportin-tiedot))
 
 
-(defn muodosta-suolasakkoraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm]}]
-  (log/debug "Haetaan tiedot suolasakon raportille hallintayksikkö-kontekstissa: " hallintayksikko-id alkupvm loppupvm)
+(defn muodosta-suolasakkoraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm urakkatyyppi]}]
+  (log/debug "Haetaan tiedot suolasakon raportille hallintayksikkö-kontekstissa: " hallintayksikko-id alkupvm loppupvm urakkatyyppi)
   (let [parametrit [db
                     hallintayksikko-id
+                    (when urakkatyyppi (name urakkatyyppi))
                     (konv/sql-timestamp alkupvm)
                     (konv/sql-timestamp loppupvm)
                     (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
@@ -36,9 +37,10 @@
         raportin-tiedot (into [] (apply hae-tiedot-hallintayksikon-suolasakkoraportille parametrit))]
     raportin-tiedot))
 
-(defn muodosta-suolasakkoraportti-koko-maalle [db user {:keys [alkupvm loppupvm]}]
-  (log/debug "Haetaan tiedot suolasakon raportille koko maa -kontekstissa: " alkupvm loppupvm)
+(defn muodosta-suolasakkoraportti-koko-maalle [db user {:keys [alkupvm loppupvm urakkatyyppi]}]
+  (log/debug "Haetaan tiedot suolasakon raportille koko maa -kontekstissa: " alkupvm loppupvm urakkatyyppi)
   (let [parametrit [db
+                    (when urakkatyyppi (name urakkatyyppi))
                     (konv/sql-timestamp alkupvm)
                     (konv/sql-timestamp loppupvm)
                     (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
@@ -46,7 +48,7 @@
         raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille parametrit))]
     raportin-tiedot))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id urakkatyyppi] :as parametrit}]
   (log/debug "Ajat:" (pr-str alkupvm loppupvm))
   (let [[konteksti raportin-data]
         (cond
@@ -57,13 +59,15 @@
 
           (and hallintayksikko-id alkupvm loppupvm)
           [:hallintayksikko (muodosta-suolasakkoraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
-                                                                                    :alkupvm            alkupvm
-                                                                                    :loppupvm           loppupvm})]
+                                                                                    :alkupvm alkupvm
+                                                                                    :loppupvm loppupvm
+                                                                                    :urakkatyyppi urakkatyyppi})]
           (and alkupvm loppupvm)
-          [:koko-maa (muodosta-suolasakkoraportti-koko-maalle db user {:alkupvm alkupvm :loppupvm loppupvm})]
+          [:koko-maa (muodosta-suolasakkoraportti-koko-maalle db user {:alkupvm alkupvm
+                                                                       :loppupvm loppupvm
+                                                                       :urakkatyyppi urakkatyyppi})]
 
           :default
-          ;; FIXME Pitäisikö tässä heittää jotain, tänne ei pitäisi päästä, jos parametrit ovat oikein?
           nil)
 
         raportin-nimi "Suolasakkoraportti"

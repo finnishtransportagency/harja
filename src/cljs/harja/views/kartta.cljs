@@ -223,7 +223,6 @@
   []
   (let [koko @nav/kartan-koko
         kartan-korkeus @kartan-korkeus
-        sivu (nav/sivu)
         v-ur @nav/valittu-urakka
         [muuta-kokoa-teksti ikoni] (case koko
                              :M ["Suurenna karttaa" (ikonit/arrow-down)]
@@ -576,7 +575,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
 
           ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
 
-          :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name (nav/sivu)))
+          :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/valittu-sivu))
           :extent             @nav/kartan-extent
 
           :selection          nav/valittu-hallintayksikko

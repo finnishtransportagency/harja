@@ -72,6 +72,7 @@ ja kaikki pakolliset kentät on täytetty"
           ::muokatut
           ::virheet
           ::varoitukset
+          ::huomautukset
           ::puuttuvat-pakolliset-kentat))
 
 (defrecord ^:private Otsikko [otsikko])
@@ -163,13 +164,18 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [teksti]
   [:div.lomake-yleinen-huomautus (harja.ui.ikonit/info-sign) (str " " teksti)])
 
+(defn yleinen-varoitus
+  "Yleinen varoitus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
+  [teksti]
+  [:div.lomake-yleinen-varoitus (harja.ui.ikonit/warning-sign) (str " " teksti)])
+
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja "
   [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s}
    data atom-fn muokattava?
-   muokattu? virheet varoitukset]
+   muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
     [:div.form-group {:class (str (or col-luokka
                                       (case (or palstoja 1)
@@ -180,7 +186,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                   (when-not (empty? virheet)
                                     " sisaltaa-virheen")
                                   (when-not (empty? varoitukset)
-                                    " sisaltaa-varoituksen"))}
+                                    " sisaltaa-varoituksen")
+                                  (when-not (empty? huomautukset)
+                                    " sisaltaa-huomautuksen"))}
      (when-not (+piilota-label+ tyyppi)
        [:label.control-label {:for nimi}
         [:span
@@ -202,6 +210,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
      (when (and muokattu?
                 (not (empty? varoitukset)))
        [virheen-ohje varoitukset :varoitus])
+     (when (and muokattu?
+                (not (empty? huomautukset)))
+       [virheen-ohje huomautukset :huomautus])
 
      [kentan-vihje s]]))
 
@@ -217,7 +228,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus!
-   muokatut virheet varoitukset]
+   muokatut virheet varoitukset huomautukset]
   (let [rivi? (-> skeemat meta :rivi?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
@@ -235,7 +246,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          data atom-fn muokattava?
          (get muokatut nimi)
          (get virheet nimi)
-         (get varoitukset nimi)]))]))
+         (get varoitukset nimi)
+         (get huomautukset nimi)]))]))
 
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
@@ -261,10 +273,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   "
   [_ _ _]
   (let [fokus (atom nil)]
-    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset voi-muokata?] :as opts} skeema
+    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset voi-muokata?] :as opts} skeema
          {muokatut ::muokatut
           virheet ::virheet
           varoitukset ::varoitukset
+          huomautukset ::huomautukset
           :as  data}]
       (kasittele-virhe
        (let [voi-muokata? (if (some? voi-muokata?)
@@ -276,6 +289,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                     (let [kaikki-skeemat (pura-ryhmat skeema)
                                           kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
                                           kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)
+                                          kaikki-huomautukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :huomauta)
                                           puuttuvat-pakolliset-kentat (into #{}
                                                                             (map :nimi)
                                                                             (validointi/puuttuvat-pakolliset-kentat uudet-tiedot kaikki-skeemat))]
@@ -284,6 +298,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                        ::muokatut (conj (or muokatut #{}) nimi)
                                                        ::virheet kaikki-virheet
                                                        ::varoitukset kaikki-varoitukset
+                                                       ::huomautukset kaikki-huomautukset
                                                        ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
          ;(lovg "RENDER! fokus = " (pr-str @fokus))
          [:div.lomake
@@ -305,7 +320,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                              #(reset! fokus %)
                              muokatut
                              virheet
-                             varoitukset]]
+                             varoitukset
+                             huomautukset]]
                 (if otsikko
                   ^{:key i}
                   [:span
@@ -315,7 +331,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
             (rivita skeema)))
 
           (when-let [footer (if footer-fn
-                              (footer-fn virheet varoitukset)
+                              (footer-fn virheet varoitukset huomautukset)
                               footer)]
             [:div.lomake-footer.row
              [:div.col-md-12 footer]])])))))

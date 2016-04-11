@@ -230,7 +230,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :tyyppi      :pvm-aika
               :nimi        :aika
               :validoi     [[:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
-              :varoita     [[:urakan-aikana-ja-hoitokaudella]]
+              :huomauta     [[:urakan-aikana-ja-hoitokaudella]]
               :palstoja  1}
 
              

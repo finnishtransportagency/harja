@@ -224,6 +224,8 @@
 
 (defmethod asia-kartalle :laatupoikkeama [laatupoikkeama valittu-fn?]
   (let [ikoni (ulkoasu/laatupoikkeaman-ikoni (:tekija laatupoikkeama))
+        ;; Laatupoikkeamat ovat pistemäisiä, mutta annetaan viivamäärittely fallbackina.
+        viiva (ulkoasu/laatupoikkeaman-reitti (:tekija laatupoikkeama))
         otsikko (otsikko-tekijalla "Laatupoikkeama" laatupoikkeama)]
     (assoc laatupoikkeama
       :type :laatupoikkeama
@@ -231,7 +233,7 @@
       :selite {:teksti otsikko
                :img    ikoni}
       :alue (maarittele-feature laatupoikkeama (valittu-fn? laatupoikkeama)
-                                ikoni))))
+                                ikoni viiva))))
 
 (def tarkastus-selitteet
   #{{:teksti "Tarkastus (ok)" :vari (:ok-tarkastus ulkoasu/viivojen-varit)}
