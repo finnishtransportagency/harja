@@ -9,7 +9,7 @@
             [harja.tiedot.urakka :as u]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko] :as yleiset]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko vihje] :as yleiset]
             [harja.tiedot.raportit :as raportit]
             [cljs.core.async :refer [<! >! chan]]
             [harja.views.kartta :as kartta]
@@ -176,7 +176,9 @@
       [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
        #(swap! vapaa-aikavali? not)
        nil false (when @vapaa-aikavali?
-                   [ui-valinnat/aikavali vapaa-aikavali])]]]))
+                   [:div
+                    [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
+                    [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])]]]))
 
 (def tienumero (atom nil))
 
