@@ -521,6 +521,8 @@
   [:span.livicon-search])
 (defn livicon-plus []
   [:span.livicon-plus])
+(defn livicon-pen []
+  [:span.livicon-pen])
 (defn livicon-warning-sign []
   [:span.livicon-exclamation-triangle])
 (defn livicon-trash []
@@ -540,8 +542,12 @@
 (defn livicon-kommentti [] ; koska comment on myös coressa
   [:span.livicon-comment])
 
-;; Tiettyjen toimintojen ikonit
+;; Tiettyjen toimintojen vakioikonit
 
+(defn muokkaa []
+  [:span.livicon-pen])
+(defn kumoa []
+  [:span.livicon-rotate-left])
 (defn peru []
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []

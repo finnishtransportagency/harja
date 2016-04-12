@@ -116,7 +116,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
       [:div.sanktiot
        [grid/muokkaus-grid
         {:tyhja        "Ei kirjattuja sanktioita."
-         :lisaa-rivi   " Lisää sanktio"
+         :lisaa-rivi   "Lisää sanktio"
          :ohjaus       g
          :uusi-rivi    (fn [rivi]
                          (assoc rivi :sakko? true))}
