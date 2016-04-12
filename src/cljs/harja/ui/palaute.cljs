@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]
             [harja.ui.ikonit :as ikonit]))
 
-(def sahkoposti "teemu.kaukoranta@solita.fi")
+(def sahkoposti "harja.palaute@solita.fi")
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
