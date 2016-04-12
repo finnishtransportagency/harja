@@ -31,7 +31,7 @@
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
 (defn tallenna-laatupoikkeama
-  "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja 
+  "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja
    päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
   [laatupoikkeama]
   (let [laatupoikkeama (assoc laatupoikkeama
@@ -61,7 +61,6 @@
                 (swap! laatupoikkeamat/urakan-laatupoikkeamat
                        conj uusi-laatupoikkeama)))
             true))))))
-
 
 (defn laatupoikkeaman-sanktiot
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
@@ -153,12 +152,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :tarkastukset))
 
 (defn laatupoikkeamalomake [asetukset laatupoikkeama]
-  (let [sanktio-virheet (atom {})
-        alkuperainen @laatupoikkeama]
+  (let [sanktio-virheet (atom {})]
     (komp/luo
       (fn [asetukset laatupoikkeama]
-        (let [muokattava? (constantly (not (paatos? alkuperainen)))
-              uusi? (not (:id alkuperainen))]
+        (let [muokattava? (constantly (not (paatos? @laatupoikkeama)))
+              uusi? (not (:id @laatupoikkeama))]
 
           [:div.laatupoikkeama
            [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
@@ -171,7 +169,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                       ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
                       ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
                       (cond
-                        (and (not (paatos? alkuperainen))
+                        (and (not (paatos? @laatupoikkeama))
                              (paatos? @laatupoikkeama))
                         "Tallenna ja lukitse laatupoikkeama"
 
@@ -188,7 +186,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :tyyppi :pvm-aika
               :nimi :aika
               :validoi [[:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
-              :varoita [[:urakan-aikana-ja-hoitokaudella]]
+              :huomauta [[:urakan-aikana-ja-hoitokaudella]]
               :palstoja 1}
 
 
@@ -256,7 +254,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                 (:kommentit @laatupoikkeama)]}))
 
              ;; Päätös
-             (when (:id alkuperainen)
+             (when (:id @laatupoikkeama)
                (lomake/ryhma
                  "Käsittely ja päätös"
 
