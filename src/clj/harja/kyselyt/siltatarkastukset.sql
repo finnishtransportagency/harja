@@ -279,3 +279,11 @@ WHERE siltaid = :siltaid;
 
 -- name: paivita-urakoiden-sillat
 SELECT paivita_sillat_alueurakoittain();
+
+-- name: onko-olemassa?
+-- single?: true
+SELECT exists(SELECT id
+              FROM siltatarkastus
+              WHERE silta = :silta AND
+                    ulkoinen_id != :ulkoinen_id AND
+                    tarkastusaika = :tarkastusaika);
