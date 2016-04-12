@@ -16,40 +16,40 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def api-tulos->kirjain
-  {"eiToimenpiteita"     "A"
-   "puhdistettava"       "B"
+  {"eiToimenpiteita" "A"
+   "puhdistettava" "B"
    "urakanKunnostettava" "C"
    "korjausOhjelmoitava" "D"})
 
 (def api-kohde->numero
   {;; Alusrakenne
-   "maatukienSiisteysJaKunto"                             1
-   "valitukienSiisteysJaKunto"                            2
-   "laakeritasojenSiisteysJaKunto"                        3
+   "maatukienSiisteysJaKunto" 1
+   "valitukienSiisteysJaKunto" 2
+   "laakeritasojenSiisteysJaKunto" 3
    ;; Päällysrakenne
-   "kansilaatta"                                          4
-   "paallysteenKunto"                                     5
-   "reunapalkinSiisteysJaKunto"                           6
-   "reunapalkinLiikuntasauma"                             7
+   "kansilaatta" 4
+   "paallysteenKunto" 5
+   "reunapalkinSiisteysJaKunto" 6
+   "reunapalkinLiikuntasauma" 7
    "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto" 8
-   "sillanpaidenSaumat"                                   9
-   "sillanJaPenkereenRaja"                                10
+   "sillanpaidenSaumat" 9
+   "sillanJaPenkereenRaja" 10
    ;; Varusteet ja laitteet
-   "kaiteidenJaSuojaverkkojenVauriot"                     11
-   "liikuntasaumalaitteidenSiisteysJaKunto"               12
-   "laakerit"                                             13
-   "syoksytorvet"                                         14
-   "tippuputket"                                          15
-   "kosketussuojatJaNiidenKiinnitykset"                   16
-   "valaistuslaitteet"                                    17
-   "johdotJaKaapelit"                                     18
-   "liikennemerkit"                                       19
+   "kaiteidenJaSuojaverkkojenVauriot" 11
+   "liikuntasaumalaitteidenSiisteysJaKunto" 12
+   "laakerit" 13
+   "syoksytorvet" 14
+   "tippuputket" 15
+   "kosketussuojatJaNiidenKiinnitykset" 16
+   "valaistuslaitteet" 17
+   "johdotJaKaapelit" 18
+   "liikennemerkit" 19
    ;; Siltapaikan rakenteet
-   "kuivatuslaitteidenSiisteysJaKunto"                    20
-   "etuluiskienSiisteysJaKunto"                           21
-   "keilojenSiisteysJaKunto"                              22
-   "tieluiskienSiisteysJaKunto"                           23
-   "portaidenSiisteysJaKunto"                             24})
+   "kuivatuslaitteidenSiisteysJaKunto" 20
+   "etuluiskienSiisteysJaKunto" 21
+   "keilojenSiisteysJaKunto" 22
+   "tieluiskienSiisteysJaKunto" 23
+   "portaidenSiisteysJaKunto" 24})
 
 (defn luo-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Luodaan uusi siltarkastus")
@@ -96,17 +96,26 @@
     (tallenna-kohderyhma (:varusteetJaLaitteet sillantarkastuskohteet))
     (tallenna-kohderyhma (:siltapaikanRakenteet sillantarkastuskohteet))))
 
+(defn tarkista-siltatarkastus [db siltatunnus silta-id ulkoinen-tarkastus-id tarkastusaika]
+  (when (silta-q/onko-olemassa? db silta-id ulkoinen-tarkastus-id tarkastusaika)
+    (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+             :virheet [{:koodi virheet/+duplikaatti-siltatarkastus+
+                        :viesti (format "Sillalle (tunnus: %s) ei voi kirjata uutta tarkastusta, sillä samalla aikaleimalla (%s) on jo kirjattu tarkastus. Tarkastusajalle saa olla vain yksi tarkastus."
+                                        siltatunnus tarkastusaika)}]})))
+
 (defn lisaa-siltatarkastus [{id :id} data kayttaja db]
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction [transaktio db]
       (let [ulkoinen-id (str (get-in data [:siltatarkastus :tunniste :id]))
+            tarkastus (:siltatarkastus data)
             siltatunnus (get-in data [:siltatarkastus :siltatunnus])
             silta (first (silta-q/hae-silta-tunnuksella transaktio siltatunnus))]
         (if silta
           (do
             (log/debug "Siltatunnuksella löydetty silta: " (pr-str silta))
+            (tarkista-siltatarkastus db siltatunnus (:id silta) ulkoinen-id (aika-string->java-sql-date (:tarkastusaika tarkastus)))
             (let [siltatarkastus-id (luo-tai-paivita-siltatarkastus
                                       ulkoinen-id
                                       urakka-id
@@ -117,8 +126,8 @@
               (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
               (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)
               (tee-kirjausvastauksen-body {:ilmoitukset "Siltatarkistus kirjattu onnistuneesti"})))
-          (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-                   :virheet [{:koodi  virheet/+tuntematon-silta+
+          (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+                   :virheet [{:koodi virheet/+tuntematon-silta+
                               :viesti (str "Siltaa ei löydy tunnuksella: " siltatunnus)}]}))))))
 
 (defrecord Siltatarkastukset []
