@@ -9,6 +9,8 @@
 (def taulukon-fonttikoko "8pt")
 (def otsikon-fonttikoko "10pt")
 
+(def raportin-tehostevari "#0066cc")
+
 (defmulti muodosta-pdf
   "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
@@ -26,13 +28,13 @@
                                               korosta-rivit oikealle-tasattavat-kentat] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko :font-weight "bold"} otsikko
-     [:fo:table {:border "solid 0.2mm #0066cc"}
+     [:fo:table {:border (str "solid 0.2mm " raportin-tehostevari)}
       (for [{:keys [otsikko leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
       [:fo:table-header
        [:fo:table-row
         (for [otsikko (map :otsikko sarakkeet)]
-          [:fo:table-cell {:border "solid 0.1mm black" :background-color "#0066cc"
+          [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
                            :color "#ffffff"
                            :font-weight "bold" :padding "1mm"}
            [:fo:block otsikko]])]]
@@ -64,15 +66,15 @@
              (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
                                           (= viimeinen-rivi rivi))
                                  {:background-color "#fafafa"
-                                  :border      "solid 0.3mm #0066cc"
-                                  :font-weight "bold"})
+                                  :border           (str "solid 0.3mm " raportin-tehostevari)
+                                  :font-weight      "bold"})
                    korosta? (when (some #(= i-rivi %) korosta-rivit)
                               {:background-color       "#919191"
                                :color "white"})]
                [:fo:table-row
                 (for [i (range (count sarakkeet))
                       :let [arvo (or (nth rivi i) "")]]
-                  [:fo:table-cell (merge {:border "solid 0.1mm #0066cc" :padding "1mm"
+                  [:fo:table-cell (merge {:border     (str "solid 0.1mm " raportin-tehostevari) :padding "1mm"
                                           :text-align (if (oikealle-tasattavat-kentat i)
                                                         "right"
                                                         "left")}
