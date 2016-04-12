@@ -13,7 +13,6 @@
     (fn [e]
       [:div.crash-component {:on-click #(swap! auki not)}
        [palaute/virhe-palaute (virhe-str e)]
-       [:span pahoitteluviesti]
        [:div.crash-details {:class (if @auki "details-open" "")}
         (virhe-str e)]])))
 

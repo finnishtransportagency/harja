@@ -18,7 +18,7 @@
   (str
     "
     ---
-    Kirjoita ylle, mitä olit tekemässä kun virhe tuli vastaan. Kuvakaappaukset ovat meille hyvä apu. Ethän pyyhi alla olevaa varoitustekstiä pois.
+    Kirjoita ylle, mitä olit tekemässä kun virhe tuli vastaan. Kuvakaappaukset ovat meille hyvä apu. Ethän pyyhi alla olevaa virheviestiä pois.
 
     ---
 
@@ -54,11 +54,9 @@
    [:span (ikonit/kommentti) " Palautetta!"]])
 
 (defn virhe-palaute [virhe]
-  [:button.nappi-ensisijainen
-   {:on-click #(.stopPropagation %)}
-   [:a
-    {:href (-> (mailto)
-               (subject virhe-otsikko "?")
-               (body (virhe-body virhe)))
-     :on-click #(.stopPropagation %)}
-    [:span (ikonit/envelope) " Lähetä meille virheraportti"]]])
+  [:a#palautelinkki
+   {:href (-> (mailto)
+              (subject virhe-otsikko "?")
+              (body (virhe-body virhe)))
+    :on-click #(.stopPropagation %)}
+   [:span (ikonit/envelope) " Hupsista, Harja räsähti. Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. Klikkaa tähän, niin pääset lähettämään virheraportin."]])
