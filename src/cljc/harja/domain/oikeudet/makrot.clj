@@ -81,6 +81,7 @@
                                     sarakkeet)]
          {:sym (oikeus-sym osio nakyma)
           :osio osio
+          :nakyma nakyma
           :taso1 (kanonisoi (str osio "-" (first (str/split nakyma #" "))))
           :kuvaus (str "Osio '" osio "' näkymä '" nakyma "'")
           :luku (into #{}
@@ -140,6 +141,8 @@
                      `(def ~sym
                         (harja.domain.oikeudet/->KayttoOikeus (str "Osio/taso " ~taso1)
                                                               ~luku ~kirjoitus {}))))
-                 (group-by :taso1 oikeudet)))
-
-       )))
+                 (group-by :taso1
+                           ;; Vain niille, joilla 1. taso ei ole ainoa taso
+                           (filter (fn [{:keys [taso1 osio nakyma]}]
+                                     (not= taso1 (str (kanonisoi osio) "-" (kanonisoi nakyma))))
+                                   oikeudet)))))))
