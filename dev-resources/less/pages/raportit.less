@@ -1,4 +1,6 @@
-// Yleiset raportti-sivun asetukset
+/**********************************
+ *            Yleiset
+ **********************************/
 
 .raportti {
     margin-bottom: 20px;
@@ -14,12 +16,6 @@
     }
 
 
-}
-
-// Yleensä raporttien otsikkorivin otsikot tavutetaan, mutta tietyissä raporteissa
-// on dynaamisesti luotua sisältöä, joka pitää tavuttaa väkivalloin
-.materiaaliraportti thead > tr {
-    word-break: break-all;
 }
 
 .raportin-asetukset {
@@ -46,6 +42,12 @@
             }
         }
     }
+
+    .raportit-valittuaikavali-vihje {
+        position: relative;
+        left: 10px;
+        top: -5px;
+    }
 }
 
 .raportin-toiminnot {
@@ -63,6 +65,16 @@
   margin: 1px 0;
   .livi-alasveto(250px);
 }
+
+// Yleensä raporttien otsikkorivin otsikot tavutetaan, mutta tietyissä raporteissa
+// on dynaamisesti luotua sisältöä, joka pitää tavuttaa väkivalloin
+.materiaaliraportti thead > tr {
+    word-break: break-all;
+}
+
+/**********************************
+ *      Yksittäiset raportit
+ **********************************/
 
 // Soratietarkastusraportti
 
