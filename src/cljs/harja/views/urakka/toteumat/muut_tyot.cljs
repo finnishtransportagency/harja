@@ -397,9 +397,8 @@
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [:button.nappi-ensisijainen {:on-click #(reset! muut-tyot/valittu-toteuma {})
-                                        :disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}
-            (ikonit/livicon-plus) " Lisää toteuma"]
+           [napit/uusi "Lisää toteuma" #(reset! muut-tyot/valittu-toteuma {})
+            {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
 
            [grid/grid
             {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt sekä vahinkojen korjaukset")

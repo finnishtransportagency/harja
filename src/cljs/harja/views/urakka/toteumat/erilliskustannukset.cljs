@@ -287,8 +287,8 @@
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.erilliskustannusten-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
-            (ikonit/livicon-plus) " Lisää kustannus"]
+           [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {})
+            {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
 
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")

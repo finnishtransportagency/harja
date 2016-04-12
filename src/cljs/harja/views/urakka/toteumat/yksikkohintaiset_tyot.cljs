@@ -365,9 +365,8 @@
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
          [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
-         [:button.nappi-ensisijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
-                                      :disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}
-          (ikonit/livicon-plus) " Lisää toteuma"]
+         [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
+          {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
 
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat")
