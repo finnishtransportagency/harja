@@ -81,6 +81,7 @@
                                     sarakkeet)]
          {:sym (oikeus-sym osio nakyma)
           :osio osio
+          :taso1 (kanonisoi (str osio "-" (first (str/split nakyma #" "))))
           :kuvaus (str "Osio '" osio "' näkymä '" nakyma "'")
           :luku (into #{}
                       (keep :rooli
@@ -128,4 +129,17 @@
                 `(def ~sym
                    (harja.domain.oikeudet/->KayttoOikeus (str "Osio " ~osio)
                                                          ~luku ~kirjoitus {}))))
-            (group-by :osio oikeudet))))))
+            (group-by :osio oikeudet)))
+
+       ;; Määritellään 1. tason näkymille oikeudet, jotka on union kaikista alaosioiden oikeuksista
+       (do
+         ~@(mapv (fn [[taso1 oikeudet]]
+                   (let [luku (reduce union #{} (map :luku oikeudet))
+                         kirjoitus (reduce union #{} (map :kirjoitus oikeudet))
+                         sym (symbol taso1)]
+                     `(def ~sym
+                        (harja.domain.oikeudet/->KayttoOikeus (str "Osio/taso " ~taso1)
+                                                              ~luku ~kirjoitus {}))))
+                 (group-by :taso1 oikeudet)))
+
+       )))
