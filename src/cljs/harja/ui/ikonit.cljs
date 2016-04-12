@@ -2,7 +2,7 @@
   "Kaikki bootstrap ja muut ikonit."
   (:refer-clojure :exclude [remove repeat print list filter sort]))
 
-;; Määritellään bootstrap ikonit
+;; Bootstrap ikonit
 
 (defn asterisk []
   [:span.glyphicon.glyphicon-asterisk])
@@ -180,14 +180,6 @@
   [:span.glyphicon.glyphicon-ok-circle])
 (defn ban-circle []
   [:span.glyphicon.glyphicon-ban-circle])
-(defn arrow-left []
-  [:span.livicon-arrow-left])
-(defn arrow-right []
-  [:span.livicon-arrow-right])
-(defn arrow-up []
-  [:span.livicon-arrow-up])
-(defn arrow-down []
-  [:span.livicon-arrow-down])
 (defn share-alt []
   [:span.glyphicon.glyphicon-share-alt])
 (defn resize-full []
@@ -212,8 +204,6 @@
   [:span.glyphicon.glyphicon-calendar])
 (defn random []
   [:span.glyphicon.glyphicon-random])
-(defn kommentti [] ; koska comment on myös coressa
-  [:span.livicon-comment])
 (defn magnet []
   [:span.glyphicon.glyphicon-magnet])
 (defn retweet []
@@ -503,6 +493,8 @@
 (defn menu-up []
   [:span.glyphicon.glyphicon-menu-up])
 
+;; Livin ikonit
+
 (defn ban []
   [:span.livicon-ban])
 (defn chevron-up []
@@ -543,3 +535,13 @@
   [:span.livicon-trash {:style {:opacity "0.3"} :title tooltip}])
 (defn upload []
   [:span.livicon-upload])
+(defn arrow-left []
+  [:span.livicon-arrow-left])
+(defn arrow-right []
+  [:span.livicon-arrow-right])
+(defn arrow-up []
+  [:span.livicon-arrow-up])
+(defn arrow-down []
+  [:span.livicon-arrow-down])
+(defn kommentti [] ; koska comment on myös coressa
+  [:span.livicon-comment])

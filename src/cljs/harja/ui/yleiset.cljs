@@ -478,3 +478,8 @@ jatkon."
                                                              (swap! piilossa? not))}
               "Piilota"]])])))))
 
+(defn ikoni-ja-teksti [ikoni teksti]
+  [:span
+   [:span {:class ikoni}]
+   [:span " "]
+   [:span teksti]])
