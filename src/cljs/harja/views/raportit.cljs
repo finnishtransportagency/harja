@@ -131,10 +131,10 @@
 
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
-  ;; vuosi (joko urakkavuodet tai generoitu lista)
-  ;; hoitokaudet (joko urakan hoitokaudet tai generoitu lista)
-  ;; kuukausi (valitun urakan tai hoitokauden kuukaudet, tai kaikki)
-  ;; vapaa tekstisyöttö aikavälille
+  ;; - vuosi (joko urakkavuodet tai generoitu lista)
+  ;; - hoitokaudet (joko urakan hoitokaudet tai generoitu lista)
+  ;; - kuukausi (valitun urakan tai hoitokauden kuukaudet, tai kaikki)
+  ;; - vapaa tekstisyöttö aikavälille
   ;;
   ;; Jos valittuna on urakka, joka ei ole tyyppiä hoito,
   ;; ei näytetä hoitokausivalintaa.
