@@ -277,8 +277,8 @@
         :nimi :laatupoikkeama
         :tyyppi :komponentti
         :vihje (if (:laatupoikkeamaid tarkastus)
-                 "Tallenna ja avaa tarkastuksen pohjalta luotu laatupoikkeama."
-                 "Tallenna ja kirjaa tarkastuksen pohjalta uusi laatupoikkeama.")
+                 "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
+                 "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
         :komponentti [napit/palvelinkutsu-nappi
                       (if (:laatupoikkeamaid tarkastus) "Avaa laatupoikkeama" "Lisää laatupoikkeama")
                       (fn []

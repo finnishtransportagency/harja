@@ -320,7 +320,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                    {:rivi? true
                     :uusi-rivi? true
                     :nimi :laatupoikkeama
-                    :vihje "Tallenna muutokset ja avaa tarkastus, jonka pohjalta laatupoikkeama on tehty."
+                    :vihje "Tallentaa muutokset ja avaa tarkastuksen, jonka pohjalta laatupoikkeama on tehty."
                     :tyyppi :komponentti
                     :komponentti [napit/yleinen
                                   "Avaa tarkastus"
