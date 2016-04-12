@@ -125,7 +125,11 @@ Hae työkalu: https://github.com/jarnovayrynen/cloverage
 Työkalun cloverage/cloverage kansiossa aja "lein install"
 Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
-## Tietokantadumpin ottaminen stg koneelta omalle
+## Tietokantadumpin ottaminen omalle koneelle
+
+### STG
+
+Yksinkertainen tapa ottaa dumppi:
 
 > ssh harja-db1-stg "sudo -u postgres pg_dump harja" > tietokanta/harja-stg-dump.sql
 
@@ -139,6 +143,16 @@ Vaihtoehtoinen tapa SCP:llä:
 > scp <omatunnus>@harja-db1-stg:/home/<omatunnus>/harja-stg-dump.sql /Users/<omatunnus>/Desktop/harja-stg-dump.sql
 
 Dumppi on nyt siirretty työpöydällesi. Siirrä se haluamaasi paikkaan.
+
+### harja-test
+
+Harja-test dumpin voi ottaa samalla logiikalla:
+
+> ssh -L 7778:localhost:5432 harja-db1-test
+> sudo -u postgres pg_dump harja > /tmp/harja-stg-dump.sql
+> mv /tmp/harja-test-dump.sql /home/jarihan/harja-test-dump.sql
+> exit
+> scp <omatunnus>@harja-db1-test:/home/<omatunnus>/harja-test-dump.sql /Users/<omatunnus>/Desktop/harja-test-dump.sql
 
 Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
 Mene vagrant-kansioon ja aja komennot:
