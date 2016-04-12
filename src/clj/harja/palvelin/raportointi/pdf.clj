@@ -36,7 +36,7 @@
         (for [otsikko (map :otsikko sarakkeet)]
           [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
                            :color "#ffffff"
-                           :font-weight "bold" :padding "1mm"}
+                           :font-weight "normal" :padding "1mm"}
            [:fo:block otsikko]])]]
       (let [rivien-maara (count data)
             viimeinen-rivi (last data)
@@ -50,6 +50,7 @@
          (when (empty? data)
            [:fo:table-row
             [:fo:table-cell {:padding                "1mm"
+                             :font-weight "normal"
                              :number-columns-spanned (count sarakkeet)}
              [:fo:block {:space-after "0.5em"}]
              [:fo:block "Ei tietoja"]]])
@@ -58,7 +59,7 @@
            (if-let [otsikko (:otsikko rivi)]
              [:fo:table-row
               [:fo:table-cell {:padding                "1mm"
-                               :font-weight            "bold"
+                               :font-weight            "normal"
                                :background-color       "#e1e1e1"
                                :number-columns-spanned (count sarakkeet)}
                [:fo:block {:space-after "0.5em"}]
@@ -75,6 +76,7 @@
                 (for [i (range (count sarakkeet))
                       :let [arvo (or (nth rivi i) "")]]
                   [:fo:table-cell (merge {:border     (str "solid 0.1mm " raportin-tehostevari) :padding "1mm"
+                                          :font-weight "normal"
                                           :text-align (if (oikealle-tasattavat-kentat i)
                                                         "right"
                                                         "left")}

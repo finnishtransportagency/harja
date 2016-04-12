@@ -60,7 +60,7 @@
                      {:background-color ~pdf/raportin-tehostevari
                       :border           "solid 0.1mm black"
                       :color "#ffffff"
-                      :font-weight      "bold"
+                      :font-weight      "normal"
                       :padding          "1mm"}
                      [:fo:block
                       "Eka"]]
@@ -68,7 +68,7 @@
                       {:background-color ~pdf/raportin-tehostevari
                        :border           "solid 0.1mm black"
                        :color "#ffffff"
-                       :font-weight      "bold"
+                       :font-weight      "normal"
                        :padding          "1mm"}
                       [:fo:block
                        "Toka"]]
@@ -76,7 +76,7 @@
                       {:background-color ~pdf/raportin-tehostevari
                        :border           "solid 0.1mm black"
                        :color "#ffffff"
-                       :font-weight      "bold"
+                       :font-weight      "normal"
                        :padding          "1mm"}
                       [:fo:block
                        "Kolmas"]])]]
@@ -85,6 +85,7 @@
                   ([:fo:table-row
                     ([:fo:table-cell
                       {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
+                       :font-weight      "normal"
                        :padding    "1mm"
                        :text-align "left"}
                       nil
@@ -92,6 +93,7 @@
                        "eka"]]
                       [:fo:table-cell
                        {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
+                        :font-weight      "normal"
                         :padding    "1mm"
                         :text-align "left"}
                        nil
@@ -99,6 +101,7 @@
                         "toka"]]
                       [:fo:table-cell
                        {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
+                        :font-weight      "normal"
                         :padding    "1mm"
                         :text-align "left"}
                        nil

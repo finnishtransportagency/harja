@@ -151,10 +151,12 @@
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)]
+                  raportin-nimi alkupvm loppupvm)
+        oikealle-tasattavat (set (range 2 (+ 5 (count listattavat-pvmt))))]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
+                 :oikealle-tasattavat-kentat oikealle-tasattavat
                  :tyhja (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys 15 :otsikko "Urakka"})
