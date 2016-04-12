@@ -507,20 +507,20 @@
                                                  (if (nil? (:id k))
                                                    (reset! valittu-kayttaja nil)
                                                    (modal/nayta! {:otsikko "Poistetaanko käyttöoikeus?"
-                                                                  :footer  [:span
-                                                                            [:button.nappi-toissijainen {:type     "button"
-                                                                                                         :on-click #(do (.preventDefault %)
-                                                                                                                        (modal/piilota!))}
-                                                                             "Peruuta"]
-                                                                            [:button.nappi-kielteinen {:type     "button"
-                                                                                                       :on-click #(do (.preventDefault %)
-                                                                                                                      (modal/piilota!)
-                                                                                                                      (poista!))}
-                                                                             "Poista käyttöoikeus"]
-                                                                            ]}
+                                                                  :footer [:span
+                                                                           [:button.nappi-toissijainen {:type "button"
+                                                                                                        :on-click #(do (.preventDefault %)
+                                                                                                                       (modal/piilota!))}
+                                                                            "Peruuta"]
+                                                                           [:button.nappi-kielteinen {:type "button"
+                                                                                                      :on-click #(do (.preventDefault %)
+                                                                                                                     (modal/piilota!)
+                                                                                                                     (poista!))}
+                                                                            "Poista käyttöoikeus"]
+                                                                           ]}
                                                                  [:div "Haluatko varmasti poistaa käyttäjän "
                                                                   [:b (:etunimi k) " " (:sukunimi k)] " Harja-käyttöoikeuden?"]))))}
-                 (ikonit/ban) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]]]]])])})))
+                 (ikonit/livicon-ban) (if (nil? (:id k)) " Peruuta" " Poista käyttöoikeus")]]]]])])})))
 
 (defn kayttajat
   "Käyttäjähallinnan pääkomponentti"

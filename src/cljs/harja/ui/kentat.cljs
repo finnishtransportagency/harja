@@ -765,7 +765,7 @@
            (when @virheet
              [:div {:class "virheet"}
               [:div {:class "virhe"}
-               [:span (ikonit/warning-sign) [:span @virheet]]]])
+               [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
            [:table
             [:thead
              [:tr

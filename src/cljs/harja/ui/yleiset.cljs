@@ -81,8 +81,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        ^{:key (hash v)}
        [:span
         (case tyyppi
-          :huomautus (ikonit/info-circle)
-          (ikonit/warning-sign))
+          :huomautus (ikonit/livicon-info-circle)
+          (ikonit/livicon-warning-sign))
         [:span (str " " v)]])]]))
 
 
@@ -364,7 +364,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     {:on-click #(do
                  (swap! rivi assoc :auki (not (:auki @rivi)))
                  (.preventDefault %))}
-    [:span.haitarin-tila (if (:auki @rivi) (ikonit/chevron-down) (ikonit/chevron-right))]
+    [:span.haitarin-tila (if (:auki @rivi) (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
     [:div.haitari-title (when piiloita? {:class "haitari-piilossa"}) (or (:otsikko @rivi) "")]]
    [:div.haitari-sisalto (if (:auki @rivi) {:class "haitari-auki"} {:class "haitari-kiinni"}) (:sisalto @rivi)]])
 
@@ -450,7 +450,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "lomake-vihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (harja.ui.ikonit/info-sign)
+     (harja.ui.ikonit/livicon-info-sign)
      (str " " teksti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")

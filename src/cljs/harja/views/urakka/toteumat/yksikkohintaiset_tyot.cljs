@@ -367,7 +367,7 @@
 
          [:button.nappi-ensisijainen {:on-click #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
                                       :disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}
-          (ikonit/plus) " Lisää toteuma"]
+          (ikonit/livicon-plus) " Lisää toteuma"]
 
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat")

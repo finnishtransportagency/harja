@@ -262,7 +262,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   [:div
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
    [:button.nappi-ensisijainen {:on-click #(reset! valittu-materiaalin-kaytto {})}
-    (ikonit/plus) " Lisää toteuma"]
+    (ikonit/livicon-plus) " Lisää toteuma"]
 
    [grid/grid
     {:otsikko  "Materiaalien käyttö"

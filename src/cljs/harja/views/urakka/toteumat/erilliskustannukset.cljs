@@ -150,51 +150,51 @@
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
-                  :footer   [:span
-                             [napit/palvelinkutsu-nappi
-                              " Tallenna kustannus"
-                              #(tallenna-erilliskustannus @muokattu)
-                              {:luokka       "nappi-ensisijainen"
-                               :disabled     @valmis-tallennettavaksi?
-                               :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
-                                               (do
-                                                 (korosta-rivia muokatun-id)
-                                                 (reset! tallennus-kaynnissa false)
-                                                 (reset! valittu-kustannus nil)))
-                               :kun-virhe    (reset! tallennus-kaynnissa false)}]
-                             (when (and
-                                     (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur))
-                                     (:id @muokattu))
-                               [:button.nappi-kielteinen
-                                {:class (when @tallennus-kaynnissa "disabled")
-                                 :on-click
-                                        (fn [e]
-                                          (.preventDefault e)
-                                          (modal/nayta! {:otsikko "Erilliskustannuksen poistaminen"
-                                                         :footer  [:span
-                                                                   [:button.nappi-toissijainen {:type     "button"
-                                                                                                :on-click #(do (.preventDefault %)
-                                                                                                               (modal/piilota!))}
-                                                                    "Peruuta"]
-                                                                   [:button.nappi-kielteinen {:type     "button"
-                                                                                              :on-click #(do (.preventDefault %)
-                                                                                                             (modal/piilota!)
-                                                                                                             (reset! tallennus-kaynnissa true)
-                                                                                                             (go (let [res (tallenna-erilliskustannus
-                                                                                                                             (assoc @muokattu :poistettu true))]
-                                                                                                                   (if res
-                                                                                                                     ;; Tallennus ok
-                                                                                                                     (do (viesti/nayta! "Kustannus poistettu")
-                                                                                                                         (reset! tallennus-kaynnissa false)
-                                                                                                                         (reset! valittu-kustannus nil))
+                  :footer [:span
+                           [napit/palvelinkutsu-nappi
+                            " Tallenna kustannus"
+                            #(tallenna-erilliskustannus @muokattu)
+                            {:luokka "nappi-ensisijainen"
+                             :disabled @valmis-tallennettavaksi?
+                             :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
+                                             (do
+                                               (korosta-rivia muokatun-id)
+                                               (reset! tallennus-kaynnissa false)
+                                               (reset! valittu-kustannus nil)))
+                             :kun-virhe (reset! tallennus-kaynnissa false)}]
+                           (when (and
+                                   (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur))
+                                   (:id @muokattu))
+                             [:button.nappi-kielteinen
+                              {:class (when @tallennus-kaynnissa "disabled")
+                               :on-click
+                               (fn [e]
+                                 (.preventDefault e)
+                                 (modal/nayta! {:otsikko "Erilliskustannuksen poistaminen"
+                                                :footer [:span
+                                                         [:button.nappi-toissijainen {:type "button"
+                                                                                      :on-click #(do (.preventDefault %)
+                                                                                                     (modal/piilota!))}
+                                                          "Peruuta"]
+                                                         [:button.nappi-kielteinen {:type "button"
+                                                                                    :on-click #(do (.preventDefault %)
+                                                                                                   (modal/piilota!)
+                                                                                                   (reset! tallennus-kaynnissa true)
+                                                                                                   (go (let [res (tallenna-erilliskustannus
+                                                                                                                   (assoc @muokattu :poistettu true))]
+                                                                                                         (if res
+                                                                                                           ;; Tallennus ok
+                                                                                                           (do (viesti/nayta! "Kustannus poistettu")
+                                                                                                               (reset! tallennus-kaynnissa false)
+                                                                                                               (reset! valittu-kustannus nil))
 
-                                                                                                                     ;; Epäonnistui jostain syystä
-                                                                                                                     (reset! tallennus-kaynnissa false)))))}
-                                                                    "Poista kustannus"]]}
-                                                        [:div (str "Haluatko varmasti poistaa erilliskustannuksen "
-                                                                   (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
-                                                                   (pvm/pvm (:pvm @muokattu)) "?")]))}
-                                (ikonit/trash) " Poista kustannus"])]}
+                                                                                                           ;; Epäonnistui jostain syystä
+                                                                                                           (reset! tallennus-kaynnissa false)))))}
+                                                          "Poista kustannus"]]}
+                                               [:div (str "Haluatko varmasti poistaa erilliskustannuksen "
+                                                          (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
+                                                          (pvm/pvm (:pvm @muokattu)) "?")]))}
+                              (ikonit/livicon-trash) " Poista kustannus"])]}
 
           [{:otsikko       "Sopimusnumero" :nimi :sopimus
             :pakollinen?   true
@@ -288,7 +288,7 @@
           [:div.erilliskustannusten-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
            [:button.nappi-ensisijainen {:on-click #(reset! valittu-kustannus {})}
-            (ikonit/plus) " Lisää kustannus"]
+            (ikonit/livicon-plus) " Lisää kustannus"]
 
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")

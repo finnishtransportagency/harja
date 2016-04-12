@@ -94,13 +94,13 @@
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (takaisin-fn))}
-   [y/ikoni-ja-teksti (ikonit/chevron-left) teksti]])
+   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn urakan-sivulle [teksti click-fn]
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (click-fn))}
-   [y/ikoni-ja-teksti (ikonit/chevron-left) teksti]])
+   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn uusi
   "Nappi 'uuden asian' luonnille. 
@@ -115,7 +115,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (uusi-fn))}
-    [y/ikoni-ja-teksti [ikonit/plus] teksti]]))
+    [y/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
 
 (defn hyvaksy
   ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
@@ -138,6 +138,6 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (peruuta-fn))}
-    [y/ikoni-ja-teksti [ikonit/ban] teksti]]))
+    [y/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
 
 

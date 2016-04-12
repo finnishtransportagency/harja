@@ -19,11 +19,11 @@
 (defn lomake-lukittu-huomautus
   [nykyinen-lukko]
   [:div.lomake-lukittu-huomautus
-   (harja.ui.ikonit/info-sign) (str " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä"
-                                    (when (and (:etunimi nykyinen-lukko)
+   (harja.ui.ikonit/livicon-info-sign) (str " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä"
+                                            (when (and (:etunimi nykyinen-lukko)
                                                (:sukunimi nykyinen-lukko))
                                       (str " (" (:etunimi nykyinen-lukko) " " (:sukunimi nykyinen-lukko) ")"))
-                                    " muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen.")])
+                                            " muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen.")])
 
 (defn nayta-paatos [tila]
   (case tila

@@ -168,35 +168,35 @@
          
 
          [grid/grid
-          {:otsikko                "Urakkasopimuksen mukaiset yksikköhinnat"
-           :tyhja                  (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-           :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                              (:id ur)
-                                                              #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                              urakan-yks-hint-tyot %)
-                                                              :ei-mahdollinen)
-           :peruuta                #(reset! tuleville? false)
-           :tunniste               :tehtava
-           :voi-lisata?            false
-           :voi-poistaa?           (constantly false)
-           :aloita-muokkaus-fn     (fn [_]
-                                     (ryhmittele-hinnoitellut @tyorivit))
-           :piilota-toiminnot?      true
-           :muokkaa-footer         (fn [g]
-                                     [raksiboksi "Tallenna tulevillekin hoitokausille"
-                                      @tuleville?
-                                      #(swap! tuleville? not)
-                                      [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                      @varoita-ylikirjoituksesta?])
-           :prosessoi-muutos       (if (= :hoito (:tyyppi ur))
-                                     (fn [rivit]
-                                       (let [rivit (seq rivit)]
-                                         (zipmap (map first rivit)
-                                                 (map (comp paivita-hoitorivin-summat second) rivit))))
-                                     (fn [rivit]
-                                       (let [rivit (seq rivit)]
-                                         (zipmap (map first rivit)
-                                                 (map (comp paivita-yllapitorivin-summat second) rivit)))))}
+          {:otsikko "Urakkasopimuksen mukaiset yksikköhinnat"
+           :tyhja (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
+           :tallenna (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                (:id ur)
+                                                #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
+                                                                urakan-yks-hint-tyot %)
+                                                :ei-mahdollinen)
+           :peruuta #(reset! tuleville? false)
+           :tunniste :tehtava
+           :voi-lisata? false
+           :voi-poistaa? (constantly false)
+           :aloita-muokkaus-fn (fn [_]
+                                 (ryhmittele-hinnoitellut @tyorivit))
+           :piilota-toiminnot? true
+           :muokkaa-footer (fn [g]
+                             [raksiboksi "Tallenna tulevillekin hoitokausille"
+                              @tuleville?
+                              #(swap! tuleville? not)
+                              [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                              @varoita-ylikirjoituksesta?])
+           :prosessoi-muutos (if (= :hoito (:tyyppi ur))
+                               (fn [rivit]
+                                 (let [rivit (seq rivit)]
+                                   (zipmap (map first rivit)
+                                           (map (comp paivita-hoitorivin-summat second) rivit))))
+                               (fn [rivit]
+                                 (let [rivit (seq rivit)]
+                                   (zipmap (map first rivit)
+                                           (map (comp paivita-yllapitorivin-summat second) rivit)))))}
 
           ;; sarakkeet
           (if (= :hoito (:tyyppi ur))

@@ -220,7 +220,7 @@
      [urakka-valinnat/urakan-hoitokausi urakka]
      [:button.nappi-ensisijainen
       {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
-      (ikonit/plus) " Lisää turvallisuuspoikkeama"]
+      (ikonit/livicon-plus) " Lisää turvallisuuspoikkeama"]
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"

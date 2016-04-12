@@ -495,53 +495,56 @@
 
 ;; Livin ikonit
 
-(defn ban []
+(defn livicon-ban []
   [:span.livicon-ban])
-(defn chevron-up []
+(defn livicon-chevron-up []
   [:span.livicon-chevron.livicon-chevron-up])
-(defn chevron-right []
+(defn livicon-chevron-right []
   [:span.livicon-chevron.livicon-chevron-right])
-(defn chevron-down []
+(defn livicon-chevron-down []
   [:span.livicon-chevron.livicon-chevron-down])
-(defn chevron-left []
+(defn livicon-chevron-left []
   [:span.livicon-chevron.livicon-chevron-left])
-(defn download []
+(defn livicon-download []
   [:span.livicon-download])
-(defn info-sign []
+(defn livicon-info-sign []
   [:span.livicon-info-circle])
-(defn info []
+(defn livicon-info []
   [:span.livicon-info])
-(defn info-circle []
+(defn livicon-info-circle []
   [:span.livicon-info-circle])
-(defn question []
+(defn livicon-question []
   [:span.livicon-question])
-(defn question-circle []
+(defn livicon-question-circle []
   [:span.livicon-question-circle])
+(defn livicon-search []
+  [:span.livicon-search])
+(defn livicon-plus []
+  [:span.livicon-plus])
+(defn livicon-warning-sign []
+  [:span.livicon-exclamation-triangle])
+(defn livicon-trash []
+  [:span.livicon-trash])
+(defn livicon-trash-disabled [tooltip]
+  [:span.livicon-trash {:style {:opacity "0.3"} :title tooltip}])
+(defn livicon-upload []
+  [:span.livicon-upload])
+(defn livicon-arrow-left []
+  [:span.livicon-arrow-left])
+(defn livicon-arrow-right []
+  [:span.livicon-arrow-right])
+(defn livicon-arrow-up []
+  [:span.livicon-arrow-up])
+(defn livicon-arrow-down []
+  [:span.livicon-arrow-down])
+(defn livicon-kommentti [] ; koska comment on myös coressa
+  [:span.livicon-comment])
+
+;; Tiettyjen toimintojen ikonit
+
 (defn peru []
   [:span.livicon-rotate-left])
 (defn tee-sittenkin []
   [:span.livicon-rotate-right])
 (defn tallenna []
   [:span.livicon-check])
-(defn search []
-  [:span.livicon-search])
-(defn plus []
-  [:span.livicon-plus])
-(defn warning-sign []
-  [:span.livicon-exclamation-triangle])
-(defn trash []
-  [:span.livicon-trash])
-(defn trash-disabled [tooltip]
-  [:span.livicon-trash {:style {:opacity "0.3"} :title tooltip}])
-(defn upload []
-  [:span.livicon-upload])
-(defn arrow-left []
-  [:span.livicon-arrow-left])
-(defn arrow-right []
-  [:span.livicon-arrow-right])
-(defn arrow-up []
-  [:span.livicon-arrow-up])
-(defn arrow-down []
-  [:span.livicon-arrow-down])
-(defn kommentti [] ; koska comment on myös coressa
-  [:span.livicon-comment])
