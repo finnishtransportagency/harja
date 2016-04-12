@@ -288,8 +288,7 @@
                                                                ") " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)))]
                                                       " tehdyn tarkastuksen?"]))}
            (ikonit/livicon-trash) " Poista tarkastus"]
-          [:button.nappi-toissijainen {:on-click #(reset! uuden-syottaminen true)}
-           [:span.livicon-plus " Uusi tarkastus"]]]
+          [napit/uusi "Uusi tarkastus" #(reset! uuden-syottaminen true)]]
 
          [grid/grid
           {:otsikko      (if @st/valittu-tarkastus

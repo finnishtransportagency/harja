@@ -541,6 +541,8 @@
   [:span.livicon-arrow-down])
 (defn livicon-kommentti [] ; koska comment on myös coressa
   [:span.livicon-comment])
+(defn livicon-check []
+  [:span.livicon-check])
 
 ;; Tiettyjen toimintojen vakioikonit
 

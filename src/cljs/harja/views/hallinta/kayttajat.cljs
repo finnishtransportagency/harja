@@ -23,7 +23,8 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.domain.roolit :refer [+rooli->kuvaus+]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -400,8 +401,7 @@
        :reagent-render
        (fn [k]
          [:div.kayttajatiedot
-          [:button.nappi-toissijainen {:on-click #(reset! valittu-kayttaja nil)}
-           [:span.livicon-chevron-left " Takaisin käyttäjäluetteloon"]]
+          [napit/takaisin "Takaisin käyttäjäluetteloon" #(reset! valittu-kayttaja nil)]
 
           [:h3 "Muokkaa käyttäjää " (:etunimi k) " " (:sukunimi k)]
 
