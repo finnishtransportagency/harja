@@ -9,6 +9,9 @@
 (defn warn [& things]
   (.apply js/console.warn js/console (apply array things)))
 
+(defn error [& things]
+  (.apply js/console.error js/console (apply array things)))
+
 (defn log [& things]
   (.apply js/console.log js/console (apply array things)))
 
@@ -22,5 +25,4 @@
 (defn tarkkaile!
   [nimi atomi]
   (add-watch atomi :tarkkailija (fn [_ _ vanha uusi]
-                                  (log nimi ": " (pr-str vanha) " => " (pr-str uusi))
-                                  )))
+                                  (log nimi ": " (pr-str vanha) " => " (pr-str uusi)))))

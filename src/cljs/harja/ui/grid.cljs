@@ -607,7 +607,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                   [:span.pull-right.muokkaustoiminnot
                                    (when (and tallenna
                                               (not (nil? tiedot)))
-                                     [:div (when (= :ei-mahdollinen tallenna)
+                                     [:div (when (and (= :ei-mahdollinen tallenna)
+                                                      tallennus-ei-mahdollinen-tooltip)
                                              {:title (tallennus-ei-mahdollinen-tooltip)})
                                       [:button.nappi-ensisijainen
                                        {:disabled (or (= :ei-mahdollinen tallenna)

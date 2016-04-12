@@ -84,8 +84,16 @@
     :urakoitsija "Urakoitsija"
     "Maksajaa ei asetettu"))
 
-(def +maksajavalinnat+
-  [:tilaaja :urakoitsija])
+(defn maksajavalinnat
+  [ek]
+  (case (:tyyppi ek)
+    :asiakastyytyvaisyysbonus
+    [:tilaaja]
+
+    :muu
+    [:tilaaja :urakoitsija]
+
+    [:tilaaja :urakoitsija]))
 
 
 (def korostettavan-rivin-id (atom nil))
@@ -214,7 +222,8 @@
                              (assoc (if (and
                                           urakan-indeksi
                                       (= :asiakastyytyvaisyysbonus arvo))
-                               (assoc rivi :indeksin_nimi urakan-indeksi)
+                               (assoc rivi :indeksin_nimi urakan-indeksi
+                                           :maksaja :tilaaja)
                                rivi)
                              :tyyppi arvo))}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
@@ -243,14 +252,16 @@
                                  (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
                                  (= :hoito (:tyyppi ur)))
                            "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan automaattisesti laskutusyhteenvedossa.
-                   Käytettävä indeksi on määritelty urakan kilpailuttamisajankohdan perusteella eikä sitä voi muuttaa.")
+                   Käytettävä indeksi määräytyy urakan kilpailuttamisajankohdan perusteella.")
             }
+           ;; asiakastyytyväisyysbonuksen voi maksaa vain tilaaja
            {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
+            :muokattava?   #(not= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
             :pakollinen?   true
             :valinta-nayta #(maksajavalinnan-teksti %)
-            :valinnat      +maksajavalinnat+
+            :valinnat-fn   #(maksajavalinnat @muokattu)
             :fmt           #(maksajavalinnan-teksti %)
-            :palstoja 1
+            :palstoja      1
             }
            {:otsikko     "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
             :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
@@ -297,7 +308,7 @@
                                (not (nil? (:indeksin_nimi %)))
                                (nil? (:indeksikorjattuna %)))
                            nil
-                           (fmt/euro-opt (:indeksikorjattuna %))))
+                           (fmt/euro-opt (Math/abs (:indeksikorjattuna %)))))
               :fmt     #(if (nil? %)
                          [:span.ei-arvoa "Ei indeksiarvoa"]
                          (str %))
