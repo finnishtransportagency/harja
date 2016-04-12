@@ -29,15 +29,15 @@
   (case valilehti
     :yleiset true
     ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
-    :suunnittelu (and (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id) (not= sopimustyyppi :kokonaisurakka))
-    :toteumat (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id) (not= sopimustyyppi :kokonaisurakka))
+    :suunnittelu (and (oikeudet/urakat-suunnittelu id) (not= sopimustyyppi :kokonaisurakka))
+    :toteumat (and (oikeudet/urakat-toteumat id) (not= sopimustyyppi :kokonaisurakka))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (= urakkatyyppi :paallystys))
-    :kohdeluettelo-paallystys (and (oikeudet/urakat-kohdeluettelo-paallystyskohteet id) (= urakkatyyppi :paallystys))
-    :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo-paikkauskohteet id) (= urakkatyyppi :paikkaus))
-    :laadunseuranta (oikeudet/urakat-laadunseuranta-tarkastukset id)
+    :kohdeluettelo-paallystys (and (oikeudet/urakat-kohdeluettelo id) (= urakkatyyppi :paallystys))
+    :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo id) (= urakkatyyppi :paikkaus))
+    :laadunseuranta (oikeudet/urakat-laadunseuranta id)
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
     :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= urakkatyyppi :hoito))
-    :laskutus (oikeudet/urakat-laskutus-laskutusyhteenveto id)))
+    :laskutus (oikeudet/urakat-laskutus id)))
 
 (defn urakka
   "Urakkanäkymä"
