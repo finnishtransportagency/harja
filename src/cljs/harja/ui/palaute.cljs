@@ -1,5 +1,6 @@
 (ns harja.ui.palaute
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [harja.ui.ikonit :as ikonit]))
 
 (def sahkoposti "teemu.kaukoranta@solita.fi")
 
@@ -8,6 +9,17 @@
   "Palautetta HARJAsta")
 (def palaute-body
   "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen mukaan liittämistä, ne ovat meille erittäin hyödyllisiä.")
+
+(def virhe-otsikko
+  "HARJA räsähti")
+
+(defn virhe-body [virheviesti]
+  (str
+    "
+    Kirjoita ylle, mitä olit tekemässä kun virhe tuli vastaan. Kuvakaappaukset ovat meille hyvä apu. Ethän pyyhi alla olevaa varoitustekstiä pois.
+
+    --"
+    virheviesti))
 
 (defn- mailto []
   (str "mailto:" sahkoposti))
@@ -25,4 +37,12 @@
   [:a {:href (-> (mailto)
                  (subject palaute-otsikko "?")
                  (body palaute-body))}
-   "Palautetta!"])
+   [:span (ikonit/kommentti) " Palautetta!"]])
+
+(defn virhe-palaute [virhe]
+  [:button.nappi-ensisijainen
+   [:a
+    {:href (-> (mailto)
+               (subject virhe-otsikko "?")
+               (body virhe-body))}
+    [:span (ikonit/envelope) " Lähetä meille vikaraportti"]]])
