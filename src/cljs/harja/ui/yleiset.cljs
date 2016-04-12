@@ -480,6 +480,6 @@ jatkon."
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
-   [:span {:class ikoni}]
+   ikoni
    [:span " "]
    [:span teksti]])

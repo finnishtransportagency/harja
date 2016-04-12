@@ -115,7 +115,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (uusi-fn))}
-    [y/ikoni-ja-teksti (ikonit/plus) teksti]]))
+    [y/ikoni-ja-teksti [ikonit/plus] teksti]]))
 
 (defn hyvaksy
   ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
@@ -127,7 +127,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
       :on-click #(do
                   (.preventDefault %)
                   (hyvaksy-fn))}
-     [y/ikoni-ja-teksti (ikonit/check) teksti]]))
+     [y/ikoni-ja-teksti [ikonit/check] teksti]]))
 
 (defn peruuta
   ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
@@ -138,6 +138,6 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (peruuta-fn))}
-    [y/ikoni-ja-teksti (ikonit/ban) teksti]]))
+    [y/ikoni-ja-teksti [ikonit/ban] teksti]]))
 
 
