@@ -6,7 +6,6 @@
     margin-bottom: 20px;
     &.laskutusyhteenveto {
         > .panel {
-            background-color: @harjan-taustavari;
             margin-bottom: 0;
         }
         .panel-heading {
@@ -14,8 +13,25 @@
             padding-top: 2px;
         }
     }
-
-
+    th {
+        background-color: @raportin-tehostevari;
+        border-color: @raportin-tehostevari;
+        color: @valkoinen;
+    }
+    tr.pariton,
+    tr.parillinen {
+        //font-weight: bold;
+        background-color: @harmaa10;
+    }
+    td {
+        border-color: @raportin-tehostevari;
+    }
+    tr.yhteenveto {
+        background-color: @harmaa11;
+        border-bottom: 2px solid @raportin-tehostevari;
+        border-top: 2px solid @raportin-tehostevari;
+        font-weight: bold;
+    }
 }
 
 .raportin-asetukset {
