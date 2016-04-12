@@ -47,9 +47,10 @@
 
 
 (defn palaute-linkki []
-  [:a {:href (-> (mailto)
-                 (subject palaute-otsikko "?")
-                 (body palaute-body))}
+  [:a#palautelinkki
+   {:href (-> (mailto)
+                              (subject palaute-otsikko "?")
+                              (body palaute-body))}
    [:span (ikonit/kommentti) " Palautetta!"]])
 
 (defn virhe-palaute [virhe]
