@@ -25,14 +25,16 @@
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                               korosta-rivit oikealle-tasattavat-kentat] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko} otsikko
-     [:fo:table {:border "solid 0.2mm black"}
+    [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko :font-weight "bold"} otsikko
+     [:fo:table {:border "solid 0.2mm #0066cc"}
       (for [{:keys [otsikko leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
       [:fo:table-header
        [:fo:table-row
         (for [otsikko (map :otsikko sarakkeet)]
-          [:fo:table-cell {:border "solid 0.1mm black" :background-color "#afafaf" :font-weight "bold" :padding "1mm"}
+          [:fo:table-cell {:border "solid 0.1mm black" :background-color "#0066cc"
+                           :color "#ffffff"
+                           :font-weight "bold" :padding "1mm"}
            [:fo:block otsikko]])]]
       (let [rivien-maara (count data)
             viimeinen-rivi (last data)
@@ -61,7 +63,8 @@
                [:fo:block otsikko]]]
              (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
                                           (= viimeinen-rivi rivi))
-                                 {:border      "solid 0.3mm black"
+                                 {:background-color "#fafafa"
+                                  :border      "solid 0.3mm #0066cc"
                                   :font-weight "bold"})
                    korosta? (when (some #(= i-rivi %) korosta-rivit)
                               {:background-color       "#919191"
@@ -69,7 +72,7 @@
                [:fo:table-row
                 (for [i (range (count sarakkeet))
                       :let [arvo (or (nth rivi i) "")]]
-                  [:fo:table-cell (merge {:border "solid 0.1mm black" :padding "1mm"
+                  [:fo:table-cell (merge {:border "solid 0.1mm #0066cc" :padding "1mm"
                                           :text-align (if (oikealle-tasattavat-kentat i)
                                                         "right"
                                                         "left")}
@@ -152,7 +155,7 @@
      [:fo:table-column {:column-width "20%"}]
      [:fo:table-body
       [:fo:table-row
-       [:fo:table-cell [:fo:block raportin-nimi]]
+       [:fo:table-cell [:fo:block {:font-weight "bold"} raportin-nimi]]
        [:fo:table-cell [:fo:block "Ajettu " nyt]]
        [:fo:table-cell {:text-align "end"}
         [:fo:block
