@@ -176,7 +176,7 @@
       [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
        #(swap! vapaa-aikavali? not)
        nil false (when @vapaa-aikavali?
-                   [ui-valinnat/aikavali vapaa-aikavali])]]]))
+                   [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}])]]]))
 
 (def tienumero (atom nil))
 
