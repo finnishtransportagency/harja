@@ -1,6 +1,6 @@
 (ns harja.palvelin.raportointi.pdf-test
   "Raportoinnin PDF elementtien muodostamisen testit"
-  (:require [harja.palvelin.raportointi.pdf :refer [muodosta-pdf]]
+  (:require [harja.palvelin.raportointi.pdf :as pdf :refer [muodosta-pdf]]
             [clojure.zip :as zip]
             [clojure.test :refer [deftest is]]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]))
@@ -43,11 +43,11 @@
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
-    (is (= fo '[:fo:block
-                {:space-before "1em" :font-size "8pt"}
+    (is (= fo `[:fo:block
+                {:space-before "1em" :font-size "8pt" :font-weight "bold"}
                 "Taulukko"
                 [:fo:table
-                 {:border "solid 0.2mm black"}
+                 {:border ~(str "solid 0.2mm " pdf/raportin-tehostevari)}
                  ([:fo:table-column
                    {:column-width "10%"}]
                    [:fo:table-column
@@ -57,23 +57,26 @@
                  [:fo:table-header
                   [:fo:table-row
                    ([:fo:table-cell
-                     {:background-color "#afafaf"
+                     {:background-color ~pdf/raportin-tehostevari
                       :border           "solid 0.1mm black"
-                      :font-weight      "bold"
+                      :color "#ffffff"
+                      :font-weight      "normal"
                       :padding          "1mm"}
                      [:fo:block
                       "Eka"]]
                      [:fo:table-cell
-                      {:background-color "#afafaf"
+                      {:background-color ~pdf/raportin-tehostevari
                        :border           "solid 0.1mm black"
-                       :font-weight      "bold"
+                       :color "#ffffff"
+                       :font-weight      "normal"
                        :padding          "1mm"}
                       [:fo:block
                        "Toka"]]
                      [:fo:table-cell
-                      {:background-color "#afafaf"
+                      {:background-color ~pdf/raportin-tehostevari
                        :border           "solid 0.1mm black"
-                       :font-weight      "bold"
+                       :color "#ffffff"
+                       :font-weight      "normal"
                        :padding          "1mm"}
                       [:fo:block
                        "Kolmas"]])]]
@@ -81,22 +84,25 @@
                   nil
                   ([:fo:table-row
                     ([:fo:table-cell
-                      {:border  "solid 0.1mm black"
-                       :padding "1mm"
+                      {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
+                       :font-weight      "normal"
+                       :padding    "1mm"
                        :text-align "left"}
                       nil
                       [:fo:block
                        "eka"]]
                       [:fo:table-cell
-                       {:border  "solid 0.1mm black"
-                        :padding "1mm"
+                       {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
+                        :font-weight      "normal"
+                        :padding    "1mm"
                         :text-align "left"}
                        nil
                        [:fo:block
                         "toka"]]
                       [:fo:table-cell
-                       {:border  "solid 0.1mm black"
-                        :padding "1mm"
+                       {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
+                        :font-weight      "normal"
+                        :padding    "1mm"
                         :text-align "left"}
                        nil
                        [:fo:block

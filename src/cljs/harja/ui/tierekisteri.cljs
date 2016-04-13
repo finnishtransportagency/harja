@@ -77,10 +77,10 @@
   (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
                                        "Valitse alkupiste kartalta."]))
 
-(defn tr-kontrollit [peruttu hyvaksytty]
+(defn tr-kontrollit [peruttu hyvaksytty tila]
   [:span.tr-valitsin-ohje
    [napit/peruuta "Peruuta" peruttu]
-   [napit/hyvaksy hyvaksytty]])
+   [napit/hyvaksy "OK" hyvaksytty {:disabled (= @tila :ei-valittu)}]])
 
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
@@ -173,7 +173,7 @@
                               (nav/vaihda-kartan-koko! :L))
                             (kartta/aseta-kursori! :crosshair)
                             (kartta/aseta-yleiset-kontrollit!
-                              (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty] {:class "kartan-tr-kontrollit"}))
+                              (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty tila] {:class "kartan-tr-kontrollit"}))
                             (nayta-ohjeet-ohjelaatikossa!))
                          #(do
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
