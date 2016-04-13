@@ -21,6 +21,9 @@ Voit pyyhkiä tämän tekstin pois.")
       ---
       Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös hyvä apu. Ethän pyyhi alla olevia virheen teknisiä tietoja pois.
       ---
+
+      Tekniset tiedot:
+
       "
       virheviesti
       "

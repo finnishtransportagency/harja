@@ -17,6 +17,6 @@
         (virhe-str e)]])))
 
 (defn arsyttava-virhe [& msgs]
-  (.alert js/window (str "Upsista keikkaa. Voisitko lähettää meille palautetta, ja liittää mukaan kuvakaappauksen tai alla olevan tekstin, sekä kuvauksen siitä mitä olit tekemässä.
+  (.alert js/window (str "Upsista keikkaa, Harja räsähti! Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin, joten voisitko lähettää meille palautetta? Liitä mukaan alla olevat virheen tekniset tiedot, kuvankaappaus sekä kuvaus siitä mitä olit tekemässä.
 
   " (apply str msgs))))
