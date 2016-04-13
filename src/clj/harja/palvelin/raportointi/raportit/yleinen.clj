@@ -43,22 +43,27 @@
 
 (def vuosi-ja-kk-fmt (tf/with-zone (tf/formatter "YYYY/MM") (t/time-zone-for-id "EET")))
 (def kk-ja-vuosi-fmt (tf/with-zone (tf/formatter "MM/YYYY") (t/time-zone-for-id "EET")))
+(def kk-ja-vv-fmt (tf/with-zone (tf/formatter "MM/YY") (t/time-zone-for-id "EET")))
 
+(defn kk-ja-vv [pvm]
+  (tf/unparse kk-ja-vv-fmt (l/to-local-date-time pvm)))
 (defn vuosi-ja-kk [pvm]
   (tf/unparse vuosi-ja-kk-fmt (l/to-local-date-time pvm)))
 
 (defn kk-ja-vuosi [pvm]
   (tf/unparse kk-ja-vuosi-fmt (l/to-local-date-time pvm)))
 
-(defn kuukaudet [alku loppu]
-  (let [alku  (l/to-local-date-time alku)
-        loppu  (l/to-local-date-time loppu)]
-    (letfn [(kuukaudet [kk]
-              (when-not (t/after? kk loppu)
-                (lazy-seq
+(defn kuukaudet
+  ([alku loppu] (kuukaudet alku loppu vuosi-ja-kk-fmt))
+  ([alku loppu vuosi-ja-kk-fmt]
+   (let [alku  (l/to-local-date-time alku)
+         loppu  (l/to-local-date-time loppu)]
+     (letfn [(kuukaudet [kk]
+               (when-not (t/after? kk loppu)
+                 (lazy-seq
                   (cons (tf/unparse vuosi-ja-kk-fmt kk)
                         (kuukaudet (t/plus kk (t/months 1)))))))]
-      (kuukaudet alku))))
+       (kuukaudet alku)))))
 
 (defn pylvaat-kuukausittain
   [{:keys [otsikko alkupvm loppupvm kuukausittainen-data piilota-arvo? legend]}]
