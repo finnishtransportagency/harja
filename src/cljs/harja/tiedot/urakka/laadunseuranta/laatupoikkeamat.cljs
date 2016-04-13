@@ -67,7 +67,7 @@
 
 (defonce valittu-laatupoikkeama
          (reaction<! [id @valittu-laatupoikkeama-id]
-                     {:nil-kun-haku-kaynnissa? false}
+                     {:nil-kun-haku-kaynnissa? true}
                      (when id
                        (go (let [laatupoikkeama (if (= :uusi id)
                                                   (uusi-laatupoikkeama)

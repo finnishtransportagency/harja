@@ -1,28 +1,18 @@
 (ns harja.views.urakka.laadunseuranta.laatupoikkeamat
-  "Listaa urakan laatupoikkeamat, jotka voivat olla joko tarkastukseen liittyviä tai irrallisia."
+  "Listaa urakan laatupoikkeamat."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla :as lp-kartalla]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.kommentit :as kommentit]
             [harja.ui.komponentti :as komp]
-            [harja.ui.liitteet :as liitteet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
-            [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta :refer [validi-laatupoikkeama?]]
-            [harja.tiedot.istunto :as istunto]
-            [harja.asiakas.kommunikaatio :as k]
+            [harja.views.urakka.laadunseuranta.laatupoikkeama :refer [laatupoikkeama laatupoikkeamalomake]]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -375,5 +365,5 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
      [:span.laatupoikkeamat
       [kartta/kartan-paikka]
       (if @laatupoikkeamat/valittu-laatupoikkeama
-        [laatupoikkeama {} laatupoikkeamat/valittu-laatupoikkeama]
+        [laatupoikkeamalomake {} laatupoikkeamat/valittu-laatupoikkeama]
         [laatupoikkeamalistaus])])))
