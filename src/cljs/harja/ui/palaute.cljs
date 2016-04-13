@@ -51,7 +51,7 @@
    {:href (-> (mailto)
                               (subject palaute-otsikko "?")
                               (body palaute-body))}
-   [:span (ikonit/kommentti) " Palautetta!"]])
+   [:span (ikonit/livicon-kommentti) " Palautetta!"]])
 
 (defn virhe-palaute [virhe]
   [:a#palautelinkki
