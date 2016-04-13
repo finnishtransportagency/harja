@@ -307,10 +307,10 @@
     [:div.boolean-group
      (when tyhjenna-kaikki?
        [:button.nappi-toissijainen {:on-click #(reset! data (apply disj @data vaihtoehdot))}
-        [y/ikoni-ja-teksti [ikonit/livicon-trash] " Tyhjennä kaikki"]])
+        [y/ikoni-ja-teksti [ikonit/livicon-trash] "Tyhjennä kaikki"]])
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
-        [y/ikoni-ja-teksti [ikonit/livicon-check " Tyhjennä kaikki"]])
+        [y/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
      (let [checkboxit (doall
                        (for [v vaihtoehdot]
                          ^{:key (str "boolean-group-" (name v))}

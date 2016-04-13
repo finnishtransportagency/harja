@@ -481,5 +481,4 @@ jatkon."
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
    ikoni
-   [:span " "]
-   [:span teksti]])
+   [:span (str " " teksti)]])
