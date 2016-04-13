@@ -87,22 +87,20 @@
                       nil)
              :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
              :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
-             :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))
-             ))
-         ]))))
+             :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))))]))))
 
 (defn takaisin
   [teksti takaisin-fn]
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (takaisin-fn))}
-   [:span.livicon-chevron-left " " teksti]])
+   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn urakan-sivulle [teksti click-fn]
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (click-fn))}
-   [:span.livicon-chevron-left " " teksti]])
+   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn uusi
   "Nappi 'uuden asian' luonnille. 
@@ -117,7 +115,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (uusi-fn))}
-    [:span.livicon-plus " " teksti]]))
+    [y/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
 
 (defn hyvaksy
   ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
@@ -129,7 +127,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
       :on-click #(do
                   (.preventDefault %)
                   (hyvaksy-fn))}
-     [:span (ikonit/check) (str " " teksti)]]))
+     [y/ikoni-ja-teksti [ikonit/check] teksti]]))
 
 (defn peruuta
   ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
@@ -140,8 +138,22 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (peruuta-fn))}
-    [:span
-     (ikonit/ban)
-     (str " " teksti)]]))
+    [y/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
 
+(defn yleinen
+  "Yleinen toimintopainike
+  Asetukset on optionaalinen mäppi ja voi sisältää:
+  :disabled jos true, nappi on disabloitu
+  :ikoni näytettävä ikoni"
+  ([teksti toiminto-fn] (yleinen teksti toiminto-fn {}))
+  ([teksti toiminto-fn {:keys [disabled luokka ikoni]}]
+   [:button.nappi-toissijainen
+    {:class (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                 (.preventDefault %)
+                 (toiminto-fn))}
+    (if ikoni
+      [:span ikoni (str " " teksti)]
+      teksti)]))
 

@@ -14,7 +14,8 @@
             [clojure.string :as str]
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom])
+            [harja.ui.dom :as dom]
+            [harja.ui.yleiset :as y])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def gridia-muokataan? (atom false))
@@ -172,8 +173,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                         (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
      (when vetolaatikko?
        (if (vetolaatikko-auki? ohjaus id)
-         (ikonit/chevron-down)
-         (ikonit/chevron-right)))]))
+         (ikonit/livicon-chevron-down)
+         (ikonit/livicon-chevron-right)))]))
 
 (defn- vetolaatikko-rivi
   "Funktio, joka palauttaa vetolaatikkorivin tai nil. Huom: kutsu tätä funktiona, koska voi palauttaa nil."
@@ -239,7 +240,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                         :left     (when (= :oikea (:tasaa s)) 0)
                                         :right    (when-not (= :oikea (:tasaa s)) "100%")}
                              :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
-                    (ikonit/arrow-down) " Täytä"]]]))
+                    (ikonit/livicon-arrow-down) " Täytä"]]]))
 
              ;;(log "tehdään kenttä " (pr-str fokus-id) ", nykyinen fokus: " (pr-str fokus))
              [tee-kentta (assoc s
@@ -260,13 +261,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
      [:td.toiminnot
       (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
         (if (and esta-poistaminen? (esta-poistaminen? rivi))
-          [:span (ikonit/trash-disabled (esta-poistaminen-tooltip rivi))]
+          [:span (ikonit/livicon-trash-disabled (esta-poistaminen-tooltip rivi))]
           [:span.klikattava {:on-click #(do (.preventDefault %)
                                             (muokkaa! id assoc :poistettu true))}
-           (ikonit/trash)]))
+           (ikonit/livicon-trash)]))
       (when-not (empty? rivin-virheet)                       ; true ;-not (empty? rivin-virheet)
         [:span.rivilla-virheita
-         (ikonit/warning-sign)])])])
+         (ikonit/livicon-warning-sign)])])])
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
                             vetolaatikot tallenna piilota-toiminnot? valittu-rivi
@@ -615,19 +616,20 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                       @gridia-muokataan?)
                                         :on-click #(do (.preventDefault %)
                                                        (aloita-muokkaus! tiedot))}
-                                       [:span.livicon-pen.grid-muokkaa " Muokkaa"]]])]
+                                       [:span.grid-muokkaa
+                                        [y/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]])]
                                   [:span.pull-right.muokkaustoiminnot
                                    [:button.nappi-toissijainen
                                     {:disabled (empty? @historia)
                                      :on-click #(do (.stopPropagation %)
                                                     (.preventDefault %)
                                                     (peru!))}
-                                    [:span.livicon-rotate-left " Kumoa"]]
+                                    [y/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
 
                                    (when-not (= false voi-lisata?)
                                      [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                                             (lisaa-rivi! ohjaus {}))}
-                                      [:span.livicon-plus (or (:lisaa-rivi opts) " Lisää rivi")]])
+                                      [y/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
 
                                    (when-not muokkaa-aina
@@ -645,7 +647,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                           (reset! tallennus-kaynnissa true)
                                                           (go (if (<! (tallenna tallennettavat)))
                                                               (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
-                                      [:span.livicon-check " Tallenna"]])
+                                      [y/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
 
                                    (when-not muokkaa-aina
                                      [:button.nappi-kielteinen.grid-peru
@@ -654,7 +656,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                     (nollaa-muokkaustiedot!)
                                                     (when peruuta (peruuta))
                                                     nil)}
-                                      [:span.livicon-ban " Peruuta"]])])
+                                      [y/ikoni-ja-teksti (ikonit/livicon-ban) "Tallenna"]])])
                                 (when nayta-otsikko? [:h6.panel-title otsikko])])]
          [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
           (muokkauspaneeli true)
@@ -922,7 +924,7 @@ Optiot on mappi optioita:
                                                 (if uusi-id
                                                   {:id uusi-id}
                                                   {})))}
-                   (ikonit/plus) (or (:lisaa-rivi opts) " Lisää rivi")])])]
+                   (ikonit/livicon-plus) (or (:lisaa-rivi opts) "Lisää rivi")])])]
             [:div.panel-body
              [:table.grid
               [:thead
@@ -992,10 +994,10 @@ Optiot on mappi optioita:
                                                  (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                                         [:span.klikattava {:on-click #(do (.preventDefault %)
                                                                           (muokkaa! muokatut-atom virheet id assoc :poistettu true))}
-                                         (ikonit/trash)])
+                                         (ikonit/livicon-trash)])
                                       (when-not (empty? rivin-virheet)
                                         [:span.rivilla-virheita
-                                         (ikonit/warning-sign)])])]
+                                         (ikonit/livicon-warning-sign)])])]
 
                                   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))
                            (if jarjesta

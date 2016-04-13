@@ -50,7 +50,7 @@ Optiot voi sisältää:
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
           [:div.file-upload.nappi-toissijainen
-           [:span (ikonit/upload) (if @tiedosto
+           [:span (ikonit/livicon-upload) (if @tiedosto
                                     " Vaihda liite"
                                     (str " " (or nappi-teksti "Valitse tiedosto")))]
            [:input.upload

@@ -225,9 +225,9 @@
         kartan-korkeus @kartan-korkeus
         v-ur @nav/valittu-urakka
         [muuta-kokoa-teksti ikoni] (case koko
-                             :M ["Suurenna karttaa" (ikonit/arrow-down)]
-                             :L ["Pienennä karttaa" (ikonit/arrow-up)]
-                             :XL ["Pienennä karttaa" (ikonit/arrow-up)]
+                             :M ["Suurenna karttaa" (ikonit/livicon-arrow-down)]
+                             :L ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
+                             :XL ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
                              ["" nil])]
     ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
