@@ -7,31 +7,70 @@
             [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.kyselyt.konversio :as konv]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"
   {:positional? true})
 
 
-(defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi]
-  (sort-by (comp :nimi :materiaali first)
-           (group-by #(select-keys % [:materiaali])
-                     (into []
-                           (map konv/alaviiva->rakenne)
-                           (hae-ymparistoraportti db alkupvm loppupvm
-                                                  (some? urakka-id) urakka-id
-                                                  (when urakkatyyppi (name urakkatyyppi))
-                                                  (some? hallintayksikko-id) hallintayksikko-id)))))
+(defn- hae-raportin-tiedot
+  [db parametrit]
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (map #(update-in % [:kk]
+                               (fn [pvm]
+                                 (when pvm
+                                   (yleinen/kk-ja-vv pvm))))))
+        (hae-ymparistoraportti-tiedot db parametrit)))
 
+
+(defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi]
+  (let [kaikki-materiaalit (into {}
+                                 ;; hae tyhjät rivit kaikille materiaaleille
+                                 (map (juxt (fn [m]
+                                              {:materiaali m})
+                                            (constantly [])))
+                                 (hae-materiaalit db))]
+    (sort-by (comp :nimi :materiaali first)
+             (merge kaikki-materiaalit
+                    (group-by #(select-keys % [:materiaali])
+                              (hae-raportin-tiedot db {:alkupvm alkupvm
+                                                       :loppupvm loppupvm
+                                                       :urakka urakka-id
+                                                       :urakkatyyppi (some-> urakkatyyppi name)
+                                                       :hallintayksikko hallintayksikko-id}))))))
 
 (defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id urakkatyyppi]
-  (sort-by (comp :nimi :urakka first)
-           (seq (group-by #(select-keys % [:materiaali :urakka])
-                          (into []
-                                (map konv/alaviiva->rakenne)
-                                (hae-ymparistoraportti-urakoittain db alkupvm loppupvm
-                                                                   (some? hallintayksikko-id) hallintayksikko-id
-                                                                   (when urakkatyyppi (name urakkatyyppi))))))))
+  (let [rivit (hae-raportin-tiedot db {:alkupvm alkupvm
+                                       :loppupvm loppupvm
+                                       :urakka nil
+                                       :urakkatyyppi (some-> urakkatyyppi name)
+                                       :hallintayksikko hallintayksikko-id})
+        urakat (into #{} (map :urakka rivit))
+        kaikki-materiaalit (hae-materiaalit db)
+
+        ;; luodaan tyhjä rivilista kaikille materiaali/urakka kombinaatioille
+        kaikki-urakka-materiaalit (into {}
+                                        (for [m kaikki-materiaalit
+                                              u urakat]
+                                          [{:materiaali m :urakka u} []]))]
+    (sort-by (comp :nimi :materiaali first)
+             (merge kaikki-urakka-materiaalit
+                    (group-by #(select-keys % [:materiaali :urakka])
+                              rivit)))))
+
+(defn- talvihoitoluokka
+  [luokka]
+  (case luokka
+    1 "Is"
+    2 "I"
+    3 "Ib"
+    4 "TIb"
+    5 "II"
+    6 "III"
+    7 "K1"
+    8 "K2"))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -50,12 +89,14 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
+                                                    db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         materiaalit (sort-by #(materiaalidomain/materiaalien-jarjestys
                                (get-in (first %) [:materiaali :nimi]))
-                             materiaalit)]
+                             materiaalit)
+        kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
@@ -68,70 +109,62 @@
 
              ;; Materiaalin nimi
              [{:otsikko "Materiaali" :leveys "16%"}]
-             ;; Kaikki kuukaudet (otetaan ensimmäisestä materiaalista)
-             (->> materiaalit first second
-                  (keep :kk)
-                  sort
-                  (map (comp (fn [o] {:otsikko o :leveys kk-lev :otsikkorivi-luokka "grid-kk-sarake"}) pvm/kuukausi-ja-vuosi-valilyonnilla)))
+             ;; Kaikki kuukaudet
+             (map (fn [kk]
+                    {:otsikko kk
+                     :leveys kk-lev}) kuukaudet)
 
              [{:otsikko "Määrä yhteensä" :leveys "8%"}
               {:otsikko "Tot-%" :leveys "8%"}
               {:otsikko "Maksimi\u00admäärä" :leveys "8%"}]))
 
-      (keep identity
-            (mapcat (fn [[{:keys [urakka materiaali]} kuukaudet]]
+      (mapcat
+       (fn [[{:keys [urakka materiaali]} rivit]]
+         (let [suunnitellut (keep :maara (filter #(nil? (:kk %)) rivit))
+               maksimi (when-not (empty? suunnitellut)
+                         (reduce + suunnitellut))
+               luokitellut (filter :luokka rivit)
+               yhteensa (reduce + (keep  #(when (and (:kk %) (not (:luokka %)))
+                                            (:maara %)) rivit))
+               kk-arvot (into {}
+                              (comp (filter :kk)
+                                    (map (juxt :kk :maara)))
+                              rivit)]
+           (concat
+            ;; Normaali materiaalikohtainen rivi
+            [(into []
+                   (concat
 
-                      (let [maksimi (:maara (first (filter #(nil? (:kk %)) kuukaudet)))
-                            luokitellut (filter :luokka kuukaudet)
-                            kuukaudet (filter (comp not :luokka) kuukaudet)
-                            yhteensa (reduce + (keep  #(when (:kk %) (:maara %)) kuukaudet))
-                            kk-arvot (sort (keep :kk kuukaudet))]
-                        (concat
-                         ;; Normaali materiaalikohtainen rivi
-                         [(into []
-                                (concat
+                    ;; Urakan nimi, jos urakoittain jaottelu päällä
+                    (when urakoittain?
+                      [(:nimi urakka)])
 
-                                 ;; Urakan nimi, jos urakoittain jaottelu päällä
-                                 (when urakoittain?
-                                   [(:nimi urakka)])
+                    ;; Materiaalin nimi
+                    [(:nimi materiaali)]
 
-                                 ;; Materiaalin nimi
-                                 [(:nimi materiaali)]
+                    ;; Kuukausittaiset määrät
+                    (map #(or (kk-arvot %) 0) kuukaudet)
 
-                                 ;; Kuukausittaiset määrät
-                                 (->> kuukaudet
-                                      (filter :kk)
-                                      (sort-by :kk)
-                                      (map #(or (:maara %) 0)))
+                    ;; Yhteensä, toteumaprosentti ja maksimimäärä
+                    [yhteensa
+                     (if maksimi (fmt/desimaaliluku (/ (* 100.0 yhteensa) maksimi) 1) "-")
+                     (or maksimi "-")]))]
 
-                                 ;; Yhteensä, toteumaprosentti ja maksimimäärä
-                                 [yhteensa
-                                  (if maksimi (fmt/desimaaliluku (/ (* 100.0 yhteensa) maksimi) 1) "-")
-                                  (or maksimi "-")]))]
+            ;; Mahdolliset hoitoluokkakohtaiset rivit
+            (map (fn [[luokka rivit]]
+                   (let [kk-arvot (into {}
+                                        (map (juxt :kk :maara))
+                                        rivit)]
+                     (into []
+                           (concat
+                            (when urakoittain?
+                              [(:nimi urakka)])
+                            [(str " - "
+                                  (talvihoitoluokka luokka))]
 
-                         ;; Mahdolliset hoitoluokkakohtaiset rivit
-                         (map (fn [[luokka kuukaudet]]
-                                (let [arvot (group-by :kk kuukaudet)]
-                                  (into []
-                                        (concat
-                                         (when urakoittain?
-                                           [(:nimi urakka)])
-                                         [(str " - "
-                                               (case luokka
-                                                 1 "Is"
-                                                 2 "I"
-                                                 3 "Ib"
-                                                 4 "TIb"
-                                                 5 "II"
-                                                 6 "III"
-                                                 7 "K1"
-                                                 8 "K2"))]
+                            (map #(or (kk-arvot %) 0) kuukaudet)
 
-                                         (for [kk kk-arvot
-                                               :let [arvo (first (get arvot kk))]]
-                                           (or (:maara arvo) 0))
+                            [(reduce + (remove nil? (vals kk-arvot))) "-" "-"]))))
+                 (sort-by first (group-by :luokka luokitellut))))))
 
-                                         [(reduce + (map (comp :maara first) (vals arvot))) "-" "-"]))))
-                              (group-by :luokka luokitellut)))))
-
-                    materiaalit))]]))
+       materiaalit)]]))

@@ -1,4 +1,58 @@
+-- name: hae-ymparistoraportti-tiedot
+SELECT -- haetaan käytetyt määrät per materiaali ja kk
+         u.id as urakka_id, u.nimi as urakka_nimi,
+         NULL as luokka, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+         date_trunc('month', t.alkanut) as kk, SUM(tm.maara) as maara
+ FROM toteuma t
+      JOIN toteuma_materiaali tm ON tm.toteuma=t.id
+      JOIN urakka u ON t.urakka=u.id
+      JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+ WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+   AND t.poistettu IS NOT TRUE
+   AND (:urakka::integer IS NULL OR u.id = :urakka)
+   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+ GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut)
+UNION
+SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
+       u.id as urakka_id, u.nimi as urakka_nimi,
+       rp.talvihoitoluokka as luokka, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+       date_trunc('month', t.alkanut) as kk, SUM(rm.maara) as maara
+  FROM reitti_materiaali rm
+       JOIN materiaalikoodi mk ON mk.id = rm.materiaalikoodi
+       JOIN reittipiste rp ON rm.reittipiste=rp.id
+       JOIN toteuma t ON rp.toteuma=t.id
+       JOIN urakka u ON t.urakka = u.id
+ WHERE t.poistettu IS NOT TRUE
+   AND (:urakka::integer IS NULL OR t.urakka = :urakka)
+   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+ GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut), rp.talvihoitoluokka
+UNION
+SELECT -- Haetaan suunnitelmat materiaaleille
+       u.id as urakka_id, u.nimi as urakka_nimi,
+       NULL as luokka,
+       mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+       NULL as kk,
+       SUM(s.maara) as maara
+  FROM materiaalin_kaytto s
+       JOIN materiaalikoodi mk ON s.materiaali = mk.id
+       JOIN urakka u ON s.urakka = u.id
+ WHERE s.poistettu IS NOT TRUE
+   AND (s.alkupvm BETWEEN :alkupvm AND :loppupvm
+        OR
+	s.loppupvm BETWEEN :alkupvm AND :loppupvm)
+   AND (:urakka::integer IS NULL OR s.urakka = :urakka)
+   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+ GROUP BY u.id, u.nimi, mk.id, mk.nimi
+
+-- name: hae-materiaalit
+-- Hakee materiaali id:t ja nimet
+SELECT id,nimi FROM materiaalikoodi
+
 -- name: hae-ymparistoraportti
+-- VANHA KYSELY, jätetään tänne vielä tulevaisuutta varten, jos löytyy eroavaisuuksia
 SELECT *
  FROM (WITH RECURSIVE kuukaudet (kk) AS (
        -- Haetaan kaikki kuukaudet alkupvm-loppupvm välillä
@@ -16,12 +70,12 @@ SELECT *
             (SELECT SUM(tm.maara)
                FROM toteuma_materiaali tm
      	       JOIN toteuma t ON tm.toteuma=t.id
-     	       JOIN urakka u ON t.urakka=u.id	       
+     	       JOIN urakka u ON t.urakka=u.id
               WHERE tm.materiaalikoodi = mk.id
          AND t.poistettu IS NOT TRUE
      	   AND (:urakka_annettu is false OR t.urakka = :urakka)
      	   AND (:urakka_annettu is true OR (:urakka_annettu is false AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)))
-     	   AND (:hal_annettu is false OR u.hallintayksikko = :hal) 
+     	   AND (:hal_annettu is false OR u.hallintayksikko = :hal)
      	   AND date_trunc('month', t.alkanut) = kkt.kk) as maara
        FROM kuukaudet kkt
             CROSS JOIN materiaalikoodi mk
@@ -42,8 +96,8 @@ SELECT *
      	   AND date_trunc('month', rp1.aika) = kkt.kk) as maara
        FROM kuukaudet kkt
             CROSS JOIN materiaalikoodi mk
-            CROSS JOIN hoitoluokat hl 
-     UNION 
+            CROSS JOIN hoitoluokat hl
+     UNION
      SELECT -- Haetaan suunnitelmat materiaaleille
             NULL as luokka,
             NULL as kk, -- tyhjä kk pvm kertoo suunnitelman
@@ -179,8 +233,8 @@ SELECT hl.column1 as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaa
   FROM kuukaudet kkt
        CROSS JOIN materiaalikoodi mk
        CROSS JOIN urakat urk
-       CROSS JOIN hoitoluokat hl 
-UNION 
+       CROSS JOIN hoitoluokat hl
+UNION
 SELECT -- Haetaan suunnitelmat materiaaleille
        NULL as luokka,
        NULL as kk, -- tyhjä kk pvm kertoo suunnitelman
