@@ -1,6 +1,7 @@
 (ns harja.ui.palaute
   (:require [clojure.string :as string]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [clojure.string :as str]))
 
 (def sahkoposti "harja.palaute@solita.fi")
 
@@ -15,7 +16,8 @@ Voit pyyhkiä tämän tekstin pois.")
   "HARJA räsähti")
 
 (defn virhe-body [virheviesti]
-  (let [sijainti-harjassa (str (-> js/window .-window .-location .-href))]
+  (let [sijainti-harjassa (-> (str (-> js/window .-window .-location .-href))
+                              (str/replace  "&" " "))] ;; FIXME &-merkkiä ei saanut escapetettua, tämä toimii kunnes löytyy parempi ratkaisu
     (str
       "
       ---
