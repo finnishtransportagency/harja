@@ -12,6 +12,9 @@
 
 (defn logt [data])
 
+(defn error [& things]
+  (.apply js/console.error js/console (apply array things)))
+
 (defn ^:export lokitus-paalle []
   (set! +lokitetaan+ true))
 
