@@ -77,11 +77,11 @@
                  :viimeinen-rivi-yhteenveto? true}
       (keep identity [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
                       {:leveys 7 :otsikko "Pvm"}
-                      {:leveys 8 :otsikko "Sop. nro"}
-                      {:leveys 10 :otsikko "Toimenpide"}
+                      {:leveys 7 :otsikko "Sop. nro"}
+                      {:leveys 12 :otsikko "Toimenpide"}
                       {:leveys 7 :otsikko "Tyyppi"}
-                      {:leveys 8 :otsikko "Summa €"}
-                      {:leveys 8 :otsikko "Ind.korotus €"}])
+                      {:leveys 6 :otsikko "Summa €"}
+                      {:leveys 6 :otsikko "Ind.korotus €"}])
 
       (keep identity
             (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))

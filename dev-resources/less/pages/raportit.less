@@ -1,10 +1,11 @@
-// Yleiset raportti-sivun asetukset
+/**********************************
+ *            Yleiset
+ **********************************/
 
 .raportti {
     margin-bottom: 20px;
     &.laskutusyhteenveto {
         > .panel {
-            background-color: @harjan-taustavari;
             margin-bottom: 0;
         }
         .panel-heading {
@@ -12,14 +13,26 @@
             padding-top: 2px;
         }
     }
-
-
-}
-
-// Yleensä raporttien otsikkorivin otsikot tavutetaan, mutta tietyissä raporteissa
-// on dynaamisesti luotua sisältöä, joka pitää tavuttaa väkivalloin
-.materiaaliraportti thead > tr {
-    word-break: break-all;
+    th {
+        background-color: @raportin-tehostevari;
+        border-color: @raportin-tehostevari;
+        color: @valkoinen;
+        font-weight: normal;
+    }
+    tr.pariton,
+    tr.parillinen {
+        //font-weight: bold;
+        background-color: @harmaa10;
+    }
+    td {
+        border-color: @raportin-tehostevari;
+    }
+    tr.yhteenveto {
+        background-color: @harmaa11;
+        border-bottom: 2px solid @raportin-tehostevari;
+        border-top: 2px solid @raportin-tehostevari;
+        font-weight: bold;
+    }
 }
 
 .raportin-asetukset {
@@ -46,6 +59,12 @@
             }
         }
     }
+
+    .raportit-valittuaikavali-vihje {
+        position: relative;
+        left: 10px;
+        top: -5px;
+    }
 }
 
 .raportin-toiminnot {
@@ -63,6 +82,16 @@
   margin: 1px 0;
   .livi-alasveto(250px);
 }
+
+// Yleensä raporttien otsikkorivin otsikot tavutetaan, mutta tietyissä raporteissa
+// on dynaamisesti luotua sisältöä, joka pitää tavuttaa väkivalloin
+.materiaaliraportti thead > tr {
+    word-break: break-all;
+}
+
+/**********************************
+ *      Yksittäiset raportit
+ **********************************/
 
 // Soratietarkastusraportti
 
