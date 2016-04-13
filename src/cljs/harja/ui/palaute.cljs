@@ -9,21 +9,23 @@
   "Palautetta HARJAsta")
 (def palaute-body
   "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen mukaan liittämistä, ne ovat meille erittäin hyödyllisiä.
-  Voit pyyhkiä tämän tekstin pois.")
+Voit pyyhkiä tämän tekstin pois.")
 
 (def virhe-otsikko
   "HARJA räsähti")
 
 (defn virhe-body [virheviesti]
-  (str
-    "
-    ---
-    Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös hyvä apu. Ethän pyyhi alla olevaa virheviestiä pois.
+  (let [sijainti-harjassa (str (-> js/window .-window .-location .-href))]
+    (str
+      "
+      ---
+      Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös hyvä apu. Ethän pyyhi alla olevia virheen teknisiä tietoja pois.
+      ---
+      "
+      virheviesti
+      "
 
-    ---
-
-    "
-    virheviesti))
+      Sijainti Harjassa: " sijainti-harjassa)))
 
 (defn- mailto []
   (str "mailto:" sahkoposti))
