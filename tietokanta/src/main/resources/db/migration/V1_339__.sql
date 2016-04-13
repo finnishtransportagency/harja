@@ -1,6 +1,3 @@
--- Pudota suljettu-boolean ilmoitukselta, vanhentunut
-ALTER TABLE ilmoitus DROP COLUMN suljettu;
-
 CREATE OR REPLACE FUNCTION hae_seuraava_vapaa_viestinumero(yhteyshenkilo_id INTEGER)
   RETURNS INTEGER AS $$
 BEGIN
@@ -17,3 +14,5 @@ BEGIN
                  + 1 AS viestinumero);
 END;
 $$ LANGUAGE plpgsql;
+
+ALTER TABLE paivystajatekstiviesti ADD COLUMN puhelinnumero VARCHAR(16);
