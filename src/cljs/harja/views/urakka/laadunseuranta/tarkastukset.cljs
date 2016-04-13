@@ -199,7 +199,7 @@
                              (not validi?))
                  :kun-onnistuu (fn [tarkastus]
                                  (reset! tarkastukset/valittu-tarkastus nil)
-                                 (tarkastukset/paivita-tarkastus-listaan! tarkastus))}]}d
+                                 (tarkastukset/paivita-tarkastus-listaan! tarkastus))}]}
       [(when jarjestelmasta?
          {:otsikko     "Lähde" :nimi :luoja :tyyppi :string
           :hae         (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
