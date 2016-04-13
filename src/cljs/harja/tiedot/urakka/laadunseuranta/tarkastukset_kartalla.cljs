@@ -19,7 +19,9 @@
   (when taso-paalla?
     (openlayers/luo-kuvataso
      :tarkastusreitit esitettavat-asiat/tarkastus-selitteet
-     "tr" (k/url-parametri (assoc parametrit :timestamp (t/now))))))
+     "tr" (k/url-parametri (assoc parametrit
+                             :timestamp (t/now)
+                             :valittu {:id (:id @tarkastukset/valittu-tarkastus)})))))
 
 (def tarkastusreitit-kartalla
   (reaction
