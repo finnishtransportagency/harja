@@ -50,7 +50,7 @@
          :on-click #(do
                      (tiedot/avaa-uusi-kuittaus!)
                      (.preventDefault %))}
-        (ikonit/plus) " Uusi kuittaus"])
+        (ikonit/livicon-plus) " Uusi kuittaus"])
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div

@@ -66,11 +66,11 @@
          [napit/palvelinkutsu-nappi
           "Hae ilmatieteenlaitokselta"
           #(tiedot/hae-lampotilat-ilmatieteenlaitokselta valitun-kauden-alkuvuosi)
-          {:luokka       "nappi-toissijainen"
-           :title        "Tuodut lämpötilat lisätään taulukkoon, tarkastettuasi arvot voit tallentaa ne Harjaan."
-           :disabled     (< valitun-kauden-alkuvuosi 2011)
-           :ikoni        (ikonit/download)
-           :virheviesti  "Lämpötilojen haku epäonnistui. Yritä myöhemmin uudelleen."
+          {:luokka "nappi-toissijainen"
+           :title "Tuodut lämpötilat lisätään taulukkoon, tarkastettuasi arvot voit tallentaa ne Harjaan."
+           :disabled (< valitun-kauden-alkuvuosi 2011)
+           :ikoni (ikonit/livicon-download)
+           :virheviesti "Lämpötilojen haku epäonnistui. Yritä myöhemmin uudelleen."
            :kun-onnistuu (fn [urakat]
                            (reset! lampotilarivit (merge-with merge @lampotilarivit urakat))
                            (viesti/nayta! "Lämpötilat haettu ja päivitetty taulukkoon - tarkista tiedot ja tallenna." :success 5000))}]

@@ -208,26 +208,26 @@
            
            [grid/grid
             {:luokat ["col-md-6"]
-             :otsikko                (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
+             :otsikko (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
              :piilota-toiminnot? true
-             :tyhja                  (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-             :tallenna               (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                                (:id ur)
-                                                                #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                                urakan-kok-hint-tyot % tuleville?)
-                                                                :ei-mahdollinen)
+             :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
+             :tallenna (roolit/jos-rooli-urakassa roolit/urakanvalvoja
+                                                  (:id ur)
+                                                  #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
+                                                                  urakan-kok-hint-tyot % tuleville?)
+                                                  :ei-mahdollinen)
              :tallenna-vain-muokatut false
-             :peruuta                #(reset! tuleville? false)
-             :tunniste               #((juxt :vuosi :kuukausi) %)
-             :voi-lisata?            false
-             :voi-poistaa?           (constantly false)
-             :muokkaa-footer         (fn [g]
-                                       [:div.kok-hint-muokkaa-footer
-                                        [raksiboksi "Tallenna tulevillekin hoitokausille"
-                                         @tuleville?
-                                         #(swap! tuleville? not)
-                                         [:div.raksiboksin-info (ikonit/warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                         (and @tuleville? @varoita-ylikirjoituksesta?)]])}
+             :peruuta #(reset! tuleville? false)
+             :tunniste #((juxt :vuosi :kuukausi) %)
+             :voi-lisata? false
+             :voi-poistaa? (constantly false)
+             :muokkaa-footer (fn [g]
+                               [:div.kok-hint-muokkaa-footer
+                                [raksiboksi "Tallenna tulevillekin hoitokausille"
+                                 @tuleville?
+                                 #(swap! tuleville? not)
+                                 [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                 (and @tuleville? @varoita-ylikirjoituksesta?)]])}
             
             ;; sarakkeet
             [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
