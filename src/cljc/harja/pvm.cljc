@@ -636,8 +636,3 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       0
       (t/in-days (t/interval (nth pvm-vector 1)
                              (nth pvm-vector 2))))))
-
-(defn kuukaudet [alkupvm loppupvm]
-  (when-not (t/after? alkupvm loppupvm)
-    (cons alkupvm
-          (kuukaudet (t/plus alkupvm (t/months 1)) loppupvm))))
