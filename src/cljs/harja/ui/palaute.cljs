@@ -18,7 +18,7 @@
   (str
     "
     ---
-    Kirjoita ylle, mitä olit tekemässä kun virhe tuli vastaan. Kuvakaappaukset ovat meille hyvä apu. Ethän pyyhi alla olevaa virheviestiä pois.
+    Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös hyvä apu. Ethän pyyhi alla olevaa virheviestiä pois.
 
     ---
 
@@ -59,4 +59,6 @@
               (subject virhe-otsikko "?")
               (body (virhe-body virhe)))
     :on-click #(.stopPropagation %)}
-   [:span (ikonit/envelope) " Hupsista, Harja räsähti. Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. Klikkaa tähän, niin pääset lähettämään virheraportin."]])
+   [:span
+    [ikonit/envelope]
+    [:span " Hupsista, Harja räsähti! Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. Klikkaa tähän, niin pääset lähettämään virheraportin."]]])
