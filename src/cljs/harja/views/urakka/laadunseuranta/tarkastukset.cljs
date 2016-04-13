@@ -292,7 +292,7 @@
                        :kun-onnistuu (fn [tarkastus]
                                        (reset! tarkastus-atom tarkastus)
                                        (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
-                       :ikoni (ikonit/arrow-right)
+                       :ikoni (ikonit/livicon-arrow-right)
                        :luokka :nappi-toissijainen}]}]
       tarkastus]]))
 

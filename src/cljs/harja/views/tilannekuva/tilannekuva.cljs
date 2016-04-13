@@ -116,7 +116,7 @@
                            "tk-checkbox-ryhma-tila chevron-rotate "
                            (when-not (auki?) "chevron-rotate-down"))}
            (if (auki?)
-             (ikonit/chevron-down) (ikonit/chevron-right))]
+             (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
           [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
            [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
             {:on-change (fn [uusi-tila]

@@ -173,7 +173,7 @@
     (when @laatupoikkeamat/voi-kirjata?
       [:button.nappi-ensisijainen
        {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
-       (ikonit/plus) " Lisää sanktio"])
+       (ikonit/livicon-plus) " Lisää sanktio"])
 
     [grid/grid
      {:otsikko       "Sanktiot"

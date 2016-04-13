@@ -42,7 +42,7 @@
   [:div.tr-virheet
    (for [virhe (into #{} (vals @tr-virheet))]
      ^{:key (hash virhe)}
-     [:div.tr-virhe (ikonit/warning-sign)
+     [:div.tr-virhe (ikonit/livicon-warning-sign)
       virhe])])
 
 (defn paallystyskohdeosat [_]

@@ -156,18 +156,18 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     [:div {:class
            (str "inline-block lomake-vihje")}
      [:div.vihjeen-sisalto
-      (harja.ui.ikonit/info-sign)
+      (harja.ui.ikonit/livicon-info-sign)
       (str " " vihje)]]))
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
   [teksti]
-  [:div.lomake-yleinen-huomautus (harja.ui.ikonit/info-sign) (str " " teksti)])
+  [:div.lomake-yleinen-huomautus (harja.ui.ikonit/livicon-info-sign) (str " " teksti)])
 
 (defn yleinen-varoitus
   "Yleinen varoitus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
   [teksti]
-  [:div.lomake-yleinen-varoitus (harja.ui.ikonit/warning-sign) (str " " teksti)])
+  [:div.lomake-yleinen-varoitus (harja.ui.ikonit/livicon-warning-sign) (str " " teksti)])
 
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 

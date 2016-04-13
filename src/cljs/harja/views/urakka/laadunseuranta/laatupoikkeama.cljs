@@ -327,7 +327,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                   (fn []
                                     (tallenna-laatupoikkeama @laatupoikkeama)
                                     (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
-                                  {:ikoni (ikonit/arrow-left)}]})))]
+                                  {:ikoni (ikonit/livicon-arrow-left)}]})))]
             @laatupoikkeama]])))))
 
 (defn laatupoikkeama []

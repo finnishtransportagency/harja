@@ -110,7 +110,7 @@ Seuraavat optiot ovat mahdollisia:
                                         [(dec vuosi) 11]
                                         [vuosi (dec kk)])))
                              nil)}
-             (ikonit/chevron-left)]
+             (ikonit/livicon-chevron-left)]
             [:td {:col-span 5} [:span.pvm-kuukausi (nth +kuukaudet+ kk)] " " [:span.pvm-vuosi vuosi]]
             [:td.pvm-seuraava-kuukausi.klikattava
              {:on-click #(do (.preventDefault %)
@@ -120,7 +120,7 @@ Seuraavat optiot ovat mahdollisia:
                                         [(inc vuosi) 0]
                                         [vuosi (inc kk)])))
                              nil)}
-             (ikonit/chevron-right)]]
+             (ikonit/livicon-chevron-right)]]
            [:tr.pvm-viikonpaivat
             (for [paiva +paivat+]
               ^{:key paiva}
