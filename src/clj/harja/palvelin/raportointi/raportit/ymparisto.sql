@@ -47,6 +47,10 @@ SELECT -- Haetaan suunnitelmat materiaaleille
    AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
  GROUP BY u.id, u.nimi, mk.id, mk.nimi
 
+-- name: hae-materiaalit
+-- Hakee materiaali id:t ja nimet
+SELECT id,nimi FROM materiaalikoodi
+
 -- name: hae-ymparistoraportti
 -- VANHA KYSELY, jätetään tänne vielä tulevaisuutta varten, jos löytyy eroavaisuuksia
 SELECT *

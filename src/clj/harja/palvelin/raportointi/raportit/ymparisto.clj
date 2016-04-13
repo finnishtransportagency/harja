@@ -24,23 +24,41 @@
                                    (yleinen/kk-ja-vv pvm))))))
         (hae-ymparistoraportti-tiedot db parametrit)))
 
+
 (defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi]
-  (sort-by (comp :nimi :materiaali first)
-           (group-by #(select-keys % [:materiaali])
-                     (hae-raportin-tiedot db {:alkupvm alkupvm
-                                              :loppupvm loppupvm
-                                              :urakka urakka-id
-                                              :urakkatyyppi (some-> urakkatyyppi name)
-                                              :hallintayksikko hallintayksikko-id}))))
+  (let [kaikki-materiaalit (into {}
+                                 ;; hae tyhjät rivit kaikille materiaaleille
+                                 (map (juxt (fn [m]
+                                              {:materiaali m})
+                                            (constantly [])))
+                                 (hae-materiaalit db))]
+    (sort-by (comp :nimi :materiaali first)
+             (merge kaikki-materiaalit
+                    (group-by #(select-keys % [:materiaali])
+                              (hae-raportin-tiedot db {:alkupvm alkupvm
+                                                       :loppupvm loppupvm
+                                                       :urakka urakka-id
+                                                       :urakkatyyppi (some-> urakkatyyppi name)
+                                                       :hallintayksikko hallintayksikko-id}))))))
 
 (defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id urakkatyyppi]
-  (sort-by (comp :nimi :materiaali first)
-           (group-by #(select-keys % [:materiaali :urakka])
-                     (hae-raportin-tiedot db {:alkupvm alkupvm
-                                              :loppupvm loppupvm
-                                              :urakka nil
-                                              :urakkatyyppi (some-> urakkatyyppi name)
-                                              :hallintayksikko hallintayksikko-id}))))
+  (let [rivit (hae-raportin-tiedot db {:alkupvm alkupvm
+                                       :loppupvm loppupvm
+                                       :urakka nil
+                                       :urakkatyyppi (some-> urakkatyyppi name)
+                                       :hallintayksikko hallintayksikko-id})
+        urakat (into #{} (map :urakka rivit))
+        kaikki-materiaalit (hae-materiaalit db)
+
+        ;; luodaan tyhjä rivilista kaikille materiaali/urakka kombinaatioille
+        kaikki-urakka-materiaalit (into {}
+                                        (for [m kaikki-materiaalit
+                                              u urakat]
+                                          [{:materiaali m :urakka u} []]))]
+    (sort-by (comp :nimi :materiaali first)
+             (merge kaikki-urakka-materiaalit
+                    (group-by #(select-keys % [:materiaali :urakka])
+                              rivit)))))
 
 (defn- talvihoitoluokka
   [luokka]
@@ -149,4 +167,4 @@
                             [(reduce + (remove nil? (vals kk-arvot))) "-" "-"]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 
-              materiaalit)]]))
+       materiaalit)]]))
