@@ -24,6 +24,11 @@
 
 (def ^:const +max-rivimaara+ 1000)
 
+(defn cdata
+  "Käsittele arvo puhtaana tekstinä."
+  [arvo]
+  (str "<![CDATA[" arvo "]]>"))
+
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                               korosta-rivit oikealle-tasattavat-kentat] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
@@ -37,7 +42,7 @@
           [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
                            :color "#ffffff"
                            :font-weight "normal" :padding "1mm"}
-           [:fo:block otsikko]])]]
+           [:fo:block (cdata otsikko)]])]]
       (let [rivien-maara (count data)
             viimeinen-rivi (last data)
             data (if (> (count data) +max-rivimaara+)
@@ -63,7 +68,7 @@
                                :background-color       "#e1e1e1"
                                :number-columns-spanned (count sarakkeet)}
                [:fo:block {:space-after "0.5em"}]
-               [:fo:block otsikko]]]
+               [:fo:block (cdata otsikko)]]]
              (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
                                           (= viimeinen-rivi rivi))
                                  {:background-color "#fafafa"
@@ -84,7 +89,7 @@
                                          korosta?)
                    (when korosta?
                      [:fo:block {:space-after "0.2em"}])
-                   [:fo:block (str arvo)]])])))
+                   [:fo:block (cdata (str arvo))]])])))
          (when (> rivien-maara +max-rivimaara+)
            [:fo:table-row
             [:fo:table-cell {:padding "1mm"
