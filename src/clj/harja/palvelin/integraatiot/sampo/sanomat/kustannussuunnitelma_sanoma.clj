@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [clj-time.core :as time]
             [clj-time.periodic :as time-period]
-            [clj-time.coerce :as coerce])
+            [clj-time.coerce :as coerce]
+            [harja.tyokalut.xml :as xml])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn muodosta-maksueranumero [numero]
@@ -22,8 +23,8 @@
   (mapv (fn [vuosisumma]
           [:segment
            {:value (:summa vuosisumma)
-            :finish (:loppupvm vuosisumma)
-            :start (:alkupvm vuosisumma)}])
+            :finish (xml/formatoi-aikaleima (:loppupvm vuosisumma))
+            :start (xml/formatoi-aikaleima (:alkupvm vuosisumma))}])
         vuosisummat))
 
 (defn muodosta-custom-information [nimi arvo]

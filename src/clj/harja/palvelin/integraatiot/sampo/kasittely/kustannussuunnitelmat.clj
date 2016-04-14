@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID Calendar TimeZone)))
 
@@ -66,13 +67,12 @@
   (let [vuodet (mapv (fn [vuosi]
                        {:alkupvm (first vuosi)
                         :loppupvm (second vuosi)})
-                     (pvm/urakan-vuodet (:alkupvm (:toimenpideinstanssi maksueran-tiedot))
-                                        (:loppupvm (:toimenpideinstanssi maksueran-tiedot))))]
+                     (pvm/urakan-vuodet (konv/java-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
+                                        (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))]
     (case (:tyyppi (:maksuera maksueran-tiedot))
       "kokonaishintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
       (tee-oletus-vuosisummat vuodet))))
-
 
 (defn valitse-lkp-tilinumero [toimenpidekoodi tuotenumero]
   (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
