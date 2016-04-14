@@ -7,13 +7,9 @@
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-samposta-sanoma :as kuittaus-sampoon-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelma]
-            [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
-
-(defn laheta-sanoma-jonoon [sonja lahetysjono sanoma-xml]
-  (sonja/laheta sonja lahetysjono sanoma-xml))
 
 (defn kasittele-kuittaus [integraatioloki db viesti]
   (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
@@ -32,80 +28,12 @@
         (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))
     #_(log/error "Samposta vastaanotettu kuittaus ei ole validia XML:ää.")))
 
-(defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
-  (log/debug "Lähetetään kustannussuunnitelma (numero: " numero ") Sampoon.")
-  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sampo" "kustannussuunnitelma-lahetys" nil nil)]
-    (try
-      (if (lukitse-kustannussuunnitelma db numero)
-        (if-let [kustannussuunnitelma-xml (kustannussuunnitelma/muodosta-kustannussuunnitelma db numero)]
-          (if-let [viesti-id (laheta-sanoma-jonoon sonja lahetysjono-ulos kustannussuunnitelma-xml)]
-            (do
-              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" kustannussuunnitelma-xml)
-              (kustannussuunnitelma/merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id))
-            (do
-              (log/error "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.")
-              (integraatioloki/kirjaa-epaonnistunut-integraatio
-                integraatioloki (str "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.") nil tapahtuma-id nil)
-              (kustannussuunnitelma/merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-              {:virhe :sonja-lahetys-epaonnistui}))
-          (do
-            (log/warn "Kustannussuunnitelman (numero: " numero ") sanoman muodostus epäonnistui.")
-            (kustannussuunnitelma/merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-            {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
-        (do
-          (log/warn "Kustannussuunnitelman (numero: " numero ") lukitseminen epäonnistui.")
-          {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
-      (catch Exception e
-        (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
-        (kustannussuunnitelma/merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-        (integraatioloki/kirjaa-epaonnistunut-integraatio
-          integraatioloki
-          "Sampo kustannussuunnitelmalähetyksessä tapahtui poikkeus"
-          (str "Poikkeus: " (.getMessage e))
-          tapahtuma-id
-          nil)
-        {:virhe :poikkeus}))))
-
-(defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero]
-  (log/debug "Lähetetään maksuera (numero: " numero ") Sampoon.")
-  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sampo" "maksuera-lahetys" nil nil)]
-    (try
-      (if (lukitse-maksuera db numero)
-        (if-let [maksuera-xml (maksuera/muodosta-sampoon-lahetettava-maksuerasanoma db numero)]
-          (if-let [viesti-id (laheta-sanoma-jonoon sonja lahetysjono-ulos maksuera-xml)]
-            (do
-              (maksuera/merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" maksuera-xml))
-            (do
-              (log/error "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.")
-              (integraatioloki/kirjaa-epaonnistunut-integraatio
-                integraatioloki (str "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.") nil tapahtuma-id nil)
-              (maksuera/merkitse-maksueralle-lahetysvirhe db numero)
-              {:virhe :sonja-lahetys-epaonnistui}))
-          (do
-            (log/warn "Maksuerän (numero: " numero ") sanoman muodostus epäonnistui.")
-            (maksuera/merkitse-maksueralle-lahetysvirhe db numero)
-            {:virhe :maksueran-lukitseminen-epaonnistui}))
-        (do
-          (log/warn "Maksuerän (numero: " numero ") lukitus epäonnistui.")
-          {:virhe :maksueran-lukitseminen-epaonnistui}))
-      (catch Exception e
-        (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
-        (maksuera/merkitse-maksueralle-lahetysvirhe db numero)
-        (integraatioloki/kirjaa-epaonnistunut-integraatio
-          integraatioloki
-          "Sampo maksuerälähetyksessä tapahtui poikkeus"
-          (str "Poikkeus: " (.getMessage e))
-          tapahtuma-id
-          nil)
-        {:virhe :poikkeus}))))
-
 (defn aja-paivittainen-lahetys [sonja integraatioloki db lahetysjono-ulos]
   (log/debug "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)]
     (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
     (doseq [maksuera maksuerat]
-      (laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera)))
+      (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera)))
     (doseq [kustannussuunnitelma kustannussuunnitelmat]
-      (laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))
+      (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))
