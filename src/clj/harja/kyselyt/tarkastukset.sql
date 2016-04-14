@@ -67,12 +67,14 @@ SELECT
   thm.kitka            AS talvihoitomittaus_kitka,
   thm.lampotila_tie    AS talvihoitomittaus_lampotila_tie,
   thm.lampotila_ilma   AS talvihoitomittaus_lampotila_ilma,
-  thm.ajosuunta        AS talvihoitomittaus_ajosuunta
+  thm.ajosuunta        AS talvihoitomittaus_ajosuunta,
+  tl.laatupoikkeama    AS laatupoikkeamaid
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
   LEFT JOIN soratiemittaus stm ON (t.tyyppi = 'soratie' :: tarkastustyyppi AND stm.tarkastus = t.id)
   LEFT JOIN talvihoitomittaus thm ON (t.tyyppi = 'talvihoito' :: tarkastustyyppi AND thm.tarkastus = t.id)
+  LEFT JOIN tarkastus_laatupoikkeama tl ON t.id = tl.tarkastus
 WHERE t.urakka = :urakka AND t.id = :id;
 
 -- name: hae-tarkastuksen-liitteet
@@ -429,3 +431,14 @@ WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS N
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie'::tarkastustyyppi;
+
+-- name: liita-tarkastukselle-laatupoikkeama<!
+INSERT INTO tarkastus_laatupoikkeama (tarkastus, laatupoikkeama) VALUES (:tarkastus, :laatupoikkeama);
+
+-- name: liita-tarkastuksen-liitteet-laatupoikkeamalle<!
+INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite)
+  SELECT
+    :laatupoikkeama,
+    liite
+  FROM tarkastus_liite
+  WHERE tarkastus = :tarkastus;

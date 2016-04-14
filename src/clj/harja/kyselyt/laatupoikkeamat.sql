@@ -135,9 +135,11 @@ SELECT
   h.tr_alkuosa,
   h.tr_alkuetaisyys,
   h.tr_loppuosa,
-  h.tr_loppuetaisyys
+  h.tr_loppuetaisyys,
+  tl.tarkastus                       AS tarkastusid
 FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
+  LEFT JOIN tarkastus_laatupoikkeama tl on h.id = tl.laatupoikkeama
 WHERE h.urakka = :urakka
       AND h.id = :id;
 

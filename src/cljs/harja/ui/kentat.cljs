@@ -29,7 +29,8 @@
             [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.varit.puhtaat :as puhtaat]
-            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
+            [harja.ui.yleiset :as y])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -306,10 +307,10 @@
     [:div.boolean-group
      (when tyhjenna-kaikki?
        [:button.nappi-toissijainen {:on-click #(reset! data (apply disj @data vaihtoehdot))}
-        [:span.livicon-trash " Tyhjennä kaikki"]])
+        [y/ikoni-ja-teksti [ikonit/livicon-trash] "Tyhjennä kaikki"]])
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
-        [:span.livicon-check " Valitse kaikki"]])
+        [y/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
      (let [checkboxit (doall
                        (for [v vaihtoehdot]
                          ^{:key (str "boolean-group-" (name v))}
@@ -765,7 +766,7 @@
            (when @virheet
              [:div {:class "virheet"}
               [:div {:class "virhe"}
-               [:span (ikonit/warning-sign) [:span @virheet]]]])
+               [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
            [:table
             [:thead
              [:tr

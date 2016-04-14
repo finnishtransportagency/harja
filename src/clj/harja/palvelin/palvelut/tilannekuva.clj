@@ -20,7 +20,8 @@
              :refer [kartalla-esitettavaan-muotoon]]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]
-            [harja.transit :as transit]))
+            [harja.transit :as transit]
+            [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -174,17 +175,14 @@
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [toleranssi alku loppu turvallisuus]} urakat]
   (when (tk/valittu? turvallisuus tk/turvallisuuspoikkeamat)
-    (konv/sarakkeet-vektoriin
-      (into []
-            (comp
-              (map konv/alaviiva->rakenne)
-              (geo/muunna-pg-tulokset :sijainti)
-              (map #(konv/array->vec % :tyyppi))
-              (map #(konv/string-vector->keyword-vector % :tyyppi))
-              (map #(konv/string->keyword % :vakavuusaste)))
-            (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
-                                          (konv/sql-date loppu)))
-      {:korjaavatoimenpide :korjaavattoimenpiteet})))
+    (let [tulos (konv/sarakkeet-vektoriin
+            (into []
+                  turvallisuuspoikkeamat/turvallisuuspoikkeama-xf
+                  (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
+                                                (konv/sql-date loppu)))
+            {:korjaavatoimenpide :korjaavattoimenpiteet})]
+      (log/debug "TURPOT: " (pr-str tulos))
+      tulos)))
 
 (defn- hae-tyokoneet
   [db user {:keys [alue alku loppu talvi kesa urakka-id
