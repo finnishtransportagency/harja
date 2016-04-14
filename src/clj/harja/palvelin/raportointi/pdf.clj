@@ -70,8 +70,8 @@
                                   :border           (str "solid 0.3mm " raportin-tehostevari)
                                   :font-weight      "bold"})
                    korosta? (when (some #(= i-rivi %) korosta-rivit)
-                              {:background-color       "#919191"
-                               :color "white"})]
+                              {:background-color       "#ff9900"
+                               :color "black"})]
                [:fo:table-row
                 (for [i (range (count sarakkeet))
                       :let [arvo (or (nth rivi i) "")]]
