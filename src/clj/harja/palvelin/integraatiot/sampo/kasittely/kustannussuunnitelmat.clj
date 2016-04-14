@@ -42,7 +42,9 @@
   (= 1 (kustannussuunnitelmat/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
 
 (defn tee-oletus-vuosisummat [vuodet]
-  (map #(hash-map :alkupvm (pvm/aika-iso8601 (:alkupvm %)), :loppupvm (pvm/aika-iso8601 (:loppupvm %)), :summa 1) vuodet))
+  (map #(hash-map :alkupvm (pvm/aika-iso8601 (:alkupvm %)),
+                  :loppupvm (pvm/aika-iso8601 (:loppupvm %)),
+                  :summa 1) vuodet))
 
 (defn aseta-pvm [pvm vuosi kuukausi paiva]
   (.setTime pvm vuosi)
