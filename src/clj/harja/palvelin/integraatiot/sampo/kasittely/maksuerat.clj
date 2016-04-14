@@ -52,19 +52,17 @@
   (= 1 (qm/merkitse-maksuera-lahetetyksi! db numero)))
 
 (defn muodosta-sampoon-lahetettava-maksuerasanoma [db numero]
-  (if (lukitse-maksuera db numero)
-    (let [maksueran-tiedot (hae-maksuera db numero)
-          ;; Sakot lähetetään Sampoon negatiivisena
-          maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
-                             (update-in maksueran-tiedot [:maksuera :summa] -)
-                             maksueran-tiedot)
-          maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
-      (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
-        maksuera-xml
-        (do
-          (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")
-          nil)))
-    nil))
+  (let [maksueran-tiedot (hae-maksuera db numero)
+        ;; Sakot lähetetään Sampoon negatiivisena
+        maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
+                           (update-in maksueran-tiedot [:maksuera :summa] -)
+                           maksueran-tiedot)
+        maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
+    (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
+      maksuera-xml
+      (do
+        (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")
+        nil))))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [transaktio db]

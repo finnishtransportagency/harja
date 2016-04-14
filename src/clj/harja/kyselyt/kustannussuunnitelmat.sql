@@ -32,7 +32,7 @@ WHERE maksuera = :numero;
 -- name: merkitse-kustannussuunnitelmalle-lahetysvirhe!
 -- Merkitsee kustannussuunnitelman lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE kustannussuunnitelma
-SET tila = 'virhe'
+SET tila = 'virhe', lukko = null, lukittu = null
 WHERE maksuera = :numero;
 
 -- name: luo-kustannussuunnitelma<!

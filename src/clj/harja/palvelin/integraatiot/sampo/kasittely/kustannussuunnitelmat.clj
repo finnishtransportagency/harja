@@ -101,18 +101,16 @@
                                 :viesti viesti}]})))))))
 
 (defn muodosta-kustannussuunnitelma [db numero]
-  (if (lukitse-kustannussuunnitelma db numero)
-    (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
-          vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
-          lkp-tilinnumero (valitse-lkp-tilinumero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
-          maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)
-          kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
-      (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
-        kustannussuunnitelma-xml
-        (do
-          (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
-          nil)))
-    nil))
+  (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
+        vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
+        lkp-tilinnumero (valitse-lkp-tilinumero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
+        maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)
+        kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
+    (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
+      kustannussuunnitelma-xml
+      (do
+        (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
+        nil))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [transaktio db]
