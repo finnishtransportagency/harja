@@ -162,7 +162,7 @@
 
 (defn paivita-toteuma [c user toteuma]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} (:tr toteuma)]
-    (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+    (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (name (:tyyppi toteuma)) (:id user)
                        (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (geometriaksi (:reitti toteuma))
                         numero alkuosa alkuetaisyys loppuosa loppuetaisyys
                        (:toteuma-id toteuma) (:urakka-id toteuma)))
@@ -337,7 +337,7 @@
       (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
       (apply q/poista-toteuman-tehtavat! params)
       (apply q/poista-toteuma! params))
-    (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (:id user)
+    (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (name (:tyyppi toteuma)) (:id user)
                             (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil
                             nil nil nil nil nil
                             (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
@@ -409,7 +409,8 @@
                         t)
                       (do
                         (log/debug "Pävitetään toteumaa " (:id t))
-                        (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t)) (:id user)
+                        (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t))
+                                            (:tyyppi t) (:id user)
                                             (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) nil
                                             nil nil nil nil nil
                                             (:id t) (:urakka t))
