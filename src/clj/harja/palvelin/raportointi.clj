@@ -43,7 +43,8 @@
   (jdbc/query (:db *raportin-suoritus*)
               haku-ja-parametrit))
 
-(defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id] :as parametrit} raportti]
+(defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id]
+                                           :as parametrit} raportti]
   (assoc-in raportti
             [1 :tietoja]
             (as-> [["Kohde" (case konteksti
@@ -54,13 +55,16 @@
                 (let [ur (first (urakat-q/hae-urakka db urakka-id))]
                   (concat t [["Urakka" (:nimi ur)]
                              ["Urakoitsija" (:urakoitsija_nimi ur)]]))
-                
+
                 t)
 
               (if (= "hallintayksikko" konteksti)
-                (concat t [["Hallintayksikkö" (:nimi (first (organisaatiot-q/hae-organisaatio db hallintayksikko-id)))]
-                           ["Urakoita käynnissä" (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
-                                                         db hallintayksikko-id))]])
+                (concat t [["Hallintayksikkö"
+                            (:nimi (first (organisaatiot-q/hae-organisaatio db
+                                                                            hallintayksikko-id)))]
+                           ["Urakoita käynnissä"
+                            (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
+                                    db hallintayksikko-id))]])
                 t)
 
               (if (= "koko maa" konteksti)
@@ -86,7 +90,7 @@
   (stop [this]
     this)
 
-  
+
   RaportointiMoottori
   (hae-raportit [this]
     (or @raportit
@@ -100,7 +104,8 @@
             {}))))
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
-  (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit] :as suorituksen-tiedot}]
+  (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit]
+                                                 :as suorituksen-tiedot}]
     (if (= "urakka" konteksti)
       (roolit/vaadi-lukuoikeus-urakkaan kayttaja (:urakka-id suorituksen-tiedot))
       (roolit/vaadi-raporttien-lukuoikeus kayttaja))
@@ -113,10 +118,10 @@
                           "urakka" (assoc parametrit
                                           :urakka-id (:urakka-id suorituksen-tiedot))
                           "hallintayksikko" (assoc parametrit
-                                                   :hallintayksikko-id (:hallintayksikko-id suorituksen-tiedot))
+                                                   :hallintayksikko-id
+                                                   (:hallintayksikko-id suorituksen-tiedot))
                           "koko maa" parametrit))))))
 
 
 (defn luo-raportointi []
   (->Raportointi (atom nil)))
-

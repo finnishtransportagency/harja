@@ -145,4 +145,10 @@
                            ;; Vain niille, joilla 1. taso ei ole ainoa taso
                            (filter (fn [{:keys [taso1 osio nakyma]}]
                                      (not= taso1 (str (kanonisoi osio) "-" (kanonisoi nakyma))))
-                                   oikeudet)))))))
+                                   oikeudet))))
+
+       ;; Määritellään yksi mäp, jossa on raporttien käyttöoikeudet nimen mukaan
+       (def ~'raporttioikeudet ~(into {}
+                                      (comp (filter #(= "raportit" (kanonisoi (:osio %))))
+                                            (map (juxt :nakyma :sym)))
+                                      oikeudet)))))
