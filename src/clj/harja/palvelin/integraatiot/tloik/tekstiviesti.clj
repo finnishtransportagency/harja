@@ -28,10 +28,6 @@
 (def +tuntematon-viestinumero-viesti+ "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy avointa ilmoitusta. Vastaa viestiin kuittauskoodilla ja kommentilla.")
 (def +virhe-viesti+ "Pahoittelemme mutta lähettämäsi viestin käsittelyssä tapahtui virhe.")
 
-(defn hae-paivystaja [db puhelinnumero]
-  (if-let [paivystaja (first (yhteyshenkilot/hae-paivystaja-puhelinnumerolla db puhelinnumero))]
-    paivystaja
-    (throw+ {:type :tuntematon-kayttaja})))
 
 (defn parsi-toimenpide [toimenpide]
   (case toimenpide
@@ -62,17 +58,19 @@
      :viestinumero viestinumero
      :vapaateksti  vapaateksti}))
 
-(defn hae-ilmoitus [db viestinumero paivystaja]
-  (if-let [ilmoitus (paivystajatekstiviestit/hae-ilmoitus db (:id paivystaja) viestinumero)]
-    ilmoitus
+(defn hae-paivystajatekstiviesti [db viestinumero puhelinnumero]
+  (if-let [paivystajatekstiviesti (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelinnumero viestinumero)]
+    paivystajatekstiviesti
     (throw+ {:type :tuntematon-ilmoitus})))
 
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
-    (let [paivystaja (hae-paivystaja db puhelinnumero)
-          data (parsi-tekstiviesti viesti)
-          ilmoitus (hae-ilmoitus db (:viestinumero data) paivystaja)
+    (let [data (parsi-tekstiviesti viesti)
+          paivystajatekstiviesti (hae-paivystajatekstiviesti db (:viestinumero data) puhelinnumero)
+          ;; todo jatka
+          paivystaja (hae-paivystaja db (:yhteyshenkilo paivystajatekstiviesti))
+          ilmoitus (hae-ilmoitus db (:ilmoitus paivystajatekstiviesti))
           ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide db ilmoitus (:vapaateksti data) (:toimenpide data) paivystaja)]
 
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
@@ -112,7 +110,7 @@
               otsikko (:otsikko ilmoitus)
               lyhytselite (:lyhytselite ilmoitus)
               selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
-              viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ilmoitus-id)
+              viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ilmoitus-id puhelinnumero)
               viesti (format +ilmoitusviesti+
                              otsikko
                              ilmoitus-id

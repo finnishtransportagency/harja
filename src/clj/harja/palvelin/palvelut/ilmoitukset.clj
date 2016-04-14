@@ -164,7 +164,7 @@
 
 (defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
-  (let [toimenpide (q/luo-ilmoitustoimenpide<!
+  (let [toimenpide (q/luo-ilmoitustoimenpide
                      db
                      (:ilmoituksen-id ilmoitustoimenpide)
                      (:ulkoinen-ilmoitusid ilmoitustoimenpide)

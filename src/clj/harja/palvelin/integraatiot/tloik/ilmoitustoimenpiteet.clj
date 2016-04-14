@@ -41,7 +41,7 @@
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db viesti-id))))
 
 (defn tallenna-ilmoitustoimenpide [db ilmoitus vapaateksti toimenpide paivystaja]
-  (:id (ilmoitukset/luo-ilmoitustoimenpide<!
+  (:id (ilmoitukset/luo-ilmoitustoimenpide
          db
          (:id ilmoitus)
          (:ilmoitusid ilmoitus)

@@ -264,4 +264,3 @@ SELECT y.id, y.etunimi, y.sukunimi,
        LEFT JOIN organisaatio o ON o.id = y.organisaatio
  WHERE p.urakka = :urakka AND
        LOWER(sahkoposti) = LOWER(:sahkoposti)
-      
