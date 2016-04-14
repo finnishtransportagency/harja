@@ -23,8 +23,8 @@
   (mapv (fn [vuosisumma]
           [:segment
            {:value (:summa vuosisumma)
-            :finish (xml/formatoi-aikaleima (:loppupvm vuosisumma))
-            :start (xml/formatoi-aikaleima (:alkupvm vuosisumma))}])
+            :finish (:loppupvm vuosisumma)
+            :start (:alkupvm vuosisumma)}])
         vuosisummat))
 
 (defn muodosta-custom-information [nimi arvo]
