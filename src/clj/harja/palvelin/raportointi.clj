@@ -24,7 +24,8 @@
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -106,21 +107,20 @@
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit]
                                                  :as suorituksen-tiedot}]
-    (if (= "urakka" konteksti)
-      (roolit/vaadi-lukuoikeus-urakkaan kayttaja (:urakka-id suorituksen-tiedot))
-      (roolit/vaadi-raporttien-lukuoikeus kayttaja))
-
-    (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit)
     (when-let [suoritettava-raportti (hae-raportti this nimi)]
+      (oikeudet/lue (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
+                    kayttaja (when (= "urakka" konteksti)
+                               (:urakka-id suorituksen-tiedot)))
+      (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit)
       (binding [*raportin-suoritus* this]
         ((:suorita suoritettava-raportti) db kayttaja
-                        (condp = konteksti
-                          "urakka" (assoc parametrit
-                                          :urakka-id (:urakka-id suorituksen-tiedot))
-                          "hallintayksikko" (assoc parametrit
-                                                   :hallintayksikko-id
-                                                   (:hallintayksikko-id suorituksen-tiedot))
-                          "koko maa" parametrit))))))
+         (condp = konteksti
+           "urakka" (assoc parametrit
+                           :urakka-id (:urakka-id suorituksen-tiedot))
+           "hallintayksikko" (assoc parametrit
+                                    :hallintayksikko-id
+                                    (:hallintayksikko-id suorituksen-tiedot))
+           "koko maa" parametrit))))))
 
 
 (defn luo-raportointi []
