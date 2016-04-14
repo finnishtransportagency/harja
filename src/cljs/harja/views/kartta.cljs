@@ -50,7 +50,7 @@
   (when-let
     [karttasailio (dom/elementti-idlla "kartta-container")]
     (let [tyyli (.-style karttasailio)]
-      #_(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
+      (log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
       (if naulattu?
         (do
           (set! (.-position tyyli) "fixed")
@@ -100,71 +100,71 @@
                 (recur))))))))
 
 (defonce kartan-sijaintipaivitys
-         (let [transition-end-tuettu? (animaatio/transition-end-tuettu?)]
-           (go (loop [naulattu? nil
-                      x nil
-                      y nil
-                      w nil
-                      h nil
-                      offset-y nil]
-                 (let [ensimmainen-kerta? (nil? naulattu?)
-                       paivita (<! paivita-kartan-sijainti)
-                       aseta (when-not paivita
-                               ;; Kartan paikkavaraus poistuu, asetetaan lähtötila, jolloin
-                               ;; seuraava päivitys aina asettaa kartan paikan.
+  (let [transition-end-tuettu? (animaatio/transition-end-tuettu?)]
+    (go (loop [naulattu? nil
+               x nil
+               y nil
+               w nil
+               h nil
+               offset-y nil]
+          (let [ensimmainen-kerta? (nil? naulattu?)
+                paivita (<! paivita-kartan-sijainti)
+                aseta (when-not paivita
+                        ;; Kartan paikkavaraus poistuu, asetetaan lähtötila, jolloin
+                        ;; seuraava päivitys aina asettaa kartan paikan.
 
-                               ;; Odotetaan joko seuraavaa eventtiä paivita-kartan-sijainti (jos uusi komponentti
-                               ;; tuli näkyviin, tai timeout 20ms (jos kartta oikeasti lähti näkyvistä)
-                               (case (<! (odota-mount-tai-timeout))
-                                 :mount true
-                                 :timeout
-                                 ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
-                                 (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
-                                   (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
-                                   (recur nil nil nil w h nil))))
-                       paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
-                       [uusi-x uusi-y uusi-w uusi-h] (dom/sijainti paikka-elt)
-                       uusi-offset-y (dom/offset-korkeus paikka-elt)]
+                        ;; Odotetaan joko seuraavaa eventtiä paivita-kartan-sijainti (jos uusi komponentti
+                        ;; tuli näkyviin, tai timeout 20ms (jos kartta oikeasti lähti näkyvistä)
+                        (case (<! (odota-mount-tai-timeout))
+                          :mount true
+                          :timeout
+                          ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
+                          (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
+                            (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
+                            (recur nil nil nil w h nil))))
+                paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
+                [uusi-x uusi-y uusi-w uusi-h] (dom/sijainti paikka-elt)
+                uusi-offset-y (dom/offset-korkeus paikka-elt)]
 
-                   ;; (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
+            ;; (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
 
 
-                   (cond
-                     ;; Eka kerta, asetetaan kartan sijainti
-                     (or (= :aseta paivita) aseta (nil? naulattu?))
-                     (let [naulattu? (neg? uusi-y)]
-                       ;(log "EKA KERTA")
-                       (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
-                       (when (or (not= w uusi-w) (not= h uusi-h))
-                         (reagent/next-tick #(openlayers/invalidate-size!)))
-                       (recur naulattu?
-                              uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+            (cond
+              ;; Eka kerta, asetetaan kartan sijainti
+              (or (= :aseta paivita) aseta (nil? naulattu?))
+              (let [naulattu? (neg? uusi-y)]
+                                        ;(log "EKA KERTA")
+                (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
+                (when (or (not= w uusi-w) (not= h uusi-h))
+                  (reagent/next-tick #(openlayers/invalidate-size!)))
+                (recur naulattu?
+                       uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
-                     ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
-                     ;; koko pitää asettaa
-                     (and (not naulattu?) (neg? uusi-y))
-                     (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
-                         (recur true
-                                uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+              ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
+              ;; koko pitää asettaa
+              (and (not naulattu?) (neg? uusi-y))
+              (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
+                  (recur true
+                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
-                     ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
-                     (and naulattu? (pos? uusi-y))
-                     (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
-                         (recur false
-                                uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+              ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
+              (and naulattu? (pos? uusi-y))
+              (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
+                  (recur false
+                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
-                     ;; jos w/h muuttuu
-                     (or (not= w uusi-w)
-                         (not= h uusi-h))
-                     (do (when-not transition-end-tuettu?
-                           (go (<! (async/timeout 150))
-                               (openlayers/invalidate-size!)))
-                         (recur naulattu?
-                                uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+              ;; jos w/h muuttuu
+              (or (not= w uusi-w)
+                  (not= h uusi-h))
+              (do (when-not transition-end-tuettu?
+                    (go (<! (async/timeout 150))
+                        (openlayers/invalidate-size!)))
+                  (recur naulattu?
+                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
-                     :default
-                     (recur naulattu?
-                            uusi-x uusi-y uusi-w uusi-h uusi-offset-y)))))))
+              :default
+              (recur naulattu?
+                     uusi-x uusi-y uusi-w uusi-h uusi-offset-y)))))))
 
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus

@@ -34,7 +34,7 @@
        etunimi " " sukunimi]]
     (if-not (istunto/testikaytto-mahdollista?)
       kayttajainfo
-      
+
       (let [testikayttaja @istunto/testikayttaja]
         [:span
          (if testikayttaja
@@ -130,9 +130,8 @@
    [:div.container
     [header sivu]]
 
-   (when @nav/murupolku-nakyvissa?
-     [:div.container
-      [murupolku/murupolku]])
+   [:div.container
+    [murupolku/murupolku]]
 
    ^{:key "harjan-paasisalto"}
    [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
@@ -186,4 +185,3 @@
                 [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))
-
