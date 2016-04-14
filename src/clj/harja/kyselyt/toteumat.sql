@@ -250,6 +250,7 @@ FROM toteuma_tehtava tt
 UPDATE toteuma
 SET alkanut           = :alkanut,
   paattynyt           = :paattynyt,
+  tyyppi              = :tyyppi::toteumatyyppi,
   muokattu            = NOW(),
   muokkaaja           = :kayttaja,
   suorittajan_nimi    = :suorittajan_nimi,

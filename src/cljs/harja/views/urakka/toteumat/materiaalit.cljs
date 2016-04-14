@@ -67,15 +67,6 @@
                                         (map #(dissoc % :kohdistettava)))
                                       @(materiaali-tiedot/hae-materiaalikoodit))))
 
-(defn hae-tiedot-vetolaatikkoon
-  [urakan-id materiaali-id]
-  (let [hoitokausi @u/valittu-hoitokausi
-        sopimusnumero (first @u/valittu-sopimusnumero)]
-    (materiaali-tiedot/hae-toteumat-materiaalille
-      urakan-id
-      materiaali-id
-      hoitokausi
-      sopimusnumero)))
 
 (defn- paivita-toteuma-materiaalit
   "Päivittää materiaalien toteumarivit muokattujen rivien perusteella.
