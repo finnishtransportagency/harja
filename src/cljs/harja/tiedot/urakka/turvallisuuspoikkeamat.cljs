@@ -52,7 +52,7 @@
            (assoc :urakka (:id @nav/valittu-urakka))
            (cond-> (not= (:tyontekijanammatti tp) :muu_tyontekija)
                    (dissoc :tyontekijanammattimuu)
-                   (not (some #{:henkikovahinko} (:vahinkoluokittelu tp)))
+                   (not (some #{:henkilovahinko} (:vahinkoluokittelu tp)))
                    (dissoc :tyontekijanammatti)))
    :korjaavattoimenpiteet (remove #(empty? (dissoc % :id :koskematon)) (:korjaavattoimenpiteet tp))
    ;; Lomakkeessa voidaan lisätä vain yksi kommentti kerrallaan, joka menee uusi-kommentti avaimeen
