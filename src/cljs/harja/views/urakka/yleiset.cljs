@@ -171,7 +171,6 @@
         :fmt :nimi
         :leveys "17%"
         :tyyppi :valinta
-        :validoi [[:ei-tyhja "Anna yhteyshenkilön organisaatio"]]
         :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
         :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
        
