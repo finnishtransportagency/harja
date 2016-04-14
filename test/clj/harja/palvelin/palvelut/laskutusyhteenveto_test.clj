@@ -246,3 +246,23 @@
       (is (= odotetut-talvihoito haetut-tiedot-oulu-talvihoito) "laskutusyhteenvedon-tiedot talvihoito")
       (is (= odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto) "laskutusyhteenvedon-tiedot liikenneympäristön hoito")
       (is (= odotetut-soratiet haetut-tiedot-oulu-soratiet) "laskutusyhteenvedon-tiedot sorateiden hoito"))))
+
+
+;; HAR-1959: Laskutusyhteenveto ottaa talvisuolasakon väärään hoitokauteen loka-joulukuussa
+(deftest suolasakko-oikean-vuoden-laskutusyhteenvedossa
+  (testing "suolasakko-oikean-vuoden-laskutusyhteenvedossa"
+    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma)
+                               +kayttaja-jvh+
+                               {:urakka-id @oulun-alueurakan-2014-2019-id
+                                :alkupvm   (pvm/->pvm "1.10.2014")
+                                :loppupvm (pvm/->pvm "31.10.2014")})
+          haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))]
+
+      (is (= (:suolasakko_kaytossa haetut-tiedot-oulu-talvihoito) true) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutettu haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutettu_ind_korotettuna haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutettu_ind_korotus haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutetaan haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutetaan_ind_korotettuna haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutetaan_ind_korotus haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa"))))
