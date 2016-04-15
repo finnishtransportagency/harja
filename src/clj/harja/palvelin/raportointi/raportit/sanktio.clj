@@ -8,13 +8,24 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.kyselyt.konversio :as konv]
             [harja.fmt :as fmt]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [clojure.string :as str]))
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
+(defn talvihoito? [kantarivi]
+  (= (str/lower-case (:toimenpidekoodi_taso2 kantarivi)) "talvihoito"))
+
+(defn talvihoidon-muistutukset [kantarivit]
+  (filter
+    (fn [rivi]
+      (and (talvihoito? rivi))
+      )
+    kantarivit))
+
 (defn sanktiot-raportille [kantarivit]
   [{:otsikko "Talvihoito"}
-   ["Muistutukset" "kpl" 0]
+   ["Muistutukset" "kpl" #_(talvihoidon-muistutukset kantarivit)]
    ["Sakko A" "€" 0]
    ["- Päätiet" "€" 0]
    ["- Muut tiet" "€" 0]
@@ -40,7 +51,7 @@
    ["Muistutukset yht." "kpl" 0]
    ["Indeksit yht." "€" 0]
    ["Kaikki sakot yht." "€" 0]
-   ["Kaikki yht" "€" 0]])
+   ["Kaikki yht." "€" 0]])
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -54,6 +65,16 @@
                                   :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                   :alku alkupvm
                                   :loppu loppupvm})
+        urakat (-> (map (fn [rivi]
+                          {:id (:urakka_id rivi)
+                           :nimi (:urakka_nimi rivi)})
+                        kantarivit)
+                   distinct)
+        raportin-otsikot (apply conj [{:otsikko "Laji" :leveys 20}
+                                      {:otsikko "Yksikkö" :leveys 3}]
+                                (mapv
+                                  (fn [urakka] {:otsikko (:nimi urakka) :leveys 20})
+                                  urakat))
         raporttidata (sanktiot-raportille kantarivit)
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
@@ -67,7 +88,5 @@
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko}
-      [{:otsikko "Laji"    :leveys "55%"}
-       {:otsikko "Yksikkö" :leveys "10%"}
-       {:otsikko "Arvo"    :leveys "55%"}]
+      raportin-otsikot
       raporttidata]]))

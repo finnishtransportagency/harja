@@ -12,7 +12,8 @@ SELECT
   tpi.nimi       AS toimenpideinstanssi_nimi,
   lp.id          AS laatupoikkeama_id,
   lp.aika        AS laatupoikkeama_aika,
-  lp.urakka      AS urakka_id
+  u.id           AS urakka_id,
+  u.nimi         AS urakka_nimi
 FROM sanktio s
   JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
@@ -26,4 +27,5 @@ WHERE (:urakka::INTEGER IS NULL OR lp.urakka = :urakka)
       AND (:urakka::INTEGER IS NOT NULL OR
            (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                  u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
-      AND lp.aika :: DATE BETWEEN :alku AND :loppu;
+      AND lp.aika :: DATE BETWEEN :alku AND :loppu
+ORDER BY urakka_nimi;
