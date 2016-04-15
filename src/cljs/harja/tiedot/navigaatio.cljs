@@ -37,11 +37,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (declare kasittele-url! paivita-url valitse-urakka)
 
-(defonce murupolku-nakyvissa? (reaction (let [raportti @raportit/suoritettu-raportti
-                                              raporttinakymassa? @raportit/raportit-nakymassa?]
-                                          ;; Piilota murupolku kun tarkastellaan raporttia
-                                          (not (and (some? raportti)
-                                                    raporttinakymassa?)))))
+(defonce murupolku-nakyvissa? (reaction (not @raportit/raportit-nakymassa?)))
+(defonce murupolku-domissa? (atom false))
 
 (defonce kartan-extent (atom nil))
 
@@ -291,9 +288,12 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                           (nil? @valittu-hallintayksikko) ;; hy:tä ei saatu asetettua -> ei estetä latausta
                           (some? @hallintayksikon-urakkalista))))
 
+(def render-lupa-url-kasitelty? (atom false))
+
 ;; sulava ensi-render: evätään render-lupa? ennen kuin konteksti on valmiina
 (def render-lupa? (reaction
-                   (and @render-lupa-hy? @render-lupa-u?)))
+                   (and @render-lupa-hy? @render-lupa-u?
+                        @render-lupa-url-kasitelty?)))
 
 
 (defn kasittele-url!
@@ -313,7 +313,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
           (reset! valittu-urakka nil))))
 
     (swap! reitit/url-navigaatio
-           reitit/tulkitse-polku polku)))
+           reitit/tulkitse-polku polku))
+  (reset! render-lupa-url-kasitelty? true))
 
 (.setEnabled historia true)
 
