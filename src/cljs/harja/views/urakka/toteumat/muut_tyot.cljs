@@ -259,7 +259,11 @@
               :pakollinen?   true
               :hae           #(get-in % [:tehtava :toimenpidekoodi])
               :valinta-arvo  #(:id (nth % 3))
-              :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
+              :valinta-nayta #(if % (:nimi (nth % 3))
+                                    ;; näytä myös poistettu toimenopidekoodi lomakkeessa (HAR-2140)
+                                    (if (get-in @muokattu [:toteuma :id])
+                                      (get-in @muokattu [:tehtava :nimi])
+                                      "- Valitse tehtävä -"))
               :tyyppi        :valinta
               :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
                                (get-in @muokattu [:toimenpideinstanssi :tpi_id])
