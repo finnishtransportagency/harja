@@ -13,7 +13,8 @@ SELECT
   lp.id          AS laatupoikkeama_id,
   lp.aika        AS laatupoikkeama_aika,
   u.id           AS urakka_id,
-  u.nimi         AS urakka_nimi
+  u.nimi         AS urakka_nimi,
+  (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
 FROM sanktio s
   JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
