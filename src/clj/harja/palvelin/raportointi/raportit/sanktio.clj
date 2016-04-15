@@ -19,7 +19,7 @@
 (defn rivien-maara-sanktiolajilla-muistutus [kantarivit]
   (let [laskettavat (filter
                       (fn [rivi]
-                        (some #{:muistutus} (:sanktiotyyppi_laji rivi)))
+                        (= :muistutus (:sakkoryhma rivi)))
                       kantarivit)]
     (count laskettavat)))
 
@@ -40,7 +40,7 @@
   (let [;; Suodatetut rivit
         talvihoito-rivit (filter talvihoito? kantarivit)
         muut-tuotteet (filter (comp not talvihoito?) kantarivit)
-        ryhma-c (filter #(some #{:C} (:sanktiotyyppi_laji %)) kantarivit)
+        ryhma-c (filter #(= (:sakkoryhma %) :C) kantarivit)
         ;; Template rivit
         muistutukset (fn [rivit]
                        (apply conj ["Muistutukset" "kpl"] (mapv (fn [urakka]
@@ -82,7 +82,9 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         kantarivit (into []
-                         (map #(konv/array->set % :sanktiotyyppi_laji keyword))
+                         (comp
+                           (map #(konv/string->keyword % :sakkoryhma))
+                           (map #(konv/array->set % :sanktiotyyppi_laji keyword)))
                          (hae-sanktiot db
                                        {:urakka urakka-id
                                         :hallintayksikko hallintayksikko-id
