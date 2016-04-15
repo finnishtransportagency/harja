@@ -132,7 +132,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   [ur]
   (let [;; Organisaatiotiedot voidaan esitäyttää - nämä ylikirjoitetaan jos kyseessä on olemassaoleva toteuma
         tiedot (atom {:suorittaja (:nimi @u/urakan-organisaatio)
-                      :ytunnus (:ytunnus @u/urakan-organisaatio)})
+                      :ytunnus (:ytunnus @u/urakan-organisaatio)
+                      :alkanut (pvm/nyt)
+                      :paattynyt (pvm/nyt)})
         vanha-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)]
 
     (komp/luo
