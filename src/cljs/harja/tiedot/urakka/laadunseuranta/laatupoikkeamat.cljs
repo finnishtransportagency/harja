@@ -7,7 +7,8 @@
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat])
+            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -63,7 +64,8 @@
 (defonce valittu-laatupoikkeama-id (atom nil))
 
 (defn uusi-laatupoikkeama []
-  {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))})
+  {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))
+   :aika (pvm/nyt)})
 
 (defonce valittu-laatupoikkeama
          (reaction<! [id @valittu-laatupoikkeama-id]
