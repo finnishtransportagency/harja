@@ -25,6 +25,12 @@
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn validoi-sanktio [sanktio]
+  (if (and (not (lomake/muokattu? sanktio))
+           (:id sanktio))
+    false
+    (not (lomake/voi-tallentaa-ja-muokattu? sanktio))))
+
 (defn sanktion-tiedot
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
@@ -53,7 +59,7 @@
                      :kun-onnistuu #(do
                                      (tiedot/sanktion-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-sanktio nil))
-                     :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
+                     :disabled     (validoi-sanktio @muokattu)}]}
         [{:otsikko     "Tekijä" :nimi :tekijanimi
           :hae         (comp :tekijanimi :laatupoikkeama)
           :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
