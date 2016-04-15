@@ -22,8 +22,20 @@
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="ely" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="vuosi" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element name="elyt">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="ely" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element  name="vuodet">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="vuosi" type="xs:int" minOccurs="0" maxOccurs="unbounded"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
                                         <xs:element name="tunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
                                         <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
                                     </xs:sequence>
