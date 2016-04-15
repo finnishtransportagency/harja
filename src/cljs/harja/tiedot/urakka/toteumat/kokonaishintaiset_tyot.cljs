@@ -14,9 +14,10 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-kokonaishintainen-toteuma (atom nil))
-(def uusi-kokonaishintainen-toteuma (reaction
-                                      {:suorittaja {:nimi    (:nimi @u/urakan-organisaatio)
-                                                    :ytunnus (:ytunnus @u/urakan-organisaatio)}}))
+(defn uusi-kokonaishintainen-toteuma []
+  {:alkanut (pvm/nyt)
+   :suorittaja {:nimi    (:nimi @u/urakan-organisaatio)
+                :ytunnus (:ytunnus @u/urakan-organisaatio)}})
 (def haetut-reitit (atom nil))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot

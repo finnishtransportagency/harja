@@ -106,7 +106,7 @@
   [:div
    (tee-valinnat)
    [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
-                                        @tiedot/uusi-kokonaishintainen-toteuma)
+                                        (tiedot/uusi-kokonaishintainen-toteuma))
     {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
    (tee-taulukko)])
 
@@ -129,8 +129,9 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko  (if (:id @muokattu) "Luo uusi kokonaishintainen toteuma"
-                                          "Muokkaa kokonaishintaista toteumaa")
+           {:otsikko  (if (:id @muokattu)
+                        "Muokkaa kokonaishintaista toteumaa"
+                        "Luo uusi kokonaishintainen toteuma")
             :muokkaa! #(do (reset! muokattu %))
             :footer   [napit/palvelinkutsu-nappi
                        "Tallenna toteuma"

@@ -8,7 +8,8 @@
             [clojure.string :as str]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.atom :refer-macros [reaction<!]]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    ))
@@ -79,4 +80,4 @@
         sukunimi (if kayttaja (:sukunimi kayttaja) "")
         nimi (str/trim (str etunimi " " sukunimi))]
     {:kohteet       {}, :silta-id silta, :urakka-id ur, :id nil,
-     :tarkastusaika nil, :tarkastaja nimi}))
+     :tarkastusaika (pvm/nyt) :tarkastaja nimi}))

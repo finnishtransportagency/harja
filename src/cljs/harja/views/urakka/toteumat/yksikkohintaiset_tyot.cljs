@@ -210,7 +210,7 @@
       (fn [ur]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin toteumaluetteloon" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil)]
-         
+
 
          [lomake {:otsikko (if (:toteuma-id @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
                              (if jarjestelman-lisaama-toteuma?
@@ -272,12 +272,12 @@
              :pakollinen? true
              :sijainti    (r/wrap (:reitti @lomake-toteuma)
                                   #(swap! lomake-toteuma assoc :reitti %))})
-           
+
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2
             :tyyppi :komponentti
             :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
-           
+
            {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text
             :uusi-rivi? true
             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
@@ -365,7 +365,9 @@
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
          [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
-         [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma {})
+         [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
+                                              {:alkanut (pvm/nyt)
+                                               :paattynyt (pvm/nyt)})
           {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
 
          [grid/grid
