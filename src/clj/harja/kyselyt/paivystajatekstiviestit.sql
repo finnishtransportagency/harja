@@ -1,5 +1,5 @@
 -- name: kirjaa-uusi-paivystajatekstiviesti<!
-INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES
+INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo, puhelinnumero) VALUES
   ((SELECT hae_seuraava_vapaa_viestinumero(:puhelinnumero :: VARCHAR(16))),
    (SELECT id
     FROM ilmoitus
@@ -12,10 +12,11 @@ DELETE FROM paivystajatekstiviesti
 WHERE ilmoitus = :ilmoitus;
 
 -- name: hae-puhelin-ja-viestinumerolla
--- single?: true
 SELECT
-  ilmoitus,
-  yhteyshenkilo
-WHERE puhelinnumero = :puhelinnumero AND
-      viestinumero = :viestinumero
-LIMIT 1;
+  ptv.ilmoitus,
+  i.ilmoitusid,
+  ptv.yhteyshenkilo
+FROM paivystajatekstiviesti ptv
+  JOIN ilmoitus i ON ptv.ilmoitus = i.id
+WHERE ptv.puhelinnumero = :puhelinnumero AND
+      ptv.viestinumero = :viestinumero;

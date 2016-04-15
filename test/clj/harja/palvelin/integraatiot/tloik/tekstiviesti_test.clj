@@ -31,14 +31,14 @@
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                   {:sahkoposti-sisaan-jono         "email-to-harja"
+                                                   {:sahkoposti-sisaan-jono "email-to-harja"
                                                     :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                    :sahkoposti-ulos-jono           "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                                                    :sahkoposti-ulos-jono "harja-to-email"
+                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
-                    {:url            +labyrintti-url+
+                    {:url +labyrintti-url+
                      :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
@@ -59,9 +59,9 @@
         yhteyshenkilo-id (first yhteyshenkilo)
         puhelinnumero (second yhteyshenkilo)]
 
-    (paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db yhteyshenkilo-id ilmoitus-id)
+    (paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db puhelinnumero ilmoitus-id yhteyshenkilo-id)
 
-    (is (= "Viestiä ei voida käsitellä, sillä käyttäjää ei voitu tunnistaa puhelinnumerolla."
+    (is (= "Viestiäsi ei voitu käsitellä. Antamasi kuittaus ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla."
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db "0834" "TESTI"))
         "Tuntematon käyttäjä käsitellään oikein")
     (is (= "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu."
@@ -78,7 +78,7 @@
       (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
              (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V1 Asia selvä."))
           "Onnistunut viestin käsittely")
-      
+
       (let [xml (odota-arvo viesti)
             data (xml/lue xml)]
         (is (= "123456789" (z/xml1-> data :ilmoitusId z/text)) "Kuittaus on tehty oikeaan viestiin.")
@@ -97,16 +97,16 @@
         ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}
         paivystajaviestien-maara (fn []
                                    (count
-                                    (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
-                                               (:id paivystaja)
-                                               (:id ilmoitus)))))]
+                                     (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
+                                                (:id paivystaja)
+                                                (:id ilmoitus)))))]
     (with-fake-http
       [{:url +labyrintti-url+ :method :post} fake-vastaus]
 
-      (let [viestien-maara-ennen  (paivystajaviestien-maara)]
-        
+      (let [viestien-maara-ennen (paivystajaviestien-maara)]
+
         (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
-        
+
         (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
 
       (poista-paivystajatekstiviestit)

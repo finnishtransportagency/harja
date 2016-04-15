@@ -1,11 +1,13 @@
-CREATE OR REPLACE FUNCTION hae_seuraava_vapaa_viestinumero(yhteyshenkilo_id INTEGER)
+DROP FUNCTION hae_seuraava_vapaa_viestinumero(yhteyshenkilo_id INTEGER );
+
+CREATE OR REPLACE FUNCTION hae_seuraava_vapaa_viestinumero(haettava_puhelinnnumero VARCHAR(16))
   RETURNS INTEGER AS $$
 BEGIN
   LOCK TABLE paivystajatekstiviesti IN ACCESS EXCLUSIVE MODE;
   RETURN (SELECT coalesce((SELECT (SELECT max(p.viestinumero)
                                    FROM paivystajatekstiviesti p
                                      INNER JOIN ilmoitus i ON p.ilmoitus = i.id
-                                   WHERE p.yhteyshenkilo = yhteyshenkilo_id AND
+                                   WHERE p.puhelinnumero = haettava_puhelinnnumero AND
                                          NOT exists(SELECT itp.id
                                                     FROM ilmoitustoimenpide itp
                                                     WHERE

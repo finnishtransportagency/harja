@@ -58,7 +58,7 @@
      :vapaateksti vapaateksti}))
 
 (defn hae-paivystajatekstiviesti [db viestinumero puhelinnumero]
-  (if-let [paivystajatekstiviesti (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelinnumero viestinumero)]
+  (if-let [paivystajatekstiviesti (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelinnumero viestinumero))]
     paivystajatekstiviesti
     (throw+ {:type :tuntematon-ilmoitus})))
 
@@ -71,6 +71,7 @@
           ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
                                   db
                                   (:ilmoitus paivystajatekstiviesti)
+                                  (:ilmoitusid paivystajatekstiviesti)
                                   (:vapaateksti data)
                                   (:toimenpide data)
                                   paivystaja)]

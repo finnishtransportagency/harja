@@ -279,4 +279,4 @@ SELECT
 FROM yhteyshenkilo y
   LEFT JOIN organisaatio o ON o.id = y.organisaatio
 WHERE
-  id = :id;
+  y.id = :id;

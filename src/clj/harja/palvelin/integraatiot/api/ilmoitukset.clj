@@ -37,7 +37,7 @@
         kasittelija (:kasittelija ilmoitustoimenpide)
         _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
         ilmoitustoimenpide-id
-        (:id (ilmoitukset/luo-ilmoitustoimenpide
+        (:id (ilmoitukset/luo-ilmoitustoimenpide<!
                db
                id
                ilmoitusid
