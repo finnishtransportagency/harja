@@ -18,10 +18,10 @@
 
 (defn talvihoidon-muistutukset [kantarivit]
   (let [laskettavat (filter
-     (fn [rivi]
-       (and (talvihoito? rivi)
-            (#{:muistutus} (:sanktiotyyppi_laji rivi))))
-     kantarivit)]
+                      (fn [rivi]
+                        (and (talvihoito? rivi)
+                             (some #{:muistutus} (:sanktiotyyppi_laji rivi))))
+                      kantarivit)]
     (count laskettavat)))
 
 (defn rivien-urakat [rivit]
