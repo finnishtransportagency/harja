@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 CREATE OR REPLACE FUNCTION hae_seuraava_vapaa_viestinumero(yhteyshenkilo_id INTEGER)
   RETURNS INTEGER AS $$
 BEGIN
@@ -17,10 +16,3 @@ END;
 $$ LANGUAGE plpgsql;
 
 ALTER TABLE paivystajatekstiviesti ADD COLUMN puhelinnumero VARCHAR(16);
-=======
-CREATE TABLE tarkastus_laatupoikkeama (
-  tarkastus INTEGER REFERENCES tarkastus (id)      NOT NULL,
-  laatupoikkeama INTEGER REFERENCES laatupoikkeama (id) NOT NULL,
-  CONSTRAINT uniikki_tarkastuksen_laatupoikkeama UNIQUE (tarkastus, laatupoikkeama)
-);
->>>>>>> develop

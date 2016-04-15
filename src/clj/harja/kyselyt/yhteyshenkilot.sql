@@ -264,3 +264,19 @@ SELECT y.id, y.etunimi, y.sukunimi,
        LEFT JOIN organisaatio o ON o.id = y.organisaatio
  WHERE p.urakka = :urakka AND
        LOWER(sahkoposti) = LOWER(:sahkoposti)
+
+
+-- name: hae-yhteyshenkilo
+SELECT
+  y.id,
+  y.etunimi,
+  y.sukunimi,
+  y.matkapuhelin,
+  y.tyopuhelin,
+  y.sahkoposti,
+  o.ytunnus,
+  o.nimi
+FROM yhteyshenkilo y
+  LEFT JOIN organisaatio o ON o.id = y.organisaatio
+WHERE
+  id = :id;

@@ -28,21 +28,20 @@
 (def +tuntematon-viestinumero-viesti+ "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy avointa ilmoitusta. Vastaa viestiin kuittauskoodilla ja kommentilla.")
 (def +virhe-viesti+ "Pahoittelemme mutta lähettämäsi viestin käsittelyssä tapahtui virhe.")
 
-
 (defn parsi-toimenpide [toimenpide]
   (case toimenpide
     "V" "vastaanotto"
     "A" "aloitus"
     "L" "lopetus"
-    (throw+ {:type    :tuntematon-ilmoitustoimenpide
-             :virheet [{:koodi  :tuntematon-ilmoitustoimenpide
+    (throw+ {:type :tuntematon-ilmoitustoimenpide
+             :virheet [{:koodi :tuntematon-ilmoitustoimenpide
                         :viesti (format "Tuntematon ilmoitustoimenpide: %s" toimenpide)}]})))
 
 (defn parsi-viestinumero [numero]
   (if (merkkijono/onko-kokonaisluku? numero)
     (Integer/parseInt numero)
-    (throw+ {:type    :tuntematon-viestinumero
-             :virheet [{:koodi  :tuntematon-viestinumero
+    (throw+ {:type :tuntematon-viestinumero
+             :virheet [{:koodi :tuntematon-viestinumero
                         :viesti (format "Tuntematon viestinumero: %s" numero)}]})))
 
 (defn parsi-vapaateksti [viesti]
@@ -54,9 +53,9 @@
   (let [toimenpide (parsi-toimenpide (str (nth viesti 0)))
         viestinumero (parsi-viestinumero (str (nth viesti 1)))
         vapaateksti (parsi-vapaateksti viesti)]
-    {:toimenpide   toimenpide
+    {:toimenpide toimenpide
      :viestinumero viestinumero
-     :vapaateksti  vapaateksti}))
+     :vapaateksti vapaateksti}))
 
 (defn hae-paivystajatekstiviesti [db viestinumero puhelinnumero]
   (if-let [paivystajatekstiviesti (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelinnumero viestinumero)]
@@ -68,10 +67,13 @@
   (try+
     (let [data (parsi-tekstiviesti viesti)
           paivystajatekstiviesti (hae-paivystajatekstiviesti db (:viestinumero data) puhelinnumero)
-          ;; todo jatka
-          paivystaja (hae-paivystaja db (:yhteyshenkilo paivystajatekstiviesti))
-          ilmoitus (hae-ilmoitus db (:ilmoitus paivystajatekstiviesti))
-          ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide db ilmoitus (:vapaateksti data) (:toimenpide data) paivystaja)]
+          paivystaja (yhteyshenkilot/hae-yhteyshenkilo db (:yhteyshenkilo paivystajatekstiviesti))
+          ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+                                  db
+                                  (:ilmoitus paivystajatekstiviesti)
+                                  (:vapaateksti data)
+                                  (:toimenpide data)
+                                  paivystaja)]
 
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
       +onnistunut-viesti+)
