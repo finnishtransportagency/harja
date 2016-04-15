@@ -5,7 +5,9 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
-            [harja.palvelin.integraatiot.sampo.vienti :as vienti]))
+            [harja.palvelin.integraatiot.sampo.vienti :as vienti]
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
+            [ harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
@@ -49,7 +51,7 @@
 
   Maksueralahetys
   (laheta-maksuera-sampoon [this numero]
-    (let [maksueran-lahetys (vienti/laheta-maksuera (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)
-          kustannussuunnitelman-lahetys (vienti/laheta-kustannussuunitelma (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)]
+    (let [maksueran-lahetys (maksuerat/laheta-maksuera (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)
+          kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-kustannussuunitelma (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)]
       {:maksuera             maksueran-lahetys
        :kustannussuunnitelma kustannussuunnitelman-lahetys})))

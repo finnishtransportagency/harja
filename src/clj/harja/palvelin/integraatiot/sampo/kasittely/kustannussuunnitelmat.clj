@@ -8,7 +8,10 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
-            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera])
+            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID Calendar TimeZone)))
 
@@ -39,7 +42,9 @@
   (= 1 (kustannussuunnitelmat/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
 
 (defn tee-oletus-vuosisummat [vuodet]
-  (map #(hash-map :alkupvm (:alkupvm %), :loppupvm (:loppupvm %), :summa 1) vuodet))
+  (map #(hash-map :alkupvm (pvm/aika-iso8601 (:alkupvm %)),
+                  :loppupvm (pvm/aika-iso8601 (:loppupvm %)),
+                  :summa 1) vuodet))
 
 (defn aseta-pvm [pvm vuosi kuukausi paiva]
   (.setTime pvm vuosi)
@@ -64,13 +69,12 @@
   (let [vuodet (mapv (fn [vuosi]
                        {:alkupvm (first vuosi)
                         :loppupvm (second vuosi)})
-                     (pvm/urakan-vuodet (:alkupvm (:toimenpideinstanssi maksueran-tiedot))
-                                        (:loppupvm (:toimenpideinstanssi maksueran-tiedot))))]
+                     (pvm/urakan-vuodet (konv/java-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
+                                        (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))]
     (case (:tyyppi (:maksuera maksueran-tiedot))
       "kokonaishintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
       (tee-oletus-vuosisummat vuodet))))
-
 
 (defn valitse-lkp-tilinumero [toimenpidekoodi tuotenumero]
   (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
@@ -101,18 +105,50 @@
                                 :viesti viesti}]})))))))
 
 (defn muodosta-kustannussuunnitelma [db numero]
-  (if (lukitse-kustannussuunnitelma db numero)
-    (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
-          vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
-          lkp-tilinnumero (valitse-lkp-tilinumero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
-          maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)
-          kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
-      (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
-        kustannussuunnitelma-xml
+  (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
+        vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
+        lkp-tilinnumero (valitse-lkp-tilinumero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
+        maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)
+        kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
+    (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
+      kustannussuunnitelma-xml
+      (do
+        (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
+        nil))))
+
+(defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
+  (log/debug "Lähetetään kustannussuunnitelma (numero: " numero ") Sampoon.")
+  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sampo" "kustannussuunnitelma-lahetys" nil nil)]
+    (try
+      (if (lukitse-kustannussuunnitelma db numero)
+        (if-let [kustannussuunnitelma-xml (muodosta-kustannussuunnitelma db numero)]
+          (if-let [viesti-id (sonja/laheta sonja lahetysjono-ulos kustannussuunnitelma-xml)]
+            (do
+              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" kustannussuunnitelma-xml)
+              (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id))
+            (do
+              (log/error "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.")
+              (integraatioloki/kirjaa-epaonnistunut-integraatio
+                integraatioloki (str "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.") nil tapahtuma-id nil)
+              (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
+              {:virhe :sonja-lahetys-epaonnistui}))
+          (do
+            (log/warn "Kustannussuunnitelman (numero: " numero ") sanoman muodostus epäonnistui.")
+            (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
+            {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
         (do
-          (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
-          nil)))
-    nil))
+          (log/warn "Kustannussuunnitelman (numero: " numero ") lukitseminen epäonnistui.")
+          {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
+      (catch Exception e
+        (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
+        (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
+        (integraatioloki/kirjaa-epaonnistunut-integraatio
+          integraatioloki
+          "Sampo kustannussuunnitelmalähetyksessä tapahtui poikkeus"
+          (str "Poikkeus: " (.getMessage e))
+          tapahtuma-id
+          nil)
+        {:virhe :poikkeus}))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [transaktio db]
