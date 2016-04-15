@@ -23,7 +23,8 @@
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
             [alandipert.storage-atom :refer [local-storage]]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tiedot.hallintayksikot :as hy])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -293,7 +294,7 @@
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)]
-    
+
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
 
     [:span
@@ -337,7 +338,7 @@
                          (if row (conj row par)
                              [par])
                          parametrit))))))))
-     
+
      [:div.row
       [:div.col-md-12
        [:div.raportin-toiminnot
@@ -383,8 +384,27 @@
            {:ikoni    [ikonit/list]
             :disabled (not voi-suorittaa?)}])]]]]))
 
+(defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
+  [:span
+   [yleiset/livi-pudotusvalikko
+    {:valitse-fn nav/valitse-hallintayksikko
+     :valinta v-hal
+     :class "raportti-alasveto"
+     :format-fn (fnil hy/elynumero-ja-nimi {:nimi "Kaikki ELYt"})}
+    (concat [nil]
+            @hy/hallintayksikot)]
+   " "
+   [yleiset/livi-pudotusvalikko
+    {:valitse-fn nav/vaihda-urakkatyyppi!
+     :valinta v-ur-tyyppi
+     :class "raportti-alasveto"
+     :format-fn :nimi}
+    nav/+urakkatyypit+]])
+
 (defn raporttivalinnat []
   (komp/luo
+   ;; Ei tällä hetkellä raporteissa sallita urakoitsijavalintaa
+   (komp/sisaan #(nav/valitse-urakoitsija! nil))
     (fn []
       (let [v-ur @nav/valittu-urakka
             v-ur-tyyppi @nav/valittu-urakkatyyppi
@@ -399,12 +419,15 @@
            [:span
             [:h3 "Raportin tiedot"]
             [yleiset/tietoja {:class "border-bottom"}
-             "Kohde" (case konteksti
-                       "urakka" "Urakka"
-                       "hallintayksikko" "Hallintayksikkö"
-                       "koko maa" "Koko maa")
-             "Urakka" (when (= "urakka" konteksti)
-                        (:nimi v-ur))
+             "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
+             "Urakka" (when v-hal
+                        [yleiset/livi-pudotusvalikko
+                         {:valitse-fn nav/valitse-urakka
+                          :valinta v-ur
+                          :class "raportti-alasveto"
+                          :format-fn (fnil :nimi {:nimi "Kaikki urakat"})}
+                         (concat [nil]
+                                 (sort-by :nimi @nav/suodatettu-urakkalista))])
              "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
                                  (:nimi v-hal))
              "Raportti" (cond
@@ -417,9 +440,9 @@
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn  #(if % (:kuvaus %) "Valitse")
                                                 :valitse-fn #(reset! valittu-raporttityyppi %)
-                                                :class      "valitse-raportti-alasveto"}
+                                                :class      "raportti-alasveto"}
                            @mahdolliset-raporttityypit])]])
-         
+
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
             [raportin-parametrit @valittu-raporttityyppi konteksti v-ur v-hal]])]))))
@@ -445,7 +468,7 @@
        [raporttivalinnat]
        (cond (= :ladataan r)
              [yleiset/ajax-loader "Raporttia suoritetaan..."]
-             
+
              (not (nil? r))
              [nayta-raportti @valittu-raporttityyppi r])])))
 
@@ -463,6 +486,6 @@
       (if (roolit/voi-nahda-raportit?)
         [:span
          (when-not @raportit/suoritettu-raportti
-           [kartta/kartan-paikka @nav/murupolku-nakyvissa?])
+           [kartta/kartan-paikka @nav/murupolku-domissa?])
          (raporttivalinnat-ja-raportti)]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
