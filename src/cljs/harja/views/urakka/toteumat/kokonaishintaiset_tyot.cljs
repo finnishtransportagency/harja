@@ -106,7 +106,7 @@
   [:div
    (tee-valinnat)
    [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
-                                        @tiedot/uusi-kokonaishintainen-toteuma)
+                                        (tiedot/uusi-kokonaishintainen-toteuma))
     {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
    (tee-taulukko)])
 
