@@ -16,10 +16,10 @@
 (defn talvihoito? [kantarivi]
   (= (str/lower-case (:toimenpidekoodi_taso2 kantarivi)) "talvihoito"))
 
-(defn rivien-maara-sanktiolajilla-muistutus [kantarivit]
+(defn rivien-maara-sakkoryhmalla [kantarivit sanktioryhma]
   (let [laskettavat (filter
                       (fn [rivi]
-                        (= :muistutus (:sakkoryhma rivi)))
+                        (= sanktioryhma (:sakkoryhma rivi)))
                       kantarivit)]
     (count laskettavat)))
 
@@ -42,12 +42,15 @@
         muut-tuotteet (filter (comp not talvihoito?) kantarivit)
         ryhma-c (filter #(= (:sakkoryhma %) :C) kantarivit)
         ;; Template rivit
-        muistutukset (fn [rivit]
-                       (apply conj ["Muistutukset" "kpl"] (mapv (fn [urakka]
-                                                                  (rivien-maara-sanktiolajilla-muistutus (urakan-rivit rivit (:id urakka))))
-                                                                (rivien-urakat rivit))))]
+        template-rivien-maara-sakkoryhmalla
+        (fn [otsikko rivit sakkoryhma]
+          (apply conj [otsikko "kpl"] (mapv (fn [urakka]
+                                                     (rivien-maara-sakkoryhmalla
+                                                       (urakan-rivit rivit (:id urakka))
+                                                       sakkoryhma))
+                                                   (rivien-urakat rivit))))]
     [{:otsikko "Talvihoito"}
-     (muistutukset talvihoito-rivit)
+     (template-rivien-maara-sakkoryhmalla "Muistutukset" talvihoito-rivit :muistutus)
      ["Sakko A" "€" 0]
      ["- Päätiet" "€" 0]
      ["- Muut tiet" "€" 0]
@@ -57,7 +60,7 @@
      ["- Talvihoito, sakot yht." "€" 0]
      ["- Talvihoito, indeksit yht." "€" 0]
      {:otsikko "Muut tuotteet"}
-     (muistutukset muut-tuotteet)
+     (template-rivien-maara-sakkoryhmalla "Muistutukset" muut-tuotteet :muistutus)
      ["Sakko A" "€" 0]
      ["- Liikenneymp. hoito" "€" 0]
      ["- Sorateiden hoito" "€" 0]
@@ -70,7 +73,7 @@
      ["Ryhmä C, sakot yht." "€" 0]
      ["Ryhmä C, indeksit yht." "€" 0]
      {:otsikko "Yhteensä"}
-     ["Muistutukset yht." "kpl" 0]
+     (template-rivien-maara-sakkoryhmalla "Muistutukset yht." kantarivit :muistutus)
      ["Indeksit yht." "€" 0]
      ["Kaikki sakot yht." "€" 0]
      ["Kaikki yht." "€" 0]]))
