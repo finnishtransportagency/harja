@@ -16,27 +16,32 @@
 (defn talvihoito? [kantarivi]
   (= (str/lower-case (:toimenpidekoodi_taso2 kantarivi)) "talvihoito"))
 
-(defn talvihoidon-muistutukset [kantarivit urakka-id]
+(defn talvihoidon-muistutukset [kantarivit]
   (let [laskettavat (filter
      (fn [rivi]
        (and (talvihoito? rivi)
-            (#{:muistutus} (:sanktiotyyppi_laji rivi))
-            (= (:urakka_id rivi) urakka-id)))
+            (#{:muistutus} (:sanktiotyyppi_laji rivi))))
      kantarivit)]
     (count laskettavat)))
 
-(defn rivien-sisaltamat-urakat [rivit]
+(defn rivien-urakat [rivit]
   (-> (map (fn [rivi]
              {:id (:urakka_id rivi)
               :nimi (:urakka_nimi rivi)})
            rivit)
       distinct))
 
+(defn urakan-rivit [rivit urakka-id]
+  (filter
+    (fn [rivi]
+      (= (:urakka_id rivi) urakka-id))
+    rivit))
+
 (defn sanktiot-raportille [kantarivit]
   [{:otsikko "Talvihoito"}
    (apply conj ["Muistutukset" "kpl"] (mapv (fn [urakka]
-                                 (talvihoidon-muistutukset kantarivit (:id urakka)))
-                                            (rivien-sisaltamat-urakat kantarivit)))
+                                              (talvihoidon-muistutukset (urakan-rivit kantarivit (:id urakka))))
+                                            (rivien-urakat kantarivit)))
    ["Sakko A" "€" 0]
    ["- Päätiet" "€" 0]
    ["- Muut tiet" "€" 0]
@@ -84,7 +89,7 @@
                                 (mapv
                                   (fn [urakka]
                                     {:otsikko (:nimi urakka) :leveys 20})
-                                  (rivien-sisaltamat-urakat kantarivit)))
+                                  (rivien-urakat kantarivit)))
         raporttidata (sanktiot-raportille kantarivit)
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
