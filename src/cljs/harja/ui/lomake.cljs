@@ -249,6 +249,22 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          (get varoitukset nimi)
          (get huomautukset nimi)]))]))
 
+(defn validoi [tiedot skeema]
+  (let [kaikki-skeemat (pura-ryhmat skeema)
+        kaikki-virheet (validointi/validoi-rivi nil tiedot kaikki-skeemat :validoi)
+        kaikki-varoitukset (validointi/validoi-rivi nil tiedot kaikki-skeemat :varoita)
+        kaikki-huomautukset (validointi/validoi-rivi nil tiedot kaikki-skeemat :huomauta)
+        puuttuvat-pakolliset-kentat (into #{}
+                                          (map :nimi)
+                                          (validointi/puuttuvat-pakolliset-kentat tiedot
+                                                                                  kaikki-skeemat))]
+    (log "UUDET-TIEDOT: " (pr-str tiedot))
+    (assoc tiedot
+           ::virheet kaikki-virheet
+           ::varoitukset kaikki-varoitukset
+           ::huomautukset kaikki-huomautukset
+           ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))
+
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
   Ottaa kolme parametria: optiot, skeeman (vektori kenttiä) sekä datan (mäppi).
@@ -273,7 +289,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   "
   [_ _ _]
   (let [fokus (atom nil)]
-    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset voi-muokata?] :as opts} skeema
+    (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
+                 voi-muokata?] :as opts} skeema
          {muokatut ::muokatut
           virheet ::virheet
           varoitukset ::varoitukset
@@ -285,21 +302,10 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                             true)
              muokkaa-kenttaa-fn (fn [nimi]
                                   (fn [uudet-tiedot]
-
-                                    (let [kaikki-skeemat (pura-ryhmat skeema)
-                                          kaikki-virheet (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :validoi)
-                                          kaikki-varoitukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :varoita)
-                                          kaikki-huomautukset (validointi/validoi-rivi nil uudet-tiedot kaikki-skeemat :huomauta)
-                                          puuttuvat-pakolliset-kentat (into #{}
-                                                                            (map :nimi)
-                                                                            (validointi/puuttuvat-pakolliset-kentat uudet-tiedot kaikki-skeemat))]
-                                      (log "UUDET-TIEDOT: " (pr-str uudet-tiedot))
-                                      (muokkaa! (assoc uudet-tiedot
-                                                       ::muokatut (conj (or muokatut #{}) nimi)
-                                                       ::virheet kaikki-virheet
-                                                       ::varoitukset kaikki-varoitukset
-                                                       ::huomautukset kaikki-huomautukset
-                                                       ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))))]
+                                    (-> uudet-tiedot
+                                        (validoi skeema)
+                                        (assoc ::muokatut (conj (or muokatut #{}) nimi))
+                                        muokkaa!)))]
          ;(lovg "RENDER! fokus = " (pr-str @fokus))
          [:div.lomake
           (when otsikko
