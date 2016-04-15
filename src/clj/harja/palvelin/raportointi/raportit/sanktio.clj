@@ -16,11 +16,10 @@
 (defn talvihoito? [kantarivi]
   (= (str/lower-case (:toimenpidekoodi_taso2 kantarivi)) "talvihoito"))
 
-(defn talvihoidon-muistutukset [kantarivit]
+(defn rivien-maara-sanktiolajilla-muistutus [kantarivit]
   (let [laskettavat (filter
                       (fn [rivi]
-                        (and (talvihoito? rivi)
-                             (some #{:muistutus} (:sanktiotyyppi_laji rivi))))
+                        (some #{:muistutus} (:sanktiotyyppi_laji rivi)))
                       kantarivit)]
     (count laskettavat)))
 
@@ -38,36 +37,43 @@
     rivit))
 
 (defn sanktiot-raportille [kantarivit]
-  [{:otsikko "Talvihoito"}
-   (apply conj ["Muistutukset" "kpl"] (mapv (fn [urakka]
-                                              (talvihoidon-muistutukset (urakan-rivit kantarivit (:id urakka))))
-                                            (rivien-urakat kantarivit)))
-   ["Sakko A" "€" 0]
-   ["- Päätiet" "€" 0]
-   ["- Muut tiet" "€" 0]
-   ["Sakko B" "€" 0]
-   ["- Päätiet" "€" 0]
-   ["- Muut tiet" "€" 0]
-   ["- Talvihoito, sakot yht." "€" 0]
-   ["- Talvihoito, indeksit yht." "€" 0]
-   {:otsikko "Muut tuotteet"}
-   ["Muistutukset" "kpl" 0]
-   ["Sakko A" "€" 0]
-   ["- Liikenneymp. hoito" "€" 0]
-   ["- Sorateiden hoito" "€" 0]
-   ["Sakko B" "€" 0]
-   ["- Liikenneymp. hoito" "€" 0]
-   ["- Sorateiden hoito" "€" 0]
-   ["- Muut tuotteet, sakot yht." "€" 0]
-   ["- Muut tuotteet, indeksit yht." "€" 0]
-   {:otsikko "Ryhmä C"}
-   ["Ryhmä C, sakot yht." "€" 0]
-   ["Ryhmä C, indeksit yht." "€" 0]
-   {:otsikko "Yhteensä"}
-   ["Muistutukset yht." "kpl" 0]
-   ["Indeksit yht." "€" 0]
-   ["Kaikki sakot yht." "€" 0]
-   ["Kaikki yht." "€" 0]])
+  (let [;; Suodatetut rivit
+        talvihoito-rivit (filter talvihoito? kantarivit)
+        muut-tuotteet (filter (comp not talvihoito?) kantarivit)
+        ryhma-c (filter #(some #{:C} (:sanktiotyyppi_laji %)) kantarivit)
+        ;; Template rivit
+        muistutukset (fn [rivit]
+                       (apply conj ["Muistutukset" "kpl"] (mapv (fn [urakka]
+                                                                  (rivien-maara-sanktiolajilla-muistutus (urakan-rivit rivit (:id urakka))))
+                                                                (rivien-urakat rivit))))]
+    [{:otsikko "Talvihoito"}
+     (muistutukset talvihoito-rivit)
+     ["Sakko A" "€" 0]
+     ["- Päätiet" "€" 0]
+     ["- Muut tiet" "€" 0]
+     ["Sakko B" "€" 0]
+     ["- Päätiet" "€" 0]
+     ["- Muut tiet" "€" 0]
+     ["- Talvihoito, sakot yht." "€" 0]
+     ["- Talvihoito, indeksit yht." "€" 0]
+     {:otsikko "Muut tuotteet"}
+     (muistutukset muut-tuotteet)
+     ["Sakko A" "€" 0]
+     ["- Liikenneymp. hoito" "€" 0]
+     ["- Sorateiden hoito" "€" 0]
+     ["Sakko B" "€" 0]
+     ["- Liikenneymp. hoito" "€" 0]
+     ["- Sorateiden hoito" "€" 0]
+     ["- Muut tuotteet, sakot yht." "€" 0]
+     ["- Muut tuotteet, indeksit yht." "€" 0]
+     {:otsikko "Ryhmä C"}
+     ["Ryhmä C, sakot yht." "€" 0]
+     ["Ryhmä C, indeksit yht." "€" 0]
+     {:otsikko "Yhteensä"}
+     ["Muistutukset yht." "kpl" 0]
+     ["Indeksit yht." "€" 0]
+     ["Kaikki sakot yht." "€" 0]
+     ["Kaikki yht." "€" 0]]))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
