@@ -71,10 +71,10 @@
      (sakkoryhman-summa "Sakko A" talvihoito-rivit :A)
      ["- Päätiet" "€" 0]
      ["- Muut tiet" "€" 0]
-     (sakkoryhman-summa "Sakko B" talvihoito-rivit :B)
+     (sakkoryhman-summa "Sakko B" talvihoito-rivit :B) ;; FIXME Ei kai vielä toimi?
      ["- Päätiet" "€" 0]
      ["- Muut tiet" "€" 0]
-     ["- Talvihoito, sakot yht." "€" 0]
+     (sakkoryhman-summa "Talvihoito, sakot yht." talvihoito-rivit nil) ;; FIXME multimethodin paikka tässä
      ["- Talvihoito, indeksit yht." "€" 0]
 
      {:otsikko "Muut tuotteet"}
@@ -85,7 +85,7 @@
      (sakkoryhman-summa "Sakko B" muut-tuotteet :B)
      ["- Liikenneymp. hoito" "€" 0]
      ["- Sorateiden hoito" "€" 0]
-     ["- Muut tuotteet, sakot yht." "€" 0]
+     (sakkoryhman-summa "Muut tuotteet, sakot yht." muut-tuotteet nil)
      ["- Muut tuotteet, indeksit yht." "€" 0]
 
      {:otsikko "Ryhmä C"}
