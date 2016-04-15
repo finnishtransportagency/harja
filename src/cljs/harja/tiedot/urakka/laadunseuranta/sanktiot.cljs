@@ -14,13 +14,11 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
-(def +uusi-sanktio+
-  (reaction {:suorasanktio true
-             :laatupoikkeama
-                           {
-                            :tekijanimi @istunto/kayttajan-nimi
-                            :paatos     {:paatos "sanktio"}
-                            }}))
+(defn uusi-sanktio []
+  {:suorasanktio true
+   :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                    :paatos {:paatos "sanktio"}
+                    :aika (pvm/nyt)}})
 
 (defonce valittu-sanktio (atom nil))
 

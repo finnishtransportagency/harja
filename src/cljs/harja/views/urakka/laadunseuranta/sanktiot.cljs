@@ -34,7 +34,7 @@
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
 
-       
+
 
        [lomake/lomake
         {:otsikko (if (:id @muokattu)
@@ -82,7 +82,7 @@
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                   [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :laatupoikkeama)
                                    "Ei voida periä käsittelyä ennen"]]})
-         
+
          {:otsikko "Kohde" :nimi :kohde
           :hae     (comp :kohde :laatupoikkeama)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
@@ -172,7 +172,7 @@
     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
     (when @laatupoikkeamat/voi-kirjata?
       [:button.nappi-ensisijainen
-       {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
+       {:on-click #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio))}
        (ikonit/livicon-plus) " Lisää sanktio"])
 
     [grid/grid
