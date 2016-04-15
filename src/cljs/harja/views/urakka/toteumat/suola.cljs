@@ -57,13 +57,14 @@
         [:span.valinnat
          [urakka-valinnat/urakan-sopimus ur]
          [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
-        
+
         [grid/grid {:otsikko "Talvisuolan käyttö"
                     :tallenna #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id ur) sopimus-id %))]
                                        (paivita! toteumat)))
                     :tyhja (if (nil? @toteumat)
                              [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                              "Ei suolatoteumia valitulle aikavälille")
+                    :uusi-rivi #(assoc % :alkanut (pvm/nyt))
                     :voi-poistaa? muokattava?
                     :max-rivimaara 500
                     :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."}
