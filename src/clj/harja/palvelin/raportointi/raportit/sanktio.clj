@@ -13,8 +13,12 @@
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
 (defn sanktiot-raportille [kantarivit]
-  kantarivit ;; TODO
-  )
+  (yleinen/ryhmittele-tulokset-raportin-taulukolle
+    kantarivit
+    :toimenpideinstanssi_nimi
+    (fn [rivi]
+      [(:sanktiotyyppi_nimi rivi)
+       (:maara rivi)])))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -28,7 +32,7 @@
                                   :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                   :alku alkupvm
                                   :loppu loppupvm})
-        data-raportille (sanktiot-raportille kantarivit)
+        raporttidata (sanktiot-raportille kantarivit)
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -43,5 +47,4 @@
      [:taulukko {:otsikko otsikko}
       [{:otsikko "Laji" :leveys "50%"}
        {:otsikko "Arvo" :leveys "50%"}]
-      [["Muistutus" 2]
-       ["Sakko A (€)" 1566]]]]))
+      raporttidata]]))
