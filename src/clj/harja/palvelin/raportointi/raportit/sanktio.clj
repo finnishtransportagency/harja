@@ -13,12 +13,34 @@
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
 (defn sanktiot-raportille [kantarivit]
-  (yleinen/ryhmittele-tulokset-raportin-taulukolle
-    kantarivit
-    :toimenpideinstanssi_nimi
-    (fn [rivi]
-      [(:sanktiotyyppi_nimi rivi)
-       (:maara rivi)])))
+  [{:otsikko "Talvihoito"}
+   ["Muistutukset" "kpl" 0]
+   ["Sakko A" "€" 0]
+   ["- Päätiet" "€" 0]
+   ["- Muut tiet" "€" 0]
+   ["Sakko B" "€" 0]
+   ["- Päätiet" "€" 0]
+   ["- Muut tiet" "€" 0]
+   ["- Talvihoito, sakot yht." "€" 0]
+   ["- Talvihoito, indeksit yht." "€" 0]
+   {:otsikko "Muut tuotteet"}
+   ["Muistutukset" "kpl" 0]
+   ["Sakko A" "€" 0]
+   ["- Liikenneymp. hoito" "€" 0]
+   ["- Sorateiden hoito" "€" 0]
+   ["Sakko B" "€" 0]
+   ["- Liikenneymp. hoito" "€" 0]
+   ["- Sorateiden hoito" "€" 0]
+   ["- Muut tuotteet, sakot yht." "€" 0]
+   ["- Muut tuotteet, indeksit yht." "€" 0]
+   {:otsikko "Ryhmä C"}
+   ["Ryhmä C, sakot yht." "€" 0]
+   ["Ryhmä C, indeksit yht." "€" 0]
+   {:otsikko "Yhteensä"}
+   ["Muistutukset yht." "kpl" 0]
+   ["Indeksit yht." "€" 0]
+   ["Kaikki sakot yht." "€" 0]
+   ["Kaikki yht" "€" 0]])
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -45,6 +67,7 @@
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko}
-      [{:otsikko "Laji" :leveys "50%"}
-       {:otsikko "Arvo" :leveys "50%"}]
+      [{:otsikko "Laji"    :leveys "55%"}
+       {:otsikko "Yksikkö" :leveys "10%"}
+       {:otsikko "Arvo"    :leveys "55%"}]
       raporttidata]]))
