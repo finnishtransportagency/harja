@@ -43,11 +43,12 @@
 
          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
 
-     [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
-                                                                         (fn [v]
-                                                                           (if (= v :hallintayksikko)
-                                                                             nil
-                                                                             :hallintayksikko)))}
+     [:button.nappi-murupolkualasveto.dropdown-toggle
+      {:on-click #(swap! valinta-auki
+                         (fn [v]
+                           (if (= v :hallintayksikko)
+                             nil
+                             :hallintayksikko)))}
       [:span.livicon-chevron-down]]
 
      ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
@@ -55,7 +56,7 @@
       (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
         ^{:key (str "hy-" (:id muu-yksikko))}
         [:li.harja-alasvetolistaitemi
-         [linkki (:nimi muu-yksikko)
+         [linkki (hal/elynumero-ja-nimi muu-yksikko)
           #(do (reset! valinta-auki nil)
                (nav/valitse-hallintayksikko muu-yksikko))]])]]))
 

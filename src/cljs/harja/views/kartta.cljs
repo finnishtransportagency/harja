@@ -50,7 +50,7 @@
   (when-let
     [karttasailio (dom/elementti-idlla "kartta-container")]
     (let [tyyli (.-style karttasailio)]
-      (log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
+      ;;(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
       (if naulattu?
         (do
           (set! (.-position tyyli) "fixed")

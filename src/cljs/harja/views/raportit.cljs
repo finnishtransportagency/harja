@@ -390,7 +390,7 @@
     {:valitse-fn nav/valitse-hallintayksikko
      :valinta v-hal
      :class "raportti-alasveto"
-     :format-fn (fnil :nimi {:nimi "Koko maa"})}
+     :format-fn (fnil hy/elynumero-ja-nimi {:nimi "Kaikki ELYt"})}
     (concat [nil]
             @hy/hallintayksikot)]
    " "
