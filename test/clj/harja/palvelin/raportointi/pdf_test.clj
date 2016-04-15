@@ -43,6 +43,7 @@
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
+    (println "Palautus: " fo)
     (is (= fo `[:fo:block
                 {:space-before "1em" :font-size "8pt" :font-weight "bold"}
                 "Taulukko"
@@ -63,7 +64,7 @@
                       :font-weight      "normal"
                       :padding          "1mm"}
                      [:fo:block
-                      "Eka"]]
+                      "<![CDATA[Eka]]>"]]
                      [:fo:table-cell
                       {:background-color ~pdf/raportin-tehostevari
                        :border           "solid 0.1mm black"
@@ -71,7 +72,7 @@
                        :font-weight      "normal"
                        :padding          "1mm"}
                       [:fo:block
-                       "Toka"]]
+                       "<![CDATA[Toka]]>"]]
                      [:fo:table-cell
                       {:background-color ~pdf/raportin-tehostevari
                        :border           "solid 0.1mm black"
@@ -79,7 +80,7 @@
                        :font-weight      "normal"
                        :padding          "1mm"}
                       [:fo:block
-                       "Kolmas"]])]]
+                       "<![CDATA[Kolmas]]>"]])]]
                  [:fo:table-body
                   nil
                   ([:fo:table-row
@@ -90,7 +91,7 @@
                        :text-align "left"}
                       nil
                       [:fo:block
-                       "eka"]]
+                       "<![CDATA[eka]]>"]]
                       [:fo:table-cell
                        {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
                         :font-weight      "normal"
@@ -98,7 +99,7 @@
                         :text-align "left"}
                        nil
                        [:fo:block
-                        "toka"]]
+                        "<![CDATA[toka]]>"]]
                       [:fo:table-cell
                        {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
                         :font-weight      "normal"
@@ -106,7 +107,7 @@
                         :text-align "left"}
                        nil
                        [:fo:block
-                        "kolmas"]])])
+                        "<![CDATA[kolmas]]>"]])])
                   nil]]
                 [:fo:block
                  {:space-after "1em"}]]))))

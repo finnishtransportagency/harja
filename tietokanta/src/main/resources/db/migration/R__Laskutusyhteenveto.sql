@@ -349,7 +349,10 @@ BEGIN
                                              hoitokauden_laskettu_suolasakon_maara)
       INTO hoitokauden_laskettu_suolasakko_rivi;
 
-      IF hoitokauden_suolasakko_rivi.maksukuukausi < (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) THEN
+      -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
+      IF (hoitokauden_suolasakko_rivi.maksukuukausi < (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER)
+          AND (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) < 10)
+      THEN
         RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
         suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutettu_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
@@ -837,7 +840,7 @@ BEGIN
     RAISE NOTICE '***** Käsitelly loppui toimenpiteelle: %  *****
 
     ', t.nimi;
-    RAISE NOTICE 'Periodinen migraatio R_Laskutusyhteenveto.sql valmis.';
+    RAISE NOTICE 'Toistuva migraatio R_Laskutusyhteenveto.sql valmis.';
 
     RETURN NEXT (t.nimi, t.tuotekoodi, t.tpi, perusluku,
                          kaikki_paitsi_kht_laskutettu_ind_korotus, kaikki_laskutettu_ind_korotus,

@@ -145,7 +145,6 @@
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
   (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka)
   (jdbc/with-db-transaction [c db]
-
     (let [osapuoli (roolit/osapuoli user urakka)
           laatupoikkeama (assoc laatupoikkeama
                      ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
@@ -304,6 +303,23 @@
       (catch Exception e
         (log/debug "TARKASTUSREITTI FIXME: " e)))))
 
+(defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
+  (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
+  (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
+  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+  (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
+    (jdbc/with-db-transaction [db db]
+      (let [laatupoikkeama {:sijainti (:sijainti tarkastus)
+                            :kuvaus (:havainnot tarkastus)
+                            :aika (:aika tarkastus)
+                            :tr (:tr tarkastus)
+                            :urakka urakka-id
+                            :tekija (:tekija tarkastus)}
+            laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)]
+        (tarkastukset/liita-tarkastukselle-laatupoikkeama<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
+        (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
+        laatupoikkeama-id))))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db karttakuvat] :as this}]
@@ -348,10 +364,13 @@
       (fn [user {:keys [urakka-id tarkastus]}]
         (tallenna-tarkastus db user urakka-id tarkastus))
 
-
       :hae-tarkastus
       (fn [user {:keys [urakka-id tarkastus-id]}]
-        (hae-tarkastus db user urakka-id tarkastus-id)))
+        (hae-tarkastus db user urakka-id tarkastus-id))
+
+      :lisaa-tarkastukselle-laatupoikkeama
+      (fn [user {:keys [urakka-id tarkastus-id]}]
+        (lisaa-tarkastukselle-laatupoikkeama db user urakka-id tarkastus-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -364,5 +383,6 @@
                      :hae-urakan-tarkastukset
                      :tallenna-tarkastus
                      :tallenna-suorasanktio
-                     :hae-tarkastus)
+                     :hae-tarkastus
+                     :lisaa-tarkastukselle-laatupoikkeama)
     this))

@@ -4,6 +4,7 @@
 (def +invalidi-json+ ::invalidi-json)
 (def +invalidi-xml+ ::invalidi-xml)
 (def +viallinen-kutsu+ ::viallinen-kutsu)
+(def +ei-hakutuloksia+ ::ei-hakutuloksia)
 (def +sisainen-kasittelyvirhe+ ::sisainen-kasittelyvirhe)
 
 ;; Virhekoodit
@@ -45,3 +46,6 @@
 
 (defn heita-puutteelliset-parametrit-poikkeus [virheet]
   (heita-poikkeus +puutteelliset-parametrit+ virheet))
+
+(defn heita-ei-hakutuloksia-apikutsulle-poikkeus [virheet]
+  (heita-poikkeus +ei-hakutuloksia+ virheet))

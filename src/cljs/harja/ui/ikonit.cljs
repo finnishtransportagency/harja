@@ -539,8 +539,6 @@
   [:span.livicon-arrow-up])
 (defn livicon-arrow-down []
   [:span.livicon-arrow-down])
-(defn livicon-kommentti [] ; koska comment on myös coressa
-  [:span.livicon-comment])
 (defn livicon-check []
   [:span.livicon-check])
 
@@ -556,3 +554,5 @@
   [:span.livicon-rotate-right])
 (defn tallenna []
   [:span.livicon-check])
+(defn livicon-kommentti []
+  [:span.livicon-comment])
