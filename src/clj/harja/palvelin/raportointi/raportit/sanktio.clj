@@ -12,12 +12,23 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
+(defn sanktiot-raportille [kantarivit]
+  kantarivit ;; TODO
+  )
+
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
                                urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
+        kantarivit (hae-sanktiot db
+                                 {:urakka urakka-id
+                                  :hallintayksikko hallintayksikko-id
+                                  :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                  :alku alkupvm
+                                  :loppu loppupvm})
+        data-raportille (sanktiot-raportille kantarivit)
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
                   (case konteksti

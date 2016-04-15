@@ -18,12 +18,12 @@ FROM sanktio s
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
   JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
   JOIN urakka u ON lp.urakka = u.id
-WHERE (:urakka IS NULL OR lp.urakka = :urakka)
-      AND (:hallintayksikko IS NULL OR lp.urakka IN (SELECT id
+WHERE (:urakka::INTEGER IS NULL OR lp.urakka = :urakka)
+      AND (:hallintayksikko::INTEGER IS NULL OR lp.urakka IN (SELECT id
                                                      FROM urakka
                                                      WHERE hallintayksikko =
                                                            :hallintayksikko))
-      AND (:urakka IS NOT NULL OR
-           (:urakka IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
+      AND (:urakka::INTEGER IS NOT NULL OR
+           (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                  u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
       AND lp.aika :: DATE BETWEEN :alku AND :loppu;
