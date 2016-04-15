@@ -48,10 +48,9 @@
     rivit))
 
 (defn sanktiot-raportille [kantarivit]
-  (let [;; Suodatetut rivit
+  (let [;; Valmiiksi uodatetut rivit
         talvihoito-rivit (filter talvihoito? kantarivit)
         muut-tuotteet (filter (comp not talvihoito?) kantarivit)
-        ryhma-c (filter #(= (:sakkoryhma %) :C) kantarivit)
         ;; Apufunktiot rivien luomiseksi
         sakkoryhman-maara
         (fn [otsikko rivit sakkoryhma]
