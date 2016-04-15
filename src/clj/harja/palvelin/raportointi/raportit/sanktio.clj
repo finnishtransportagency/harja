@@ -84,7 +84,7 @@
                                         :alku alkupvm
                                         :loppu loppupvm}))
         raportin-otsikot (apply conj
-                                [{:otsikko "" :leveys 20}
+                                [{:otsikko "" :leveys 10}
                                  {:otsikko "Yks." :leveys 3}]
                                 (mapv
                                   (fn [urakka]
