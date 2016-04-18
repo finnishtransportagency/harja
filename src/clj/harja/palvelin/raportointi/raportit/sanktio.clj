@@ -14,7 +14,7 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
-(defn talvihoito? [rivi]
+(defn rivi-kuuluu-talvihoitoon? [rivi]
   (= (str/lower-case (:toimenpidekoodi_taso2 rivi)) "talvihoito"))
 
 (defn rivien-urakat [rivit]
@@ -37,7 +37,7 @@
         (sanktiot-domain/sakko? rivi)
         (or (nil? sakkoryhma) (= sakkoryhma (:sakkoryhma rivi)))
         (or (nil? urakka-id) (= urakka-id (:urakka_id rivi)))
-        (or (nil? talvihoito?) (= talvihoito? (talvihoito? rivi)))))
+        (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
 (defn suodata-muistutukset [rivit {:keys [urakka-id talvihoito?] :as suodattimet}]
@@ -47,7 +47,7 @@
       (and
         (not (sanktiot-domain/sakko? rivi))
         (or (nil? urakka-id) (= urakka-id (:urakka_id rivi)))
-        (or (nil? talvihoito?) (= talvihoito? (talvihoito? rivi)))))
+        (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
 (defn sakkojen-summa
