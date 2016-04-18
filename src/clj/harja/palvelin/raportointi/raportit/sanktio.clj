@@ -68,92 +68,157 @@
 (defn- luo-rivi-sakkojen-summa
   ([otsikko rivit]
    (luo-rivi-sakkojen-summa otsikko rivit {}))
-  ([otsikko rivit suodattimet]
+  ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
          rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                                (sakkojen-summa rivit (merge suodattimet
+                                                (sakkojen-summa rivit (merge optiot
                                                                              {:urakka-id (:id urakka)})))
                                               rivien-urakat))]
-     (conj rivi (sakkojen-summa rivit suodattimet)))))
+     (if yhteensa-sarake?
+       (conj rivi (sakkojen-summa rivit optiot))
+       rivi))))
 
 (defn- luo-rivi-muistutusten-maara
   ([otsikko rivit]
    (luo-rivi-muistutusten-maara otsikko rivit {}))
-  ([otsikko rivit suodattimet]
+  ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
          rivi (apply conj [otsikko "kpl"] (mapv (fn [urakka]
-                                        (muistutusten-maara rivit (merge suodattimet
+                                        (muistutusten-maara rivit (merge optiot
                                                                          {:urakka-id (:id urakka)})))
                                       rivien-urakat))]
-     (conj rivi (muistutusten-maara rivit suodattimet)))))
+     (if yhteensa-sarake?
+       (conj rivi (muistutusten-maara rivit optiot))
+       rivi))))
 
 (defn- luo-rivi-indeksien-summa
   ([otsikko rivit]
    (luo-rivi-indeksien-summa otsikko rivit {}))
-  ([otsikko rivit suodattimet]
+  ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
          rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                      (fmt/desimaaliluku-opt (indeksien-summa rivit (merge suodattimet
+                                      (fmt/desimaaliluku-opt (indeksien-summa rivit (merge optiot
                                                                                            {:urakka-id (:id urakka)}))
                                                              2))
                                     rivien-urakat))]
-     (conj rivi (fmt/desimaaliluku-opt (indeksien-summa rivit suodattimet)
-                                       2)))))
+     (if yhteensa-sarake?
+       (conj rivi (fmt/desimaaliluku-opt (indeksien-summa rivit optiot)
+                                        2))
+       rivi))))
 
 (defn- luo-rivi-kaikki-yht
-  ([otsikko rivit]
+  ([otsikko rivit] (luo-rivi-kaikki-yht otsikko rivit {}))
+  ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
          rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
                                       (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit {:urakka-id (:id urakka)})
                                                                 (indeksien-summa rivit {:urakka-id (:id urakka)}))
                                                              2))
                                     rivien-urakat))]
-     (conj rivi (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit)
-                                          (indeksien-summa rivit))
-                                       2)))))
+     (if yhteensa-sarake?
+       (conj rivi (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit)
+                                           (indeksien-summa rivit))
+                                        2))
+       rivi))))
 
-(defn- raporttirivit-talvihoito [rivit]
+(defn- raporttirivit-talvihoito [rivit {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko "Talvihoito"}
-   (luo-rivi-muistutusten-maara "Muistutukset" rivit {:talvihoito? true})
-   (luo-rivi-sakkojen-summa "Sakko A" rivit {:sakkoryhma :A :talvihoito? true})
-   (luo-rivi-sakkojen-summa "- Päätiet" rivit {:sanktiotyyppi "Talvihoito, päätiet" :sakkoryhma :A :talvihoito? true})
-   (luo-rivi-sakkojen-summa "- Muut tiet" rivit {:sanktiotyyppi "Talvihoito, muut tiet" :sakkoryhma :A :talvihoito? true})
-   (luo-rivi-sakkojen-summa "Sakko B" rivit {:sakkoryhma :B :talvihoito? true})
-   (luo-rivi-sakkojen-summa "- Päätiet" rivit {:sanktiotyyppi "Talvihoito, päätiet" :sakkoryhma :B :talvihoito? true})
-   (luo-rivi-sakkojen-summa "- Muut tiet" rivit {:sanktiotyyppi "Talvihoito, muut tiet" :sakkoryhma :B :talvihoito? true})
-   (luo-rivi-sakkojen-summa "Talvihoito, sakot yht." rivit {:talvihoito? true})
-   (luo-rivi-indeksien-summa "Talvihoito, indeksit yht." rivit {:talvihoito? true})])
+   (luo-rivi-muistutusten-maara "Muistutukset" rivit
+                                {:talvihoito? true
+                                 :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "Sakko A" rivit
+                            {:sakkoryhma :A
+                             :talvihoito? true
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Päätiet" rivit
+                            {:sanktiotyyppi "Talvihoito, päätiet"
+                             :sakkoryhma :A
+                             :talvihoito? true
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Muut tiet" rivit
+                            {:sanktiotyyppi "Talvihoito, muut tiet"
+                             :sakkoryhma :A
+                             :talvihoito? true
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "Sakko B" rivit
+                            {:sakkoryhma :B
+                             :talvihoito? true
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Päätiet" rivit
+                            {:sanktiotyyppi "Talvihoito, päätiet"
+                             :sakkoryhma :B
+                             :talvihoito? true
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Muut tiet" rivit
+                            {:sanktiotyyppi "Talvihoito, muut tiet"
+                             :sakkoryhma :B
+                             :talvihoito? true
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "Talvihoito, sakot yht." rivit
+                            {:talvihoito? true
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-indeksien-summa "Talvihoito, indeksit yht." rivit
+                             {:talvihoito? true
+                              :yhteensa-sarake? yhteensa-sarake?})])
 
-(defn- raporttirivit-muut-tuotteet [rivit]
+(defn- raporttirivit-muut-tuotteet [rivit {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko "Muut tuotteet"}
-   (luo-rivi-muistutusten-maara "Muistutukset" rivit {:talvihoito? false})
-   (luo-rivi-sakkojen-summa "Sakko A" rivit {:sakkoryhma :A :talvihoito? false})
-   (luo-rivi-sakkojen-summa "- Liikenneymp. hoito" rivit {:sanktiotyyppi "Liikenneympäristön hoito" :sakkoryhma :A :talvihoito? false})
-   (luo-rivi-sakkojen-summa "- Sorateiden hoito" rivit {:sanktiotyyppi "Sorateiden hoito ja ylläpito" :sakkoryhma :A :talvihoito? false})
-   (luo-rivi-sakkojen-summa "Sakko B" rivit {:sakkoryhma :B :talvihoito? false})
-   (luo-rivi-sakkojen-summa "- Liikenneymp. hoito" rivit {:sanktiotyyppi "Liikenneympäristön hoito" :sakkoryhma :B :talvihoito? false})
-   (luo-rivi-sakkojen-summa "- Sorateiden hoito" rivit {:sanktiotyyppi "Sorateiden hoito ja ylläpito" :sakkoryhma :B :talvihoito? false})
-   (luo-rivi-sakkojen-summa "Muut tuotteet, sakot yht." rivit {:talvihoito? false})
-   (luo-rivi-indeksien-summa "Muut tuotteet, indeksit yht." rivit {:talvihoito? false})])
+   (luo-rivi-muistutusten-maara "Muistutukset" rivit
+                                {:talvihoito? false
+                                 :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "Sakko A" rivit
+                            {:sakkoryhma :A
+                             :talvihoito? false
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Liikenneymp. hoito" rivit
+                            {:sanktiotyyppi "Liikenneympäristön hoito"
+                             :sakkoryhma :A
+                             :talvihoito? false
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Sorateiden hoito" rivit
+                            {:sanktiotyyppi "Sorateiden hoito ja ylläpito"
+                             :sakkoryhma :A
+                             :talvihoito? false
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "Sakko B" rivit
+                            {:sakkoryhma :B
+                             :talvihoito? false
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Liikenneymp. hoito" rivit
+                            {:sanktiotyyppi "Liikenneympäristön hoito"
+                             :sakkoryhma :B
+                             :talvihoito? false
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "- Sorateiden hoito" rivit
+                            {:sanktiotyyppi "Sorateiden hoito ja ylläpito"
+                             :sakkoryhma :B
+                             :talvihoito? false
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "Muut tuotteet, sakot yht." rivit
+                            {:talvihoito? false
+                             :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-indeksien-summa "Muut tuotteet, indeksit yht." rivit
+                             {:talvihoito? false
+                              :yhteensa-sarake? yhteensa-sarake?})])
 
-(defn- raporttirivit-ryhma-c [rivit]
+(defn- raporttirivit-ryhma-c [rivit {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko "Ryhmä C"}
-   (luo-rivi-sakkojen-summa "Ryhmä C, sakot yht." rivit {:sakkoryhma :C})
-   (luo-rivi-indeksien-summa "Ryhmä C, indeksit yht." rivit {:sakkoryhma :C})])
+   (luo-rivi-sakkojen-summa "Ryhmä C, sakot yht." rivit {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-indeksien-summa "Ryhmä C, indeksit yht." rivit {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])
 
-(defn- raporttirivit-yhteensa [rivit]
+(defn- raporttirivit-yhteensa [rivit {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko "Yhteensä"}
-   (luo-rivi-muistutusten-maara "Muistutukset yht." rivit)
-   (luo-rivi-indeksien-summa "Indeksit yht." rivit)
-   (luo-rivi-sakkojen-summa "Kaikki sakot yht." rivit)
-   (luo-rivi-kaikki-yht "Kaikki yht." rivit)])
+   (luo-rivi-muistutusten-maara "Muistutukset yht." rivit {:yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-indeksien-summa "Indeksit yht." rivit {:yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa "Kaikki sakot yht." rivit {:yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-kaikki-yht "Kaikki yht." rivit {:yhteensa-sarake? yhteensa-sarake?})])
 
-(defn- raporttirivit [rivit]
+(defn- raporttirivit [rivit optiot]
   (concat
-    (raporttirivit-talvihoito rivit)
-    (raporttirivit-muut-tuotteet rivit)
-    (raporttirivit-ryhma-c rivit)
-    (raporttirivit-yhteensa rivit)))
+    (raporttirivit-talvihoito rivit optiot)
+    (raporttirivit-muut-tuotteet rivit optiot)
+    (raporttirivit-ryhma-c rivit optiot)
+    (raporttirivit-yhteensa rivit optiot)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -171,15 +236,18 @@
                                         :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                         :alku alkupvm
                                         :loppu loppupvm}))
+        rivien-urakat (rivien-urakat kantarivit)
+        yhteensa-sarake? (> (count rivien-urakat) 1)
         raportin-otsikot (concat
                            [{:otsikko "" :leveys 10}
                             {:otsikko "Yks." :leveys 2}]
                            (mapv
                              (fn [urakka]
                                {:otsikko (:nimi urakka) :leveys 20})
-                             (rivien-urakat kantarivit))
-                           [{:otsikko "Yhteensä" :leveys 10}])
-        raportin-rivit (raporttirivit kantarivit)
+                             rivien-urakat)
+                           (when yhteensa-sarake?
+                             [{:otsikko "Yhteensä" :leveys 10}]))
+        raportin-rivit (raporttirivit kantarivit {:yhteensa-sarake? yhteensa-sarake?})
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
                   (case konteksti
