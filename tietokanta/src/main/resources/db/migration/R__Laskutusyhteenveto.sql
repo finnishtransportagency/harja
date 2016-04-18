@@ -346,7 +346,7 @@ BEGIN
       SELECT *
       FROM laske_suolasakon_indeksitarkistus(hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi,
                                              hoitokauden_suolasakko_rivi.indeksi,
-                                             hoitokauden_laskettu_suolasakon_maara)
+                                             hoitokauden_laskettu_suolasakon_maara, ur)
       INTO hoitokauden_laskettu_suolasakko_rivi;
 
       -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
