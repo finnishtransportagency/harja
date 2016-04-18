@@ -240,7 +240,7 @@
         yhteensa-sarake? (> (count rivien-urakat) 1)
         raportin-otsikot (concat
                            [{:otsikko "" :leveys 10}
-                            {:otsikko "Yks." :leveys 2}]
+                            {:otsikko "Yks." :leveys 4}]
                            (mapv
                              (fn [urakka]
                                {:otsikko (:nimi urakka) :leveys 20})
