@@ -16,6 +16,19 @@
 (defn talvihoito? [kantarivi]
   (= (str/lower-case (:toimenpidekoodi_taso2 kantarivi)) "talvihoito"))
 
+(defn rivien-urakat [rivit]
+  (-> (map (fn [rivi]
+             {:id (:urakka_id rivi)
+              :nimi (:urakka_nimi rivi)})
+           rivit)
+      distinct))
+
+(defn urakan-rivit [rivit urakka-id]
+  (filter
+    (fn [rivi]
+      (= (:urakka_id rivi) urakka-id))
+    rivit))
+
 (defn sakkoryhman-maara [kantarivit sakkoryhma]
   (let [laskettavat (filter
                       (fn [rivi]
@@ -34,68 +47,58 @@
                 #(or (:maara %) 0)
                 laskettavat))))
 
-(defn rivien-urakat [rivit]
-  (-> (map (fn [rivi]
-             {:id (:urakka_id rivi)
-              :nimi (:urakka_nimi rivi)})
-           rivit)
-      distinct))
+(defn luo-rivi-sakkoryhman-maara ([otsikko rivit]
+   (luo-rivi-sakkoryhman-maara otsikko rivit nil))
+  ([otsikko rivit sakkoryhma]
+   (apply conj [otsikko "kpl"] (mapv (fn [urakka]
+                                       (sakkoryhman-maara
+                                         (urakan-rivit rivit (:id urakka))
+                                         sakkoryhma))
+                                     (rivien-urakat rivit)))))
 
-(defn urakan-rivit [rivit urakka-id]
-  (filter
-    (fn [rivi]
-      (= (:urakka_id rivi) urakka-id))
-    rivit))
+(defn luo-rivi-sakkoryhman-summa
+  ([otsikko rivit]
+   (luo-rivi-sakkoryhman-summa otsikko rivit nil))
+  ([otsikko rivit sakkoryhma]
+  (apply conj [otsikko "€"] (mapv (fn [urakka]
+                                    (sakkoryhman-summa
+                                      (urakan-rivit rivit (:id urakka))
+                                      sakkoryhma))
+                                  (rivien-urakat rivit)))))
 
 (defn sanktiot-raportille [kantarivit]
-  (let [;; Valmiiksi uodatetut rivit
-        talvihoito-rivit (filter talvihoito? kantarivit)
-        muut-tuotteet (filter (comp not talvihoito?) kantarivit)
-        ;; Apufunktiot rivien luomiseksi
-        sakkoryhman-maara
-        (fn [otsikko rivit sakkoryhma]
-          (apply conj [otsikko "kpl"] (mapv (fn [urakka]
-                                                     (sakkoryhman-maara
-                                                       (urakan-rivit rivit (:id urakka))
-                                                       sakkoryhma))
-                                                   (rivien-urakat rivit))))
-        sakkoryhman-summa
-        (fn [otsikko rivit sakkoryhma]
-          (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                              (sakkoryhman-summa
-                                                (urakan-rivit rivit (:id urakka))
-                                                sakkoryhma))
-                                            (rivien-urakat rivit))))]
+  (let [talvihoito-rivit (filter talvihoito? kantarivit)
+        muut-tuotteet (filter (comp not talvihoito?) kantarivit)]
     [{:otsikko "Talvihoito"}
-     (sakkoryhman-maara "Muistutukset" talvihoito-rivit :muistutus)
-     (sakkoryhman-summa "Sakko A" talvihoito-rivit :A)
+     (luo-rivi-sakkoryhman-maara "Muistutukset" talvihoito-rivit :muistutus)
+     (luo-rivi-sakkoryhman-summa "Sakko A" talvihoito-rivit :A)
      ["- Päätiet" "€" 0]
      ["- Muut tiet" "€" 0]
-     (sakkoryhman-summa "Sakko B" talvihoito-rivit :B) ;; FIXME Ei kai vielä toimi?
+     (luo-rivi-sakkoryhman-summa "Sakko B" talvihoito-rivit :B) ;; FIXME Ei kai vielä toimi?
      ["- Päätiet" "€" 0]
      ["- Muut tiet" "€" 0]
-     (sakkoryhman-summa "Talvihoito, sakot yht." talvihoito-rivit nil) ;; FIXME multimethodin paikka tässä
+     (luo-rivi-sakkoryhman-summa "Talvihoito, sakot yht." talvihoito-rivit)
      ["- Talvihoito, indeksit yht." "€" 0]
 
      {:otsikko "Muut tuotteet"}
-     (sakkoryhman-maara "Muistutukset" muut-tuotteet :muistutus)
-     (sakkoryhman-summa "Sakko A" muut-tuotteet :A)
+     (luo-rivi-sakkoryhman-maara "Muistutukset" muut-tuotteet :muistutus)
+     (luo-rivi-sakkoryhman-summa "Sakko A" muut-tuotteet :A)
      ["- Liikenneymp. hoito" "€" 0]
      ["- Sorateiden hoito" "€" 0]
-     (sakkoryhman-summa "Sakko B" muut-tuotteet :B)
+     (luo-rivi-sakkoryhman-summa "Sakko B" muut-tuotteet :B)
      ["- Liikenneymp. hoito" "€" 0]
      ["- Sorateiden hoito" "€" 0]
-     (sakkoryhman-summa "Muut tuotteet, sakot yht." muut-tuotteet nil)
+     (luo-rivi-sakkoryhman-summa "Muut tuotteet, sakot yht." muut-tuotteet)
      ["- Muut tuotteet, indeksit yht." "€" 0]
 
      {:otsikko "Ryhmä C"}
-     (sakkoryhman-summa "Ryhmä C, sakot yht." kantarivit :C)
+     (luo-rivi-sakkoryhman-summa "Ryhmä C, sakot yht." kantarivit :C)
      ["Ryhmä C, indeksit yht." "€" 0]
 
      {:otsikko "Yhteensä"}
-     (sakkoryhman-maara "Muistutukset yht." kantarivit :muistutus)
+     (luo-rivi-sakkoryhman-maara "Muistutukset yht." kantarivit :muistutus)
      ["Indeksit yht." "€" 0]
-     (sakkoryhman-summa "Kaikki sakot yht." kantarivit nil)
+     (luo-rivi-sakkoryhman-summa "Kaikki sakot yht." kantarivit)
      ["Kaikki yht." "€" 0]]))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
