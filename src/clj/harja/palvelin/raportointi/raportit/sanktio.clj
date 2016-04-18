@@ -31,38 +31,27 @@
     rivit))
 
 (defn sakkojen-maara
-  ([rivit]
-   (count (filter
-            (fn [rivi]
-              (sanktiot-domain/sakko? rivi))
-            rivit)))
-  ([rivit sakkoryhma]
-   (count (filter
-            (fn [rivi]
-              (and
-                (sanktiot-domain/sakko? rivi)
-                (= sakkoryhma (:sakkoryhma rivi))))
-            rivit))))
+  ([rivit] (sakkojen-maara rivit nil))
+  ([rivit sakkoryhma] (count (filter
+                               (fn [rivi]
+                                 (and
+                                   (sanktiot-domain/sakko? rivi)
+                                   (or (nil? sakkoryhma)
+                                       (= sakkoryhma (:sakkoryhma rivi)))))
+                               rivit))))
 
 (defn sakkojen-summa
-  ([rivit]
-   (let [laskettavat (filter
-                       (fn [rivi]
-                         (sanktiot-domain/sakko? rivi))
-                       rivit)]
-     (reduce + (map
-                 #(or (:maara %) 0)
-                 laskettavat))))
-  ([rivit sakkoryhma]
-  (let [laskettavat (filter
-                      (fn [rivi]
-                        (and
-                          (sanktiot-domain/sakko? rivi)
-                          (= sakkoryhma (:sakkoryhma rivi))))
-                      rivit)]
-    (reduce + (map
-                #(or (:maara %) 0)
-                laskettavat)))))
+  ([rivit] (sakkojen-summa rivit nil))
+  ([rivit sakkoryhma] (let [laskettavat (filter
+                                          (fn [rivi]
+                                            (and
+                                              (sanktiot-domain/sakko? rivi)
+                                              (or (nil? sakkoryhma)
+                                                  (= sakkoryhma (:sakkoryhma rivi)))))
+                                          rivit)]
+                        (reduce + (map
+                                    #(or (:summa %) 0)
+                                    laskettavat)))))
 
 (defn muistutusten-maara [rivit]
   (let [laskettavat (filter
@@ -74,7 +63,7 @@
 
 
 (defn luo-rivi-sakkoryhman-maara ([otsikko rivit]
-   (luo-rivi-sakkoryhman-maara otsikko rivit nil))
+                                  (luo-rivi-sakkoryhman-maara otsikko rivit nil))
   ([otsikko rivit sakkoryhma]
    (apply conj [otsikko "kpl"] (mapv (fn [urakka]
                                        (sakkojen-maara
@@ -86,11 +75,11 @@
   ([otsikko rivit]
    (luo-rivi-sakkoryhman-summa otsikko rivit nil))
   ([otsikko rivit sakkoryhma]
-  (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                    (sakkojen-summa
-                                      (urakan-rivit rivit (:id urakka))
-                                      sakkoryhma))
-                                  (rivien-urakat rivit)))))
+   (apply conj [otsikko "€"] (mapv (fn [urakka]
+                                     (sakkojen-summa
+                                       (urakan-rivit rivit (:id urakka))
+                                       sakkoryhma))
+                                   (rivien-urakat rivit)))))
 
 (defn luo-rivi-muistutuksien-maara [otsikko rivit]
   (apply conj [otsikko "kpl"] (mapv (fn [urakka]
@@ -104,34 +93,34 @@
     [{:otsikko "Talvihoito"}
      (luo-rivi-muistutuksien-maara "Muistutukset" talvihoito-rivit)
      (luo-rivi-sakkoryhman-summa "Sakko A" talvihoito-rivit :A)
-     ["- Päätiet" "€" "?"] ; TODO
-     ["- Muut tiet" "€" "?"] ; TODO
+     ["- Päätiet" "€" "?"]                                  ; TODO
+     ["- Muut tiet" "€" "?"]                                ; TODO
      (luo-rivi-sakkoryhman-summa "Sakko B" talvihoito-rivit :B)
-     ["- Päätiet" "€" "?"] ; TODO
-     ["- Muut tiet" "€" "?"] ; TODO
+     ["- Päätiet" "€" "?"]                                  ; TODO
+     ["- Muut tiet" "€" "?"]                                ; TODO
      (luo-rivi-sakkoryhman-summa "Talvihoito, sakot yht." talvihoito-rivit)
-     ["- Talvihoito, indeksit yht." "€" "?"] ; TODO
+     ["- Talvihoito, indeksit yht." "€" "?"]                ; TODO
 
      {:otsikko "Muut tuotteet"}
      (luo-rivi-muistutuksien-maara "Muistutukset" talvihoito-rivit)
      (luo-rivi-sakkoryhman-summa "Sakko A" muut-tuotteet :A) ; TODO
-     ["- Liikenneymp. hoito" "€" "?"] ; TODO
-     ["- Sorateiden hoito" "€" "?"] ; TODO
+     ["- Liikenneymp. hoito" "€" "?"]                       ; TODO
+     ["- Sorateiden hoito" "€" "?"]                         ; TODO
      (luo-rivi-sakkoryhman-summa "Sakko B" muut-tuotteet :B)
-     ["- Liikenneymp. hoito" "€" "?"] ; TODO
-     ["- Sorateiden hoito" "€" "?"] ; TODO
+     ["- Liikenneymp. hoito" "€" "?"]                       ; TODO
+     ["- Sorateiden hoito" "€" "?"]                         ; TODO
      (luo-rivi-sakkoryhman-summa "Muut tuotteet, sakot yht." muut-tuotteet)
-     ["- Muut tuotteet, indeksit yht." "€" "?"]  ; TODO
+     ["- Muut tuotteet, indeksit yht." "€" "?"]             ; TODO
 
      {:otsikko "Ryhmä C"}
      (luo-rivi-sakkoryhman-summa "Ryhmä C, sakot yht." kantarivit :C)
-     ["Ryhmä C, indeksit yht." "€" "?"]  ; TODO
+     ["Ryhmä C, indeksit yht." "€" "?"]                     ; TODO
 
      {:otsikko "Yhteensä"}
      (luo-rivi-muistutuksien-maara "Muistutukset yht." kantarivit)
-     ["Indeksit yht." "€" "?"]  ; TODO
+     ["Indeksit yht." "€" "?"]                              ; TODO
      (luo-rivi-sakkoryhman-summa "Kaikki sakot yht." kantarivit)
-     ["Kaikki yht." "€" "?"]]))  ; TODO
+     ["Kaikki yht." "€" "?"]]))                             ; TODO
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -160,9 +149,9 @@
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
-                                                    db hallintayksikko-id)))
+                                                     db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
 

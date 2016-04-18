@@ -3,7 +3,7 @@
 SELECT
   s.id,
   sakkoryhma,
-  maara,
+  maara AS summa,
   indeksi,
   suorasanktio,
   st.id          AS sanktiotyyppi_id,
