@@ -25,6 +25,12 @@
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn validoi-sanktio [sanktio]
+  (if (and (not (lomake/muokattu? sanktio))
+           (:id sanktio))
+    false
+    (not (lomake/voi-tallentaa-ja-muokattu? sanktio))))
+
 (defn sanktion-tiedot
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
@@ -34,7 +40,7 @@
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
 
-       
+
 
        [lomake/lomake
         {:otsikko (if (:id @muokattu)
@@ -53,7 +59,7 @@
                      :kun-onnistuu #(do
                                      (tiedot/sanktion-tallennus-onnistui % @muokattu)
                                      (reset! tiedot/valittu-sanktio nil))
-                     :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
+                     :disabled     (validoi-sanktio @muokattu)}]}
         [{:otsikko     "Tekijä" :nimi :tekijanimi
           :hae         (comp :tekijanimi :laatupoikkeama)
           :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
@@ -82,7 +88,7 @@
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
                                   [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :laatupoikkeama)
                                    "Ei voida periä käsittelyä ennen"]]})
-         
+
          {:otsikko "Kohde" :nimi :kohde
           :hae     (comp :kohde :laatupoikkeama)
           :aseta   (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
@@ -172,7 +178,7 @@
     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
     (when @laatupoikkeamat/voi-kirjata?
       [:button.nappi-ensisijainen
-       {:on-click #(reset! tiedot/valittu-sanktio @tiedot/+uusi-sanktio+)}
+       {:on-click #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio))}
        (ikonit/livicon-plus) " Lisää sanktio"])
 
     [grid/grid

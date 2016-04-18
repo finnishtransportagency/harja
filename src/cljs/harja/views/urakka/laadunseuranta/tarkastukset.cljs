@@ -185,9 +185,13 @@
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :laatupoikkeamat))
 
 (defn validoi-tarkastuslomake [tarkastus]
-  (let [validi? (lomake/voi-tallentaa? tarkastus)]
-    (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
-    (not validi?)))
+  (if (and (not (lomake/muokattu? tarkastus))
+           (:id tarkastus))
+    ;; Olemassaoleva tarkastus avattu, mutta ei muokattu => salli tallennus
+    false
+    (let [validi? (lomake/voi-tallentaa-ja-muokattu? tarkastus)]
+      (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
+      (not validi?))))
 
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom

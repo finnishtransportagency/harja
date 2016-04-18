@@ -239,7 +239,7 @@
               :valinnat      (:sopimukset @nav/valittu-urakka)
               :fmt           second
               :palstoja 1}
-             
+
              {:otsikko       "Tyyppi" :nimi :tyyppi
               :tyyppi        :valinta
               :pakollinen?   true
@@ -306,7 +306,7 @@
               {:otsikko     "Määrä" :nimi :maara :tyyppi :positiivinen-numero
                :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
                :hae         #(get-in % [:tehtava :maara])
-           
+
                :aseta       (fn [rivi arvo] (assoc-in rivi [:tehtava :maara] arvo))
                :validoi     (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                               [[:ei-tyhja "Määrä antamatta."]])
@@ -346,7 +346,7 @@
                                    "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelun Muutos- ja lisätyöt -osiosta."
                                    "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
                                   varten Suunnittelun Muutos- ja lisätyöt -osioon."))]}
-             
+
              {:otsikko "Suorittaja" :nimi :suorittajan-nimi
               :hae     #(if (get-in @muokattu [:suorittajan :nimi])
                           (get-in @muokattu [:suorittajan :nimi])
@@ -401,7 +401,9 @@
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [napit/uusi "Lisää toteuma" #(reset! muut-tyot/valittu-toteuma {})
+           [napit/uusi "Lisää toteuma" #(reset! muut-tyot/valittu-toteuma
+                                                {:alkanut (pvm/nyt)
+                                                 :paattynyt (pvm/nyt)})
             {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
 
            [grid/grid
