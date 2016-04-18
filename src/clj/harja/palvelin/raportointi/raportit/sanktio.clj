@@ -87,22 +87,24 @@
                                         (urakan-rivit rivit (:id urakka))))
                                     (rivien-urakat rivit))))
 
-(defn sanktiot-raportille [kantarivit]
-  (let [talvihoito-rivit (filter talvihoito? kantarivit)
-        muut-tuotteet (filter (comp not talvihoito?) kantarivit)]
+(defn raporttirivit-talvihoito [kantarivit]
+  (let [talvihoito-rivit (filter talvihoito? kantarivit)]
     [{:otsikko "Talvihoito"}
      (luo-rivi-muistutuksien-maara "Muistutukset" talvihoito-rivit)
      (luo-rivi-sakkoryhman-summa "Sakko A" talvihoito-rivit :A)
+     #_(luo-rivi-sanktiotyyppi-summa "- Päätiet" talvihoito-rivit :A "Talvihoito, päätiet") ; TODO
      ["- Päätiet" "€" "?"]                                  ; TODO
      ["- Muut tiet" "€" "?"]                                ; TODO
      (luo-rivi-sakkoryhman-summa "Sakko B" talvihoito-rivit :B)
      ["- Päätiet" "€" "?"]                                  ; TODO
      ["- Muut tiet" "€" "?"]                                ; TODO
      (luo-rivi-sakkoryhman-summa "Talvihoito, sakot yht." talvihoito-rivit)
-     ["- Talvihoito, indeksit yht." "€" "?"]                ; TODO
+     ["- Talvihoito, indeksit yht." "€" "?"]]))             ; TODO
 
-     {:otsikko "Muut tuotteet"}
-     (luo-rivi-muistutuksien-maara "Muistutukset" talvihoito-rivit)
+(defn raporttirivit-muut-tuotteet [kantarivit]
+  (let [muut-tuotteet (filter (comp not talvihoito?) kantarivit)]
+    [{:otsikko "Muut tuotteet"}
+     (luo-rivi-muistutuksien-maara "Muistutukset" muut-tuotteet)
      (luo-rivi-sakkoryhman-summa "Sakko A" muut-tuotteet :A) ; TODO
      ["- Liikenneymp. hoito" "€" "?"]                       ; TODO
      ["- Sorateiden hoito" "€" "?"]                         ; TODO
@@ -110,17 +112,26 @@
      ["- Liikenneymp. hoito" "€" "?"]                       ; TODO
      ["- Sorateiden hoito" "€" "?"]                         ; TODO
      (luo-rivi-sakkoryhman-summa "Muut tuotteet, sakot yht." muut-tuotteet)
-     ["- Muut tuotteet, indeksit yht." "€" "?"]             ; TODO
+     ["- Muut tuotteet, indeksit yht." "€" "?"]]))          ; TODO
 
-     {:otsikko "Ryhmä C"}
-     (luo-rivi-sakkoryhman-summa "Ryhmä C, sakot yht." kantarivit :C)
-     ["Ryhmä C, indeksit yht." "€" "?"]                     ; TODO
+(defn raporttirivit-ryhma-c [kantarivit]
+  [{:otsikko "Ryhmä C"}
+   (luo-rivi-sakkoryhman-summa "Ryhmä C, sakot yht." kantarivit :C)
+   ["Ryhmä C, indeksit yht." "€" "?"]])
 
-     {:otsikko "Yhteensä"}
-     (luo-rivi-muistutuksien-maara "Muistutukset yht." kantarivit)
-     ["Indeksit yht." "€" "?"]                              ; TODO
-     (luo-rivi-sakkoryhman-summa "Kaikki sakot yht." kantarivit)
-     ["Kaikki yht." "€" "?"]]))                             ; TODO
+(defn raporttirivit-yhteensa [kantarivit]
+  [{:otsikko "Yhteensä"}
+   (luo-rivi-muistutuksien-maara "Muistutukset yht." kantarivit)
+   ["Indeksit yht." "€" "?"]                                ; TODO
+   (luo-rivi-sakkoryhman-summa "Kaikki sakot yht." kantarivit)
+   ["Kaikki yht." "€" "?"]])
+
+(defn raporttirivit [kantarivit]
+  (concat
+    (raporttirivit-talvihoito kantarivit)
+    (raporttirivit-muut-tuotteet kantarivit)
+    (raporttirivit-ryhma-c kantarivit)
+    (raporttirivit-yhteensa kantarivit)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -145,7 +156,7 @@
                                   (fn [urakka]
                                     {:otsikko (:nimi urakka) :leveys 20})
                                   (rivien-urakat kantarivit)))
-        raporttidata (sanktiot-raportille kantarivit)
+        raportin-rivit (raporttirivit kantarivit)
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -159,4 +170,4 @@
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko}
       raportin-otsikot
-      raporttidata]]))
+      raportin-rivit]]))
