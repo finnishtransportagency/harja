@@ -274,46 +274,19 @@ WHERE pk.poistettu IS NOT TRUE AND
 -- name: hae-toteumat
 -- FIXME: poista tästä "turhaa" tietoa, jota ei renderöinti tarvi
 SELECT
-  t.id,
-  t.urakka,
-  t.sopimus,
-  t.alkanut,
-  t.paattynyt,
   t.tyyppi,
-  t.lisatieto,
   ST_Simplify(t.reitti, :toleranssi) as reitti,
-
-  t.suorittajan_ytunnus           AS suorittaja_ytunnus,
-  t.suorittajan_nimi              AS suorittaja_nimi,
-  t.ulkoinen_id                   AS ulkoinenid,
-
-  tt.id                           AS tehtava_id,
-  tt.toimenpidekoodi              AS tehtava_toimenpidekoodi,
-  tt.maara                        AS tehtava_maara,
-  tt.paivan_hinta                 AS tehtava_paivanhinta,
-  tt.lisatieto                    AS tehtava_lisatieto,
-  (SELECT nimi
-   FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi) AS tehtava_toimenpide,
-
-  tm.id                           AS materiaali_id,
-  tm.maara                        AS materiaali_maara,
-
-  mk.id                           AS materiaali_materiaali_id,
-  mk.nimi                         AS materiaali_materiaali_nimi,
-  mk.kohdistettava                AS materiaali_materiaali_kohdistettava
+  tt.toimenpidekoodi          AS tehtava_toimenpidekoodi,
+  tpk.nimi                    AS tehtava_toimenpide
 FROM toteuma_tehtava tt
      JOIN toteuma t ON tt.toteuma = t.id
-                    AND t.alkanut >= :alku
-                    AND t.paattynyt <= :loppu
-                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
-                    AND tt.poistettu IS NOT TRUE
-                    AND t.poistettu IS NOT TRUE
-
-     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-                                     AND tm.poistettu IS NOT TRUE
-     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+                        AND t.alkanut >= :alku
+                        AND t.paattynyt <= :loppu
+                        AND t.poistettu IS NOT TRUE
+     JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
+WHERE tt.poistettu IS NOT TRUE AND
+      tt.toimenpidekoodi IN (:toimenpidekoodit) AND
+      (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
