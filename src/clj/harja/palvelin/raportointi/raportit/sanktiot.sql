@@ -7,7 +7,6 @@ SELECT
   suorasanktio,
   st.id          AS sanktiotyyppi_id,
   st.nimi        AS sanktiotyyppi_nimi,
-  st.sanktiolaji AS sanktiotyyppi_laji,
   tpi.id         AS toimenpideinstanssi_id,
   tpi.nimi       AS toimenpideinstanssi_nimi,
   lp.id          AS laatupoikkeama_id,
