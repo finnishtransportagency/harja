@@ -12,7 +12,7 @@
 (deftest laske-urakan-suolasakko
   (let [ur @oulun-alueurakan-2014-2019-id]
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
-      (is (= 2280.0M
+      (is (= -2280.0M
              (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')"))))))))
 
 (defn suolasakko [ur lampotila lampotila-pitka sakko-per-tonni sallittu-maara kaytetty-maara]
@@ -20,7 +20,7 @@
   (u (str "UPDATE lampotilat SET keskilampotila = " lampotila ", pitka_keskilampotila = " lampotila-pitka " WHERE urakka = " ur " AND alkupvm='2014-10-01'"))
   (u (str "UPDATE suolasakko SET maara=" sakko-per-tonni ", talvisuolaraja=" sallittu-maara " WHERE urakka=" ur " AND hoitokauden_alkuvuosi=2014"))
   (u (str "UPDATE toteuma_materiaali SET maara = " kaytetty-maara " WHERE toteuma IN (SELECT id FROM toteuma WHERE urakka = " ur ")"))
-  (double (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')")))))
+  (Math/abs (double (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')"))))))
 
   
 (defspec muuta-sakon-maaraa

@@ -194,6 +194,12 @@
   (when dt
     (java.sql.Timestamp. (.getTime dt))))
 
+(defn java-date
+  "Luo java.util.Date objektin annetusta java.sql.Date  objektista."
+  [^java.sql.Date dt]
+  (when dt
+    (java.util.Date. (.getTime dt))))
+
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"
   [json avain]

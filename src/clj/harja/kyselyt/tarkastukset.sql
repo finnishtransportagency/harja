@@ -22,8 +22,8 @@ SELECT
     JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
   WHERE tarkastus = t.id) as vakiohavainnot
 FROM tarkastus t
-  JOIN kayttaja k ON t.luoja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN kayttaja k ON t.luoja = k.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)

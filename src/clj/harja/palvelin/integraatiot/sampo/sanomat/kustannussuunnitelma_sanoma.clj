@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [clj-time.core :as time]
             [clj-time.periodic :as time-period]
-            [clj-time.coerce :as coerce])
+            [clj-time.coerce :as coerce]
+            [harja.tyokalut.xml :as xml])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn muodosta-maksueranumero [numero]

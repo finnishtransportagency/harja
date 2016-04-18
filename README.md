@@ -150,7 +150,7 @@ Harja-test dumpin voi ottaa samalla logiikalla:
 
 > ssh -L 7778:localhost:5432 harja-db1-test
 > sudo -u postgres pg_dump harja > /tmp/harja-stg-dump.sql
-> mv /tmp/harja-test-dump.sql /home/jarihan/harja-test-dump.sql
+> mv /tmp/harja-test-dump.sql /home/<omatunnus>/harja-test-dump.sql
 > exit
 > scp <omatunnus>@harja-db1-test:/home/<omatunnus>/harja-test-dump.sql /Users/<omatunnus>/Desktop/harja-test-dump.sql
 

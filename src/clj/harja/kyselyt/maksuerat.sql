@@ -192,7 +192,7 @@ WHERE numero = :numero;
 -- name: merkitse-maksueralle-lahetysvirhe!
 -- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE maksuera
-SET tila = 'virhe'
+SET tila = 'virhe', lukko = null, lukittu = null
 WHERE numero = :numero;
 
 -- name: merkitse-tyypin-maksuerat-likaisiksi!

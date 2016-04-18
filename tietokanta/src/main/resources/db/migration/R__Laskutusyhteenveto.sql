@@ -346,7 +346,7 @@ BEGIN
       SELECT *
       FROM laske_suolasakon_indeksitarkistus(hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi,
                                              hoitokauden_suolasakko_rivi.indeksi,
-                                             hoitokauden_laskettu_suolasakon_maara)
+                                             hoitokauden_laskettu_suolasakon_maara, ur)
       INTO hoitokauden_laskettu_suolasakko_rivi;
 
       -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
@@ -381,7 +381,7 @@ BEGIN
                   JOIN toteuma tot ON (tt.toteuma = tot.id
                                        AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                                        AND tot.poistettu IS NOT TRUE)
-                  JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+                  JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                                    AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -412,7 +412,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL
@@ -438,7 +438,7 @@ BEGIN
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                        AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -471,7 +471,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('muutostyo', 'lisatyo', 'vahinkojen-korjaukset')
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL
@@ -505,7 +505,7 @@ BEGIN
                    JOIN toteuma tot ON (tt.toteuma = tot.id
                                         AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
                                         AND tot.poistettu IS NOT TRUE)
-                   JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                    JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                    JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                                     AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -536,7 +536,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL
@@ -562,7 +562,7 @@ BEGIN
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi IN ('akillinen-hoitotyo'::toteumatyyppi)
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN muutoshintainen_tyo mht ON (tt.toimenpidekoodi = mht.tehtava
                                        AND mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut
@@ -595,7 +595,7 @@ BEGIN
       JOIN toteuma tot ON (tt.toteuma = tot.id
                            AND tot.tyyppi IN ('akillinen-hoitotyo':: toteumatyyppi)
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                    AND tpk3.id = t.tpk3_id
     WHERE tt.paivan_hinta IS NOT NULL

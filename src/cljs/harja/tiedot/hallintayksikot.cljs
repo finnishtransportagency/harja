@@ -4,11 +4,16 @@
             [cljs.core.async :refer [<! >! chan close!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t])
-  
+
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def hallintayksikot (atom nil))
- 
+
+(defn elynumero-ja-nimi [{nro :elynumero nimi :nimi}]
+  (if-not nro
+    nimi
+    (str nro " " nimi)))
+
 (go (reset! hallintayksikot
             (into []
                   (map #(assoc % :type :hy))

@@ -81,6 +81,6 @@ BEGIN
     suolasakko := 0.0;
   END IF;
 
-  RETURN suolasakko;
+  RETURN -suolasakko;
 END;
 $$ LANGUAGE plpgsql;

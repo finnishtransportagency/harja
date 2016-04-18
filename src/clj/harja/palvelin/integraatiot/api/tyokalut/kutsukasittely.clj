@@ -230,7 +230,10 @@
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (let [body (if (:body request)
-               (slurp (:body request))
+               (if (= (get-in request [:headers "content-encoding"]) "gzip")
+                 (with-open [gzip (java.util.zip.GZIPInputStream. (:body request))]
+                   (slurp gzip))
+                 (slurp (:body request)))
                nil)
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))

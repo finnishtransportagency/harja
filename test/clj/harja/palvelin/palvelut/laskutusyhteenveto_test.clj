@@ -68,12 +68,12 @@
                                :erilliskustannukset_laskutettu                  1000.0M
                                :erilliskustannukset_laskutettu_ind_korotettuna  990.42451324609000255000M
                                :erilliskustannukset_laskutettu_ind_korotus      -9.57548675390999745000M
-                               :kaikki_laskutetaan                              8985.791394829237321930000M
-                               :kaikki_laskutetaan_ind_korotus                  205.791394829237321930000M
+                               :kaikki_laskutetaan                              4309.8340248962656517440000000M
+                               :kaikki_laskutetaan_ind_korotus                  89.8340248962656517440000000M
                                :kaikki_laskutettu                               39229.07756144270691680200M
                                :kaikki_laskutettu_ind_korotus                   129.07756144270691680200M
-                               :kaikki_paitsi_kht_laskutetaan                   5485.791394829237321930000M
-                               :kaikki_paitsi_kht_laskutetaan_ind_korotus       146.582968400893821930000M
+                               :kaikki_paitsi_kht_laskutetaan                   809.8340248962656517440000000M
+                               :kaikki_paitsi_kht_laskutetaan_ind_korotus       30.6255984679221517440000000M
                                :kaikki_paitsi_kht_laskutettu                    4229.07756144270691680200M
                                :kaikki_paitsi_kht_laskutettu_ind_korotus        12.89498882859880851200M
                                :kht_laskutetaan                                 3500.0M
@@ -98,9 +98,9 @@
                                :sakot_laskutettu_ind_korotettuna                99.48930737312480054200M
                                :sakot_laskutettu_ind_korotus                    -0.51069262687519945800M
                                :suolasakko_kaytossa                             true
-                               :suolasakot_laskutetaan                          2280.00000M
-                               :suolasakot_laskutetaan_ind_korotettuna          2388.680000000000076000000M
-                               :suolasakot_laskutetaan_ind_korotus              108.680000000000076000000M
+                               :suolasakot_laskutetaan                          -2280.00000M
+                               :suolasakot_laskutetaan_ind_korotettuna          -2287.2773699329715941860000000M
+                               :suolasakot_laskutetaan_ind_korotus              -7.2773699329715941860000000M
                                :suolasakot_laskutettu                           0.0M
                                :suolasakot_laskutettu_ind_korotettuna           0.0M
                                :suolasakot_laskutettu_ind_korotus               0.0M
