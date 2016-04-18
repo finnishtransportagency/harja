@@ -6,6 +6,7 @@
             [harja.pvm :as pvm]
             [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
             [harja.kyselyt.konversio :as konv]
             [harja.fmt :as fmt]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
@@ -29,36 +30,54 @@
       (= (:urakka_id rivi) urakka-id))
     rivit))
 
-(defn sakkoryhman-maara [kantarivit sakkoryhma]
+(defn sakkojen-maara
+  ([rivit]
+   (count (filter
+            (fn [rivi]
+              (sanktiot-domain/sakko? rivi))
+            rivit)))
+  ([rivit sakkoryhma]
+   (count (filter
+            (fn [rivi]
+              (and
+                (sanktiot-domain/sakko? rivi)
+                (= sakkoryhma (:sakkoryhma rivi))))
+            rivit))))
+
+(defn sakkojen-summa
+  ([rivit]
+   (let [laskettavat (filter
+                       (fn [rivi]
+                         (sanktiot-domain/sakko? rivi))
+                       rivit)]
+     (reduce + (map
+                 #(or (:maara %) 0)
+                 laskettavat))))
+  ([rivit sakkoryhma]
   (let [laskettavat (filter
                       (fn [rivi]
-                        (= sakkoryhma (:sakkoryhma rivi)))
-                      kantarivit)]
-    (count laskettavat)))
+                        (and
+                          (sanktiot-domain/sakko? rivi)
+                          (= sakkoryhma (:sakkoryhma rivi))))
+                      rivit)]
+    (reduce + (map
+                #(or (:maara %) 0)
+                laskettavat)))))
 
 (defn muistutusten-maara [rivit]
   (let [laskettavat (filter
                       (fn [rivi]
-                        (nil? (:maara rivi)))
+                        (not (sanktiot-domain/sakko? rivi)))
                       rivit)]
     (count laskettavat)))
 
-(defn sakkoryhman-summa [kantarivit sakkoryhma]
-  (let [laskettavat (filter
-                      (fn [rivi]
-                        (or
-                          (nil? sakkoryhma)
-                          (= sakkoryhma (:sakkoryhma rivi))))
-                      kantarivit)]
-    (reduce + (map
-                #(or (:maara %) 0)
-                laskettavat))))
+
 
 (defn luo-rivi-sakkoryhman-maara ([otsikko rivit]
    (luo-rivi-sakkoryhman-maara otsikko rivit nil))
   ([otsikko rivit sakkoryhma]
    (apply conj [otsikko "kpl"] (mapv (fn [urakka]
-                                       (sakkoryhman-maara
+                                       (sakkojen-maara
                                          (urakan-rivit rivit (:id urakka))
                                          sakkoryhma))
                                      (rivien-urakat rivit)))))
@@ -68,7 +87,7 @@
    (luo-rivi-sakkoryhman-summa otsikko rivit nil))
   ([otsikko rivit sakkoryhma]
   (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                    (sakkoryhman-summa
+                                    (sakkojen-summa
                                       (urakan-rivit rivit (:id urakka))
                                       sakkoryhma))
                                   (rivien-urakat rivit)))))
