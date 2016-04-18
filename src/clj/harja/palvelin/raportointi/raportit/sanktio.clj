@@ -41,7 +41,6 @@
     rivit))
 
 (defn suodata-muistutukset [rivit {:keys [urakka-id talvihoito?] :as suodattimet}]
-  (println "Suodatetaan muistutukset suodattimilla " urakka-id talvihoito?)
   (filter
     (fn [rivi]
       (and
