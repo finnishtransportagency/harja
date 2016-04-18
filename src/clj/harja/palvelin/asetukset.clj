@@ -133,6 +133,9 @@
 (defn konfiguroi-lokitus [asetukset]
   (log/set-config! [:middleware] [crlf-filter])
 
+  (when-not (:kehitysmoodi asetukset)
+    (log/set-config! [:appenders :standard-out :min-level] :info))
+
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
@@ -167,5 +170,3 @@
              (.setContext konfiguroija konteksti)
              (.reset konteksti)
              (.doConfigure konfiguroija konfiguraatio))))
-      
-  
