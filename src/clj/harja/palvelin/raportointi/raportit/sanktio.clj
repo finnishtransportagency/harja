@@ -44,15 +44,6 @@
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
-(defn- suodata-muistutukset [rivit {:keys [urakka-id talvihoito?] :as suodattimet}]
-  (filter
-    (fn [rivi]
-      (and
-        (not (sanktiot-domain/sakko? rivi))
-        (or (nil? urakka-id) (= urakka-id (:urakka_id rivi)))
-        (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
-    rivit))
-
 (defn- sakkojen-summa
   ([rivit] (sakkojen-summa rivit {}))
   ([rivit suodattimet]
