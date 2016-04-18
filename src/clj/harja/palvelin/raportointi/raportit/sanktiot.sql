@@ -1,6 +1,7 @@
 -- name: hae-sanktiot
 -- Hakee sanktiot
 SELECT
+  s.id,
   sakkoryhma,
   maara,
   indeksi,

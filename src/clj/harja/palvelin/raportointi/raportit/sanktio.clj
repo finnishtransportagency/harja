@@ -36,6 +36,13 @@
                       kantarivit)]
     (count laskettavat)))
 
+(defn muistutusten-maara [rivit]
+  (let [laskettavat (filter
+                      (fn [rivi]
+                        (nil? (:maara rivi)))
+                      rivit)]
+    (count laskettavat)))
+
 (defn sakkoryhman-summa [kantarivit sakkoryhma]
   (let [laskettavat (filter
                       (fn [rivi]
@@ -66,40 +73,46 @@
                                       sakkoryhma))
                                   (rivien-urakat rivit)))))
 
+(defn luo-rivi-muistutuksien-maara [otsikko rivit]
+  (apply conj [otsikko "kpl"] (mapv (fn [urakka]
+                                      (muistutusten-maara
+                                        (urakan-rivit rivit (:id urakka))))
+                                    (rivien-urakat rivit))))
+
 (defn sanktiot-raportille [kantarivit]
   (let [talvihoito-rivit (filter talvihoito? kantarivit)
         muut-tuotteet (filter (comp not talvihoito?) kantarivit)]
     [{:otsikko "Talvihoito"}
-     (luo-rivi-sakkoryhman-maara "Muistutukset" talvihoito-rivit :muistutus)
+     (luo-rivi-muistutuksien-maara "Muistutukset" talvihoito-rivit)
      (luo-rivi-sakkoryhman-summa "Sakko A" talvihoito-rivit :A)
-     ["- Päätiet" "€" 0]
-     ["- Muut tiet" "€" 0]
-     (luo-rivi-sakkoryhman-summa "Sakko B" talvihoito-rivit :B) ;; FIXME Ei kai vielä toimi?
-     ["- Päätiet" "€" 0]
-     ["- Muut tiet" "€" 0]
+     ["- Päätiet" "€" "?"] ; TODO
+     ["- Muut tiet" "€" "?"] ; TODO
+     (luo-rivi-sakkoryhman-summa "Sakko B" talvihoito-rivit :B)
+     ["- Päätiet" "€" "?"] ; TODO
+     ["- Muut tiet" "€" "?"] ; TODO
      (luo-rivi-sakkoryhman-summa "Talvihoito, sakot yht." talvihoito-rivit)
-     ["- Talvihoito, indeksit yht." "€" 0]
+     ["- Talvihoito, indeksit yht." "€" "?"] ; TODO
 
      {:otsikko "Muut tuotteet"}
-     (luo-rivi-sakkoryhman-maara "Muistutukset" muut-tuotteet :muistutus)
-     (luo-rivi-sakkoryhman-summa "Sakko A" muut-tuotteet :A)
-     ["- Liikenneymp. hoito" "€" 0]
-     ["- Sorateiden hoito" "€" 0]
+     (luo-rivi-muistutuksien-maara "Muistutukset" talvihoito-rivit)
+     (luo-rivi-sakkoryhman-summa "Sakko A" muut-tuotteet :A) ; TODO
+     ["- Liikenneymp. hoito" "€" "?"] ; TODO
+     ["- Sorateiden hoito" "€" "?"] ; TODO
      (luo-rivi-sakkoryhman-summa "Sakko B" muut-tuotteet :B)
-     ["- Liikenneymp. hoito" "€" 0]
-     ["- Sorateiden hoito" "€" 0]
+     ["- Liikenneymp. hoito" "€" "?"] ; TODO
+     ["- Sorateiden hoito" "€" "?"] ; TODO
      (luo-rivi-sakkoryhman-summa "Muut tuotteet, sakot yht." muut-tuotteet)
-     ["- Muut tuotteet, indeksit yht." "€" 0]
+     ["- Muut tuotteet, indeksit yht." "€" "?"]  ; TODO
 
      {:otsikko "Ryhmä C"}
      (luo-rivi-sakkoryhman-summa "Ryhmä C, sakot yht." kantarivit :C)
-     ["Ryhmä C, indeksit yht." "€" 0]
+     ["Ryhmä C, indeksit yht." "€" "?"]  ; TODO
 
      {:otsikko "Yhteensä"}
      (luo-rivi-sakkoryhman-maara "Muistutukset yht." kantarivit :muistutus)
-     ["Indeksit yht." "€" 0]
+     ["Indeksit yht." "€" "?"]  ; TODO
      (luo-rivi-sakkoryhman-summa "Kaikki sakot yht." kantarivit)
-     ["Kaikki yht." "€" 0]]))
+     ["Kaikki yht." "€" "?"]]))  ; TODO
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
