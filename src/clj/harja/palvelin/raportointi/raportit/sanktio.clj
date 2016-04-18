@@ -71,8 +71,9 @@
   ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
          rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                                (sakkojen-summa rivit (merge optiot
-                                                                             {:urakka-id (:id urakka)})))
+                                                (fmt/desimaaliluku-opt (sakkojen-summa rivit (merge optiot
+                                                                                                    {:urakka-id (:id urakka)}))
+                                                                       2))
                                               rivien-urakat))]
      (if yhteensa-sarake?
        (conj rivi (sakkojen-summa rivit optiot))
