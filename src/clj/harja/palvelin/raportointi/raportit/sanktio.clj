@@ -262,12 +262,7 @@
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
                                                      db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)
-        _ (log/debug (pr-str [:raportti {:nimi raportin-nimi
-                                         :orientaatio :landscape}
-                              [:taulukko {:otsikko otsikko}
-                               raportin-otsikot
-                               raportin-rivit]]))]
+                  raportin-nimi alkupvm loppupvm)]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
