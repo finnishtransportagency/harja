@@ -76,7 +76,7 @@
                                                                        2))
                                               rivien-urakat))]
      (if yhteensa-sarake?
-       (conj rivi (sakkojen-summa rivit optiot))
+       (conj rivi (fmt/desimaaliluku-opt (sakkojen-summa rivit optiot) 2))
        rivi))))
 
 (defn- luo-rivi-muistutusten-maara
