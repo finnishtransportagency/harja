@@ -73,7 +73,7 @@
 
 (defn luo-rivi-muistutusten-maara
   ([otsikko rivit]
-   (luo-rivi-sakkojen-summa otsikko rivit {}))
+   (luo-rivi-muistutusten-maara otsikko rivit {}))
   ([otsikko rivit suodattimet]
    (apply conj [otsikko "kpl"] (mapv (fn [urakka]
                                      (muistutusten-maara rivit (merge suodattimet
