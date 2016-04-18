@@ -40,11 +40,11 @@
       (log/error (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db viesti-id))))
 
-(defn tallenna-ilmoitustoimenpide [db ilmoitus vapaateksti toimenpide paivystaja]
+(defn tallenna-ilmoitustoimenpide [db ilmoitus ilmoitusid vapaateksti toimenpide paivystaja]
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
-         (:id ilmoitus)
-         (:ilmoitusid ilmoitus)
+         ilmoitus
+         ilmoitusid
          (pvm/nyt)
          vapaateksti
          toimenpide
