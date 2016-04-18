@@ -24,12 +24,6 @@
            rivit)
       distinct))
 
-(defn- urakan-rivit [rivit urakka-id]
-  (filter
-    (fn [rivi]
-      (= (:urakka_id rivi) urakka-id))
-    rivit))
-
 (defn- suodata-sakot [rivit {:keys [urakka-id sakkoryhma talvihoito?] :as suodattimet}]
   (filter
     (fn [rivi]
