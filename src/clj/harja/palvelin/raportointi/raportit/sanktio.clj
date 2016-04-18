@@ -29,7 +29,9 @@
     (fn [rivi]
       (and
         (sanktiot-domain/sakko? rivi)
-        (or (nil? sakkoryhma) (= sakkoryhma (:sakkoryhma rivi)))
+        (or (nil? sakkoryhma) (if (set? sakkoryhma)
+                                (sakkoryhma (:sakkoryhma rivi))
+                                (= sakkoryhma (:sakkoryhma rivi))))
         (or (nil? urakka-id) (= urakka-id (:urakka_id rivi)))
         (or (nil? sanktiotyyppi) (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
@@ -157,9 +159,11 @@
                              :yhteensa-sarake? yhteensa-sarake?})
    (luo-rivi-sakkojen-summa "Talvihoito, sakot yht." rivit
                             {:talvihoito? true
+                             :sakkoryhma #{:A :B}
                              :yhteensa-sarake? yhteensa-sarake?})
    (luo-rivi-indeksien-summa "Talvihoito, indeksit yht." rivit
                              {:talvihoito? true
+                              :sakkoryhma #{:A :B}
                               :yhteensa-sarake? yhteensa-sarake?})])
 
 (defn- raporttirivit-muut-tuotteet [rivit {:keys [yhteensa-sarake?] :as optiot}]
@@ -197,9 +201,11 @@
                              :yhteensa-sarake? yhteensa-sarake?})
    (luo-rivi-sakkojen-summa "Muut tuotteet, sakot yht." rivit
                             {:talvihoito? false
+                             :sakkoryhma #{:A :B}
                              :yhteensa-sarake? yhteensa-sarake?})
    (luo-rivi-indeksien-summa "Muut tuotteet, indeksit yht." rivit
                              {:talvihoito? false
+                              :sakkoryhma #{:A :B}
                               :yhteensa-sarake? yhteensa-sarake?})])
 
 (defn- raporttirivit-ryhma-c [rivit {:keys [yhteensa-sarake?] :as optiot}]
