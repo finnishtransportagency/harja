@@ -14,7 +14,8 @@ SELECT
   lp.aika        AS laatupoikkeama_aika,
   u.id           AS urakka_id,
   u.nimi         AS urakka_nimi,
-  (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
+  (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2,
+  kuukauden_indeksikorotus(lp.aika::DATE, indeksi, maara, u.id) AS indeksikorotus
 FROM sanktio s
   JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id

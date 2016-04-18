@@ -61,12 +61,12 @@
                  #(or (:summa %) 0)
                  laskettavat)))))
 
-(defn- indeksien-summa ; TODO Miten lasketaan?
+(defn- indeksien-summa
   ([rivit] (indeksien-summa rivit {}))
   ([rivit suodattimet]
    (let [laskettavat (suodata-sakot rivit suodattimet)]
      (reduce + (map
-                 #(or (:summa %) 0)
+                 #(or (:indeksikorotus %) 0)
                  laskettavat)))))
 
 (defn muistutusten-maara
@@ -97,15 +97,17 @@
    (luo-rivi-indeksien-summa otsikko rivit {}))
   ([otsikko rivit suodattimet]
    (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                       (indeksien-summa rivit (merge suodattimet
-                                                                        {:urakka-id (:id urakka)})))
-                                     (rivien-urakat rivit)))))
+                                     (fmt/desimaaliluku-opt (indeksien-summa rivit (merge suodattimet
+                                                                                          {:urakka-id (:id urakka)}))
+                                                            2))
+                                   (rivien-urakat rivit)))))
 
 (defn- luo-rivi-kaikki-yht
   ([otsikko rivit]
    (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                     (+ (sakkojen-summa rivit {:urakka-id (:id urakka)})
-                                        (indeksien-summa rivit {:urakka-id (:id urakka)})))
+                                     (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit {:urakka-id (:id urakka)})
+                                                               (indeksien-summa rivit {:urakka-id (:id urakka)}))
+                                                            2))
                                    (rivien-urakat rivit)))))
 
 (defn- raporttirivit-talvihoito [rivit]
