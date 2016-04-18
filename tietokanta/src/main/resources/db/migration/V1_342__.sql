@@ -1,1 +1,0 @@
-ALTER TABLE paivystajatekstiviesti ADD COLUMN puhelinnumero VARCHAR(16);
