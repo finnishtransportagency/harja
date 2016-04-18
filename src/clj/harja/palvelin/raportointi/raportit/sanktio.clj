@@ -109,7 +109,7 @@
      ["Ryhmä C, indeksit yht." "€" "?"]  ; TODO
 
      {:otsikko "Yhteensä"}
-     (luo-rivi-sakkoryhman-maara "Muistutukset yht." kantarivit :muistutus)
+     (luo-rivi-muistutuksien-maara "Muistutukset yht." kantarivit)
      ["Indeksit yht." "€" "?"]  ; TODO
      (luo-rivi-sakkoryhman-summa "Kaikki sakot yht." kantarivit)
      ["Kaikki yht." "€" "?"]]))  ; TODO
