@@ -221,11 +221,11 @@
    (luo-rivi-kaikki-yht "Kaikki yht." rivit {:yhteensa-sarake? yhteensa-sarake?})])
 
 (defn- raporttirivit [rivit optiot]
-  (concat
-    (raporttirivit-talvihoito rivit optiot)
-    (raporttirivit-muut-tuotteet rivit optiot)
-    (raporttirivit-ryhma-c rivit optiot)
-    (raporttirivit-yhteensa rivit optiot)))
+  (into [] (concat
+             (raporttirivit-talvihoito rivit optiot)
+             (raporttirivit-muut-tuotteet rivit optiot)
+             (raporttirivit-ryhma-c rivit optiot)
+             (raporttirivit-yhteensa rivit optiot))))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -245,15 +245,15 @@
                                         :loppu loppupvm}))
         rivien-urakat (rivien-urakat kantarivit)
         yhteensa-sarake? (> (count rivien-urakat) 1)
-        raportin-otsikot (concat
-                           [{:otsikko "" :leveys 10}
-                            {:otsikko "Yks." :leveys 4}]
-                           (mapv
-                             (fn [urakka]
-                               {:otsikko (:nimi urakka) :leveys 20})
-                             rivien-urakat)
-                           (when yhteensa-sarake?
-                             [{:otsikko "Yhteensä" :leveys 10}]))
+        raportin-otsikot (into [] (concat
+                                    [{:otsikko "" :leveys 10}
+                                     {:otsikko "Yks." :leveys 4}]
+                                    (mapv
+                                      (fn [urakka]
+                                        {:otsikko (:nimi urakka) :leveys 20})
+                                      rivien-urakat)
+                                    (when yhteensa-sarake?
+                                      [{:otsikko "Yhteensä" :leveys 10}])))
         raportin-rivit (raporttirivit kantarivit {:yhteensa-sarake? yhteensa-sarake?})
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
@@ -262,7 +262,12 @@
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
                                                      db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)]
+                  raportin-nimi alkupvm loppupvm)
+        _ (log/debug (pr-str [:raportti {:nimi raportin-nimi
+                                         :orientaatio :landscape}
+                              [:taulukko {:otsikko otsikko}
+                               raportin-otsikot
+                               raportin-rivit]]))]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
