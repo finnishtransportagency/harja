@@ -14,23 +14,23 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
-(defn rivi-kuuluu-talvihoitoon? [rivi]
+(defn- rivi-kuuluu-talvihoitoon? [rivi]
   (= (str/lower-case (:toimenpidekoodi_taso2 rivi)) "talvihoito"))
 
-(defn rivien-urakat [rivit]
+(defn- rivien-urakat [rivit]
   (-> (map (fn [rivi]
              {:id (:urakka_id rivi)
               :nimi (:urakka_nimi rivi)})
            rivit)
       distinct))
 
-(defn urakan-rivit [rivit urakka-id]
+(defn- urakan-rivit [rivit urakka-id]
   (filter
     (fn [rivi]
       (= (:urakka_id rivi) urakka-id))
     rivit))
 
-(defn suodata-sakot [rivit {:keys [urakka-id sakkoryhma talvihoito?] :as suodattimet}]
+(defn- suodata-sakot [rivit {:keys [urakka-id sakkoryhma talvihoito?] :as suodattimet}]
   (filter
     (fn [rivi]
       (and
@@ -40,7 +40,7 @@
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
-(defn suodata-muistutukset [rivit {:keys [urakka-id talvihoito?] :as suodattimet}]
+(defn- suodata-muistutukset [rivit {:keys [urakka-id talvihoito?] :as suodattimet}]
   (filter
     (fn [rivi]
       (and
@@ -49,7 +49,7 @@
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
-(defn sakkojen-summa
+(defn- sakkojen-summa
   ([rivit] (sakkojen-summa rivit {}))
   ([rivit suodattimet]
    (let [laskettavat (suodata-sakot rivit suodattimet)]
@@ -62,7 +62,7 @@
   ([rivit suodattimet]
    (count (suodata-muistutukset rivit suodattimet))))
 
-(defn luo-rivi-sakkojen-summa
+(defn- luo-rivi-sakkojen-summa
   ([otsikko rivit]
    (luo-rivi-sakkojen-summa otsikko rivit {}))
   ([otsikko rivit suodattimet]
@@ -71,7 +71,7 @@
                                                                   {:urakka-id (:id urakka)})))
                                    (rivien-urakat rivit)))))
 
-(defn luo-rivi-muistutusten-maara
+(defn- luo-rivi-muistutusten-maara
   ([otsikko rivit]
    (luo-rivi-muistutusten-maara otsikko rivit {}))
   ([otsikko rivit suodattimet]
@@ -80,7 +80,7 @@
                                                                   {:urakka-id (:id urakka)})))
                                    (rivien-urakat rivit)))))
 
-(defn raporttirivit-talvihoito [rivit]
+(defn- raporttirivit-talvihoito [rivit]
   [{:otsikko "Talvihoito"}
    (luo-rivi-muistutusten-maara "Muistutukset" rivit {:talvihoito? true})
    (luo-rivi-sakkojen-summa "Sakko A" rivit {:sakkoryhma :A :talvihoito? true})
@@ -92,7 +92,7 @@
    (luo-rivi-sakkojen-summa "Talvihoito, sakot yht." rivit {:talvihoito? true})
    ["- Talvihoito, indeksit yht." "€" "?"]])             ; TODO
 
-(defn raporttirivit-muut-tuotteet [rivit]
+(defn- raporttirivit-muut-tuotteet [rivit]
   [{:otsikko "Muut tuotteet"}
    (luo-rivi-muistutusten-maara "Muistutukset" rivit {:talvihoito? false})
    (luo-rivi-sakkojen-summa "Sakko A" rivit {:sakkoryhma :A :talvihoito? false})
@@ -104,19 +104,19 @@
    (luo-rivi-sakkojen-summa "Muut tuotteet, sakot yht." rivit {:talvihoito? false})
    ["- Muut tuotteet, indeksit yht." "€" "?"]])             ; TODO
 
-(defn raporttirivit-ryhma-c [rivit]
+(defn- raporttirivit-ryhma-c [rivit]
   [{:otsikko "Ryhmä C"}
    (luo-rivi-sakkojen-summa "Ryhmä C, sakot yht." rivit {:sakkoryhma :C})
    ["Ryhmä C, indeksit yht." "€" "?"]])                     ; TODO
 
-(defn raporttirivit-yhteensa [rivit]
+(defn- raporttirivit-yhteensa [rivit]
   [{:otsikko "Yhteensä"}
    (luo-rivi-muistutusten-maara "Muistutukset yht." rivit)
    ["Indeksit yht." "€" "?"]                                ; TODO
    (luo-rivi-sakkojen-summa "Kaikki sakot yht." rivit)
    ["Kaikki yht." "€" "?"]])
 
-(defn raporttirivit [rivit]
+(defn- raporttirivit [rivit]
   (concat
     (raporttirivit-talvihoito rivit)
     (raporttirivit-muut-tuotteet rivit)
