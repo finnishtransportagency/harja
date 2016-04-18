@@ -30,6 +30,12 @@
   ([valittu? valittu-leveys ei-valittu-leveys]
    (if valittu? valittu-leveys ei-valittu-leveys)))
 
+(defn pura-geometry-collection [asia]
+  (if (= :geometry-collection (:type (:sijainti asia)))
+    (for [g (:geometries (:sijainti asia))]
+      (assoc asia :sijainti g))
+    [asia]))
+
 (defn reitillinen-asia? [asia]
   (case (:type (or (:sijainti asia) asia))
     :point false
@@ -497,6 +503,7 @@
      (with-meta
        (into []
              (comp (or asia-xf identity)
+                   (mapcat pura-geometry-collection)
                    (map #(kartalla-xf % valittu (or tunniste [:id])))
                    (filter some?)
                    (filter #(some? (:alue %)))
