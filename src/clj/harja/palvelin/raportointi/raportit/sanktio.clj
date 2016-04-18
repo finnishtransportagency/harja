@@ -69,37 +69,48 @@
   ([otsikko rivit]
    (luo-rivi-sakkojen-summa otsikko rivit {}))
   ([otsikko rivit suodattimet]
-   (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                     (sakkojen-summa rivit (merge suodattimet
-                                                                  {:urakka-id (:id urakka)})))
-                                   (rivien-urakat rivit)))))
+   (let [rivien-urakat (rivien-urakat rivit)
+         rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
+                                                (sakkojen-summa rivit (merge suodattimet
+                                                                             {:urakka-id (:id urakka)})))
+                                              rivien-urakat))]
+     (conj rivi (sakkojen-summa rivit suodattimet)))))
 
 (defn- luo-rivi-muistutusten-maara
   ([otsikko rivit]
    (luo-rivi-muistutusten-maara otsikko rivit {}))
   ([otsikko rivit suodattimet]
-   (apply conj [otsikko "kpl"] (mapv (fn [urakka]
-                                     (muistutusten-maara rivit (merge suodattimet
-                                                                  {:urakka-id (:id urakka)})))
-                                   (rivien-urakat rivit)))))
+   (let [rivien-urakat (rivien-urakat rivit)
+         rivi (apply conj [otsikko "kpl"] (mapv (fn [urakka]
+                                        (muistutusten-maara rivit (merge suodattimet
+                                                                         {:urakka-id (:id urakka)})))
+                                      rivien-urakat))]
+     (conj rivi (muistutusten-maara rivit suodattimet)))))
 
 (defn- luo-rivi-indeksien-summa
   ([otsikko rivit]
    (luo-rivi-indeksien-summa otsikko rivit {}))
   ([otsikko rivit suodattimet]
-   (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                     (fmt/desimaaliluku-opt (indeksien-summa rivit (merge suodattimet
-                                                                                          {:urakka-id (:id urakka)}))
-                                                            2))
-                                   (rivien-urakat rivit)))))
+   (let [rivien-urakat (rivien-urakat rivit)
+         rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
+                                      (fmt/desimaaliluku-opt (indeksien-summa rivit (merge suodattimet
+                                                                                           {:urakka-id (:id urakka)}))
+                                                             2))
+                                    rivien-urakat))]
+     (conj rivi (fmt/desimaaliluku-opt (indeksien-summa rivit suodattimet)
+                                       2)))))
 
 (defn- luo-rivi-kaikki-yht
   ([otsikko rivit]
-   (apply conj [otsikko "€"] (mapv (fn [urakka]
-                                     (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit {:urakka-id (:id urakka)})
-                                                               (indeksien-summa rivit {:urakka-id (:id urakka)}))
-                                                            2))
-                                   (rivien-urakat rivit)))))
+   (let [rivien-urakat (rivien-urakat rivit)
+         rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
+                                      (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit {:urakka-id (:id urakka)})
+                                                                (indeksien-summa rivit {:urakka-id (:id urakka)}))
+                                                             2))
+                                    rivien-urakat))]
+     (conj rivi (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit)
+                                          (indeksien-summa rivit))
+                                       2)))))
 
 (defn- raporttirivit-talvihoito [rivit]
   [{:otsikko "Talvihoito"}
@@ -160,13 +171,14 @@
                                         :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                         :alku alkupvm
                                         :loppu loppupvm}))
-        raportin-otsikot (apply conj
-                                [{:otsikko "" :leveys 10}
-                                 {:otsikko "Yks." :leveys 3}]
-                                (mapv
-                                  (fn [urakka]
-                                    {:otsikko (:nimi urakka) :leveys 20})
-                                  (rivien-urakat kantarivit)))
+        raportin-otsikot (concat
+                           [{:otsikko "" :leveys 10}
+                            {:otsikko "Yks." :leveys 2}]
+                           (mapv
+                             (fn [urakka]
+                               {:otsikko (:nimi urakka) :leveys 20})
+                             (rivien-urakat kantarivit))
+                           [{:otsikko "Yhteensä" :leveys 10}])
         raportin-rivit (raporttirivit kantarivit)
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
