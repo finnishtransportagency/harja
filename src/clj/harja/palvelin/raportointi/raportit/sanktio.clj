@@ -247,7 +247,7 @@
                                       urakat)
                                     (when yhteensa-sarake?
                                       [{:otsikko "Yhteensä" :leveys 8}])))
-        raportin-rivit (when (> (count urakat) 1)
+        raportin-rivit (when (> (count urakat) 0)
                          (raporttirivit kantarivit urakat {:yhteensa-sarake? yhteensa-sarake?}))
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
