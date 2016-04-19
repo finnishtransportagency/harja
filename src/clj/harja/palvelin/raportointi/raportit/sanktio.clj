@@ -72,7 +72,7 @@
    (luo-rivi-sakkojen-summa otsikko rivit {}))
   ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
-         rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
+         rivi (apply conj [(str otsikko " (€)")] (mapv (fn [urakka]
                                                 (fmt/desimaaliluku-opt (sakkojen-summa rivit (merge optiot
                                                                                                     {:urakka-id (:id urakka)}))
                                                                        2))
@@ -86,7 +86,7 @@
    (luo-rivi-muistutusten-maara otsikko rivit {}))
   ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
-         rivi (apply conj [otsikko "kpl"] (mapv (fn [urakka]
+         rivi (apply conj [(str otsikko " (kpl)")] (mapv (fn [urakka]
                                         (muistutusten-maara rivit (merge optiot
                                                                          {:urakka-id (:id urakka)})))
                                       rivien-urakat))]
@@ -99,7 +99,7 @@
    (luo-rivi-indeksien-summa otsikko rivit {}))
   ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
-         rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
+         rivi (apply conj [(str otsikko " (€)")] (mapv (fn [urakka]
                                       (fmt/desimaaliluku-opt (indeksien-summa rivit (merge optiot
                                                                                            {:urakka-id (:id urakka)}))
                                                              2))
@@ -113,7 +113,7 @@
   ([otsikko rivit] (luo-rivi-kaikki-yht otsikko rivit {}))
   ([otsikko rivit {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivien-urakat (rivien-urakat rivit)
-         rivi (apply conj [otsikko "€"] (mapv (fn [urakka]
+         rivi (apply conj [(str otsikko " (€)")] (mapv (fn [urakka]
                                       (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit {:urakka-id (:id urakka)})
                                                                 (indeksien-summa rivit {:urakka-id (:id urakka)}))
                                                              2))
@@ -246,14 +246,13 @@
         rivien-urakat (rivien-urakat kantarivit)
         yhteensa-sarake? (> (count rivien-urakat) 1)
         raportin-otsikot (into [] (concat
-                                    [{:otsikko "" :leveys 10}
-                                     {:otsikko "Yks." :leveys 4}]
+                                    [{:otsikko "" :leveys 8}]
                                     (mapv
                                       (fn [urakka]
-                                        {:otsikko (:nimi urakka) :leveys 20})
+                                        {:otsikko (:nimi urakka) :leveys 15})
                                       rivien-urakat)
                                     (when yhteensa-sarake?
-                                      [{:otsikko "Yhteensä" :leveys 10}])))
+                                      [{:otsikko "Yhteensä" :leveys 8}])))
         raportin-rivit (raporttirivit kantarivit {:yhteensa-sarake? yhteensa-sarake?})
         raportin-nimi "Sanktioraportti"
         otsikko (raportin-otsikko
