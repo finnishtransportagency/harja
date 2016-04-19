@@ -64,9 +64,12 @@
                               }))
                          (:tehtavat %))))))
 
+(def tyhja-tr-osoite {:numero nil :alkuosa nil :alkuetaisyys nil :loppuosa nil :loppuetaisyys nil})
+
 (defn toteuman-parametrit [toteuma kayttaja]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} (:tr toteuma)]
-    (merge (:tr toteuma)
+    (merge tyhja-tr-osoite
+           (:tr toteuma)
            {:urakka (:urakka-id toteuma)
             :sopimus (:sopimus-id toteuma)
             :alkanut (konv/sql-timestamp (:alkanut toteuma))
