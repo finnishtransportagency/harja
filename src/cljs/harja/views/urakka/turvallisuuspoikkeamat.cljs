@@ -46,6 +46,11 @@
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
+(defn- voi-tallentaa? [tp]
+  (if-not (:id tp)
+    (lomake/voi-tallentaa-ja-muokattu? tp)
+    (lomake/voi-tallentaa? tp)))
+
 (defn turvallisuuspoikkeaman-tiedot []
   (let [turvallisuuspoikkeama (reaction @tiedot/valittu-turvallisuuspoikkeama)]
     (fnc []
@@ -73,7 +78,7 @@
                         :kun-onnistuu #(do
                                         (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                         (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                        :disabled (not (lomake/voi-tallentaa? @turvallisuuspoikkeama))}]}
+                        :disabled (not (voi-tallentaa? @turvallisuuspoikkeama))}]}
              [(lomake/ryhma {:rivi? true}
                             {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
                              :pakollinen? true
