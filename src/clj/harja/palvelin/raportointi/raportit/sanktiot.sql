@@ -31,3 +31,20 @@ WHERE (:urakka::INTEGER IS NULL OR lp.urakka = :urakka)
                                  u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
       AND lp.aika :: DATE BETWEEN :alku AND :loppu
 ORDER BY urakka_nimi;
+
+-- name: hae-kontekstin-urakat
+-- Listaa kaikki ne urakat, joita haku koskee
+SELECT
+  id,
+  nimi
+FROM urakka
+WHERE
+  (:urakka :: INTEGER IS NULL OR id = :urakka)
+  AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
+  AND (:urakka :: INTEGER IS NOT NULL OR
+       (:urakka :: INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
+                                        tyyppi = :urakkatyyppi :: urakkatyyppi)))
+  AND (:urakka :: INTEGER IS NOT NULL OR :urakka :: INTEGER IS NULL AND ((alkupvm :: DATE BETWEEN :alku AND :loppu)
+                                                                         OR (loppupvm :: DATE BETWEEN :alku AND :loppu)
+                                                                         OR (:alku >= alkupvm AND :loppu <= loppupvm)
+                                                                         OR (:alku <= alkupvm AND :loppu >= loppupvm)));
