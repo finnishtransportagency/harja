@@ -253,15 +253,15 @@ SET alkanut           = :alkanut,
   tyyppi              = :tyyppi::toteumatyyppi,
   muokattu            = NOW(),
   muokkaaja           = :kayttaja,
-  suorittajan_nimi    = :suorittajan_nimi,
+  suorittajan_nimi    = :suorittaja,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
   reitti              = :reitti,
-  tr_numero = :num,
-  tr_alkuosa = :aos,
-  tr_alkuetaisyys = :aet,
-  tr_loppuosa = :los,
-  tr_loppuetaisyys = :let
+  tr_numero = :numero,
+  tr_alkuosa = :alkuosa,
+  tr_alkuetaisyys = :alkuetaisyys,
+  tr_loppuosa = :loppuosa,
+  tr_loppuetaisyys = :loppuetaisyys
 WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
@@ -287,8 +287,8 @@ INTO toteuma
  poistettu, suorittajan_nimi, suorittajan_ytunnus, lisatieto, ulkoinen_id, reitti,
  tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW(), :kayttaja,
-                 FALSE, :suorittaja, :tunnus, :lisatieto, :ulkoinen_id, :reitti,
-        :num, :aos, :aet, :los, :let);
+                 FALSE, :suorittaja, :ytunnus, :lisatieto, :ulkoinen_id, :reitti,
+        :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys);
 
 -- name: poista-toteuma!
 UPDATE toteuma
@@ -739,4 +739,3 @@ FROM toteuma t
    t.urakka = :urakka
    AND t.alkanut::date = :pvm::date
    AND tt.toimenpidekoodi = :toimenpidekoodi;
-
