@@ -113,17 +113,22 @@
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
+(def vain-hoitokausivalinta? #{:suolasakko})
+
 (defonce paivita-aikavalinta
     (run! (let [hk @valittu-hoitokausi
-              vuosi @valittu-vuosi
-              kk @valittu-kuukausi
-              vapaa-aikavali? @vapaa-aikavali?
-              aikavali @vapaa-aikavali
-              [alku loppu] (cond
-                             vapaa-aikavali? aikavali
-                             kk kk
-                             vuosi (pvm/vuoden-aikavali vuosi)
-                             :default hk)]
+                vuosi @valittu-vuosi
+                kk @valittu-kuukausi
+                vapaa-aikavali? @vapaa-aikavali?
+                aikavali @vapaa-aikavali
+                vain-hoitokausivalinta? (vain-hoitokausivalinta?
+                                          (:nimi @valittu-raporttityyppi))
+                [alku loppu] (cond
+                               vain-hoitokausivalinta? hk
+                               vapaa-aikavali? aikavali
+                               kk kk
+                               vuosi (pvm/vuoden-aikavali vuosi)
+                               :default hk)]
             (if (and alku loppu)
               (swap! parametri-arvot
                      assoc "Aikaväli" {:alkupvm alku :loppupvm loppu})
@@ -147,10 +152,12 @@
                     2010)
         vuosi-vika (if ur
                      (pvm/vuosi (:loppupvm ur))
-                     (pvm/vuosi (pvm/nyt)))]
+                     (pvm/vuosi (pvm/nyt)))
+        vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
-      [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
+      [ui-valinnat/vuosi {:disabled (or @vapaa-aikavali?
+                                        vain-hoitokausivalinta?)}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
           (reset! valittu-vuosi %)
@@ -167,19 +174,21 @@
             (reset! valittu-hoitokausi %)
             (reset! valittu-vuosi nil)
             (reset! valittu-kuukausi nil))])
-      [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
+      [ui-valinnat/kuukausi {:disabled    (or @vapaa-aikavali?
+                                              vain-hoitokausivalinta?)
                              :nil-valinta (if @valittu-vuosi
                                             "Koko vuosi"
                                             "Koko hoitokausi")}
        @kuukaudet valittu-kuukausi]]
 
-     [:div.raportin-valittu-aikavali
-      [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
-       #(swap! vapaa-aikavali? not)
-       nil false (when @vapaa-aikavali?
-                   [:div
-                    [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
-                    [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])]]]))
+     (when-not vain-hoitokausivalinta?
+       [:div.raportin-valittu-aikavali
+       [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
+        #(swap! vapaa-aikavali? not)
+        nil false (when @vapaa-aikavali?
+                    [:div
+                     [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
+                     [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])]])]))
 
 (def tienumero (atom nil))
 
