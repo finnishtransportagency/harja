@@ -36,6 +36,7 @@
                       :viesti (str "JSON ei ole validia: " (formatoi-virhe "" virheet))}]}))
 
 (defn- lue-skeemaresurssi* [polku]
+  (log/debug "Ladataan schema: " polku)
   (cheshire/parse-string (slurp (io/resource polku))))
 
 (def lue-skeemaresurssi (memoize lue-skeemaresurssi*))
@@ -54,13 +55,8 @@
                  (lue-skeemaresurssi skeemaresurssin-polku)
                  (cheshire/parse-string json)
                  {:draft3-required true
-                  :ref-resolver (fn [uri]
-                                  (log/debug "Ladataan linkattu schema: " uri)
-                                  (let [resurssipolku (.substring uri (count "file:resources/"))]
-                                    (log/debug "Resurssipolku: " resurssipolku)
-                                    (let [ladattu (lue-skeemaresurssi resurssipolku)]
-                                      (log/debug "Ladattiin: " ladattu)
-                                      ladattu)))})]
+                  :ref-resolver #(lue-skeemaresurssi
+                                  (.substring % (count "file:resources/")))})]
     (if-not virheet
       (log/debug "JSON data on validia")
       (kasittele-validointivirheet virheet))))
