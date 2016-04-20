@@ -216,26 +216,6 @@
              (raporttirivit-ryhma-c rivit alueet optiot)
              (raporttirivit-yhteensa rivit alueet optiot))))
 
-(defn- muodosta-listattavat-alueet
-  "Palauttaa listan joka sisältää pelkästään urakat tai hallintayksiköt, riippuen kontekstista."
-  [urakat konteksti]
-  (if (= konteksti :koko-maa)
-    (distinct
-      (map
-        #(-> %
-             (dissoc :urakka_id :urakka_nimi)
-             (set/rename-keys {:hallintayksikko_id :hallintayksikko-id
-                               :hallintayksikko_nimi :nimi
-                               :hallintayksikko_elynumero :hallintayksikko-elynumero}))
-
-        urakat))
-    (map
-      #(-> %
-           (dissoc :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_elynumero)
-           (set/rename-keys {:urakka_id :urakka-id
-                             :urakka_nimi :nimi}))
-      urakat)))
-
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
                                urakkatyyppi] :as parametrit}]
