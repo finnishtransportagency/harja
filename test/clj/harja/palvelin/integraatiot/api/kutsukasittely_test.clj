@@ -47,5 +47,5 @@
                   json-skeemat/+laatupoikkeaman-kirjaus+
                   json-skeemat/+kirjausvastaus+
                   (fn [_]))]
-    (is (= 400 (:status vastaus)))
+    (is (= 403 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-kayttaja"))))

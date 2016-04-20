@@ -169,7 +169,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 ;; id:2 Järjestelmävastuuhenkilö
 (def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
-                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"jarjestelmavastuuhenkilo"}, :id 2
+                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
