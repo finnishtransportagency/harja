@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.urakat
   (:require [com.stuartsierra.component :as component]
-            [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
@@ -8,7 +7,8 @@
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa parametrien mukaiset urakoiden id:t vektorissa."
@@ -115,18 +115,18 @@
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id)))))
 
 (defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
-  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
   (q/tallenna-urakan-sopimustyyppi! db (name sopimustyyppi) urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
 
 (defn tallenna-urakan-tyyppi [db user {:keys  [urakka-id urakkatyyppi]}]
-  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
   (q/tallenna-urakan-tyyppi! db urakkatyyppi urakka-id)
   (hae-urakan-tyyppi db user urakka-id))
 
 (defn hae-yksittainen-urakka [db user urakka-id]
   (log/debug "Haetaan urakoita urakka-id:llä: " urakka-id)
-  (roolit/lukuoikeus-urakassa? user urakka-id)
+  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (first (into []
                urakka-xf
                (q/hae-yksittainen-urakka db urakka-id))))

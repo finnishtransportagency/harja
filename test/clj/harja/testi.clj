@@ -169,7 +169,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
 (def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789" :organisaatio 9
-                      :roolit #{"urakanvalvoja"}})
+                      :roolit #{"ELY_Urakanvalvoja"}})
 
 ;; id:2 Järjestelmävastuuhenkilö
 (def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
