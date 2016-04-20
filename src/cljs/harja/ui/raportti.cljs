@@ -3,9 +3,11 @@
   (:require [harja.ui.grid :as grid]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.liitteet :as liitteet]
             [harja.visualisointi :as vis]
             [harja.loki :refer [log]]
-            [harja.asiakas.kommunikaatio :as k]))
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.modal :as modal]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -15,7 +17,6 @@
                  (keyword? (first elementti)))
             (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
     (first elementti)))
-
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                korosta-rivit korostustyyli oikealle-tasattavat-kentat]}
@@ -43,15 +44,7 @@
                             (when (= (:tyyppi sarake) :liite)
                               {:komponentti (fn [rivi]
                                               (let [liitteet (second (get rivi i))]
-                                                [:span
-                                                 (map-indexed
-                                                   (fn [index liite]
-                                                     [:span
-                                                      [:a {:href (k/liite-url (:id liite))
-                                                           :target "_blank"}
-                                                       (inc index)]
-                                                      [:span " "]])
-                                                   liitteet)]))})))
+                                                (liitteet/liitelistaus liitteet)))})))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko "Ei tietoja")]

@@ -77,11 +77,11 @@
            [:fo:table-row
             (for [i (range (count sarakkeet))
                   :let [arvo-datassa (nth rivi i)
-                        arvo (or (if (and (vector? arvo-datassa)
-                                          (= (first arvo-datassa) :liitteet))
-                                   (count (second arvo-datassa))
-                                   arvo-datassa)
-                                 "")]]
+                        naytettava-arvo (or (if (and (vector? arvo-datassa)
+                                                     (= (first arvo-datassa) :liitteet))
+                                              (count (second arvo-datassa))
+                                              arvo-datassa)
+                                            "")]]
               [:fo:table-cell (merge {:border     (str "solid 0.1mm " raportin-tehostevari) :padding "1mm"
                                       :font-weight "normal"
                                       :text-align (if (oikealle-tasattavat-kentat i)
@@ -91,7 +91,7 @@
                                      korosta?)
                (when korosta?
                  [:fo:block {:space-after "0.2em"}])
-               [:fo:block (cdata (str arvo))]])])))
+               [:fo:block (cdata (str naytettava-arvo))]])])))
      (when (> rivien-maara +max-rivimaara+)
        [:fo:table-row
         [:fo:table-cell {:padding "1mm"
