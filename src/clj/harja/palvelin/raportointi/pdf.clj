@@ -60,7 +60,12 @@
              [:fo:block {:space-after "0.5em"}]
              [:fo:block "Ei tietoja"]]])
          (for [i-rivi (range (count data))
-               :let [rivi (or (nth data i-rivi) "")]]
+               :let [rivi (or (nth data i-rivi) "")
+                     [rivi optiot]
+                     (if (map? rivi)
+                       [(:rivi rivi) rivi]
+                       [rivi {}])
+                     lihavoi-rivi? (:lihavoi? optiot)]]
            (if-let [otsikko (:otsikko rivi)]
              [:fo:table-row
               [:fo:table-cell {:padding                "1mm"
@@ -76,7 +81,9 @@
                                   :font-weight      "bold"})
                    korosta? (when (some #(= i-rivi %) korosta-rivit)
                               {:background-color       "#ff9900"
-                               :color "black"})]
+                               :color "black"})
+                   lihavoi? (when lihavoi-rivi?
+                              {:font-weight "bold"})]
                [:fo:table-row
                 (for [i (range (count sarakkeet))
                       :let [arvo (or (nth rivi i) "")]]
@@ -86,7 +93,8 @@
                                                         "right"
                                                         "left")}
                                          yhteenveto?
-                                         korosta?)
+                                         korosta?
+                                         lihavoi?)
                    (when korosta?
                      [:fo:block {:space-after "0.2em"}])
                    [:fo:block (cdata (str arvo))]])])))

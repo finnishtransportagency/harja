@@ -43,16 +43,25 @@
                (map-indexed (fn [index rivi]
                               (if-let [otsikko (:otsikko rivi)]
                                 (grid/otsikko otsikko)
-                                (let [mappina (assoc
+                                (let [[rivi optiot]
+                                      (if (map? rivi)
+                                        [(:rivi rivi) rivi]
+                                        [rivi {}])
+                                      lihavoi? (:lihavoi? optiot)
+                                      mappina (assoc
                                                 (zipmap (range (count sarakkeet))
-                                                       rivi)
+                                                        rivi)
                                                 ::rivin-indeksi index)]
                                   (cond-> mappina
                                           (and viimeinen-rivi-yhteenveto?
                                                (= viimeinen-rivi rivi))
                                           (assoc :yhteenveto true)
+
                                           (when korosta-rivit (korosta-rivit index))
-                                          (assoc :korosta true))))))
+                                          (assoc :korosta true)
+
+                                          lihavoi?
+                                          (assoc :lihavoi true))))))
                data)))]))
 
 

@@ -70,9 +70,9 @@
           :default
           nil)
 
-        suolasakot-hallintayksikoittain (sort-by #(or (:hallintayksikko_nimi (first %)) 100000)
-                                       (seq (group-by :hallintayksikko_nimi
-                                                      raportin-data)))
+        suolasakot-hallintayksikoittain (seq (group-by :hallintayksikko_nimi
+                                                       (reverse (sort-by #(or (:hallintayksikko_elynumero (first %)) 100000)
+                                                                 raportin-data))))
         raportin-nimi "Suolasakkoraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -116,7 +116,8 @@
             (conj
               (into []
                     (apply concat
-                           (for [[hy-nimi hyn-suolasakot] suolasakot-hallintayksikoittain]
+                           (for [[hy-nimi hyn-suolasakot] suolasakot-hallintayksikoittain
+                                 :let [elynumero (:hallintayksikko_elynumero (first hyn-suolasakot))]]
                              (concat
                                (for [rivi hyn-suolasakot]
                                  (let [sakko (laske-sakko rivi)
@@ -143,30 +144,31 @@
                                       (fmt/euro-opt false (* (:kerroin rivi) sakko)))]))
                                ;; jos koko maan rapsa, näytä kunkin Hallintayksikön summarivi
                                (when (and (= :koko-maa konteksti) hy-nimi)
-                                 ;; FIXME tähän metadatana tai muuten rivin korostus
-                                 [[(str hy-nimi " yhteensä")
-                                  nil
-                                  nil
-                                  (reduce + (keep :sakko_talvisuolaraja hyn-suolasakot))
-                                  nil
-                                  nil
-                                  (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot))
-                                  (reduce + (keep :suola_kaytetty hyn-suolasakot))
-                                  (-
+                                 [{:lihavoi? true
+                                   :rivi
+                                   [(str elynumero " " hy-nimi)
+                                    nil
+                                    nil
+                                    (reduce + (keep :sakko_talvisuolaraja hyn-suolasakot))
+                                    nil
+                                    nil
+                                    (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot))
                                     (reduce + (keep :suola_kaytetty hyn-suolasakot))
-                                    (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot)))
-                                  nil
-                                  (fmt/euro-opt false
-                                                (reduce + (keep
-                                                            (fn [rivi]
-                                                              (laske-sakko rivi))
-                                                            hyn-suolasakot)))
-                                  nil
-                                  (fmt/euro-opt false
-                                                (reduce + (keep
-                                                            (fn [rivi]
-                                                              (laske-indeksikorotettu-sakko rivi))
-                                                            hyn-suolasakot)))]])))))
+                                    (-
+                                      (reduce + (keep :suola_kaytetty hyn-suolasakot))
+                                      (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot)))
+                                    nil
+                                    (fmt/euro-opt false
+                                                  (reduce + (keep
+                                                              (fn [rivi]
+                                                                (laske-sakko rivi))
+                                                              hyn-suolasakot)))
+                                    nil
+                                    (fmt/euro-opt false
+                                                  (reduce + (keep
+                                                              (fn [rivi]
+                                                                (laske-indeksikorotettu-sakko rivi))
+                                                              hyn-suolasakot)))]}])))))
               (when (not (empty? raportin-data))
                 ["Yhteensä"
                  nil
