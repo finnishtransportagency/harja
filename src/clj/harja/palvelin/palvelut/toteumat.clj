@@ -18,27 +18,6 @@
             [clj-time.core :as t]
             [harja.geo :as geo]))
 
-(defn annettu? [p]
-  (if (nil? p)
-    false
-    (do
-      (if (string? p)
-        (not (empty? p))
-
-        (if (vector? p)
-          (do
-            (if (empty? p)
-              false
-              (some true? (map annettu? p))))
-
-          (if (map? p)
-            (do
-              (if (empty? p)
-                false
-                (some true? (map #(annettu? (val %)) p))))
-
-            true))))))
-
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
 
