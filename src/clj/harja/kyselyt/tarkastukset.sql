@@ -181,7 +181,10 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -207,7 +210,10 @@ SELECT
   t.tyyppi,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
@@ -234,7 +240,10 @@ SELECT
   t.tyyppi,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN urakka u ON t.urakka = u.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
@@ -266,7 +275,10 @@ SELECT
   thm.lampotila_tie,
   thm.ajosuunta,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
@@ -299,7 +311,10 @@ SELECT
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN urakka u ON t.urakka = u.id
@@ -335,7 +350,10 @@ SELECT
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN urakka u ON t.urakka = u.id

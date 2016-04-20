@@ -95,7 +95,7 @@
                                {:leveys "6%" :otsikko "Let"}
                                {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
                                {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "5%" :otsikko "Liit\u00ADtei\u00ADtä"}]))
+                               {:leveys "5%" :otsikko "Liit\u00ADteet" :tyyppi :liite}]))
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         (reverse (sort-by (fn [rivi] [(:aika rivi)
                                       (get-in rivi [:tr :numero])])
@@ -111,4 +111,4 @@
            (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
            (:havainnot rivi)
-           (count (:liitteet rivi))]))]]))
+           [:liitteet (:liitteet rivi)]]))]]))

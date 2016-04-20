@@ -9,20 +9,46 @@
             [harja.tietoturva.liitteet :as t-liitteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn naytettava-liite?
+  "Kertoo, voidaanko liite näyttää käyttäjälle esim. modaalissa vai onko tarkoitus tarjota puhdas latauslinkki"
+  [liite]
+  (zero? (.indexOf (:tyyppi liite) "image/")))
+
+(defn liitekuva-modalissa [liite]
+  [:div.liite-ikkuna
+   [:img {:src (k/liite-url (:id liite))}]])
+
 (defn liitetiedosto
-  "Olemassaolevan liitteen näyttäminen. Näyttää pikkukuvan ja tiedoston nimen."
+  "Näyttää liitteen pikkukuvan ja nimen. Näytettävä liite avataan modalissa, muuten tarjotaan normaali latauslinkki."
   [tiedosto]
-  (let [naytettava? (zero? (.indexOf (:tyyppi tiedosto) "image/"))] ; jos kuva MIME tyyppi, näytetään modaalissa
-    [:div.liite
-     (if naytettava?
+  [:div.liite
+   (if (naytettava-liite? tiedosto)
+     [:span
+      [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
+                                  :on-click #(modal/nayta!
+                                              {:otsikko (str "Liite: " (:nimi tiedosto))}
+                                              (liitekuva-modalissa tiedosto))}]
+      [:span.liite-nimi (:nimi tiedosto)]]
+     [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
+
+(defn liitelistaus
+  "Listaa liitteet numeroina. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
+  [liitteet]
+  [:div.liitelistaus
+   (map-indexed
+     (fn [index liite]
+       ^{:key (:id liite)}
        [:span
-        [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                    :on-click #(modal/nayta!
-                                                {:otsikko (str "Liite: " (:nimi tiedosto))}
-                                                [:div.liite-ikkuna
-                                                 [:img {:src (k/liite-url (:id tiedosto))}]])}]
-        [:span.liite-nimi (:nimi tiedosto)]]
-     [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])]))
+        (if (naytettava-liite? liite)
+          [:a.klikattava {:on-click #(modal/nayta!
+                                         {:otsikko (str "Liite: " (:nimi liite))}
+                                         (liitekuva-modalissa liite))}
+           (inc index)]
+          [:a {:href (k/liite-url (:id liite))
+               :target "_blank"}
+           (inc index)])
+        [:span " "]])
+     liitteet)])
 
 (defn liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
