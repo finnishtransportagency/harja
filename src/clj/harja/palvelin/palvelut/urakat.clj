@@ -14,7 +14,6 @@
   "Palauttaa parametrien mukaiset urakoiden id:t vektorissa."
   ([db user] (kayttajan-urakat-aikavalilta db user nil nil nil nil (pvm/nyt) (pvm/nyt)))
   ([db user urakka-id urakoitsija urakkatyyppi hallintayksikko alku loppu]
-   (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
 
    (let [alku (or alku (pvm/nyt))
          loppu (or loppu (pvm/nyt))]

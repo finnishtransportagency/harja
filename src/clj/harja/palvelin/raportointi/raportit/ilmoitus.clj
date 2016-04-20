@@ -21,7 +21,8 @@
                                     :urakkatyyppi urakkatyyppi
                                     :tilat +ilmoitustilat+
                                     :tyypit +ilmoitustyypit+
-                                    :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}
+                                    :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus
+                                                      :lopetus :muutos :vastaus}
                                     :aikavali [alkupvm loppupvm]
                                     :hakuehto hakuehto
                                     :selite selite}))
@@ -156,5 +157,3 @@
          (ei-osumia-aikavalilla-teksti "ilmoituksia" graafin-alkupvm graafin-loppupvm)))
 
      (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)]))
-
-    

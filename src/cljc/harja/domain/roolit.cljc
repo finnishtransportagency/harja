@@ -13,6 +13,7 @@
 (defn ei-oikeutta? [arvo]
   (instance? EiOikeutta arvo))
 
+
 ;; Roolit kätevämpää käyttöä varten
 (def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo") ;; UHA: jvh
 (def tilaajan-kayttaja                 "tilaajan kayttaja")
@@ -33,6 +34,8 @@
 (def urakoitsijan-paivystaja           "urakoitsijan paivystaja") ;; UHA: uy
 (def raportoija-tiehallinto            "raportoija tiehallinto") ;; UHA: r
 
+;; Sähke roolit
+(def jarjestelmavastaava "Jarjestelmavastaava")
 
 
 
@@ -225,7 +228,7 @@ rooleista."
   "Käyttäjä voi nähdä kaikki urakat, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
   #?(:cljs ([] (lukuoikeus-kaikkiin-urakoihin? @istunto/kayttaja)))
   ([kayttaja]
-   (tilaajan-kayttaja? kayttaja)))
+   (roolissa? kayttaja jarjestelmavastaava)))
 
 
 #?(:clj
