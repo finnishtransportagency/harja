@@ -16,13 +16,14 @@
 (def +tuntematon-sopimus-koodi+ "tuntematon-sopimus")
 (def +urakkaa-ei-loydy+ "urakkaa-ei-loydy")
 (def +paivystajia-ei-loydy+ "paivystajia-ei-loydy")
+(def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
 (def +tuntematon-silta+ "tuntematon-silta")
 (def +duplikaatti-siltatarkastus+ "duplikaatti-siltatarkastus")
 (def +tuntematon-materiaali+ "tuntematon-materiaali")
-(def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
+(def +tuntematon-kayttaja+ "tuntematon-kayttaja")
 (def +tyhja-vastaus+ "tyhja-vastaus")
 (def +kayttajalla-puutteelliset-oikeudet+ "kayttajalla-puutteelliset-oikeudet")
 (def +puutteelliset-parametrit+ "puutteelliset-parametrit")

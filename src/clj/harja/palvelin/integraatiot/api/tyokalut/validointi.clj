@@ -32,38 +32,31 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]})))
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
-  (when-not
-    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
-        (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+  (when-not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja))
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia urakkaan: "
                                      urakka-id)}]})))
 
 (defn tarkista-onko-kayttaja-organisaatiossa [db ytunnus kayttaja]
-  (when-not
-    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
-        (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja)))
+  (when-not (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja))
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia organisaatioon: " ytunnus)}]})))
 
 (defn tarkista-onko-kayttaja-organisaation-jarjestelma [db ytunnus kayttaja]
-  (when (not (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo))
-    (tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
-    (when (not (:jarjestelma kayttaja))
-      (throw+ {:type    virheet/+viallinen-kutsu+
-               :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
-                          :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) " ei ole järjestelmä")}]}))))
+  (tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
+  (when (not (:jarjestelma kayttaja))
+    (throw+ {:type    virheet/+viallinen-kutsu+
+             :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
+                        :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) " ei ole järjestelmä")}]})))
 
 (defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja]
   (tarkista-urakka db urakka-id)
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
 (defn tarkista-rooli [kayttaja rooli]
-  (when-not
-    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
-        (roolit/roolissa? kayttaja rooli))
+  (when-not (roolit/roolissa? kayttaja rooli)
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
                         :viesti (str "Käyttäjällä ei oikeutta resurssiin.")}]})))
@@ -74,15 +67,10 @@
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
 (defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
-  (when-not
-    (or (roolit/roolissa? kayttaja roolit/jarjestelmavastuuhenkilo)
-        (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
-        (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+  (when-not (or (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
+                (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
     (throw+ {:type    virheet/+viallinen-kutsu+
              :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (format "Käyttäjällä: %s ei ole oikeuksia urakan: %s päivystäjätietoihin."
                                         (:kayttajanimi kayttaja)
                                         urakka-id)}]})))
-
-
-

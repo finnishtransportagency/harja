@@ -23,7 +23,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -59,20 +60,25 @@
 
    [:ul#sivut.nav.nav-pills
 
-    [:li {:role "presentation" :class (when (= s :urakat) "active")}
-     [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]]
+    (when (oikeudet/urakat)
+      [:li {:role "presentation" :class (when (= s :urakat) "active")}
+       [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]])
 
-    [:li {:role "presentation" :class (when (= s :raportit) "active")}
-     [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]]
+    (when (oikeudet/raportit)
+      [:li {:role "presentation" :class (when (= s :raportit) "active")}
+       [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]])
 
-    [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
-     [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]]
+    (when (oikeudet/tilannekuva)
+      [:li {:role "presentation" :class (when (= s :tilannekuva) "active")}
+       [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]])
 
-    [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
-     [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]]
+    (when (oikeudet/ilmoitukset)
+      [:li {:role "presentation" :class (when (= s :ilmoitukset) "active")}
+       [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
 
-    [:li {:role "presentation" :class (when (= s :hallinta) "active")}
-     [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]]]
+    (when (oikeudet/hallinta)
+      [:li {:role "presentation" :class (when (= s :hallinta) "active")}
+       [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])]
    :right
    [palaute/palaute-linkki]
    [kayttajatiedot istunto/kayttaja]])
@@ -165,6 +171,12 @@
                   [:div
                    [:p "Käytössäsi on vanhentunut Internet Explorer -selaimen versio. Emme voi taata, että kaikki Harjan ominaisuudet toimivat täysin oikein."]])))
 
+(defn ei-kayttooikeutta? [kayttaja]
+  (or (:poistettu kayttaja)
+      (and (empty? (:roolit kayttaja))
+           (empty? (:urakkaroolit kayttaja))
+           (empty? (:organisaatioroolit kayttaja)))))
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
@@ -180,8 +192,7 @@
             [:div "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen."]
             (if (nil? kayttaja)
               [ladataan]
-              (if (or (:poistettu kayttaja)
-                      (empty? (:roolit kayttaja)))
+              (if (ei-kayttooikeutta? kayttaja)
                 [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))

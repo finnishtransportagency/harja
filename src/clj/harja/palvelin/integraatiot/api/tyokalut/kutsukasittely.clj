@@ -110,6 +110,9 @@
   [virheet]
   (tee-virhevastaus 404 virheet))
 
+(defn tee-sisainen-autentikaatiovirhevastaus [virheet]
+  (tee-virhevastaus 403 virheet))
+
 (defn tee-vastaus
   "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok). Payload on Clojure dataa, joka
   muunnetaan JSON-dataksi. Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
@@ -152,6 +155,10 @@
   (log/error (format "Resurssin: %s kutsussa tapahtui sisäinen käsittelyvirhe: %s" resurssi virheet))
   (tee-sisainen-kasittelyvirhevastaus virheet))
 
+(defn kasittele-sisainen-autentikaatio-virhe [virheet resurssi]
+  (log/error (format "Resurssin: %s kutsussa tapahtui autentikaatiovirhe: %s" resurssi virheet))
+  (tee-sisainen-autentikaatiovirhevastaus virheet))
+
 (defn lue-kutsu
   "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu. Muille kutsuille palauttaa arvon nil.
   Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
@@ -170,7 +177,7 @@
       kayttaja
       (do
         (log/error "Tuntematon käyttäjätunnus: " kayttajanimi)
-        (throw+ {:type virheet/+viallinen-kutsu+
+        (throw+ {:type virheet/+tuntematon-kayttaja+
                  :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
@@ -191,6 +198,8 @@
       (kasittele-sisainen-kasittelyvirhe virheet resurssi))
     (catch [:type virheet/+virheellinen-liite+] {:keys [virheet]}
       (kasittele-sisainen-kasittelyvirhe virheet resurssi))
+    (catch [:type virheet/+tuntematon-kayttaja+] {:keys [virheet]}
+      (kasittele-sisainen-autentikaatio-virhe virheet resurssi))
     (catch #(get % :virheet) poikkeus
       (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus) resurssi))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
@@ -219,6 +228,14 @@
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))))
 
+(defn- lue-body [request]
+  (if (:body request)
+    (if (= (get-in request [:headers "content-encoding"]) "gzip")
+      (with-open [gzip (java.util.zip.GZIPInputStream. (:body request))]
+        (slurp gzip))
+      (slurp (:body request)))
+    nil))
+
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
   lähetetty data on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
@@ -229,12 +246,7 @@
 
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
-  (let [body (if (:body request)
-               (if (= (get-in request [:headers "content-encoding"]) "gzip")
-                 (with-open [gzip (java.util.zip.GZIPInputStream. (:body request))]
-                   (slurp gzip))
-                 (slurp (:body request)))
-               nil)
+  (let [body (lue-body request)
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))
         vastaus (aja-virhekasittelyn-kanssa

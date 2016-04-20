@@ -18,6 +18,30 @@ FROM kayttaja k
 WHERE k.kayttajanimi = :koka
       AND k.poistettu = FALSE
 
+-- name: varmista-kayttaja
+-- single?: true
+-- Varmistaa että KOKA käyttäjä on tietokannassa
+INSERT
+  INTO kayttaja (kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, organisaatio)
+  VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio)
+ON CONFLICT ON CONSTRAINT uniikki_kayttajanimi DO
+  UPDATE SET etunimi = :etunimi, sukunimi = :sukunimi,
+             sahkoposti = :sahkoposti, puhelin = :puhelin,
+             organisaatio = :organisaatio
+RETURNING id
+
+-- name: hae-ely-numerolla
+-- Hakee ELY-keskuksen organisaation ELY numeron perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+ WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
+
+-- name: hae-organisaation-urakat
+-- Palauttaa organisaation (hallintayksikkö tai urakoitsija) omien urakoiden id:t
+SELECT u.id
+  FROM urakka u
+ WHERE u.urakoitsija = :org OR u.hallintayksikko = :org
+
+
 -- name: hae-kayttajat
 -- Hakee käyttäjiä käyttäjähallinnan listausta varten.
 -- Haun suorittava käyttäjä annetaan parametrina ja vain käyttäjät, jotka hän saa nähdä palautetaan.
@@ -310,3 +334,12 @@ SELECT exists(
       JOIN kayttaja k ON k.organisaatio = o.id
       AND o.ytunnus = :ytunnus
       AND k.id = :kayttaja_id);
+
+-- name: hae-urakan-id-sampo-idlla
+-- single?: true
+-- Hae urakan id Sampo ID:llä, sähke oikeuksien hakua varten
+SELECT id FROM urakka WHERE hanke_sampoid = :sampoid
+
+-- name: hae-urakoitsijan-id-ytunnuksella
+-- single?: true
+SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus

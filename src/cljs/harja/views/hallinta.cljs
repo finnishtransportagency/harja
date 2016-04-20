@@ -4,6 +4,7 @@
             [harja.ui.bootstrap :as bs]
 
             [harja.domain.roolit :as roolit]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.views.toimenpidekoodit :as tp]
@@ -23,35 +24,29 @@
    "Käyttäjät"
    :kayttajat
    ^{:key "kayttajat"}
-   (roolit/jos-rooli roolit/kayttajien-hallinta
-                     [kayttajat/kayttajat]
-                     "Ei käyttöoikeutta tähän osioon.")
+   (when (oikeudet/hallinta-kayttajat)
+     [kayttajat/kayttajat])
 
    "Indeksit"
    :indeksit
-   (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
-                     ^{:key "indeksit"}
-                     [i/indeksit-elementti]
-                     +vain-jvhn-kaytossa+)
+   (when (oikeudet/hallinta-indeksit)
+     ^{:key "indeksit"}
+     [i/indeksit-elementti])
 
    "Tehtävät"
    :tehtavat
-   (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
-                     ^{:key "tehtävät"}
-                     [tp/toimenpidekoodit]
-                     +vain-jvhn-kaytossa+)
+   (when (oikeudet/hallinta-tehtavat)
+     ^{:key "tehtävät"}
+     [tp/toimenpidekoodit])
 
    "Lämpötilat"
    :lampotilat
-   (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
-                     ^{:key "lämpötilat"}
-                     [lampotilat/lampotilat]
-                     +vain-jvhn-kaytossa+)
+   (when (oikeudet/hallinta-lampotilat)
+     ^{:key "lämpötilat"}
+     [lampotilat/lampotilat])
 
    "Integraatioloki"
    :integraatioloki
-   (roolit/jos-rooli roolit/jarjestelmavastuuhenkilo
-                     ^{:key "integraatioloki"}
-                     [integraatioloki/integraatioloki]
-                     +vain-jvhn-kaytossa+)])
-
+   (when (oikeudet/hallinta-lampotilat)
+     ^{:key "integraatioloki"}
+     [integraatioloki/integraatioloki])])

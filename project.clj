@@ -118,6 +118,9 @@
 
                  ;; Clojure(Script) assertointi
                  [com.taoensso/truss "1.0.0"]
+
+                 ;; Apache POI wrapper (Excel yms lukemiseen)
+                 [dk.ative/docjure "1.10.0"]
                  ]
 
   :dev-dependencies [

@@ -22,14 +22,6 @@
 (defn hae-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
-(defn hae-urakan-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tyyppi]
-  (k/post! :urakan-toteumat
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm
-            :tyyppi tyyppi}))
-
 (defn hae-urakan-toteuma [urakka-id toteuma-id]
   (k/post! :urakan-toteuma
            {:urakka-id urakka-id

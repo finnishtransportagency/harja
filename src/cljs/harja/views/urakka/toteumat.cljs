@@ -19,7 +19,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -27,37 +28,42 @@
 
 (defn toteumat
   "Toteumien pääkomponentti"
-  []
-  (let [ur @nav/valittu-urakka]
-    (komp/luo
-      (komp/sisaan-ulos #(do
-                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                          (nav/vaihda-kartan-koko! :S))
-                        #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-      (fn []
-        [bs/tabs {:style :tabs :classes "tabs-taso2"
-                  :active (nav/valittu-valilehti-atom :toteumat)}
+  [ur]
+  (komp/luo
+   (komp/sisaan-ulos #(do
+                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                        (nav/vaihda-kartan-koko! :S))
+                     #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+   (fn [{:keys [id] :as ur}]
+     [bs/tabs {:style :tabs :classes "tabs-taso2"
+               :active (nav/valittu-valilehti-atom :toteumat)}
 
-         "Kokonaishintaiset työt" :kokonaishintaiset-tyot
-         [kokonaishintaiset-tyot/kokonaishintaiset-toteumat]
+      "Kokonaishintaiset työt" :kokonaishintaiset-tyot
+      (when (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
+        [kokonaishintaiset-tyot/kokonaishintaiset-toteumat])
 
-         "Yksikköhintaiset työt" :yksikkohintaiset-tyot
-         [yks-hint-tyot/yksikkohintaisten-toteumat]
+      "Yksikköhintaiset työt" :yksikkohintaiset-tyot
+      (when (oikeudet/urakat-toteumat-yksikkohintaisettyot id)
+        [yks-hint-tyot/yksikkohintaisten-toteumat])
 
-         "Muutos- ja lisätyöt" :muut-tyot
-         [muut-tyot/muut-tyot-toteumat]
+      "Muutos- ja lisätyöt" :muut-tyot
+      (when (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
+        [muut-tyot/muut-tyot-toteumat])
 
-         "Suola" :suola
-         (when (= :hoito (:tyyppi ur))
-           [suolatoteumat])
-         
-         "Materiaalit" :materiaalit
-         [materiaalit-nakyma ur]
+      "Suola" :suola
+      (when (and (oikeudet/urakat-toteumat-suola id)
+                 (= :hoito (:tyyppi ur)))
+        [suolatoteumat])
 
-         "Erilliskustannukset" :erilliskustannukset
-         [erilliskustannukset/erilliskustannusten-toteumat]
+      "Materiaalit" :materiaalit
+      (when (oikeudet/urakat-toteumat-materiaalit id)
+        [materiaalit-nakyma ur])
 
-         "Varusteet" :varusteet
-         (when (= :hoito (:tyyppi ur))
-           [varusteet/varusteet])]))))
+      "Erilliskustannukset" :erilliskustannukset
+      (when (oikeudet/urakat-toteumat-erilliskustannukset id)
+        [erilliskustannukset/erilliskustannusten-toteumat])
 
+      "Varusteet" :varusteet
+      (when (and (oikeudet/urakat-toteumat-varusteet id)
+                 (= :hoito (:tyyppi ur)))
+        [varusteet/varusteet])])))
