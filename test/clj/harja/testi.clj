@@ -12,9 +12,12 @@
     [harja.palvelin.komponentit.liitteet :as liitteet]
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
-    [clj-time.coerce :as tc]))
+    [clj-time.coerce :as tc])
+  (:import (java.util Locale)))
 
 (def jarjestelma nil)
+
+(Locale/setDefault (Locale. "fi" "FI"))
 
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"
