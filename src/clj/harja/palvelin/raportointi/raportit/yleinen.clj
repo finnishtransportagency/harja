@@ -145,5 +145,5 @@
 (defn rivi [& asiat]
   (into [] (keep identity asiat)))
 
-(defn sarakkeiden-maara [rivit]
-  (apply max (map count rivit)))
+(defn sarakkeiden-maara [otsikot]
+  (count otsikot))
