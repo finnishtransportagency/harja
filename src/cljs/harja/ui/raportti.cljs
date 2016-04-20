@@ -4,7 +4,8 @@
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.visualisointi :as vis]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -41,8 +42,16 @@
                              :tasaa (when (oikealle-tasattavat-kentat i) :oikea)}
                             (when (= (:tyyppi sarake) :liite)
                               {:komponentti (fn [rivi]
-                                              (let [liite (second (get rivi i))]
-                                                [:span (:maara liite)]))})))
+                                              (let [liitteet (second (get rivi i))]
+                                                [:span
+                                                 (map-indexed
+                                                   (fn [index liite]
+                                                     [:span
+                                                      [:a {:href (k/liite-url (:id liite))
+                                                           :target "_blank"}
+                                                       (inc index)]
+                                                      [:span " "]])
+                                                   liitteet)]))})))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko "Ei tietoja")]

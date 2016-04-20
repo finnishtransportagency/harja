@@ -99,7 +99,7 @@
        {:leveys 20 :otsikko "Koh\u00ADde"}
        {:leveys 10 :otsikko "Te\u00ADki\u00ADjä"}
        {:leveys 35 :otsikko "Ku\u00ADvaus"}
-       {:leveys 25 :otsikko "Liit\u00ADtei\u00ADtä" :tyyppi :liite}]
+       {:leveys 25 :otsikko "Liit\u00ADteet" :tyyppi :liite}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         (reverse (sort-by :aika laatupoikkeamarivit))
         :urakka
@@ -108,7 +108,7 @@
            (:kohde rivi)
            (:tekija rivi)
            (:kuvaus rivi)
-           [:liitteet {:maara (count (:liitteet rivi))}]]))]
+           [:liitteet (:liitteet rivi)]]))]
 
      (when nayta-pylvaat?
        (if-not (empty? laatupoikkeamat-kuukausittain)

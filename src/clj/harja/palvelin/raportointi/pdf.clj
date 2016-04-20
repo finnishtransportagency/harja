@@ -79,8 +79,9 @@
                   :let [arvo-datassa (nth rivi i)
                         arvo (or (if (and (vector? arvo-datassa)
                                           (= (first arvo-datassa) :liitteet))
-                                   (:maara (second arvo-datassa))
-                                   arvo-datassa) "")]]
+                                   (count (second arvo-datassa))
+                                   arvo-datassa)
+                                 "")]]
               [:fo:table-cell (merge {:border     (str "solid 0.1mm " raportin-tehostevari) :padding "1mm"
                                       :font-weight "normal"
                                       :text-align (if (oikealle-tasattavat-kentat i)
