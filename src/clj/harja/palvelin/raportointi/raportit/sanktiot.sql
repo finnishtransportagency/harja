@@ -39,12 +39,8 @@ WHERE (:urakka::INTEGER IS NULL OR lp.urakka = :urakka)
 -- Listaa kaikki ne urakat, joita haku koskee
 SELECT
   u.id           AS urakka_id,
-  u.nimi         AS urakka_nimi,
-  o.id           AS hallintayksikko_id,
-  o.nimi         AS hallintayksikko_nimi,
-  o.elynumero    AS hallintayksikko_elynumero
+  u.nimi         AS urakka_nimi
 FROM urakka u
-JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE
   (:urakka :: INTEGER IS NULL OR u.id = :urakka)
   AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
@@ -53,7 +49,8 @@ WHERE
                                         u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
   AND (:urakka :: INTEGER IS NOT NULL OR :urakka :: INTEGER IS NULL AND ((alkupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (loppupvm :: DATE BETWEEN :alku AND :loppu)
-                                                                         OR (:alku >= alkupvm AND :loppu <= loppupvm)));
+                                                                         OR (:alku >= alkupvm AND :loppu <= loppupvm)))
+ORDER BY urakka_nimi;
 
 -- name: hae-kontekstin-hallintayksikot
 -- Listaa kaikki ne hallintayksikot, joita haku koskee
