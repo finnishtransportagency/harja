@@ -217,7 +217,7 @@
              (raporttirivit-yhteensa rivit alueet optiot))))
 
 (defn- muodosta-listattavat-alueet
-  "Palauttaa listan joka sisältää pelkästään urakat tai hallintayksiköt, riippuen kontekstista"
+  "Palauttaa listan joka sisältää pelkästään urakat tai hallintayksiköt, riippuen kontekstista."
   [urakat konteksti]
   (if (= konteksti :koko-maa)
     (distinct
@@ -242,26 +242,34 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        urakat (hae-kontekstin-urakat db
-                                      {:urakka urakka-id
-                                       :hallintayksikko hallintayksikko-id
-                                       :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-                                       :alku alkupvm
-                                       :loppu loppupvm})
-        naytettavat-alueet (muodosta-listattavat-alueet urakat konteksti)
+        naytettavat-alueet (if (= konteksti :koko-maa)
+                             (into []
+                                   (map #(set/rename-keys % {:hallintayksikko_id :hallintayksikko-id
+                                                             :hallintayksikko_nimi :nimi
+                                                             :hallintayksikko_elynumero :hallintayksikko-elynumero}))
+                                   (hae-kontekstin-hallintayksikot db))
+                             (into []
+                                   (map #(set/rename-keys % {:urakka_id :urakka-id
+                                                             :urakka_nimi :nimi}))
+                                   (hae-kontekstin-urakat db
+                                                          {:urakka urakka-id
+                                                           :hallintayksikko hallintayksikko-id
+                                                           :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                           :alku alkupvm
+                                                           :loppu loppupvm})))
         sanktiot-kannassa (into []
                                 (comp
-                           (map #(konv/string->keyword % :sakkoryhma))
-                           (map #(konv/array->set % :sanktiotyyppi_laji keyword)))
+                                  (map #(konv/string->keyword % :sakkoryhma))
+                                  (map #(konv/array->set % :sanktiotyyppi_laji keyword)))
                                 (hae-sanktiot db
-                                       {:urakka urakka-id
-                                        :hallintayksikko hallintayksikko-id
-                                        :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-                                        :alku alkupvm
-                                        :loppu loppupvm}))
+                                              {:urakka urakka-id
+                                               :hallintayksikko hallintayksikko-id
+                                               :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                               :alku alkupvm
+                                               :loppu loppupvm}))
         yhteensa-sarake? (> (count naytettavat-alueet) 1)
         raportin-otsikot (into [] (concat
-                                    [{:otsikko "" :leveys 8}]
+                                    [{:otsikko "" :leveys 12}]
                                     (mapv
                                       (fn [alue]
                                         {:otsikko (if (= konteksti :koko-maa)

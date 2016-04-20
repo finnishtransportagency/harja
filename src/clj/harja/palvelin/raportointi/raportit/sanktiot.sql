@@ -54,3 +54,13 @@ WHERE
   AND (:urakka :: INTEGER IS NOT NULL OR :urakka :: INTEGER IS NULL AND ((alkupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (loppupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (:alku <= alkupvm AND :loppu >= loppupvm)));
+
+-- name: hae-kontekstin-hallintayksikot
+-- Listaa kaikki ne hallintayksikot, joita haku koskee
+SELECT
+  o.id           AS hallintayksikko_id,
+  o.nimi         AS hallintayksikko_nimi,
+  o.elynumero    AS hallintayksikko_elynumero
+FROM organisaatio o
+WHERE elynumero IS NOT NULL
+ORDER BY hallintayksikko_elynumero;
