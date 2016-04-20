@@ -27,3 +27,23 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus)
 VALUES
   ('Kajaanin alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisa26339/06', (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null));
+
+-- Vantaan pääsopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES
+  ('Vantaan alueurakka pääsopimus','2014-10-01','2019-09-30','7V26339/05', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'));
+-- Vantaan lisäsopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus)
+VALUES
+  ('Vantaan alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisaV26339/06', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null));
+
+-- Espoon pääsopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES
+  ('Espoon alueurakka pääsopimus','2014-10-01','2019-09-30','7eS6339/05', (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'));
+-- Espoon lisäsopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus)
+VALUES
+  ('Espoon alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisaES6339/06', (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019') AND paasopimus IS null));

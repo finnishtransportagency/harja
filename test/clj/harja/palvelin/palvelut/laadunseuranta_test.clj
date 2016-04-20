@@ -118,13 +118,13 @@
     (is (>= (count vastaus) 1))))
 
 (deftest hae-urakan-sanktiot
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku      (pvm/luo-pvm (+ 1900 100) 9 1)
-                                                                     :loppu     (pvm/luo-pvm (+ 1900 110) 8 30)})]
+                                                                     :alku      (pvm/luo-pvm 2015 10 1)
+                                                                     :loppu     (pvm/luo-pvm 2016 10 30)})]
     (is (not (empty? vastaus)))
-    (is (>= (count vastaus) 1))))
+    (is (>= (count vastaus) 8))))
 
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -167,7 +167,7 @@
          [:laatupoikkeama :tr :numero] [:laatupoikkeama :tr :alkuosa] [:laatupoikkeama :tr :loppuosa]
          [:laatupoikkeama :tr :alkuetaisyys] [:laatupoikkeama :tr :loppuetaisyys]]
         :hae-urakan-sanktiot
-        {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
-         :alku      (pvm/luo-pvm (+ 1900 100) 0 1)
-         :loppu    (pvm/luo-pvm (+ 1900 110) 0 1)
+        {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
+         :alku      (pvm/luo-pvm 2015 10 1)
+         :loppu    (pvm/luo-pvm 2016 10 30)
          :tpi 1})))

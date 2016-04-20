@@ -14,6 +14,7 @@
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
+            [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
             [harja.transit :as transit]
             [harja.geo :as geo]
 
@@ -99,7 +100,7 @@
                               (map konv/alaviiva->rakenne)
                               (map #(konv/string->keyword % :laji))
                               (map #(assoc %
-                                     :sakko? (not (nil? (:summa %)))
+                                     :sakko? (sanktiot-domain/sakko? %)
                                      :summa (some-> % :summa double))))
                         (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
         :liitteet (into [] (laatupoikkeamat/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))
