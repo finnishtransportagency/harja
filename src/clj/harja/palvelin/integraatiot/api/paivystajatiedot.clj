@@ -135,7 +135,7 @@
 (defn hae-paivystajatiedot-puhelinnumerolla [db parametrit kayttaja]
   (log/debug "Haetaan päivystäjätiedot puhelinnumerolla parametreillä: " parametrit)
   (parametrivalidointi/tarkista-parametrit parametrit {:puhelinnumero "Puhelinnumero puuttuu"})
-  (validointi/tarkista-rooli kayttaja roolit/liikennep  aivystaja)
+  (validointi/tarkista-rooli kayttaja roolit/liikennepaivystaja)
   (let [{puhelinnumero :puhelinnumero alkaen :alkaen paattyen :paattyen} parametrit
         pvm-vali (parsi-pvm-vali alkaen paattyen)
         kaikki-paivystajatiedot (yhteyshenkilot/hae-kaikki-paivystajat db (first pvm-vali) (second pvm-vali))
