@@ -40,11 +40,11 @@
                              :pakota-rivitys? (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
                              :nimi (str "sarake" i)
-                             :tyyppi (if (= (:tyyppi sarake) :liite)
+                             :tyyppi (if (:tyyppi sarake)
                                        :komponentti
                                        :string)
                              :tasaa (when (oikealle-tasattavat-kentat i) :oikea)}
-                            (when (= (:tyyppi sarake) :liite)
+                            (when (:tyyppi sarake)
                               {:komponentti (fn [rivi]
                                               (let [elementti (get rivi i)]
                                                 (muodosta-html elementti)))})))
