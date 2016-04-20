@@ -28,13 +28,21 @@
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
-                          {:hae                #(get % i)
-                           :leveys             (:leveys sarake)
-                           :otsikko            (:otsikko sarake)
-                           :pakota-rivitys?    (:pakota-rivitys? sarake)
-                           :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
-                           :nimi               (str "sarake" i)
-                           :tasaa              (when (oikealle-tasattavat-kentat i) :oikea)})
+                          (merge
+                            {:hae #(get % i)
+                             :leveys (:leveys sarake)
+                             :otsikko (:otsikko sarake)
+                             :pakota-rivitys? (:pakota-rivitys? sarake)
+                             :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
+                             :nimi (str "sarake" i)
+                             :tyyppi (if (= (:tyyppi sarake) :liite)
+                                       :komponentti
+                                       :string)
+                             :tasaa (when (oikealle-tasattavat-kentat i) :oikea)}
+                            (when (= (:tyyppi sarake) :liite)
+                              {:komponentti (fn [rivi]
+                                              (let [liite (second (get rivi i))]
+                                                [:span (:maara liite)]))})))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko "Ei tietoja")]
