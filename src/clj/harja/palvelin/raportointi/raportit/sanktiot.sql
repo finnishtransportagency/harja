@@ -53,7 +53,7 @@ WHERE
                                         u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
   AND (:urakka :: INTEGER IS NOT NULL OR :urakka :: INTEGER IS NULL AND ((alkupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (loppupvm :: DATE BETWEEN :alku AND :loppu)
-                                                                         OR (:alku <= alkupvm AND :loppu >= loppupvm)));
+                                                                         OR (:alku >= alkupvm AND :loppu <= loppupvm)));
 
 -- name: hae-kontekstin-hallintayksikot
 -- Listaa kaikki ne hallintayksikot, joita haku koskee
