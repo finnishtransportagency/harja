@@ -258,7 +258,7 @@
                                          :leveys 15})
                                       naytettavat-alueet)
                                     (when yhteensa-sarake?
-                                      [{:otsikko "Yhteensä" :leveys 8}])))
+                                      [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 8}])))
         raportin-rivit (when (> (count naytettavat-alueet) 0)
                          (raporttirivit sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?}))
         raportin-nimi "Sanktioraportti"
@@ -272,6 +272,7 @@
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     [:taulukko {:otsikko otsikko}
+     [:taulukko {:otsikko otsikko
+                 :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-rivit)))}
       raportin-otsikot
       raportin-rivit]]))
