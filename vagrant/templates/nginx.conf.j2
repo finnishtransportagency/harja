@@ -64,6 +64,7 @@ http {
 	    proxy_pass http://harja/$path$is_args$args;
 	    access_log /var/log/nginx/3000_access.log;
 	    error_log /var/log/nginx/3000_error.log;
+	    proxy_read_timeout 600;
         }
 
         error_page   500 502 503 504  /50x.html;
