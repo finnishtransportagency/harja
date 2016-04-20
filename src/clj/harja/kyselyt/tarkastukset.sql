@@ -266,7 +266,10 @@ SELECT
   thm.lampotila_tie,
   thm.ajosuunta,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
@@ -299,7 +302,10 @@ SELECT
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN urakka u ON t.urakka = u.id
@@ -335,7 +341,10 @@ SELECT
   thm.ajosuunta,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM tarkastus t
   JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   JOIN urakka u ON t.urakka = u.id
