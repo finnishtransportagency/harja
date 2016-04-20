@@ -247,7 +247,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
 
 (defn julkaise-reitti
-  ([http nimi reitti] (julkaise-reitti http nimi reitti false))
+  ([http nimi reitti] (julkaise-reitti http nimi reitti true))
   ([http nimi reitti ei-todennettava?]
    (julkaise-palvelu http nimi (wrap-params reitti)
                      {:ring-kasittelija? true

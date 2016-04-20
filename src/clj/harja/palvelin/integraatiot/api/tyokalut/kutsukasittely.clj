@@ -219,6 +219,14 @@
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))))
 
+(defn- lue-body [request]
+  (if (:body request)
+    (if (= (get-in request [:headers "content-encoding"]) "gzip")
+      (with-open [gzip (java.util.zip.GZIPInputStream. (:body request))]
+        (slurp gzip))
+      (slurp (:body request)))
+    nil))
+
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
   lähetetty data on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
@@ -229,12 +237,7 @@
 
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
-  (let [body (if (:body request)
-               (if (= (get-in request [:headers "content-encoding"]) "gzip")
-                 (with-open [gzip (java.util.zip.GZIPInputStream. (:body request))]
-                   (slurp gzip))
-                 (slurp (:body request)))
-               nil)
+  (let [body (lue-body request)
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))
         vastaus (aja-virhekasittelyn-kanssa
