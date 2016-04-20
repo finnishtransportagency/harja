@@ -144,3 +144,6 @@
 
 (defn rivi [& asiat]
   (into [] (keep identity asiat)))
+
+(defn sarakkeiden-maara [otsikot]
+  (count otsikot))

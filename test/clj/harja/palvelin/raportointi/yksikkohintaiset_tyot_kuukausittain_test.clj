@@ -46,8 +46,8 @@
                                 +kayttaja-jvh+
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "urakka"
-                                 :parametrit {:urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                              :alkupvm   (c/to-date (t/local-date 2005 10 10))
+                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                                 :parametrit {:alkupvm   (c/to-date (t/local-date 2005 10 10))
                                               :loppupvm  (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
@@ -58,8 +58,8 @@
                                 +kayttaja-jvh+
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "hallintayksikko"
-                                 :parametrit {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                              :alkupvm            (c/to-date (t/local-date 2005 10 10))
+                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :parametrit {:alkupvm            (c/to-date (t/local-date 2005 10 10))
                                               :loppupvm           (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
