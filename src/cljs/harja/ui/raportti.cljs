@@ -18,6 +18,9 @@
             (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
     (first elementti)))
 
+(defmethod muodosta-html :liitteet [[_ liitteet]]
+  (liitteet/liitelistaus liitteet))
+
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                korosta-rivit korostustyyli oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
@@ -37,14 +40,14 @@
                              :pakota-rivitys? (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
                              :nimi (str "sarake" i)
-                             :tyyppi (if (= (:tyyppi sarake) :liite)
+                             :tyyppi (if (:tyyppi sarake)
                                        :komponentti
                                        :string)
                              :tasaa (when (oikealle-tasattavat-kentat i) :oikea)}
-                            (when (= (:tyyppi sarake) :liite)
+                            (when (:tyyppi sarake)
                               {:komponentti (fn [rivi]
-                                              (let [liitteet (second (get rivi i))]
-                                                (liitteet/liitelistaus liitteet)))})))
+                                              (let [elementti (get rivi i)]
+                                                (muodosta-html elementti)))})))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko "Ei tietoja")]

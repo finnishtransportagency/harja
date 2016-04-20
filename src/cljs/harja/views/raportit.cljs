@@ -19,11 +19,12 @@
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
-            [harja.domain.roolit :as roolit]
             [harja.ui.raportti :as raportti]
             [harja.transit :as t]
             [alandipert.storage-atom :refer [local-storage]]
             [clojure.string :as str]
+            [harja.domain.oikeudet :as oikeudet]
+
             [harja.tiedot.hallintayksikot :as hy])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
@@ -45,11 +46,14 @@
                                                (keep identity [(when v-ur "urakka")
                                                                (when v-hal "hallintayksikko")]))
                   urakkatyypin-raportit (filter
-                                          #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
+                                         #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
                                           (vals @raporttityypit))]
               (sort-by :kuvaus
                          (into []
-                               (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                               (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                                     (filter #(oikeudet/voi-lukea?
+                                               (oikeudet/raporttioikeudet (:kuvaus %))
+                                               (:id v-ur))))
                                urakkatyypin-raportit)))))
 
 (add-watch mahdolliset-raporttityypit :konteksti-muuttui
@@ -492,7 +496,7 @@
                         (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
-      (if (roolit/voi-nahda-raportit?)
+      (if (oikeudet/raportit)
         [:span
          (when-not @raportit/suoritettu-raportti
            [kartta/kartan-paikka @nav/murupolku-domissa?])

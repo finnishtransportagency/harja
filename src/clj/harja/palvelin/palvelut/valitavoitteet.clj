@@ -2,14 +2,14 @@
   "Palvelu välitavoitteiden hakemiseksi ja tallentamiseksi."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.domain.roolit :as roolit]
             [harja.kyselyt.valitavoitteet :as q]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-valitavoitteet [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/lue oikeudet/urakat-valitavoitteet user urakka-id)
 
   (into []
         (map konv/alaviiva->rakenne)
@@ -17,15 +17,14 @@
 
 (defn merkitse-valmiiksi! [db user {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
   (log/info "merkitse valmiiksi: " tiedot)
-  (roolit/vaadi-rooli-urakassa user roolit/urakoitsijan-urakkaroolit-kirjoitus
-                            urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-valitavoitteet user urakka-id)
   (jdbc/with-db-transaction [c db]
     (and (= 1 (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
                                      (:id user) urakka-id valitavoite-id))
          (hae-valitavoitteet db user urakka-id))))
 
 (defn tallenna! [db user {:keys [urakka-id valitavoitteet]}]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-valitavoitteet user urakka-id)
   (jdbc/with-db-transaction [c db]
     ;; Poistetaan tietokannasta :poistettu merkityt
     (doseq [poistettava (filter :poistettu valitavoitteet)]

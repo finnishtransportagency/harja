@@ -5,7 +5,7 @@
             [harja.kyselyt.maksuerat :as q]
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
             [harja.kyselyt.konversio :as konversio]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 (def aseta-kustannussuunnitelman-tila-xf
   (map #(assoc-in % [:kustannussuunnitelma :tila] (keyword (:tila (:kustannussuunnitelma %))))))
@@ -41,7 +41,7 @@
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/lue oikeudet/urakat-laskutus-maksuerat user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (let [summat (into {}
                      (map (juxt :tpi_id identity))

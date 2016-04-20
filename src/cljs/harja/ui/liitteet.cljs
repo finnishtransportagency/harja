@@ -37,6 +37,7 @@
   [:div.liitelistaus
    (map-indexed
      (fn [index liite]
+       ^{:key (:id liite)}
        [:span
         (if (naytettava-liite? liite)
           [:a.klikattava {:on-click #(modal/nayta!

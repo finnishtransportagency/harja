@@ -11,7 +11,8 @@
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]])
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
+            [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -32,7 +33,7 @@
 
     (r/create-class
       {:reagent-render
-       (fn [ur]
+       (fn [{:keys [id] :as ur}]
 
          [:span.suunnittelu
           ;; suunnittelun välilehdet
@@ -41,24 +42,28 @@
 
            "Kokonaishintaiset työt"
            :kokonaishintaiset
-           ^{:key "kokonaishintaiset-tyot"}
-           [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset]
+           (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
+             ^{:key "kokonaishintaiset-tyot"}
+             [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset])
 
            "Yksikköhintaiset työt"
            :yksikkohintaiset
-           ^{:key "yksikkohintaiset-tyot"}
-           [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset]
+           (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
+             ^{:key "yksikkohintaiset-tyot"}
+             [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset])
 
            "Muutos- ja lisätyöt"
            :muut
-           ^{:key "muut-tyot"}
-           [muut-tyot/muut-tyot ur]
+           (when (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id)
+             ^{:key "muut-tyot"}
+             [muut-tyot/muut-tyot ur])
 
            "Suola" :suola
-           (when (= :hoito (:tyyppi ur))
+           (when (and (oikeudet/urakat-suunnittelu-suola id) (= :hoito (:tyyppi ur)))
              [suola/suola])
-           
+
            "Materiaalit"
            :materiaalit
-           ^{:key "materiaalit"}
-           [mat/materiaalit ur]]])})))
+           (when (oikeudet/urakat-suunnittelu-materiaalit id)
+             ^{:key "materiaalit"}
+             [mat/materiaalit ur])]])})))
