@@ -24,7 +24,17 @@ INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, lopp
 
 INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija, alue) VALUES ('4242599-TES6', 'palvelusopimus'::sopimustyyppi, (SELECT id FROM organisaatio WHERE lyhenne='POP'), 'Tievalaistuksen palvelusopimus 2015-2020', '2015-01-01','2020-09-30', 'valaistus', (SELECT id FROM organisaatio WHERE ytunnus='0651792-4'), ST_GeomFromText('POLYGON((64.609748673276 25.037841796875, 64.84893726357947 25.125732421875, 65.07213008560697 25.400390625, 65.28428227574943 25.960693359374996, 65.31641761810764 26.8505859375, 65.0025821781929 27.61962890625, 64.543718384468 27.509765625, 64.06259063688063 27.344970703125, 64.10580478684241 26.54296875, 64.239820464092 25.598144531249996, 64.41117678357296 25.125732421875, 64.609748673276 25.037841796875))'));
 
--- Luodaan Kajaanin urakka ja sopimus
+-- Luodaan Kajaanin urakka
 INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija)
 VALUES ('1245142-KAJ2', (SELECT id FROM organisaatio WHERE lyhenne='POP'), 'Kajaanin alueurakka 2014-2019', '2014-10-01', '2019-09-30', 'hoito',
+        (SELECT id FROM organisaatio WHERE ytunnus='1565583-5'));
+
+-- Luodaan Vantaan urakka
+INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija)
+VALUES ('1245142-VAN2', (SELECT id FROM organisaatio WHERE lyhenne='UUD'), 'Vantaan alueurakka 2014-2019', '2014-10-01', '2019-09-30', 'hoito',
+        (SELECT id FROM organisaatio WHERE ytunnus='2163026-3'));
+
+-- Luodaan Espoon urakka
+INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija)
+VALUES ('1245142-ESP2', (SELECT id FROM organisaatio WHERE lyhenne='UUD'), 'Espoon alueurakka 2014-2019', '2014-10-01', '2019-09-30', 'hoito',
         (SELECT id FROM organisaatio WHERE ytunnus='1565583-5'));
