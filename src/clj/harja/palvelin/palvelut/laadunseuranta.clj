@@ -292,12 +292,13 @@
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
   (let [hakuparametrit (some-> parametrit (get "tr") transit/lue-transit-string)
+        valittu (:valittu hakuparametrit)
         tarkastukset (hae-urakan-tarkastukset db user hakuparametrit true Long/MAX_VALUE)]
 
     (try
       (esitettavat-asiat/kartalla-esitettavaan-muotoon
        tarkastukset
-       nil :id
+       valittu :id
        (comp (filter #(not (nil? (:sijainti %))))
              (map #(assoc % :tyyppi-kartalla :tarkastus))))
       (catch Exception e

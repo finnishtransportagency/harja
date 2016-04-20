@@ -40,14 +40,14 @@
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
-     (doto (goog.date.DateTime.)
-       (.setYear (.getYear dt))
-       (.setMonth (.getMonth dt))
-       (.setDate (.getDate dt))
-       (.setHours tunnit)
-       (.setMinutes minuutit)
-       (.setSeconds sekunnit)
-       (.setMilliseconds millisekunnit))
+     (goog.date.DateTime.
+       (.getYear dt)
+       (.getMonth dt)
+       (.getDate dt)
+       tunnit
+       minuutit
+       sekunnit
+       millisekunnit)
 
      :clj
      (cond (instance? java.util.Date dt)

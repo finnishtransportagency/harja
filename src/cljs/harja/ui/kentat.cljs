@@ -170,20 +170,26 @@
         muuta! (fn [data e]
                  ;; alla pientä workaroundia koska selaimen max-length -ominaisuus ei tue rivinvaihtoja
                  (let [teksti (-> e .-target .-value)]
-                   ;; jos copy-paste ylittäisi max-pituuden, eipä sallita sitä
-                   (if (< (count teksti) pituus-max)
-                     (reset! data teksti)
-                     (reset! data (subs teksti 0 pituus-max)))))]
+                   (when-not
+                       ;; IE11 laukaisee oudon change eventin initial renderissä
+                       ;; joka johtaa kentän validoimiseen, estetään käsittely
+                       ;; jos teksti on tyhjä ja data on nil
+                       (and (empty? teksti)
+                            (nil? @data))
+                     ;; jos copy-paste ylittäisi max-pituuden, eipä sallita sitä
+                     (if (< (count teksti) pituus-max)
+                       (reset! data teksti)
+                       (reset! data (subs teksti 0 pituus-max))))))]
     (komp/luo
       (when (= koko-rivit :auto)
         {:component-did-update
          (fn [this _]
            (let [n (-> this r/dom-node
                        (.getElementsByTagName "textarea")
-                       (aget 0))]
-             (let [erotus (- (.-scrollHeight n) (.-clientHeight n))]
-               (when (> erotus 0)
-                 (swap! rivit + (/ erotus 19))))))})
+                       (aget 0))
+                 erotus (- (.-scrollHeight n) (.-clientHeight n))]
+             (when (> erotus 1) ;; IE11 näyttää aluksi 24 vs 25
+               (swap! rivit + (/ erotus 19)))))})
 
       (fn [{:keys [nimi koko on-focus lomake?]} data]
         [:span.kentta-text

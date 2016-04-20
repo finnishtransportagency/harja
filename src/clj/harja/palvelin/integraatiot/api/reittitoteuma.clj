@@ -37,7 +37,8 @@
   (try
     (geo/pg->clj (:geometria (first (tieverkko/hae-tr-osoite-valille db x1 y1 x2 y2 250))))
     (catch PSQLException e
-      (log/warn "Reittitoteuman pisteillä (x1:" x1 " y1: " y1 " & x2: " x2 " y2: " y2 " ) ei ole yhteistä tietä: " e)
+      (log/warn "Reittitoteuman pisteillä (x1:" x1 " y1: " y1 " & x2: " x2 " y2: " y2 " )"
+                " ei ole yhteistä tietä. Tehdään linnuntie.")
       {:type :line :points [[x1 y1] [x2 y2]]})))
 
 (defn luo-reitti-geometria [db reitti]
@@ -56,10 +57,10 @@
   (log/debug "Luodaan reitin tehtävät")
   (doseq [tehtava (get-in reittipiste [:reittipiste :tehtavat])]
     (toteumat/luo-reitti_tehtava<!
-      db
-      reittipiste-id
-      (get-in tehtava [:tehtava :id])
-      (get-in tehtava [:tehtava :maara :maara]))))
+     db
+     reittipiste-id
+     (get-in tehtava [:tehtava :id])
+     (get-in tehtava [:tehtava :maara :maara]))))
 
 (defn luo-reitin-materiaalit [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin materiaalit")
@@ -76,11 +77,11 @@
   (log/debug "Luodaan uusi reittipiste")
   (doseq [reittipiste reitti]
     (let [reittipiste-id (:id (toteumat/luo-reittipiste<!
-                                db
-                                toteuma-id
-                                (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
-                                (get-in reittipiste [:reittipiste :koordinaatit :x])
-                                (get-in reittipiste [:reittipiste :koordinaatit :y])))]
+                               db
+                               toteuma-id
+                               (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
+                               (get-in reittipiste [:reittipiste :koordinaatit :x])
+                               (get-in reittipiste [:reittipiste :koordinaatit :y])))]
       (log/debug "Reittipiste tallennettu, id: " reittipiste-id)
       (log/debug "Aloitetaan reittipisteen tehtävien tallennus.")
       (luo-reitin-tehtavat db reittipiste reittipiste-id)
@@ -88,15 +89,10 @@
       (luo-reitin-materiaalit db reittipiste reittipiste-id))))
 
 (defn poista-toteuman-reitti [db toteuma-id]
-  (log/debug "Selvitetään toteumaan kuuluvat reittipisteet")
-  (let [reittipisteet (toteumat/hae-toteuman-reittipisteet-idlla db toteuma-id)]
-    (log/debug "Poistetaan reittipisteiden tehtävät & materiaalit")
-    (doseq [reittipiste reittipisteet]
-      (toteumat/poista-reitti_tehtava-reittipiste-idlla! db (:id reittipiste))
-      (toteumat/poista-reitti_materiaali-reittipiste-idlla! db (:id reittipiste)))
-
-    (log/debug "Poistetaan reittipisteet")
-    (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)))
+  (log/debug "Poistetaan reittipisteet")
+  ;; Poistetaan reittipisteet (reittipisteiden tehtävät ja materiaalit cascade)
+  ;; PENDING: Tämä on hidas operaatio isoille toteumille.
+  (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
 (defn tallenna-yksittainen-reittitoteuma [db urakka-id kirjaaja reittitoteuma]
   (let [reitti (:reitti reittitoteuma)
@@ -151,7 +147,7 @@
                          request
                          json-skeemat/+reittitoteuman-kirjaus+
                          json-skeemat/+kirjausvastaus+
-                         (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db] (#'kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)

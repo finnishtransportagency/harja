@@ -136,9 +136,8 @@
    [:div.container
     [header sivu]]
 
-   (when @nav/murupolku-nakyvissa?
-     [:div.container
-      [murupolku/murupolku]])
+   [:div.container
+    [murupolku/murupolku]]
 
    ^{:key "harjan-paasisalto"}
    [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas

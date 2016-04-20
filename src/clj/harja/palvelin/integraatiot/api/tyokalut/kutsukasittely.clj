@@ -106,6 +106,10 @@
   [virheet]
   (tee-virhevastaus 400 virheet))
 
+(defn tee-ei-hakutuloksia-virhevastaus
+  [virheet]
+  (tee-virhevastaus 404 virheet))
+
 (defn tee-vastaus
   "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok). Payload on Clojure dataa, joka
   muunnetaan JSON-dataksi. Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
@@ -135,6 +139,10 @@
 (defn kasittele-viallinen-kutsu [virheet resurssi]
   (log/error (format "Resurssin: %s kutsu on viallinen: %s " resurssi virheet))
   (tee-viallinen-kutsu-virhevastaus virheet))
+
+(defn kasittele-ei-hakutuloksia [virheet resurssi]
+  (log/error (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
+  (tee-ei-hakutuloksia-virhevastaus virheet))
 
 (defn kasittele-puutteelliset-parametrit [virheet resurssi]
   (log/error (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
@@ -173,6 +181,8 @@
       (kasittele-invalidi-json virheet resurssi))
     (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
       (kasittele-viallinen-kutsu virheet resurssi))
+    (catch [:type virheet/+ei-hakutuloksia+] {:keys [virheet]}
+      (kasittele-ei-hakutuloksia virheet resurssi))
     (catch [:type virheet/+puutteelliset-parametrit+] {:keys [virheet]}
       (kasittele-puutteelliset-parametrit virheet resurssi))
     (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
@@ -220,7 +230,10 @@
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (let [body (if (:body request)
-               (slurp (:body request))
+               (if (= (get-in request [:headers "content-encoding"]) "gzip")
+                 (with-open [gzip (java.util.zip.GZIPInputStream. (:body request))]
+                   (slurp gzip))
+                 (slurp (:body request)))
                nil)
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))

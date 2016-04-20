@@ -10,7 +10,7 @@
 
 
 (defn yksi
-  "Ottaa resultsetin ja palauttaa ensimmäisen rivin ensimmäisen arvon, 
+  "Ottaa resultsetin ja palauttaa ensimmäisen rivin ensimmäisen arvon,
   tämä on tarkoitettu single-value queryille, kuten vaikka yhden COUNT arvon hakeminen."
   [rs]
   (second (ffirst rs)))
@@ -48,6 +48,8 @@
       * (sarakkeet-vektoriin ilmoitukset {:kuittaus :kuittaukset})
   * group-fn: Funktio, joka ryhmittelee rivit ennen sarakkeiden yhdistämistä. Voidaan käyttää esim.
     saman id:n sisältävien rivien yhdistämiseen, koska kuvaavat loogisesti samaa asiaa.
+  * lapsi-ok-fn: funktio, joka tarkistaa onko lapsi kelpo, oletuksena :id. Jos funktio palautta
+    ei-truthy arvon, lasta ei lisätä vektoriin
 
   Funktio osaa käsitellä useamman 'lapsirivin' kerralla, tämä onnistuu yksinkertaisesti syöttämällä
   sarake-vektoriin useamman avain-arvo -parin.
@@ -55,8 +57,11 @@
   TÄRKEÄÄ! Jos lapsiriviä on useampia, konversio PITÄÄ tehdä yhdellä kutsulla (eli antamalla useampi
   avain-arvo -pari mäppiin). Funktio tunnistaa uniikit rivit kaikista-riveistä poistamalla lapsirivit,
   joten jos kaikkia lapsirivejä ei määrittele, ei konversio toimi oikein."
-  ([kaikki-rivit sarake-vektori] (sarakkeet-vektoriin kaikki-rivit sarake-vektori :id))
+  ([kaikki-rivit sarake-vektori]
+   (sarakkeet-vektoriin kaikki-rivit sarake-vektori :id :id))
   ([kaikki-rivit sarake-vektori group-fn]
+   (sarakkeet-vektoriin kaikki-rivit sarake-vektori group-fn :id))
+  ([kaikki-rivit sarake-vektori group-fn lapsi-ok-fn]
   (vec
    (for [[id rivit] (group-by group-fn kaikki-rivit)]
      (loop [rivi (first rivit)
@@ -67,13 +72,13 @@
                     (dissoc sarake)
                     (assoc vektori (vec (into #{}
                                               (keep #(when-let [lapsi (get % sarake)]
-                                                       (when (:id lapsi)
+                                                       (when (lapsi-ok-fn lapsi)
                                                          lapsi))
                                                     rivit)))))
                 sarakkeet)))))))
 
 (defn alaviiva->rakenne
-  "Muuntaa mäpin avaimet alaviivalla sisäiseksi rakenteeksi, esim. 
+  "Muuntaa mäpin avaimet alaviivalla sisäiseksi rakenteeksi, esim.
   {:id 1 :urakka_hallintayksikko_nimi \"POP ELY\"} => {:id 1 :urakka {:hallintayksikko {:nimi \"POP ELY\"}}}"
   [m]
   (let [ks (into []
@@ -166,7 +171,7 @@
              #{})))
 
 (defn array->set
-  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi. 
+  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi.
   Yhden arityn versio ottaa JDBC arrayn ja paluttaa setin ilman mäppiä."
   ([a]
    (into #{} (and a (.getArray a))))
@@ -193,6 +198,12 @@
   [^java.util.Date dt]
   (when dt
     (java.sql.Timestamp. (.getTime dt))))
+
+(defn java-date
+  "Luo java.util.Date objektin annetusta java.sql.Date  objektista."
+  [^java.sql.Date dt]
+  (when dt
+    (java.util.Date. (.getTime dt))))
 
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"

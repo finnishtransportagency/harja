@@ -151,6 +151,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :tarkastukset))
 
+(defn validoi-laatupoikkeama [laatupoikkeama]
+  (if (and (not (lomake/muokattu? laatupoikkeama))
+           (:id laatupoikkeama))
+    false
+    (not (lomake/voi-tallentaa-ja-muokattu? laatupoikkeama))))
+
 (defn laatupoikkeamalomake [asetukset laatupoikkeama]
   (let [sanktio-virheet (atom {})]
     (komp/luo
@@ -178,7 +184,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
                       #(tallenna-laatupoikkeama @laatupoikkeama)
                       {:ikoni (ikonit/tallenna)
-                       :disabled (not (lomake/voi-tallentaa? @laatupoikkeama))
+                       :disabled (validoi-laatupoikkeama @laatupoikkeama)
                        :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]}
 
             [{:otsikko "Päivämäärä ja aika"

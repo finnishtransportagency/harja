@@ -152,8 +152,8 @@
         pvm-vali (parsi-pvm-vali alkaen paattyen)
         urakka-idt (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y})]
     (if (empty? urakka-idt)
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi  virheet/+virheellinen-sijainti+
+      (virheet/heita-ei-hakutuloksia-apikutsulle-poikkeus
+        {:koodi  virheet/+urakkaa-ei-loydy+
          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."})
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-idt))

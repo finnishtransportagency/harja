@@ -23,7 +23,9 @@
             [harja.transit :as t]
             [alandipert.storage-atom :refer [local-storage]]
             [clojure.string :as str]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+
+            [harja.tiedot.hallintayksikot :as hy])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -115,17 +117,22 @@
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
+(def vain-hoitokausivalinta? #{:suolasakko})
+
 (defonce paivita-aikavalinta
     (run! (let [hk @valittu-hoitokausi
-              vuosi @valittu-vuosi
-              kk @valittu-kuukausi
-              vapaa-aikavali? @vapaa-aikavali?
-              aikavali @vapaa-aikavali
-              [alku loppu] (cond
-                             vapaa-aikavali? aikavali
-                             kk kk
-                             vuosi (pvm/vuoden-aikavali vuosi)
-                             :default hk)]
+                vuosi @valittu-vuosi
+                kk @valittu-kuukausi
+                vapaa-aikavali? @vapaa-aikavali?
+                aikavali @vapaa-aikavali
+                vain-hoitokausivalinta? (vain-hoitokausivalinta?
+                                          (:nimi @valittu-raporttityyppi))
+                [alku loppu] (cond
+                               vain-hoitokausivalinta? hk
+                               vapaa-aikavali? aikavali
+                               kk kk
+                               vuosi (pvm/vuoden-aikavali vuosi)
+                               :default hk)]
             (if (and alku loppu)
               (swap! parametri-arvot
                      assoc "Aikaväli" {:alkupvm alku :loppupvm loppu})
@@ -149,10 +156,12 @@
                     2010)
         vuosi-vika (if ur
                      (pvm/vuosi (:loppupvm ur))
-                     (pvm/vuosi (pvm/nyt)))]
+                     (pvm/vuosi (pvm/nyt)))
+        vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
-      [ui-valinnat/vuosi {:disabled @vapaa-aikavali?}
+      [ui-valinnat/vuosi {:disabled (or @vapaa-aikavali?
+                                        vain-hoitokausivalinta?)}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
           (reset! valittu-vuosi %)
@@ -169,19 +178,21 @@
             (reset! valittu-hoitokausi %)
             (reset! valittu-vuosi nil)
             (reset! valittu-kuukausi nil))])
-      [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
+      [ui-valinnat/kuukausi {:disabled    (or @vapaa-aikavali?
+                                              vain-hoitokausivalinta?)
                              :nil-valinta (if @valittu-vuosi
                                             "Koko vuosi"
                                             "Koko hoitokausi")}
        @kuukaudet valittu-kuukausi]]
 
-     [:div.raportin-valittu-aikavali
-      [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
-       #(swap! vapaa-aikavali? not)
-       nil false (when @vapaa-aikavali?
-                   [:div
-                    [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
-                    [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])]]]))
+     (when-not vain-hoitokausivalinta?
+       [:div.raportin-valittu-aikavali
+       [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
+        #(swap! vapaa-aikavali? not)
+        nil false (when @vapaa-aikavali?
+                    [:div
+                     [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
+                     [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])]])]))
 
 (def tienumero (atom nil))
 
@@ -386,8 +397,27 @@
            {:ikoni    [ikonit/list]
             :disabled (not voi-suorittaa?)}])]]]]))
 
+(defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
+  [:span
+   [yleiset/livi-pudotusvalikko
+    {:valitse-fn nav/valitse-hallintayksikko
+     :valinta v-hal
+     :class "raportti-alasveto"
+     :format-fn (fnil hy/elynumero-ja-nimi {:nimi "Kaikki ELYt"})}
+    (concat [nil]
+            @hy/hallintayksikot)]
+   " "
+   [yleiset/livi-pudotusvalikko
+    {:valitse-fn nav/vaihda-urakkatyyppi!
+     :valinta v-ur-tyyppi
+     :class "raportti-alasveto"
+     :format-fn :nimi}
+    nav/+urakkatyypit+]])
+
 (defn raporttivalinnat []
   (komp/luo
+   ;; Ei tällä hetkellä raporteissa sallita urakoitsijavalintaa
+   (komp/sisaan #(nav/valitse-urakoitsija! nil))
     (fn []
       (let [v-ur @nav/valittu-urakka
             v-ur-tyyppi @nav/valittu-urakkatyyppi
@@ -402,12 +432,15 @@
            [:span
             [:h3 "Raportin tiedot"]
             [yleiset/tietoja {:class "border-bottom"}
-             "Kohde" (case konteksti
-                       "urakka" "Urakka"
-                       "hallintayksikko" "Hallintayksikkö"
-                       "koko maa" "Koko maa")
-             "Urakka" (when (= "urakka" konteksti)
-                        (:nimi v-ur))
+             "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
+             "Urakka" (when v-hal
+                        [yleiset/livi-pudotusvalikko
+                         {:valitse-fn nav/valitse-urakka
+                          :valinta v-ur
+                          :class "raportti-alasveto"
+                          :format-fn (fnil :nimi {:nimi "Kaikki urakat"})}
+                         (concat [nil]
+                                 (sort-by :nimi @nav/suodatettu-urakkalista))])
              "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
                                  (:nimi v-hal))
              "Raportti" (cond
@@ -420,7 +453,7 @@
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn  #(if % (:kuvaus %) "Valitse")
                                                 :valitse-fn #(reset! valittu-raporttityyppi %)
-                                                :class      "valitse-raportti-alasveto"}
+                                                :class      "raportti-alasveto"}
                            @mahdolliset-raporttityypit])]])
 
          (when @valittu-raporttityyppi
@@ -466,6 +499,6 @@
       (if (oikeudet/raportit)
         [:span
          (when-not @raportit/suoritettu-raportti
-           [kartta/kartan-paikka @nav/murupolku-nakyvissa?])
+           [kartta/kartan-paikka @nav/murupolku-domissa?])
          (raporttivalinnat-ja-raportti)]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))

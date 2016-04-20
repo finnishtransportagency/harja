@@ -5,11 +5,11 @@
             [harja.ui.bootstrap :as bs]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :as yleiset]
-            
+
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakat :as ur]
             [harja.loki :refer [log]]
-            
+
             [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
@@ -29,7 +29,7 @@
          [:h5.haku-otsikko "Valitse hallintayksikkö"]
          [:div
           ^{:key "hy-lista"}
-          [suodatettu-lista {:format :nimi :haku :nimi
+          [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
                              :on-select nav/valitse-hallintayksikko
                              :aputeksti "Kirjoita hallintayksikön nimi tähän"}

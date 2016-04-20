@@ -50,7 +50,7 @@
       (.replace "__OTSIKKO__" otsikko)
       (.replace "__SISALTO__" sisalto)))
 
-(deftest tarkista-kuisttauksen-vastaanotto-sahkopostilla
+(deftest tarkista-kuittauksen-vastaanotto-sahkopostilla
   (let [ilmoitusviesti (atom nil)]
     (tloik-apurit/tee-testipaivystys)
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (partial reset! ilmoitusviesti))

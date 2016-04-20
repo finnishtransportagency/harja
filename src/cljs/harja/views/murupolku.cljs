@@ -43,11 +43,12 @@
 
          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
 
-     [:button.nappi-murupolkualasveto.dropdown-toggle {:on-click #(swap! valinta-auki
-                                                                         (fn [v]
-                                                                           (if (= v :hallintayksikko)
-                                                                             nil
-                                                                             :hallintayksikko)))}
+     [:button.nappi-murupolkualasveto.dropdown-toggle
+      {:on-click #(swap! valinta-auki
+                         (fn [v]
+                           (if (= v :hallintayksikko)
+                             nil
+                             :hallintayksikko)))}
       [:span.livicon-chevron-down]]
 
      ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
@@ -55,7 +56,7 @@
       (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
         ^{:key (str "hy-" (:id muu-yksikko))}
         [:li.harja-alasvetolistaitemi
-         [linkki (:nimi muu-yksikko)
+         [linkki (hal/elynumero-ja-nimi muu-yksikko)
           #(do (reset! valinta-auki nil)
                (nav/valitse-hallintayksikko muu-yksikko))]])]]))
 
@@ -120,6 +121,7 @@
   []
   (let [valinta-auki (atom nil)]
     (komp/luo
+     (komp/ulos #(reset! nav/murupolku-domissa? false))
      (komp/kuuntelija
       [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
        :urakka-valittu :urakkavalinta-poistettu]
@@ -131,7 +133,8 @@
         (when-not (dom/sisalla? this klikkaus)
           (reset! valinta-auki false))))
      {:component-did-mount (fn [_]
-                              (t/julkaise! {:aihe :murupolku-muuttunut}))}
+                             (reset! nav/murupolku-domissa? true)
+                             (t/julkaise! {:aihe :murupolku-muuttunut}))}
      (fn []
        (let [ur @nav/valittu-urakka
              ei-urakkaa? (nil? ur)
@@ -143,6 +146,7 @@
                           (cond
                             (= @nav/valittu-sivu :hallinta) "hide"
                             (= @nav/valittu-sivu :about) "hide"
+                            (not @nav/murupolku-nakyvissa?) "hide"
                             :default ""))}
           (if (or ei-urakkaa? (= @nav/valittu-sivu :raportit))
             [:ol.murupolku
