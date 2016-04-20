@@ -163,14 +163,6 @@
              [])))
 
 (defn array->set
-  "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure-setiksi."
-  [rivi kentta]
-  (assoc rivi
-    kentta (if-let [a (get rivi kentta)]
-             (set (.getArray a))
-             #{})))
-
-(defn array->set
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi.
   Yhden arityn versio ottaa JDBC arrayn ja paluttaa setin ilman mäppiä."
   ([a]
