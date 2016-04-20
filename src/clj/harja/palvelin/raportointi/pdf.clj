@@ -29,7 +29,7 @@
   [arvo]
   (str "<![CDATA[" arvo "]]>"))
 
-(defn pdf-header [sarakkeet]
+(defn taulukko-header [sarakkeet]
   [:fo:table-header
    [:fo:table-row
     (for [otsikko (map :otsikko sarakkeet)]
@@ -38,7 +38,10 @@
                        :font-weight "normal" :padding "1mm"}
        [:fo:block (cdata otsikko)]])]])
 
-(defn pdf-body [sarakkeet data {:keys [otsikko viimeinen-rivi-yhteenveto?
+(defmethod muodosta-pdf :liitteet [liitteet]
+  (count (second liitteet)))
+
+(defn taulukko-body [sarakkeet data {:keys [otsikko viimeinen-rivi-yhteenveto?
                                   korosta-rivit oikealle-tasattavat-kentat] :as optiot}]
   (let [rivien-maara (count data)
         viimeinen-rivi (last data)
@@ -77,9 +80,8 @@
            [:fo:table-row
             (for [i (range (count sarakkeet))
                   :let [arvo-datassa (nth rivi i)
-                        naytettava-arvo (or (if (and (vector? arvo-datassa)
-                                                     (= (first arvo-datassa) :liitteet))
-                                              (count (second arvo-datassa))
+                        naytettava-arvo (or (if (vector? arvo-datassa)
+                                              (muodosta-pdf arvo-datassa)
                                               arvo-datassa)
                                             "")]]
               [:fo:table-cell (merge {:border     (str "solid 0.1mm " raportin-tehostevari) :padding "1mm"
@@ -109,8 +111,8 @@
      [:fo:table {:border (str "solid 0.2mm " raportin-tehostevari)}
       (for [{:keys [otsikko leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
-      (pdf-header sarakkeet)
-      (pdf-body sarakkeet data optiot)]
+      (taulukko-header sarakkeet)
+      (taulukko-body sarakkeet data optiot)]
      [:fo:block {:space-after "1em"}]]))
 
 
