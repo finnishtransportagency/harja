@@ -94,20 +94,20 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
-                 :oikealle-tasattavat-kentat #{9 10 11 12}}
-      [{:leveys "15%" :otsikko "Urakka"}
-       {:otsikko "Keski\u00ADlämpö\u00ADtila"}
-       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
-       {:otsikko "Talvi\u00ADsuolan maksimi\u00ADmäärä (t)"}
-       {:otsikko "Sakko\u00ADraja (t)"}
-       {:otsikko "Kerroin"}
-       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)"}
-       {:otsikko "Käytetty suola\u00ADmäärä (t)"}
-       {:otsikko "Suola\u00ADerotus (t)"}
-       {:otsikko "Sakko \u20AC / tonni"}
-       {:otsikko "Sakko €"}
-       {:otsikko "Indeksi €"}
-       {:otsikko "Indeksi\u00ADkorotettu sakko €"}]
+                 :oikealle-tasattavat-kentat (set (range 1 14))}
+      [{:leveys 15 :otsikko "Urakka"}
+       {:otsikko "Keski\u00ADlämpö\u00ADtila" :leveys 5}
+       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila" :leveys 5}
+       {:otsikko "Talvi\u00ADsuolan max-määrä (t)" :leveys 5}
+       {:otsikko "Sakko\u00ADraja (t)" :leveys 5}
+       {:otsikko "Kerroin" :leveys 3}
+       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 5}
+       {:otsikko "Käytetty suola\u00ADmäärä (t)" :leveys 5}
+       {:otsikko "Suola\u00ADerotus (t)" :leveys 5}
+       {:otsikko "Sakko \u20AC / tonni" :leveys 4}
+       {:otsikko "Sakko €" :leveys 6}
+       {:otsikko "Indeksi €" :leveys 4}
+       {:otsikko "Indeksi\u00ADkorotettu sakko €" :leveys 6}]
       (keep identity
             (concat
               (for [rivi raportin-data]
@@ -140,7 +140,7 @@
                   (reduce + (keep :sakko_talvisuolaraja raportin-data))
                   nil
                   nil
-                  nil
+                  (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data))
                   (reduce + (keep :suola_kaytetty raportin-data))
                   (-
                     (reduce + (keep :suola_kaytetty raportin-data))
