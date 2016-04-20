@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.urakat
   (:require [com.stuartsierra.component :as component]
+            [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
