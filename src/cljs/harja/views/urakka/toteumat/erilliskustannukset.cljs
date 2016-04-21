@@ -25,7 +25,7 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -163,7 +163,7 @@
                                                (reset! valittu-kustannus nil)))
                              :kun-virhe (reset! tallennus-kaynnissa false)}]
                            (when (and
-                                   (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur))
+                                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id ur))
                                    (:id @muokattu))
                              [:button.nappi-kielteinen
                               {:class (when @tallennus-kaynnissa "disabled")
@@ -288,7 +288,7 @@
           [:div.erilliskustannusten-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
            [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
-            {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
+            {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka)))}]
 
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")
