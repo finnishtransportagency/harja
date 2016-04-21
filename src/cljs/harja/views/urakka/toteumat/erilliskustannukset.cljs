@@ -133,11 +133,11 @@
                            :maksaja :tilaaja
                            :indeksin_nimi yleiset/+ei-sidota-indeksiin+)))
         valmis-tallennettavaksi? (reaction (let [m @muokattu]
-                                             (not (and
+                                             (and
                                                     (:toimenpideinstanssi m)
                                                     (:tyyppi m)
                                                     (:pvm m)
-                                                    (:rahasumma m)))))
+                                                    (:rahasumma m))))
         tallennus-kaynnissa (atom false)]
 
     (komp/luo
@@ -150,12 +150,14 @@
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
+                  :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka))
                   :footer [:span
                            [napit/palvelinkutsu-nappi
                             " Tallenna kustannus"
                             #(tallenna-erilliskustannus @muokattu)
                             {:luokka "nappi-ensisijainen"
-                             :disabled @valmis-tallennettavaksi?
+                             :disabled (or (not @valmis-tallennettavaksi?)
+                                           (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka))))
                              :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
                                              (do
                                                (korosta-rivia muokatun-id)
