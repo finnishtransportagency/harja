@@ -24,13 +24,14 @@
    :LastName :sukunimi
    :Email :sahkoposti
    :MobilePhone [:puhelin #(str/replace % " " "")]
+   :Role :roolit
    :Company :organisaatio})
 
 (defn lue-fim-vastaus
-  "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin käyttäjä mäppejä."
+  "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin urakan käyttäjiä."
   [xml]
   (z/xml-> xml
-           :person
+           :member
            (fn [p]
              (into {}
                    (map (fn [[elementti avain]]
@@ -43,21 +44,24 @@
 (defn lue-xml [bytet]
   (xml-zip (parse (ByteArrayInputStream. bytet))))
 
-(defn hae-kayttajatunnus
-  "Hakee FIM palvelusta käyttäjätunnuksella."
-  [{:keys [url]} kayttajatunnus integraatioloki db]
+(defn- urakan-kayttajat-parametrit [urakan-sampo-id]
+  {:filter (str "SopimusID=" urakan-sampo-id)
+   :ignorecache "false"
+   :fetch "AccountName,FirstName,LastName,DisplayName,Email,MobilePhone,Company"})
+
+(defn hae-urakan-kayttajat
+  "Hakee urakkaan liitetyt käyttäjät."
+  [{:keys [url db integraatioloki]} urakan-sampo-id]
   (when-not (empty? url)
     (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "fim" "tuo-fim-kayttaja"
-      (fn [konteksti]
-        (let [parametrit {:filterproperty "AccountName"
-                          :filter kayttajatunnus
-                          :fetch "AccountName,FirstName,LastName,Email,MobilePhone,Company"}
-              http-asetukset {:metodi :GET
-                              :url url
-                              :parametrit parametrit}
-              {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (first (lue-fim-vastaus (lue-xml vastaus))))))))
+     db integraatioloki "fim" "hae-urakan-kayttajat"
+     #(-> (integraatiotapahtuma/laheta
+           % :http {:metodi :GET
+                    :url url
+                    :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)})
+          :body
+          lue-xml
+          lue-fim-vastaus))))
 
 (defrecord FIM [url]
   component/Lifecycle

@@ -141,7 +141,9 @@
        [:sonja :integraatioloki :db])
 
       ;; FIM REST rajapinta
-      :fim (fim/->FIM (:url (:fim asetukset)))
+      :fim (component/using
+            (fim/->FIM (:url (:fim asetukset)))
+            [:db :integraatioloki])
 
       ;; Sampo
       :sampo (component/using (let [sampo (:sampo asetukset)]
