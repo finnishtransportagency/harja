@@ -36,13 +36,15 @@
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
-  [tyyppi oikeus urakka-id kayttaja]
+  ([tyyppi oikeus urakka-id]
+   (on-muu-oikeus? tyyppi oikeus urakka-id @istunto/kayttaja))
+  ([tyyppi oikeus urakka-id kayttaja]
   (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
       (let [roolit-joilla-oikeus (get-in oikeus [:muu tyyppi])]
         (and (not (empty? roolit-joilla-oikeus))
              (or (roolit/roolissa? kayttaja roolit-joilla-oikeus)
                  (and urakka-id
-                      (roolit/rooli-urakassa? kayttaja roolit-joilla-oikeus urakka-id)))))))
+                      (roolit/rooli-urakassa? kayttaja roolit-joilla-oikeus urakka-id))))))))
 (defn voi-lukea?
   #?(:cljs
      ([oikeus]
