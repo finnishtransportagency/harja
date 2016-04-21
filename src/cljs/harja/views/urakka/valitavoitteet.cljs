@@ -10,9 +10,9 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.fmt :as fmt]
             [cljs-time.core :as t]
-            [harja.domain.roolit :as roolit]
             [cljs.core.async :refer [<!]]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -58,7 +58,7 @@
                                 (reset! tallennus-kaynnissa false)))
                           (log "merkitään " (pr-str vt) " valmiiksi"))}
           "Merkitse valmiiksi"]]]])))
-            
+
 (defn valitavoite-lomake [opts ur vt]
   (let [{:keys [pvm merkitsija merkitty kommentti]} (:valmis vt)]
     [:div.valitavoite
@@ -66,24 +66,24 @@
       (when pvm
         [y/rivi
          {:koko y/tietopaneelin-elementtikoko}
-       
-       
+
+
          [y/otsikolla "Valmistunut" (fmt/pvm pvm)]
-         
+
          (when merkitty
            [y/otsikolla "Merkitty valmiiksi"
             [:span (fmt/pvm-opt merkitty) " " (fmt/kayttaja-opt merkitsija)]])
-         
-         
+
+
          (when kommentti
            [y/otsikolla "Urakoitsijan kommentti" kommentti])])]
-     
+
      (when (and (nil? pvm)
-                (roolit/rooli-urakassa? roolit/urakoitsijan-urakkaroolit-kirjoitus ur))
+                (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur)))
        ;; Ei ole valmis, sallitaan urakoitsijan käyttäjän merkitä se valmiiksi
        [valitavoite-valmis-lomake opts ur vt]
          )]))
-    
+
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
@@ -93,14 +93,14 @@
         tallennus-kaynnissa (atom false)]
     (vaihda-urakka! ur)
     (komp/luo
-     
+
      {:component-will-receive-props (fn [_ & [_ ur]]
                                       (log "uusi urakka: " (pr-str (dissoc ur :alue)))
                                       (vaihda-urakka! ur))}
-     
+
      (fn [ur]
        [:div.valitavoitteet {:style {:position "relative"}}
-        
+
         (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
         [grid/grid
          {:otsikko "Urakan välitavoitteet"
@@ -111,7 +111,7 @@
                          (go
                            (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
                            (reset! tallennus-kaynnissa false)))
-                         
+
           :vetolaatikot (into {}
                               (map (juxt :id (partial valitavoite-lomake {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
                               @tavoitteet)}
