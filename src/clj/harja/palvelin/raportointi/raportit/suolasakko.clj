@@ -98,18 +98,18 @@
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :oikealle-tasattavat-kentat (set (range 1 14))}
-      [{:leveys 15 :otsikko "Urakka"}
+      [{:leveys 10 :otsikko "Urakka"}
        {:otsikko "Keski\u00ADlämpö\u00ADtila" :leveys 5}
        {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila" :leveys 5}
        {:otsikko "Talvi\u00ADsuolan max-määrä (t)" :leveys 5}
        {:otsikko "Sakko\u00ADraja (t)" :leveys 5}
-       {:otsikko "Kerroin" :leveys 3}
+       {:otsikko "Kerroin" :leveys 4}
        {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 5}
        {:otsikko "Käytetty suola\u00ADmäärä (t)" :leveys 5}
        {:otsikko "Suola\u00ADerotus (t)" :leveys 5}
        {:otsikko "Sakko \u20AC / tonni" :leveys 4}
        {:otsikko "Sakko €" :leveys 6}
-       {:otsikko "Indeksi €" :leveys 4}
+       {:otsikko "Indeksi €" :leveys 5}
        {:otsikko "Indeksi\u00ADkorotettu sakko €" :leveys 6}]
 
       (keep identity

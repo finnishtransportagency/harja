@@ -38,9 +38,6 @@
                        :font-weight "normal" :padding "1mm"}
        [:fo:block (cdata otsikko)]])]])
 
-(defmethod muodosta-pdf :liitteet [liitteet]
-  (count (second liitteet)))
-
 (defn taulukko-body [sarakkeet data {:keys [otsikko viimeinen-rivi-yhteenveto?
                                   korosta-rivit oikealle-tasattavat-kentat] :as optiot}]
   (let [rivien-maara (count data)
@@ -112,17 +109,18 @@
                          (when viimeinen-rivi-yhteenveto?
                            "Yhteenveto on laskettu kaikista riveistä"))]]])]))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
-                                              korosta-rivit oikealle-tasattavat-kentat] :as optiot} sarakkeet data]]
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko :font-weight "bold"} otsikko
      [:fo:table {:border (str "solid 0.2mm " raportin-tehostevari)}
-      (for [{:keys [otsikko leveys]} sarakkeet]
+      (for [{:keys [leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
       (taulukko-header sarakkeet)
       (taulukko-body sarakkeet data optiot)]
      [:fo:block {:space-after "1em"}]]))
 
+(defmethod muodosta-pdf :liitteet [liitteet]
+  (count (second liitteet)))
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
