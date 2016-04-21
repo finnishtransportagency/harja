@@ -120,8 +120,6 @@
              :default [(assoc v-ur
                               :valittu true)])))))
 
-
-
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
 (defonce nakyman-geometriat (atom {}))
@@ -134,12 +132,6 @@
 
 (defn poista-geometria! [avain]
   (swap! nakyman-geometriat dissoc avain))
-
-;; PENDING: Tasot, niiden lippu atomit ja keyword nimet ja z-indexit,
-;; olisi hyvä saada määriteltyä tiivisti, kerran ja yhdessä paikassa.
-;;
-;; esim. (def tasot [[:mun-taso mun-taso/taso-lippu mun-taso/geometriat 4] ...])
-;; sitä samaa tietoa voisi sitten käyttää kaikkialla alla.
 
 (defn- aseta-z-index
   ([taso] (aseta-z-index taso oletus-zindex))

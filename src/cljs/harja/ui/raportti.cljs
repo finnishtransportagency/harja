@@ -40,6 +40,7 @@
                              :pakota-rivitys? (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
                              :nimi (str "sarake" i)
+                             ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
                              :tyyppi (if (:tyyppi sarake)
                                        :komponentti
                                        :string)
@@ -56,16 +57,25 @@
                (map-indexed (fn [index rivi]
                               (if-let [otsikko (:otsikko rivi)]
                                 (grid/otsikko otsikko)
-                                (let [mappina (assoc
+                                (let [[rivi optiot]
+                                      (if (map? rivi)
+                                        [(:rivi rivi) rivi]
+                                        [rivi {}])
+                                      lihavoi? (:lihavoi? optiot)
+                                      mappina (assoc
                                                 (zipmap (range (count sarakkeet))
-                                                       rivi)
+                                                        rivi)
                                                 ::rivin-indeksi index)]
                                   (cond-> mappina
                                           (and viimeinen-rivi-yhteenveto?
                                                (= viimeinen-rivi rivi))
                                           (assoc :yhteenveto true)
+
                                           (when korosta-rivit (korosta-rivit index))
-                                          (assoc :korosta true))))))
+                                          (assoc :korosta true)
+
+                                          lihavoi?
+                                          (assoc :lihavoi true))))))
                data)))]))
 
 

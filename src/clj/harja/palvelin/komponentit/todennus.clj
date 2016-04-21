@@ -3,17 +3,19 @@
   WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei tee
   käyttöoikeustarkistuksia, vaan pelkästään hakee käyttäjälle sallitut käyttöoikeudet
   ja tarkistaa käyttäjän identiteetin."
-  (:require [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
-            [clojure.core.cache :as cache]
-            [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.kayttajat :as q]
-            [slingshot.slingshot :refer [try+ throw+]]
+  (:require [clojure.core.cache :as cache]
+            [clojure.string :as str]
+            [com.stuartsierra.component :as component]
+            [harja.domain
+             [oikeudet :as oikeudet]
+             [roolit :as roolit]]
+            [harja.kyselyt
+             [kayttajat :as q]
+             [konversio :as konv]]
             [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
-            [harja.domain.roolit :as roolit]
-            [harja.domain.oikeudet :as oikeudet]
-
-            [clojure.string :as str]))
+            [slingshot.slingshot :refer [throw+ try+]]
+            [taoensso.timbre :as log])
+  (:import (org.apache.commons.codec.net BCodec)))
 
 (defn- ryhman-rooli-ja-linkki
   "Etsii annetulle OAM ryhmälle roolin. Ryhmä voi olla suoraan roolin nimi
@@ -84,16 +86,27 @@ on nil."
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
 (def kayttajatiedot (atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
 
+(defn- pura-header-arvo
+  "KOKA lähettää ääkkösellisen headerin muodossa \"=?UTF?B?...base64...?=\"."
+  [teksti]
+  (if (and teksti (str/starts-with? teksti "=?"))
+    (.decode (BCodec.) teksti)
+    teksti))
+
 (defn- koka-headerit [headerit]
-  (select-keys headerit
-               [;; Käyttäjätunnus ja ryhmät
-                "oam_remote_user" "oam_groups"
-                ;; ELY-numero (tai null) ja org nimi
-                "oam_departmentnumber" "oam_organization"
-                ;; Etu- ja sukunimi
-                "oam_user_first_name" "oam_user_last_name"
-                ;; Sähköposti ja puhelin
-                "oam_user_email" "oam_user_mobile"]))
+  (reduce-kv
+   (fn [m k v]
+     (assoc m k (pura-header-arvo v)))
+   {}
+   (select-keys headerit
+                [;; Käyttäjätunnus ja ryhmät
+                 "oam_remote_user" "oam_groups"
+                 ;; ELY-numero (tai null) ja org nimi
+                 "oam_departmentnumber" "oam_organization"
+                 ;; Etu- ja sukunimi
+                 "oam_user_first_name" "oam_user_last_name"
+                 ;; Sähköposti ja puhelin
+                 "oam_user_email" "oam_user_mobile"])))
 
 (defn- hae-kayttajalle-organisaatio
   [ely db organisaatio]
