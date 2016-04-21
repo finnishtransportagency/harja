@@ -8,7 +8,8 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -24,8 +25,8 @@
          urakka @nav/valittu-urakka]
      (and kayttaja
           urakka
-          (roolit/rooli-urakassa? kayttaja
-                                  roolit/laadunseuranta-kirjaus (:id urakka))))))
+          (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-laatupoikkeamat
+                                    (:id urakka))))))
 
 (defn hae-urakan-laatupoikkeamat
   "Hakee annetun urakan laatupoikkeamat urakka id:n ja aikavälin perusteella."

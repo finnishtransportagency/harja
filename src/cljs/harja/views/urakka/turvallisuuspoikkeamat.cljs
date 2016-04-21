@@ -14,7 +14,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -47,9 +48,10 @@
    toimenpiteet])
 
 (defn- voi-tallentaa? [tp]
-  (if-not (:id tp)
-    (lomake/voi-tallentaa-ja-muokattu? tp)
-    (lomake/voi-tallentaa? tp)))
+  (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
+       (if-not (:id tp)
+         (lomake/voi-tallentaa-ja-muokattu? tp)
+         (lomake/voi-tallentaa? tp))))
 
 (defn turvallisuuspoikkeaman-tiedot []
   (let [turvallisuuspoikkeama (reaction @tiedot/valittu-turvallisuuspoikkeama)]
@@ -70,6 +72,7 @@
             [lomake/lomake
              {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
               :muokkaa! #(reset! turvallisuuspoikkeama %)
+              :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
               :footer [napit/palvelinkutsu-nappi
                        "Tallenna turvallisuuspoikkeama"
                        #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
@@ -223,9 +226,8 @@
   (let [urakka @nav/valittu-urakka]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi urakka]
-     [:button.nappi-ensisijainen
-      {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
-      (ikonit/livicon-plus) " Lisää turvallisuuspoikkeama"]
+     [napit/uusi "Lisää turvallisuuspoikkeama" #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)
+      {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka)))}]
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"

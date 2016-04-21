@@ -2,6 +2,9 @@
 SELECT *, (suola_kaytetty - kohtuullistarkistettu_sakkoraja) as ylitys
 FROM (SELECT
         u.nimi AS urakka_nimi,
+        hy.id                                                              AS hallintayksikko_id,
+        hy.nimi                                                            AS hallintayksikko_nimi,
+        lpad(cast(hy.elynumero as varchar), 2, '0')                        AS hallintayksikko_elynumero,
         ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
         ss.maksukuukausi AS sakko_maksukuukausi,
         ss.indeksi AS sakko_indeksi,
@@ -46,6 +49,7 @@ FROM (SELECT
         LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
         LEFT JOIN urakka u ON lt.urakka = u.id
+        LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
       WHERE lt.urakka = :urakka
             AND ss.hoitokauden_alkuvuosi = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi
@@ -55,6 +59,9 @@ FROM (SELECT
 SELECT *, (suola_kaytetty - kohtuullistarkistettu_sakkoraja) as ylitys
 FROM (SELECT
         u.nimi AS urakka_nimi,
+        hy.id                                                              AS hallintayksikko_id,
+        hy.nimi                                                            AS hallintayksikko_nimi,
+        lpad(cast(hy.elynumero as varchar), 2, '0')                        AS hallintayksikko_elynumero,
         ss.talvisuolaraja as sakko_talvisuolaraja,
         ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
         ss.maksukuukausi AS sakko_maksukuukausi,
@@ -101,6 +108,7 @@ FROM (SELECT
         LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
         LEFT JOIN urakka u ON lt.urakka = u.id
+        LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
       WHERE lt.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
                           AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
             AND ss.hoitokauden_alkuvuosi = :alkuvuosi
@@ -111,6 +119,9 @@ FROM (SELECT
 SELECT *, (suola_kaytetty - kohtuullistarkistettu_sakkoraja) as ylitys
 FROM (SELECT
         u.nimi AS urakka_nimi,
+        hy.id                                                              AS hallintayksikko_id,
+        hy.nimi                                                            AS hallintayksikko_nimi,
+        lpad(cast(hy.elynumero as varchar), 2, '0')                        AS hallintayksikko_elynumero,
         ss.talvisuolaraja as sakko_talvisuolaraja,
         ss.hoitokauden_alkuvuosi AS sakko_hoitokauden_alkuvuosi,
         ss.maksukuukausi AS sakko_maksukuukausi,
@@ -155,6 +166,7 @@ FROM (SELECT
         LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
         LEFT JOIN urakka u ON lt.urakka = u.id
+        LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
       WHERE lt.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
             AND ss.hoitokauden_alkuvuosi = :alkuvuosi
             AND (SELECT EXTRACT(YEAR FROM lt.alkupvm)) = :alkuvuosi

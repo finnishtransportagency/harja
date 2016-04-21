@@ -25,7 +25,7 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -133,11 +133,11 @@
                            :maksaja :tilaaja
                            :indeksin_nimi yleiset/+ei-sidota-indeksiin+)))
         valmis-tallennettavaksi? (reaction (let [m @muokattu]
-                                             (not (and
+                                             (and
                                                     (:toimenpideinstanssi m)
                                                     (:tyyppi m)
                                                     (:pvm m)
-                                                    (:rahasumma m)))))
+                                                    (:rahasumma m))))
         tallennus-kaynnissa (atom false)]
 
     (komp/luo
@@ -150,12 +150,14 @@
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
+                  :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka))
                   :footer [:span
                            [napit/palvelinkutsu-nappi
                             " Tallenna kustannus"
                             #(tallenna-erilliskustannus @muokattu)
                             {:luokka "nappi-ensisijainen"
-                             :disabled @valmis-tallennettavaksi?
+                             :disabled (or (not @valmis-tallennettavaksi?)
+                                           (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka))))
                              :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
                                              (do
                                                (korosta-rivia muokatun-id)
@@ -163,7 +165,7 @@
                                                (reset! valittu-kustannus nil)))
                              :kun-virhe (reset! tallennus-kaynnissa false)}]
                            (when (and
-                                   (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur))
+                                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id ur))
                                    (:id @muokattu))
                              [:button.nappi-kielteinen
                               {:class (when @tallennus-kaynnissa "disabled")
@@ -288,7 +290,7 @@
           [:div.erilliskustannusten-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
            [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
-            {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
+            {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka)))}]
 
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")

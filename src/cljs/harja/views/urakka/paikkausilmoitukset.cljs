@@ -16,14 +16,14 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
-            [harja.domain.roolit :as roolit]
             [harja.ui.kommentit :as kommentit]
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.kartta :as kartta]
             [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
             [harja.tiedot.urakka.paallystys-ja-paikkaus-yhteiset :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
             [harja.ui.tierekisteri :as tierekisteri]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -60,7 +60,8 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                      (roolit/roolissa? roolit/urakanvalvoja)
+                     (oikeudet/voi-kirjoittaa?
+                      oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id @nav/valittu-urakka))
                       (not= (:tila @paikkaus/paikkausilmoitus-lomakedata) :lukittu)
                       (false? @lomake-lukittu-muokkaukselta?))
         paatostiedot (r/wrap {:paatos        (:paatos @paikkaus/paikkausilmoitus-lomakedata)

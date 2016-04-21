@@ -18,11 +18,11 @@
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.lomake :as lomake]
-            [harja.domain.roolit :as roolit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -107,7 +107,7 @@
    (tee-valinnat)
    [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
                                         (tiedot/uusi-kokonaishintainen-toteuma))
-    {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
+    {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka)))}]
    (tee-taulukko)])
 
 (defn kokonaishintainen-toteuma-lomake []
@@ -129,19 +129,21 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko  (if (:id @muokattu)
-                        "Muokkaa kokonaishintaista toteumaa"
-                        "Luo uusi kokonaishintainen toteuma")
+           {:otsikko (if (:id @muokattu)
+                       "Muokkaa kokonaishintaista toteumaa"
+                       "Luo uusi kokonaishintainen toteuma")
             :muokkaa! #(do (reset! muokattu %))
-            :footer   [napit/palvelinkutsu-nappi
-                       "Tallenna toteuma"
-                       #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
-                       {:luokka       "nappi-ensisijainen"
-                        :ikoni        (ikonit/tallenna)
-                        :kun-onnistuu #(do
-                                        (tiedot/toteuman-tallennus-onnistui %)
-                                        (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
-                        :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
+            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
+            :footer [napit/palvelinkutsu-nappi
+                     "Tallenna toteuma"
+                     #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
+                     {:luokka "nappi-ensisijainen"
+                      :ikoni (ikonit/tallenna)
+                      :kun-onnistuu #(do
+                                      (tiedot/toteuman-tallennus-onnistui %)
+                                      (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                      :disabled (or (not (lomake/voi-tallentaa? @muokattu))
+                                    (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}]}
            ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
            ;; reitti!
            [{:otsikko     "Päivämäärä"

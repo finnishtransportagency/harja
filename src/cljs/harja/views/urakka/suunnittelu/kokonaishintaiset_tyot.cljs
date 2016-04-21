@@ -1,7 +1,6 @@
 (ns harja.views.urakka.suunnittelu.kokonaishintaiset-tyot
   "Urakan 'Kokonaishintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
@@ -19,7 +18,8 @@
             [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t]
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -211,11 +211,9 @@
              :otsikko (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
              :piilota-toiminnot? true
              :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-             :tallenna (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                  (:id ur)
-                                                  #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                  urakan-kok-hint-tyot % tuleville?)
-                                                  :ei-mahdollinen)
+             :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+                         #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?)
+                         :ei-mahdollinen)
              :tallenna-vain-muokatut false
              :peruuta #(reset! tuleville? false)
              :tunniste #((juxt :vuosi :kuukausi) %)
