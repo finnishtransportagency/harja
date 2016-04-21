@@ -144,13 +144,13 @@
    {:leveys 6 :otsikko "Losa"}
    {:leveys 6 :otsikko "Let"}
    {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
-   {:leveys 8 :otsikko "1"}
-   {:leveys 8 :otsikko "2"}
-   {:leveys 8 :otsikko "3"}
-   {:leveys 8 :otsikko "4"}
-   {:leveys 8 :otsikko "5"}
-   {:leveys 8 :otsikko "Yht"}
-   {:leveys 8 :otsikko "1+2"}
+   {:leveys 8 :otsikko "1" :tyyppi :arvo-ja-osuus}
+   {:leveys 8 :otsikko "2" :tyyppi :arvo-ja-osuus}
+   {:leveys 8 :otsikko "3" :tyyppi :arvo-ja-osuus}
+   {:leveys 8 :otsikko "4" :tyyppi :arvo-ja-osuus}
+   {:leveys 8 :otsikko "5" :tyyppi :arvo-ja-osuus}
+   {:leveys 8 :otsikko "Yht" :tyyppi :arvo-ja-osuus}
+   {:leveys 8 :otsikko "1+2" :tyyppi :arvo-ja-osuus}
    {:leveys 10 :otsikko "Laa\u00ADtu\u00ADpoik\u00ADke\u00ADa\u00ADma"}])
 
 (def tr-kentat [[:tr :numero]
@@ -171,12 +171,14 @@
         [(fmt/roomalaisena-numerona (:hoitoluokka rivi))]
 
         ;; arvot ja prosentit 1-5
-        (map #(str (get-in rivi [% 0]) " (" (get-in rivi [% 1]) "%)") (range 1 6))
+        (map (fn [numero]
+               [:arvo-ja-osuus {:arvo (get-in rivi [numero 0]) :osuus (get-in rivi [numero 1])}])
+             (range 1 6))
 
         ;; yhteensä, 1+2 yhteensä
-        [(str (:laatuarvot-yhteensa rivi) " (100%)")
-         (str (:laatuarvo-1+2-summa rivi) " (" (+ (get-in rivi [1 1])
-                                                  (get-in rivi [2 1])) "%)")
+        [[:arvo-ja-osuus {:arvo (:laatuarvot-yhteensa rivi) :osuus 100}]
+         [:arvo-ja-osuus {:arvo (:laatuarvo-1+2-summa rivi) :osuus (+ (get-in rivi [1 1])
+                                                                      (get-in rivi [2 1]))}]
          ;; laatupoikkeamat
          (when (not (empty? (:laatupoikkeamat rivi)))
            (str "Kyllä" " (" (clojure.string/join ", " (:laatupoikkeamat rivi)) ")"))])))
@@ -193,10 +195,14 @@
                                                         laatuarvo-summat-yhteensa)) 100))
                                0)]
     (vec (concat ["Yhteensä" nil nil nil nil nil nil]
-                 (map #(str (nth laatuarvo-summat %) " (" (Math/round (osuus-prosentteina (nth laatuarvo-summat %) laatuarvo-summat-yhteensa)) "%)")
-                      (range 5))
-                 [(str laatuarvo-summat-yhteensa " (100%)")
-                  (str laatuarvot-1+2-summa " (" laatuarvot-1+2-osuus "%)")
+                 (map
+                   (fn [numero] [:arvo-ja-osuus {:arvo (nth laatuarvo-summat numero)
+                                                 :osuus (Math/round (osuus-prosentteina (nth laatuarvo-summat numero) laatuarvo-summat-yhteensa))}])
+                   (range 5))
+                 [[:arvo-ja-osuus {:arvo laatuarvo-summat-yhteensa
+                                   :osuus 100}]
+                  [:arvo-ja-osuus {:arvo laatuarvot-1+2-summa
+                                   :osuus laatuarvot-1+2-osuus}]
                   nil]))))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
