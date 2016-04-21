@@ -254,27 +254,14 @@ rooleista."
          (throw+ (->EiOikeutta viesti))))))
 
 (defn osapuoli
-     "Päättelee kuka osapuoli on kyseessä roolien perusteella.
+  "Päättelee kuka osapuoli on kyseessä roolien perusteella.
    Palauttaa avainsanan :urakoitsija, :konsultti tai :tilaaja."
-     [kayttaja urakka-id]
-     (if (roolissa? kayttaja  jarjestelmavastuuhenkilo)
-       :tilaaja
-       (let [roolit (urakkaroolit kayttaja urakka-id)]
-         (cond
-           (some roolit [jarjestelmavastuuhenkilo
-                         tilaajan-kayttaja
-                         urakanvalvoja
-                         tilaajan-asiantuntija])
-           :tilaaja
-
-           (some roolit [tilaajan-laadunvalvontakonsultti])
-           :konsultti
-
-           (some roolit [urakoitsijan-paakayttaja
-                         urakoitsijan-urakan-vastuuhenkilo
-                         urakoitsijan-kayttaja
-                         urakoitsijan-laatuvastaava])
-           :urakoitsija))))
+  [kayttaja urakka-id]
+  (case (get-in kayttaja [:organisaatio :tyyppi])
+    "liikennevirasto" :tilaaja
+    "urakoitsija" :urakoitsija
+    ;; FIXME: laadunvalvontakonsultti ?
+    :tilaaja))
 
 
 ;;VAIN FRONTILLA
