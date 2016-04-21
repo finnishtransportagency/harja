@@ -48,9 +48,10 @@
    toimenpiteet])
 
 (defn- voi-tallentaa? [tp]
-  (if-not (:id tp)
-    (lomake/voi-tallentaa-ja-muokattu? tp)
-    (lomake/voi-tallentaa? tp)))
+  (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
+       (if-not (:id tp)
+         (lomake/voi-tallentaa-ja-muokattu? tp)
+         (lomake/voi-tallentaa? tp))))
 
 (defn turvallisuuspoikkeaman-tiedot []
   (let [turvallisuuspoikkeama (reaction @tiedot/valittu-turvallisuuspoikkeama)]
