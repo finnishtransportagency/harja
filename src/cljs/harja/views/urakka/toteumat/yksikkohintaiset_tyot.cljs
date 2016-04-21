@@ -1,7 +1,6 @@
 (ns harja.views.urakka.toteumat.yksikkohintaiset-tyot
   "Urakan 'Toteumat' välilehden Yksikköhintaist työt osio"
   (:require [reagent.core :refer [atom]]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
@@ -27,7 +26,8 @@
             [harja.tiedot.urakka :as u]
             [harja.ui.napit :as napit]
             [cljs-time.core :as t]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -217,23 +217,23 @@
                                "Tarkastele toteumaa"
                                "Muokkaa toteumaa")
                              "Luo uusi toteuma")
-                  :voi-muokata? (and (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
+                  :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
                                      (not jarjestelman-lisaama-toteuma?))
-                  :muokkaa!     (fn [uusi]
-                                  (log "Muokataan toteumaa: " (pr-str uusi))
-                                  (reset! lomake-toteuma uusi))
-                  :footer       (when (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
-                                  [harja.ui.napit/palvelinkutsu-nappi
-                                   "Tallenna toteuma"
-                                   #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
-                                   {:luokka       "nappi-ensisijainen"
-                                    :disabled     (false? @valmis-tallennettavaksi?)
-                                    :kun-onnistuu (fn [vastaus]
-                                                    (log "Tehtävät tallennettu, vastaus: " (pr-str vastaus))
-                                                    (reset! yksikkohintaiset-tyot/yks-hint-tehtavien-summat (:tehtavien-summat vastaus))
-                                                    (reset! lomake-tehtavat nil)
-                                                    (reset! lomake-toteuma nil)
-                                                    (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil))}])}
+                  :muokkaa! (fn [uusi]
+                              (log "Muokataan toteumaa: " (pr-str uusi))
+                              (reset! lomake-toteuma uusi))
+                  :footer (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
+                            [harja.ui.napit/palvelinkutsu-nappi
+                             "Tallenna toteuma"
+                             #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
+                             {:luokka "nappi-ensisijainen"
+                              :disabled (false? @valmis-tallennettavaksi?)
+                              :kun-onnistuu (fn [vastaus]
+                                              (log "Tehtävät tallennettu, vastaus: " (pr-str vastaus))
+                                              (reset! yksikkohintaiset-tyot/yks-hint-tehtavien-summat (:tehtavien-summat vastaus))
+                                              (reset! lomake-tehtavat nil)
+                                              (reset! lomake-toteuma nil)
+                                              (reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma nil))}])}
           [(when jarjestelman-lisaama-toteuma?
              {:otsikko     "Lähde" :nimi :luoja :tyyppi :string
               :hae         (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
@@ -284,7 +284,7 @@
             :koko [80 :auto]
             :palstoja 2}]
           @lomake-toteuma]
-         (when-not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
+         (when-not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
            "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")]))))
 
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
@@ -368,7 +368,7 @@
          [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
                                               {:alkanut (pvm/nyt)
                                                :paattynyt (pvm/nyt)})
-          {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
+          {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka)))}]
 
          [grid/grid
           {:otsikko      (str "Yksikköhintaisten töiden toteumat")
