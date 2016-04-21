@@ -1,7 +1,6 @@
 (ns harja.views.urakka.suunnittelu.kokonaishintaiset-tyot
   "Urakan 'Kokonaishintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi

@@ -1,7 +1,6 @@
 (ns harja.views.urakka.suunnittelu.yksikkohintaiset-tyot
   "Urakan 'Yksikkohintaiset työt' välilehti:"
   (:require [reagent.core :refer [atom] :as reagent]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
