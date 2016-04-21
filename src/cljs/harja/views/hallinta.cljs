@@ -10,7 +10,6 @@
             [harja.views.toimenpidekoodit :as tp]
             [harja.views.indeksit :as i]
             [harja.views.hallinta.lampotilat :as lampotilat]
-            [harja.views.hallinta.kayttajat :as kayttajat]
             [harja.views.hallinta.integraatioloki :as integraatioloki]
             [harja.ui.grid :as g]
             ))
