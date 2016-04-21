@@ -133,6 +133,7 @@
                        "Muokkaa kokonaishintaista toteumaa"
                        "Luo uusi kokonaishintainen toteuma")
             :muokkaa! #(do (reset! muokattu %))
+            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
             :footer [napit/palvelinkutsu-nappi
                      "Tallenna toteuma"
                      #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
