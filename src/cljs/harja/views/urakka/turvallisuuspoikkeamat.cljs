@@ -14,7 +14,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -223,9 +224,8 @@
   (let [urakka @nav/valittu-urakka]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi urakka]
-     [:button.nappi-ensisijainen
-      {:on-click #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)}
-      (ikonit/livicon-plus) " Lisää turvallisuuspoikkeama"]
+     [napit/uusi "Lisää turvallisuuspoikkeama" #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)
+      {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka)))}]
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"
