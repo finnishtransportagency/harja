@@ -9,7 +9,8 @@
             [harja.kyselyt.liitteet :as q]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.komponentit.liitteet :as liitteet])
+            [harja.palvelin.komponentit.liitteet :as liitteet]
+            [harja.domain.oikeudet :as oikeudet])
   (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
 
 (defn tallenna-liite [liitteet req]
@@ -17,7 +18,7 @@
         liite (get parametrit "liite")
         urakka (Integer/parseInt (get parametrit "urakka"))]
 
-    (roolit/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
+    (oikeudet/kirjoita oikeudet/urakat-liitteet (:kayttaja req) urakka)
     (if liite
       (let [{:keys [filename content-type tempfile size kuvaus]} liite
             uusi-liite (liitteet/luo-liite liitteet (:id (:kayttaja req)) urakka filename content-type size tempfile kuvaus)]
@@ -31,7 +32,7 @@
 (defn lataa-liite [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
         {:keys [tyyppi koko urakka data]} (liitteet/lataa-liite liitteet id)]
-    (roolit/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
+    (oikeudet/lue oikeudet/urakat-liitteet (:kayttaja req) urakka)
     {:status  200
      :headers {"Content-Type"   tyyppi
                "Content-Length" koko}
@@ -40,7 +41,7 @@
 (defn lataa-pikkukuva [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
         {:keys [pikkukuva urakka]} (liitteet/lataa-pikkukuva liitteet id)]
-    (roolit/vaadi-lukuoikeus-urakkaan (:kayttaja req) urakka)
+    (oikeudet/lue oikeudet/urakat-liitteet (:kayttaja req) urakka)
     (log/debug "Ladataan pikkukuva " id)
     (if pikkukuva
       {:status  200
@@ -70,4 +71,3 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin :tallenna-liite :lataa-liite :lataa-pikkukuva)
     this))
-

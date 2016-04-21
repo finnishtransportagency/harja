@@ -83,7 +83,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :aseta #(assoc %1
                    :laji %2
                    :tyyppi nil)
-          :valinnat [:A :B :C :muistutus]
+          :valinnat [:A :B :C]
           :valinta-nayta #(case %
                            :A "A"
                            :B "B"

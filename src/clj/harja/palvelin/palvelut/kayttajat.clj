@@ -12,7 +12,8 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [clojure.set :as set]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (declare hae-kayttajat
          hae-kayttajan-tiedot
@@ -34,7 +35,8 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-kayttajan-tiedot
                       (fn [user tiedot]
-                        (tallenna-kayttajan-tiedot (:db this) (:integraatioloki this) (:fim this) (:klusterin-tapahtumat this) user tiedot)))
+                        (tallenna-kayttajan-tiedot (:db this) (:integraatioloki this) (:fim this)
+                                                   (:klusterin-tapahtumat this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :poista-kayttaja
                       (fn [user kayttaja-id]
@@ -42,13 +44,14 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-fim-kayttaja
                       (fn [user tunnus]
-                        (hae-fim-kayttaja (:db this) (:integraatioloki this) (:fim this) user tunnus)))
+                        (hae-fim-kayttaja (:db this) (:integraatioloki this) (:fim this)
+                                          user tunnus)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-organisaatioita
                       (fn [user teksti]
                         (hae-organisaatioita (:db this) user teksti)))
-    
-                           
+
+
     this)
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-kayttajat)
@@ -57,20 +60,20 @@
     (poista-palvelu (:http-palvelin this) :poista-kayttaja)
     (poista-palvelu (:http-palvelin this) :hae-fim-kayttaja)
     (poista-palvelu (:http-palvelin this) :hae-organisaatioita)
-    
+
     this))
 
 
 (defn hae-kayttajat
   "Hae käyttäjät tiedot frontille varten"
   [db user hakuehto alku maara]
-  
+
   (let [kayttajat (into []
                         (comp (map konv/organisaatio)
                               (map #(konv/array->set % :roolit)))
                         (q/hae-kayttajat db (:id user) hakuehto alku maara))
         lkm (:lkm (first (q/hae-kayttajat-lkm db (:id user) hakuehto)))]
-    
+
     [lkm kayttajat]))
 
 (defn hae-kayttaja [db kayttaja-id]
@@ -135,9 +138,7 @@
 (defn tallenna-kayttajan-tiedot
   "Tallentaa käyttäjän uudet käyttäjäoikeustiedot. Palauttaa lopuksi käyttäjän tiedot."
   [db integraatioloki fim tapahtumat user {:keys [kayttaja-id kayttajatunnus organisaatio-id tiedot]}]
-  (roolit/vaadi-rooli user #{roolit/jarjestelmavastuuhenkilo
-                             roolit/hallintayksikon-vastuuhenkilo
-                             roolit/urakoitsijan-paakayttaja})
+  (oikeudet/kirjoita oikeudet/hallinta-kayttajat user)
   (log/info "Tallennetaan käyttäjälle " kayttaja-id " tiedot: " tiedot)
   (let [kayttajan-tiedot
         (jdbc/with-db-transaction [c db]
@@ -145,22 +146,22 @@
           (let [luotu-kayttaja (when (nil? kayttaja-id)
                                  (tuo-fim-kayttaja c integraatioloki fim user kayttajatunnus organisaatio-id))
                 kayttaja-id (if luotu-kayttaja
-                              (:id luotu-kayttaja) 
+                              (:id luotu-kayttaja)
                               kayttaja-id)
                 vanhat-tiedot (hae-kayttajan-tiedot c user kayttaja-id)
                 vanhat-roolit (:roolit vanhat-tiedot)
-                
+
                 vanhat-urakka-roolit (group-by (comp :id :urakka) (:urakka-roolit vanhat-tiedot))] ;; HAE roolit,  urakka-id => #{"rooli1" "rooli2"}
             ;; FIXME:
             ;; Käydään läpi per rooli tallennukset, tallennetaan vain niitä mitä käyttäjä saa tallentaa
                                         ;(when (oik/roolissa? user roolit/jarjestelmavastuuhenkilo)
-            
+
             ;; Järjestelmävastuuhenkilö saa antaa rooleja: urakanvalvoja
                                         ;  )
 
             (log/info "VANHAT-ROOLIT " vanhat-roolit)
             (log/info "VANHAT-URAKKA-ROOLIT " vanhat-urakka-roolit)
-            
+
             (doseq [rooli (:roolit tiedot)]
               (if (vanhat-roolit rooli)
                 (log/info "Käyttäjällä on rooli " rooli " ja se jatkuu.")
@@ -172,14 +173,14 @@
               (q/poista-rooli! c (:id user) kayttaja-id poistettava-rooli)
               (q/poista-urakka-roolit! c (:id user) kayttaja-id poistettava-rooli)
               )
-            
-            
+
+
             (doseq [{:keys [rooli urakka] :as urakka-rooli} (:urakka-roolit tiedot)]
-              
+
               (if (:poistettu urakka-rooli)
                 (do (log/info "Poistetaan käyttäjän " kayttaja-id " rooli " rooli " urakasta " (:id urakka))
                     (q/poista-urakka-rooli! c (:id user) kayttaja-id (:id urakka) rooli))
-                
+
                 (let [roolit-urakassa (into #{} (map :rooli (get vanhat-urakka-roolit (:id urakka) [])))]
                   (if (roolit-urakassa rooli)
                     (log/info "Käyttäjällä on rooli " rooli " urakassa " (:id urakka) " ja se jatkuu...")
@@ -191,14 +192,14 @@
             ;; Lopuksi palautetaan päivitetty käyttäjä
             (merge (hae-kayttaja c kayttaja-id)
                    (hae-kayttajan-tiedot c user kayttaja-id))))]
-    (julkaise! tapahtumat :kayttaja-muokattu (:kayttajanimi kayttajan-tiedot))  
+    (julkaise! tapahtumat :kayttaja-muokattu (:kayttajanimi kayttajan-tiedot))
     kayttajan-tiedot))
 
 
 (defn poista-kayttaja [db user kayttaja-id]
   (jdbc/with-db-transaction [c db]
     (= 1 (q/poista-kayttaja! c (:id user) kayttaja-id))))
-            
+
 (defn hae-organisaatioita [db user teksti]
   (into []
         organisaatio-xf

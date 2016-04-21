@@ -18,6 +18,7 @@
 (def jarjestelma nil)
 
 (Locale/setDefault (Locale. "fi" "FI"))
+(log/set-config! [:appenders :standard-out :min-level] :info)
 
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"
@@ -168,11 +169,11 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
 (def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789" :organisaatio 9
-                      :roolit #{"urakanvalvoja"}})
+                      :roolit #{"ELY_Urakanvalvoja"}})
 
 ;; id:2 Järjestelmävastuuhenkilö
 (def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
-                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"jarjestelmavastuuhenkilo"}, :id 2
+                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
@@ -302,16 +303,16 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 (defn oulun-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
-   :roolit #{"urakanvalvoja"}, :id 417,
+   :roolit #{"ELY_Urakanvalvoja"}, :id 417,
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
    :urakkaroolit [{:urakka {:id @oulun-alueurakan-2005-2010-id,
                             :nimi "Oulun alueurakka 2005-2012",
                             :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                   :rooli "urakanvalvoja"}]})
+                   :rooli "ELY_Urakanvalvoja"}]})
 
 (defn oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
-   :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
+   :roolit #{"Vastuuhenkilo"}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :urakkaroolit [{:urakka {:id @oulun-alueurakan-2005-2010-id,
                             :nimi "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},

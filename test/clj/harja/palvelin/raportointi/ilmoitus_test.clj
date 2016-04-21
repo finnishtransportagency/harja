@@ -44,9 +44,9 @@
     (let [db (tietokanta/luo-tietokanta testitietokanta)
           [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.11.2014"))
           ilmoitukset (ilmoitusraportti/hae-ilmoitukset-raportille
-                  db +kayttaja-jvh+ nil nil nil nil
-                  +ilmoitustilat+ +ilmoitustyypit+
-                  [alkupvm loppupvm] "" nil)
+                       db +kayttaja-jvh+ nil nil nil nil
+                       +ilmoitustilat+ +ilmoitustyypit+
+                       [alkupvm loppupvm] "" nil)
           ristisuon-ilmoitus (first (filter #(= (:lyhytselite %) "Voimakas lumipyry nelostiellä Ristisuon kohdalla ja tiet auraamatta.")
                                       ilmoitukset))]
       (is (= (pvm/pvm (:ilmoitettu ristisuon-ilmoitus)) "26.01.2015"))
