@@ -9,7 +9,7 @@ Autentikointiin käytetään KOKAa.
 
 ## Hakemistorakenne ##
 
-Alustava 
+Alustava
 Harja repon hakemistorakenne:
 
 - README                    (yleinen readme)
@@ -58,7 +58,7 @@ Host harja-*-test
 Host harja-*-stg
   ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
 
-* Sourceta uusi config tai avaa uusi terminaali-ikkuna. 
+* Sourceta uusi config tai avaa uusi terminaali-ikkuna.
 
 * Avaa VPN putki.
 
@@ -167,3 +167,16 @@ Mene vagrant-kansioon ja aja komennot:
 
 Valmis!
 
+## Kirjautuminen
+
+Harja käyttää liikenneviraston extranetista tulevia headereita kirjautumiseen.
+Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä.
+
+Seuraavat headerit tuettuna:
+* OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
+* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit), esim "Jarjestelmavastaava"
+* OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto"
+* OAM_USER_FIRST_NAME: Etunimi
+* OAM_USER_LAST_NAME: Sukunimi
+* OAM_USER_EMAIL: Sähköpostiosoite
+* OAM_USER_MOBILE: Puhelinnumero
