@@ -14,7 +14,8 @@
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -67,7 +68,7 @@
                :muutos #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
                                                                      (:tehtava rivi))
                                                                    (vals (grid/hae-muokkaustila %)))))
-               :voi-poistaa? (oikeudet/on-muu-oikeus? "poista" oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka))}
+               :voi-poistaa? (oikeudet/on-muu-oikeus? "poista" oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka) @istunto/kayttaja)}
 
               [{:otsikko       "Tehtävä" :nimi :tehtavanimi
                 :jos-tyhja     "Ei valittavia tehtäviä"
