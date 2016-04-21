@@ -21,12 +21,6 @@
   [bs/tabs {:style :tabs :classes "tabs-taso1"
             :active (nav/valittu-valilehti-atom :hallinta)}
 
-   "Käyttäjät"
-   :kayttajat
-   ^{:key "kayttajat"}
-   (when (oikeudet/hallinta-kayttajat)
-     [kayttajat/kayttajat])
-
    "Indeksit"
    :indeksit
    (when (oikeudet/hallinta-indeksit)
