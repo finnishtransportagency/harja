@@ -24,19 +24,19 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [urakkatyyppi sopimustyyppi id]}]
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   ;; FIXME: siirrä navigaatioon
   (case valilehti
     :yleiset true
     ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
     :suunnittelu (and (oikeudet/urakat-suunnittelu id) (not= sopimustyyppi :kokonaisurakka))
     :toteumat (and (oikeudet/urakat-toteumat id) (not= sopimustyyppi :kokonaisurakka))
-    :aikataulu (and (oikeudet/urakat-aikataulu id) (= urakkatyyppi :paallystys))
-    :kohdeluettelo-paallystys (and (oikeudet/urakat-kohdeluettelo id) (= urakkatyyppi :paallystys))
-    :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo id) (= urakkatyyppi :paikkaus))
+    :aikataulu (and (oikeudet/urakat-aikataulu id) (= tyyppi :paallystys))
+    :kohdeluettelo-paallystys (and (oikeudet/urakat-kohdeluettelo id) (= tyyppi :paallystys))
+    :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo id) (= tyyppi :paikkaus))
     :laadunseuranta (oikeudet/urakat-laadunseuranta id)
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
-    :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= urakkatyyppi :hoito))
+    :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= tyyppi :hoito))
     :laskutus (oikeudet/urakat-laskutus id)))
 
 (defn urakka
