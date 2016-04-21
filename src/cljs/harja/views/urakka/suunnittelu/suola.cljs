@@ -4,7 +4,6 @@
             [harja.tiedot.urakka.toteumat.suola :as suola]
             [cljs.core.async :refer [<!]]
             [harja.ui.komponentti :as komp]
-            [harja.domain.roolit :as roolit]
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
@@ -14,14 +13,14 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.indeksit :as i]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
             [harja.fmt :as fmt]
-            [harja.views.kartta.pohjavesialueet :as pohjavesialueet])
+            [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]))
@@ -114,8 +113,7 @@
 (defn suolasakko-lomake
   []
   (let [urakka @nav/valittu-urakka
-        saa-muokata? (roolit/rooli-urakassa? roolit/urakanvalvoja
-                                             (:id urakka))
+        saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
         pohjavesialueita-muokattu? (atom false)]
 
     (fn []
