@@ -286,7 +286,7 @@
             :palstoja 2}]
           @lomake-toteuma]
          (when-not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
-           "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")]))))
+           oikeudet/ilmoitus-ei-oikeutta-muokata-toteumaa)]))))
 
 (defn yksiloidyt-tehtavat [rivi tehtavien-summat]
   (let [urakka-id (:id @nav/valittu-urakka)

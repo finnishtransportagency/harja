@@ -369,7 +369,7 @@
 
             @muokattu]
            (when-not kirjoitusoikeus?
-             "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")])))))
+             oikeudet/ilmoitus-ei-oikeutta-muokata-toteumaa)])))))
 
 (defn muut-tyot-toteumalistaus
   "Muiden töiden toteumat"
