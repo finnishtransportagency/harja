@@ -5,7 +5,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
-                                      alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
+                                                  alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
             [harja.visualisointi :as vis]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
@@ -17,7 +17,8 @@
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
 
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -170,11 +171,9 @@
          [grid/grid
           {:otsikko "Urakkasopimuksen mukaiset yksikköhinnat"
            :tyhja (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")
-           :tallenna (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                (:id ur)
-                                                #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi
-                                                                urakan-yks-hint-tyot %)
-                                                :ei-mahdollinen)
+           :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                       #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-yks-hint-tyot %)
+                       :ei-mahdollinen)
            :peruuta #(reset! tuleville? false)
            :tunniste :tehtava
            :voi-lisata? false
