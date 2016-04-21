@@ -1,6 +1,5 @@
 (ns harja.views.urakka.suunnittelu.materiaalit
   (:require [reagent.core :refer [atom] :as r]
-            [harja.domain.roolit :as roolit]
             [harja.ui.yleiset :refer [raksiboksi] :refer-macros [deftk]]
             [harja.tiedot.urakka.suunnittelu.materiaalit :as t]
             [harja.loki :refer [log logt]]
@@ -12,7 +11,8 @@
             [harja.ui.viesti :as viesti]
 
             [cljs.core.async :refer [<!]]
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [run! reaction]]))
 
@@ -129,9 +129,7 @@
              virheita? (not (empty? @yleiset-materiaalit-virheet))
                            
              voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
-             voi-muokata? (roolit/rooli-urakassa? roolit/urakanvalvoja (:id ur))
-             ]
-    
+             voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-materiaalit (:id ur))]
          [:div.materiaalit
           [valinnat/urakan-sopimus-ja-hoitokausi ur]
           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
