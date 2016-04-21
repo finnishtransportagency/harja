@@ -106,7 +106,7 @@ on nil."
                  ;; Etu- ja sukunimi
                  "oam_user_first_name" "oam_user_last_name"
                  ;; Sähköposti ja puhelin
-                 "oam_user_email" "oam_user_mobile"])))
+                 "oam_user_mail" "oam_user_mobile"])))
 
 (defn- hae-kayttajalle-organisaatio
   [ely db organisaatio]
@@ -129,7 +129,7 @@ ja palauttaa käyttäjätiedot"
        organisaatio "oam_organization"
        etunimi "oam_user_first_name"
        sukunimi "oam_user_last_name"
-       sahkoposti "oam_user_email"
+       sahkoposti "oam_user_mail"
        puhelin "oam_user_mobile"}]
 
   (let [organisaatio (hae-kayttajalle-organisaatio ely db organisaatio)

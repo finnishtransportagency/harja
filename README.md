@@ -178,5 +178,5 @@ Seuraavat headerit tuettuna:
 * OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto"
 * OAM_USER_FIRST_NAME: Etunimi
 * OAM_USER_LAST_NAME: Sukunimi
-* OAM_USER_EMAIL: Sähköpostiosoite
+* OAM_USER_MAIL: Sähköpostiosoite
 * OAM_USER_MOBILE: Puhelinnumero
