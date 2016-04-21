@@ -26,7 +26,6 @@
 
 (maarittele-oikeudet!)
 
-
 (defn on-oikeus?
   "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
   [tyyppi oikeus urakka-id kayttaja]
