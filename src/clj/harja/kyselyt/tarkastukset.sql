@@ -219,7 +219,7 @@ FROM tarkastus t
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
-                   AND (:rajaa_urakkatyyppi = FALSE OR tyyppi = :urakkatyyppi :: urakkatyyppi))
+                   AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'tiesto'::tarkastustyyppi;

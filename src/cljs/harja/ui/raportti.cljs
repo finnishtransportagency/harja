@@ -40,6 +40,7 @@
                              :pakota-rivitys? (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
                              :nimi (str "sarake" i)
+                             ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
                              :tyyppi (if (:tyyppi sarake)
                                        :komponentti
                                        :string)
