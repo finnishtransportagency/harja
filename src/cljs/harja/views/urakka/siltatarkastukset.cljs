@@ -1,7 +1,6 @@
 (ns harja.views.urakka.siltatarkastukset
   "Urakan 'Siltatarkastukset' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
@@ -24,7 +23,8 @@
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -298,10 +298,11 @@
            :tunniste     :kohdenro
            :voi-lisata?  false
            :voi-poistaa? (constantly false)
-           :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                    (:id @nav/valittu-urakka)
-                                                    #(paivita-siltatarkastus! %)
-                                                    :ei-mahdollinen)}
+           :tallenna     (if (oikeudet/voi-kirjoittaa?
+                              oikeudet/urakat-laadunseuranta-siltatarkastukset
+                              (:id @nav/valittu-urakka))
+                           #(paivita-siltatarkastus! %)
+                           :ei-mahdollinen)}
 
           ;; sarakkeet
           @siltatarkastussarakkeet
@@ -333,7 +334,7 @@
       (fn []
         [:div.uusi-siltatarkastus
          [napit/takaisin "Palaa tallentamatta" #(reset! uuden-syottaminen false)]
-         
+
          [lomake {:otsikko "Luo uusi siltatarkastus"
                   :muokkaa! (fn [uusi]
                               (reset! lomakkeen-tiedot uusi))}
