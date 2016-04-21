@@ -41,6 +41,10 @@
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
+(defmethod muodosta-pdf :arvo-ja-osuus [arvo-ja-osuus]
+  (let [tiedot (second arvo-ja-osuus)]
+    (str (:arvo tiedot) " (" (:osuus tiedot) "%)")))
+
 (defn taulukko-body [sarakkeet data {:keys [otsikko viimeinen-rivi-yhteenveto?
                                   korosta-rivit oikealle-tasattavat-kentat] :as optiot}]
   (let [rivien-maara (count data)
