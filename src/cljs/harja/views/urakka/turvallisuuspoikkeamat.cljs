@@ -72,6 +72,7 @@
             [lomake/lomake
              {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
               :muokkaa! #(reset! turvallisuuspoikkeama %)
+              :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
               :footer [napit/palvelinkutsu-nappi
                        "Tallenna turvallisuuspoikkeama"
                        #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
