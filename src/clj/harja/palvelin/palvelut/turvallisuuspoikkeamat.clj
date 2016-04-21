@@ -3,13 +3,13 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.geo :as geo]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (def turvallisuuspoikkeama-xf
   (comp (map konv/alaviiva->rakenne)
@@ -28,7 +28,7 @@
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
-  (when urakka-id (roolit/vaadi-lukuoikeus-urakkaan user urakka-id))
+  (oikeudet/lue oikeudet/urakat-turvallisuus user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
           turvallisuuspoikkeama-xf
@@ -36,7 +36,7 @@
     {:korjaavatoimenpide :korjaavattoimenpiteet}))
 
 (defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/lue oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
   (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
                                                          turvallisuuspoikkeama-xf
@@ -148,6 +148,7 @@
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
+  (oikeudet/kirjoita oikeudet/urakat-turvallisuus user (:urakka tp))
   (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi)]
     (when turi
       (turi/laheta-turvallisuuspoikkeama turi id)))

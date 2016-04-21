@@ -13,6 +13,7 @@
 (defn ei-oikeutta? [arvo]
   (instance? EiOikeutta arvo))
 
+
 ;; Roolit kätevämpää käyttöä varten
 (def jarjestelmavastuuhenkilo          "jarjestelmavastuuhenkilo") ;; UHA: jvh
 (def tilaajan-kayttaja                 "tilaajan kayttaja")
@@ -33,6 +34,8 @@
 (def urakoitsijan-paivystaja           "urakoitsijan paivystaja") ;; UHA: uy
 (def raportoija-tiehallinto            "raportoija tiehallinto") ;; UHA: r
 
+;; Sähke roolit
+(def jarjestelmavastaava "Jarjestelmavastaava")
 
 
 
@@ -106,18 +109,38 @@
            (map :rooli)
            (into #{}))))
 
+(defn organisaatioroolit
+  "Palauttaa setin rooleja, joita käyttäjällä on annetussa organisaatiossa."
+  ([kayttaja]
+   (organisaatioroolit kayttaja (get-in kayttaja [:organisaatio :id])))
+  ([kayttaja organisaatio-id]
+   (get (:organisaatioroolit kayttaja) organisaatio-id)))
+
+(defn organisaation-urakka?
+  "Tarkistaa onko annettu urakka käyttäjän organisaation oma urakka.
+Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai
+urakoitsija."
+  [{urakat :organisaation-urakat} urakka-id]
+  (and urakat
+       (urakat urakka-id)))
+
+(defn oma-urakka? [kayttaja urakka-id]
+  (or (organisaation-urakka? kayttaja urakka-id)
+      (not (empty? (urakkaroolit kayttaja urakka-id)))))
+
 (defn roolissa?
   "Tarkistaa onko käyttäjällä tietty rooli. Rooli voi olla joko yksittäinen rooli
 tai setti rooleja. Jos annetaan setti, tarkistetaan onko käyttäjällä joku annetuista
 rooleista."
   #?(:cljs ([rooli] (roolissa? @istunto/kayttaja rooli)))
   ([kayttaja rooli]
-    ;; Järjestelmän vastuuhenkilöllä on kaikki roolit eli saa tehdä kaiken
-   (if (contains? (:roolit kayttaja) jarjestelmavastuuhenkilo)
-     true
-     (if (some (if (set? rooli)
-                 rooli
-                 #{rooli}) (:roolit kayttaja))
+   (let [roolit (if (set? rooli)
+                  rooli
+                  #{rooli})]
+     (if (or (some roolit (:roolit kayttaja))
+             (some (fn [organisaatioroolit]
+                     (some roolit organisaatioroolit))
+                   (vals (:organisaatioroolit kayttaja))))
        true
        false))))
 
@@ -128,14 +151,16 @@ rooleista."
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
   #?(:cljs ([rooli urakka-id] (rooli-urakassa? @istunto/kayttaja rooli urakka-id)))
   ([kayttaja rooli urakka-id]
-    (if (roolissa? kayttaja jarjestelmavastuuhenkilo)
-      true
-      (if-let [urakkaroolit (urakkaroolit kayttaja urakka-id)]
-        (cond
-          (string? rooli) (if (urakkaroolit rooli) true false)
-          (set? rooli) (not (empty? (intersection urakkaroolit rooli)))
-          :default false)
-        false))))
+   (let [roolit (if (set? rooli)
+                  rooli
+                  #{rooli})]
+     (or
+      ;; Jos käyttäjällä on suoraan rooli annetussa urakassa
+      (some roolit (urakkaroolit kayttaja urakka-id))
+
+      ;; Tai käyttäjällä on rooli organisaatiossa ja urakka on organisaation urakka
+      (and (organisaation-urakka? kayttaja urakka-id)
+           (some roolit (organisaatioroolit kayttaja)))))))
 
 ;; VAIN BACKILLÄ
 
@@ -168,13 +193,6 @@ rooleista."
                tilaajan-asiantuntija
                tilaajan-laadunvalvontakonsultti}))
 
-(defn organisaation-urakka?
-  "Tarkistaa onko annettu urakka käyttäjän organisaation oma urakka.
-Oma urakka on urakka, jossa käyttäjän organisaatio on hallintayksikkö tai 
-urakoitsija."
-  [{urakat :organisaation-urakat} urakka-id]
-  (and urakat
-       (urakat urakka-id)))
 
 (defn lukuoikeus-urakassa?
   [kayttaja urakka-id]
@@ -184,7 +202,7 @@ urakoitsija."
       (rooli-urakassa? kayttaja urakoitsijan-urakan-vastuuhenkilo urakka-id)))
 
 (defn voi-kirjata-toteumia?
-  "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli 
+  "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli
   tai jos hän on urakan urakoitsijaorganisaation pääkäyttäjä"
   #?(:cljs ([urakka-id] (voi-kirjata-toteumia? @istunto/kayttaja urakka-id)))
   ([kayttaja urakka-id]
@@ -210,7 +228,7 @@ urakoitsija."
   "Käyttäjä voi nähdä kaikki urakat, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
   #?(:cljs ([] (lukuoikeus-kaikkiin-urakoihin? @istunto/kayttaja)))
   ([kayttaja]
-   (tilaajan-kayttaja? kayttaja)))
+   (roolissa? kayttaja jarjestelmavastaava)))
 
 
 #?(:clj

@@ -3,8 +3,11 @@
   (:require [harja.ui.grid :as grid]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.liitteet :as liitteet]
             [harja.visualisointi :as vis]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.modal :as modal]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -15,6 +18,8 @@
             (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
     (first elementti)))
 
+(defmethod muodosta-html :liitteet [[_ liitteet]]
+  (liitteet/liitelistaus liitteet))
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                korosta-rivit korostustyyli oikealle-tasattavat-kentat]}
@@ -28,13 +33,22 @@
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
-                          {:hae                #(get % i)
-                           :leveys             (:leveys sarake)
-                           :otsikko            (:otsikko sarake)
-                           :pakota-rivitys?    (:pakota-rivitys? sarake)
-                           :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
-                           :nimi               (str "sarake" i)
-                           :tasaa              (when (oikealle-tasattavat-kentat i) :oikea)})
+                          (merge
+                            {:hae #(get % i)
+                             :leveys (:leveys sarake)
+                             :otsikko (:otsikko sarake)
+                             :pakota-rivitys? (:pakota-rivitys? sarake)
+                             :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
+                             :nimi (str "sarake" i)
+                             ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
+                             :tyyppi (if (:tyyppi sarake)
+                                       :komponentti
+                                       :string)
+                             :tasaa (when (oikealle-tasattavat-kentat i) :oikea)}
+                            (when (:tyyppi sarake)
+                              {:komponentti (fn [rivi]
+                                              (let [elementti (get rivi i)]
+                                                (muodosta-html elementti)))})))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko "Ei tietoja")]

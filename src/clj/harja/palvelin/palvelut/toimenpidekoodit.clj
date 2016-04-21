@@ -1,12 +1,12 @@
 (ns harja.palvelin.palvelut.toimenpidekoodit
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [harja.domain.roolit :as roolit]
             [harja.kyselyt.toimenpidekoodit :as q]
             [harja.kyselyt.urakat :as urakat-q]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.oikeudet :as oikeudet]))
 
 
 
@@ -40,7 +40,7 @@
   (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko (konv/seq->array hinnoittelu) id)))
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
-  (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
+  (oikeudet/kirjoita oikeudet/hallinta-tehtavat user)
   (jdbc/with-db-transaction [c db]
     (doseq [rivi lisattavat]
       (lisaa-toimenpidekoodi c user rivi))

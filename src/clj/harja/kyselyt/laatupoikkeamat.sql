@@ -282,7 +282,10 @@ SELECT
   lp.kuvaus,
   lp.tekija,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -302,7 +305,10 @@ SELECT
   u.nimi as urakka,
   lp.tekija,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -324,7 +330,10 @@ SELECT
   lp.tekija,
   u.nimi as urakka,
   liite.id   as liite_id,
-  liite.nimi as liite_nimi
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id

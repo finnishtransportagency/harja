@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.kokonaishintaiset-tyot-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
-            
+
             [harja.kyselyt.urakat :as urk-q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kokonaishintaiset-tyot :refer :all]
@@ -11,14 +11,14 @@
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
-                    (component/start 
+                    (component/start
                      (component/system-map
                       :db (luo-testitietokanta)
                       :http-palvelin (testi-http-palvelin)
                       :kokonaishintaiset-tyot (component/using
                                   (->Kokonaishintaiset-tyot)
                                   [:http-palvelin :db])))))
-  
+
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -30,9 +30,9 @@
 
 
 ;; käyttää testidata.sql:stä tietoa
-(deftest kaikki-kokonaishintaiset-tyot-haettu-oikein 
-  (let [oulun-alueurakan-sopimus (ffirst (q (str "SELECT id 
-                                                 FROM sopimus 
+(deftest kaikki-kokonaishintaiset-tyot-haettu-oikein
+  (let [oulun-alueurakan-sopimus (ffirst (q (str "SELECT id
+                                                 FROM sopimus
                                                  WHERE urakka = " @oulun-alueurakan-2005-2010-id
                                                  " AND paasopimus IS null")))
 
@@ -42,17 +42,18 @@
                                                        :kokonaishintaiset-tyot +kayttaja-jvh+ @oulun-alueurakan-2005-2010-id))
         talvihoidon-tyot (filter #(= "Oulu Talvihoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
         sorateiden-tyot (filter #(= "Oulu Sorateiden hoito TP" (:tpi_nimi %)) kokonaishintaiset-tyot)
-        oulun-alueurakan-toiden-lkm (ffirst (q (str "SELECT count(*) 
-                                                                FROM kokonaishintainen_tyo kt 
+        oulun-alueurakan-toiden-lkm (ffirst (q (str "SELECT count(*)
+                                                                FROM kokonaishintainen_tyo kt
                                                                 LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
                                                                 WHERE tpi.urakka = " @oulun-alueurakan-2005-2010-id
                                                                 " AND sopimus = " oulun-alueurakan-sopimus)))
-        
+
         urakoitsijan-urakanvalvoja (oulun-urakan-urakoitsijan-urakkavastaava)
         ei-ole-taman-urakan-urakoitsijan-urakanvalvoja (ei-ole-oulun-urakan-urakoitsijan-urakkavastaava)
-        kokonaishintaiset-tyot-kutsujana-urakoitsija (filter #(= oulun-alueurakan-sopimus (:sopimus %))
-                                                             (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                             :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja @oulun-alueurakan-2005-2010-id))]
+        kokonaishintaiset-tyot-kutsujana-urakoitsija
+        (filter #(= oulun-alueurakan-sopimus (:sopimus %))
+                (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja @oulun-alueurakan-2005-2010-id))]
 
     (is (= (count kokonaishintaiset-tyot) oulun-alueurakan-toiden-lkm))
     (is (= (count kokonaishintaiset-tyot-kutsujana-urakoitsija) oulun-alueurakan-toiden-lkm))

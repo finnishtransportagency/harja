@@ -4,7 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.integraatioloki :as q]
             [harja.kyselyt.konversio :as konversio]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 
 (defn muunna-merkkijono-kartaksi [merkkijono]
@@ -38,14 +38,14 @@
 (defn hae-jarjestelmien-integraatiot
   "Palvelu, joka palauttaa kaikki eri järjestelmien integraatiot."
   [db kayttaja]
-  (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastuuhenkilo)
+  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
   (log/debug "Haetaan järjestelmien integraatiot.")
   (hae-integraatiot db))
 
 (defn hae-integraatiotapahtumat
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
   [db kayttaja jarjestelma integraatio alkaen paattyen]
-  (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastuuhenkilo)
+  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
   (let [tapahtumat
         (into []
               tapahtuma-xf
@@ -62,17 +62,17 @@
 
 (defn hae-integraatiotapahtumien-maarat
   [db kayttaja jarjestelma integraatio]
-  (when (roolit/tilaajan-kayttaja? kayttaja)
-    (let [
-          jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
-          maarat (q/hae-integraatiotapahtumien-maarat
-                   db
-                   (if jarjestelma true false) jarjestelma
-                   (if integraatio true false) integraatio)]
-      maarat)))
+  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
+  (let [
+        jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
+        maarat (q/hae-integraatiotapahtumien-maarat
+                db
+                (if jarjestelma true false) jarjestelma
+                (if integraatio true false) integraatio)]
+    maarat))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
-  (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastuuhenkilo)
+  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
   (into []
         viesti-xf
         (q/hae-integraatiotapahtuman-viestit db tapahtuma-id)))

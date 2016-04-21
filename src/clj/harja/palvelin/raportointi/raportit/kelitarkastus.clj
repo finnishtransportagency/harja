@@ -100,7 +100,7 @@
        {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}
        {:leveys 5 :otsikko "Tar\u00ADkas\u00ADtaja"}
        {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}
-       {:leveys 5 :otsikko "Liit\u00ADtei\u00ADtä"}]
+       {:leveys 5 :otsikko "Liit\u00ADteet" :tyyppi :liite}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         (reverse (sort-by (fn [rivi] [(:aika rivi)
                                       (get-in rivi [:tr :numero])])
@@ -123,4 +123,4 @@
            (get-in rivi [:lampotila :tie])
            (:tarkastaja rivi)
            (:havainnot rivi)
-           (count (:liitteet rivi))]))]]))
+           [:liitteet (:liitteet rivi)]]))]]))

@@ -14,6 +14,7 @@
           db (:db this)]
       (julkaise-palvelu http :ping
                         (fn [user tiedot]
+                          (log/debug "KÄYTTÄJÄ: " user)
                           (kasittele-ping db user tiedot)))
       this))
 

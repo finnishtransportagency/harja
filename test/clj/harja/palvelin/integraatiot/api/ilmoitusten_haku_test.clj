@@ -15,7 +15,7 @@
            (java.text SimpleDateFormat)
            (java.util Date)))
 
-(def kayttaja "jvh")
+(def kayttaja "yit-rakennus")
 
 (def +kuittausjono+ "tloik-ilmoituskuittausjono")
 

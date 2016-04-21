@@ -6,10 +6,10 @@
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
 
-            [harja.domain.roolit :as roolit]
             [harja.kyselyt.muutoshintaiset-tyot :as q]
             [harja.kyselyt.toteumat :as tot-q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.oikeudet :as oikeudet]))
 
 
 (def muutoshintaiset-xf
@@ -22,7 +22,7 @@
 (defn hae-urakan-muutoshintaiset-tyot
   "Palvelu, joka palauttaa urakan muutoshintaiset työt."
   [db user urakka-id]
-  (roolit/vaadi-lukuoikeus-urakkaan user urakka-id)
+  (oikeudet/lue oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka-id)
   (into []
     muutoshintaiset-xf
     (q/listaa-urakan-muutoshintaiset-tyot db urakka-id)))
@@ -30,7 +30,7 @@
 (defn tallenna-muutoshintaiset-tyot
   "Palvelu joka tallentaa muutoshintaiset tyot."
   [db user {:keys [urakka-id tyot]}]
-  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
 
   (jdbc/with-db-transaction
@@ -44,7 +44,7 @@
         (if (:poistettu tyo)
           (do
             ;; vain järjestelmän vastuuhenkilö voi poistaa muutoshintaisia töitä
-            (roolit/vaadi-rooli user roolit/jarjestelmavastuuhenkilo)
+            (oikeudet/vaadi-oikeus "poista" oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user)
             (apply q/poista-muutoshintainen-tyo! parametrit))
           ;; uusien rivien id on negatiivinen
           (if (neg? (:id tyo))
