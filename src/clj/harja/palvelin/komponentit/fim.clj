@@ -8,7 +8,8 @@
             [clojure.string :as str]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.domain.oikeudet :as oikeudet])
   (:import (java.io ByteArrayInputStream)))
 
 ;; Kentät, joita voidaan hakea:
@@ -27,6 +28,20 @@
    :MobilePhone [:puhelin #(str/replace % " " "")]
    :Role :roolit
    :Company :organisaatio})
+
+(defn- roolien-kuvaukset [roolit urakan-sampo-id]
+  (and
+   roolit
+   (into []
+         (comp
+          (filter #(str/starts-with? % urakan-sampo-id))
+          (map #(subs % (inc (count urakan-sampo-id))))
+          (map #(get-in oikeudet/roolit [% :kuvaus]))
+          (remove nil?))
+         (str/split roolit #","))))
+
+(defn- kuvaa-roolit [henkilot urakan-sampo-id]
+  (map #(update-in % [:roolit] roolien-kuvaukset urakan-sampo-id) henkilot))
 
 (defn lue-fim-vastaus
   "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin urakan käyttäjiä."
@@ -62,7 +77,8 @@
                     :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)})
           :body
           lue-xml
-          lue-fim-vastaus))))
+          lue-fim-vastaus
+          (kuvaa-roolit urakan-sampo-id)))))
 
 (defrecord FIM [url]
   component/Lifecycle

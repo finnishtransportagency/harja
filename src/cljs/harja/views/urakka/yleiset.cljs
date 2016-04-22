@@ -122,15 +122,16 @@
     (komp/luo
      (komp/kun-muuttuu hae!)
      (fn [urakka-id]
+       (log "URAKKAAN LIITETYT: " (pr-str @kayttajat))
        [grid/grid
         {:otsikko "Urakkaan liitetyt käyttäjät"
+         :tunniste :kayttajatunnus
          :tyhja (if (nil? @kayttajat)
                   [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
                   "Ei urakkaan liitettyjä käyttäjiä.")}
 
-        [{:otsikko "Rooli" :nimi :rooli :fmt roolit/rooli->kuvaus :tyyppi :string :leveys "15%"}
-         {:otsikko "Organisaatio" :nimi :org :hae (comp :nimi :organisaatio) :tyyppi :string
-          :leveys "15%"}
+        [{:otsikko "Rooli" :nimi :roolit :fmt #(str/join ", " %) :tyyppi :string :leveys "15%"}
+         {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string :leveys "15%"}
          {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string
           :leveys "25%"}
          {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}

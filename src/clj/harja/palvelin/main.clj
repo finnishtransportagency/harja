@@ -226,7 +226,7 @@
                   [:http-palvelin :db])
       :yhteyshenkilot (component/using
                         (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
-                        [:http-palvelin :db])
+                        [:http-palvelin :db :fim])
       :toimenpidekoodit (component/using
                           (toimenpidekoodit/->Toimenpidekoodit)
                           [:http-palvelin :db])
