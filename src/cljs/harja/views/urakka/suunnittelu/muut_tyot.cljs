@@ -68,7 +68,7 @@
                :muutos #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
                                                                      (:tehtava rivi))
                                                                    (vals (grid/hae-muokkaustila %)))))
-               :voi-poistaa? (oikeudet/on-muu-oikeus? "poista" oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka) @istunto/kayttaja)}
+               :voi-poistaa? (constantly (oikeudet/on-muu-oikeus? "poista" oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka) @istunto/kayttaja))}
 
               [{:otsikko       "Tehtävä" :nimi :tehtavanimi
                 :jos-tyhja     "Ei valittavia tehtäviä"
