@@ -122,7 +122,6 @@
     (komp/luo
      (komp/kun-muuttuu hae!)
      (fn [urakka-id]
-       (log "URAKKAAN LIITETYT: " (pr-str @kayttajat))
        [grid/grid
         {:otsikko "Urakkaan liitetyt käyttäjät"
          :tunniste :kayttajatunnus
