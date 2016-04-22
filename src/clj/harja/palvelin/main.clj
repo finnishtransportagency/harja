@@ -41,7 +41,6 @@
     [harja.palvelin.palvelut.paallystys :as paallystys]
     [harja.palvelin.palvelut.paikkaus :as paikkaus]
     [harja.palvelin.palvelut.ping :as ping]
-    [harja.palvelin.palvelut.kayttajat :as kayttajat]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
@@ -108,7 +107,7 @@
                               [:db])
 
       :todennus (component/using
-                  (todennus/http-todennus (:testikayttajat asetukset))
+                  (todennus/http-todennus (:sahke-headerit asetukset))
                   [:db :klusterin-tapahtumat])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
@@ -181,7 +180,7 @@
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
-                        (kayttajatiedot/->Kayttajatiedot (:testikayttajat asetukset))
+                        (kayttajatiedot/->Kayttajatiedot)
                         [:http-palvelin :db])
       :urakoitsijat (component/using
                       (urakoitsijat/->Urakoitsijat)
@@ -231,9 +230,6 @@
       :toimenpidekoodit (component/using
                           (toimenpidekoodit/->Toimenpidekoodit)
                           [:http-palvelin :db])
-      :kayttajat (component/using
-                   (kayttajat/->Kayttajat)
-                   [:http-palvelin :db :fim :klusterin-tapahtumat :integraatioloki])
       :pohjavesialueet (component/using
                          (pohjavesialueet/->Pohjavesialueet)
                          [:http-palvelin :db])

@@ -4,10 +4,11 @@
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.palvelut.kayttajat :refer [organisaatio-xf]]
             [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat hallintayksikon-urakat]]
             [harja.geo :refer [muunna-pg-tulokset]]))
 
+(def organisaatio-xf
+  (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
 (defn hae-hallintayksikot
   "Palvelu, joka palauttaa halutun liikennemuodon hallintayksiköt."
