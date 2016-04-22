@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [taoensso.timbre :as log])
   (:import (java.io ByteArrayInputStream)))
 
 ;; Kentät, joita voidaan hakea:
@@ -42,7 +43,7 @@
                    +fim-elementit+))))
 
 (defn lue-xml [bytet]
-  (xml-zip (parse (ByteArrayInputStream. bytet))))
+  (xml-zip (parse (ByteArrayInputStream. (.getBytes bytet)))))
 
 (defn- urakan-kayttajat-parametrit [urakan-sampo-id]
   {:filter (str "SopimusID=" urakan-sampo-id)

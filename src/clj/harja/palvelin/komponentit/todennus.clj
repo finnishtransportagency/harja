@@ -161,7 +161,7 @@ ja palauttaa käyttäjätiedot"
 Jos käyttäjälle on ohitetut headerit, ne palautetaan KOKAn antamien headerien sijasta, muuten
 headerit palautetaan normaalisti."
   [{kayttaja "oam_remote_user" :as koka-headerit} oikeudet]
-  (or (oikeudet kayttaja)
+  (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
 (defn koka->kayttajatiedot [db headerit oikeudet]
