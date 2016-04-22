@@ -110,12 +110,10 @@
   (let [kayttajat (atom nil)
         hae! (fn [urakka-id]
                (reset! kayttajat nil)
-               (<! (yht/hae-urakan-kayttajat urakka-id)))]
+               (go (reset! kayttajat (<! (yht/hae-urakan-kayttajat urakka-id)))))]
     (hae! urakka-id)
     (komp/luo
-     (komp/kun-muuttuu (fn [urakka-id]
-                         (log "URAKKA-ID on " urakka-id)
-                         (hae! urakka-id)))
+     (komp/kun-muuttuu hae!)
      (fn [urakka-id]
        [grid/grid
         {:otsikko "Urakkaan liitetyt käyttäjät"
