@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.tyokalut.avaimet :as avaimet]
-            [harja.kyselyt.kayttajat :as kayttajat])
+            [harja.kyselyt.kayttajat :as kayttajat]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)))
@@ -174,7 +175,7 @@
 (defn hae-kayttaja [db kayttajanimi]
   (let [kayttaja (first (kayttajat/hae-kayttaja-kayttajanimella db kayttajanimi))]
     (if kayttaja
-      kayttaja
+      (konv/array->set (konv/organisaatio kayttaja) :roolit)
       (do
         (log/error "Tuntematon käyttäjätunnus: " kayttajanimi)
         (throw+ {:type virheet/+tuntematon-kayttaja+
