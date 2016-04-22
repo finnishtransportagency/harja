@@ -198,6 +198,7 @@
                :leveys-col 3}
               {:otsikko       "Toimenpide"
                :nimi          :toimenpide
+               :pakollinen?   true
                :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi        :valinta
                :valinnat      @toimenpideinstanssit
@@ -214,6 +215,7 @@
                :leveys-col    3}
               {:otsikko       "Tehtävä"
                :nimi          :tehtava
+               :pakollinen?   true
                :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi        :valinta
                :valinnat      @tehtavat
@@ -229,6 +231,7 @@
                :leveys-col    3}
               {:otsikko "Määrä"
                :nimi :maara
+               :pakollinen?   true
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi :positiivinen-numero
                :hae (comp :maara :tehtava)
