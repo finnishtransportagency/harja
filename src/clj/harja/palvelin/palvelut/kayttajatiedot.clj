@@ -5,7 +5,7 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defrecord Kayttajatiedot [testikayttajat]
+(defrecord Kayttajatiedot []
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)

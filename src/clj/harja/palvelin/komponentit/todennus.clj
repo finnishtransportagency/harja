@@ -156,8 +156,16 @@ ja palauttaa käyttäjätiedot"
                              oikeudet/roolit
                              ryhmat))))
 
-(defn koka->kayttajatiedot [db headerit]
-  (let [oam-tiedot (koka-headerit headerit)]
+(defn- ohita-oikeudet
+  "Mahdollista kaikkien OAM_* headerien ohittaminen tietyille käyttäjille konfiguraatiossa.
+Jos käyttäjälle on ohitetut headerit, ne palautetaan KOKAn antamien headerien sijasta, muuten
+headerit palautetaan normaalisti."
+  [{kayttaja "oam_remote_user" :as koka-headerit} oikeudet]
+  (or (oikeudet kayttaja)
+      koka-headerit))
+
+(defn koka->kayttajatiedot [db headerit oikeudet]
+  (let [oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
     (get (swap! kayttajatiedot
                 #(cache/through
                   (fn [oam-tiedot]
@@ -177,27 +185,9 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (def todennusvirhe {:virhe :todennusvirhe})
 
-(defn testikaytto
-  "Tekee mahdollisen testikäyttäjän korvaamisen. Jos testikäyttäjiä on konfiguroitu ja autentikoitu
-  käyttäjä on järjestelmävastuuhenkilö ja hänellä on testikäyttäjä eväste, korvataan käyttäjätiedot
-  evästeen nimeämän käyttäjätunnuksen tiedoilla."
-  [db req kayttajatiedot testikayttajat]
-  (if-let [testitunnus (and testikayttajat
-                            (oikeudet/voi-kirjoittaa? oikeudet/testaus-testikaytto
-                                                      nil kayttajatiedot)
-                            (get-in req [:cookies "testikayttaja" :value]))]
-    (if-let [testikayttajan-tiedot (get testikayttajat testitunnus)]
-      (assoc (koka->kayttajatiedot db testikayttajan-tiedot)
-             ;; asetetaan myös oikea käyttäjä talteen, käyttäjätiedot tarvitsee sitä, jotta
-             ;; "su" tilanne voidaan tunnistaa
-             :oikea-kayttaja kayttajatiedot)
-      (do
-        (log/warn "Käyttäjä " (:kayttajanimi kayttajatiedot)
-                  " yritti ei-sallittua testikäyttäjää: " testitunnus)
-        (throw+ todennusvirhe)))
-    kayttajatiedot))
 
-(defrecord HttpTodennus [testikayttajat]
+
+(defrecord HttpTodennus [oikeudet]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -214,9 +204,8 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
       (if (nil? kayttaja-id)
         (throw+ todennusvirhe)
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit)]
-          (assoc req :kayttaja
-                 (testikaytto db req kayttajatiedot testikayttajat))
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
+          (assoc req :kayttaja kayttajatiedot)
           (throw+ todennusvirhe))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]
@@ -234,8 +223,8 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (defn http-todennus
   ([] (http-todennus nil))
-  ([testikayttajat]
-   (->HttpTodennus testikayttajat)))
+  ([oikeudet]
+   (->HttpTodennus oikeudet)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))

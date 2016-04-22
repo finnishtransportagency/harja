@@ -107,7 +107,7 @@
                               [:db])
 
       :todennus (component/using
-                  (todennus/http-todennus (:testikayttajat asetukset))
+                  (todennus/http-todennus (:sahke-headerit asetukset))
                   [:db :klusterin-tapahtumat])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
@@ -178,7 +178,7 @@
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
-                        (kayttajatiedot/->Kayttajatiedot (:testikayttajat asetukset))
+                        (kayttajatiedot/->Kayttajatiedot)
                         [:http-palvelin :db])
       :urakoitsijat (component/using
                       (urakoitsijat/->Urakoitsijat)
