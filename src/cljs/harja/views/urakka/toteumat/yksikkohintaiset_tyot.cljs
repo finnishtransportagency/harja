@@ -239,7 +239,7 @@
              {:otsikko     "Lähde" :nimi :luoja :tyyppi :string
               :hae         (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
               :muokattava? (constantly false)
-              :vihje       "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu."})
+              :vihje       toteumat/ilmoitus-jarjestelman-muokkaama-toteuma})
            {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :nimi :alkanut :pakollinen? true :tyyppi :pvm
             :uusi-rivi? true

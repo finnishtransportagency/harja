@@ -22,7 +22,8 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka.toteumat :as toteumat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -51,12 +52,8 @@
          :leveys      2
          :komponentti (fn [rivi]
                         [:div
-                         {:title (if (:jarjestelma rivi)
-                                   "Järjestelmän raportoimaa toteumaa ei voi muokata."
-                                   "Muokkaa toteumaa.")}
                          [:button.nappi-toissijainen.nappi-grid
-                          {:on-click #(tiedot/valitse-toteuma! rivi)
-                           :disabled (:jarjestelma rivi)}
+                          {:on-click #(tiedot/valitse-toteuma! rivi)}
                           (ikonit/eye-open) " Toteuma"]])}]
        (sort-by :alkanut @tiedot)])))
 
@@ -143,10 +140,18 @@
                                       (tiedot/toteuman-tallennus-onnistui %)
                                       (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
                       :disabled (or (not (lomake/voi-tallentaa? @muokattu))
+                                    jarjestelman-lisaama-toteuma?
                                     (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}]}
            ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
            ;; reitti!
-           [{:otsikko     "Päivämäärä"
+           [(when jarjestelman-lisaama-toteuma?
+              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+               :hae (fn [rivi]
+                      (println "jeejee " rivi)
+                      (str "Järjestelmä (" (get-in rivi [:suorittaja :nimi]) ")"))
+               :muokattava? (constantly false)
+               :vihje toteumat/ilmoitus-jarjestelman-muokkaama-toteuma})
+            {:otsikko     "Päivämäärä"
              :nimi        :alkanut
              :pakollinen? true
              :tyyppi      :pvm-aika
