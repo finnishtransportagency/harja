@@ -20,7 +20,8 @@
             [cljs-time.core :as t]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.komponentti :as komp])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.ui.yleiset :refer [deftk]]))
 
@@ -84,30 +85,60 @@
 
 (defn vahvista-urakkatyypin-vaihtaminen [ur uusi-urakkatyyppi]
   (when-not (= uusi-urakkatyyppi (:tyyppi ur))
-  (let [vaihda-urakkatyyppi (fn [] (go (let [res (<! (urakka/vaihda-urakkatyyppi (:id ur) (name uusi-urakkatyyppi)))]
-                                     (if-not (k/virhe? res)
-                                       (nav/paivita-urakka (:id ur) assoc :tyyppi res)
-                                       true))))]
-  (modal/nayta! {:otsikko "Vaihdetaanko urakkatyyppi?"
-                 :footer  [:span
-                           [:button.nappi-toissijainen {:type     "button"
-                                                        :on-click #(do (.preventDefault %)
-                                                                       (modal/piilota!))}
-                            "Peruuta"]
-                           [:button.nappi-myonteinen {:type     "button"
-                                                      :on-click #(do (.preventDefault %)
-                                                                     (modal/piilota!)
-                                                                     (vaihda-urakkatyyppi))}
-                            "Vaihda"]
-                           ]}
-                [:div
-                 [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur)) "-tyyppisen urakan ")
-                             [:strong (str (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi")] "?"]
-                 [:p (str "Vaihtamisen jälkeen nykyiseen " (string/lower-case (navigaatio/nayta-urakkatyyppi (:tyyppi ur))) "urakkaan sidotut tiedot, kuten ilmoituslomakkeet, säilytetään, mutta ne eivät enää ole näkyvissä.")]]))))
+    (let [vaihda-urakkatyyppi (fn []
+                                (go (let [res (<! (urakka/vaihda-urakkatyyppi
+                                                   (:id ur)
+                                                   (name uusi-urakkatyyppi)))]
+                                      (if-not (k/virhe? res)
+                                        (nav/paivita-urakka (:id ur) assoc :tyyppi res)
+                                        true))))]
+    (modal/nayta!
+     {:otsikko "Vaihdetaanko urakkatyyppi?"
+      :footer  [:span
+                [:button.nappi-toissijainen {:type     "button"
+                                             :on-click #(do (.preventDefault %)
+                                                            (modal/piilota!))}
+                 "Peruuta"]
+                [:button.nappi-myonteinen {:type     "button"
+                                           :on-click #(do (.preventDefault %)
+                                                          (modal/piilota!)
+                                                          (vaihda-urakkatyyppi))}
+                 "Vaihda"]]}
+     [:div
+      [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur))
+               "-tyyppisen urakan ")
+       [:strong (str (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi")] "?"]
+      [:p (str "Vaihtamisen jälkeen nykyiseen "
+               (string/lower-case (navigaatio/nayta-urakkatyyppi (:tyyppi ur)))
+               "urakkaan sidotut tiedot, kuten ilmoituslomakkeet, säilytetään, "
+               "mutta ne eivät enää ole näkyvissä.")]]))))
+
+(defn urakkaan-liitetyt-kayttajat [urakka-id]
+  (let [kayttajat (atom nil)
+        hae! (fn [urakka-id]
+               (reset! kayttajat nil)
+               (go (reset! kayttajat (<! (yht/hae-urakan-kayttajat urakka-id)))))]
+    (hae! urakka-id)
+    (komp/luo
+     (komp/kun-muuttuu hae!)
+     (fn [urakka-id]
+       [grid/grid
+        {:otsikko "Urakkaan liitetyt käyttäjät"
+         :tunniste :kayttajatunnus
+         :tyhja (if (nil? @kayttajat)
+                  [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
+                  "Ei urakkaan liitettyjä käyttäjiä.")}
+
+        [{:otsikko "Rooli" :nimi :roolit :fmt #(str/join ", " %) :tyyppi :string :leveys "15%"}
+         {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string :leveys "15%"}
+         {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string
+          :leveys "25%"}
+         {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
+         {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
+        @kayttajat]))))
 
 (deftk yleiset [ur]
   [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
-   kayttajat (<! (yht/hae-urakan-kayttajat (:id ur)))
    paivystajat (reverse (sort-by :loppu (<! (yht/hae-urakan-paivystajat (:id ur)))))
    yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
    sopimustyyppi (:sopimustyyppi ur)]
@@ -129,7 +160,9 @@
        (when-not (= :hoito (:tyyppi ur))
          [yleiset/livi-pudotusvalikko {:class      "alasveto-yleiset-tiedot"
                                        :valinta    @sopimustyyppi
-                                       :format-fn  #(if % (str/capitalize (name %)) "Ei sopimustyyppiä")
+                                       :format-fn  #(if %
+                                                      (str/capitalize (name %))
+                                                      "Ei sopimustyyppiä")
                                        :valitse-fn #(tallenna-sopimustyyppi ur %)
                                        :disabled   (not kirjoitusoikeus?)}
           sopimus/+sopimustyypit+])
@@ -143,16 +176,7 @@
                                        :disabled   (not kirjoitusoikeus?)}
           [:paallystys :paikkaus]])]]
 
-     [grid/grid
-      {:otsikko "Urakkaan liitetyt käyttäjät"
-       :tyhja "Ei urakkaan liitettyjä käyttäjiä."}
-
-      [{:otsikko "Rooli" :nimi :rooli :fmt roolit/rooli->kuvaus :tyyppi :string :leveys "15%"}
-       {:otsikko "Organisaatio" :nimi :org :hae (comp :nimi :organisaatio) :tyyppi :string :leveys "15%"}
-       {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string :leveys "25%"}
-       {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
-       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
-      @kayttajat]
+     [urakkaan-liitetyt-kayttajat (:id ur)]
 
      [grid/grid
       {:otsikko "Yhteyshenkilöt"

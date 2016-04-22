@@ -49,7 +49,8 @@
                                 (is (string? (:etunimi yhteyshenkilo)))
                                 (is (string? (:sukunimi yhteyshenkilo))))) vastaus)))
 
-(deftest urakan-kayttajien-haku-toimii
+;; Tämä ei Sähke myötä enää toimi, koska päivystäjät haetaan FIMistä
+#_(deftest urakan-kayttajien-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-kayttajat +kayttaja-jvh+ 1)]
 
