@@ -1,11 +1,12 @@
 (ns harja.palvelin.palvelut.haku
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
 
             [harja.kyselyt.urakat :as ur-q]
             [harja.kyselyt.kayttajat :as k-q]
-            [harja.kyselyt.hallintayksikot :as org-q]))
+            [harja.kyselyt.hallintayksikot :as org-q]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."
@@ -34,17 +35,29 @@
         _ (log/debug "haun tulokset" tulokset)]
     tulokset))
 
+(defn hae-kayttaja [db kayttaja-id]
+  (when-let [k (first (k-q/hae-kayttaja db kayttaja-id))]
+    (konv/array->set (konv/organisaatio k) :roolit)))
+
+
+
+(defn hae-kayttajan-tiedot
+  "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
+  [db user kayttaja-id]
+  (hae-kayttaja db kayttaja-id))
+
 (defrecord Haku []
   component/Lifecycle
   (start [this]
     (doto (:http-palvelin this)
-      (julkaise-palvelu
-       :hae (fn [user hakutermi]
-              (hae-harjasta (:db this) user hakutermi))))
+      (julkaise-palvelu :hae
+                        (fn [user hakutermi]
+                          (hae-harjasta (:db this) user hakutermi)))
+      (julkaise-palvelu :hae-kayttajan-tiedot
+                        (fn [user kayttaja-id]
+                          (hae-kayttajan-tiedot (:db this) user kayttaja-id))))
     this)
 
   (stop [this]
-    (poista-palvelu (:http-palvelin this) :hae)
+    (poista-palvelut (:http-palvelin this) :hae :hae-kayttajan-tiedot)
     this))
-
-

@@ -2,7 +2,6 @@
   "Palvelu, jolla voi hakea perustietoja nykyisestä käyttäjästä"
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.palvelut.kayttajat :as k]
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]))
 
