@@ -52,8 +52,14 @@ server {
     }
 
     location / {
-      proxy_set_header OAM_REMOTE_USER jvh;
-      proxy_pass   http://backend;
+        proxy_set_header OAM_REMOTE_USER "jvh";
+	    proxy_set_header OAM_GROUPS "Jarjestelmavastaava";
+        proxy_set_header OAM_ORGANIZATION "Liikennevirasto";
+        proxy_set_header OAM_USER_FIRST_NAME "Jalmari";
+        proxy_set_header OAM_USER_LAST_NAME "Jarjestelmavastaava";
+        proxy_set_header OAM_USER_EMAIL "harja@example.com";
+        proxy_set_header OAM_USER_MOBILE "1234567890";
+        proxy_pass   http://backend;
     }
 
     location /laadunseuranta {
