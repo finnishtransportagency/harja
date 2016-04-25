@@ -1,4 +1,4 @@
-(ns harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset
+(ns harja.domain.paallystys-ja-paikkaus
   "Päällystys- ja paikkausurakoiden yhteisiä apureita")
 
 (defn kuvaile-paatostyyppi [paatos]

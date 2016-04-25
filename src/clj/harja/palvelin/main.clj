@@ -38,7 +38,7 @@
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
-    [harja.palvelin.palvelut.yllapito :as yllapito]
+    [harja.palvelin.palvelut.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
@@ -214,9 +214,9 @@
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db])
-      :yllapito (component/using
-                    (yllapito/->Yllapito)
-                    [:http-palvelin :db])
+      :paallystys-ja-paikkaus (component/using
+                                (paallystys-ja-paikkaus/->PaallystysJaPaikkaus)
+                                [:http-palvelin :db])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db])

@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.yllapito :refer :all]
+            [harja.palvelin.palvelut.paallystys-ja-paikkaus :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
@@ -18,19 +18,19 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :urakan-yllapitokohteet (component/using
-                                                    (->Yllapito)
+                                                    (->PaallystysJaPaikkaus)
                                                     [:http-palvelin :db])
                         :urakan-paallystysilmoitus-paallystyskohteella (component/using
-                                                                         (->Yllapito)
+                                                                         (->PaallystysJaPaikkaus)
                                                                          [:http-palvelin :db])
                         :tallenna-paallystysilmoitus (component/using
-                                                       (->Yllapito)
+                                                       (->PaallystysJaPaikkaus)
                                                        [:http-palvelin :db])
                         :tallenna-paallystyskohde (component/using
-                                                    (->Yllapito)
+                                                    (->PaallystysJaPaikkaus)
                                                     [:http-palvelin :db])
                         :tallenna-yllapitokohdeosat (component/using
-                                                        (->Yllapito)
+                                                        (->PaallystysJaPaikkaus)
                                                         [:http-palvelin :db])))))
 
   (testit)

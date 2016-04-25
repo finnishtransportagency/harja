@@ -20,7 +20,7 @@
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.kartta :as kartta]
             [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
-            [harja.tiedot.urakka.paallystys-ja-paikkaus-yhteiset :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
+            [harja.tiedot.urakka.yllapito :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet])

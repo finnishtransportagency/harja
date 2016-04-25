@@ -1,4 +1,4 @@
-(ns harja.domain.paallystys.pot
+(ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
   (:require [schema.core :as s]
             [harja.domain.skeema :as skeema]))
