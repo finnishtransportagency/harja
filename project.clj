@@ -142,6 +142,7 @@
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/repository/solita/"]
+                 ["archiva" "http://10.25.44.14:8080/"]
                  ["harja-data" "http://185.26.50.104/mvn/"]]
 
 
