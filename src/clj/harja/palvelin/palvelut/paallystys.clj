@@ -9,7 +9,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paallystys.pot :as pot]
 
-            [harja.kyselyt.paallystys :as q]
+            [harja.kyselyt.yllapito :as q]
             [harja.kyselyt.urakat :as urakat-q]
 
             [cheshire.core :as cheshire]

@@ -22,7 +22,7 @@ ALTER TABLE paallystyskohde RENAME TO yllapitokohde;
 ALTER TABLE paallystyskohdeosa RENAME TO yllapitokohdeosa;
 
 CREATE TYPE yllapitokohdetyyppi AS ENUM ('paallystys', 'paikkaus');
-
 ALTER TABLE yllapitokohde ADD COLUMN tyyppi yllapitokohdetyyppi;
+ALTER TABLE yllapitokohdeosa RENAME COLUMN paallystyskohde TO yllapitokohde;
 
 UPDATE yllapitokohde SET tyyppi = (SELECT tyyppi FROM urakka WHERE id = urakka)::TEXT::yllapitokohdetyyppi;

@@ -1,7 +1,7 @@
--- name: hae-urakan-paallystyskohteet
--- Hakee urakan kaikki paallystyskohteet
+-- name: hae-urakan-yllapitokohteet
+-- Hakee urakan kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
-  paallystyskohde.id,
+  yllapitokohde.id,
   pi.id as paallystysilmoitus_id,
   pi.tila as paallystysilmoitus_tila,
   pai.id as paikkausilmoitus_id,
@@ -15,29 +15,29 @@ SELECT
   kaasuindeksi,
   muutoshinta,
   pa.toteutunut_hinta
-FROM paallystyskohde
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
+FROM yllapitokohde
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
   AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pa ON pa.paikkauskohde = paallystyskohde.id
+  LEFT JOIN paikkausilmoitus pa ON pa.paikkauskohde = yllapitokohde.id
   AND pa.poistettu IS NOT TRUE
-LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = paallystyskohde.id
+LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = yllapitokohde.id
   AND pai.poistettu IS NOT TRUE
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
-  AND paallystyskohde.poistettu IS NOT TRUE;
+  AND yllapitokohde.poistettu IS NOT TRUE;
 
--- name: hae-urakan-paallystyskohde
--- Hakee urakan yksittäisen päällystyskohteen
+-- name: hae-urakan-yllapitokohde
+-- Hakee urakan yksittäisen ylläpitokohteen
 SELECT id, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset,
        bitumi_indeksi, kaasuindeksi
-  FROM paallystyskohde
- WHERE urakka = :urakka AND id = :id
+  FROM yllapitokohde
+ WHERE urakka = :urakka AND id = :id;
 
 -- name: hae-urakan-paallystystoteumat
 -- Hakee urakan kaikki paallystystoteumat
 SELECT
-  paallystyskohde.id AS paallystyskohde_id,
+  yllapitokohde.id AS paallystyskohde_id,
   pi.tila,
   nimi,
   kohdenumero,
@@ -47,12 +47,12 @@ SELECT
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi
-FROM paallystyskohde
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
+FROM yllapitokohde
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
   AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
 AND sopimus = :sopimus
-AND paallystyskohde.poistettu IS NOT TRUE;
+AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
@@ -74,18 +74,18 @@ SELECT
   kasittelyaika_tekninen_osa,
   kasittelyaika_taloudellinen_osa
 FROM paallystysilmoitus
-  JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
+  JOIN yllapitokohde pk ON pk.id = paallystysilmoitus.paallystyskohde
                              AND pk.urakka = :urakka
                              AND pk.sopimus = :sopimus
                              AND pk.poistettu IS NOT TRUE
 WHERE paallystyskohde = :paallystyskohde
       AND paallystysilmoitus.poistettu IS NOT TRUE;
 
--- name: hae-urakan-paallystyskohteen-paallystyskohdeosat
--- Hakee urakan päällystyskohdeosat päällystyskohteen id:llä.
+-- name: hae-urakan-yllapitokohteen-yllapitokohdeosat
+-- Hakee urakan ylläpitokohdeosat ylläpitokohteen id:llä.
 SELECT
-  paallystyskohdeosa.id,
-  paallystyskohdeosa.nimi,
+  yllapitokohdeosa.id,
+  yllapitokohdeosa.nimi,
   tr_numero,
   tr_alkuosa,
   tr_alkuetaisyys,
@@ -95,12 +95,12 @@ SELECT
   kvl,
   nykyinen_paallyste,
   toimenpide
-FROM paallystyskohdeosa
-  JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+FROM yllapitokohdeosa
+  JOIN yllapitokohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
                           AND urakka = :urakka
                           AND sopimus = :sopimus
                           AND paallystyskohde.poistettu IS NOT TRUE
-WHERE paallystyskohde = :paallystyskohde
+WHERE yllapitokohde = :yllapitokohde
 AND paallystyskohdeosa.poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoitus!
@@ -168,9 +168,9 @@ ORDER BY k.luotu ASC;
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
 
--- name: luo-paallystyskohde<!
--- Luo uuden päällystykohteen
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+-- name: luo-yllapitokohde<!
+-- Luo uuden ylläpitokohteen
+INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES (:urakka,
         :sopimus,
         :kohdenumero,
@@ -181,9 +181,9 @@ VALUES (:urakka,
         :bitumi_indeksi,
         :kaasuindeksi);
 
--- name: paivita-paallystyskohde!
--- Päivittää päällystyskohteen
-UPDATE paallystyskohde
+-- name: paivita-yllapitokohde!
+-- Päivittää ylläpitokohteen
+UPDATE yllapitokohde
 SET
   kohdenumero                 = :kohdenumero,
   nimi                        = :nimi,
@@ -194,30 +194,30 @@ SET
   kaasuindeksi                = :kaasuindeksi
 WHERE id = :id;
 
--- name: poista-paallystyskohde!
--- Poistaa päällystyskohteen
+-- name: poista-yllapitokohde!
+-- Poistaa ylläpitokohteen
 UPDATE paallystyskohde
 SET poistettu = true
 WHERE id = :id;
 
--- name: luo-paallystyskohdeosa<!
--- Luo uuden päällystykohdeosan
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste, toimenpide)
-VALUES (:paallystyskohde,
+-- name: luo-yllapitokohdeosa<!
+-- Luo uuden yllapitokohdeosan
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste, toimenpide)
+VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
         :tr_alkuosa,
         :tr_alkuetaisyys,
         :tr_loppuosa,
         :tr_loppuetaisyys,
-	:sijainti,
+        :sijainti,
         :kvl,
         :nykyinen_paallyste,
         :toimenpide);
 
--- name: paivita-paallystyskohdeosa!
--- Päivittää päällystyskohdeosan
-UPDATE paallystyskohdeosa
+-- name: paivita-yllapitokohdeosa!
+-- Päivittää yllapitokohdeosan
+UPDATE yllapitokohdeosa
 SET
   nimi                  = :nimi,
   tr_numero             = :tr_numero,
@@ -231,17 +231,17 @@ SET
   toimenpide            = :toimenpide
 WHERE id = :id;
 
--- name: poista-paallystyskohdeosa!
--- Poistaa päällystyskohdeosan
-UPDATE paallystyskohdeosa
+-- name: poista-yllapitokohdeosa!
+-- Poistaa ylläpitokohdeosan
+UPDATE yllapitokohdeosa
 SET poistettu = true
 WHERE id = :id;
 
 -- name: paivita-paallystys-tai-paikkausurakan-geometria
-SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka::INTEGER)
+SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka::INTEGER);
 
 -- name: hae-urakan-aikataulu
--- Hakee päällystysurakan kohteiden aikataulutiedot
+-- Hakee urakan kohteiden aikataulutiedot
 SELECT
   id,
   kohdenumero,
@@ -256,15 +256,15 @@ SELECT
   aikataulu_muokattu,
   aikataulu_muokkaaja,
   valmis_tiemerkintaan
-FROM paallystyskohde
+FROM yllapitokohde
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
-  AND paallystyskohde.poistettu IS NOT TRUE;
+  AND yllapitokohde.poistettu IS NOT TRUE;
 
--- name: tallenna-paallystyskohteen-aikataulu!
--- Tallentaa päällystyskohteen aikataulun
-UPDATE paallystyskohde
+-- name: tallenna-yllapitokohteen-aikataulu!
+-- Tallentaa ylläpitokohteen aikataulun
+UPDATE yllapitokohde
 SET
   aikataulu_paallystys_alku = :aikataulu_paallystys_alku,
   aikataulu_paallystys_loppu = :aikataulu_paallystys_loppu,
@@ -274,3 +274,101 @@ SET
   aikataulu_muokattu = NOW(),
   aikataulu_muokkaaja = :aikataulu_muokattu
 WHERE id = :id;
+
+-- name: hae-urakan-paikkaustoteumat
+-- Hakee urakan kaikki paikkaustoteumat
+SELECT
+  yllapitokohde.id AS paikkauskohde_id,
+  pi.id,
+  pi.tila,
+  nimi,
+  kohdenumero,
+  pi.paatos
+FROM yllapitokohde
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = yllapitokohde.id
+                                   AND pi.poistettu IS NOT TRUE
+WHERE urakka = :urakka
+      AND sopimus = :sopimus
+      AND paallystyskohde.poistettu IS NOT TRUE;
+
+-- name: hae-urakan-paikkausilmoitus-paikkauskohteella
+-- Hakee urakan paikkausilmoituksen paikkauskohteen id:llä
+SELECT
+  paikkausilmoitus.id,
+  tila,
+  aloituspvm,
+  valmispvm_kohde,
+  valmispvm_paikkaus,
+  pk.nimi as kohdenimi,
+  pk.kohdenumero,
+  ilmoitustiedot,
+  paatos,
+  perustelu,
+  kasittelyaika
+FROM paikkausilmoitus
+  JOIN yllapitokohde pk ON pk.id = paikkausilmoitus.paikkauskohde
+                           AND pk.urakka = :urakka
+                           AND pk.sopimus = :sopimus
+                           AND pk.poistettu IS NOT TRUE
+WHERE paikkauskohde = :paikkauskohde
+      AND paikkausilmoitus.poistettu IS NOT TRUE;
+
+-- name: paivita-paikkausilmoitus!
+-- Päivittää paikkausilmoituksen
+UPDATE paikkausilmoitus
+SET
+  tila                              = :tila::paikkausilmoituksen_tila,
+  ilmoitustiedot                    = :ilmoitustiedot :: JSONB,
+  toteutunut_hinta                  = :toteutunut_hinta,
+  aloituspvm                        = :aloituspvm,
+  valmispvm_kohde                   = :valmispvm_kohde,
+  valmispvm_paikkaus                = :valmispvm_paikkaus,
+  paatos                            = :paatos::paikkausilmoituksen_paatostyyppi,
+  perustelu                         = :perustelu,
+  kasittelyaika                     = :kasittelyaika,
+  muokattu                          = NOW(),
+  muokkaaja                         = :muokkaaja,
+  poistettu                         = FALSE
+WHERE paikkauskohde = :id;
+
+-- name: luo-paikkausilmoitus<!
+-- Luo uuden paikkausilmoituksen
+INSERT INTO paikkausilmoitus (paikkauskohde, tila, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_kohde, valmispvm_paikkaus, luotu, luoja, poistettu)
+VALUES (:paikkauskohde,
+        :tila::paikkausilmoituksen_tila,
+        :ilmoitustiedot::JSONB,
+        :toteutunut_hinta,
+        :aloituspvm,
+        :valmispvm_kohde,
+        :valmispvm_paikkaus,
+        NOW(),
+        :kayttaja, FALSE);
+
+-- name: hae-paikkausilmoituksen-kommentit
+-- Hakee annetun paikkausilmoituksen kaikki kommentit (joita ei ole poistettu) sekä
+-- kommentin mahdollisen liitteen tiedot. Kommentteja on vaikea hakea
+-- array aggregoimalla itse havainnon hakukyselyssä.
+SELECT
+  k.id,
+  k.tekija,
+  k.kommentti,
+  k.luoja,
+  k.luotu                              AS aika,
+  CONCAT(ka.etunimi, ' ', ka.sukunimi) AS tekijanimi,
+  l.id                                 AS liite_id,
+  l.tyyppi                             AS liite_tyyppi,
+  l.koko                               AS liite_koko,
+  l.nimi                               AS liite_nimi,
+  l.liite_oid                          AS liite_oid
+FROM kommentti k
+  JOIN kayttaja ka ON k.luoja = ka.id
+  LEFT JOIN liite l ON l.id = k.liite
+WHERE k.poistettu = FALSE
+      AND k.id IN (SELECT pk.kommentti
+                   FROM paikkausilmoitus_kommentti pk
+                   WHERE pk.ilmoitus = :id)
+ORDER BY k.luotu ASC;
+
+-- name: liita-kommentti<!
+-- Liittää paikkausilmoitukseen uuden kommentin
+INSERT INTO paikkausilmoitus_kommentti (ilmoitus, kommentti) VALUES (:paikkausilmoitus, :kommentti);

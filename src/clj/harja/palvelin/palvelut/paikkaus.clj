@@ -9,16 +9,10 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paikkaus.minipot :as minipot]
 
-            [harja.kyselyt.paikkaus :as q]
-            [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.yllapito :as q]
 
-            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
-            [clj-time.format :as format]
-            [clj-time.coerce :as coerce]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.palvelin.palvelut.paallystys :as paallystys]
             [harja.domain.oikeudet :as oikeudet]))

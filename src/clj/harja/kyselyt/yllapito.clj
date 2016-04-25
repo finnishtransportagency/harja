@@ -1,5 +1,5 @@
-(ns harja.kyselyt.paikkaus
+(ns harja.kyselyt.yllapito
   (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/paikkaus.sql"
+(defqueries "harja/kyselyt/yllapito.sql"
   {:positional? true})
