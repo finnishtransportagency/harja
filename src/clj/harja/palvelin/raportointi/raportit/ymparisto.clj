@@ -100,7 +100,8 @@
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     [:taulukko {:otsikko otsikko}
+     [:taulukko {:otsikko otsikko
+                 :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))}
       (into []
 
             (concat
@@ -132,23 +133,24 @@
                               rivit)]
            (concat
             ;; Normaali materiaalikohtainen rivi
-            [(into []
-                   (concat
+            [{:lihavoi? true
+              :rivi (into []
+                          (concat
 
-                    ;; Urakan nimi, jos urakoittain jaottelu päällä
-                    (when urakoittain?
-                      [(:nimi urakka)])
+                           ;; Urakan nimi, jos urakoittain jaottelu päällä
+                           (when urakoittain?
+                             [(:nimi urakka)])
 
-                    ;; Materiaalin nimi
-                    [(:nimi materiaali)]
+                           ;; Materiaalin nimi
+                           [(:nimi materiaali)]
 
-                    ;; Kuukausittaiset määrät
-                    (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
+                           ;; Kuukausittaiset määrät
+                           (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
 
-                    ;; Yhteensä, toteumaprosentti ja maksimimäärä
-                    [yhteensa
-                     (if maksimi (fmt/desimaaliluku (/ (* 100.0 yhteensa) maksimi) 1) "-")
-                     (or maksimi "-")]))]
+                           ;; Yhteensä, toteumaprosentti ja maksimimäärä
+                           [(fmt/desimaaliluku yhteensa 1)
+                            (if maksimi (fmt/desimaaliluku (/ (* 100.0 yhteensa) maksimi) 1) "-")
+                            (or (fmt/desimaaliluku-opt maksimi 1) "-")]))}]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
@@ -164,7 +166,8 @@
 
                             (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
 
-                            [(reduce + (remove nil? (vals kk-arvot))) "-" "-"]))))
+                            [(fmt/desimaaliluku (reduce + (remove nil? (vals kk-arvot))) 1)
+                             "-" "-"]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 
        materiaalit)]]))
