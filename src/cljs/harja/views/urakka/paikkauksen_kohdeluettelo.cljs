@@ -17,13 +17,14 @@
             [harja.views.kartta :as kartta]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.paikkaus :as paikkaus])
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paikkauskohde-id (:paikkauskohde_id kohde)]
+  (let [paikkauskohde-id (or (:paikkauskohde-id kohde)
+                             (:paikkauskohde_id kohde))]
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paikkaus-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
@@ -46,7 +47,7 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
-    (komp/lippu paikkaus/karttataso-paikkauskohteet)
+    (komp/lippu yllapitokohteet/karttataso-yllapitokohteet)
     (fn []
       [:span.kohdeluettelo
        [bs/tabs {:style  :tabs :classes "tabs-taso2"

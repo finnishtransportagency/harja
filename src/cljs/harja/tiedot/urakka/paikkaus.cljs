@@ -5,7 +5,6 @@
                               livi-pudotusvalikko]]
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
-    [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k])
 
@@ -29,7 +28,6 @@
   (k/post! :tallenna-paikkausilmoitus {:urakka-id        urakka-id
                                        :sopimus-id       sopimus-id
                                        :paikkausilmoitus lomakedata}))
-
 
 (def paikkausilmoituslomake-lukittu? (reaction (let [_ @lukko/nykyinen-lukko]
                                                (lukko/nykyinen-nakyma-lukittu?))))
