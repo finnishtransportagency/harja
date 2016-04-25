@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.paallystys :refer :all]
+            [harja.palvelin.palvelut.yllapito :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
@@ -17,20 +17,20 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :urakan-paallystyskohteet (component/using
-                                                    (->Paallystys)
+                        :urakan-yllapitokohteet (component/using
+                                                    (->Yllapito)
                                                     [:http-palvelin :db])
                         :urakan-paallystysilmoitus-paallystyskohteella (component/using
-                                                                         (->Paallystys)
+                                                                         (->Yllapito)
                                                                          [:http-palvelin :db])
                         :tallenna-paallystysilmoitus (component/using
-                                                       (->Paallystys)
+                                                       (->Yllapito)
                                                        [:http-palvelin :db])
                         :tallenna-paallystyskohde (component/using
-                                                    (->Paallystys)
+                                                    (->Yllapito)
                                                     [:http-palvelin :db])
-                        :tallenna-paallystyskohdeosat (component/using
-                                                        (->Paallystys)
+                        :tallenna-yllapitokohdeosat (component/using
+                                                        (->Yllapito)
                                                         [:http-palvelin :db])))))
 
   (testit)
@@ -145,7 +145,7 @@
 
 (deftest paallystyskohteet-haettu-oikein
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :urakan-paallystyskohteet +kayttaja-jvh+
+                            :urakan-yllapitokohteet +kayttaja-jvh+
                             {:urakka-id  @muhoksen-paallystysurakan-id
                              :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohteiden-lkm (ffirst (q
@@ -286,7 +286,7 @@
                                             (str "SELECT count(*) FROM paallystyskohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
           kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :urakan-paallystyskohteet
+                                         :urakan-yllapitokohteet
                                          +kayttaja-jvh+ {:urakka-id  urakka-id
                                                          :sopimus-id sopimus-id})]
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
@@ -307,7 +307,7 @@
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-paallystyskohdeosat +kayttaja-jvh+ {:urakka-id          urakka-id
+                      :tallenna-yllapitokohdeosat +kayttaja-jvh+ {:urakka-id          urakka-id
                                                                    :sopimus-id         sopimus-id
                                                                    :paallystysilmoitus paallystysilmoitus
                                                                    :paallystyskohde-id paallystyskohde-id
@@ -317,7 +317,7 @@
                                             LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             kohdeosat-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                        :urakan-paallystyskohdeosat
+                                                        :urakan-yllapitokohdeosat
                                                         +kayttaja-jvh+ {:urakka-id          urakka-id
                                                                         :sopimus-id         sopimus-id
                                                                         :paallystyskohde-id paallystyskohde-id})]

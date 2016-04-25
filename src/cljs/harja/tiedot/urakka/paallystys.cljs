@@ -17,11 +17,11 @@
 (defonce paallystys-tai-paikkauskohteet-nakymassa (atom false))
 
 (defn hae-paallystyskohteet [urakka-id sopimus-id]
-  (k/post! :urakan-paallystyskohteet {:urakka-id  urakka-id
+  (k/post! :urakan-yllapitokohteet {:urakka-id  urakka-id
                                       :sopimus-id sopimus-id}))
 
 (defn hae-paallystyskohdeosat [urakka-id sopimus-id paallystyskohde-id]
-  (k/post! :urakan-paallystyskohdeosat {:urakka-id          urakka-id
+  (k/post! :urakan-yllapitokohdeosat {:urakka-id          urakka-id
                                         :sopimus-id         sopimus-id
                                         :paallystyskohde-id paallystyskohde-id}))
 
@@ -45,7 +45,7 @@
                                         :kohteet    kohteet}))
 
 (defn tallenna-paallystyskohdeosat [urakka-id sopimus-id paallystyskohde-id osat]
-  (k/post! :tallenna-paallystyskohdeosat {:urakka-id          urakka-id
+  (k/post! :tallenna-yllapitokohdeosat {:urakka-id          urakka-id
                                           :sopimus-id         sopimus-id
                                           :paallystyskohde-id paallystyskohde-id
                                           :osat               osat}))
