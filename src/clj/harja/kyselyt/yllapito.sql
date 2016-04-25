@@ -63,8 +63,8 @@ SELECT
   valmispvm_kohde,
   valmispvm_paallystys,
   takuupvm,
-  pk.nimi as kohdenimi,
-  pk.kohdenumero,
+  ypk.nimi as kohdenimi,
+  ypk.kohdenumero,
   muutoshinta,
   ilmoitustiedot,
   paatos_tekninen_osa,
@@ -74,10 +74,10 @@ SELECT
   kasittelyaika_tekninen_osa,
   kasittelyaika_taloudellinen_osa
 FROM paallystysilmoitus
-  JOIN yllapitokohde pk ON pk.id = paallystysilmoitus.paallystyskohde
-                             AND pk.urakka = :urakka
-                             AND pk.sopimus = :sopimus
-                             AND pk.poistettu IS NOT TRUE
+  JOIN yllapitokohde ypk ON ypk.id = paallystysilmoitus.paallystyskohde
+                             AND ypk.urakka = :urakka
+                             AND ypk.sopimus = :sopimus
+                             AND ypk.poistettu IS NOT TRUE
 WHERE paallystyskohde = :paallystyskohde
       AND paallystysilmoitus.poistettu IS NOT TRUE;
 
@@ -299,17 +299,17 @@ SELECT
   aloituspvm,
   valmispvm_kohde,
   valmispvm_paikkaus,
-  pk.nimi as kohdenimi,
-  pk.kohdenumero,
+  ypk.nimi as kohdenimi,
+  ypk.kohdenumero,
   ilmoitustiedot,
   paatos,
   perustelu,
   kasittelyaika
 FROM paikkausilmoitus
-  JOIN yllapitokohde pk ON pk.id = paikkausilmoitus.paikkauskohde
-                           AND pk.urakka = :urakka
-                           AND pk.sopimus = :sopimus
-                           AND pk.poistettu IS NOT TRUE
+  JOIN yllapitokohde ypk ON ypk.id = paikkausilmoitus.paikkauskohde
+                           AND ypk.urakka = :urakka
+                           AND ypk.sopimus = :sopimus
+                           AND ypk.poistettu IS NOT TRUE
 WHERE paikkauskohde = :paikkauskohde
       AND paikkausilmoitus.poistettu IS NOT TRUE;
 
