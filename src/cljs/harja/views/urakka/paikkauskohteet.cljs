@@ -1,26 +1,15 @@
-(ns harja.views.urakka.paallystyskohteet
-  "Päällystyskohteet"
+(ns harja.views.urakka.paikkauskohteet
+  "Paikkauskohteet"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.paallystys :refer [paallystyskohderivit paallystys-tai-paikkauskohteet-nakymassa paivita-kohde!] :as paallystys]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.domain.paallystys.pot :as paallystys-pot]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.ui.napit :as napit]
             [clojure.string :as str]
-            [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
 
@@ -32,20 +21,19 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-
 (defn laske-sarakkeen-summa [sarake]
   (reduce + (mapv
               (fn [rivi] (sarake rivi))
               @paallystyskohderivit)))
 
-(defn paallystyskohdeosa-virheet [tr-virheet]
+(defn paikkauskohdeosa-virheet [tr-virheet]
   [:div.tr-virheet
    (for [virhe (into #{} (vals @tr-virheet))]
      ^{:key (hash virhe)}
      [:div.tr-virhe (ikonit/livicon-warning-sign)
       virhe])])
 
-(defn paallystyskohdeosat [_]
+(defn paikkauskohdeosat [_]
   (let [tr-osoite (fn [rivi]
                     (let [arvot (map rivi [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])]
                       (when (every? #(not (str/blank? %)) arvot)
@@ -137,7 +125,7 @@
 
          [paallystyskohdeosa-virheet tr-virheet]]))))
 
-(defn paallystyskohteet []
+(defn paikkauskohteet []
   (let [paallystyskohteet (reaction (let [kohteet @paallystyskohderivit]
                                       (filter #(false? (:muu_tyo %))
                                               kohteet)))

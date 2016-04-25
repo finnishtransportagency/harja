@@ -26,7 +26,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.views.kartta :as kartta]
             [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
-            [harja.tiedot.urakka.yllapito :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
+            [harja.tiedot.urakka.paallystys :refer [paallystysilmoituslomake-lukittu?] :as yhteiset-cljs]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet])
@@ -60,10 +60,10 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                     (oikeudet/voi-kirjoittaa?
+                      (oikeudet/voi-kirjoittaa?
                       oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id @nav/valittu-urakka))
-                     (not= (:tila @paallystysilmoitus-lomakedata) :lukittu)
-                     (false? @lomake-lukittu-muokkaukselta?))
+                      (not= (:tila @paallystysilmoitus-lomakedata) :lukittu)
+                      (false? @paallystysilmoituslomake-lukittu?))
         paatostiedot-tekninen-osa (r/wrap {:paatos-tekninen            (:paatos_tekninen_osa @paallystysilmoitus-lomakedata)
                                            :perustelu-tekninen-osa     (:perustelu_tekninen_osa @paallystysilmoitus-lomakedata)
                                            :kasittelyaika-tekninen-osa (:kasittelyaika_tekninen_osa @paallystysilmoitus-lomakedata)}
@@ -200,7 +200,7 @@
                                          toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                          kiviaines-virheet @kiviaines-virheet
                                          tila (:tila @paallystysilmoitus-lomakedata)
-                                         lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
+                                         lomake-lukittu-muokkaukselta? @paallystysilmoituslomake-lukittu?]
                                      (and
                                       (not (= tila :lukittu))
                                       (empty? alikohteet-virheet)
@@ -262,7 +262,7 @@
 
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paallystysilmoitus-lomakedata nil)]
 
-           (when @lomake-lukittu-muokkaukselta?
+           (when @paallystysilmoituslomake-lukittu?
              (yhteiset-cljs/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
 
            [:h2 "Päällystysilmoitus"]
@@ -271,7 +271,7 @@
             [:div.col-md-6
              [:h3 "Perustiedot"]
              [lomake/lomake {:voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
-                                                (false? @lomake-lukittu-muokkaukselta?))
+                                                (false? @paallystysilmoituslomake-lukittu?))
                              :muokkaa! (fn [uusi]
                                          (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
                                          (swap! paallystysilmoitus-lomakedata merge uusi))}
@@ -316,7 +316,7 @@
                               (log "PÄÄ tila " (pr-str (:tila lomakedata-nyt)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa lomakedata-nyt)))
                               (and (not= :lukittu (:tila lomakedata-nyt))
                                    (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
-                                   (false? @lomake-lukittu-muokkaukselta?)))
+                                   (false? @paallystysilmoituslomake-lukittu?)))
               :virheet alikohteet-virheet
               :rivinumerot? true
               :uusi-id (inc (count @toteutuneet-osoitteet))}
@@ -361,7 +361,7 @@
               :voi-poistaa? (constantly false)
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
-                                 (false? @lomake-lukittu-muokkaukselta?))
+                                 (false? @paallystysilmoituslomake-lukittu?))
               :virheet paallystystoimenpide-virheet
               :rivinumerot? true}
              [{:otsikko       "Päällyste"
@@ -409,7 +409,7 @@
              {:otsikko      "Kiviaines ja sideaine"
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
-                                 (false? @lomake-lukittu-muokkaukselta?))
+                                 (false? @paallystysilmoituslomake-lukittu?))
               :virheet kiviaines-virheet
               :uusi-id (inc (count @kiviaines))}
              [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256 :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -424,7 +424,7 @@
              {:otsikko      "Alustalle tehdyt toimet"
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
-                                 (false? @lomake-lukittu-muokkaukselta?))
+                                 (false? @paallystysilmoituslomake-lukittu?))
               :uusi-id (inc (count @alustalle-tehdyt-toimet))
               :virheet alustalle-tehdyt-toimet-virheet}
              [{:otsikko "Alku\u00ADtieosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%" :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -466,7 +466,7 @@
              {:otsikko "Toteutuneet määrät"
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos_taloudellinen_osa lomakedata-nyt))
-                                 (false? @lomake-lukittu-muokkaukselta?))
+                                 (false? @paallystysilmoituslomake-lukittu?))
               :validoi-aina? true
               :uusi-id (inc (count @toteutuneet-maarat))
               :virheet toteutuneet-maarat-virheet}

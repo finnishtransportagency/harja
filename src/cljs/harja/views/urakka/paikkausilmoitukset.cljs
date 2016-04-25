@@ -20,7 +20,7 @@
             [harja.domain.paikkaus.minipot :as minipot]
             [harja.views.kartta :as kartta]
             [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
-            [harja.tiedot.urakka.yllapito :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
+            [harja.tiedot.urakka.paallystys :refer [paallystysilmoituslomake-lukittu?] :as yhteiset-cljs]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet])
@@ -60,10 +60,10 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                     (oikeudet/voi-kirjoittaa?
+                      (oikeudet/voi-kirjoittaa?
                       oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id @nav/valittu-urakka))
                       (not= (:tila @paikkaus/paikkausilmoitus-lomakedata) :lukittu)
-                      (false? @lomake-lukittu-muokkaukselta?))
+                      (false? @paallystysilmoituslomake-lukittu?))
         paatostiedot (r/wrap {:paatos        (:paatos @paikkaus/paikkausilmoitus-lomakedata)
                               :perustelu     (:perustelu @paikkaus/paikkausilmoitus-lomakedata)
                               :kasittelyaika (:kasittelyaika @paikkaus/paikkausilmoitus-lomakedata)}
@@ -169,7 +169,7 @@
                                          (let [toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
                                                toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                                tila (:tila @paikkaus/paikkausilmoitus-lomakedata)
-                                               lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
+                                               lomake-lukittu-muokkaukselta? @paallystysilmoituslomake-lukittu?]
                                            (and
                                              (not (= tila :lukittu))
                                              (empty? toteutuneet-osoitteet-virheet)
@@ -186,7 +186,7 @@
           [:div.paikkausilmoituslomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paikkaus/paikkausilmoitus-lomakedata nil)]
 
-           (when @lomake-lukittu-muokkaukselta?
+           (when @paallystysilmoituslomake-lukittu?
              (yhteiset-cljs/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
 
            [:h2 "Paikkausilmoitus"]
@@ -196,7 +196,7 @@
              [:h3 "Perustiedot"]
              [lomake/lomake {:luokka       :horizontal
                              :voi-muokata? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                                (false? @lomake-lukittu-muokkaukselta?))
+                                                (false? @paallystysilmoituslomake-lukittu?))
                              :muokkaa!     (fn [uusi]
                                              (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
                                              (reset! kohteen-tiedot uusi))}
@@ -238,7 +238,7 @@
                               (log "PAI tila " (pr-str (:tila @paikkaus/paikkausilmoitus-lomakedata)) " Päätös: " (pr-str (:paatos_tekninen_osa @paikkaus/paikkausilmoitus-lomakedata)))
                               (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
                                    (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
-                                   (false? @lomake-lukittu-muokkaukselta?)))
+                                   (false? @paallystysilmoituslomake-lukittu?)))
               :virheet      toteutuneet-osoitteet-virheet
               :uusi-id      (inc (count @toteutuneet-osoitteet))}
              [{:otsikko "Tie#" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -261,7 +261,7 @@
              {:otsikko      "Toteutuneet suoritemäärät"
               :voi-muokata? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
                                  (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
-                                 (false? @lomake-lukittu-muokkaukselta?))
+                                 (false? @paallystysilmoituslomake-lukittu?))
               :voi-lisata?  false
               :voi-kumota?  false
               :voi-poistaa? (constantly false)

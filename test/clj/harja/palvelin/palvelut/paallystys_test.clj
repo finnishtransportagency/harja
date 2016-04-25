@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.paallystys-ja-paikkaus :refer :all]
+            [harja.palvelin.palvelut.paallystys :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]

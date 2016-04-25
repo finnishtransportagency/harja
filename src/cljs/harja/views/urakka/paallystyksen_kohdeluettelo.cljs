@@ -24,8 +24,6 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-
-
 (defn kohdeosan-reitti-klikattu [_ kohde]
   (let [paallystyskohde-id (or (:paallystyskohde_id kohde) (:paallystyskohde-id kohde))]
     (popupit/nayta-popup

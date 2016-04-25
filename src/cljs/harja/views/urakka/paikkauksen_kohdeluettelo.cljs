@@ -4,7 +4,7 @@
             [harja.ui.bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko]]
-            [harja.views.urakka.paallystyskohteet :as paallystyskohteet-yhteenveto]
+            [harja.views.urakka.paikkauskohteet :as paikkauskohteet]
             [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]
 
             [harja.ui.lomake :refer [lomake]]
@@ -22,13 +22,8 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-
-
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  ;; FIXME Paikkauksessä ja päällystyksessä on sekaisin _id ja -id muotoa.
-  ;; Saattaapi olla iso refaktorointi että saa varmasti korjattua, mutta on aika pelottava potentiaalinen
-  ;; bugien lähde.
-  (let [paikkauskohde-id (or (:paikkauskohde_id kohde) (:paikkauskohde-id kohde))]
+  (let [paikkauskohde-id (:paikkauskohde_id kohde)]
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paikkaus-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
@@ -59,7 +54,7 @@
 
         "Paikkauskohteet"
         :paikkauskohteet
-        [paallystyskohteet-yhteenveto/paallystyskohteet]
+        [paikkauskohteet/paikkauskohteet]
 
         "Paikkausilmoitukset"
         :paikkausilmoitukset
