@@ -15,3 +15,14 @@ CREATE TABLE yhatiedot (
 
 ALTER TABLE yhatiedot ADD CONSTRAINT uniikki_yhatunnus UNIQUE (yhatunnus);
 ALTER TABLE yhatiedot  ADD CONSTRAINT uniikki_yhaid UNIQUE (yhaid);
+
+-- Uudelleennimeä päällystystaulut
+
+ALTER TABLE paallystyskohde RENAME TO yllapitokohde;
+ALTER TABLE paallystyskohdeosa RENAME TO yllapitokohdeosa;
+
+CREATE TYPE yllapitokohdetyyppi AS ENUM ('paallystys', 'paikkaus');
+
+ALTER TABLE yllapitokohde ADD COLUMN tyyppi yllapitokohdetyyppi;
+
+UPDATE yllapitokohde SET tyyppi = (SELECT tyyppi FROM urakka WHERE id = urakka)::TEXT::yllapitokohdetyyppi;
