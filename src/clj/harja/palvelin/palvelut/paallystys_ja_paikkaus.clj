@@ -11,7 +11,7 @@
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
 
-            [harja.kyselyt.yllapito :as q]
+            [harja.kyselyt.paallystys-ja-paikkaus :as q]
 
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
