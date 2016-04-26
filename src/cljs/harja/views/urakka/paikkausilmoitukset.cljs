@@ -62,7 +62,7 @@
                       (oikeudet/voi-kirjoittaa?
                       oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id @nav/valittu-urakka))
                       (not= (:tila @paikkaus/paikkausilmoitus-lomakedata) :lukittu)
-                      (false? @paallystysilmoituslomake-lukittu?))
+                      (false? @paikkaus/paikkausilmoituslomake-lukittu?))
         paatostiedot (r/wrap {:paatos        (:paatos @paikkaus/paikkausilmoitus-lomakedata)
                               :perustelu     (:perustelu @paikkaus/paikkausilmoitus-lomakedata)
                               :kasittelyaika (:kasittelyaika @paikkaus/paikkausilmoitus-lomakedata)}
@@ -195,7 +195,7 @@
              [:h3 "Perustiedot"]
              [lomake/lomake {:luokka       :horizontal
                              :voi-muokata? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                                (false? @@paikkaus/paikkausilmoituslomake-lukittu?))
+                                                (false? @paikkaus/paikkausilmoituslomake-lukittu?))
                              :muokkaa!     (fn [uusi]
                                              (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
                                              (reset! kohteen-tiedot uusi))}

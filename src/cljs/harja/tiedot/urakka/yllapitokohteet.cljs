@@ -31,11 +31,12 @@
                                         :yllapitokohde-id yllapitokohde-id
                                         :osat               osat}))
 
-(defn kuvaile-yllapitokohteen-tila [tila]
+(defn kuvaile-kohteen-tila [tila]
   (case tila
     :valmis "Valmis"
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
+
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom

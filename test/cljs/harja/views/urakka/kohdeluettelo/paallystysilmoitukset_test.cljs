@@ -5,7 +5,7 @@
 
     [harja.pvm :refer [->pvm] :as pvm]
     [harja.loki :refer [log]]
-    [harja.domain.paallystys.pot :as pot]
+    [harja.domain.paallystysilmoitus :as pot]
     [harja.ui.tierekisteri :as tierekisteri]))
 
 (deftest tien-pituus-laskettu-oikein
