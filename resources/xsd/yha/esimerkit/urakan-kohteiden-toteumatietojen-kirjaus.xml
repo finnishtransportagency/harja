@@ -46,6 +46,8 @@
                         <yha:kasittelymenetelma>12</yha:kasittelymenetelma>
                         <yha:kasittelypaksuus>100</yha:kasittelypaksuus>
                         <yha:verkkotyyppi>4</yha:verkkotyyppi>
+                        <yha:verkon-tarkoitus>1</yha:verkon-tarkoitus>
+                        <yha:verkon-sijainti>1</yha:verkon-sijainti>
                         <yha:tekninen-toimenpide>4</yha:tekninen-toimenpide>
                     </yha:alustalle-tehty-toimenpide>
                 </yha:alustalle-tehdyt-toimet>
