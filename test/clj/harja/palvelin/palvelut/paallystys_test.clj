@@ -129,18 +129,18 @@
 
 
 (def paallystyskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "
-                                                           SELECT paallystyskohde.id as paallystyskohde_id
-                                                           FROM paallystyskohde
-                                                           FULL OUTER JOIN paallystysilmoitus ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                                           SELECT yllapitokohde.id as paallystyskohde_id
+                                                           FROM yllapitokohde
+                                                           FULL OUTER JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
                                                            WHERE paallystysilmoitus.id IS NULL
                                                            AND urakka = " (hae-muhoksen-paallystysurakan-id) "
                                                            AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
 (log/debug "Päällystyskohde id ilman ilmoitusta: " paallystyskohde-id-jolla-ei-ilmoitusta)
 
 (def paallystyskohde-id-jolla-on-ilmoitus (ffirst (q (str "
-                                                           SELECT paallystyskohde.id as paallystyskohde_id
-                                                           FROM paallystyskohde
-                                                           JOIN paallystysilmoitus ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                                           SELECT yllapitokohde.id as paallystyskohde_id
+                                                           FROM yllapitokohde
+                                                           JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
                                                            WHERE urakka = " (hae-muhoksen-paallystysurakan-id) " AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
 (log/debug "Päällystyskohde id jolla on ilmoitus: " paallystyskohde-id-jolla-on-ilmoitus)
 
@@ -151,7 +151,7 @@
                              :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
-                                      FROM paallystyskohde
+                                      FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))]
     (is (= (count res) kohteiden-lkm) "Päällystyskohteiden määrä")))
 
@@ -165,7 +165,7 @@
                                  (assoc-in [:ilmoitustiedot :ylimaarainen-keyword] "Huonoa dataa, jota ei saa päästää kantaan."))
           maara-ennen-pyyntoa (ffirst (q
                                         (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -175,7 +175,7 @@
                                                                     :paallystysilmoitus paallystysilmoitus})))
       (let [maara-pyynnon-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
@@ -188,7 +188,7 @@
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
           maara-ennen-lisaysta (ffirst (q
                                          (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -197,7 +197,7 @@
                                                                    :paallystysilmoitus paallystysilmoitus})
       (let [maara-lisayksen-jalkeen (ffirst (q
                                               (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystysilmoitus.paallystyskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
@@ -276,7 +276,7 @@
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
         maara-ennen-lisaysta (ffirst (q
-                                       (str "SELECT count(*) FROM paallystyskohde
+                                       (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))]
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -284,7 +284,7 @@
                                                                 :sopimus-id sopimus-id
                                                                 :kohteet    [paallystyskohde-testidata]})
     (let [maara-lisayksen-jalkeen (ffirst (q
-                                            (str "SELECT count(*) FROM paallystyskohde
+                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
           kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :urakan-yllapitokohteet
@@ -293,7 +293,7 @@
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
-      (u (str "DELETE FROM paallystyskohde WHERE nimi = 'Testiramppi4564ddf';")))))
+      (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
 
 (deftest tallenna-paallystyskohdeosa-kantaan
   (let [paallystyskohde-id paallystyskohde-id-jolla-on-ilmoitus]
@@ -303,8 +303,8 @@
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
           maara-ennen-lisaysta (ffirst (q
-                                         (str "SELECT count(*) FROM paallystyskohdeosa
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+                                         (str "SELECT count(*) FROM yllapitokohdeosa
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystyskohdeosa.paallystyskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -314,8 +314,8 @@
                                                                    :paallystyskohde-id paallystyskohde-id
                                                                    :osat [paallystyskohdeosa-testidata]})
       (let [maara-lisayksen-jalkeen (ffirst (q
-                                              (str "SELECT count(*) FROM paallystyskohdeosa
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+                                              (str "SELECT count(*) FROM yllapitokohdeosa
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystyskohdeosa.paallystyskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             kohdeosat-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-yllapitokohdeosat
@@ -325,13 +325,13 @@
         (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
         (is (not (nil? kohdeosat-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
-        (u (str "DELETE FROM paallystyskohdeosa WHERE nimi = 'Testiosa123456';"))))))
+        (u (str "DELETE FROM yllapitokohdeosa WHERE nimi = 'Testiosa123456';"))))))
 
 (deftest tallenna-paallystysurakan-aikataulut
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
         maara-ennen-lisaysta (ffirst (q
-                                       (str "SELECT count(*) FROM paallystyskohde
+                                       (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         kohteet [{:kohdenumero                 "L03", :aikataulu_paallystys_alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu_muokkaaja 2, :urakka 5,
                   :aikataulu_kohde_valmis      (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
@@ -343,7 +343,7 @@
                                                                                         :sopimus-id sopimus-id
                                                                                         :kohteet    kohteet})
         maara-paivityksen-jalkeen (ffirst (q
-                                            (str "SELECT count(*) FROM paallystyskohde
+                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         vastaus-leppajarven-ramppi (first (filter #(= "L03" (:kohdenumero %)) vastaus))
         odotettu {:aikataulu_kohde_valmis       (pvm/->pvm "29.5.2016")
