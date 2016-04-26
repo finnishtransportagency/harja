@@ -44,6 +44,18 @@
 (def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
   (apply s/enum (map :koodi +alustamenetelmat+)))
 
+(def +kuulamyllyt+
+  [{:nimi "AN5" :lyhenne "AN5" :koodi 1}
+   {:nimi "AN7" :lyhenne "AN7" :koodi 2}
+   {:nimi "N10" :lyhenne "N10" :koodi 3}
+   {:nimi "N14" :lyhenne "N14" :koodi 4}
+   {:nimi "N19" :lyhenne "N19" :koodi 5}
+   {:nimi "N30" :lyhenne "N30" :koodi 6}
+   {:nimi "N22" :lyhenne "N22" :koodi 7}])
+
+(def +kuulamylly+ "Kuulamylly annetulla koodilla"
+  (apply s/enum (map :koodi +kuulamyllyt+)))
+
 (def +verkkotyypit+
   "Verkkotyypit POT-lomake Excelistä"
   [{:nimi "Teräsverkko" :koodi 1}
@@ -107,34 +119,35 @@
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet
-   [{:tie                        s/Int
-     :ajorata                    +ajorata+
-     :suunta                     +suunta+
-     :kaista                     +kaista+
-     :aosa                       s/Int
-     :aet                        s/Int
-     :losa                       s/Int
-     :let                        s/Int
+   [{:tie s/Int
+     :ajorata +ajorata+
+     :suunta +suunta+
+     :kaista +kaista+
+     :aosa s/Int
+     :aet s/Int
+     :losa s/Int
+     :let s/Int
      ; Osoitteelle tehdyt toimenpiteet
-     :paallystetyyppi            paallystys-ja-paikkaus/+paallystetyyppi+
-     :raekoko                    s/Int
-     :massa                      s/Num                      ;; kg/m2
-     :rc%                        s/Int
-     :tyomenetelma               +tyomenetelma+             ;; koodisto "työmenetelmä"
-     :leveys                     s/Num                      ;; metriä, esim. 4,2
-     :massamaara                 s/Num                      ;; tonnia
-     :pinta-ala                  s/Num                      ;; m2
-     :edellinen-paallystetyyppi  paallystys-ja-paikkaus/+paallystetyyppi+
+     :paallystetyyppi paallystys-ja-paikkaus/+paallystetyyppi+
+     :raekoko s/Int
+     :massa s/Num                                           ;; kg/m2
+     :rc% s/Int
+     :tyomenetelma +tyomenetelma+                           ;; koodisto "työmenetelmä"
+     :leveys s/Num                                          ;; metriä, esim. 4,2
+     :massamaara s/Num                                      ;; tonnia
+     :pinta-ala s/Num                                       ;; m2
+     (s/optional-key :kuulamylly) (s/maybe s/Num)
+     :edellinen-paallystetyyppi paallystys-ja-paikkaus/+paallystetyyppi+
      (s/optional-key :poistettu) s/Bool}]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
    :kiviaines
-   [{:esiintyma                  s/Str
-     :km-arvo                    s/Str
-     :muotoarvo                  s/Str
-     :sideainetyyppi             s/Str
-     :pitoisuus                  s/Num
-     :lisaaineet                 s/Str
+   [{:esiintyma s/Str
+     :km-arvo s/Str
+     :muotoarvo s/Str
+     :sideainetyyppi s/Str
+     :pitoisuus s/Num
+     :lisaaineet s/Str
      (s/optional-key :poistettu) s/Bool}]
 
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
@@ -145,20 +158,20 @@
      :aet s/Int
      :losa s/Int
      :let s/Int
-     :kasittelymenetelma         +alustamenetelma+          ;; +alustamenetelma+ skeemasta
-     :paksuus                    s/Num                      ;; cm
-     :verkkotyyppi               +verkkotyyppi+             ;; +verkkotyyppi+ skeemasta
-     :tekninen-toimenpide        +tekninen-toimenpide+      ;; +tekninen-toimenpide+ skeemasta
+     :kasittelymenetelma +alustamenetelma+                  ;; +alustamenetelma+ skeemasta
+     :paksuus s/Num                                         ;; cm
+     :verkkotyyppi +verkkotyyppi+                           ;; +verkkotyyppi+ skeemasta
+     :tekninen-toimenpide +tekninen-toimenpide+             ;; +tekninen-toimenpide+ skeemasta
      (s/optional-key :poistettu) s/Bool}]
 
    ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
    :tyot
-   [{:tyyppi                     +paallystystyon-tyyppi+    ;; +paallystystyon-tyyppi+ skeemasta
-     :tyo                        s/Str
-     :tilattu-maara              s/Num
-     :toteutunut-maara           s/Num
-     :yksikko                    s/Str
-     :yksikkohinta               s/Num
+   [{:tyyppi +paallystystyon-tyyppi+                        ;; +paallystystyon-tyyppi+ skeemasta
+     :tyo s/Str
+     :tilattu-maara s/Num
+     :toteutunut-maara s/Num
+     :yksikko s/Str
+     :yksikkohinta s/Num
      (s/optional-key :poistettu) s/Bool}]})
 
 (defn laske-muutokset-kokonaishintaan

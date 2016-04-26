@@ -400,7 +400,17 @@
                                   "- Valitse päällyste -"))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
+               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Kuulamylly"
+               :nimi :kuulamylly
+               :tyyppi :valinta
+               :valinta-arvo :koodi
+               :valinta-nayta (fn [rivi]
+                                (if rivi
+                                  (:nimi rivi)
+                                  "- Valitse kuulamylly -"))
+               :valinnat (conj pot/+kuulamyllyt+ {:nimi "Ei kuulamyllyä" :lyhenne "Ei kuulamyllyä" :koodi nil})
+               :leveys "30%"}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
