@@ -171,7 +171,7 @@
                           (:kaasuindeksi rivi)))}]
      @kohteet-atom])
 
-(defn yllapitokohteet-yhteensa [kohteet-atom opts]
+(defn yllapitokohteet-yhteensa [kohteet-atom optiot]
   (let [yhteensa (reaction (let [kohteet @kohteet-atom
                                  sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen_mukaiset_tyot kohteet)
                                  toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut_hinta kohteet)
@@ -199,13 +199,13 @@
      [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
       {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
       {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
-      (when (:paallystysnakyma? opts)
+      (when (:paallystysnakyma? optiot)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero
          :leveys tarjoushinta-leveys})
-      (when (:paallystysnakyma? opts)
+      (when (:paallystysnakyma? optiot)
         {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys muutoshinta-leveys})
-      (when (:paikkausnakyma? opts)
+      (when (:paikkausnakyma? optiot)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys toteutunut-hinta-leveys})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
