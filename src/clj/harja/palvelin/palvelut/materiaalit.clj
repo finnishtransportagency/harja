@@ -231,7 +231,8 @@
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
               (toteumat/paivita-toteuma! db
-                                         (:alkanut toteuma) (:paattynyt toteuma) "kokonaishintainen"
+                                         (:alkanut toteuma) (or (:paattynyt toteuma) (:alkanut toteuma))
+                                         "kokonaishintainen"
                                          (:id user)
                                          (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma)
                                          (:lisatieto toteuma)
