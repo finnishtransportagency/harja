@@ -83,3 +83,6 @@
             :sopimus-id sopimus-id
             :alkupvm alkupvm
             :loppupvm loppupvm}))
+
+(def ilmoitus-jarjestelman-muokkaama-toteuma
+  "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu.")

@@ -261,7 +261,7 @@
                                       [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15}])))
         raportin-rivit (when (> (count naytettavat-alueet) 0)
                          (raporttirivit sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?}))
-        raportin-nimi "Sanktioraportti"
+        raportin-nimi "Sanktioiden yhteenveto"
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))

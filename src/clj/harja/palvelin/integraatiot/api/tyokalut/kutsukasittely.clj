@@ -7,9 +7,10 @@
             [org.httpkit.server :refer [with-channel on-close send!]]
             [harja.tyokalut.json-validointi :as json]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.kayttajat :as q]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.tyokalut.avaimet :as avaimet])
+            [harja.tyokalut.avaimet :as avaimet]
+            [harja.kyselyt.kayttajat :as kayttajat]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)))
@@ -172,9 +173,9 @@
     (cheshire/decode body true)))
 
 (defn hae-kayttaja [db kayttajanimi]
-  (let [kayttaja (q/hae-kayttaja-kayttajanimella db kayttajanimi)]
+  (let [kayttaja (first (kayttajat/hae-kayttaja-kayttajanimella db kayttajanimi))]
     (if kayttaja
-      kayttaja
+      (konv/array->set (konv/organisaatio kayttaja) :roolit)
       (do
         (log/error "Tuntematon käyttäjätunnus: " kayttajanimi)
         (throw+ {:type virheet/+tuntematon-kayttaja+

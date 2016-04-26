@@ -154,6 +154,8 @@ Harja-test dumpin voi ottaa samalla logiikalla:
 > exit
 > scp <omatunnus>@harja-db1-test:/home/<omatunnus>/harja-test-dump.sql /Users/<omatunnus>/Desktop/harja-test-dump.sql
 
+### Dumpin käyttöönotto
+
 Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
 Mene vagrant-kansioon ja aja komennot:
 
@@ -178,5 +180,5 @@ Seuraavat headerit tuettuna:
 * OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto"
 * OAM_USER_FIRST_NAME: Etunimi
 * OAM_USER_LAST_NAME: Sukunimi
-* OAM_USER_EMAIL: Sähköpostiosoite
+* OAM_USER_MAIL: Sähköpostiosoite
 * OAM_USER_MOBILE: Puhelinnumero

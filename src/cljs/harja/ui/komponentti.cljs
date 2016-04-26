@@ -16,13 +16,13 @@
   Funktiototeutuksia saa olla maksimissa yksi ja sitä käytetään :reagent-render lifecycle
   metodina. Muut toteutusten antamat lifecycle metodit yhdistetään siten, että kaikkien
   metodit kutsutaan."
-  
+
   [& toteutukset]
 
   (let [render (or (some #(when (fn? %) %) toteutukset)
                    (some :reagent-render toteutukset))
         toteutukset (filter #(not (fn? %)) toteutukset)
-        
+
         get-initial-state (keep :get-initial-state toteutukset)
         component-will-receive-props (keep :component-will-receive-props toteutukset)
         component-will-mount (keep :component-will-mount toteutukset)
@@ -30,7 +30,7 @@
         component-will-update (keep :component-will-update toteutukset)
         component-did-update (keep :component-did-update toteutukset)
         component-will-unmount (keep :component-will-unmount toteutukset)]
-    
+
     (r/create-class
      {:reagent-render (fn [& args] (try
                                      (apply render args)
@@ -59,7 +59,7 @@
                                 (doseq [f component-will-unmount]
                                   (f this)))})))
 
-                   
+
 (defn kuuntelija
   "Komponentti mixin tapahtuma-aiheiden kuuntelemiseen.
   Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.
@@ -78,7 +78,7 @@
                                                              [aihe]
                                                              (seq aihe)))))
                                        kuuntelijat))))
-      :component-will-unmount (fn [this _]                                
+      :component-will-unmount (fn [this _]
                                 (let [kuuntelijat (-> this r/state ::kuuntelijat)]
                                   (doseq [k kuuntelijat]
                                     (k))))}))
@@ -98,8 +98,8 @@
                                 (let [kuuntelija-fn (fn [tapahtuma] (kasittelija this tapahtuma))]
                                   (events/listen dom-node aihe kuuntelija-fn)
                                   (recur (conj kahvat [aihe kuuntelija-fn]) kuuntelijat)))))
-     
-     :component-will-unmount (fn [this _]                                
+
+     :component-will-unmount (fn [this _]
                                (let [kuuntelijat (-> this r/state ::dom-kuuntelijat)]
                                  (doseq [[aihe kuuntelija-fn] kuuntelijat]
                                    (events/unlisten dom-node aihe kuuntelija-fn))))}))
@@ -158,17 +158,13 @@
                #(istunto/kaynnista-ajastin!)))
 
 (defn kun-muuttuu
-  "Mixin, joka seuraa annetun parametrin muuttumista. Tekee :component-will-receive-props elinkaaren
-  kuuntelijan ja laukaisee callbackin aina kun järjestysnumerolla (nollasta alkaen) ilmaistu parametri muuttuu.
+  "Mixin, joka seuraa annetun parametrien muuttumista. Tekee :component-will-receive-props
+  elinkaaren kuuntelijan ja laukaisee callbackin aina kun parametrit muuttuvat.
   Callbackille annetaan samat parametrit kuin render funktiolle."
-  [alkuarvo jarjestys callback]
-  (let [arvo (cljs.core/atom alkuarvo)]
-    {:component-will-receive-props
-     (fn [& args]
-       (let [uusi-arvo (nth args (+ jarjestys 2))]
-         (when (not= @arvo uusi-arvo)
-           (reset! arvo uusi-arvo)
-           (callback (drop 2 args)))))}))
+  [callback]
+  {:component-will-receive-props
+   (fn [& args]
+     (apply callback (drop 2 args)))})
 
 (defn klikattu-ulkopuolelle
   "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen."
@@ -184,9 +180,9 @@
   {:component-will-unmount
    (fn [_]
      (funktio))})
-  
+
 (defn watcher
-  "Komponentti mixin atomin add-watch/remove-watch tekemiseen kun component-did-mount ja component-will-unmount 
+  "Komponentti mixin atomin add-watch/remove-watch tekemiseen kun component-did-mount ja component-will-unmount
   elinkaaritapahtumien yhteydessä.
   atomit-ja-kasittelijat on vuorotellen atomi ja käsittelyfunktio,
   jolle annetaan kolme parametria: komponentti, vanha arvo ja uusi arvo."
@@ -202,7 +198,7 @@
                                                            (kasittelija this vanha uusi)))
                                     (recur (conj kahvat atomi)
                                            kasittelijat)))))
-     :component-will-unmount (fn [this _]                                
+     :component-will-unmount (fn [this _]
                                (let [atomit (-> this r/state ::atomien-watcherit)]
                                  (doseq [a atomit]
                                    (remove-watch a key))))}))

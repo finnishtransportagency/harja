@@ -2,6 +2,7 @@
 asetukset.edn
 resources/public/css
 resources/public/js
+resources/~$roolit.xlsx
 target
 .lein-repl-history
 .nrepl-port
