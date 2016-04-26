@@ -7,19 +7,19 @@ SELECT
   pai.id as paikkausilmoitus_id,
   pai.tila as paikkausilmoitus_tila,
   pai.toteutunut_hinta
-  kohdenumero,
-  paallystyskohde.nimi,
+    kohdenumero,
+  ypk.nimi,
   sopimuksen_mukaiset_tyot,
   muu_tyo,
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi,
   muutoshinta
-FROM yllapitokohde
+FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
-  AND pi.poistettu IS NOT TRUE
-LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = yllapitokohde.id
-  AND pai.poistettu IS NOT TRUE
+                                     AND pi.poistettu IS NOT TRUE
+  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = yllapitokohde.id
+                                    AND pai.poistettu IS NOT TRUE
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
@@ -28,9 +28,9 @@ WHERE
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
 SELECT id, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset,
-       bitumi_indeksi, kaasuindeksi
-  FROM yllapitokohde
- WHERE urakka = :urakka AND id = :id;
+  bitumi_indeksi, kaasuindeksi
+FROM yllapitokohde
+WHERE urakka = :urakka AND id = :id;
 
 -- name: hae-urakan-yllapitokohteen-yllapitokohdeosat
 -- Hakee urakan ylläpitokohdeosat ylläpitokohteen id:llä.
@@ -46,13 +46,13 @@ SELECT
   kvl,
   nykyinen_paallyste,
   toimenpide
-FROM yllapitokohdeosa
-  JOIN yllapitokohde ON yllapitokohdeosa.yllapitokohde = yllapitokohde.id
-                          AND urakka = :urakka
-                          AND sopimus = :sopimus
-                          AND paallystyskohde.poistettu IS NOT TRUE
+FROM yllapitokohdeosa ypko
+  JOIN yllapitokohde ypk ON yllapitokohdeosa.yllapitokohde = yllapitokohde.id
+                            AND urakka = :urakka
+                            AND sopimus = :sopimus
+                            AND ypk.poistettu IS NOT TRUE
 WHERE yllapitokohde = :yllapitokohde
-AND yllapitokohdeosa.poistettu IS NOT TRUE;
+      AND yllapitokohdeosa.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
@@ -82,7 +82,7 @@ WHERE id = :id;
 
 -- name: poista-yllapitokohde!
 -- Poistaa ylläpitokohteen
-UPDATE paallystyskohde
+UPDATE yllapitokohde
 SET poistettu = true
 WHERE id = :id;
 
@@ -90,16 +90,16 @@ WHERE id = :id;
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste, toimenpide)
 VALUES (:yllapitokohde,
-        :nimi,
-        :tr_numero,
-        :tr_alkuosa,
-        :tr_alkuetaisyys,
-        :tr_loppuosa,
-        :tr_loppuetaisyys,
-        :sijainti,
-        :kvl,
-        :nykyinen_paallyste,
-        :toimenpide);
+  :nimi,
+  :tr_numero,
+  :tr_alkuosa,
+  :tr_alkuetaisyys,
+  :tr_loppuosa,
+  :tr_loppuetaisyys,
+  :sijainti,
+  :kvl,
+  :nykyinen_paallyste,
+  :toimenpide);
 
 -- name: paivita-yllapitokohdeosa!
 -- Päivittää yllapitokohdeosan
