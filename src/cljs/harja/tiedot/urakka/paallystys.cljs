@@ -81,15 +81,7 @@
                            (keep #(and (:sijainti %) %))
                            (map #(assoc % :tyyppi-kartalla :paallystys))))))))
 
-(defn paivita-paallystyskohde! [id funktio & argumentit]
-  (swap! paallystyskohteet
-         (fn [kohderivit]
-           (into []
-                 (map (fn [kohderivi]
-                        (if (= id (:id kohderivi))
-                          (apply funktio kohderivi argumentit)
-                          kohderivi)))
-                 kohderivit))))
+
 
 (defn nayta-paatos [tila]
   (case tila

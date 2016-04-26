@@ -12,6 +12,7 @@
             [clojure.string :as str]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
 
             [harja.tyokalut.vkm :as vkm]
             [harja.views.kartta :as kartta]
@@ -81,10 +82,10 @@
                                                   (log "OSA: " (pr-str osa) " => SIJAINTI: " (pr-str (sijainnit (tr-osoite osa))))
                                                   (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                            %)
-                                vastaus (<! (tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) osat))]
-                            (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
+                                vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat urakka-id sopimus-id (:id rivi) osat))]
+                            (log "PÄÄ ylläpitokohdeosat tallennettu: " (pr-str vastaus))
                             (resetoi-tr-tiedot)
-                            (paivita-kohde! id assoc :kohdeosat vastaus)))
+                            (yllapitokohteet/paivita-yllapitokohde! kohdeosat id assoc :kohdeosat vastaus)))
            :luokat ["paallystyskohdeosat-haitari"]
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [g]
@@ -133,8 +134,7 @@
             :leveys "20%"}
            {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna toimenpide"]]}]
           kohdeosat]
-
-         [paallystyskohdeosa-virheet tr-virheet]]))))
+         [yllapitokohdeosa-virheet tr-virheet]]))))
 
 (defn yllapitokohteet [kohteet-atom opts]
   [grid/grid
