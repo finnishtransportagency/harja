@@ -164,7 +164,7 @@
       (when-not (:paallystysnakyma? opts)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "Bitumi-indeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
        :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
