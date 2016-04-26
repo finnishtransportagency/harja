@@ -1,13 +1,13 @@
 -- name: hae-urakan-yllapitokohteet
 -- Hakee urakan kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
-  yllapitokohde.id,
+  ypk.id,
   pi.id as paallystysilmoitus_id,
   pi.tila as paallystysilmoitus_tila,
   pai.id as paikkausilmoitus_id,
   pai.tila as paikkausilmoitus_tila,
   pai.toteutunut_hinta
-    kohdenumero,
+  kohdenumero,
   ypk.nimi,
   sopimuksen_mukaiset_tyot,
   muu_tyo,
@@ -16,14 +16,14 @@ SELECT
   kaasuindeksi,
   muutoshinta
 FROM yllapitokohde ypk
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = yllapitokohde.id
+  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
-  AND yllapitokohde.poistettu IS NOT TRUE;
+  AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
@@ -35,8 +35,8 @@ WHERE urakka = :urakka AND id = :id;
 -- name: hae-urakan-yllapitokohteen-yllapitokohdeosat
 -- Hakee urakan ylläpitokohdeosat ylläpitokohteen id:llä.
 SELECT
-  yllapitokohdeosa.id,
-  yllapitokohdeosa.nimi,
+  ypko.id,
+  ypko.nimi,
   tr_numero,
   tr_alkuosa,
   tr_alkuetaisyys,
@@ -47,12 +47,12 @@ SELECT
   nykyinen_paallyste,
   toimenpide
 FROM yllapitokohdeosa ypko
-  JOIN yllapitokohde ypk ON yllapitokohdeosa.yllapitokohde = yllapitokohde.id
+  JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
                             AND urakka = :urakka
                             AND sopimus = :sopimus
                             AND ypk.poistettu IS NOT TRUE
 WHERE yllapitokohde = :yllapitokohde
-      AND yllapitokohdeosa.poistettu IS NOT TRUE;
+      AND ypko.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
