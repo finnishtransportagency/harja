@@ -89,6 +89,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn linkki [otsikko toiminto]
   [:a {:href "#" :on-click #(do (.preventDefault %) (toiminto))} otsikko])
 
+(defn staattinen-linkki-uuteen-ikkunaan [otsikko linkki]
+  [:a {:href linkki :target "_blank"} otsikko])
+
 (defn raksiboksi
   ([teksti checked toiminto info-teksti nayta-infoteksti?]
    (raksiboksi teksti checked toiminto info-teksti nayta-infoteksti? nil))
