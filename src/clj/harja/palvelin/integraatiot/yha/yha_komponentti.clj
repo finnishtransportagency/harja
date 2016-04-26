@@ -9,6 +9,9 @@
   (hae-kohteet [this urakka-id])
   (laheta-kohde [this kohde-id]))
 
+(defn kasittele-vastaus [body headers]
+  )
+
 (defn hae-urakat-yhasta [integraatioloki db url tunniste nimi vuosi]
   (let [url (str url "/urakkahaku")]
     (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, nimi: %s & vuosi: %s)" tunniste nimi vuosi))
