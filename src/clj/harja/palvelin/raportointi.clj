@@ -90,13 +90,14 @@
        (let [raportti (suorita-raportti this kayttaja params)]
          (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti)))))
 
-    (excel-vienti/rekisteroi-excel-kasittelija!
-     excel-vienti :raportointi
-     (fn [workbook kayttaja params]
-       (let [raportti (suorita-raportti this kayttaja params)]
-         (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
-         (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
-                               workbook))))
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija!
+       excel-vienti :raportointi
+       (fn [workbook kayttaja params]
+         (let [raportti (suorita-raportti this kayttaja params)]
+           (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
+           (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
+                                 workbook)))))
 
 
     this)
