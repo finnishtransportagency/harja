@@ -65,6 +65,7 @@
     (komp/luo
       (komp/ulos #(kartta/poista-popup!))
       (fn [{:keys [kohdeosat id] :as rivi} yllapitokohde-atom]
+        (log "[PAAL] Renderöi alikohteet")
         [:div
          [grid/grid
           {:otsikko "Tierekisterikohteet"
@@ -83,7 +84,7 @@
                                                   (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                            %)
                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat urakka-id sopimus-id (:id rivi) osat))]
-                            (log "PÄÄ ylläpitokohdeosat tallennettu: " (pr-str vastaus))
+                            (log "[PAAL] ylläpitokohdeosat tallennettu: " (pr-str vastaus))
                             (resetoi-tr-tiedot)
                             (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))
            :luokat ["yllapitokohdeosat-haitari"]
@@ -138,7 +139,7 @@
 
 (defn yllapitokohteet [kohteet-atom optiot]
   [grid/grid
-     {:otsikko "Kohteet"
+     {:otsikko (:otsikko optiot)
       :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
       :vetolaatikot (into {} (map (juxt :id
                                         (fn [rivi]

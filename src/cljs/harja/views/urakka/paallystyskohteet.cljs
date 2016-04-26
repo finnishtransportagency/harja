@@ -25,6 +25,7 @@
     (fn []
       [:div
        [kartta/kartan-paikka]
-       [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:paallystysnakyma? true
+       [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:otsikko "Päällystyskohteet"
+                                                                           :paallystysnakyma? true
                                                                            :tallenna :ei-mahdollinen}]
        [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}]])))
