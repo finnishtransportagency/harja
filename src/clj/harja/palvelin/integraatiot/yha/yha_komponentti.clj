@@ -9,7 +9,7 @@
   (hae-kohteet [this urakka-id])
   (laheta-kohde [this kohde-id]))
 
-(defn hae-urakat-yhasta [integraatioloki url tunniste nimi vuosi]
+(defn hae-urakat-yhasta [integraatioloki db url tunniste nimi vuosi]
   (let [url (str url "/urakkahaku")]
     (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, nimi: %s & vuosi: %s)" tunniste nimi vuosi))
     (integraatiotapahtuma/suorita-integraatio
@@ -41,7 +41,7 @@
   YllapidonUrakoidenHallinta
 
   (hae-urakat [this tunniste nimi vuosi]
-    (hae-urakat-yhasta (:integraatioloki this) (:url (:yha asetukset)) tunniste nimi vuosi))
+    (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url (:yha asetukset)) tunniste nimi vuosi))
   (hae-kohteet [this urakka-id]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url (:yha asetukset)) urakka-id))
   (laheta-kohde [this kohde-id]
