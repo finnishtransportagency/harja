@@ -1,12 +1,9 @@
 -- name: hae-urakan-yllapitokohteet
--- Hakee urakan kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
+-- Hakee urakan kaikki yllapitokohteet ja sen paikkausilmoituksen
 SELECT
   ypk.id,
   pi.id as paallystysilmoitus_id,
   pi.tila as paallystysilmoitus_tila,
-  pai.id as paikkausilmoitus_id,
-  pai.tila as paikkausilmoitus_tila,
-  pai.toteutunut_hinta
   kohdenumero,
   ypk.nimi,
   sopimuksen_mukaiset_tyot,
@@ -18,8 +15,6 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
