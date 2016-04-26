@@ -20,8 +20,8 @@
 
 (defprotocol ExcelKasittelijat
   (rekisteroi-excel-kasittelija! [this nimi kasittely-fn]
-    "Julkaisee Excel käsittelijäfunktion annetulla keyword nimellä. Funktio ottaa parametriksi
- käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa mäpin, jossa on Excelin tiedot.")
+    "Julkaisee Excel käsittelijäfunktion annetulla keyword nimellä. Funktio ottaa parametriksi Excel
+workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa tiedoston nimen.")
   (poista-excel-kasittelija! [this nimi]))
 
 (declare muodosta-excel)
@@ -67,18 +67,8 @@
       (ByteArrayInputStream.)
       t/lue-transit))
 
-(defn- luo-workbook [{:keys [nimi rivit]}]
-  (log/info "LUO WORKBOOK: nimi= " nimi "; rivit: " rivit)
-  (let [workbook (XSSFWorkbook.)
-        sheet    (excel/add-sheet! workbook nimi)]
-    (doseq [rivi rivit
-            :let [tyyli (meta rivi)]]
-      (log/info "TYYLI: " tyyli)
-      (let [row (excel/add-row! sheet rivi)]
-        (when tyyli
-          (excel/set-row-style! row
-                                (excel/create-cell-style! workbook tyyli)))))
-    workbook))
+(defn- luo-workbook []
+  (XSSFWorkbook.))
 
 (defn- kirjoita-workbook [wb out]
   (excel/save-workbook! out wb)
@@ -99,13 +89,13 @@
       (try
         (log/debug "Luodaan " tyyppi " Excel käyttäjälle " (:kayttajanimi kayttaja)
                    " parametreilla " params)
-        {:status  200
-         :headers {"Content-Type" +mime-type+}
-         :body    (piped-input-stream
-                   (fn [out]
-                     (-> (kasittelija kayttaja params)
-                         (luo-workbook)
-                         (kirjoita-workbook out))))}
+        (let [wb (luo-workbook)
+              nimi (kasittelija wb kayttaja params)]
+          (log/info "WORKBOOK ON " wb)
+          {:status  200
+           :headers {"Content-Type" +mime-type+
+                     "Content-Disposition" (str "attachment; filename=\"" nimi ".xlsx\"")}
+           :body    (piped-input-stream #(kirjoita-workbook wb %))})
         (catch Exception e
           (log/warn e "Virhe Excel-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja)
           {:status 500

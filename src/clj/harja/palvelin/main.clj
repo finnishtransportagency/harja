@@ -378,7 +378,8 @@
 
 (defn dev-restart []
   (dev-stop)
-  (dev-start))
+  (dev-start)
+  :ok)
 
 
 (defn dev-julkaise

@@ -116,7 +116,8 @@
                      :leveys kk-lev
                      :fmt :numero}) kuukaudet)
 
-             [{:otsikko "Määrä yhteensä" :leveys "8%" :fmt :numero :jos-tyhja "-"}
+             [{:otsikko "Määrä yhteensä" :leveys "8%" :fmt :numero :jos-tyhja "-"
+               :excel [:summa-vasen (if urakoittain? 2 1)]}
               {:otsikko "Tot-%" :leveys "8%" :fmt :prosentti :jos-tyhja "-"}
               {:otsikko "Maksimi\u00admäärä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
 
