@@ -6,11 +6,14 @@
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
-            [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.ui.komponentti :as komp]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -20,5 +23,6 @@
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystyskohteet-nakymassa?)
     (fn []
-      [yllapitokohteet/yllapitokohteet paallystys/paallystyskohteet {:paallystysnakyma? true}]
-      [yllapitokohteet/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}])))
+      [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:paallystysnakyma? true
+                                                                          :tallenna :ei-mahdollinen}]
+      [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}])))
