@@ -24,7 +24,7 @@
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
   (let [paikkauskohde-id (or (:paikkauskohde-id kohde)
-                             (:paikkauskohde_id kohde))] ; FIXME Selviä missä käytetään viivalla, yhtenäistä käyttämään samaa tyyliä
+                             (:paikkauskohde_id kohde))] ; FIXME Yhtenäistä käyttämään samaa tyyliä
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paikkaus-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})

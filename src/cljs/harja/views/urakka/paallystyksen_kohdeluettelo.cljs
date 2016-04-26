@@ -26,7 +26,7 @@
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
   (let [paallystyskohde-id (or (:paallystyskohde-id kohde)
-                               (:paallystyskohde_id kohde))] ; FIXME Selviä missä käytetään viivalla, yhtenäistä käyttämään samaa tyyliä
+                               (:paallystyskohde_id kohde))] ; FIXME Yhtenäistä käyttämään samaa tyyliä
     (popupit/nayta-popup
      (assoc kohde
          :aihe :paallystys-klikattu
