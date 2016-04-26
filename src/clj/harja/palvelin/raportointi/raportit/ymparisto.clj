@@ -113,11 +113,12 @@
              ;; Kaikki kuukaudet
              (map (fn [kk]
                     {:otsikko kk
-                     :leveys kk-lev}) kuukaudet)
+                     :leveys kk-lev
+                     :fmt :numero}) kuukaudet)
 
-             [{:otsikko "Määrä yhteensä" :leveys "8%"}
-              {:otsikko "Tot-%" :leveys "8%"}
-              {:otsikko "Maksimi\u00admäärä" :leveys "8%"}]))
+             [{:otsikko "Määrä yhteensä" :leveys "8%" :fmt :numero :jos-tyhja "-"}
+              {:otsikko "Tot-%" :leveys "8%" :fmt :prosentti :jos-tyhja "-"}
+              {:otsikko "Maksimi\u00admäärä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
 
       (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
@@ -145,12 +146,12 @@
                            [(:nimi materiaali)]
 
                            ;; Kuukausittaiset määrät
-                           (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
+                           (map kk-arvot kuukaudet)
 
                            ;; Yhteensä, toteumaprosentti ja maksimimäärä
-                           [(fmt/desimaaliluku yhteensa 1)
-                            (if maksimi (fmt/desimaaliluku (/ (* 100.0 yhteensa) maksimi) 1) "-")
-                            (or (fmt/desimaaliluku-opt maksimi 1) "-")]))}]
+                           [yhteensa
+                            (when maksimi (/ (* 100.0 yhteensa) maksimi))
+                            maksimi]))}]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
@@ -164,10 +165,10 @@
                             [(str " - "
                                   (talvihoitoluokka luokka))]
 
-                            (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
+                            (map kk-arvot kuukaudet)
 
-                            [(fmt/desimaaliluku (reduce + (remove nil? (vals kk-arvot))) 1)
-                             "-" "-"]))))
+                            [(reduce + (remove nil? (vals kk-arvot)))
+                             nil nil]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 
        materiaalit)]]))

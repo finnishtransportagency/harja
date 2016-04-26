@@ -7,7 +7,9 @@
             [harja.visualisointi :as vis]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.modal :as modal]))
+            [harja.ui.modal :as modal]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -40,6 +42,10 @@
                              :pakota-rivitys? (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (:otsikkorivi-luokka sarake)
                              :nimi (str "sarake" i)
+                             :fmt (case (:fmt sarake)
+                                    :numero #(fmt/desimaaliluku-opt % 1 true)
+                                    :prosentti #(fmt/prosentti-opt % 1)
+                                    str)
                              ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
                              :tyyppi (if (:tyyppi sarake)
                                        :komponentti
@@ -108,7 +114,7 @@
   (apply yleiset/taulukkotietonakyma {}
          (mapcat identity otsikot-ja-arvot)))
 
-  
+
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
   [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}

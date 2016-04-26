@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [harja.visualisointi :as vis]
             [taoensso.timbre :as log]
-            [harja.ui.skeema :as skeema]))
+            [harja.ui.skeema :as skeema]
+            [harja.fmt :as fmt]))
 
 (def taulukon-fonttikoko "8pt")
 (def otsikon-fonttikoko "10pt")
@@ -84,9 +85,13 @@
            [:fo:table-row
             (for [i (range (count sarakkeet))
                   :let [arvo-datassa (nth rivi i)
+                        fmt (case (:fmt (nth sarakkeet i))
+                              :numero #(fmt/desimaaliluku-opt % 1 true)
+                              :prosentti #(fmt/prosentti-opt %)
+                              str)
                         naytettava-arvo (or (if (vector? arvo-datassa)
                                               (muodosta-pdf arvo-datassa)
-                                              arvo-datassa)
+                                              (fmt arvo-datassa))
                                             "")]]
               [:fo:table-cell (merge {:border     (str "solid 0.1mm " raportin-tehostevari) :padding "1mm"
                                       :font-weight "normal"
