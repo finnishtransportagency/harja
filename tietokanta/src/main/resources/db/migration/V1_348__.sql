@@ -1,0 +1,1 @@
+UPDATE raportti SET kuvaus = 'Sanktioiden yhteenveto' WHERE nimi = 'sanktioraportti';

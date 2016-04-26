@@ -154,6 +154,8 @@ Harja-test dumpin voi ottaa samalla logiikalla:
 > exit
 > scp <omatunnus>@harja-db1-test:/home/<omatunnus>/harja-test-dump.sql /Users/<omatunnus>/Desktop/harja-test-dump.sql
 
+### Dumpin käyttöönotto
+
 Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
 Mene vagrant-kansioon ja aja komennot:
 

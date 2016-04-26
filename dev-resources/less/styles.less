@@ -7,7 +7,7 @@
 
 .alasveto-urakkatyyppi,
 .alasveto-urakoitsija {
-  .livi-alasveto(160px 160px);
+  .livi-alasveto(160px, 160px);
 }
 .alasveto-vuosi {
   .livi-alasveto(85px, 85px);
@@ -167,6 +167,18 @@ tr.uusitehtavakoodi td {
     font-weight: bold;
   }
   .livi-alasveto(@valintakontrollin-leveys);
+  &.sopimusnumero {
+    .livi-alasveto(@alasvedon-leveys-sop);
+  }
+  &.hoitokausi {
+    .livi-alasveto(@alasvedon-leveys-hk);
+  }
+  &.kuukausi {
+    .livi-alasveto(@alasvedon-leveys-kk);
+  }
+  &.toimenpide {
+    .livi-alasveto(@alasvedon-leveys-tp);
+  }
 }
 
 .pvm-kentta,
@@ -205,7 +217,7 @@ tr.uusitehtavakoodi td {
   .label-ja-aikavali-tpl(@valintakontrollin-leveys);
 }
 .label-ja-aikavali-lyhyt {
-  .label-ja-aikavali-tpl(100px);
+  .label-ja-aikavali-tpl(85px);
 }
 
 .flash-viesti {
