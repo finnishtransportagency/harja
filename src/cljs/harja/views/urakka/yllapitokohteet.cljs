@@ -214,7 +214,7 @@
          :leveys toteutunut-hinta-leveys})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
        :leveys arvonvahennykset-leveys}
-      {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero
+      {:otsikko "Bitumi-indeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys bitumi-indeksi-leveys}
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys}
