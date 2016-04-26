@@ -1,5 +1,7 @@
 -- Lisää urakan YHA-tiedoille uusi taulu
 
+-- FIXME SELVITÄ ARVOJEN TYYPIT XSD-SKEEMASTA
+
 CREATE TABLE yhatiedot (
   id                       SERIAL PRIMARY KEY,
   urakka                   INTEGER REFERENCES urakka (id),

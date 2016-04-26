@@ -6,6 +6,8 @@
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
     [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+    [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
+    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
@@ -50,14 +52,14 @@
 (def paallystyskohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
-               nakymassa? @paallystyskohteet-nakymassa]
+               nakymassa? @paallystyskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
+                (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
-                         kohderivit @paallystyskohderivit
+                         kohderivit @paallystyskohteet
                          toteumarivit @paallystystoteumat
                          avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
                      (when (and taso
@@ -80,11 +82,3 @@
                                            (:kohdeosat kohde))))
                            (keep #(and (:sijainti %) %))
                            (map #(assoc % :tyyppi-kartalla :paallystys))))))))
-
-
-
-(defn nayta-paatos [tila]
-  (case tila
-    :hyvaksytty [:span.ilmoitus-hyvaksytty (paallystys-ja-paikkaus/kuvaile-paatostyyppi tila)]
-    :hylatty [:span.ilmoitus-hylatty (paallystys-ja-paikkaus/kuvaile-paatostyyppi tila)]
-    ""))

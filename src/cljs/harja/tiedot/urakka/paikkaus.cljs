@@ -7,6 +7,8 @@
     [harja.loki :refer [log tarkkaile!]]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
+    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+    [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka :as u]
     [harja.tiedot.navigaatio :as nav])
 
@@ -52,11 +54,11 @@
                nakymassa? @paikkauskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
+                (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paikkauskohteet-kartalla
          (reaction (let [taso @karttataso-paikkauskohteet
-                         kohderivit @paallystys/paallystyskohderivit
+                         kohderivit @paikkauskohteet
                          toteumarivit @paikkaustoteumat
                          avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
                      (when (and taso

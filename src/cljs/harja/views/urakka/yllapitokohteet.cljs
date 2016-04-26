@@ -45,7 +45,7 @@
 (def yhteensa-leveys 15)
 (def kohde-leveys 15)
 
-(defn yllapitokohdeosat [_]
+(defn yllapitokohdeosat [_ optiot]
   (let [tr-osoite (fn [rivi]
                     (let [arvot (map rivi [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])]
                       (when (every? #(not (str/blank? %)) arvot)
@@ -74,7 +74,10 @@
                             (when-let [viiva (some-> rivi :sijainti)]
                               (nav/vaihda-kartan-koko! :L)
                               (kartta/keskita-kartta-alueeseen! (geo/extent viiva))))
-           :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
+           :tallenna (:tallenna optiot)
+
+           ; FIXME Korjaa tallennus...
+           #_#(go (let [urakka-id (:id @nav/valittu-urakka)
                                 [sopimus-id _] @u/valittu-sopimusnumero
                                 sijainnit @tr-sijainnit
                                 osat (into []

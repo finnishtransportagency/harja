@@ -12,3 +12,9 @@
     :valmis "Valmis"
     :lukittu "Lukittu"
     "-"))
+
+(defn nayta-paatos [tila]
+  (case tila
+    :hyvaksytty [:span.ilmoitus-hyvaksytty (kuvaile-paatostyyppi tila)]
+    :hylatty [:span.ilmoitus-hylatty (kuvaile-paatostyyppi tila)]
+    ""))
