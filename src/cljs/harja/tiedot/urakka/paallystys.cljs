@@ -1,11 +1,11 @@
 (ns harja.tiedot.urakka.paallystys
   "Päällystyksen tiedot"
   (:require
+    [reagent.core :refer [atom] :as r]
     [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                               livi-pudotusvalikko]]
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
-    [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [cljs.core.async :refer [<!]]
@@ -17,10 +17,11 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defonce paallystyskohteet-nakymassa? (atom false))
-(defonce paallystysilmoitukset-nakymassa? (atom false))
+(def paallystyskohteet-nakymassa? (atom false))
+(def paallystysilmoitukset-nakymassa? (atom false))
 
-(tarkkaile! "[PAIK] Päällystysilmoitukset näkymässä: " paallystysilmoitukset-nakymassa?)
+(tarkkaile! "[PAAL] Päällystyskohteet näkymässä: " paallystyskohteet-nakymassa?)
+(tarkkaile! "[PAAL] Päällystysilmoitukset näkymässä: " paallystysilmoitukset-nakymassa?)
 
 (defn hae-paallystystoteumat [urakka-id sopimus-id]
   (k/post! :urakan-paallystystoteumat {:urakka-id  urakka-id
@@ -36,13 +37,14 @@
                                          :sopimus-id         sopimus-id
                                          :paallystysilmoitus lomakedata}))
 
-(defonce paallystystoteumat
-         (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
-                      nakymassa? @paallystysilmoitukset-nakymassa?]
-                     {:nil-kun-haku-kaynnissa? true}
-                     (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                       (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+(def paallystystoteumat
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @paallystysilmoitukset-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (log "[PAAL] Haetaan päällystystoteumat")
+                (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
@@ -57,10 +59,10 @@
                nakymassa? @paallystyskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (log "[PAIK] Haetaan ylläpitokohteet")
+                (log "[PAAL] Haetaan ylläpitokohteet")
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
-(tarkkaile! "[PAIK] Päällystyskohteet: " paallystyskohteet)
+(tarkkaile! "[PAAL] Päällystyskohteet: " paallystyskohteet)
 
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet

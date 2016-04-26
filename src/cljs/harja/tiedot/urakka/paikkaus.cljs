@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.paikkaus
   "Paikkauksen tiedot"
   (:require
+    [reagent.core :refer [atom] :as r]
     [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                               livi-pudotusvalikko]]
     [harja.tiedot.muokkauslukko :as lukko]
