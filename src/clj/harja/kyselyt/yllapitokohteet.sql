@@ -47,12 +47,12 @@ SELECT
   nykyinen_paallyste,
   toimenpide
 FROM yllapitokohdeosa
-  JOIN yllapitokohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
+  JOIN yllapitokohde ON yllapitokohdeosa.yllapitokohde = yllapitokohde.id
                           AND urakka = :urakka
                           AND sopimus = :sopimus
                           AND paallystyskohde.poistettu IS NOT TRUE
 WHERE yllapitokohde = :yllapitokohde
-AND paallystyskohdeosa.poistettu IS NOT TRUE;
+AND yllapitokohdeosa.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
