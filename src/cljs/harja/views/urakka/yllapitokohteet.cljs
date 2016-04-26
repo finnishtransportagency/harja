@@ -80,7 +80,6 @@
                                 sijainnit @tr-sijainnit
                                 osat (into []
                                            (map (fn [osa]
-                                                  (log "OSA: " (pr-str osa) " => SIJAINTI: " (pr-str (sijainnit (tr-osoite osa))))
                                                   (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                            %)
                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat urakka-id sopimus-id (:id rivi) osat))]

@@ -28,12 +28,12 @@
       (log/debug "Päällystyskohteet saatu: " (pr-str (map :nimi vastaus)))
       vastaus)))
 
-(defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
-  (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", paallystyskohde-id: " paallystyskohde-id)
+(defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
+  (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (let [vastaus (into []
                       kohdeosa-xf
-                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id paallystyskohde-id))]
+                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id yllapitokohde-id))]
     (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
@@ -153,9 +153,9 @@
 
 (defn tallenna-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
   (jdbc/with-db-transaction [c db]
-    (log/debug "Tallennetaan ylläpitokohdeosat " (pr-str osat) ". Ylläpitokohde-id: " yllapitokohde-id)
+    (log/debug "Tallennetaan ylläpitokohdeosat. Ylläpitokohde-id: " yllapitokohde-id)
     (doseq [osa osat]
-      (log/debug (str "Käsitellään saapunut ylläpitokohdeosa: " osa))
+      (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
       (if (and (:id osa) (not (neg? (:id osa))))
         (paivita-yllapitokohdeosa c user osa)
         (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
