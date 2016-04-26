@@ -23,8 +23,9 @@
                    [harja.atom :refer [reaction<!]]))
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paikkauskohde-id (or (:paikkauskohde-id kohde)
-                             (:paikkauskohde_id kohde))] ; FIXME Yhtenäistä käyttämään samaa tyyliä
+  (let [; FIXME Eri paikoissa käytetään välillä alaviivaa ja välillä viivaa. Pitäisi yhtenäistää.
+        paikkauskohde-id (or (:paikkauskohde-id kohde)
+                             (:paikkauskohde_id kohde))]
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paikkaus-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
