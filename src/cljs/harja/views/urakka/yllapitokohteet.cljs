@@ -36,14 +36,14 @@
 
 (def haitari-leveys 5)
 (def id-leveys 10)
-(def tarjoushinta-leveys 20)
+(def kohde-leveys 15)
+(def tarjoushinta-leveys 10)
 (def muutoshinta-leveys 10)
 (def toteutunut-hinta-leveys 10)
 (def arvonvahennykset-leveys 10)
 (def bitumi-indeksi-leveys 10)
 (def kaasuindeksi-leveys 10)
-(def yhteensa-leveys 15)
-(def kohde-leveys 15)
+(def yhteensa-leveys 10)
 
 (defn yllapitokohdeosat [_ optiot]
   (let [tr-osoite (fn [rivi]
