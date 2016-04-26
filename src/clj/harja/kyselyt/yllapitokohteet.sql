@@ -6,6 +6,7 @@ SELECT
   pi.tila as paallystysilmoitus_tila,
   pai.id as paikkausilmoitus_id,
   pai.tila as paikkausilmoitus_tila,
+  pai.toteutunut_hinta
   kohdenumero,
   paallystyskohde.nimi,
   sopimuksen_mukaiset_tyot,
@@ -13,13 +14,10 @@ SELECT
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi,
-  muutoshinta,
-  pa.toteutunut_hinta
+  muutoshinta
 FROM yllapitokohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
   AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pa ON pa.paikkauskohde = yllapitokohde.id
-  AND pa.poistettu IS NOT TRUE
 LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = yllapitokohde.id
   AND pai.poistettu IS NOT TRUE
 WHERE

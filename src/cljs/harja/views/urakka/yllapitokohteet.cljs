@@ -176,6 +176,7 @@
    @kohteet-atom])
 
 (defn yllapitokohteet-yhteensa [kohteet-atom opts]
+  (log "[PAIK] Ylläpitokohteet yhteensä, data sisään: " (pr-str @kohteet-atom))
   (let [yhteensa (reaction (let [kohteet @kohteet-atom
                                  sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen_mukaiset_tyot kohteet)
                                  toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut_hinta kohteet)

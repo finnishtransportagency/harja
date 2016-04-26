@@ -20,6 +20,8 @@
 (defonce paallystyskohteet-nakymassa? (atom false))
 (defonce paallystysilmoitukset-nakymassa? (atom false))
 
+(tarkkaile! "[PAIK] Päällystysilmoitukset näkymässä: " paallystysilmoitukset-nakymassa?)
+
 (defn hae-paallystystoteumat [urakka-id sopimus-id]
   (k/post! :urakan-paallystystoteumat {:urakka-id  urakka-id
                                        :sopimus-id sopimus-id}))
@@ -55,7 +57,10 @@
                nakymassa? @paallystyskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (log "[PAIK] Haetaan ylläpitokohteet")
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
+
+(tarkkaile! "[PAIK] Päällystyskohteet: " paallystyskohteet)
 
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet

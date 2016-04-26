@@ -23,6 +23,7 @@
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystyskohteet-nakymassa?)
     (fn []
-      [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:paallystysnakyma? true
-                                                                          :tallenna :ei-mahdollinen}]
-      [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}])))
+      [:div
+       [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:paallystysnakyma? true
+                                                                           :tallenna :ei-mahdollinen}]
+       [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}]])))
