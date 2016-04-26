@@ -23,11 +23,12 @@
     (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
     (fn []
       [:div
-       [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:tallenna (fn [kohteet]
+       [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:paikkausnakyma? true
+                                                                       :tallenna (fn [kohteet]
                                                                                    (go (let [urakka-id (:id @nav/valittu-urakka)
                                                                                              [sopimus-id _] @u/valittu-sopimusnumero
                                                                                              _ (log "PÄÄ Tallennetaan paikkauskohteet: " (pr-str kohteet))
                                                                                              vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
                                                                                          (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                                                                                          (reset! paikkaus/paikkauskohteet vastaus))))}]
-       [yllapitokohteet-view/yllapitokohteet-yhteensa paikkaus/paikkauskohteet]])))
+       [yllapitokohteet-view/yllapitokohteet-yhteensa paikkaus/paikkauskohteet {:paikkausnakyma? true}]])))
