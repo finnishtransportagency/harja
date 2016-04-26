@@ -79,7 +79,7 @@
       [:li {:role "presentation" :class (when (= s :hallinta) "active")}
        [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
 
-    (when (oikeudet/urakat)
+    (when (oikeudet/laadunseuranta)
       [:li {:role "presentation"}
        [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu" (str k/+polku+ "laadunseuranta/")]])]
     
