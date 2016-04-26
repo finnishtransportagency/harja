@@ -40,7 +40,7 @@
   ([hoitokaudet valittu-hoitokausi-atom valitse-fn]
    (hoitokausi {} hoitokaudet valittu-hoitokausi-atom valitse-fn))
   ([{:keys [disabled]} hoitokaudet valittu-hoitokausi-atom valitse-fn]
-   [:div.label-ja-alasveto
+   [:div.label-ja-alasveto.hoitokausi
     [:span.alasvedon-otsikko "Hoitokausi"]
     [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
                           :disabled disabled
@@ -51,7 +51,7 @@
      hoitokaudet]]))
 
 (defn kuukausi [{:keys [disabled nil-valinta]} kuukaudet valittu-kuukausi-atom]
-  [:div.label-ja-alasveto
+  [:div.label-ja-alasveto.kuukausi
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
                          :disabled disabled
@@ -67,7 +67,7 @@
 
 (defn hoitokauden-kuukausi
   [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]
-  [:div.label-ja-alasveto
+  [:div.label-ja-alasveto.kuukausi
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
                          :format-fn  #(if %
