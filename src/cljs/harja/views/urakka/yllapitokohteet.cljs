@@ -33,17 +33,16 @@
      [:div.tr-virhe (ikonit/livicon-warning-sign)
       virhe])])
 
-(def sarake-leveydet
-  {:haitari-leveys 5
-   :id-leveys 10
-   :kohde-leveys 20
-   :tarjoushinta-leveys 10
-   :muutoshinta-leveys 10
-   :toteutunut-hinta-leveys 10
-   :arvonvahennykset-leveys 10
-   :bitumi-indeksi-leveys 10
-   :kaasuindeksi-leveys 10
-   :yhteensa-leveys 15})
+(def haitari-leveys 5)
+(def id-leveys 10)
+(def tarjoushinta-leveys 20)
+(def muutoshinta-leveys 10)
+(def toteutunut-hinta-leveys 10)
+(def arvonvahennykset-leveys 10)
+(def bitumi-indeksi-leveys 10)
+(def kaasuindeksi-leveys 10)
+(def yhteensa-leveys 15)
+(def kohde-leveys 15)
 
 (defn yllapitokohdeosat [_]
   (let [tr-osoite (fn [rivi]
@@ -82,7 +81,7 @@
                                                   (log "OSA: " (pr-str osa) " => SIJAINTI: " (pr-str (sijainnit (tr-osoite osa))))
                                                   (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                            %)
-                                vastaus (<! (paallysharja.domain.paikkausilmoitustys/tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) osat))]
+                                vastaus (<! (tallenna-paallystyskohdeosat urakka-id sopimus-id (:id rivi) osat))]
                             (log "PÄÄ päällystyskohdeosat tallennettu: " (pr-str vastaus))
                             (resetoi-tr-tiedot)
                             (paivita-kohde! id assoc :kohdeosat vastaus)))
@@ -141,7 +140,10 @@
   [grid/grid
    {:otsikko "Kohteet"
     :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
-    :vetolaatikot (into {} (map (juxt :id (fn [rivi] [paallystyskohdeosat rivi])) @kohteet-atom))
+    :vetolaatikot (into {} (map (juxt :id
+                                      (fn [rivi]
+                                        [yllapitokohdeosat rivi]))
+                                @kohteet-atom))
     :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
                          [sopimus-id _] @u/valittu-sopimusnumero
                          payload (mapv (fn [rivi] (assoc rivi :muu_tyo false)) %)
@@ -183,14 +185,21 @@
     {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
     {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
     (when (:paallystysnakyma? opts)
-      {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys})
+      {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero
+       :leveys tarjoushinta-leveys})
     (when (:paallystysnakyma? opts)
-      {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
+      {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero
+       :leveys muutoshinta-leveys})
     (when-not (:paallystysnakyma? opts)
-      {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
-    {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys arvonvahennykset-leveys}
-    {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys bitumi-indeksi-leveys}
-    {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys kaasuindeksi-leveys}
-    {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys}
+      {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :fmt fmt/euro-opt :tyyppi :numero
+       :leveys toteutunut-hinta-leveys})
+    {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
+     :leveys arvonvahennykset-leveys}
+    {:otsikko "Bitumi\u00ADindeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero
+     :leveys bitumi-indeksi-leveys}
+    {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
+     :leveys kaasuindeksi-leveys}
+    {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt
+     :tyyppi :numero :leveys yhteensa-leveys}
     {:otsikko "" :nimi :muokkaustoiminnot-tyhja :tyyppi :string :leveys 3}]
    @kohteet-atom])

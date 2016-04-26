@@ -17,14 +17,14 @@
             [harja.views.kartta :as kartta]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
+            [harja.tiedot.urakka.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
 (defn kohdeosan-reitti-klikattu [_ kohde]
   (let [paikkauskohde-id (or (:paikkauskohde-id kohde)
-                             (:paikkauskohde_id kohde))]
+                             (:paikkauskohde_id kohde))] ; FIXME Selviä missä käytetään viivalla, yhtenäistä käyttämään samaa tyyliä
     (popupit/nayta-popup (-> kohde
                              (assoc :aihe :paikkaus-klikattu)
                              (assoc :kohde {:nimi (get-in kohde [:kohde :nimi])})
@@ -47,7 +47,7 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
-    (komp/lippu yllapitokohteet/karttataso-yllapitokohteet)
+    (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn []
       [:span.kohdeluettelo
        [bs/tabs {:style  :tabs :classes "tabs-taso2"

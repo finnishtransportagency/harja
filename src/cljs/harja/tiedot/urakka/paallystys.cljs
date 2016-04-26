@@ -50,7 +50,7 @@
 (def paallystyskohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
-               nakymassa? @paallystys-tai-paikkauskohteet-nakymassa]
+               nakymassa? @paallystyskohteet-nakymassa]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))

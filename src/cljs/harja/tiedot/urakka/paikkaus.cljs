@@ -6,7 +6,9 @@
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
     [cljs.core.async :refer [<!]]
-    [harja.asiakas.kommunikaatio :as k])
+    [harja.asiakas.kommunikaatio :as k]
+    [harja.tiedot.urakka :as u]
+    [harja.tiedot.navigaatio :as nav])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -43,6 +45,14 @@
                        (hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paikkausilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
+
+(def paikkauskohteet
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @paikkauskohteet-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paikkauskohteet-kartalla
          (reaction (let [taso @karttataso-paikkauskohteet
