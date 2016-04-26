@@ -144,7 +144,7 @@
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
    (if luku
-     (desimaaliluku luku tarkkuus)
+     (desimaaliluku luku tarkkuus ryhmitelty?)
      "")))
 
 (defn prosentti
