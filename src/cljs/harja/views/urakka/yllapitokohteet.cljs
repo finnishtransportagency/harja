@@ -90,7 +90,7 @@
                             (resetoi-tr-tiedot)
                             ; FIXME Selvitä miten päivitetään parent kohde?
                             #_(yllapitokohteet/paivita-yllapitokohde! id assoc :kohdeosat vastaus)))
-           :luokat ["paallystyskohdeosat-haitari"]
+           :luokat ["yllapitokohdeosat-haitari"]
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [g]
                      (log "VIRHEET:" (pr-str (grid/hae-virheet g)))

@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.paallystys :refer :all]
+            [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
@@ -17,21 +18,21 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :tallenna-yllapitokohdeosat (component/using
+                                                      (->Yllapitokohteet)
+                                                      [:http-palvelin :db])
                         :urakan-yllapitokohteet (component/using
-                                                    (->PaallystysJaPaikkaus)
+                                                    (->Yllapitokohteet)
                                                     [:http-palvelin :db])
                         :urakan-paallystysilmoitus-paallystyskohteella (component/using
-                                                                         (->PaallystysJaPaikkaus)
+                                                                         (->Paallystys)
                                                                          [:http-palvelin :db])
                         :tallenna-paallystysilmoitus (component/using
-                                                       (->PaallystysJaPaikkaus)
+                                                       (->Paallystys)
                                                        [:http-palvelin :db])
                         :tallenna-paallystyskohde (component/using
-                                                    (->PaallystysJaPaikkaus)
-                                                    [:http-palvelin :db])
-                        :tallenna-yllapitokohdeosat (component/using
-                                                        (->PaallystysJaPaikkaus)
-                                                        [:http-palvelin :db])))))
+                                                    (->Paallystys)
+                                                    [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
