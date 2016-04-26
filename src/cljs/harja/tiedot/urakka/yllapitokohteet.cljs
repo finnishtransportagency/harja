@@ -15,11 +15,6 @@
   (k/post! :urakan-yllapitokohteet {:urakka-id  urakka-id
                                     :sopimus-id sopimus-id}))
 
-(defn hae-yllapitokohdeosat [urakka-id sopimus-id yllapitokohde-id]
-  (k/post! :urakan-yllapitokohdeosat {:urakka-id          urakka-id
-                                      :sopimus-id         sopimus-id
-                                      :yllapitokohde-id   yllapitokohde-id}))
-
 (defn tallenna-yllapitokohteet [urakka-id sopimus-id kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id  urakka-id
                                         :sopimus-id sopimus-id
