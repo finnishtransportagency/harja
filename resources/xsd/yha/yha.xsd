@@ -265,7 +265,7 @@
                 <xs:simpleType>
                     <xs:restriction base="xs:int">
                         <xs:minInclusive value="0"/>
-                        <xs:maxInclusive value="999"/>
+                        <xs:maxInclusive value="100"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -320,6 +320,8 @@
                 </xs:annotation>
             </xs:element>
             <xs:element name="verkkotyyppi" type="alustan-verkkotyyppi" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="verkon-tarkoitus" type="alustan-verkon-sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" nillable="false" minOccurs="1" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
@@ -355,6 +357,7 @@
 
     <xs:simpleType name="kaista">
         <xs:restriction base="xs:int">
+            <xs:enumeration value="1"/>
             <xs:enumeration value="11"/>
             <xs:enumeration value="12"/>
             <xs:enumeration value="13"/>
@@ -742,7 +745,69 @@
             </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
-
+    <xs:simpleType name="alustan-verkon-tarkoitus">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>Pituushalkeamien ehkäisy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>Muiden routavaurioiden ehkäisy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>Levennyksen tukeminen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>Painumien ehkäisy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="5">
+                <xs:annotation>
+                    <xs:documentation>Moniongelmaisen tukeminen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="9">
+                <xs:annotation>
+                    <xs:documentation>Muu tarkoitus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="alustan-verkon-sijainti">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>Päällysteessä</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>Kantavan kerroksen yläpinnassa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>Kantavassa kerroksessa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>Kantavan kerroksen alapinnassa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="9">
+                <xs:annotation>
+                    <xs:documentation>Muu sijainti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
     <xs:simpleType name="alustan-tekninen-toimenpide">
         <xs:restriction base="xs:integer">
             <xs:enumeration value="1">

@@ -39,8 +39,8 @@
                        :font-weight "normal" :padding "1mm"}
        [:fo:block (cdata otsikko)]])]])
 
-(defn taulukko-body [sarakkeet data {:keys [otsikko viimeinen-rivi-yhteenveto?
-                                  korosta-rivit oikealle-tasattavat-kentat] :as optiot}]
+(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto?
+                                            korosta-rivit oikealle-tasattavat-kentat] :as optiot}]
   (let [rivien-maara (count data)
         viimeinen-rivi (last data)
         data (if (> (count data) +max-rivimaara+)
@@ -64,7 +64,7 @@
                    [(:rivi rivi) rivi]
                    [rivi {}])
                  lihavoi-rivi? (:lihavoi? optiot)]]
-       (if-let [otsikko (:otsikko rivi)]
+       (if-let [otsikko (:otsikko optiot)]
          [:fo:table-row
           [:fo:table-cell {:padding                "1mm"
                            :font-weight            "normal"
