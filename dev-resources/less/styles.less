@@ -167,6 +167,15 @@ tr.uusitehtavakoodi td {
     font-weight: bold;
   }
   .livi-alasveto(@valintakontrollin-leveys);
+  &.sopimusnumero {
+    .livi-alasveto(@alasvedon-leveys-sop);
+  }
+  &.hoitokausi {
+    .livi-alasveto(@alasvedon-leveys-hk);
+  }
+  &.toimenpide {
+    .livi-alasveto(@alasvedon-leveys-tp);
+  }
 }
 
 .pvm-kentta,
