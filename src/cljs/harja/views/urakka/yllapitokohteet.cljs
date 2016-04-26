@@ -11,13 +11,11 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [clojure.string :as str]
             [cljs.core.async :refer [<!]]
-            [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-
             [harja.tyokalut.vkm :as vkm]
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
-            [harja.ui.tierekisteri :as tierekisteri])
+            [harja.ui.tierekisteri :as tierekisteri]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -127,15 +125,15 @@
                                                          :let (:tr_loppuetaisyys rivi)})))
             :leveys "10%"}
            {:otsikko "Kvl" :nimi :kvl :tyyppi :numero :leveys "10%" :validoi [[:ei-tyhja "Anna kvl"]]}
-           #_{:otsikko "Nykyinen päällyste"
-              :nimi :nykyinen_paallyste
-              :fmt #(paallystys-pot/hae-paallyste-koodilla %)
-              :tyyppi :valinta
-              :valinta-arvo :koodi
-              :valinnat paallystys-pot/+paallystetyypit+
-              :validoi [[:ei-tyhja "Anna päällystetyyppi"]]
-              :valinta-nayta :nimi
-              :leveys "20%"}                                ; FIXME Hae nykyinen päällyste
+           {:otsikko "Nykyinen päällyste"
+            :nimi :nykyinen_paallyste
+            :fmt #(paallystys-ja-paikkaus/hae-paallyste-koodilla %)
+            :tyyppi :valinta
+            :valinta-arvo :koodi
+            :valinnat paallystys-ja-paikkaus/+paallystetyypit+
+            :validoi [[:ei-tyhja "Anna päällystetyyppi"]]
+            :valinta-nayta :nimi
+            :leveys "20%"}
            {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna toimenpide"]]}]
           kohdeosat]
          [yllapitokohdeosa-virheet tr-virheet]]))))

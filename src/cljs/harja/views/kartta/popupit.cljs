@@ -11,11 +11,9 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.tiedot.urakka.paikkaus :as paikkaus]
-            [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
-            [harja.domain.paallystysilmoitus :as paallystys-pot]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]))
@@ -197,7 +195,7 @@
                                                              (get-in tapahtuma [:tr :alkuetaisyys])
                                                              (get-in tapahtuma [:tr :loppuosa])
                                                              (get-in tapahtuma [:tr :loppuetaisyys]))]
-                                                 ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
+                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paallystysilmoitus :tila]))]
                                                  (when aloitettu
@@ -225,7 +223,7 @@
                                                              (get-in tapahtuma [:tr :alkuetaisyys])
                                                              (get-in tapahtuma [:tr :loppuosa])
                                                              (get-in tapahtuma [:tr :loppuetaisyys]))]
-                                                 ["Nykyinen päällyste: " (paallystys-pot/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
+                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paikkausilmoitus :tila]))]
                                                  (when aloitettu

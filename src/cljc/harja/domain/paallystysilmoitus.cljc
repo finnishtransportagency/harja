@@ -1,33 +1,7 @@
 (ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
   (:require [schema.core :as s]
-            [harja.domain.skeema :as skeema]))
-
-(def +paallystetyypit+
-  "Kaikki päällystetyypit POT-lomake Excelistä"
-  [{:nimi "Betoni" :lyhenne "BET" :koodi 1}
-   {:nimi "Kivi" :lyhenne "KIVI" :koodi 2}
-   {:nimi "Avoin asfaltti" :lyhenne "AA" :koodi 11}
-   {:nimi "Asfalttibetoni" :lyhenne "AB" :koodi 12}
-   {:nimi "Epäjatkuva asfaltti" :lyhenne "EA" :koodi 13}
-   {:nimi "Kivimastiksiasfaltti" :lyhenne "SMA" :koodi 14}
-   {:nimi "Kantavan kerroksen AB" :lyhenne "ABK" :koodi 15}
-   {:nimi "Bit.sidottu kantava ker." :lyhenne "ABS" :koodi 16}
-   {:nimi "Valuasfaltti" :lyhenne "VA" :koodi 17}
-   {:nimi "Pehmeä asfalttibetoni" :lyhenne "PAB-B" :koodi 21}
-   {:nimi "Pehmeä asfalttibetoni" :lyhenne "PAB-V" :koodi 22}
-   {:nimi "Pehmeä asfalttibetoni" :lyhenne "PAB-O" :koodi 23}
-   {:nimi "Sirotepintaus" :lyhenne "SIP" :koodi 24}
-   {:nimi "Soratien pintaus" :lyhenne "SOP" :koodi 31}
-   {:nimi "Sora" :lyhenne "SORA" :koodi 41}])
-
-(defn hae-paallyste-koodilla
-  "Hakee päällysteen nimen koodilla"
-  [koodi]
-  (:nimi (first (filter #(= (:koodi %) koodi) +paallystetyypit+))))
-
-(def +paallystetyyppi+ "Päällystetyypin valinta koodilla"
-  (apply s/enum (map :koodi +paallystetyypit+)))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
 (def +tyomenetelmat+
   "Kaikki työmenetelmät POT-lomake Excelistä"
@@ -65,9 +39,7 @@
    {:nimi "Massatasaus" :lyhenne "TAS" :koodi 32}
    {:nimi "Tasausjyrsintä" :lyhenne "TJYR" :koodi 41}
    {:nimi "Laatikkojyrsintä" :lyhenne "LJYR" :koodi 42}
-   {:nimi "Reunajyrsintä" :lyhenne "RJYR" :koodi 43}
-   ;;FIXME: puuttuu sekoitusjyrsintä SJYR
-   ])
+   {:nimi "Reunajyrsintä" :lyhenne "RJYR" :koodi 43}])
 
 (def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
   (apply s/enum (map :koodi +alustamenetelmat+)))
@@ -144,7 +116,7 @@
      :losa                       s/Int
      :let                        s/Int
      ; Osoitteelle tehdyt toimenpiteet
-     :paallystetyyppi            +paallystetyyppi+
+     :paallystetyyppi            paallystys-ja-paikkaus/+paallystetyyppi+
      :raekoko                    s/Int
      :massa                      s/Num                      ;; kg/m2
      :rc%                        s/Int
@@ -152,7 +124,7 @@
      :leveys                     s/Num                      ;; metriä, esim. 4,2
      :massamaara                 s/Num                      ;; tonnia
      :pinta-ala                  s/Num                      ;; m2
-     :edellinen-paallystetyyppi  +paallystetyyppi+
+     :edellinen-paallystetyyppi  paallystys-ja-paikkaus/+paallystetyyppi+
      (s/optional-key :poistettu) s/Bool}]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
