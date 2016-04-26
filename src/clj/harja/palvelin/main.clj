@@ -9,6 +9,7 @@
     [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+    [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -117,6 +118,9 @@
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
                     [:http-palvelin])
+      :excel-vienti (component/using
+                     (excel-vienti/luo-excel-vienti)
+                     [:http-palvelin])
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db])
@@ -176,7 +180,8 @@
       :raportointi (component/using
                      (raportointi/luo-raportointi)
                      {:db         :db-replica
-                      :pdf-vienti :pdf-vienti})
+                      :pdf-vienti :pdf-vienti
+                      :excel-vienti :excel-vienti})
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using

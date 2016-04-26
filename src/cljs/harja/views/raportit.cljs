@@ -293,7 +293,7 @@
 
 (def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
   +vientimuodot+
-  [#_[(ikonit/save) "Tallenna Excel" "raporttixls" "foo"]
+  [[(ikonit/save) "Tallenna Excel" "raporttixls" (k/excel-url :raportointi)]
    [(ikonit/print) "Tallenna PDF" "raporttipdf" (k/pdf-url :raportointi)]])
 
 (defn- vie-raportti [v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
@@ -311,13 +311,13 @@
                                                "urakka"
                                                (raportit/urakkaraportin-parametrit
                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
-                              (set! (.-value (input))
+                              (set! (.-value input)
                                     (t/clj->transit parametrit))
                               true))]
     [:span
      (for [[ikoni teksti id url] +vientimuodot+]
        ^{:key id}
-       [:form {:target "_blank" :method "POST" :id url
+       [:form {:target "_blank" :method "POST" :id id
                :style {:display "inline"}
                :action url}
         [:input {:type  "hidden" :name "parametrit"
@@ -403,14 +403,19 @@
         (when-not raportissa?
           [napit/palvelinkutsu-nappi " Tee raportti"
            #(go (reset! raportit/suoritettu-raportti :ladataan)
-                (let [raportti (<! (case konteksti
-                                     "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                                                    arvot-nyt)
-                                     "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                                                  (:nimi raporttityyppi) arvot-nyt)
-                                     "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
-                                                                                (:nimi raporttityyppi)
-                                                                                arvot-nyt)))]
+                (let [raportti
+                      (<! (case konteksti
+                            "koko maa"
+                            (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                                arvot-nyt)
+                            "hallintayksikko"
+                            (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                       (:nimi raporttityyppi)
+                                                                       arvot-nyt)
+                            "urakka"
+                            (raportit/suorita-raportti-urakka (:id v-ur)
+                                                              (:nimi raporttityyppi)
+                                                              arvot-nyt)))]
                   (if-not (k/virhe? raportti)
                     (reset! raportit/suoritettu-raportti raportti)
                     (do
