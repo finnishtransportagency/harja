@@ -69,7 +69,9 @@
   [:div
    (if (:sitomaton-urakka? optiot)
      [vihje "Urakka täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."]
-     [vihje "Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."])
+     [:div
+      [:span "Urakka on jo sidottu YHA-urakkaan " (get-in urakka [:yha-tiedot :nimi]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan."]
+      [vihje "Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."]])
    [hakulomake]
    [hakutulokset urakka]
    (when @yha/sidonta-kaynnissa?
@@ -83,4 +85,4 @@
                                                       (.preventDefault e)
                                                       (modal/piilota!))}
               "Sulje"]}
-    (tuontidialogi urakka {:sitomaton-urakka? true})))
+    (tuontidialogi urakka {:sitomaton-urakka? (nil? (:yha-tiedot urakka))})))

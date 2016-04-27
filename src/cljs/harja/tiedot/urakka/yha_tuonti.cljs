@@ -52,7 +52,8 @@
            :urakoitsija {:id 18, :nimi "Skanska Asfaltti Oy", :ytunnus "0651792-4"},
            :sopimustyyppi :kokonaisurakka,
            :tyyppi :paallystys
-           :yha-tiedot {:yhatunnus "YHA1"
+           :yha-tiedot {:nimi "YHA-urakka"
+                        :yhatunnus "YHA1"
                         :elyt "Pohjois-Pohjanmaa"
                         :vuodet "2010"}}]
       (<! (timeout 2000))

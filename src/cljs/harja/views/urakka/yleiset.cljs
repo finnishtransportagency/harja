@@ -146,7 +146,7 @@
        (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
-             paallystys-tai-paikkausurakka-sidottu? (:yha-tiedot ur)]
+             paallystys-tai-paikkausurakka-sidottu? (some? (:yha-tiedot ur))]
          (when (and paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
            (yha/nayta-tuontidialogi ur))
          [:div
@@ -158,12 +158,22 @@
             "YHA-tunnus:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (get-in ur [:yha-tiedot :yhatunnus]))
-            "ELYt:"
+            "YHA-ELYt:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (get-in ur [:yha-tiedot :elyt]))
-            "Vuodet:"
+            "YHA-vuodet:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (get-in ur [:yha-tiedot :vuodet]))
+            "YHA-sidonta:"
+            (case
+              (and paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+              [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)}
+               "Sido YHA-urakkaan"]
+              (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
+              ; FIXME Tarkista myös, ettei ole ilmoituksia
+              [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)}
+               "Vaihda sidottu urakka"]
+              :default nil)
             "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
             "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
             "Tilaaja:" (:nimi (:hallintayksikko ur))
@@ -180,7 +190,7 @@
                                             :valitse-fn #(tallenna-sopimustyyppi ur %)
                                             :disabled (not kirjoitusoikeus?)}
                sopimus/+sopimustyypit+])
-            "Urakkatyyppi: "                                ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
+            "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
             (when paallystys-tai-paikkausurakka?
               [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
                                             :valinta (:tyyppi ur)
