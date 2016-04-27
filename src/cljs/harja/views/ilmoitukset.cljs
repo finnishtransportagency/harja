@@ -119,7 +119,7 @@
            {:nimi             :vain-myohassa?
             :otsikko          "Kuittaukset"
             :tyyppi           :checkbox
-            :teksti           "Myöhästyneet"}
+            :teksti           "Näytä ainoastaan myöhästyneet"}
            {:nimi             :aloituskuittauksen-ajankohta
             :otsikko          "Aloituskuittaus annettu"
             :tyyppi           :radio-group
