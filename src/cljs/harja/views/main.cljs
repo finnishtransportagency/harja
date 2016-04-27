@@ -5,7 +5,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
             [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
@@ -50,7 +50,6 @@
                                        :valitse-fn istunto/aseta-testikayttaja!}
           (concat [nil] @istunto/testikayttajat)]]))))
 
-
 (defn header [s]
   [bs/navbar {}
    [:img#harja-brand-icon {:alt      "HARJA"
@@ -78,7 +77,12 @@
 
     (when (oikeudet/hallinta)
       [:li {:role "presentation" :class (when (= s :hallinta) "active")}
-       [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])]
+       [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
+
+    (when (oikeudet/laadunseuranta)
+      [:li {:role "presentation"}
+       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu" (str k/+polku+ "laadunseuranta/")]])]
+    
    :right
    [palaute/palaute-linkki]
    [kayttajatiedot istunto/kayttaja]])

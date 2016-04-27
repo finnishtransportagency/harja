@@ -140,8 +140,7 @@
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
 
-  :repositories [["archiva" "http://10.25.44.14:8080/"]
-                 ["harja-data" "http://185.26.50.104/mvn/"]
+  :repositories [["harja-data" "http://185.26.50.104/mvn/"]
                  ["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
                  ["solita" "http://mvn.solita.fi/repository/solita/"]]
 
