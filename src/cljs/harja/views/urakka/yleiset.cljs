@@ -13,6 +13,7 @@
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.loki :refer [log]]
+            [harja.views.urakka.yhatuonti :as yha]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<!]]
@@ -144,6 +145,7 @@
    sopimustyyppi (:sopimustyyppi ur)]
 
   (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))]
+    (yha/nayta-tuontidialogi)
     [:div
      [bs/panel {}
       "Yleiset tiedot"

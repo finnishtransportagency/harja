@@ -10,9 +10,9 @@
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
-(def hakutiedot (atom nil))
+(def hakulomake-data (atom nil))
 
-(tarkkaile! "[YHA] Hakutiedot " hakutiedot)
+(tarkkaile! "[YHA] Hakutiedot " hakulomake-data)
 
 (defn hae-yha-urakat [hakuparametrit]
   ;; TODO
@@ -20,14 +20,32 @@
   (go []))
 
 (def hakutulokset
-  (reaction<! [hakutiedot @hakutiedot]
+  (reaction<! [hakulomake-data @hakulomake-data]
               {:nil-kun-haku-kaynnissa? true
                :odota 500}
-              (hae-yha-urakat hakutiedot)))
+              (hae-yha-urakat hakulomake-data)))
 
 (defn- sido-yha-urakka-harja-urakkaan [yha-urakka harja-urakka]
   ;; TODO
   (log "[YHA] Sidotaan YHA-urakka Harja-urakkaan..."))
+
+(defn- hakutiedot []
+  [lomake {:otsikko "Urakan tiedot"
+           :muokkaa! (fn [uusi-data]
+                       (reset! hakulomake-data uusi-data))}
+   [{:otsikko "Nimi"
+     :nimi :nimi
+     :pituus-max 512
+     :tyyppi :string}
+    {:otsikko "Tunniste"
+     :nimi :tunniste
+     :pituus-max 512
+     :tyyppi :string}
+    {:otsikko "Vuosi"
+     :nimi :vuosi
+     :pituus-max 512
+     :tyyppi :positiivinen-numero}
+    @hakutiedot]])
 
 (defn- hakutulokset []
   [grid
@@ -57,24 +75,6 @@
                      {:on-click #(sido-yha-urakka-harja-urakkaan nil nil)}
                      "Valitse"])}]
    @hakutulokset])
-
-(defn- hakutiedot []
-  [lomake {:otsikko "Urakan tiedot"
-           :muokkaa! (fn [uusi-data]
-                       (reset! hakutiedot uusi-data))}
-   [{:otsikko "Nimi"
-     :nimi :nimi
-     :pituus-max 512
-     :tyyppi :string}
-    {:otsikko "Tunniste"
-     :nimi :tunniste
-     :pituus-max 512
-     :tyyppi :string}
-    {:otsikko "Vuosi"
-     :nimi :vuosi
-     :pituus-max 512
-     :tyyppi :positiivinen-numero}
-    @hakutiedot]])
 
 (defn- tuontidialogi []
   (log "[YHA] Render dialog tiedoilla:" (pr-str @hakutiedot))
