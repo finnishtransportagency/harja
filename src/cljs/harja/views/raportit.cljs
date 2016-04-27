@@ -47,6 +47,13 @@
 
 (tarkkaile! "Rapsat" raporttityypit)
 
+(defn- raportin-sort-avain
+  "Raportin sort avain. Kuvauksen mukaan aakkosjärjestyksessä, paitsi työmaakokous ensin."
+  [{kuvaus :kuvaus}]
+  (cond
+    (= kuvaus "Työmaakokousraportti") ""
+    :default kuvaus))
+
 (defonce mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko
@@ -56,7 +63,7 @@
                   urakkatyypin-raportit (filter
                                          #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
                                           (vals @raporttityypit))]
-              (sort-by :kuvaus
+              (sort-by raportin-sort-avain
                          (into []
                                (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
                                      (filter #(oikeudet/voi-lukea?
