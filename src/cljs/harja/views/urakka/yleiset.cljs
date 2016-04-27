@@ -95,16 +95,16 @@
                                         true))))]
       (modal/nayta!
         {:otsikko "Vaihdetaanko urakkatyyppi?"
-         :footer  [:span
-                   [:button.nappi-toissijainen {:type     "button"
-                                                :on-click #(do (.preventDefault %)
-                                                               (modal/piilota!))}
-                    "Peruuta"]
-                   [:button.nappi-myonteinen {:type     "button"
-                                              :on-click #(do (.preventDefault %)
-                                                             (modal/piilota!)
-                                                             (vaihda-urakkatyyppi))}
-                    "Vaihda"]]}
+         :footer [:span
+                  [:button.nappi-toissijainen {:type "button"
+                                               :on-click #(do (.preventDefault %)
+                                                              (modal/piilota!))}
+                   "Peruuta"]
+                  [:button.nappi-myonteinen {:type "button"
+                                             :on-click #(do (.preventDefault %)
+                                                            (modal/piilota!)
+                                                            (vaihda-urakkatyyppi))}
+                   "Vaihda"]]}
         [:div
          [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur))
                   "-tyyppisen urakan ")
@@ -157,13 +157,13 @@
             "Urakan tunnus:" (:sampoid ur)
             "YHA-tunnus:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              "TODO")
+              (get-in ur [:yha-tiedot :yhatunnus]))
             "ELYt:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              "TODO")
+              (get-in ur [:yha-tiedot :elyt]))
             "Vuodet:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              "TODO")
+              (get-in ur [:yha-tiedot :vuodet]))
             "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
             "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
             "Tilaaja:" (:nimi (:hallintayksikko ur))
@@ -172,21 +172,21 @@
             ;; päällystys --> kokonaisurakka
             "Sopimustyyppi: "
             (when-not (= :hoito (:tyyppi ur))
-              [yleiset/livi-pudotusvalikko {:class      "alasveto-yleiset-tiedot"
-                                            :valinta    @sopimustyyppi
-                                            :format-fn  #(if %
-                                                          (str/capitalize (name %))
-                                                          "Ei sopimustyyppiä")
+              [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                            :valinta @sopimustyyppi
+                                            :format-fn #(if %
+                                                         (str/capitalize (name %))
+                                                         "Ei sopimustyyppiä")
                                             :valitse-fn #(tallenna-sopimustyyppi ur %)
-                                            :disabled   (not kirjoitusoikeus?)}
+                                            :disabled (not kirjoitusoikeus?)}
                sopimus/+sopimustyypit+])
-            "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
+            "Urakkatyyppi: "                                ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
             (when paallystys-tai-paikkausurakka?
-              [yleiset/livi-pudotusvalikko {:class      "alasveto-yleiset-tiedot"
-                                            :valinta    (:tyyppi ur)
-                                            :format-fn  #(navigaatio/nayta-urakkatyyppi %)
+              [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                            :valinta (:tyyppi ur)
+                                            :format-fn #(navigaatio/nayta-urakkatyyppi %)
                                             :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                            :disabled   (not kirjoitusoikeus?)}
+                                            :disabled (not kirjoitusoikeus?)}
                [:paallystys :paikkaus]])]]
 
           [urakkaan-liitetyt-kayttajat (:id ur)]
@@ -195,14 +195,14 @@
            {:otsikko "Yhteyshenkilöt"
             :tyhja "Ei yhteyshenkilöitä."
             :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
-           [{:otsikko       "Rooli" :nimi :rooli :tyyppi :valinta :leveys "17%"
+           [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys "17%"
              :hae #(do (when (:rooli %)
                          (str/capitalize (:rooli %))))
              :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
 
-             :valinnat      (vec (concat [nil] @yhteyshenkilotyypit))
+             :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
 
-             :validoi       [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
+             :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
             {:otsikko "Organisaatio"
              :nimi :organisaatio
              :fmt :nimi
@@ -241,7 +241,7 @@
 
 
              :tyyppi :string :leveys "20%"
-             :validoi [[:ei-tyhja  "Anna päivystäjän nimi"]]}
+             :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
             {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
              :tyyppi :valinta :muokattava? (constantly false)
              :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
@@ -251,7 +251,7 @@
              :pituus 16}
             {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"
              :pituus 16}
-            {:otsikko  "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"
+            {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"
              :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
             {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
              :validoi [[:ei-tyhja "Aseta alkupvm"]
