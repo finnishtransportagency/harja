@@ -145,7 +145,7 @@
    sopimustyyppi (:sopimustyyppi ur)]
 
   (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))]
-    (yha/nayta-tuontidialogi)
+    (yha/nayta-tuontidialogi ur)
     [:div
      [bs/panel {}
       "Yleiset tiedot"

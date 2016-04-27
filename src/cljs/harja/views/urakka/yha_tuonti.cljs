@@ -5,34 +5,17 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.lomake :refer [lomake]]
-            [harja.ui.grid :refer [grid]])
+            [harja.tiedot.urakka.yhatuonti :as yha]
+            [harja.ui.grid :refer [grid]]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
-(def hakulomake-data (atom nil))
-
-(tarkkaile! "[YHA] Hakutiedot " hakulomake-data)
-
-(defn hae-yha-urakat [hakuparametrit]
-  ;; TODO
-  (log "[YHA] Suoritetaan YHA-haku")
-  (go []))
-
-(def hakutulokset-data
-  (reaction<! [hakulomake-data @hakulomake-data]
-              {:nil-kun-haku-kaynnissa? true
-               :odota 500}
-              (hae-yha-urakat hakulomake-data)))
-
-(defn- sido-yha-urakka-harja-urakkaan [yha-urakka harja-urakka]
-  ;; TODO
-  (log "[YHA] Sidotaan YHA-urakka Harja-urakkaan..."))
-
 (defn- hakulomake []
   [lomake {:otsikko "Urakan tiedot"
            :muokkaa! (fn [uusi-data]
-                       (reset! hakulomake-data uusi-data))}
+                       (reset! yha/hakulomake-data uusi-data))}
    [{:otsikko "Nimi"
      :nimi :nimi
      :pituus-max 512
@@ -45,12 +28,12 @@
      :nimi :vuosi
      :pituus-max 512
      :tyyppi :positiivinen-numero}
-    @hakulomake-data]])
+    @yha/hakulomake-data]])
 
-(defn- hakutulokset []
+(defn- hakutulokset [urakka]
   [grid
    {:otsikko "Löytyneet urakat"
-    :tyhja (if (nil? @hakutulokset) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")}
+    :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")}
    [{:otsikko "Tunnus"
      :nimi :tunnus
      :tyyppi :string
@@ -72,18 +55,18 @@
      :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [:button.nappi-ensisijainen.nappi-grid
-                     {:on-click #(sido-yha-urakka-harja-urakkaan nil nil)}
+                     {:on-click #(yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi)}
                      "Valitse"])}]
-   @hakutulokset-data])
+   @yha/hakutulokset-data])
 
-(defn- tuontidialogi []
-  (log "[YHA] Render dialog tiedoilla:" (pr-str @hakulomake-data))
+(defn- tuontidialogi [urakka]
+  (log "[YHA] Render dialog tiedoilla:" (pr-str @yha/hakulomake-data))
   [:div
    [vihje "Urakka tätyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka ja tee sidonta."]
    [hakulomake]
-   [hakutulokset]])
+   [hakutulokset urakka]])
 
-(defn nayta-tuontidialogi []
+(defn nayta-tuontidialogi [urakka]
   (modal/nayta!
     {:otsikko "Urakan sitominen YHA-urakkaan"
      :luokka "yha-tuonti"
@@ -91,4 +74,4 @@
                                                       (.preventDefault e)
                                                       (modal/piilota!))}
               "Sulje"]}
-    (tuontidialogi)))
+    (tuontidialogi urakka)))
