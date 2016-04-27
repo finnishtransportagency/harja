@@ -10,10 +10,14 @@
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
-(defn hae-yha-urakat [hakuparametrit]
-  ;; TODO
+(defn hae-yha-urakat [{:keys [nimi tunniste vuosi] :as hakuparametrit}]
   (log "[YHA] Hae YHA-urakat...")
-  (go []))
+  #_(k/post! :hae-yha-urakat {:nimi nimi
+                            :tunniste tunniste
+                            :vuosi vuosi})
+  ;; FIXME Palauta toistaiseksi vain testidata
+  (go (do
+        [{:tunnus "YHA1" :nimi "YHA-urakka" :elyt "Pohjois-Pohjanmaa" :vuodet 2010}])))
 
 (def hakulomake-data (atom nil))
 

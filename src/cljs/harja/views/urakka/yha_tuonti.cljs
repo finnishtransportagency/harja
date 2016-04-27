@@ -59,9 +59,11 @@
                      "Valitse"])}]
    @yha/hakutulokset-data])
 
-(defn- tuontidialogi [urakka]
+(defn- tuontidialogi [urakka optiot]
   [:div
-   [vihje "Urakka tätyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka ja tee sidonta."]
+   (if (:sitomaton-urakka? optiot)
+     [vihje "Urakka täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."]
+     [vihje "Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."])
    [hakulomake]
    [hakutulokset urakka]])
 
@@ -73,4 +75,4 @@
                                                       (.preventDefault e)
                                                       (modal/piilota!))}
               "Sulje"]}
-    (tuontidialogi urakka)))
+    (tuontidialogi urakka {:sitomaton-urakka? true})))
