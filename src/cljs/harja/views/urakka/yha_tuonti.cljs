@@ -55,9 +55,13 @@
      :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [:button.nappi-ensisijainen.nappi-grid
-                     {:on-click #(yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi)}
+                     {:on-click #(yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi)
+                      :disabled @yha/sidonta-kaynnissa?}
                      "Valitse"])}]
    @yha/hakutulokset-data])
+
+(defn- sidonta-kaynnissa []
+  [ajax-loader "Sidonta käynnissä..."])
 
 (defn- tuontidialogi [urakka optiot]
   [:div
@@ -65,7 +69,9 @@
      [vihje "Urakka täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."]
      [vihje "Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."])
    [hakulomake]
-   [hakutulokset urakka]])
+   [hakutulokset urakka]
+   (when @yha/sidonta-kaynnissa?
+     [sidonta-kaynnissa])])
 
 (defn nayta-tuontidialogi [urakka]
   (modal/nayta!

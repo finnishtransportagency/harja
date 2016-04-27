@@ -5,14 +5,17 @@
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.grid :refer [grid]]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
+(def sidonta-kaynnissa? (atom false))
+
 (defn hae-yha-urakat [{:keys [nimi tunniste vuosi] :as hakuparametrit}]
   (log "[YHA] Hae YHA-urakat...")
-  #_(k/post! :hae-yha-urakat {:nimi nimi
+  (k/post! :hae-yha-urakat {:nimi nimi
                             :tunniste tunniste
                             :vuosi vuosi})
   ;; FIXME Palauta toistaiseksi vain testidata
@@ -31,5 +34,12 @@
 
 (defn- sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]
   (log "[YHA] Sidotaan YHA-urakka Harja-urakkaan...")
-  (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
-                                            :yha-tiedot yha-tiedot}))
+  (reset! sidonta-kaynnissa? true)
+  (go
+    ;; FIXME Palauta toistaiseksi vain testidata
+    (let [vastaus #_(<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
+                                                                  :yha-tiedot yha-tiedot}))
+          (<! (timeout 2000))]
+      (log "[YHA] Sidonta suoritettu")
+      (reset! sidonta-kaynnissa? false)
+      (modal/piilota!))))
