@@ -1,7 +1,7 @@
 (ns harja.views.urakka.yhatuonti
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.modal :as modal]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader vihje]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.grid :refer [grid]]))
@@ -19,8 +19,7 @@
 
 (defn- tuontidialogi [optiot]
   [:div
-   (when (:kehotus-sitoa? optiot)
-     [:div "Urakka tätyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka ja tee sidonta."])
+   [vihje "Urakka tätyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka ja tee sidonta."]
    [lomake {:otsikko "Urakan tiedot"}
     [{:otsikko "Nimi"
       :nimi :nimi
@@ -68,4 +67,4 @@
   (modal/nayta!
     {:otsikko "Urakan sitominen YHA-urakkaan"
      :luokka "yha-tuonti"}
-    (tuontidialogi {:kehotus-sitoa? true})))
+    (tuontidialogi {})))
