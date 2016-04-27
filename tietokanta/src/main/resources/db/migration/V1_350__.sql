@@ -12,7 +12,8 @@ CREATE TABLE yhatiedot (
   vuodet                   INTEGER [],
   kohdeluettelo_paivitetty TIMESTAMP,
   luotu                    TIMESTAMP,
-  muokattu                 TIMESTAMP
+  linkittaja               integer REFERENCES kayttaja (id),
+  muokattu                 TIMESTAMP,
 );
 
 ALTER TABLE yhatiedot ADD CONSTRAINT yhatiedot_uniikki_yhaid UNIQUE (yhaid);
