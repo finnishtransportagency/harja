@@ -127,12 +127,12 @@
                maksimi (when-not (empty? suunnitellut)
                          (reduce + suunnitellut))
                luokitellut (filter :luokka rivit)
-               yhteensa (reduce + (keep  #(when (and (:kk %) (not (:luokka %)))
-                                            (:maara %)) rivit))
                kk-arvot (into {}
                               (comp (filter :kk)
                                     (map (juxt :kk :maara)))
-                              rivit)]
+                              rivit)
+               yhteensa (reduce + 0 (vals kk-arvot))]
+           ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
             ;; Normaali materiaalikohtainen rivi
             [{:lihavoi? true
