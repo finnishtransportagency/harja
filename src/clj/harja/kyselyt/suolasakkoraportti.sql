@@ -82,10 +82,12 @@ FROM (SELECT
          FROM materiaalin_kaytto mk
          WHERE mk.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
                              AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+               AND mk.urakka = u.id
                AND mk.materiaali IN (SELECT id FROM materiaalikoodi
          WHERE materiaalityyppi = 'talvisuola'::materiaalityyppi)
                AND mk.alkupvm >= :alkupvm
-               AND mk.alkupvm <= :loppupvm) AS suola_suunniteltu,
+               AND mk.alkupvm <= :loppupvm
+        GROUP BY mk.urakka) AS suola_suunniteltu,
         (SELECT AVG(arvo/100)
          FROM indeksi
          WHERE nimi = ss.indeksi
@@ -102,8 +104,10 @@ FROM (SELECT
          WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
                AND t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
                                 AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi))
+               AND t.urakka = u.id
                AND t.alkanut >= :alkupvm
-               AND t.alkanut <= :loppupvm) AS suola_kaytetty
+               AND t.alkanut <= :loppupvm
+        GROUP BY t.urakka) AS suola_kaytetty
       FROM lampotilat lt
         LEFT JOIN suolasakko ss ON ss.urakka = lt.urakka
                                    AND ss.hoitokauden_alkuvuosi = (SELECT EXTRACT(YEAR FROM lt.alkupvm))
