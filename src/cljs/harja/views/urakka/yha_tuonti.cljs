@@ -19,7 +19,7 @@
   (log "[YHA] Suoritetaan YHA-haku")
   (go []))
 
-(def hakutulokset
+(def hakutulokset-data
   (reaction<! [hakulomake-data @hakulomake-data]
               {:nil-kun-haku-kaynnissa? true
                :odota 500}
@@ -29,7 +29,7 @@
   ;; TODO
   (log "[YHA] Sidotaan YHA-urakka Harja-urakkaan..."))
 
-(defn- hakutiedot []
+(defn- hakulomake []
   [lomake {:otsikko "Urakan tiedot"
            :muokkaa! (fn [uusi-data]
                        (reset! hakulomake-data uusi-data))}
@@ -45,7 +45,7 @@
      :nimi :vuosi
      :pituus-max 512
      :tyyppi :positiivinen-numero}
-    @hakutiedot]])
+    @hakulomake-data]])
 
 (defn- hakutulokset []
   [grid
@@ -74,13 +74,13 @@
                     [:button.nappi-ensisijainen.nappi-grid
                      {:on-click #(sido-yha-urakka-harja-urakkaan nil nil)}
                      "Valitse"])}]
-   @hakutulokset])
+   @hakutulokset-data])
 
 (defn- tuontidialogi []
-  (log "[YHA] Render dialog tiedoilla:" (pr-str @hakutiedot))
+  (log "[YHA] Render dialog tiedoilla:" (pr-str @hakulomake-data))
   [:div
    [vihje "Urakka tätyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka ja tee sidonta."]
-   [hakutiedot]
+   [hakulomake]
    [hakutulokset]])
 
 (defn nayta-tuontidialogi []
