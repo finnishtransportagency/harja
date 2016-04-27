@@ -149,7 +149,7 @@
         paallystys-tai-paikkausurakka-sidottu? (:yha-tiedot ur)
         kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))]
     (when (and paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
-      (yha/nayta-tuontidialogi ur)
+      (yha/nayta-tuontidialogi ur))
     [:div
      [bs/panel {}
       "Yleiset tiedot"
@@ -173,25 +173,25 @@
        ;; päällystys --> kokonaisurakka
        "Sopimustyyppi: "
        (when-not (= :hoito (:tyyppi ur))
-         [yleiset/livi-pudotusvalikko {:class      "alasveto-yleiset-tiedot"
-                                       :valinta    @sopimustyyppi
-                                       :format-fn  #(if %
-                                                      (str/capitalize (name %))
-                                                      "Ei sopimustyyppiä")
+         [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                       :valinta @sopimustyyppi
+                                       :format-fn #(if %
+                                                    (str/capitalize (name %))
+                                                    "Ei sopimustyyppiä")
                                        :valitse-fn #(tallenna-sopimustyyppi ur %)
-                                       :disabled   (not kirjoitusoikeus?)}
+                                       :disabled (not kirjoitusoikeus?)}
           sopimus/+sopimustyypit+])
-       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
+       "Urakkatyyppi: "                                     ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
        (when (or (= :paikkaus (:tyyppi ur))
                  (= :paallystys (:tyyppi ur)))
-         [yleiset/livi-pudotusvalikko {:class      "alasveto-yleiset-tiedot"
-                                       :valinta    (:tyyppi ur)
-                                       :format-fn  #(navigaatio/nayta-urakkatyyppi %)
+         [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                       :valinta (:tyyppi ur)
+                                       :format-fn #(navigaatio/nayta-urakkatyyppi %)
                                        :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                       :disabled   (not kirjoitusoikeus?)}
-          [:paallystys :paikkaus]])]]
+                                       :disabled (not kirjoitusoikeus?)}
+          [:paallystys :paikkaus]])]
 
-     [urakkaan-liitetyt-kayttajat (:id ur)]
+      [urakkaan-liitetyt-kayttajat (:id ur)]]
 
      [grid/grid
       {:otsikko "Yhteyshenkilöt"
