@@ -3,7 +3,9 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.pdf :as pdf]
+            [harja.palvelin.raportointi.excel :as excel]
             [taoensso.timbre :as log]
             [harja.kyselyt.raportit :as raportit-q]
             [harja.kyselyt.urakat :as urakat-q]
@@ -77,6 +79,7 @@
   component/Lifecycle
   (start [{db :db
            pdf-vienti :pdf-vienti
+           excel-vienti :excel-vienti
            :as this}]
 
     ;; Rekisteröidään PDF-vientipalveluun uusi käsittelijä :raportointi, joka
@@ -86,6 +89,16 @@
      (fn [kayttaja params]
        (let [raportti (suorita-raportti this kayttaja params)]
          (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti)))))
+
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija!
+       excel-vienti :raportointi
+       (fn [workbook kayttaja params]
+         (let [raportti (suorita-raportti this kayttaja params)]
+           (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
+           (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
+                                 workbook)))))
+
 
     this)
 

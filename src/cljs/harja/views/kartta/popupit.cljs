@@ -172,8 +172,8 @@
                                                    ["Tapahtunut" (pvm/pvm-aika tapahtunut) " - " (pvm/pvm-aika paattynyt)])
                                                  (when kasitelty
                                                    ["Käsitelty" (pvm/pvm-aika kasitelty)])
-                                                 ["Työ\u00ADtehtävä" (:tyontekijanammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
-                                                 ["Vammat" (:vammat tapahtuma)]
+                                                 ["Työ\u00ADtehtävä" (turpodomain/kuvaile-tyontekijan-ammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                                                 ["Vammat" (str/join ", " (map turpodomain/vammat (:vammat tapahtuma)))]
                                                  ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
                                                  ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
                                                  ["Vakavuus\u00ADaste" (turpodomain/turpo-vakavuusasteet (:vakavuusaste tapahtuma))]

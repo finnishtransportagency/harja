@@ -4,7 +4,8 @@
             #?(:cljs [goog.i18n.currencyCodeMap])
             #?(:cljs [goog.i18n.NumberFormatSymbols])
             #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
-            #?(:cljs [goog.i18n.NumberFormat]))
+            #?(:cljs [goog.i18n.NumberFormat])
+            [clojure.string :as str])
   #?(:clj (:import (java.text NumberFormat))))
 
 #?(:cljs
@@ -23,7 +24,7 @@
   #?(:cljs
      ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
      ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
-     ;; vasta IE11 versiosta lähtien. 
+     ;; vasta IE11 versiosta lähtien.
      (str (.format euro-number-format eur) " \u20AC")
 
      :clj
@@ -105,23 +106,58 @@
     (pvm-vali vali)
     ""))
 
+#?(:cljs
+   (def desimaali-fmt
+     (into {}
+           (zipmap (range 1 4)
+                   (map #(doto (goog.i18n.NumberFormat.
+                                (.-DECIMAL goog.i18n.NumberFormat/Format))
+                           (.setShowTrailingZeros false)
+                           (.setMinimumFractionDigits %)
+                           (.setMaximumFractionDigits %))
+                        (range 1 4))))))
+
+#?(:clj (def desimaali-symbolit
+          (doto (java.text.DecimalFormatSymbols.)
+            (.setGroupingSeparator \ ))))
+
 (defn desimaaliluku
-  #?(:cljs([luku] (desimaaliluku luku 2)))
-  #?(:cljs([luku tarkkuus] (.toFixed luku tarkkuus)))
-  #?(:clj ([luku] (desimaaliluku luku 2)))
-  #?(:clj ([luku tarkkuus] (format (str "%." tarkkuus "f") (double luku) tarkkuus))))
+  ([luku] (desimaaliluku luku 2 false))
+  ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
+  ([luku tarkkuus ryhmitelty?]
+   #?(:cljs
+      (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+        (if-not ryhmitelty?
+          (str/replace formatoitu #" " "")
+          formatoitu))
+      :clj
+      (.format (doto (java.text.DecimalFormat.)
+                 (.setDecimalFormatSymbols desimaali-symbolit)
+                 (.setMinimumFractionDigits tarkkuus)
+                 (.setMaximumFractionDigits tarkkuus)
+                 (.setGroupingSize (if ryhmitelty? 3 0)))
+
+               (double luku)))))
 
 (defn desimaaliluku-opt
-  #?(:cljs ([luku] (desimaaliluku-opt luku 2)))
-  #?(:cljs ([luku tarkkuus]
-             (if luku
-               (desimaaliluku luku tarkkuus)
-               "")))
-  #?(:clj ([luku] (desimaaliluku-opt luku 2)))
-  #?(:clj ([luku tarkkuus]
-           (if luku
-             (desimaaliluku luku tarkkuus)
-             ""))))
+  ([luku] (desimaaliluku-opt luku 2 false))
+  ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
+  ([luku tarkkuus ryhmitelty?]
+   (if luku
+     (desimaaliluku luku tarkkuus ryhmitelty?)
+     "")))
+
+(defn prosentti
+  ([luku] (prosentti luku 1))
+  ([luku tarkkuus]
+   (str (desimaaliluku luku tarkkuus) "%")))
+
+(defn prosentti-opt
+  ([luku] (prosentti-opt luku 1))
+  ([luku tarkkuus]
+   (if luku
+     (prosentti luku tarkkuus)
+     "")))
 
 (defn trimmaa-puhelinnumero
   "Ottaa suomalaisen puhelinnumeron teksimuodossa ja palauttaa sen yksinkertaistetussa numeromuodossa ilman etuliitettä
