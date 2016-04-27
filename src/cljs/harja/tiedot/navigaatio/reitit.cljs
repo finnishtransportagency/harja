@@ -1,5 +1,5 @@
 (ns harja.tiedot.navigaatio.reitit
-  "Määrittelee välilehtien valinnat ja hoittaa URL-muodostuksen 
+  "Määrittelee välilehtien valinnat ja hoittaa URL-muodostuksen
   sekä #-polun tulkinnan"
   (:require [clojure.string :as str]
             [reagent.core :refer [atom wrap]]))
@@ -14,7 +14,8 @@
          :hallinta :kayttajat
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
-         :kohdeluettelo-paikkaus :paikkauskohteet}))
+         :kohdeluettelo-paikkaus :paikkauskohteet
+         :raportit nil}))
 
 (defn aseta-valittu-valilehti!
   [osio valilehti]
@@ -38,7 +39,7 @@
     (let [osio (last polku)]
       (if (contains? url-navigaatio osio)
         (recur (conj polku (get url-navigaatio osio)))
-        (str/join "/" (map name polku))))))
+        (str/join "/" (keep #(and % (name %)) polku))))))
 
 (defn tulkitse-polku
   "Tulkitsee URL-polun ja palauttaa sen perusteella päivitetyn navigaatiotilan"
@@ -52,6 +53,3 @@
       (recur (assoc url-navigaatio sijainti osa)
              osa
              osat))))
-
-
-

@@ -70,9 +70,8 @@
           :default
           nil)
 
-        suolasakot-hallintayksikoittain (seq (group-by :hallintayksikko_nimi
-                                                       (reverse (sort-by #(or (:hallintayksikko_elynumero (first %)) 100000)
-                                                                 raportin-data))))
+        suolasakot-hallintayksikoittain (sort (group-by :hallintayksikko_elynumero
+                                                        raportin-data))
         raportin-nimi "Suolasakkoraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -116,8 +115,8 @@
             (conj
               (into []
                     (apply concat
-                           (for [[hy-nimi hyn-suolasakot] suolasakot-hallintayksikoittain
-                                 :let [elynumero (:hallintayksikko_elynumero (first hyn-suolasakot))]]
+                           (for [[elynum hyn-suolasakot] suolasakot-hallintayksikoittain
+                                 :let [elynimi (:hallintayksikko_nimi (first hyn-suolasakot))]]
                              (concat
                                (for [rivi hyn-suolasakot]
                                  (let [sakko (laske-sakko rivi)
@@ -143,10 +142,10 @@
                                     (when (and (:kerroin rivi) sakko)
                                       (fmt/euro-opt false (* (:kerroin rivi) sakko)))]))
                                ;; jos koko maan rapsa, näytä kunkin Hallintayksikön summarivi
-                               (when (and (= :koko-maa konteksti) hy-nimi)
+                               (when (and (= :koko-maa konteksti) elynum)
                                  [{:lihavoi? true
                                    :rivi
-                                   [(str elynumero " " hy-nimi)
+                                   [(str elynum " "  elynimi)
                                     nil
                                     nil
                                     (reduce + (keep :sakko_talvisuolaraja hyn-suolasakot))

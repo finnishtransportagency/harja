@@ -161,6 +161,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (str (polku) "pdf?_=" (name tyyppi) "&"
        (yhdista-parametrit parametrit)))
 
+(defn excel-url [tyyppi & parametrit]
+  (str (polku) "excel?_=" (name tyyppi) "&"
+       (yhdista-parametrit parametrit)))
+
 (defn wmts-polku []
   (str +polku+ "wmts/"))
 
