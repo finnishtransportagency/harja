@@ -8,6 +8,10 @@
 
 (def hakutiedot (atom nil))
 (def hakutulokset (atom []))
+(def hakutulokset-testidata (atom [{:tunnus "YHA1"
+                          :nimi "YHA-urakka"
+                          :elyt "Pohjois-Pohjanmaa"
+                          :vuodet "2005"}]))
 
 (defn- sido-yha-urakka-harja-urakkaan [yha-urakka harja-urakka]
   ;; TODO
@@ -33,8 +37,8 @@
      @hakutiedot]]
 
    [grid
-    {:otsikko     "Löytyneet urakat"
-     :tyhja       (if (nil? @hakutulokset) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")}
+    {:otsikko "Löytyneet urakat"
+     :tyhja (if (nil? @hakutulokset) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")}
     [{:otsikko "Tunnus"
       :nimi :tunnus
       :tyyppi :string
@@ -58,9 +62,10 @@
                      [:button.nappi-ensisijainen.nappi-grid
                       {:on-click #(sido-yha-urakka-harja-urakkaan nil nil)}
                         "Valitse"])}]
-    @hakutulokset]])
+    @hakutulokset-testidata]])
 
 (defn nayta-tuontidialogi []
   (modal/nayta!
-    {:otsikko "Urakan sitominen YHA-urakkaan"}
+    {:otsikko "Urakan sitominen YHA-urakkaan"
+     :luokka "yha-tuonti"}
     (tuontidialogi {:kehotus-sitoa? true})))
