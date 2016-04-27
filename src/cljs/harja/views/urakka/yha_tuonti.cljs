@@ -4,7 +4,7 @@
             [harja.ui.yleiset :refer [ajax-loader vihje]]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<! >! chan timeout]]
-            [harja.ui.lomake :refer [lomake]]
+            [harja.ui.lomake :as lomake]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
             [harja.tiedot.navigaatio :as nav])
@@ -13,7 +13,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 (defn- hakulomake []
-  [lomake {:otsikko "Urakan tiedot"
+  [lomake/lomake {:otsikko "Urakan tiedot"
            :muokkaa! (fn [uusi-data]
                        (reset! yha/hakulomake-data uusi-data))}
    [{:otsikko "Nimi"
@@ -69,9 +69,7 @@
   [:div
    (if (:sitomaton-urakka? optiot)
      [vihje "Urakka täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."]
-     [:div
-      [:span "Urakka on jo sidottu YHA-urakkaan " (get-in urakka [:yha-tiedot :nimi]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan."]
-      [vihje "Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."]])
+     [lomake/yleinen-varoitus (str "Urakka on jo sidottu YHA-urakkaan " (get-in urakka [:yha-tiedot :nimi]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan.")])
    [hakulomake]
    [hakutulokset urakka]
    (when @yha/sidonta-kaynnissa?

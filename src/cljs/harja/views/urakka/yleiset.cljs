@@ -165,7 +165,7 @@
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (get-in ur [:yha-tiedot :vuodet]))
             "YHA-sidonta:"
-            (case
+            (cond
               (and paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
               [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)}
                "Sido YHA-urakkaan"]
