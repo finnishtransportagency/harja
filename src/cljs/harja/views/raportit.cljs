@@ -30,13 +30,17 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def valittu-raporttityyppi-nimi (nav/valittu-valilehti-atom :raportit))
+(def valittu-raporttityyppi-nimi (reaction (nav/valittu-valilehti :raportit)))
+(defn- valitse-raporttityyppi! [nimi]
+  (nav/aseta-valittu-valilehti! :raportit nimi))
 
 ;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
 (defonce raporttityypit (atom nil))
 
 (def valittu-raporttityyppi
-  (reaction (get @raporttityypit @valittu-raporttityyppi-nimi)))
+  (reaction (let [raporttityypit @raporttityypit]
+              (when raporttityypit
+                (get raporttityypit @valittu-raporttityyppi-nimi)))))
 
 (def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
 
@@ -66,7 +70,7 @@
                    valittu @valittu-raporttityyppi]
                (when-not (mahdolliset valittu)
                  (log "Resetoidaan valittu raportti, ei enää mahdollinen")
-                 (reset! valittu-raporttityyppi-nimi nil)))))
+                 (valitse-raporttityyppi! nil)))))
 
 (defonce tyhjenna-raportti-kun-valinta-muuttuu
   (run! @valittu-raporttityyppi
@@ -479,8 +483,7 @@
                           [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn  #(if % (:kuvaus %) "Valitse")
-                                                :valitse-fn #(reset! valittu-raporttityyppi-nimi
-                                                                     (:nimi %))
+                                                :valitse-fn #(valitse-raporttityyppi! (:nimi %))
                                                 :class      "raportti-alasveto"}
                            @mahdolliset-raporttityypit])]])
 
