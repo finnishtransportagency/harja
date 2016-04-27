@@ -127,10 +127,11 @@
                maksimi (when-not (empty? suunnitellut)
                          (reduce + suunnitellut))
                luokitellut (filter :luokka rivit)
-               kk-arvot (into {}
-                              (comp (filter :kk)
-                                    (map (juxt :kk :maara)))
-                              rivit)
+               materiaalirivit (filter #(not (:luokka %)) rivit)
+               kk-rivit (group-by :kk materiaalirivit)
+               kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
+                                     (assoc kk-arvot kk (reduce + 0 (map :maara rivit))))
+                                   {} kk-rivit)
                yhteensa (reduce + 0 (vals kk-arvot))]
            ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
