@@ -144,9 +144,12 @@
    yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
    sopimustyyppi (:sopimustyyppi ur)]
 
-  (let [paallystys-tai-paikkausurakka-sidottu? false ; FIXME Check
+  (let [paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
+                                           (= (:tyyppi ur) :paikkaus))
+        paallystys-tai-paikkausurakka-sidottu? (:yha-tiedot ur)
         kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))]
-    (yha/nayta-tuontidialogi ur) ;; FIXME Näytä vain jos tarvii
+    (when (and paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+      (yha/nayta-tuontidialogi ur)
     [:div
      [bs/panel {}
       "Yleiset tiedot"
@@ -154,13 +157,13 @@
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
        "YHA-tunnus"
-       (when paallystys-tai-paikkausurakka-sidottu?
+       (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
          "TODO")
        "ELYt"
-       (when paallystys-tai-paikkausurakka-sidottu?
+       (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
          "TODO")
        "Vuodet"
-       (when paallystys-tai-paikkausurakka-sidottu?
+       (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
          "TODO")
        "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
        "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
