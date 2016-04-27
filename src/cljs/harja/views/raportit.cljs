@@ -88,13 +88,13 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
-(def valittu-vuosi (reaction
-                         (let [hoitourakassa? @hoitourakassa?
-                               valittu-urakka @nav/valittu-urakka]
-                           (when-not hoitourakassa?
-                            (pvm/vuosi (pvm/nyt))))))
-(defonce valittu-hoitokausi (reaction (when @hoitourakassa?
-                                        @u/valittu-hoitokausi)))
+
+(defonce valittu-hoitokausi (reaction (if @hoitourakassa?
+                                        @u/valittu-hoitokausi
+                                        (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+
+(def valittu-vuosi (atom nil))
+
 (defonce kuukaudet (reaction
                     (let [hk @valittu-hoitokausi
                           vuosi @valittu-vuosi]
@@ -131,6 +131,7 @@
                                vain-hoitokausivalinta? hk
                                vapaa-aikavali? aikavali
                                kk kk
+                               hk hk
                                vuosi (pvm/vuoden-aikavali vuosi)
                                :default hk)]
             (if (and alku loppu)
