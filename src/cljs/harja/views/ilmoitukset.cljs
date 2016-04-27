@@ -123,9 +123,10 @@
            {:nimi             :aloituskuittauksen-ajankohta
             :otsikko          "Aloituskuittaus annettu"
             :tyyppi           :radio-group
-            :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
+            :vaihtoehdot      [:kaikki :alle-10-min :alle-tunti :myohemmin]
             :vaihtoehto-nayta (fn [arvo]
                                 ({:kaikki     "Kaikki"
+                                  :alle-10-min "10 minuutin sisällä"
                                   :alle-tunti "Alle tunnin kuluessa"
                                   :myohemmin  "Yli tunnin päästä"}
                                   arvo))})]
