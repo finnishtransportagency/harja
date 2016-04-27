@@ -13,7 +13,7 @@ CREATE TABLE yhatiedot (
   kohdeluettelo_paivitetty TIMESTAMP,
   luotu                    TIMESTAMP,
   linkittaja               integer REFERENCES kayttaja (id),
-  muokattu                 TIMESTAMP,
+  muokattu                 TIMESTAMP
 );
 
 ALTER TABLE yhatiedot ADD CONSTRAINT yhatiedot_uniikki_yhaid UNIQUE (yhaid);
@@ -25,6 +25,7 @@ ALTER TABLE paallystyskohdeosa RENAME TO yllapitokohdeosa;
 ALTER TABLE yllapitokohdeosa RENAME COLUMN paallystyskohde TO yllapitokohde;
 
 -- Ylläpitokohteelta pois muu_tyo boolean. Tätä käytettiin tutkimaan onko kohde luotu Harjassa vai YHAssa. Jatkossa tiedetään yhaid:n perusteella.
+
 ALTER TABLE yllapitokohde DROP COLUMN muu_tyo;
 
 -- Kohteelle tarvittavat tiedot
