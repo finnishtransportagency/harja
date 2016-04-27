@@ -7,12 +7,12 @@
             [harja.virhekasittely :as v]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.istunto :as istunto]
-            
+
             [reagent.core :as reagent]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log error]]
 
             [cljsjs.react]
-            
+
             [harja.pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -43,6 +43,7 @@
   ;; Kaapataan raportoimattomat virheet ja lähetetään ne backin kautta logiin
   (set! (.-onerror js/window)
         (fn [errorMsg url lineNumber column errorObj]
+          (error errorObj)
           (k/post! :raportoi-selainvirhe
                    {:url    url
                     :viesti errorMsg
@@ -60,5 +61,3 @@
     (k/kaynnista-palvelimen-pingaus)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))
-
-
