@@ -29,61 +29,66 @@
   ;; TODO
   (log "[YHA] Sidotaan YHA-urakka Harja-urakkaan..."))
 
-(defn- tuontidialogi [optiot]
+(defn- hakutulokset []
+  [grid
+   {:otsikko "Löytyneet urakat"
+    :tyhja (if (nil? @hakutulokset) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")}
+   [{:otsikko "Tunnus"
+     :nimi :tunnus
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "Nimi"
+     :nimi :nimi
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "ELYt"
+     :nimi :elyt
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "Vuodet"
+     :nimi :vuodet
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "Sidonta"
+     :nimi :valitse
+     :tyyppi :komponentti
+     :komponentti (fn [rivi]
+                    [:button.nappi-ensisijainen.nappi-grid
+                     {:on-click #(sido-yha-urakka-harja-urakkaan nil nil)}
+                     "Valitse"])}]
+   @hakutulokset])
+
+(defn- hakutiedot []
+  [lomake {:otsikko "Urakan tiedot"
+           :muokkaa! (fn [uusi-data]
+                       (reset! hakutiedot uusi-data))}
+   [{:otsikko "Nimi"
+     :nimi :nimi
+     :pituus-max 512
+     :tyyppi :string}
+    {:otsikko "Tunniste"
+     :nimi :tunniste
+     :pituus-max 512
+     :tyyppi :string}
+    {:otsikko "Vuosi"
+     :nimi :vuosi
+     :pituus-max 512
+     :tyyppi :positiivinen-numero}
+    @hakutiedot]])
+
+(defn- tuontidialogi []
   (log "[YHA] Render dialog tiedoilla:" (pr-str @hakutiedot))
   [:div
    [vihje "Urakka tätyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka ja tee sidonta."]
-   [lomake {:otsikko "Urakan tiedot"
-            :muokkaa! (fn [uusi-data]
-                        (reset! hakutiedot uusi-data))}
-    [{:otsikko "Nimi"
-      :nimi :nimi
-      :pituus-max 512
-      :tyyppi :string}
-     {:otsikko "Tunniste"
-      :nimi :tunniste
-      :pituus-max 512
-      :tyyppi :string}
-     {:otsikko "Vuosi"
-      :nimi :vuosi
-      :pituus-max 512
-      :tyyppi :positiivinen-numero}
-     @hakutiedot]]
-
-   [grid
-    {:otsikko "Löytyneet urakat"
-     :tyhja (if (nil? @hakutulokset) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")}
-    [{:otsikko "Tunnus"
-      :nimi :tunnus
-      :tyyppi :string
-      :muokattava? (constantly false)}
-     {:otsikko "Nimi"
-      :nimi :nimi
-      :tyyppi :string
-      :muokattava? (constantly false)}
-     {:otsikko "ELYt"
-      :nimi :elyt
-      :tyyppi :string
-      :muokattava? (constantly false)}
-     {:otsikko "Vuodet"
-      :nimi :vuodet
-      :tyyppi :string
-      :muokattava? (constantly false)}
-     {:otsikko "Sidonta"
-      :nimi :valitse
-      :tyyppi :komponentti
-      :komponentti (fn [rivi]
-                     [:button.nappi-ensisijainen.nappi-grid
-                      {:on-click #(sido-yha-urakka-harja-urakkaan nil nil)}
-                      "Valitse"])}]
-    @hakutulokset]])
+   [hakutiedot]
+   [hakutulokset]])
 
 (defn nayta-tuontidialogi []
   (modal/nayta!
     {:otsikko "Urakan sitominen YHA-urakkaan"
      :luokka "yha-tuonti"
-     :footer  [:button.nappi-toissijainen {:on-click (fn [e]
-                                                       (.preventDefault e)
-                                                       (modal/piilota!))}
-               "Sulje"]}
-    (tuontidialogi {})))
+     :footer [:button.nappi-toissijainen {:on-click (fn [e]
+                                                      (.preventDefault e)
+                                                      (modal/piilota!))}
+              "Sulje"]}
+    (tuontidialogi)))
