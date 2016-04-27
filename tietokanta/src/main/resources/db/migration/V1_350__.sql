@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- YHA:n vaatimat tietomallimuutokset
 
 -- Uusi taulu urakan yhatiedoille, linkittyy urakkaan
@@ -23,6 +22,9 @@ ALTER TABLE yhatiedot ADD CONSTRAINT yhatiedot_uniikki_yhaid UNIQUE (yhaid);
 ALTER TABLE paallystyskohde RENAME TO yllapitokohde;
 ALTER TABLE paallystyskohdeosa RENAME TO yllapitokohdeosa;
 ALTER TABLE yllapitokohdeosa RENAME COLUMN paallystyskohde TO yllapitokohde;
+
+-- Ylläpitokohteelta pois muu_tyo boolean. Tätä käytettiin tutkimaan onko kohde luotu Harjassa vai YHAssa. Jatkossa tiedetään yhaid:n perusteella.
+ALTER TABLE yllapitokohde DROP COLUMN muu_tyo;
 
 -- Kohteelle tarvittavat tiedot
 
@@ -51,6 +53,3 @@ ALTER TABLE yllapitokohde ADD CONSTRAINT yllapitokohde_uniikki_yhaid UNIQUE (yha
 
 ALTER TABLE yllapitokohdeosa ADD COLUMN yhaid INTEGER;
 ALTER TABLE yllapitokohdeosa ADD CONSTRAINT yllapitokohdeosa_uniikki_yhaid UNIQUE (yhaid);
-=======
-UPDATE raportti SET kuvaus = 'Sanktioiden yhteenveto' WHERE nimi = 'sanktioraportti';
->>>>>>> develop

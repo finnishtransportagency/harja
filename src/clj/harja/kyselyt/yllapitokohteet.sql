@@ -10,7 +10,6 @@ SELECT
   kohdenumero,
   ypk.nimi,
   sopimuksen_mukaiset_tyot,
-  muu_tyo,
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi,
@@ -27,7 +26,7 @@ WHERE
 
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
-SELECT id, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset,
+SELECT id, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset,
   bitumi_indeksi, kaasuindeksi
 FROM yllapitokohde
 WHERE urakka = :urakka AND id = :id;
@@ -56,13 +55,12 @@ WHERE yllapitokohde = :yllapitokohde
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
-INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES (:urakka,
         :sopimus,
         :kohdenumero,
         :nimi,
         :sopimuksen_mukaiset_tyot,
-        :muu_tyo,
         :arvonvahennykset,
         :bitumi_indeksi,
         :kaasuindeksi);
@@ -74,7 +72,6 @@ SET
   kohdenumero                 = :kohdenumero,
   nimi                        = :nimi,
   sopimuksen_mukaiset_tyot    = :sopimuksen_mukaiset_tyot,
-  muu_tyo                     = :muu_tyo,
   arvonvahennykset            = :arvonvanhennykset,
   bitumi_indeksi              = :bitumi_indeksi,
   kaasuindeksi                = :kaasuindeksi
