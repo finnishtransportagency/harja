@@ -3,20 +3,16 @@
   Lisäksi tänne voi muut komponentit rekisteröidä Excel:n luontimekanismin.
   Tämä komponentti ei ota kantaa Excel:n sisältöön, se vain antaa excel workbook kahvan 
   rekisteröidylle funktiolle, joka mutatoi sitä haluamallaan tavalla."
-  (:require [clojure.java.io :as io]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
+            [dk.ative.docjure.spreadsheet :as excel]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelu]]
-            [harja.transit :as t]
-            [hiccup.core :refer [html]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.util.codec :as codec]
+            [ring.util.io :refer [piped-input-stream]]
             [taoensso.timbre :as log]
-            [dk.ative.docjure.spreadsheet :as excel]
-            [ring.util.io :refer [piped-input-stream]])
-  (:import (java.io ByteArrayInputStream)
-           (org.apache.poi.xssf.usermodel XSSFWorkbook)))
+            [harja.palvelin.komponentit.vienti :as vienti])
+  (:import org.apache.poi.xssf.usermodel.XSSFWorkbook))
 
 (defprotocol ExcelKasittelijat
   (rekisteroi-excel-kasittelija! [this nimi kasittely-fn]
@@ -54,19 +50,6 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
 (defn luo-excel-vienti []
   (->ExcelVienti (atom {})))
 
-;; Jostain syystä wrap-params ei lue meidän POSTattua formia
-;; Luetaan se ja otetaan "parametrit" niminen muuttuja ja
-;; muunnetaan se transit+json muodosta Clojure dataksi
-(defn- lue-body-parametrit [body]
-  (-> body
-      .bytes
-      (String.)
-      codec/form-decode
-      (get "parametrit")
-      .getBytes
-      (ByteArrayInputStream.)
-      t/lue-transit))
-
 (defn- luo-workbook []
   (XSSFWorkbook.))
 
@@ -80,9 +63,8 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
                                      query-params :params
                                      :as req}]
   (let [tyyppi (keyword (get query-params "_"))
-        params (lue-body-parametrit body)
+        params (vienti/lue-body-parametrit body)
         kasittelija (get kasittelijat tyyppi)]
-    (log/debug "PARAMS: " params)
     (if-not kasittelija
       {:status 404
        :body (str "Tuntematon Excel: " tyyppi)}
@@ -91,7 +73,6 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
                    " parametreilla " params)
         (let [wb (luo-workbook)
               nimi (kasittelija wb kayttaja params)]
-          (log/info "WORKBOOK ON " wb)
           {:status  200
            :headers {"Content-Type" +mime-type+
                      "Content-Disposition" (str "attachment; filename=\"" nimi ".xlsx\"")}
