@@ -28,37 +28,39 @@
      :nimi :vuosi
      :pituus-max 512
      :tyyppi :positiivinen-numero}]
-    @yha/hakulomake-data])
+   @yha/hakulomake-data])
 
 (defn- hakutulokset [urakka]
-  [grid
-   {:otsikko "Löytyneet urakat"
-    :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")}
-   [{:otsikko "Tunnus"
-     :nimi :tunnus
-     :tyyppi :string
-     :muokattava? (constantly false)}
-    {:otsikko "Nimi"
-     :nimi :nimi
-     :tyyppi :string
-     :muokattava? (constantly false)}
-    {:otsikko "ELYt"
-     :nimi :elyt
-     :tyyppi :string
-     :muokattava? (constantly false)}
-    {:otsikko "Vuodet"
-     :nimi :vuodet
-     :tyyppi :string
-     :muokattava? (constantly false)}
-    {:otsikko "Sidonta"
-     :nimi :valitse
-     :tyyppi :komponentti
-     :komponentti (fn [rivi]
-                    [:button.nappi-ensisijainen.nappi-grid
-                     {:on-click #(yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi)
-                      :disabled @yha/sidonta-kaynnissa?}
-                     "Valitse"])}]
-   @yha/hakutulokset-data])
+  (let [sidonta-kaynnissa? @yha/sidonta-kaynnissa?]
+    [grid
+     {:otsikko "Löytyneet urakat"
+      :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")
+      :tunniste :tunnus}
+     [{:otsikko "Tunnus"
+       :nimi :tunnus
+       :tyyppi :string
+       :muokattava? (constantly false)}
+      {:otsikko "Nimi"
+       :nimi :nimi
+       :tyyppi :string
+       :muokattava? (constantly false)}
+      {:otsikko "ELYt"
+       :nimi :elyt
+       :tyyppi :string
+       :muokattava? (constantly false)}
+      {:otsikko "Vuodet"
+       :nimi :vuodet
+       :tyyppi :string
+       :muokattava? (constantly false)}
+      {:otsikko "Sidonta"
+       :nimi :valitse
+       :tyyppi :komponentti
+       :komponentti (fn [rivi]
+                      [:button.nappi-ensisijainen.nappi-grid
+                       {:on-click #(yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi)
+                        :disabled sidonta-kaynnissa?}
+                       "Valitse"])}]
+     @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []
   [ajax-loader "Sidonta käynnissä..."])
