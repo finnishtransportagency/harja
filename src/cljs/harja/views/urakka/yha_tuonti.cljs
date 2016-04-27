@@ -59,7 +59,7 @@
                       [:button.nappi-ensisijainen.nappi-grid
                        {:on-click #(yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi)
                         :disabled sidonta-kaynnissa?}
-                       "Valitse"])}]
+                       "Sido"])}]
      @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []
@@ -68,7 +68,7 @@
 (defn- tuontidialogi [urakka optiot]
   [:div
    (if (:sitomaton-urakka? optiot)
-     [vihje "Urakka täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta."]
+     [vihje (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta.")]
      [lomake/yleinen-varoitus (str "Urakka on jo sidottu YHA-urakkaan " (get-in urakka [:yha-tiedot :nimi]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan.")])
    [hakulomake]
    [hakutulokset urakka]
