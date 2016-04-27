@@ -39,7 +39,8 @@
     ;; FIXME Palauta toistaiseksi vain testidata
     (let [vastaus #_(<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                                                   :yha-tiedot yha-tiedot}))
-          (<! (timeout 2000))]
+          nil]
+      (<! (timeout 2000))
       (log "[YHA] Sidonta suoritettu")
       (reset! sidonta-kaynnissa? false)
       (modal/piilota!))))

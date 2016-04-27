@@ -457,7 +457,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "lomake-vihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
+     (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)
+     (str " " teksti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

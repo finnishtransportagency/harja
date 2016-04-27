@@ -144,18 +144,24 @@
    yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
    sopimustyyppi (:sopimustyyppi ur)]
 
-  (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))]
+  (let [paallystys-tai-paikkausurakka-sidottu? false ; FIXME Check
+        kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))]
     (yha/nayta-tuontidialogi ur) ;; FIXME Näytä vain jos tarvii
     [:div
      [bs/panel {}
       "Yleiset tiedot"
       [yleiset/tietoja {}
-       #_(when false ;; FIXME Kun urakka sidottu
-         "YHA-tunnus" "TODO"
-         "ELYt" "TODO"
-         "Vuodet" "TODO")
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
+       "YHA-tunnus"
+       (when paallystys-tai-paikkausurakka-sidottu?
+         "TODO")
+       "ELYt"
+       (when paallystys-tai-paikkausurakka-sidottu?
+         "TODO")
+       "Vuodet"
+       (when paallystys-tai-paikkausurakka-sidottu?
+         "TODO")
        "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
        "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
        "Tilaaja:" (:nimi (:hallintayksikko ur))
