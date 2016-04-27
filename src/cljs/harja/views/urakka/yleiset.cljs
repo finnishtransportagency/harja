@@ -145,11 +145,15 @@
    sopimustyyppi (:sopimustyyppi ur)]
 
   (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))]
-    (yha/nayta-tuontidialogi ur)
+    (yha/nayta-tuontidialogi ur) ;; FIXME Näytä vain jos tarvii
     [:div
      [bs/panel {}
       "Yleiset tiedot"
       [yleiset/tietoja {}
+       (when false ;; FIXME Kun urakka sidottu
+         "YHA-tunnus" "TODO"
+         "ELYt" "TODO"
+         "Vuodet" "TODO")
        "Urakan nimi:" (:nimi ur)
        "Urakan tunnus:" (:sampoid ur)
        "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
