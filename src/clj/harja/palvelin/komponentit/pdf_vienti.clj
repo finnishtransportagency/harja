@@ -12,7 +12,8 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.codec :as codec]
             [taoensso.timbre :as log]
-            [ring.util.io :refer [piped-input-stream]])
+            [ring.util.io :refer [piped-input-stream]]
+            [harja.palvelin.komponentit.vienti :as vienti])
   (:import javax.xml.transform.sax.SAXResult
            javax.xml.transform.stream.StreamSource
            javax.xml.transform.TransformerFactory
@@ -70,24 +71,11 @@
     (.transform xform src res)))
 
 
-;; Jostain syystä wrap-params ei lue meidän POSTattua formia
-;; Luetaan se ja otetaan "parametrit" niminen muuttuja ja
-;; muunnetaan se transit+json muodosta Clojure dataksi
-(defn- lue-body-parametrit [body]
-  (-> body
-      .bytes
-      (String.)
-      codec/form-decode
-      (get "parametrit")
-      .getBytes
-      (ByteArrayInputStream.)
-      t/lue-transit))
-
 (defn- muodosta-pdf [fop-factory kasittelijat {kayttaja :kayttaja body :body
                                                query-params :params
                                                :as req}]
   (let [tyyppi (keyword (get query-params "_"))
-        params (lue-body-parametrit body)
+        params (vienti/lue-body-parametrit body)
         kasittelija (get kasittelijat tyyppi)]
     (log/debug "PARAMS: " params)
     (if-not kasittelija
