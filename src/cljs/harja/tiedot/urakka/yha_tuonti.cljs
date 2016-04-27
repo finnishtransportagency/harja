@@ -6,7 +6,9 @@
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.grid :refer [grid]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [cljs-time.core :as t]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -39,8 +41,22 @@
     ;; FIXME Palauta toistaiseksi vain testidata
     (let [vastaus #_(<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                                                   :yha-tiedot yha-tiedot}))
-          nil]
+          {:sopimukset {27 "5HE5228/10"},
+           :loppupvm (t/now),
+           :type :ur, :alue nil,
+           :nimi "YHA-testiurakka",
+           :sampoid "4242566-TES2",
+           :id 20,
+           :alkupvm (t/now),
+           :hallintayksikko {:id 9, :nimi "Pohjois-Pohjanmaa ja Kainuu", :lyhenne "POP"},
+           :urakoitsija {:id 18, :nimi "Skanska Asfaltti Oy", :ytunnus "0651792-4"},
+           :sopimustyyppi :kokonaisurakka,
+           :tyyppi :paallystys
+           :yha-tiedot {:yhatunnus "YHA1"
+                        :elyt "Pohjois-Pohjanmaa"
+                        :vuodet "2010"}}]
       (<! (timeout 2000))
       (log "[YHA] Sidonta suoritettu")
       (reset! sidonta-kaynnissa? false)
+      (reset! nav/valittu-urakka vastaus)
       (modal/piilota!))))
