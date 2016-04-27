@@ -150,7 +150,7 @@
      [bs/panel {}
       "Yleiset tiedot"
       [yleiset/tietoja {}
-       (when false ;; FIXME Kun urakka sidottu
+       #_(when false ;; FIXME Kun urakka sidottu
          "YHA-tunnus" "TODO"
          "ELYt" "TODO"
          "Vuodet" "TODO")
