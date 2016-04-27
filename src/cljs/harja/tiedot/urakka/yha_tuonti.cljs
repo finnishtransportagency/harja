@@ -12,7 +12,7 @@
 
 (defn hae-yha-urakat [hakuparametrit]
   ;; TODO
-  (log "[YHA] Suoritetaan YHA-haku")
+  (log "[YHA] Hae YHA-urakat...")
   (go []))
 
 (def hakulomake-data (atom nil))

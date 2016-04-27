@@ -27,8 +27,8 @@
     {:otsikko "Vuosi"
      :nimi :vuosi
      :pituus-max 512
-     :tyyppi :positiivinen-numero}
-    @yha/hakulomake-data]])
+     :tyyppi :positiivinen-numero}]
+    @yha/hakulomake-data])
 
 (defn- hakutulokset [urakka]
   [grid
@@ -60,7 +60,6 @@
    @yha/hakutulokset-data])
 
 (defn- tuontidialogi [urakka]
-  (log "[YHA] Render dialog tiedoilla:" (pr-str @yha/hakulomake-data))
   [:div
    [vihje "Urakka tätyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka ja tee sidonta."]
    [hakulomake]
