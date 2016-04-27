@@ -158,10 +158,22 @@
                                                                   " (" (pvm/pvm-aika kasittelyaika) ")")])]))))
 
 (defmethod nayta-popup :tarkastus-klikattu [tapahtuma]
-  (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
-                       (tee-arvolistaus-popup (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tapahtuma))
-                                              [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
-                                               ["Mittaaja" (:mittaaja tapahtuma)]])))
+  (let [havainnot (cond
+                    (and (:havainnot tapahtuma) (not-empty (:vakiohavainnot tapahtuma)))
+                    (str (:havainnot tapahtuma) " & " (str/join ", " (:vakiohavainnot tapahtuma)))
+
+                    (:havainnot tapahtuma)
+                    (:havainnot tapahtuma)
+
+                    (not-empty (:vakiohavainnot tapahtuma))
+                    (str/join ", " (:vakiohavainnot tapahtuma))
+
+                    :default nil)]
+    (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
+                        (tee-arvolistaus-popup (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tapahtuma))
+                                               [["Aika" (pvm/pvm-aika-sek (:aika tapahtuma))]
+                                                ["Tarkastaja" (:tarkastaja tapahtuma)]
+                                                ["Havainnot" havainnot]]))))
 
 (defmethod nayta-popup :turvallisuuspoikkeama-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
