@@ -136,6 +136,8 @@ Yksinkertainen tapa ottaa dumppi:
 Tämä saattaa kuitenkin mystisesti kaatua kesken siirron.
 Vaihtoehtoinen tapa SCP:llä:
 
+Huom. voit olla välittämättä virheilmoituksesta: could not change directory to "/home/mikkoro": Permission denied. Kopiointi tehdään silti.
+
 > ssh harja-db1-stg
 > sudo -u postgres pg_dump harja > /tmp/harja-stg-dump.sql
 > mv /tmp/harja-stg-dump.sql /home/<omatunnus>/harja-stg-dump.sql
@@ -153,6 +155,7 @@ Harja-test dumpin voi ottaa samalla logiikalla:
 > mv /tmp/harja-test-dump.sql /home/<omatunnus>/harja-test-dump.sql
 > exit
 > scp <omatunnus>@harja-db1-test:/home/<omatunnus>/harja-test-dump.sql /Users/<omatunnus>/Desktop/harja-test-dump.sql
+> kopioi dumppi harja/tietokanta kansioon
 
 ### Dumpin käyttöönotto
 
