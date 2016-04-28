@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.palvelut.urakat :as urakat]
             [harja.kyselyt.yha :as yha-q]
             [harja.kyselyt.konversio :as konv]))
 
@@ -13,8 +14,8 @@
                                          :yhatunnus yhatunnus
                                          :yhaid yhaid
                                          :yhanimi yhanimi
-                                         :elyt (konv/seq->array elyt) ;; FIXME Ei toimi, en tiedä miksi
-                                         :vuodet (konv/seq->array vuodet) ;; FIXME Ei toimi, en tiedä miksi
+                                         :elyt (konv/seq->array elyt)
+                                         ;:vuodet (konv/seq->array vuodet) ; FIXME Ei toimi, en tiedä miksi
                                          :kayttaja (:id user)}))
 
 (defn- poista-urakan-yha-tiedot [db urakka-id]
@@ -28,8 +29,12 @@
     (poista-urakan-yha-tiedot db harja-urakka-id)
     (log/debug "Lisätään YHA-tiedot")
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
-    (log/debug "YHA-tiedot sidottu")
-    (yha-q/hae-urakka-yhatietoineen db {:urakka harja-urakka-id})))
+    (log/debug "YHA-tiedot sidottu, palautetaan urakan tiedot")
+    (first (into []
+                 (comp
+                   (map #(konv/array->vec % :vuodet))
+                   (map #(konv/array->vec % :elyt)))
+                 (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
 (defrecord Yha []
   component/Lifecycle
