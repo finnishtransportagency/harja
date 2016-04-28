@@ -30,11 +30,11 @@
     (log/debug "Lisätään YHA-tiedot")
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
     (log/debug "YHA-tiedot sidottu, palautetaan urakan tiedot")
-    (into []
-          (comp
-            (map #(konv/array->vec % :vuodet))
-            (map #(konv/array->vec % :elyt)))
-          (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id}))))
+    (first (into []
+                 (comp
+                   (map #(konv/array->vec % :vuodet))
+                   (map #(konv/array->vec % :elyt)))
+                 (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
 (defrecord Yha []
   component/Lifecycle
