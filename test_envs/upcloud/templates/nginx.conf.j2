@@ -65,7 +65,12 @@ server {
         proxy_set_header OAM_USER_MOBILE "1234567890";
         proxy_pass   http://backend;
     }
-    
+
+    location /laadunseuranta {
+      include /etc/nginx/mime.types;
+      alias /opt/harja/laadunseuranta;
+    }
+
     location ~ /harja/api/(?<path>.*)$ {
       # buffering off tarvitaan kun halutaan striimata chunked responseja
       proxy_buffering off;
@@ -94,7 +99,7 @@ server {
           proxy_pass https://testisonja/harja/tierekisteri/$path$is_args$args;
         }
 
-    location ~ /harja/laadunseuranta/(?<path>.*)$ {
+    location ~ /laadunseuranta/(?<path>.*) {
       proxy_pass_request_headers on;
       proxy_pass_header OAM_REMOTE_USER;
       proxy_pass_header OAM_GROUPS;
