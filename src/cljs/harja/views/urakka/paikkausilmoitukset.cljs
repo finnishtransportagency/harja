@@ -17,10 +17,9 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.ui.kommentit :as kommentit]
-            [harja.domain.paikkaus.minipot :as minipot]
+            [harja.domain.paikkausilmoitus :as minipot]
             [harja.views.kartta :as kartta]
-            [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
-            [harja.tiedot.urakka.paallystys-ja-paikkaus-yhteiset :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet])
@@ -60,10 +59,10 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                     (oikeudet/voi-kirjoittaa?
+                      (oikeudet/voi-kirjoittaa?
                       oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id @nav/valittu-urakka))
                       (not= (:tila @paikkaus/paikkausilmoitus-lomakedata) :lukittu)
-                      (false? @lomake-lukittu-muokkaukselta?))
+                      (false? @paikkaus/paikkausilmoituslomake-lukittu?))
         paatostiedot (r/wrap {:paatos        (:paatos @paikkaus/paikkausilmoitus-lomakedata)
                               :perustelu     (:perustelu @paikkaus/paikkausilmoitus-lomakedata)
                               :kasittelyaika (:kasittelyaika @paikkaus/paikkausilmoitus-lomakedata)}
@@ -89,7 +88,7 @@
           :tyyppi        :valinta
           :valinnat      [:hyvaksytty :hylatty]
           :validoi       [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (yhteiset-cljc/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :palstoja 1}
 
          (when (:paatos @paatostiedot)
@@ -169,7 +168,7 @@
                                          (let [toteutuneet-osoitteet-virheet @toteutuneet-osoitteet-virheet
                                                toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                                                tila (:tila @paikkaus/paikkausilmoitus-lomakedata)
-                                               lomake-lukittu-muokkaukselta? @lomake-lukittu-muokkaukselta?]
+                                               lomake-lukittu-muokkaukselta? @paikkaus/paikkausilmoituslomake-lukittu?]
                                            (and
                                              (not (= tila :lukittu))
                                              (empty? toteutuneet-osoitteet-virheet)
@@ -186,8 +185,8 @@
           [:div.paikkausilmoituslomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paikkaus/paikkausilmoitus-lomakedata nil)]
 
-           (when @lomake-lukittu-muokkaukselta?
-             (yhteiset-cljs/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
+           (when @paikkaus/paikkausilmoituslomake-lukittu?
+             (lomake/lomake-lukittu-huomautus @lukko/nykyinen-lukko))
 
            [:h2 "Paikkausilmoitus"]
 
@@ -196,7 +195,7 @@
              [:h3 "Perustiedot"]
              [lomake/lomake {:luokka       :horizontal
                              :voi-muokata? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                                (false? @lomake-lukittu-muokkaukselta?))
+                                                (false? @paikkaus/paikkausilmoituslomake-lukittu?))
                              :muokkaa!     (fn [uusi]
                                              (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
                                              (reset! kohteen-tiedot uusi))}
@@ -238,7 +237,7 @@
                               (log "PAI tila " (pr-str (:tila @paikkaus/paikkausilmoitus-lomakedata)) " Päätös: " (pr-str (:paatos_tekninen_osa @paikkaus/paikkausilmoitus-lomakedata)))
                               (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
                                    (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
-                                   (false? @lomake-lukittu-muokkaukselta?)))
+                                   (false? @paikkaus/paikkausilmoituslomake-lukittu?)))
               :virheet      toteutuneet-osoitteet-virheet
               :uusi-id      (inc (count @toteutuneet-osoitteet))}
              [{:otsikko "Tie#" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
@@ -261,7 +260,7 @@
              {:otsikko      "Toteutuneet suoritemäärät"
               :voi-muokata? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
                                  (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
-                                 (false? @lomake-lukittu-muokkaukselta?))
+                                 (false? @paikkaus/paikkausilmoituslomake-lukittu?))
               :voi-lisata?  false
               :voi-kumota?  false
               :voi-poistaa? (constantly false)
@@ -306,9 +305,9 @@
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
          {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
-                                                                                                           (yhteiset-cljc/nayta-tila (:tila rivi)))}
+                                                                                                           (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
-                                                                                                                            (yhteiset-cljs/nayta-paatos (:paatos rivi)))}
+                                                                                                                            (paallystys-ja-paikkaus/nayta-paatos (:paatos rivi)))}
          {:otsikko     "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
           :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]

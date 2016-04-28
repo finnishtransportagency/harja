@@ -933,7 +933,7 @@ Optiot on mappi optioita:
                 (if rivinumerot? [:th {:width "40px"} " "])
                 (for [{:keys [otsikko leveys nimi]} skeema]
                   ^{:key (str nimi)}
-                  [:th {:width (or leveys "5%")} otsikko])
+                  [:th.rivinumero {:width (or leveys "5%")} otsikko])
                 (when-not piilota-toiminnot?
                   [:th.toiminnot {:width "40px"} " "])]]
 
@@ -955,7 +955,7 @@ Optiot on mappi optioita:
                                   [:tr.muokataan {:class (str (if (even? (+ i 1))
                                                                 "parillinen"
                                                                 "pariton"))}
-                                   (if rivinumerot? [:td (+ i 1)])
+                                   (if rivinumerot? [:td.rivinumero (+ i 1)])
                                    (for [{:keys [nimi hae aseta fmt muokattava? tyyppi] :as s} skeema]
                                      (if (= :vetolaatikon-tila tyyppi)
                                        ^{:key (str "vetolaatikontila" id)}

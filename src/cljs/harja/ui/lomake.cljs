@@ -75,6 +75,15 @@ ja kaikki pakolliset kentät on täytetty"
           ::huomautukset
           ::puuttuvat-pakolliset-kentat))
 
+(defn lomake-lukittu-huomautus
+  [nykyinen-lukko]
+  [:div.lomake-lukittu-huomautus
+   (harja.ui.ikonit/livicon-info-sign) (str " Lomakkeen muokkaaminen on estetty, sillä toinen käyttäjä"
+                                            (when (and (:etunimi nykyinen-lukko)
+                                                       (:sukunimi nykyinen-lukko))
+                                              (str " (" (:etunimi nykyinen-lukko) " " (:sukunimi nykyinen-lukko) ")"))
+                                            " muokkaa parhaillaan lomaketta. Yritä hetken kuluttua uudelleen.")])
+
 (defrecord ^:private Otsikko [otsikko])
 (defn- otsikko? [x]
   (instance? Otsikko x))
