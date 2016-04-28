@@ -15,6 +15,8 @@
 
 (def sidonta-kaynnissa? (atom false))
 
+(tarkkaile! "[YHA] Sidonta käynnissä? " sidonta-kaynnissa?)
+
 (defn hae-yha-urakat [{:keys [nimi tunniste vuosi] :as hakuparametrit}]
   (log "[YHA] Hae YHA-urakat...")
   (k/post! :hae-yha-urakat {:nimi nimi

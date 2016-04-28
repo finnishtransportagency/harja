@@ -44,7 +44,7 @@
        :nimi :nimi
        :tyyppi :string
        :muokattava? (constantly false)}
-      {:otsikko "ELYt"
+      {:otsikko "ELY:t"
        :nimi :elyt
        :tyyppi :string
        :muokattava? (constantly false)}
