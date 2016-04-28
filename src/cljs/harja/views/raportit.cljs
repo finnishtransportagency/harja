@@ -311,7 +311,7 @@
   {"aikavali" 1
    "urakan-toimenpide" 3})
 
-(def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
+(def parametri-omalle-riville? #{"aikavali" "urakoittain"})
 
 (def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
   +vientimuodot+
