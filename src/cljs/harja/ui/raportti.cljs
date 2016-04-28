@@ -23,6 +23,12 @@
 (defmethod muodosta-html :liitteet [[_ liitteet]]
   (liitteet/liitelistaus liitteet))
 
+(defmethod muodosta-html :arvo-ja-osuus [[_ arvo-ja-osuus]]
+  [:span.arvo-ja-osuus
+   [:span.arvo (:arvo arvo-ja-osuus)]
+   [:span " "]
+   [:span.osuus (str "(" (:osuus arvo-ja-osuus) "%)")]])
+
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                korosta-rivit korostustyyli oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
