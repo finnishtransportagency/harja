@@ -1,13 +1,11 @@
 (ns harja.palvelin.raportointi.raportit.yleinen
-  (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
-            [harja.pvm :as pvm]
-            [clj-time.local :as l]
-            [clj-time.format :as tf]
-            [clj-time.coerce :as tc]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]))
-
+  (:require [clj-time
+             [coerce :as c]
+             [core :as t]
+             [format :as tf]
+             [local :as l]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.pvm :as pvm]))
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
@@ -147,3 +145,17 @@
 
 (defn sarakkeiden-maara [otsikot]
   (count otsikot))
+
+(def talvihoitoluokat ["Is" "I" "Ib" "TIb" "II" "III" "K1" "K2"])
+
+(defn- talvihoitoluokka
+  [luokka]
+  (case luokka
+    1 "Is"
+    2 "I"
+    3 "Ib"
+    4 "TIb"
+    5 "II"
+    6 "III"
+    7 "K1"
+    8 "K2"))

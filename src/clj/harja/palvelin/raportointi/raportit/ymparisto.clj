@@ -1,14 +1,15 @@
 (ns harja.palvelin.raportointi.raportit.ymparisto
-  (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.pvm :as pvm]
-            [harja.domain.materiaali :as materiaalidomain]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [harja.kyselyt.konversio :as konv]
-            [harja.fmt :as fmt]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+  (:require [harja.domain.materiaali :as materiaalidomain]
+            [harja.kyselyt
+             [hallintayksikot :as hallintayksikot-q]
+             [konversio :as konv]
+             [urakat :as urakat-q]]
+            [harja.palvelin.raportointi.raportit.yleinen
+             :as
+             yleinen
+             :refer
+             [raportin-otsikko]]
+            [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"
   {:positional? true})
@@ -59,18 +60,6 @@
              (merge kaikki-urakka-materiaalit
                     (group-by #(select-keys % [:materiaali :urakka])
                               rivit)))))
-
-(defn- talvihoitoluokka
-  [luokka]
-  (case luokka
-    1 "Is"
-    2 "I"
-    3 "Ib"
-    4 "TIb"
-    5 "II"
-    6 "III"
-    7 "K1"
-    8 "K2"))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
