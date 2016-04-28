@@ -39,5 +39,5 @@
                                                                 :yha-tiedot yha-tiedot}))]
       (log "[YHA] Sidonta suoritettu")
       (reset! sidonta-kaynnissa? false)
-      (reset! nav/valittu-urakka vastaus)
+      (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
       (modal/piilota!))))
