@@ -13,28 +13,23 @@
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
+(def hakulomake-data (atom nil))
+(def hakutulokset-data (atom []))
 (def sidonta-kaynnissa? (atom false))
 
-(tarkkaile! "[YHA] Sidonta käynnissä? " sidonta-kaynnissa?)
 
 (defn hae-yha-urakat [{:keys [nimi tunniste vuosi] :as hakuparametrit}]
   (log "[YHA] Hae YHA-urakat...")
-  (k/post! :hae-yha-urakat {:nimi nimi
+  (reset! hakutulokset-data nil)
+  #_(k/post! :hae-yha-urakat {:nimi nimi
                             :tunniste tunniste
                             :vuosi vuosi})
   ;; FIXME Palauta toistaiseksi vain testidata
   (go (do
+        (<! (timeout 2000))
         [{:tunnus "YHA1" :nimi "YHA-urakka" :elyt "Pohjois-Pohjanmaa" :vuodet 2010}])))
 
-(def hakulomake-data (atom nil))
 
-(tarkkaile! "[YHA] Hakutiedot " hakulomake-data)
-
-(def hakutulokset-data
-  (reaction<! [hakulomake-data @hakulomake-data]
-              {:nil-kun-haku-kaynnissa? true
-               :odota 500}
-              (hae-yha-urakat hakulomake-data)))
 
 (defn- sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]
   (log "[YHA] Sidotaan YHA-urakka Harja-urakkaan...")

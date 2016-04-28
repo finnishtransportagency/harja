@@ -14,8 +14,16 @@
 
 (defn- hakulomake []
   [lomake/lomake {:otsikko "Urakan tiedot"
-           :muokkaa! (fn [uusi-data]
-                       (reset! yha/hakulomake-data uusi-data))}
+                  :muokkaa! (fn [uusi-data]
+                              (reset! yha/hakulomake-data uusi-data))
+                  :footer [harja.ui.napit/palvelinkutsu-nappi
+                           "Hae"
+                           #(yha/hae-yha-urakat yha/hakulomake-data)
+                           {:luokka "nappi-ensisijainen"
+                            :disabled @yha/sidonta-kaynnissa?
+                            :kun-onnistuu (fn [vastaus]
+                                            (log "YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
+                                            (reset! yha/hakutulokset-data vastaus))}]}
    [{:otsikko "Nimi"
      :nimi :nimi
      :pituus-max 512
@@ -34,7 +42,7 @@
   (let [sidonta-kaynnissa? @yha/sidonta-kaynnissa?]
     [grid
      {:otsikko "Löytyneet urakat"
-      :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")
+      :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
       :tunniste :tunnus}
      [{:otsikko "Tunnus"
        :nimi :tunnus
