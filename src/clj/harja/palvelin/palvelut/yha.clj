@@ -6,25 +6,30 @@
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.yllapitokohteet :as q]
+            [harja.kyselyt.yha :as q]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defn sido-yha-urakka-harja-urakkaan [db user {:keys [urakka-id sopimus-id]}]
-  #_(oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  #_(log/debug "Haetaan urakan ylläpitokohteet.")
-  #_(jdbc/with-db-transaction [db db]
-    (let [vastaus (into []
-                        (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus_tila]))
-                              (map #(konv/string-polusta->keyword % [:paikkausilmoitus_tila]))
-                              (map #(assoc % :kohdeosat
-                                             (into []
-                                                   kohdeosa-xf
-                                                   (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                                     db urakka-id sopimus-id (:id %))))))
-                        (q/hae-urakan-yllapitokohteet db urakka-id sopimus-id))]
-      (log/debug "Päällystyskohteet saatu: " (pr-str (map :nimi vastaus)))
-      vastaus))) ;; TODO!
+(defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
+  (q/lisaa-urakalle-yha-tiedot db {:urakka urakka-id
+                                   :yhatunnus yhatunnus
+                                   :yhaid yhaid
+                                   :yhanimi yhanimi
+                                   :elyt elyt
+                                   :vuodet vuodet
+                                   :kayttaja (:id user)}))
+
+(defn- poista-urakan-yha-tiedot [db urakka-id]
+  (q/poista-urakan-yha-tiedot db {:urakka urakka-id}))
+
+(defn sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
+  ; FIXME Oikeustarkistus!
+  (log/debug (format "Lisätään Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot))
+  (jdbc/with-db-transaction [db db]
+    (poista-urakan-yha-tiedot db harja-urakka-id)
+    (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
+    (log/debug "YHA-tiedot sidottu!")
+    (q/hae-urakka-yhatietoineen db {:urakka harja-urakka-id})))
 
 (defrecord Yha []
   component/Lifecycle

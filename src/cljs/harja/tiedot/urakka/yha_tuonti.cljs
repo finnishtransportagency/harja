@@ -27,7 +27,7 @@
   ;; FIXME Hae YHA-urakat, toistaiseksi palauta vain testidata
   (go (do
         (<! (timeout 2000))
-        [{:tunnus "YHA1" :nimi "YHA-urakka" :elyt "Pohjois-Pohjanmaa" :vuodet 2010}])))
+        [{:yhatunnus "YHA1" :yhaid 5 :yhanimi "YHA-urakka" :elyt "Pohjois-Pohjanmaa" :vuodet 2010}])))
 
 
 
@@ -37,7 +37,7 @@
   (go
     ;; FIXME Palauta urakan tiedot kannasta alla olevan testidatan mukaisesti
     (let [vastaus #_(<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
-                                                                  :yha-tiedot yha-tiedot}))
+                                                                  :yhatiedot yha-tiedot}))
           {:sopimukset {27 "5HE5228/10"},
            :loppupvm (t/now),
            :type :ur, :alue nil,
@@ -49,7 +49,7 @@
            :urakoitsija {:id 18, :nimi "Skanska Asfaltti Oy", :ytunnus "0651792-4"},
            :sopimustyyppi :kokonaisurakka,
            :tyyppi :paallystys
-           :yha-tiedot {:nimi "YHA-urakka"
+           :yhatiedot {:nimi "YHA-urakka"
                         :yhatunnus "YHA1"
                         :elyt "Pohjois-Pohjanmaa"
                         :vuodet "2010"}}]
