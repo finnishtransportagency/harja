@@ -167,106 +167,106 @@ WHERE
 
 -- name: hae-paallystykset-nykytilanteeseen
 SELECT
-  pk.id,
-  pk.kohdenumero,
-  pk.nimi AS kohde_nimi,
-  pko.nimi AS kohdeosa_nimi,
-  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
-  pko.tr_numero,
-  pko.tr_alkuosa,
-  pko.tr_alkuetaisyys,
-  pko.tr_loppuosa,
-  pko.tr_loppuetaisyys,
-  pko.nykyinen_paallyste,
-  pko.toimenpide,
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi AS kohde_nimi,
+  ypko.nimi AS kohdeosa_nimi,
+  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypko.tr_numero,
+  ypko.tr_alkuosa,
+  ypko.tr_alkuetaisyys,
+  ypko.tr_loppuosa,
+  ypko.tr_loppuetaisyys,
+  ypko.nykyinen_paallyste,
+  ypko.toimenpide,
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paallystys AS paallystysvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
-FROM paallystyskohdeosa pko
-  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
+FROM yllapitokohdeosa ypko
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
     AND (pi.tila :: TEXT != 'valmis' OR
              (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
-WHERE pk.poistettu IS NOT TRUE;
+WHERE ypk.poistettu IS NOT TRUE;
 
 -- name: hae-paallystykset-historiakuvaan
 SELECT
-  pk.id,
-  pk.kohdenumero,
-  pk.nimi AS kohde_nimi,
-  pko.nimi AS kohdeosa_nimi,
-  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
-  pko.tr_numero,
-  pko.tr_alkuosa,
-  pko.tr_alkuetaisyys,
-  pko.tr_loppuosa,
-  pko.tr_loppuetaisyys,
-  pko.nykyinen_paallyste,
-  pko.toimenpide,
-  pi.id   AS paallystysilmoitus_id,
-  pi.tila AS paallystysilmoitus_tila,
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi                                AS kohde_nimi,
+  ypko.nimi                               AS kohdeosa_nimi,
+  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypko.tr_numero,
+  ypko.tr_alkuosa,
+  ypko.tr_alkuetaisyys,
+  ypko.tr_loppuosa,
+  ypko.tr_loppuetaisyys,
+  ypko.nykyinen_paallyste,
+  ypko.toimenpide,
+  pi.id                                   AS paallystysilmoitus_id,
+  pi.tila                                 AS paallystysilmoitus_tila,
   pi.aloituspvm,
-  pi.valmispvm_paallystys AS paallystysvalmispvm,
-  pi.valmispvm_kohde AS kohdevalmispvm,
+  pi.valmispvm_paallystys                 AS paallystysvalmispvm,
+  pi.valmispvm_kohde                      AS kohdevalmispvm,
   pi.tila
-FROM paallystyskohdeosa pko
-  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = pk.id
-WHERE pk.poistettu IS NOT TRUE AND
-       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
+FROM yllapitokohdeosa ypko
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
+WHERE ypk.poistettu IS NOT TRUE AND
+      (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-paikkaukset-nykytilanteeseen
 SELECT
-  pk.id,
-  pk.kohdenumero,
-  pk.nimi AS kohde_nimi,
-  pko.nimi AS kohdeosa_nimi,
-  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
-  pko.tr_numero,
-  pko.tr_alkuosa,
-  pko.tr_alkuetaisyys,
-  pko.tr_loppuosa,
-  pko.tr_loppuetaisyys,
-  pko.nykyinen_paallyste,
-  pko.toimenpide,
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi AS kohde_nimi,
+  ypk.nimi AS kohdeosa_nimi,
+  ST_Simplify(ypk.sijainti, :toleranssi) AS sijainti,
+  ypk.tr_numero,
+  ypk.tr_alkuosa,
+  ypk.tr_alkuetaisyys,
+  ypk.tr_loppuosa,
+  ypk.tr_loppuetaisyys,
+  ypk.nykyinen_paallyste,
+  ypk.toimenpide,
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paikkaus AS paikkausvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
-FROM paallystyskohdeosa pko
-  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
+FROM yllapitokohdeosa ypk
+  LEFT JOIN yllapitokohde ypk ON ypk.yllapitokohde = ypk.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
   AND (pi.tila :: TEXT != 'valmis' OR
              (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
-WHERE pk.poistettu IS NOT TRUE;
+WHERE ypk.poistettu IS NOT TRUE;
 
 -- name: hae-paikkaukset-historiakuvaan
 SELECT
   pk.id,
   pk.kohdenumero,
   pk.nimi AS kohde_nimi,
-  pko.nimi AS kohdeosa_nimi,
-  ST_Simplify(pko.sijainti, :toleranssi) AS sijainti,
-  pko.tr_numero,
-  pko.tr_alkuosa,
-  pko.tr_alkuetaisyys,
-  pko.tr_loppuosa,
-  pko.tr_loppuetaisyys,
-  pko.nykyinen_paallyste,
-  pko.toimenpide,
+  ypko.nimi AS kohdeosa_nimi,
+  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypko.tr_numero,
+  ypko.tr_alkuosa,
+  ypko.tr_alkuetaisyys,
+  ypko.tr_loppuosa,
+  ypko.tr_loppuetaisyys,
+  ypko.nykyinen_paallyste,
+  ypko.toimenpide,
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paikkaus AS paikkausvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
-FROM paallystyskohdeosa pko
-  LEFT JOIN paallystyskohde pk ON pko.paallystyskohde = pk.id
+FROM yllapitokohdeosa ypko
+  LEFT JOIN yllapitokohde pk ON ypko.yllapitokohde = pk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
        (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));

@@ -1,18 +1,18 @@
 -- name: hae-urakan-paikkaustoteumat
 -- Hakee urakan kaikki paikkaustoteumat
 SELECT
-  paallystyskohde.id AS paikkauskohde_id,
+  yllapitokohde.id AS paikkauskohde_id,
   pi.id,
   pi.tila,
   nimi,
   kohdenumero,
   pi.paatos
-FROM paallystyskohde
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = paallystyskohde.id
-                                     AND pi.poistettu IS NOT TRUE
+FROM yllapitokohde
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = yllapitokohde.id
+                                   AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
-      AND paallystyskohde.poistettu IS NOT TRUE;
+      AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paikkausilmoitus-paikkauskohteella
 -- Hakee urakan paikkausilmoituksen paikkauskohteen id:llä
@@ -22,17 +22,17 @@ SELECT
   aloituspvm,
   valmispvm_kohde,
   valmispvm_paikkaus,
-  pk.nimi as kohdenimi,
-  pk.kohdenumero,
+  ypk.nimi as kohdenimi,
+  ypk.kohdenumero,
   ilmoitustiedot,
   paatos,
   perustelu,
   kasittelyaika
 FROM paikkausilmoitus
-  JOIN paallystyskohde pk ON pk.id = paikkausilmoitus.paikkauskohde
-                             AND pk.urakka = :urakka
-                             AND pk.sopimus = :sopimus
-                             AND pk.poistettu IS NOT TRUE
+  JOIN yllapitokohde ypk ON ypk.id = paikkausilmoitus.paikkauskohde
+                           AND ypk.urakka = :urakka
+                           AND ypk.sopimus = :sopimus
+                           AND ypk.poistettu IS NOT TRUE
 WHERE paikkauskohde = :paikkauskohde
       AND paikkausilmoitus.poistettu IS NOT TRUE;
 
