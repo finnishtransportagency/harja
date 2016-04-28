@@ -36,23 +36,8 @@
   (reset! sidonta-kaynnissa? true)
   (go
     ;; FIXME Palauta urakan tiedot kannasta alla olevan testidatan mukaisesti
-    (let [vastaus #_(<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
-                                                                  :yhatiedot yha-tiedot}))
-          {:sopimukset {27 "5HE5228/10"},
-           :loppupvm (t/now),
-           :type :ur, :alue nil,
-           :nimi "YHA-testiurakka",
-           :sampoid "4242566-TES2",
-           :id 20,
-           :alkupvm (t/now),
-           :hallintayksikko {:id 9, :nimi "Pohjois-Pohjanmaa ja Kainuu", :lyhenne "POP"},
-           :urakoitsija {:id 18, :nimi "Skanska Asfaltti Oy", :ytunnus "0651792-4"},
-           :sopimustyyppi :kokonaisurakka,
-           :tyyppi :paallystys
-           :yhatiedot {:nimi "YHA-urakka"
-                        :yhatunnus "YHA1"
-                        :elyt "Pohjois-Pohjanmaa"
-                        :vuodet "2010"}}]
+    (let [vastaus (<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
+                                                                :yhatiedot yha-tiedot}))]
       (<! (timeout 2000))
       (log "[YHA] Sidonta suoritettu")
       (reset! sidonta-kaynnissa? false)

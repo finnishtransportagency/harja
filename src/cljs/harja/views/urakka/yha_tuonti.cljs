@@ -45,11 +45,11 @@
       :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
       :tunniste :tunnus}
      [{:otsikko "Tunnus"
-       :nimi :tunnus
+       :nimi :yhatunnus
        :tyyppi :string
        :muokattava? (constantly false)}
       {:otsikko "Nimi"
-       :nimi :nimi
+       :nimi :yhanimi
        :tyyppi :string
        :muokattava? (constantly false)}
       {:otsikko "ELY:t"
