@@ -73,11 +73,15 @@
                 (let [cell (.createCell row sarake-nro)
                       lihavoi? (:lihavoi? optiot)
                       tyyli (excel/create-cell-style! workbook
-                                                      {:font {:bold lihavoi?}})]
+                                                      {:font {:bold lihavoi?}})
+                      arvo-datassa (nth data sarake-nro)
+                      naytettava-arvo (if (vector? arvo-datassa)
+                                        ""  ;; fixme: implementoi supportti Exceliin komponentille
+                                        arvo-datassa)]
 
                   (if-let [kaava (:excel sarake)]
                     (aseta-kaava! kaava cell rivi-nro sarake-nro)
-                    (excel/set-cell! cell (ilman-soft-hyphenia (nth data sarake-nro))))
+                    (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
                   (excel/set-cell-style! cell tyyli)))
               sarakkeet))))
         data))

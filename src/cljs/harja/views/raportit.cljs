@@ -264,15 +264,19 @@
 
 (def tyomaakokousraportit
   {"Erilliskustannukset" :erilliskustannukset
-   "Ilmoitusraportti" :ilmoitusraportti
+   "Ilmoitukset" :ilmoitusraportti
+   "Kelitarkastusraportti" :kelitarkastusraportti
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
+   "Materiaaliraportti" :materiaaliraportti
    "Sanktioiden yhteenveto" :sanktioraportti
+   "Soratietarkastukset" :soratietarkastusraportti
    "Tiestötarkastukset" :tiestotarkastusraportti
    "Turvallisuusraportti" :turvallisuus
-   "Yks.hint. työt kuukausittain" :yks-hint-kuukausiraportti
+   "Yksikköhintaiset työt kuukausittain" :yks-hint-kuukausiraportti
+   "Yksikköhintaiset työt päivittäin" :yksikkohintaiset-tyot
    "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
-   "Yks.hint. työt tehtävittäin" :yks-hint-tehtavien-summat
+   "Yksikköhintaiset työt tehtävittäin" :yks-hint-tehtavien-summat
    "Ympäristöraportti" :ymparisto})
 
 (defmethod raportin-parametri "checkbox" [p arvo]

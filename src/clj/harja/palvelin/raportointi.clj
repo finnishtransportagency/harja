@@ -27,7 +27,6 @@
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
-            [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]))
 
 (def ^:dynamic *raportin-suoritus*
