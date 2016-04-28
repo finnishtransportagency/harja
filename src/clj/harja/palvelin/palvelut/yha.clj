@@ -5,19 +5,20 @@
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.yha :as yha-q]))
+            [harja.kyselyt.yha :as yha-q]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
-  (yha-q/lisaa-urakalle-yha-tiedot db {:urakka urakka-id
-                                   :yhatunnus yhatunnus
-                                   :yhaid yhaid
-                                   :yhanimi yhanimi
-                                   :elyt elyt
-                                   :vuodet vuodet
-                                   :kayttaja (:id user)}))
+  (yha-q/lisaa-urakalle-yha-tiedot<! db {:urakka urakka-id
+                                         :yhatunnus yhatunnus
+                                         :yhaid yhaid
+                                         :yhanimi yhanimi
+                                         :elyt (konv/seq->array elyt)
+                                         :vuodet (konv/seq->array vuodet)
+                                         :kayttaja (:id user)}))
 
 (defn- poista-urakan-yha-tiedot [db urakka-id]
-  (yha-q/poista-urakan-yha-tiedot db {:urakka urakka-id}))
+  (yha-q/poista-urakan-yha-tiedot! db {:urakka urakka-id}))
 
 (defn sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
   ; FIXME Oikeustarkistus!

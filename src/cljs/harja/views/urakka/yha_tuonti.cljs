@@ -7,7 +7,8 @@
             [harja.ui.lomake :as lomake]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -55,11 +56,13 @@
       {:otsikko "ELY:t"
        :nimi :elyt
        :tyyppi :string
-       :muokattava? (constantly false)}
+       :muokattava? (constantly false)
+       :fmt #(str/join ", " %)}
       {:otsikko "Vuodet"
        :nimi :vuodet
        :tyyppi :string
-       :muokattava? (constantly false)}
+       :muokattava? (constantly false)
+       :fmt #(str/join ", " %)}
       {:otsikko "Sidonta"
        :nimi :valitse
        :tyyppi :komponentti

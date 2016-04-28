@@ -27,7 +27,7 @@
   ;; FIXME Hae YHA-urakat, toistaiseksi palauta vain testidata
   (go (do
         (<! (timeout 2000))
-        [{:yhatunnus "YHA1" :yhaid 5 :yhanimi "YHA-urakka" :elyt "Pohjois-Pohjanmaa" :vuodet 2010}])))
+        [{:yhatunnus "YHA1" :yhaid 5 :yhanimi "YHA-urakka" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012]}])))
 
 
 
@@ -36,7 +36,7 @@
   (reset! sidonta-kaynnissa? true)
   (go
     (let [vastaus (<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
-                                                                :yhatiedot yha-tiedot}))]
+                                                                :yha-tiedot yha-tiedot}))]
       (log "[YHA] Sidonta suoritettu")
       (reset! sidonta-kaynnissa? false)
       (reset! nav/valittu-urakka vastaus)
