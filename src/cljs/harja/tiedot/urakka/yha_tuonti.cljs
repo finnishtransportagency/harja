@@ -38,7 +38,6 @@
     ;; FIXME Palauta urakan tiedot kannasta alla olevan testidatan mukaisesti
     (let [vastaus (<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                                                 :yhatiedot yha-tiedot}))]
-      (<! (timeout 2000))
       (log "[YHA] Sidonta suoritettu")
       (reset! sidonta-kaynnissa? false)
       (reset! nav/valittu-urakka vastaus)
