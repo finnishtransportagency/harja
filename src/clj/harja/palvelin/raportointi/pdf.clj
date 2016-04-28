@@ -40,7 +40,6 @@
                        :font-weight "normal" :padding "1mm"}
        [:fo:block (cdata otsikko)]])]])
 
-<<<<<<< HEAD
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
