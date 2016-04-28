@@ -2,4 +2,4 @@
   (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]))
 
-(defqueries "harja/kyselyt/yha.sql"•)
+(defqueries "harja/kyselyt/yha.sql")
