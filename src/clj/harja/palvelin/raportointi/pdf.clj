@@ -7,7 +7,8 @@
             [harja.ui.skeema :as skeema]
             [harja.fmt :as fmt]))
 
-(def taulukon-fonttikoko "8pt")
+(def taulukon-fonttikoko 8)
+(def taulukon-fonttikoko-yksikko "pt")
 (def otsikon-fonttikoko "10pt")
 
 (def raportin-tehostevari "#0066cc")
@@ -39,8 +40,18 @@
                        :font-weight "normal" :padding "1mm"}
        [:fo:block (cdata otsikko)]])]])
 
-(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto?
-                                            korosta-rivit oikealle-tasattavat-kentat] :as optiot}]
+(defmethod muodosta-pdf :liitteet [liitteet]
+  (count (second liitteet)))
+
+(defmethod muodosta-pdf :arvo-ja-osuus [arvo-ja-osuus]
+  (let [tiedot (second arvo-ja-osuus)]
+    [:fo:inline
+     [:fo:inline (:arvo tiedot)]
+     [:fo:inline " "]
+     [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " (:osuus tiedot) "%)")]]))
+
+(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
+                                            oikealle-tasattavat-kentat] :as optiot}]
   (let [rivien-maara (count data)
         viimeinen-rivi (last data)
         data (if (> (count data) +max-rivimaara+)
@@ -103,7 +114,9 @@
                                      lihavoi?)
                (when korosta?
                  [:fo:block {:space-after "0.2em"}])
-               [:fo:block (cdata (str naytettava-arvo))]])])))
+               [:fo:block (if (string? naytettava-arvo)
+                            (cdata (str naytettava-arvo))
+                            naytettava-arvo)]])])))
      (when (> rivien-maara +max-rivimaara+)
        [:fo:table-row
         [:fo:table-cell {:padding "1mm"
@@ -116,7 +129,7 @@
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    [:fo:block {:space-before "1em" :font-size taulukon-fonttikoko :font-weight "bold"} otsikko
+    [:fo:block {:space-before "1em" :font-size (str taulukon-fonttikoko taulukon-fonttikoko-yksikko) :font-weight "bold"} otsikko
      [:fo:table {:border (str "solid 0.2mm " raportin-tehostevari)}
       (for [{:keys [leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
