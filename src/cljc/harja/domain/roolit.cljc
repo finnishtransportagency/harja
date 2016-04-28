@@ -103,11 +103,8 @@
 (defn urakkaroolit
   "Palauttaa setin rooleja, joita käyttäjällä on annetussa urakassa."
   #?(:cljs ([urakka-id] (urakkaroolit @istunto/kayttaja urakka-id)))
-  ([kayttaja urakka-id]
-  (some->> (:urakkaroolit kayttaja)
-           (filter #(= (:id (:urakka %)) urakka-id))
-           (map :rooli)
-           (into #{}))))
+  ([{r :urakkaroolit} urakka-id]
+  (get r urakka-id)))
 
 (defn organisaatioroolit
   "Palauttaa setin rooleja, joita käyttäjällä on annetussa organisaatiossa."
