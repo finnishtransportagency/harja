@@ -144,10 +144,11 @@
         yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
         sopimustyyppi (:sopimustyyppi ur)]
        (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+             yha-tuontioikeus? true ; FIXME Oikeustarkistus
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
              paallystys-tai-paikkausurakka-sidottu? (some? (:yha-tiedot ur))]
-         (when (and paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+         (when (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
            (yha/nayta-tuontidialogi ur))
          [:div
           [bs/panel {}
@@ -166,10 +167,10 @@
               (get-in ur [:yha-tiedot :vuodet]))
             "YHA-sidonta:"
             (cond
-              (and paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+              (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
               [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)}
                "Sido YHA-urakkaan"]
-              (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
+              (and yha-tuontioikeus? paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               ; FIXME Tarkista myös, ettei ole ilmoituksia
               [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)}
                "Vaihda sidottu urakka"]
