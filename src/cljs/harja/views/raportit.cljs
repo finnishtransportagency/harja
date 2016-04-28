@@ -263,10 +263,16 @@
      [:kaikki :urakoitsija :tilaaja :konsultti]]))
 
 (def tyomaakokousraportit
-  {"Laskutusyhteenveto" :laskutusyhteenveto
-   "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
+  {"Erilliskustannukset" :erilliskustannukset
    "Ilmoitusraportti" :ilmoitusraportti
+   "Laatupoikkeamat" :laatupoikkeamaraportti
+   "Laskutusyhteenveto" :laskutusyhteenveto
+   "Sanktioiden yhteenveto" :sanktioraportti
+   "Tiestötarkastukset" :tiestotarkastusraportti
    "Turvallisuusraportti" :turvallisuus
+   "Yks.hint. työt kuukausittain" :yks-hint-kuukausiraportti
+   "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
+   "Yks.hint. työt tehtävittäin" :yks-hint-tehtavien-summat
    "Ympäristöraportti" :ymparisto})
 
 (defmethod raportin-parametri "checkbox" [p arvo]

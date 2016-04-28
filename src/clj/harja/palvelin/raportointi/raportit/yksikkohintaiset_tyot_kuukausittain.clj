@@ -6,13 +6,11 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]
-            [harja.domain.roolit :as roolit]))
+            [clj-time.coerce :as c]))
 
 (defn hae-tehtavat-urakalle [db {:keys [urakka-id alkupvm loppupvm toimenpide-id suunnittelutiedot]}]
   (let [toteumat (q/hae-yksikkohintaiset-tyot-kuukausittain-urakalle db

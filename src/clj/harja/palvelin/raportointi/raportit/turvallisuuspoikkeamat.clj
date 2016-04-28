@@ -9,8 +9,6 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [clojure.string :as str]
             [clj-time.core :as t]
-            [clj-time.coerce :as tc]
-            [clj-time.format :as tf]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
 

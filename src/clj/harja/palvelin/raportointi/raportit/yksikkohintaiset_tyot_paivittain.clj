@@ -7,7 +7,6 @@
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [clojure.string :as str]))
 
