@@ -53,6 +53,7 @@
     [harja.palvelin.palvelut.liitteet :as liitteet]
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
+    [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
@@ -286,6 +287,10 @@
                   [:http-palvelin :db :raportointi :pdf-vienti])
 
       :tyokoneenseuranta (component/using
+                           (tyokoneenseuranta/->TyokoneseurantaHaku)
+                           [:http-palvelin :db])
+
+      :yha (component/using
                            (tyokoneenseuranta/->TyokoneseurantaHaku)
                            [:http-palvelin :db])
 
