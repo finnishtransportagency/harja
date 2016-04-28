@@ -24,10 +24,10 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-
-
 (defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paallystyskohde-id (or (:paallystyskohde_id kohde) (:paallystyskohde-id kohde))]
+  (let [; FIXME Eri paikoissa käytetään välillä alaviivaa ja välillä viivaa. Pitäisi yhtenäistää.
+        paallystyskohde-id (or (:paallystyskohde-id kohde)
+                               (:paallystyskohde_id kohde))]
     (popupit/nayta-popup
      (assoc kohde
          :aihe :paallystys-klikattu

@@ -1,4 +1,4 @@
-(ns harja.domain.paikkaus.minipot
+(ns harja.domain.paikkausilmoitus
   "Ylläpidon paikkausurakoissa käytettävän MINIPOT-lomakkeen skeemat."
   (:require [schema.core :as s]
             [harja.domain.skeema :as skeema]))

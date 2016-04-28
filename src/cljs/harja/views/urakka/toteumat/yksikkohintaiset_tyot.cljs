@@ -228,7 +228,7 @@
                              #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
                              {:luokka "nappi-ensisijainen"
                               :disabled (or (false? @valmis-tallennettavaksi?)
-                                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka)))
+                                            (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))))
                               :kun-onnistuu (fn [vastaus]
                                               (log "Tehtävät tallennettu, vastaus: " (pr-str vastaus))
                                               (reset! yksikkohintaiset-tyot/yks-hint-tehtavien-summat (:tehtavien-summat vastaus))
