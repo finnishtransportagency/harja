@@ -147,7 +147,7 @@
              yha-tuontioikeus? true ; FIXME Oikeustarkistus
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
-             paallystys-tai-paikkausurakka-sidottu? (some? (:yha-tiedot ur))]
+             paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))]
          (when (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
            (yha/nayta-tuontidialogi ur))
          [:div
@@ -158,13 +158,13 @@
             "Urakan tunnus:" (:sampoid ur)
             "YHA-tunnus:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (get-in ur [:yha-tiedot :yhatunnus]))
+              (get-in ur [:yhatiedot :yhatunnus]))
             "YHA-ELYt:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (get-in ur [:yha-tiedot :elyt]))
+              (get-in ur [:yhatiedot :elyt]))
             "YHA-vuodet:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (get-in ur [:yha-tiedot :vuodet]))
+              (get-in ur [:yhatiedot :vuodet]))
             "YHA-sidonta:"
             (cond
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))

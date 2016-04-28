@@ -7,15 +7,24 @@
             [harja.ui.lomake :as lomake]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
 (defn- hakulomake []
   [lomake/lomake {:otsikko "Urakan tiedot"
-           :muokkaa! (fn [uusi-data]
-                       (reset! yha/hakulomake-data uusi-data))}
+                  :muokkaa! (fn [uusi-data]
+                              (reset! yha/hakulomake-data uusi-data))
+                  :footer [harja.ui.napit/palvelinkutsu-nappi
+                           "Hae"
+                           #(yha/hae-yha-urakat yha/hakulomake-data)
+                           {:luokka "nappi-ensisijainen"
+                            :disabled @yha/sidonta-kaynnissa?
+                            :kun-onnistuu (fn [vastaus]
+                                            (log "YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
+                                            (reset! yha/hakutulokset-data vastaus))}]}
    [{:otsikko "Nimi"
      :nimi :nimi
      :pituus-max 512
@@ -34,24 +43,26 @@
   (let [sidonta-kaynnissa? @yha/sidonta-kaynnissa?]
     [grid
      {:otsikko "Löytyneet urakat"
-      :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan..."] "Urakoita ei löytynyt")
+      :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
       :tunniste :tunnus}
      [{:otsikko "Tunnus"
-       :nimi :tunnus
+       :nimi :yhatunnus
        :tyyppi :string
        :muokattava? (constantly false)}
       {:otsikko "Nimi"
-       :nimi :nimi
+       :nimi :yhanimi
        :tyyppi :string
        :muokattava? (constantly false)}
       {:otsikko "ELY:t"
        :nimi :elyt
        :tyyppi :string
-       :muokattava? (constantly false)}
+       :muokattava? (constantly false)
+       :fmt #(str/join ", " %)}
       {:otsikko "Vuodet"
        :nimi :vuodet
        :tyyppi :string
-       :muokattava? (constantly false)}
+       :muokattava? (constantly false)
+       :fmt #(str/join ", " %)}
       {:otsikko "Sidonta"
        :nimi :valitse
        :tyyppi :komponentti
@@ -69,7 +80,7 @@
   [:div
    (if (:sitomaton-urakka? optiot)
      [vihje (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta.")]
-     [lomake/yleinen-varoitus (str (:nimi urakka) " on jo sidottu YHA-urakkaan " (get-in urakka [:yha-tiedot :nimi]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan.")])
+     [lomake/yleinen-varoitus (str (:nimi urakka) " on jo sidottu YHA-urakkaan " (get-in urakka [:yhatiedot :nimi]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan.")])
    [hakulomake]
    [hakutulokset urakka]
    (when @yha/sidonta-kaynnissa?
@@ -83,4 +94,4 @@
                                                       (.preventDefault e)
                                                       (modal/piilota!))}
               "Sulje"]}
-    (tuontidialogi urakka {:sitomaton-urakka? (nil? (:yha-tiedot urakka))})))
+    (tuontidialogi urakka {:sitomaton-urakka? (nil? (:yhatiedot urakka))})))
