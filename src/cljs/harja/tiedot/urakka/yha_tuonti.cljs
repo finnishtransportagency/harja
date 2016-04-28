@@ -35,7 +35,6 @@
   (log "[YHA] Sidotaan Harja-urakka " harja-urakka-id " yha-urakkaan: " (pr-str yha-tiedot))
   (reset! sidonta-kaynnissa? true)
   (go
-    ;; FIXME Palauta urakan tiedot kannasta alla olevan testidatan mukaisesti
     (let [vastaus (<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                                                 :yhatiedot yha-tiedot}))]
       (log "[YHA] Sidonta suoritettu")
