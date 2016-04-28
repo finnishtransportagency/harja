@@ -180,7 +180,7 @@
          [:arvo-ja-osuus {:arvo (:laatuarvo-1+2-summa rivi) :osuus (+ (get-in rivi [1 1])
                                                                       (get-in rivi [2 1]))}]
          ;; laatupoikkeamat
-         (when (not (empty? (:laatupoikkeamat rivi)))
+         (when-not (empty? (:laatupoikkeamat rivi))
            (str "Kyllä" " (" (clojure.string/join ", " (:laatupoikkeamat rivi)) ")"))])))
 
 (defn yhteensa-rivi [naytettavat-rivit]
@@ -194,16 +194,19 @@
                                (Math/round (* (float (/ laatuarvot-1+2-summa
                                                         laatuarvo-summat-yhteensa)) 100))
                                0)]
-    (vec (concat ["Yhteensä" nil nil nil nil nil nil]
-                 (map
-                   (fn [numero] [:arvo-ja-osuus {:arvo (nth laatuarvo-summat numero)
-                                                 :osuus (Math/round (osuus-prosentteina (nth laatuarvo-summat numero) laatuarvo-summat-yhteensa))}])
-                   (range 5))
-                 [[:arvo-ja-osuus {:arvo laatuarvo-summat-yhteensa
-                                   :osuus 100}]
-                  [:arvo-ja-osuus {:arvo laatuarvot-1+2-summa
-                                   :osuus laatuarvot-1+2-osuus}]
-                  nil]))))
+    (vec (concat
+           ["Yhteensä" nil nil nil nil nil nil]
+           (map
+             (fn [numero]
+               [:arvo-ja-osuus {:arvo (nth laatuarvo-summat numero)
+                                :osuus (Math/round (osuus-prosentteina
+                                                     (nth laatuarvo-summat numero) laatuarvo-summat-yhteensa))}])
+             (range 5))
+           [[:arvo-ja-osuus {:arvo laatuarvo-summat-yhteensa
+                             :osuus 100}]
+            [:arvo-ja-osuus {:arvo laatuarvot-1+2-summa
+                             :osuus laatuarvot-1+2-osuus}]
+            nil]))))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
@@ -229,8 +232,9 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         ryhmittellyt-rivit (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                             (reverse (sort-by (fn [rivi] [(:aika rivi)
-                                                           (get-in rivi [:tr :numero])])
+                             (reverse (sort-by (fn [rivi]
+                                                 [(:aika rivi)
+                                                  (get-in rivi [:tr :numero])])
                                                naytettavat-rivit))
                              :urakka
                              raportti-rivi)
@@ -244,8 +248,8 @@
                                                     ryhmittellyt-rivit)))]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
-     [:taulukko {:otsikko                    otsikko
-                 :tyhja                      (when (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+     [:taulukko {:otsikko otsikko
+                 :tyhja (when (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :korosta-rivit (kylla-loppuiset-rivi-indeksit ryhmittellyt-rivit)
                  :viimeinen-rivi-yhteenveto? true}
       taulukon-otsikot
