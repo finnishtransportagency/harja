@@ -8,8 +8,8 @@
             <yha:vuodet>
                 <yha:vuosi>2016</yha:vuosi>
             </yha:vuodet>
-            <yha:sampotunnus>string</yha:sampotunnus>
-            <yha:tunnus>string</yha:tunnus>
+            <yha:sampotunnus>SAMPOTUNNUS</yha:sampotunnus>
+            <yha:tunnus>YHATUNNUS</yha:tunnus>
         </yha:urakka>
     </yha:urakat>
     <!--Optional:-->

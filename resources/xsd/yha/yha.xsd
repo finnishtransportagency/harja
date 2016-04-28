@@ -36,14 +36,14 @@
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
-                                        <xs:element name="sampotunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1">
+                                        <xs:element name="sampotunnus" nillable="false" minOccurs="1" maxOccurs="1">
                                             <xs:simpleType>
                                                 <xs:restriction base="xs:string">
                                                     <xs:maxLength value="50"/>
                                                 </xs:restriction>
                                             </xs:simpleType>
                                         </xs:element>
-                                        <xs:element name="tunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1">
+                                        <xs:element name="tunnus" nillable="false" minOccurs="1" maxOccurs="1">
                                             <xs:simpleType>
                                                 <xs:restriction base="xs:string">
                                                     <xs:maxLength value="20"/>
