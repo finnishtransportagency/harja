@@ -656,7 +656,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                     (nollaa-muokkaustiedot!)
                                                     (when peruuta (peruuta))
                                                     nil)}
-                                      [y/ikoni-ja-teksti (ikonit/livicon-ban) "Tallenna"]])])
+                                      [y/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
                                 (when nayta-otsikko? [:h6.panel-title otsikko])])]
          [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
           (muokkauspaneeli true)
