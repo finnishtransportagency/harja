@@ -13,8 +13,8 @@
                                          :yhatunnus yhatunnus
                                          :yhaid yhaid
                                          :yhanimi yhanimi
-                                         :elyt (konv/seq->array elyt)
-                                         :vuodet (konv/seq->array vuodet)
+                                         :elyt (konv/seq->array elyt) ;; FIXME Ei toimi, en tiedä miksi
+                                         :vuodet (konv/seq->array vuodet) ;; FIXME Ei toimi, en tiedä miksi
                                          :kayttaja (:id user)}))
 
 (defn- poista-urakan-yha-tiedot [db urakka-id]
