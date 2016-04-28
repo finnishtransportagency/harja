@@ -136,7 +136,7 @@
      :leveys s/Num                                          ;; metriä, esim. 4,2
      :massamaara s/Num                                      ;; tonnia
      :pinta-ala s/Num                                       ;; m2
-     (s/optional-key :kuulamylly) (s/maybe s/Num)
+     (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
      :edellinen-paallystetyyppi paallystys-ja-paikkaus/+paallystetyyppi+
      (s/optional-key :poistettu) s/Bool}]
 
