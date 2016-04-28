@@ -1,27 +1,20 @@
 (ns harja.palvelin.palvelut.paikkaus
+  "Paikkauksen palvelut"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konv]
-            [clojure.string :as str]
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.kommentit :as kommentit]
-            [harja.domain.paikkaus.minipot :as minipot]
-
+            [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
             [harja.kyselyt.paikkaus :as q]
-            [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.urakat :as urakat-q]
-
-            [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
-            [clj-time.format :as format]
-            [clj-time.coerce :as coerce]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.palvelin.palvelut.paallystys :as paallystys]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
 (defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id]}]
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
@@ -31,8 +24,8 @@
                         (map #(konv/string-polusta->keyword % [:tila]))
                         (map #(assoc % :kohdeosat
                                        (into []
-                                             paallystys/kohdeosa-xf
-                                             (paallystys-q/hae-urakan-paallystyskohteen-paallystyskohdeosat
+                                             yllapitokohteet/kohdeosa-xf
+                                             (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                db urakka-id sopimus-id (:paikkauskohde_id %))))))
                       (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
@@ -42,7 +35,7 @@
 (defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
-  (let [kohdetiedot (first (paallystys-q/hae-urakan-paallystyskohde db urakka-id paikkauskohde-id))
+  (let [kohdetiedot (first (yllapitokohteet-q/hae-urakan-yllapitokohde db urakka-id paikkauskohde-id))
         _ (log/debug (pr-str kohdetiedot))
         kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen_mukaiset_tyot
                                                    :arvonvahennykset
@@ -58,11 +51,11 @@
     ;; Uusi paikkausilmoitus
     (if-not paikkausilmoitus
       ^{:uusi true}
-      {:kohdenumero        (:kohdenumero kohdetiedot)
-       :kohdenimi          (:nimi kohdetiedot)
-       :paikkauskohde-id   paikkauskohde-id
-       :kokonaishinta      kokonaishinta
-       :kommentit          []}
+      {:kohdenumero (:kohdenumero kohdetiedot)
+       :kohdenimi (:nimi kohdetiedot)
+       :paikkauskohde-id paikkauskohde-id
+       :kokonaishinta kokonaishinta
+       :kommentit []}
       (do
         (log/debug "Haetaan kommentit...")
         (let [kommentit (into []
@@ -79,13 +72,12 @@
             :paikkauskohde-id paikkauskohde-id
             :kommentit kommentit))))))
 
-
 (defn paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]
   (log/debug "Päivitetään vanha paikkaussilmoitus, jonka id: " paikkauskohde-id)
   (let [tila (if (= paatos :hyvaksytty)
                "lukittu"
                (if (and valmispvm_kohde valmispvm_paikkaus) "valmis" "aloitettu"))
-        toteutunut-hinta (minipot/laske-kokonaishinta (:toteumat ilmoitustiedot))
+        toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
@@ -109,7 +101,7 @@
   (log/debug "valmispvm_kohde: " (pr-str valmispvm_kohde))
   (log/debug "valmispvm_paikkaus: " (pr-str valmispvm_paikkaus))
   (let [tila (if (and valmispvm_kohde valmispvm_paikkaus) "valmis" "aloitettu")
-        toteutunut-hinta (minipot/laske-kokonaishinta (:toteumat ilmoitustiedot))
+        toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
@@ -135,13 +127,13 @@
              ", sopimus-id: " sopimus-id
              ", paikkauskohde-id:" (:paikkauskohde-id paikkausilmoitus))
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
-  (skeema/validoi minipot/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
+  (skeema/validoi paikkausilmoitus-domain/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]
     (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella
-                                     c user {:urakka-id        urakka-id
-                                             :sopimus-id       sopimus-id
-                                             :paikkauskohde-id (:paikkauskohde-id paikkausilmoitus)})
+                                      c user {:urakka-id urakka-id
+                                              :sopimus-id sopimus-id
+                                              :paikkauskohde-id (:paikkauskohde-id paikkausilmoitus)})
           paikkausilmoitus-kannassa (when-not (:uusi (meta paikkausilmoitus-kannassa))
                                       ;; Tunnistetaan uuden tallentaminen
                                       paikkausilmoitus-kannassa)]
@@ -150,10 +142,10 @@
       ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä
       ;; päätöstä. Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
       (if (or
-           (not (= (:paatos_tekninen_osa paikkausilmoitus-kannassa)
-                   (or (:paatos_tekninen_osa paikkausilmoitus) nil)))
-           (not (= (:perustelu paikkausilmoitus-kannassa)
-                   (or (:perustelu paikkausilmoitus) nil))))
+            (not (= (:paatos_tekninen_osa paikkausilmoitus-kannassa)
+                    (or (:paatos_tekninen_osa paikkausilmoitus) nil)))
+            (not (= (:perustelu paikkausilmoitus-kannassa)
+                    (or (:perustelu paikkausilmoitus) nil))))
         (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
                                user urakka-id))
 
@@ -179,10 +171,8 @@
             ;; Liitä kommentti paikkausilmoitukseen
             (q/liita-kommentti<! c paikkausilmoitus-id (:id kommentti))))
 
-        (hae-urakan-paikkaustoteumat c user {:urakka-id  urakka-id
+        (hae-urakan-paikkaustoteumat c user {:urakka-id urakka-id
                                              :sopimus-id sopimus-id})))))
-
-
 (defrecord Paikkaus []
   component/Lifecycle
   (start [this]
