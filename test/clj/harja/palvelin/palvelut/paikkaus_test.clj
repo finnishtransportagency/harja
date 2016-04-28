@@ -58,17 +58,17 @@
                            :takuupvm        (pvm/luo-pvm 2005 9 1)}]}})
 
 
-(def paikkauskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "SELECT paallystyskohde.id as paallystyskohde_id
-                                                             FROM paallystyskohde
-                                                             FULL OUTER JOIN paikkausilmoitus ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
+(def paikkauskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
+                                                             FROM yllapitokohde
+                                                             FULL OUTER JOIN paikkausilmoitus ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                                              WHERE paikkausilmoitus.id IS NULL
                                                              AND urakka = " (hae-muhoksen-paikkausurakan-id) "
                                                              AND sopimus = " (hae-muhoksen-paikkausurakan-paasopimuksen-id) ";"))))
 (log/debug "Paikkauskohde id ilman ilmoitusta: " paikkauskohde-id-jolla-ei-ilmoitusta)
 
-(def paikkauskohde-id-jolla-on-ilmoitus (ffirst (q (str "SELECT paallystyskohde.id as paallystyskohde_id
-                                                         FROM paallystyskohde
-                                                         JOIN paikkausilmoitus ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
+(def paikkauskohde-id-jolla-on-ilmoitus (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
+                                                         FROM yllapitokohde
+                                                         JOIN paikkausilmoitus ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                                          WHERE urakka = " (hae-muhoksen-paikkausurakan-id) " AND sopimus = " (hae-muhoksen-paikkausurakan-paasopimuksen-id) ";"))))
 (log/debug "Paikkauskohde id jolla on ilmoitus: " paikkauskohde-id-jolla-on-ilmoitus)
 
@@ -82,7 +82,7 @@
                                (assoc-in [:ilmoitustiedot :ylimaarainen-keyword] "Olen cräppidataa, en halua kantaan :("))
           maara-ennen-pyyntoa (ffirst (q
                                         (str "SELECT count(*) FROM paikkausilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -92,7 +92,7 @@
                                                                     :paikkausilmoitus paikkausilmoitus})))
       (let [maara-pyynnon-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM paikkausilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
@@ -105,7 +105,7 @@
           paikkausilmoitus (assoc minipot-testidata :paikkauskohde-id paikkauskohde-id)
           maara-ennen-lisaysta (ffirst (q
                                          (str "SELECT count(*) FROM paikkausilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -114,7 +114,7 @@
                                                                  :paikkausilmoitus paikkausilmoitus})
       (let [maara-lisayksen-jalkeen (ffirst (q
                                               (str "SELECT count(*) FROM paikkausilmoitus
-                                            LEFT JOIN paallystyskohde ON paallystyskohde.id = paikkausilmoitus.paikkauskohde
+                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             paikkausilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paikkausilmoitus-paikkauskohteella

@@ -1,43 +1,7 @@
--- name: hae-urakan-paallystyskohteet
--- Hakee urakan kaikki paallystyskohteet
-SELECT
-  paallystyskohde.id,
-  pi.id as paallystysilmoitus_id,
-  pi.tila as paallystysilmoitus_tila,
-  pai.id as paikkausilmoitus_id,
-  pai.tila as paikkausilmoitus_tila,
-  kohdenumero,
-  paallystyskohde.nimi,
-  sopimuksen_mukaiset_tyot,
-  muu_tyo,
-  arvonvahennykset,
-  bitumi_indeksi,
-  kaasuindeksi,
-  muutoshinta,
-  pa.toteutunut_hinta
-FROM paallystyskohde
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
-  AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pa ON pa.paikkauskohde = paallystyskohde.id
-  AND pa.poistettu IS NOT TRUE
-LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = paallystyskohde.id
-  AND pai.poistettu IS NOT TRUE
-WHERE
-  urakka = :urakka
-  AND sopimus = :sopimus
-  AND paallystyskohde.poistettu IS NOT TRUE;
-
--- name: hae-urakan-paallystyskohde
--- Hakee urakan yksittäisen päällystyskohteen
-SELECT id, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset,
-       bitumi_indeksi, kaasuindeksi
-  FROM paallystyskohde
- WHERE urakka = :urakka AND id = :id
-
 -- name: hae-urakan-paallystystoteumat
 -- Hakee urakan kaikki paallystystoteumat
 SELECT
-  paallystyskohde.id AS paallystyskohde_id,
+  yllapitokohde.id AS paallystyskohde_id,
   pi.tila,
   nimi,
   kohdenumero,
@@ -47,12 +11,12 @@ SELECT
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi
-FROM paallystyskohde
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = paallystyskohde.id
+FROM yllapitokohde
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
   AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
 AND sopimus = :sopimus
-AND paallystyskohde.poistettu IS NOT TRUE;
+AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
@@ -63,8 +27,8 @@ SELECT
   valmispvm_kohde,
   valmispvm_paallystys,
   takuupvm,
-  pk.nimi as kohdenimi,
-  pk.kohdenumero,
+  ypk.nimi as kohdenimi,
+  ypk.kohdenumero,
   muutoshinta,
   ilmoitustiedot,
   paatos_tekninen_osa,
@@ -74,34 +38,12 @@ SELECT
   kasittelyaika_tekninen_osa,
   kasittelyaika_taloudellinen_osa
 FROM paallystysilmoitus
-  JOIN paallystyskohde pk ON pk.id = paallystysilmoitus.paallystyskohde
-                             AND pk.urakka = :urakka
-                             AND pk.sopimus = :sopimus
-                             AND pk.poistettu IS NOT TRUE
+  JOIN yllapitokohde ypk ON ypk.id = paallystysilmoitus.paallystyskohde
+                             AND ypk.urakka = :urakka
+                             AND ypk.sopimus = :sopimus
+                             AND ypk.poistettu IS NOT TRUE
 WHERE paallystyskohde = :paallystyskohde
       AND paallystysilmoitus.poistettu IS NOT TRUE;
-
--- name: hae-urakan-paallystyskohteen-paallystyskohdeosat
--- Hakee urakan päällystyskohdeosat päällystyskohteen id:llä.
-SELECT
-  paallystyskohdeosa.id,
-  paallystyskohdeosa.nimi,
-  tr_numero,
-  tr_alkuosa,
-  tr_alkuetaisyys,
-  tr_loppuosa,
-  tr_loppuetaisyys,
-  sijainti,
-  kvl,
-  nykyinen_paallyste,
-  toimenpide
-FROM paallystyskohdeosa
-  JOIN paallystyskohde ON paallystyskohde.id = paallystyskohdeosa.paallystyskohde
-                          AND urakka = :urakka
-                          AND sopimus = :sopimus
-                          AND paallystyskohde.poistettu IS NOT TRUE
-WHERE paallystyskohde = :paallystyskohde
-AND paallystyskohdeosa.poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoitus!
 -- Päivittää päällystysilmoituksen
@@ -167,110 +109,3 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
-
--- name: luo-paallystyskohde<!
--- Luo uuden päällystykohteen
-INSERT INTO paallystyskohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES (:urakka,
-        :sopimus,
-        :kohdenumero,
-        :nimi,
-        :sopimuksen_mukaiset_tyot,
-        :muu_tyo,
-        :arvonvahennykset,
-        :bitumi_indeksi,
-        :kaasuindeksi);
-
--- name: paivita-paallystyskohde!
--- Päivittää päällystyskohteen
-UPDATE paallystyskohde
-SET
-  kohdenumero                 = :kohdenumero,
-  nimi                        = :nimi,
-  sopimuksen_mukaiset_tyot    = :sopimuksen_mukaiset_tyot,
-  muu_tyo                     = :muu_tyo,
-  arvonvahennykset            = :arvonvanhennykset,
-  bitumi_indeksi              = :bitumi_indeksi,
-  kaasuindeksi                = :kaasuindeksi
-WHERE id = :id;
-
--- name: poista-paallystyskohde!
--- Poistaa päällystyskohteen
-UPDATE paallystyskohde
-SET poistettu = true
-WHERE id = :id;
-
--- name: luo-paallystyskohdeosa<!
--- Luo uuden päällystykohdeosan
-INSERT INTO paallystyskohdeosa (paallystyskohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste, toimenpide)
-VALUES (:paallystyskohde,
-        :nimi,
-        :tr_numero,
-        :tr_alkuosa,
-        :tr_alkuetaisyys,
-        :tr_loppuosa,
-        :tr_loppuetaisyys,
-	:sijainti,
-        :kvl,
-        :nykyinen_paallyste,
-        :toimenpide);
-
--- name: paivita-paallystyskohdeosa!
--- Päivittää päällystyskohdeosan
-UPDATE paallystyskohdeosa
-SET
-  nimi                  = :nimi,
-  tr_numero             = :tr_numero,
-  tr_alkuosa            = :tr_alkuosa,
-  tr_alkuetaisyys       = :tr_alkuetaisyys,
-  tr_loppuosa           = :tr_loppuosa,
-  tr_loppuetaisyys      = :tr_loppuetaisyys,
-  sijainti              = :sijainti,
-  kvl                   = :kvl,
-  nykyinen_paallyste    = :nykyinen_paallyste,
-  toimenpide            = :toimenpide
-WHERE id = :id;
-
--- name: poista-paallystyskohdeosa!
--- Poistaa päällystyskohdeosan
-UPDATE paallystyskohdeosa
-SET poistettu = true
-WHERE id = :id;
-
--- name: paivita-paallystys-tai-paikkausurakan-geometria
-SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka::INTEGER)
-
--- name: hae-urakan-aikataulu
--- Hakee päällystysurakan kohteiden aikataulutiedot
-SELECT
-  id,
-  kohdenumero,
-  nimi,
-  urakka,
-  sopimus,
-  aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu,
-  aikataulu_kohde_valmis,
-  aikataulu_muokattu,
-  aikataulu_muokkaaja,
-  valmis_tiemerkintaan
-FROM paallystyskohde
-WHERE
-  urakka = :urakka
-  AND sopimus = :sopimus
-  AND paallystyskohde.poistettu IS NOT TRUE;
-
--- name: tallenna-paallystyskohteen-aikataulu!
--- Tallentaa päällystyskohteen aikataulun
-UPDATE paallystyskohde
-SET
-  aikataulu_paallystys_alku = :aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu = :aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku = :aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
-  aikataulu_kohde_valmis = :aikataulu_kohde_valmis,
-  aikataulu_muokattu = NOW(),
-  aikataulu_muokkaaja = :aikataulu_muokattu
-WHERE id = :id;
