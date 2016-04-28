@@ -28,12 +28,12 @@
       (log/debug "Päällystyskohteet saatu: " (pr-str (map :nimi vastaus)))
       vastaus)))
 
-(defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
-  (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", paallystyskohde-id: " paallystyskohde-id)
+(defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
+  (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (let [vastaus (into []
                       kohdeosa-xf
-                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id paallystyskohde-id))]
+                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id yllapitokohde-id))]
     (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
@@ -62,7 +62,7 @@
                                    :sopimus-id sopimus-id})))
 
 (defn luo-uusi-yllapitokohde [db user urakka-id sopimus-id
-                              {:keys [kohdenumero nimi sopimuksen_mukaiset_tyot muu_tyo
+                              {:keys [kohdenumero nimi sopimuksen_mukaiset_tyot
                                       arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
   (log/debug "Luodaan uusi ylläpitokohde")
   (when-not poistettu
@@ -72,13 +72,12 @@
                            kohdenumero
                            nimi
                            (or sopimuksen_mukaiset_tyot 0)
-                           (or muu_tyo false)
                            (or arvonvahennykset 0)
                            (or bitumi_indeksi 0)
                            (or kaasuindeksi 0))))
 
 (defn paivita-yllapitokohde [db user urakka-id sopimus-id
-                             {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot muu_tyo
+                             {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot
                                      arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
   (if poistettu
     (do (log/debug "Tarkistetaan onko ylläpitokohteella ilmoituksia")
@@ -97,7 +96,6 @@
                                   kohdenumero
                                   nimi
                                   (or sopimuksen_mukaiset_tyot 0)
-                                  (or muu_tyo false)
                                   (or arvonvahennykset 0)
                                   (or bitumi_indeksi 0)
                                   (or kaasuindeksi 0)
@@ -153,9 +151,9 @@
 
 (defn tallenna-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
   (jdbc/with-db-transaction [c db]
-    (log/debug "Tallennetaan ylläpitokohdeosat " (pr-str osat) ". Ylläpitokohde-id: " yllapitokohde-id)
+    (log/debug "Tallennetaan ylläpitokohdeosat. Ylläpitokohde-id: " yllapitokohde-id)
     (doseq [osa osat]
-      (log/debug (str "Käsitellään saapunut ylläpitokohdeosa: " osa))
+      (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
       (if (and (:id osa) (not (neg? (:id osa))))
         (paivita-yllapitokohdeosa c user osa)
         (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))

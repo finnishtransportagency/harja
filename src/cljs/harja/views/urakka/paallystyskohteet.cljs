@@ -24,6 +24,8 @@
     (komp/lippu paallystys/paallystyskohteet-nakymassa?)
     (fn []
       [:div
-       [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:paallystysnakyma? true
+       [kartta/kartan-paikka]
+       [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:otsikko "Päällystyskohteet"
+                                                                           :paallystysnakyma? true
                                                                            :tallenna :ei-mahdollinen}]
        [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}]])))

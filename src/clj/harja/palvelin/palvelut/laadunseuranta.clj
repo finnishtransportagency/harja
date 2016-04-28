@@ -307,8 +307,7 @@
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
-  (roolit/vaadi-rooli-urakassa user roolit/laadunseuranta-kirjaus urakka-id)
-  (roolit/vaadi-rooli-urakassa user roolit/urakanvalvoja urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
     (jdbc/with-db-transaction [db db]
       (let [laatupoikkeama {:sijainti (:sijainti tarkastus)

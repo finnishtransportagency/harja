@@ -30,14 +30,29 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def valittu-raporttityyppi (atom nil))
-
-(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
+(def valittu-raporttityyppi-nimi (reaction (nav/valittu-valilehti :raportit)))
+(defn- valitse-raporttityyppi! [nimi]
+  (nav/aseta-valittu-valilehti! :raportit nimi))
 
 ;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
 (defonce raporttityypit (atom nil))
 
+(def valittu-raporttityyppi
+  (reaction (let [raporttityypit @raporttityypit]
+              (when raporttityypit
+                (get raporttityypit @valittu-raporttityyppi-nimi)))))
+
+(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
+
+
 (tarkkaile! "Rapsat" raporttityypit)
+
+(defn- raportin-sort-avain
+  "Raportin sort avain. Kuvauksen mukaan aakkosjärjestyksessä, paitsi työmaakokous ensin."
+  [{kuvaus :kuvaus}]
+  (cond
+    (= kuvaus "Työmaakokousraportti") ""
+    :default kuvaus))
 
 (defonce mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
@@ -48,7 +63,7 @@
                   urakkatyypin-raportit (filter
                                          #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
                                           (vals @raporttityypit))]
-              (sort-by :kuvaus
+              (sort-by raportin-sort-avain
                          (into []
                                (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
                                      (filter #(oikeudet/voi-lukea?
@@ -62,7 +77,7 @@
                    valittu @valittu-raporttityyppi]
                (when-not (mahdolliset valittu)
                  (log "Resetoidaan valittu raportti, ei enää mahdollinen")
-                 (reset! valittu-raporttityyppi nil)))))
+                 (valitse-raporttityyppi! nil)))))
 
 (defonce tyhjenna-raportti-kun-valinta-muuttuu
   (run! @valittu-raporttityyppi
@@ -88,13 +103,13 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
-(def valittu-vuosi (reaction
-                         (let [hoitourakassa? @hoitourakassa?
-                               valittu-urakka @nav/valittu-urakka]
-                           (when-not hoitourakassa?
-                            (pvm/vuosi (pvm/nyt))))))
-(defonce valittu-hoitokausi (reaction (when @hoitourakassa?
-                                        @u/valittu-hoitokausi)))
+
+(defonce valittu-hoitokausi (reaction (if @hoitourakassa?
+                                        @u/valittu-hoitokausi
+                                        (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+
+(def valittu-vuosi (atom nil))
+
 (defonce kuukaudet (reaction
                     (let [hk @valittu-hoitokausi
                           vuosi @valittu-vuosi]
@@ -131,6 +146,7 @@
                                vain-hoitokausivalinta? hk
                                vapaa-aikavali? aikavali
                                kk kk
+                               hk hk
                                vuosi (pvm/vuoden-aikavali vuosi)
                                :default hk)]
             (if (and alku loppu)
@@ -287,6 +303,43 @@
 
 (def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
 
+(def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
+  +vientimuodot+
+  [[(ikonit/save) "Tallenna Excel" "raporttixls" (k/excel-url :raportointi)]
+   [(ikonit/print) "Tallenna PDF" "raporttipdf" (k/pdf-url :raportointi)]])
+
+(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
+  (let [aseta-parametrit! (fn [id]
+                            (let [input (-> js/document
+                                            (.getElementById id)
+                                            (aget "parametrit"))
+                                  parametrit (case konteksti
+                                               "koko maa"
+                                               (raportit/koko-maa-raportin-parametrit
+                                                (:nimi raporttityyppi) arvot-nyt)
+                                               "hallintayksikko"
+                                               (raportit/hallintayksikon-raportin-parametrit
+                                                (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
+                                               "urakka"
+                                               (raportit/urakkaraportin-parametrit
+                                                (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
+                              (set! (.-value input)
+                                    (t/clj->transit parametrit))
+                              true))]
+    [:span
+     (for [[ikoni teksti id url] +vientimuodot+]
+       ^{:key id}
+       [:form {:target "_blank" :method "POST" :id id
+               :style {:display "inline"}
+               :action url}
+        [:input {:type  "hidden" :name "parametrit"
+                 :value ""}]
+        [:button.nappi-ensisijainen.pull-right
+         {:type     "submit"
+          :disabled (not voi-suorittaa?)
+          :on-click #(aseta-parametrit! id)}
+         ikoni " " teksti]])]))
+
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
                                  100)
@@ -358,37 +411,23 @@
         (when raportissa?
           [napit/takaisin "Palaa raporttivalintoihin"
            #(reset! raportit/suoritettu-raportti nil)])
-        [:form {:target "_blank" :method "POST" :id "raporttipdf"
-                :style {:display "inline"}
-                :action (k/pdf-url :raportointi)}
-         [:input {:type  "hidden" :name "parametrit"
-                  :value ""}]
-         [:button.nappi-ensisijainen.pull-right
-          {:type     "submit"
-           :disabled (not voi-suorittaa?)
-           :on-click #(do
-                       (let [input (-> js/document
-                                       (.getElementById "raporttipdf")
-                                       (aget "parametrit"))
-                             parametrit (case konteksti
-                                          "koko maa" (raportit/koko-maa-raportin-parametrit (:nimi raporttityyppi) arvot-nyt)
-                                          "hallintayksikko" (raportit/hallintayksikon-raportin-parametrit (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
-                                          "urakka" (raportit/urakkaraportin-parametrit (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
-                         (set! (.-value input)
-                               (t/clj->transit parametrit)))
-                       true)}
-          (ikonit/print) " Tallenna PDF"]]
+        [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
         (when-not raportissa?
           [napit/palvelinkutsu-nappi " Tee raportti"
            #(go (reset! raportit/suoritettu-raportti :ladataan)
-                (let [raportti (<! (case konteksti
-                                     "koko maa" (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                                                    arvot-nyt)
-                                     "hallintayksikko" (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                                                  (:nimi raporttityyppi) arvot-nyt)
-                                     "urakka" (raportit/suorita-raportti-urakka (:id v-ur)
-                                                                                (:nimi raporttityyppi)
-                                                                                arvot-nyt)))]
+                (let [raportti
+                      (<! (case konteksti
+                            "koko maa"
+                            (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                                arvot-nyt)
+                            "hallintayksikko"
+                            (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                       (:nimi raporttityyppi)
+                                                                       arvot-nyt)
+                            "urakka"
+                            (raportit/suorita-raportti-urakka (:id v-ur)
+                                                              (:nimi raporttityyppi)
+                                                              arvot-nyt)))]
                   (if-not (k/virhe? raportti)
                     (reset! raportit/suoritettu-raportti raportti)
                     (do
@@ -452,7 +491,7 @@
                           [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn  #(if % (:kuvaus %) "Valitse")
-                                                :valitse-fn #(reset! valittu-raporttityyppi %)
+                                                :valitse-fn #(valitse-raporttityyppi! (:nimi %))
                                                 :class      "raportti-alasveto"}
                            @mahdolliset-raporttityypit])]])
 

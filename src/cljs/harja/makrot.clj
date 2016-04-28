@@ -1,4 +1,5 @@
-(ns harja.makrot)
+(ns harja.makrot
+  (:require [harja.loki]))
 
 (defmacro defc [name args & body]
   (assert (symbol? name) "function name must be a symbol")
@@ -7,6 +8,7 @@
      (try
        ~@body
        (catch :default e#
+         (harja.loki/error e#)
          [harja.virhekasittely/rendaa-virhe e#]))))
 
 (defmacro fnc [args & body]
@@ -15,6 +17,7 @@
      (try
        ~@body
        (catch :default e#
+         (harja.loki/error e#)
          [harja.virhekasittely/rendaa-virhe e#]))))
 
 (defmacro kasittele-virhe
@@ -22,11 +25,12 @@
   `(try
      ~@body
      (catch :default e#
+       (harja.loki/error e#)
        [harja.virhekasittely/rendaa-virhe e#])))
 
 (defmacro with-loop-from-channel
   "Makro joka lukee loopissa viestejä annetusta kanavasta kunnes kanava menee kiinni.
-   Viestin käsittelypoikkeukset napataan kiinni, logitetaan ja viestien lukeminen 
+   Viestin käsittelypoikkeukset napataan kiinni, logitetaan ja viestien lukeminen
    jatkuu normaalisti"
   [chan binding & body]
   (assert (symbol? binding) "binding must be a symbol")
@@ -43,7 +47,7 @@
   `(try
      ~@body
      (catch :default e#
-       (.log js/console e#)
+       (harja.loki/error e#)
        (harja.virhekasittely/arsyttava-virhe "go-blokki kaatui: " e#))))
 
 
@@ -60,7 +64,7 @@
      (defn ~type ~@ctor)
 
      (goog/inherits ~type ~base-type)
-     
+
      ~@(mapv
         (fn [method]
           (binding [*current-method* (name (first method))]

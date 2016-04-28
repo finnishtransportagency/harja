@@ -1,28 +1,28 @@
 -- Päällystyskohteet
 
 INSERT INTO yllapitokohde
-(urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, muu_tyo, arvonvahennykset, bitumi_indeksi, kaasuindeksi,
+(urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi,
  aikataulu_paallystys_alku, aikataulu_paallystys_loppu, aikataulu_tiemerkinta_alku, aikataulu_tiemerkinta_loppu,
  aikataulu_kohde_valmis, aikataulu_muokkaaja, aikataulu_muokattu, valmis_tiemerkintaan)
 VALUES
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
-   'L03', 'Leppäjärven ramppi', 400, true, 100, 4543.95, 0,
+   'L03', 'Leppäjärven ramppi', 400, 100, 4543.95, 0,
    '2016-05-19 06:00:00+02', '2016-05-21 16:00:00+02', null, null,
    null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), '2016-05-21 16:00:00+02'),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
-   308, 'Mt 2855 Viisari - Renko', 9000, false, 200, 565, 100,
+   308, 'Mt 2855 Viisari - Renko', 9000, 200, 565, 100,
    '2016-05-21 06:00:00+02', null, null, null,
    null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
-   'L010', 'Tie 357', 500, true, 3457, 5, 6,
+   'L010', 'Tie 357', 500, 3457, 5, 6,
    '2016-05-26 06:00:00+02', null, null, null,
    null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
-   310, 'Oulaisten ohitusramppi', 500, false, 3457, 5, 6,
+   310, 'Oulaisten ohitusramppi', 500, 3457, 5, 6,
    '2016-06-02 06:00:00+02', null, null, null,
    null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null);
 

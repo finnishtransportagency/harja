@@ -23,7 +23,9 @@
     (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
     (fn []
       [:div
-       [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:paikkausnakyma? true
+       [kartta/kartan-paikka]
+       [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:otsikko "Paikkauskohteet"
+                                                                       :paikkausnakyma? true
                                                                        :tallenna (fn [kohteet]
                                                                                    (go (let [urakka-id (:id @nav/valittu-urakka)
                                                                                              [sopimus-id _] @u/valittu-sopimusnumero
