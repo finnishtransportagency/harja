@@ -24,7 +24,7 @@
   #_(k/post! :hae-yha-urakat {:nimi nimi
                             :tunniste tunniste
                             :vuosi vuosi})
-  ;; FIXME Palauta toistaiseksi vain testidata
+  ;; FIXME Hae YHA-urakat, toistaiseksi palauta vain testidata
   (go (do
         (<! (timeout 2000))
         [{:tunnus "YHA1" :nimi "YHA-urakka" :elyt "Pohjois-Pohjanmaa" :vuodet 2010}])))
@@ -32,10 +32,10 @@
 
 
 (defn- sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]
-  (log "[YHA] Sidotaan YHA-urakka Harja-urakkaan...")
+  (log "[YHA] Sidotaan Harja-urakka " harja-urakka-id " yha-urakkaan: " (pr-str yha-tiedot))
   (reset! sidonta-kaynnissa? true)
   (go
-    ;; FIXME Palauta toistaiseksi vain testidata
+    ;; FIXME Palauta urakan tiedot kannasta alla olevan testidatan mukaisesti
     (let [vastaus #_(<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                                                   :yha-tiedot yha-tiedot}))
           {:sopimukset {27 "5HE5228/10"},
