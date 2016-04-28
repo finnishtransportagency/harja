@@ -3,10 +3,9 @@
     [cljs-time.core :as t]
     [cljs.test :as test :refer-macros [deftest is]]
 
-    [harja.pvm :refer [->pvm] :as pvm]
+    [harja.pvm :refer [->pvm]]
     [harja.domain.paikkausilmoitus :as minipot]
     [harja.loki :refer [log]]
-    [harja.domain.paallystysilmoitus :as pot]
     [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]))
 
 

@@ -1,7 +1,6 @@
 (ns harja.views.kartta.popupit
   "Yleinen nayta-popup multimetodi, joka osaa eri tyyppisistä asioista tehdä popupin."
-  (:require [harja.tiedot.navigaatio :as nav]
-            [harja.loki :refer [log tarkkaile!]]
+  (:require [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
@@ -11,12 +10,10 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.ui.modal :as modal]
-            [harja.ui.napit :as napit]
-            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
 (def klikattu-tyokone (atom nil))
 

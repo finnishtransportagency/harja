@@ -10,10 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.ui.komponentti :as komp]
-            [harja.views.kartta :as kartta]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
+            [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))

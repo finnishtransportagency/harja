@@ -6,8 +6,6 @@
             [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]
-            [cheshire.core :as cheshire]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
