@@ -13,7 +13,8 @@
             [harja.loki :refer [log logt]]
             [harja.atom :refer [paivita!]]
             [cljs.core.async :refer [<! >!]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -43,7 +44,6 @@
                 (suola/hae-materiaalit))))
 
 (defn suolatoteumat []
-
   (komp/luo
    (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet
                tiedot-urakka/aseta-kuluva-kk-jos-hoitokaudella?)
@@ -59,8 +59,10 @@
          [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"
-                    :tallenna #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id ur) sopimus-id %))]
+                    :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-suola (:id @nav/valittu-urakka))
+                                #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id ur) sopimus-id %))]
                                        (paivita! toteumat)))
+                                :ei-mahdollinen)
                     :tyhja (if (nil? @toteumat)
                              [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                              "Ei suolatoteumia valitulle aikavälille")

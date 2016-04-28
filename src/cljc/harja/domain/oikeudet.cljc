@@ -26,7 +26,6 @@
 
 (maarittele-oikeudet!)
 
-
 (defn on-oikeus?
   "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
   [tyyppi oikeus urakka-id kayttaja]
@@ -100,3 +99,6 @@
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
+
+(def ilmoitus-ei-oikeutta-muokata-toteumaa
+  "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")

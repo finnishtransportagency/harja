@@ -14,7 +14,6 @@
             [harja.ui.yleiset :as yleiset]
 
             [harja.domain.paallystys.pot :as pot]
-            [harja.domain.roolit :as roolit]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paallystys :refer [paallystystoteumat paallystysilmoitus-lomakedata] :as paallystys]
@@ -29,7 +28,8 @@
             [harja.domain.paallystys.paallystys-ja-paikkaus-yhteiset :as yhteiset-cljc]
             [harja.tiedot.urakka.paallystys-ja-paikkaus-yhteiset :refer [lomake-lukittu-muokkaukselta?] :as yhteiset-cljs]
             [harja.ui.tierekisteri :as tierekisteri]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -60,7 +60,8 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                     (roolit/roolissa? roolit/urakanvalvoja)
+                     (oikeudet/voi-kirjoittaa?
+                      oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id @nav/valittu-urakka))
                      (not= (:tila @paallystysilmoitus-lomakedata) :lukittu)
                      (false? @lomake-lukittu-muokkaukselta?))
         paatostiedot-tekninen-osa (r/wrap {:paatos-tekninen            (:paatos_tekninen_osa @paallystysilmoitus-lomakedata)
@@ -85,7 +86,7 @@
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
        [:h3 "Käsittely"]
-       
+
        [lomake/lomake
         {:otsikko "Tekninen osa"
          :muokkaa! (fn [uusi]
@@ -115,7 +116,7 @@
             :validoi     [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatostiedot-tekninen-osa]
 
-       
+
        [lomake/lomake
         {:otsikko "Taloudellinen osa"
          :muokkaa! (fn [uusi]
@@ -504,8 +505,8 @@
    (komp/kuuntelija :avaa-paallystysilmoitus
                     (fn [_ rivi]
                       (avaa-paallystysilmoitus (:paallystyskohde-id rivi))))
-                                                     
-                      
+
+
     (fn []
       [:div
        [:h3 "Päällystysilmoitukset"]

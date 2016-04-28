@@ -23,7 +23,9 @@ SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
        JOIN reittipiste rp ON rm.reittipiste=rp.id
        JOIN toteuma t ON rp.toteuma=t.id
        JOIN urakka u ON t.urakka = u.id
- WHERE t.poistettu IS NOT TRUE
+ WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+   AND t.poistettu IS NOT TRUE
+   AND rp.talvihoitoluokka IS NOT NULL
    AND (:urakka::integer IS NULL OR t.urakka = :urakka)
    AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)

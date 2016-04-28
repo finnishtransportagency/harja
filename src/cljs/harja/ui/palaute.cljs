@@ -3,7 +3,7 @@
             [harja.ui.ikonit :as ikonit]
             [clojure.string :as str]))
 
-(def sahkoposti "harjaprojekti@solita.fi")
+(def sahkoposti "harjapalaute@solita.fi")
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko

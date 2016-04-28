@@ -3,6 +3,7 @@
 
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt.yhteyshenkilot :as q]
+            [harja.kyselyt.urakat :as uq]
 
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [clojure.java.jdbc :as jdbc]
@@ -10,7 +11,8 @@
 
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.komponentit.fim :as fim]))
 
 (declare hae-urakan-yhteyshenkilot
          hae-yhteyshenkilotyypit
@@ -42,7 +44,7 @@
                           (tallenna-urakan-paivystajat (:db this) user tiedot)))
       (julkaise-palvelu :hae-urakan-kayttajat
                         (fn [user urakka-id]
-                          (hae-urakan-kayttajat (:db this) user urakka-id))))
+                          (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id))))
 
 
     this)
@@ -57,11 +59,11 @@
       (poista-palvelu (:http-palvelin this) p))
     this))
 
-(defn hae-urakan-kayttajat [db user urakka-id]
+(defn hae-urakan-kayttajat [db fim user urakka-id]
   (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
-  (into []
-        (map konv/alaviiva->rakenne)
-        (q/hae-urakan-kayttajat db urakka-id)))
+  (->> urakka-id
+       (uq/hae-urakan-sampo-id db)
+       (fim/hae-urakan-kayttajat fim)))
 
 
 (defn hae-yhteyshenkilotyypit [db user]

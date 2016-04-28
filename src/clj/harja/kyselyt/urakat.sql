@@ -400,3 +400,7 @@ FROM urakka u
   JOIN hanke ON u.hanke = hanke.id
   JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id = :id;
+
+-- name: hae-urakan-sampo-id
+-- single?: true
+SELECT sampoid FROM urakka where id = :urakka

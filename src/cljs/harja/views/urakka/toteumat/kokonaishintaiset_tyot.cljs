@@ -18,11 +18,12 @@
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.lomake :as lomake]
-            [harja.domain.roolit :as roolit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka.toteumat :as toteumat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -51,12 +52,8 @@
          :leveys      2
          :komponentti (fn [rivi]
                         [:div
-                         {:title (if (:jarjestelma rivi)
-                                   "Järjestelmän raportoimaa toteumaa ei voi muokata."
-                                   "Muokkaa toteumaa.")}
                          [:button.nappi-toissijainen.nappi-grid
-                          {:on-click #(tiedot/valitse-toteuma! rivi)
-                           :disabled (:jarjestelma rivi)}
+                          {:on-click #(tiedot/valitse-toteuma! rivi)}
                           (ikonit/eye-open) " Toteuma"]])}]
        (sort-by :alkanut @tiedot)])))
 
@@ -107,7 +104,7 @@
    (tee-valinnat)
    [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
                                         (tiedot/uusi-kokonaishintainen-toteuma))
-    {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
+    {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka)))}]
    (tee-taulukko)])
 
 (defn kokonaishintainen-toteuma-lomake []
@@ -129,22 +126,32 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko  (if (:id @muokattu)
-                        "Muokkaa kokonaishintaista toteumaa"
-                        "Luo uusi kokonaishintainen toteuma")
+           {:otsikko (if (:id @muokattu)
+                       "Muokkaa kokonaishintaista toteumaa"
+                       "Luo uusi kokonaishintainen toteuma")
             :muokkaa! #(do (reset! muokattu %))
-            :footer   [napit/palvelinkutsu-nappi
-                       "Tallenna toteuma"
-                       #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
-                       {:luokka       "nappi-ensisijainen"
-                        :ikoni        (ikonit/tallenna)
-                        :kun-onnistuu #(do
-                                        (tiedot/toteuman-tallennus-onnistui %)
-                                        (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
-                        :disabled     (not (lomake/voi-tallentaa? @muokattu))}]}
+            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
+            :footer [napit/palvelinkutsu-nappi
+                     "Tallenna toteuma"
+                     #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
+                     {:luokka "nappi-ensisijainen"
+                      :ikoni (ikonit/tallenna)
+                      :kun-onnistuu #(do
+                                      (tiedot/toteuman-tallennus-onnistui %)
+                                      (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                      :disabled (or (not (lomake/voi-tallentaa? @muokattu))
+                                    jarjestelman-lisaama-toteuma?
+                                    (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}]}
            ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
            ;; reitti!
-           [{:otsikko     "Päivämäärä"
+           [(when jarjestelman-lisaama-toteuma?
+              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+               :hae (fn [rivi]
+                      (println "jeejee " rivi)
+                      (str "Järjestelmä (" (get-in rivi [:suorittaja :nimi]) ")"))
+               :muokattava? (constantly false)
+               :vihje toteumat/ilmoitus-jarjestelman-muokkaama-toteuma})
+            {:otsikko     "Päivämäärä"
              :nimi        :alkanut
              :pakollinen? true
              :tyyppi      :pvm-aika
@@ -191,6 +198,7 @@
                :leveys-col 3}
               {:otsikko       "Toimenpide"
                :nimi          :toimenpide
+               :pakollinen?   true
                :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi        :valinta
                :valinnat      @toimenpideinstanssit
@@ -207,6 +215,7 @@
                :leveys-col    3}
               {:otsikko       "Tehtävä"
                :nimi          :tehtava
+               :pakollinen?   true
                :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi        :valinta
                :valinnat      @tehtavat
@@ -222,6 +231,7 @@
                :leveys-col    3}
               {:otsikko "Määrä"
                :nimi :maara
+               :pakollinen?   true
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
                :tyyppi :positiivinen-numero
                :hae (comp :maara :tehtava)

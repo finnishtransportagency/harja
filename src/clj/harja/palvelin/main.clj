@@ -9,6 +9,7 @@
     [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+    [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -41,7 +42,6 @@
     [harja.palvelin.palvelut.paallystys :as paallystys]
     [harja.palvelin.palvelut.paikkaus :as paikkaus]
     [harja.palvelin.palvelut.ping :as ping]
-    [harja.palvelin.palvelut.kayttajat :as kayttajat]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
@@ -108,7 +108,7 @@
                               [:db])
 
       :todennus (component/using
-                  (todennus/http-todennus (:testikayttajat asetukset))
+                  (todennus/http-todennus (:sahke-headerit asetukset))
                   [:db :klusterin-tapahtumat])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
@@ -118,6 +118,9 @@
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
                     [:http-palvelin])
+      :excel-vienti (component/using
+                     (excel-vienti/luo-excel-vienti)
+                     [:http-palvelin])
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db])
@@ -141,7 +144,9 @@
        [:sonja :integraatioloki :db])
 
       ;; FIM REST rajapinta
-      :fim (fim/->FIM (:url (:fim asetukset)))
+      :fim (component/using
+            (fim/->FIM (:url (:fim asetukset)))
+            [:db :integraatioloki])
 
       ;; Sampo
       :sampo (component/using (let [sampo (:sampo asetukset)]
@@ -175,11 +180,12 @@
       :raportointi (component/using
                      (raportointi/luo-raportointi)
                      {:db         :db-replica
-                      :pdf-vienti :pdf-vienti})
+                      :pdf-vienti :pdf-vienti
+                      :excel-vienti :excel-vienti})
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
-                        (kayttajatiedot/->Kayttajatiedot (:testikayttajat asetukset))
+                        (kayttajatiedot/->Kayttajatiedot)
                         [:http-palvelin :db])
       :urakoitsijat (component/using
                       (urakoitsijat/->Urakoitsijat)
@@ -225,13 +231,10 @@
                   [:http-palvelin :db])
       :yhteyshenkilot (component/using
                         (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
-                        [:http-palvelin :db])
+                        [:http-palvelin :db :fim])
       :toimenpidekoodit (component/using
                           (toimenpidekoodit/->Toimenpidekoodit)
                           [:http-palvelin :db])
-      :kayttajat (component/using
-                   (kayttajat/->Kayttajat)
-                   [:http-palvelin :db :fim :klusterin-tapahtumat :integraatioloki])
       :pohjavesialueet (component/using
                          (pohjavesialueet/->Pohjavesialueet)
                          [:http-palvelin :db])
@@ -375,7 +378,8 @@
 
 (defn dev-restart []
   (dev-stop)
-  (dev-start))
+  (dev-start)
+  :ok)
 
 
 (defn dev-julkaise

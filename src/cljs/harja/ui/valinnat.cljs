@@ -14,7 +14,7 @@
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
-  [:div.label-ja-alasveto
+  [:div.label-ja-alasveto.sopimusnumero
    [:span.alasvedon-otsikko "Sopimusnumero"]
    [livi-pudotusvalikko {:valinta    @valittu-sopimusnumero-atom
                          :format-fn  second
@@ -25,7 +25,7 @@
 
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
-  [:div.label-ja-alasveto
+  [:div.label-ja-alasveto.hoitokausi
    [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
                          :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
@@ -40,7 +40,7 @@
   ([hoitokaudet valittu-hoitokausi-atom valitse-fn]
    (hoitokausi {} hoitokaudet valittu-hoitokausi-atom valitse-fn))
   ([{:keys [disabled]} hoitokaudet valittu-hoitokausi-atom valitse-fn]
-   [:div.label-ja-alasveto
+   [:div.label-ja-alasveto.hoitokausi
     [:span.alasvedon-otsikko "Hoitokausi"]
     [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
                           :disabled disabled
@@ -51,7 +51,7 @@
      hoitokaudet]]))
 
 (defn kuukausi [{:keys [disabled nil-valinta]} kuukaudet valittu-kuukausi-atom]
-  [:div.label-ja-alasveto
+  [:div.label-ja-alasveto.kuukausi
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
                          :disabled disabled
@@ -67,7 +67,7 @@
 
 (defn hoitokauden-kuukausi
   [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]
-  [:div.label-ja-alasveto
+  [:div.label-ja-alasveto.kuukausi
    [:span.alasvedon-otsikko "Kuukausi"]
    [livi-pudotusvalikko {:valinta    @valittu-kuukausi-atom
                          :format-fn  #(if %
@@ -113,6 +113,12 @@
                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
+(defn- toimenpideinstanssi-fmt
+  [tpi]
+  (if-let [tpi-nimi (:tpi_nimi tpi)]
+    (clojure.string/replace tpi-nimi #"alueurakka" "AU")
+    "Ei toimenpidettä"))
+
 (defn urakan-toimenpide
   [urakan-toimenpideinstanssit-atom valittu-toimenpideinstanssi-atom valitse-fn]
   (when (not (some
@@ -120,10 +126,10 @@
                @urakan-toimenpideinstanssit-atom))
     ; Nykyisessä valintalistassa ei ole valittua arvoa, resetoidaan.
     (reset! valittu-toimenpideinstanssi-atom (first @urakan-toimenpideinstanssit-atom)))
-  [:div.label-ja-alasveto
+  [:div.label-ja-alasveto.toimenpide
    [:span.alasvedon-otsikko "Toimenpide"]
    [livi-pudotusvalikko {:valinta    @valittu-toimenpideinstanssi-atom
-                         :format-fn  #(if % (str (:tpi_nimi %)) "Ei toimenpidettä")
+                         :format-fn  #(toimenpideinstanssi-fmt %)
                          :valitse-fn valitse-fn}
     @urakan-toimenpideinstanssit-atom]])
 

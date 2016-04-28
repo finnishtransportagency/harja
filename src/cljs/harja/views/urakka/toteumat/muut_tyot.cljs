@@ -3,7 +3,6 @@
   (:require [reagent.core :refer [atom] :as r]
 
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
@@ -27,7 +26,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -143,9 +143,12 @@
               tehtavat (map #(nth % 3) tehtavat-tasoineen)
               toimenpideinstanssit @u/urakan-toimenpideinstanssit
               jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
+              urakka-id (:id @nav/valittu-urakka)
+              kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                                                         urakka-id)
               lomaketta-voi-muokata? (and
-                                       (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
-                                       (not jarjestelman-lisaama-toteuma?))
+                                      kirjoitusoikeus?
+                                      (not jarjestelman-lisaama-toteuma?))
               aseta-tehtava (fn [rivi arvo]
                                (let [jo-suunniteltu-yksikko
                                      (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat))
@@ -171,7 +174,7 @@
                     :voi-muokata? lomaketta-voi-muokata?
                     :muokkaa! (fn [uusi]
                                 (reset! muokattu uusi))
-                    :footer (when (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka))
+                    :footer (when kirjoitusoikeus?
                               [:span
                                [napit/palvelinkutsu-nappi
                                 " Tallenna toteuma"
@@ -365,8 +368,8 @@
              ]
 
             @muokattu]
-           (when-not (roolit/voi-kirjata-toteumia?  (:id @nav/valittu-urakka))
-             "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")])))))
+           (when-not kirjoitusoikeus?
+             oikeudet/ilmoitus-ei-oikeutta-muokata-toteumaa)])))))
 
 (defn muut-tyot-toteumalistaus
   "Muiden töiden toteumat"
@@ -404,7 +407,9 @@
            [napit/uusi "Lisää toteuma" #(reset! muut-tyot/valittu-toteuma
                                                 {:alkanut (pvm/nyt)
                                                  :paattynyt (pvm/nyt)})
-            {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
+            {:disabled (not (oikeudet/voi-kirjoittaa?
+                             oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                             (:id @nav/valittu-urakka)))}]
 
            [grid/grid
             {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt sekä vahinkojen korjaukset")

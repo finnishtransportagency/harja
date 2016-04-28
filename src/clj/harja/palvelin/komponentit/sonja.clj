@@ -60,12 +60,15 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     (thread
       (try
         (loop [viesti (.receive consumer)]
-          (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
-          (try
-            (>!! viesti-ch viesti)
-            (catch Exception e
-              (log/warn e (str "Viestin käsittelijä heitti poikkeuksen, jono: " jonon-nimi))))
-          (recur (.receive consumer)))
+          (if-not viesti
+            (log/info "JMS jonon " jonon-nimi " consumer suljettu. Lopetetaan kuuntelu.")
+            (do
+              (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
+              (try
+                (>!! viesti-ch viesti)
+                (catch Exception e
+                  (log/warn e (str "Viestin käsittelijä heitti poikkeuksen, jono: " jonon-nimi))))
+              (recur (.receive consumer)))))
         (catch Exception e
           (log/warn e (str "Virhe Sonja kuuntelijassa, jono: " jonon-nimi)))))
     consumer))
@@ -115,8 +118,8 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
           (Thread/sleep aika)
           (recur (min (* 2 aika) 600000)))))))
 
-(defn poista-kuuntelija [jonot jonon-nimi kuuntelija-fn]
-  (update-in jonot [jonon-nimi :kuuntelijat] disj kuuntelija-fn))
+(defn poista-kuuntelija [tila jonon-nimi kuuntelija-fn]
+  (update-in tila [:jonot jonon-nimi :kuuntelijat] disj kuuntelija-fn))
 
 (defn yhdista-kuuntelija [{:keys [istunto] :as tila} jonon-nimi kuuntelija-fn]
   (log/debug (format "Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
@@ -160,9 +163,9 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     (when @yhteys-ok?
       (let [tila @tila]
         (some-> tila :istunto .close)
-        (some-> tila :yhteys .close)
-        (assoc this
-          :tila nil))))
+        (some-> tila :yhteys .close)))
+    (assoc this
+           :tila nil))
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
@@ -171,7 +174,8 @@ Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blok
     (send tila
           (fn [tila]
             (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)
-            tila)))
+            tila))
+    #(send tila poista-kuuntelija jonon-nimi kuuntelija-fn))
 
   (laheta [this jonon-nimi viesti {:keys [correlation-id]}]
     (if-not @yhteys-ok?

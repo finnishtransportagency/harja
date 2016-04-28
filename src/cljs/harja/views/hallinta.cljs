@@ -10,7 +10,6 @@
             [harja.views.toimenpidekoodit :as tp]
             [harja.views.indeksit :as i]
             [harja.views.hallinta.lampotilat :as lampotilat]
-            [harja.views.hallinta.kayttajat :as kayttajat]
             [harja.views.hallinta.integraatioloki :as integraatioloki]
             [harja.ui.grid :as g]
             ))
@@ -20,12 +19,6 @@
 (defn hallinta []
   [bs/tabs {:style :tabs :classes "tabs-taso1"
             :active (nav/valittu-valilehti-atom :hallinta)}
-
-   "Käyttäjät"
-   :kayttajat
-   ^{:key "kayttajat"}
-   (when (oikeudet/hallinta-kayttajat)
-     [kayttajat/kayttajat])
 
    "Indeksit"
    :indeksit

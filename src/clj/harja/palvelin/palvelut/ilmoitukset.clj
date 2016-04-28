@@ -7,7 +7,6 @@
             [harja.kyselyt.ilmoitukset :as q]
             [harja.domain.ilmoitukset :as ilmoitukset-domain]
             [harja.palvelin.palvelut.urakat :as urakat]
-            [harja.palvelin.palvelut.kayttajat :as kayttajat]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clj-time.core :as t]
             [harja.pvm :as pvm]

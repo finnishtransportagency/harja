@@ -124,10 +124,6 @@ urakoitsija."
   (and urakat
        (urakat urakka-id)))
 
-(defn oma-urakka? [kayttaja urakka-id]
-  (or (organisaation-urakka? kayttaja urakka-id)
-      (not (empty? (urakkaroolit kayttaja urakka-id)))))
-
 (defn roolissa?
   "Tarkistaa onko käyttäjällä tietty rooli. Rooli voi olla joko yksittäinen rooli
 tai setti rooleja. Jos annetaan setti, tarkistetaan onko käyttäjällä joku annetuista
@@ -193,14 +189,6 @@ rooleista."
                tilaajan-asiantuntija
                tilaajan-laadunvalvontakonsultti}))
 
-
-(defn lukuoikeus-urakassa?
-  [kayttaja urakka-id]
-  (or (tilaajan-kayttaja? kayttaja)
-      (and (organisaation-urakka? kayttaja urakka-id)
-           (roolissa? kayttaja urakoitsijan-paakayttaja))
-      (rooli-urakassa? kayttaja urakoitsijan-urakan-vastuuhenkilo urakka-id)))
-
 (defn voi-kirjata-toteumia?
   "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli
   tai jos hän on urakan urakoitsijaorganisaation pääkäyttäjä"
@@ -216,68 +204,24 @@ rooleista."
   ([kayttaja]
    (tilaajan-kayttaja? kayttaja)))
 
-#?(:clj
-   (defn vaadi-raporttien-lukuoikeus
-     ([kayttaja]
-      (when-not (voi-nahda-raportit? kayttaja)
-        (let [viesti (format "Käyttäjällä '%1$s' ei ole oikeutta nähdä raportteja.", (:kayttajanimi kayttaja))]
-          (backlog/warn viesti)
-          (throw+ (->EiOikeutta viesti)))))))
-
 (defn lukuoikeus-kaikkiin-urakoihin?
   "Käyttäjä voi nähdä kaikki urakat, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
   #?(:cljs ([] (lukuoikeus-kaikkiin-urakoihin? @istunto/kayttaja)))
   ([kayttaja]
    (roolissa? kayttaja jarjestelmavastaava)))
 
-
-#?(:clj
-   (defn vaadi-toteumien-kirjaus-urakkaan [kayttaja urakka-id]
-     (when-not (voi-kirjata-toteumia? kayttaja urakka-id)
-       (let [viest (format "Käyttäjällä '%1$s' ei toteumien kirjauksen roolia (tai ei urakoitsijan pk) urakassa, jonka id on %2$s"
-                           (:kayttajanimi kayttaja) urakka-id)]))))
-
-#?(:clj
-   (defn vaadi-lukuoikeus-urakkaan
-     [kayttaja urakka-id]
-     (when-not (lukuoikeus-urakassa? kayttaja urakka-id)
-       (let [viesti (format "Käyttäjällä '%1$s' ei lukuoikeutta urakassa jonka id on %2$s", (:kayttajanimi kayttaja) urakka-id)]
-         (backlog/warn viesti)
-         (throw+ (->EiOikeutta viesti))))))
-
-#?(:clj
-   (defn vaadi-urakanvalvoja
-     [kayttaja urakka-id]
-     (when-not (rooli-urakassa? kayttaja urakanvalvoja urakka-id)
-       (let [viesti (format "Käyttäjä '%1$s' ei ole urakanvalvoja urakassa %2$s", (:kayttajanimi kayttaja) urakka-id)]
-         (backlog/warn viesti)
-         (throw+ (->EiOikeutta viesti))))))
-
 (defn osapuoli
-     "Päättelee kuka osapuoli on kyseessä roolien perusteella.
+  "Päättelee kuka osapuoli on kyseessä roolien perusteella.
    Palauttaa avainsanan :urakoitsija, :konsultti tai :tilaaja."
-     [kayttaja urakka-id]
-     (if (roolissa? kayttaja  jarjestelmavastuuhenkilo)
-       :tilaaja
-       (let [roolit (urakkaroolit kayttaja urakka-id)]
-         (cond
-           (some roolit [jarjestelmavastuuhenkilo
-                         tilaajan-kayttaja
-                         urakanvalvoja
-                         tilaajan-asiantuntija])
-           :tilaaja
-
-           (some roolit [tilaajan-laadunvalvontakonsultti])
-           :konsultti
-
-           (some roolit [urakoitsijan-paakayttaja
-                         urakoitsijan-urakan-vastuuhenkilo
-                         urakoitsijan-kayttaja
-                         urakoitsijan-laatuvastaava])
-           :urakoitsija))))
-
+  [kayttaja urakka-id]
+  (case (get-in kayttaja [:organisaatio :tyyppi])
+    "liikennevirasto" :tilaaja
+    "urakoitsija" :urakoitsija
+    ;; FIXME: laadunvalvontakonsultti ?
+    :tilaaja))
 
 ;;VAIN FRONTILLA
+
 #?(:cljs
    (defn jos-rooli-urakassa
      "Palauttaa komponentin käyttöliittymään jos käyttäjän rooli sallii.

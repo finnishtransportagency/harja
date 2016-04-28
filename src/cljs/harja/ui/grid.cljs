@@ -751,6 +751,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                                       (when rivi-klikattu
                                                                                         " klikattava ")
                                                                                       (when (:korosta rivi) " korostettu-rivi ")
+                                                                                      (when (:lihavoi rivi) " bold ")
                                                                                       (when (:yhteenveto rivi) " yhteenveto ")
                                                                                       (when rivin-luokka
                                                                                         (rivin-luokka rivi)))

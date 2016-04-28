@@ -100,7 +100,8 @@
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     [:taulukko {:otsikko otsikko}
+     [:taulukko {:otsikko otsikko
+                 :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))}
       (into []
 
             (concat
@@ -112,11 +113,13 @@
              ;; Kaikki kuukaudet
              (map (fn [kk]
                     {:otsikko kk
-                     :leveys kk-lev}) kuukaudet)
+                     :leveys kk-lev
+                     :fmt :numero}) kuukaudet)
 
-             [{:otsikko "Määrä yhteensä" :leveys "8%"}
-              {:otsikko "Tot-%" :leveys "8%"}
-              {:otsikko "Maksimi\u00admäärä" :leveys "8%"}]))
+             [{:otsikko "Määrä yhteensä" :leveys "8%" :fmt :numero :jos-tyhja "-"
+               :excel [:summa-vasen (if urakoittain? 2 1)]}
+              {:otsikko "Tot-%" :leveys "8%" :fmt :prosentti :jos-tyhja "-"}
+              {:otsikko "Maksimi\u00admäärä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
 
       (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
@@ -124,31 +127,33 @@
                maksimi (when-not (empty? suunnitellut)
                          (reduce + suunnitellut))
                luokitellut (filter :luokka rivit)
-               yhteensa (reduce + (keep  #(when (and (:kk %) (not (:luokka %)))
-                                            (:maara %)) rivit))
-               kk-arvot (into {}
-                              (comp (filter :kk)
-                                    (map (juxt :kk :maara)))
-                              rivit)]
+               materiaalirivit (filter #(not (:luokka %)) rivit)
+               kk-rivit (group-by :kk materiaalirivit)
+               kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
+                                     (assoc kk-arvot kk (reduce + 0 (map :maara rivit))))
+                                   {} kk-rivit)
+               yhteensa (reduce + 0 (vals kk-arvot))]
+           ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
             ;; Normaali materiaalikohtainen rivi
-            [(into []
-                   (concat
+            [{:lihavoi? true
+              :rivi (into []
+                          (concat
 
-                    ;; Urakan nimi, jos urakoittain jaottelu päällä
-                    (when urakoittain?
-                      [(:nimi urakka)])
+                           ;; Urakan nimi, jos urakoittain jaottelu päällä
+                           (when urakoittain?
+                             [(:nimi urakka)])
 
-                    ;; Materiaalin nimi
-                    [(:nimi materiaali)]
+                           ;; Materiaalin nimi
+                           [(:nimi materiaali)]
 
-                    ;; Kuukausittaiset määrät
-                    (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
+                           ;; Kuukausittaiset määrät
+                           (map kk-arvot kuukaudet)
 
-                    ;; Yhteensä, toteumaprosentti ja maksimimäärä
-                    [yhteensa
-                     (if maksimi (fmt/desimaaliluku (/ (* 100.0 yhteensa) maksimi) 1) "-")
-                     (or maksimi "-")]))]
+                           ;; Yhteensä, toteumaprosentti ja maksimimäärä
+                           [yhteensa
+                            (when maksimi (/ (* 100.0 yhteensa) maksimi))
+                            maksimi]))}]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
@@ -162,9 +167,10 @@
                             [(str " - "
                                   (talvihoitoluokka luokka))]
 
-                            (map #(or (fmt/desimaaliluku-opt (kk-arvot %) 1) 0) kuukaudet)
+                            (map kk-arvot kuukaudet)
 
-                            [(reduce + (remove nil? (vals kk-arvot))) "-" "-"]))))
+                            [(reduce + (remove nil? (vals kk-arvot)))
+                             nil nil]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 
        materiaalit)]]))

@@ -19,7 +19,9 @@
                                :loppupvm loppupvm}))
 
 (defn tallenna-toteumat [urakka-id sopimus-id rivit]
-  (let [tallennettavat (into [] (filter (comp not :koskematon) rivit))]
+  (let [tallennettavat (into [] (->> rivit
+                                     (filter (comp not :koskematon))
+                                     (map #(assoc % :paattynyt (:alkanut %)))))]
     (k/post! :tallenna-suolatoteumat
              {:urakka-id urakka-id
               :sopimus-id sopimus-id

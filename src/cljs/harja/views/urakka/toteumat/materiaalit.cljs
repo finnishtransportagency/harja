@@ -18,7 +18,7 @@
 
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -115,7 +115,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   [grid/muokkaus-grid
    {:tyhja        "Ei materiaaleja."
     :muutos       (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
-    :voi-muokata? (not koneen-lisaama?)}
+    :voi-muokata? (and (not koneen-lisaama?)
+                       (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}
    [{:otsikko       "Materiaali" :nimi :materiaali :tyyppi :valinta
      :valinnat      @materiaalikoodit
      :valinta-nayta #(if % (:nimi %) "- valitse materiaali -")
@@ -172,20 +173,22 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
            [lomake {:otsikko (if vanha-toteuma?
                                "Muokkaa toteumaa"
                                "Luo uusi toteuma")
-                    :luokka   :horizontal
+                    :luokka :horizontal
+                    :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
                     :muokkaa! muokkaa!
-                    :footer   [napit/palvelinkutsu-nappi
-                               "Tallenna toteuma"
-                               #(tallenna-toteuma-ja-toteumamateriaalit!
-                                 (:toteumamateriaalit tiedot)
-                                 tiedot)
-                               {:luokka   "nappi-ensisijainen"
-                                :ikoni    (ikonit/tallenna)
-                                :kun-onnistuu
-                                #(do
-                                   (reset! urakan-materiaalin-kaytot %)
-                                   (reset! valittu-materiaalin-kaytto nil))
-                                :disabled (not voi-tallentaa?)}]}
+                    :footer [napit/palvelinkutsu-nappi
+                             "Tallenna toteuma"
+                             #(tallenna-toteuma-ja-toteumamateriaalit!
+                               (:toteumamateriaalit tiedot)
+                               tiedot)
+                             {:luokka "nappi-ensisijainen"
+                              :ikoni (ikonit/tallenna)
+                              :kun-onnistuu
+                              #(do
+                                (reset! urakan-materiaalin-kaytot %)
+                                (reset! valittu-materiaalin-kaytto nil))
+                              :disabled (or (not voi-tallentaa?)
+                                            (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
 
             [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
              {:otsikko     "Aloitus" :pakollinen? true :uusi-rivi? true
@@ -256,7 +259,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   [:div
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
    [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
-    {:disabled (not (roolit/voi-kirjata-toteumia? (:id @nav/valittu-urakka)))}]
+    {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}]
 
    [grid/grid
     {:otsikko  "Materiaalien käyttö"
@@ -290,8 +293,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                     (:kokonaismaara rivi))]
                        (if (>= erotus 0)
                          [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
-                         [:span.materiaalierotus.materiaalierotus-negatiivinen erotus])))}
-     ]
+                         [:span.materiaalierotus.materiaalierotus-negatiivinen erotus])))}]
 
     (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])
 

@@ -1,7 +1,6 @@
 (ns harja.views.urakka.suunnittelu.muut-tyot
   "Urakan 'Muut työt' välilehti, sis. Muutos-, lisä- ja äkilliset hoitotyöt"
   (:require [reagent.core :refer [atom]]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
                                                   alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
@@ -14,7 +13,9 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -54,21 +55,20 @@
            [valinnat/urakan-toimenpide+muut ur]
            (if-not (empty? valitun-tpin-tehtavat-tasoineen)
              [grid/grid
-              {:otsikko      "Urakkasopimuksen mukaiset muutos- ja lisätyöhinnat"
-               :luokat       ["col-md-10"]
-               :tyhja        (if (nil? @u/muutoshintaiset-tyot)
-                               [ajax-loader "Muutoshintaisia töitä haetaan..."]
-                               "Ei muutoshintaisia töitä")
-               :tallenna     (roolit/jos-rooli-urakassa roolit/urakanvalvoja
-                                                        (:id @nav/valittu-urakka)
-                                                        #(tallenna-tyot
-                                                          % u/muutoshintaiset-tyot)
-                                                        :ei-mahdollinen)
-               :ohjaus       g
-               :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
-                                                                           (:tehtava rivi))
-                                                                         (vals (grid/hae-muokkaustila %)))))
-               :voi-poistaa? #(roolit/roolissa? roolit/jarjestelmavastuuhenkilo)}
+              {:otsikko "Urakkasopimuksen mukaiset muutos- ja lisätyöhinnat"
+               :luokat ["col-md-10"]
+               :tyhja (if (nil? @u/muutoshintaiset-tyot)
+                        [ajax-loader "Muutoshintaisia töitä haetaan..."]
+                        "Ei muutoshintaisia töitä")
+               :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka))
+                           #(tallenna-tyot
+                             % u/muutoshintaiset-tyot)
+                           :ei-mahdollinen)
+               :ohjaus g
+               :muutos #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
+                                                                     (:tehtava rivi))
+                                                                   (vals (grid/hae-muokkaustila %)))))
+               :voi-poistaa? (constantly (oikeudet/on-muu-oikeus? "poista" oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka) @istunto/kayttaja))}
 
               [{:otsikko       "Tehtävä" :nimi :tehtavanimi
                 :jos-tyhja     "Ei valittavia tehtäviä"

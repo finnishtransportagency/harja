@@ -70,6 +70,8 @@
           :default
           nil)
 
+        suolasakot-hallintayksikoittain (sort (group-by :hallintayksikko_elynumero
+                                                        raportin-data))
         raportin-nimi "Suolasakkoraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -94,66 +96,99 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
-                 :oikealle-tasattavat-kentat #{9 10 11 12}}
-      [{:leveys "15%" :otsikko "Urakka"}
-       {:otsikko "Keski\u00ADlämpö\u00ADtila"}
-       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila"}
-       {:otsikko "Talvi\u00ADsuolan maksimi\u00ADmäärä (t)"}
-       {:otsikko "Sakko\u00ADraja (t)"}
-       {:otsikko "Kerroin"}
-       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)"}
-       {:otsikko "Käytetty suola\u00ADmäärä (t)"}
-       {:otsikko "Suola\u00ADerotus (t)"}
-       {:otsikko "Sakko \u20AC / tonni"}
-       {:otsikko "Sakko €"}
-       {:otsikko "Indeksi €"}
-       {:otsikko "Indeksi\u00ADkorotettu sakko €"}]
+                 :oikealle-tasattavat-kentat (set (range 1 14))}
+      [{:leveys 10 :otsikko "Urakka"}
+       {:otsikko "Keski\u00ADlämpö\u00ADtila" :leveys 5}
+       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila" :leveys 5}
+       {:otsikko "Talvi\u00ADsuolan max-määrä (t)" :leveys 5}
+       {:otsikko "Sakko\u00ADraja (t)" :leveys 5}
+       {:otsikko "Kerroin" :leveys 4}
+       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 5}
+       {:otsikko "Käytetty suola\u00ADmäärä (t)" :leveys 5}
+       {:otsikko "Suola\u00ADerotus (t)" :leveys 5}
+       {:otsikko "Sakko \u20AC / tonni" :leveys 4}
+       {:otsikko "Sakko €" :leveys 6}
+       {:otsikko "Indeksi €" :leveys 5}
+       {:otsikko "Indeksi\u00ADkorotettu sakko €" :leveys 6}]
+
       (keep identity
-            (concat
-              (for [rivi raportin-data]
-                (let [sakko (laske-sakko rivi)
-                      indeksikorotettu-sakko (laske-indeksikorotettu-sakko rivi)]
-                  [(:urakka_nimi rivi)
-                   (str (:keskilampotila rivi) " °C")
-                   (str (:pitkakeskilampotila rivi) " °C")
-                   (:sakko_talvisuolaraja rivi)
-                   (when (:sakko_talvisuolaraja rivi)
-                     (format "%.2f" (* (:sakko_talvisuolaraja rivi) 1.05)))
-                   (if (:kerroin rivi)
-                     (format "%.4f" (:kerroin rivi))
-                     "Indeksi puuttuu!")
-                   (when (:kohtuullistarkistettu_sakkoraja rivi)
-                     (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi)))
-                   (:suola_kaytetty rivi)
-                   (when (and (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi))
-                     (- (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi)))
-                   (fmt/euro-opt false (:sakko_maara_per_tonni rivi))
-                   (fmt/euro-opt false (laske-sakko rivi))
-                   (when (and sakko indeksikorotettu-sakko)
-                     (fmt/euro-opt false (- indeksikorotettu-sakko sakko)))
-                   (when (and (:kerroin rivi) sakko)
-                     (fmt/euro-opt false (* (:kerroin rivi) sakko)))]))
+            (conj
+              (into []
+                    (apply concat
+                           (for [[elynum hyn-suolasakot] suolasakot-hallintayksikoittain
+                                 :let [elynimi (:hallintayksikko_nimi (first hyn-suolasakot))]]
+                             (concat
+                               (for [rivi hyn-suolasakot]
+                                 (let [sakko (laske-sakko rivi)
+                                       indeksikorotettu-sakko (laske-indeksikorotettu-sakko rivi)]
+                                   [(:urakka_nimi rivi)
+                                    (str (:keskilampotila rivi) " °C")
+                                    (str (:pitkakeskilampotila rivi) " °C")
+                                    (:sakko_talvisuolaraja rivi)
+                                    (when (:sakko_talvisuolaraja rivi)
+                                      (format "%.2f" (* (:sakko_talvisuolaraja rivi) 1.05)))
+                                    (if (:kerroin rivi)
+                                      (format "%.4f" (:kerroin rivi))
+                                      "Indeksi puuttuu!")
+                                    (when (:kohtuullistarkistettu_sakkoraja rivi)
+                                      (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi)))
+                                    (:suola_kaytetty rivi)
+                                    (when (and (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi))
+                                      (- (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi)))
+                                    (fmt/euro-opt false (:sakko_maara_per_tonni rivi))
+                                    (fmt/euro-opt false (laske-sakko rivi))
+                                    (when (and sakko indeksikorotettu-sakko)
+                                      (fmt/euro-opt false (- indeksikorotettu-sakko sakko)))
+                                    (when (and (:kerroin rivi) sakko)
+                                      (fmt/euro-opt false (* (:kerroin rivi) sakko)))]))
+                               ;; jos koko maan rapsa, näytä kunkin Hallintayksikön summarivi
+                               (when (and (= :koko-maa konteksti) elynum)
+                                 [{:lihavoi? true
+                                   :rivi
+                                   [(str elynum " "  elynimi)
+                                    nil
+                                    nil
+                                    (reduce + (keep :sakko_talvisuolaraja hyn-suolasakot))
+                                    nil
+                                    nil
+                                    (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot))
+                                    (reduce + (keep :suola_kaytetty hyn-suolasakot))
+                                    (-
+                                      (reduce + (keep :suola_kaytetty hyn-suolasakot))
+                                      (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot)))
+                                    nil
+                                    (fmt/euro-opt false
+                                                  (reduce + (keep
+                                                              (fn [rivi]
+                                                                (laske-sakko rivi))
+                                                              hyn-suolasakot)))
+                                    nil
+                                    (fmt/euro-opt false
+                                                  (reduce + (keep
+                                                              (fn [rivi]
+                                                                (laske-indeksikorotettu-sakko rivi))
+                                                              hyn-suolasakot)))]}])))))
               (when (not (empty? raportin-data))
-                [["Yhteensä"
-                  nil
-                  nil
-                  (reduce + (keep :sakko_talvisuolaraja raportin-data))
-                  nil
-                  nil
-                  nil
-                  (reduce + (keep :suola_kaytetty raportin-data))
-                  (-
-                    (reduce + (keep :suola_kaytetty raportin-data))
-                    (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data)))
-                  nil
-                  (fmt/euro-opt false
-                    (reduce + (keep
-                                (fn [rivi]
-                                  (laske-sakko rivi))
-                                raportin-data)))
-                  nil
-                  (fmt/euro-opt false
-                    (reduce + (keep
-                                (fn [rivi]
-                                  (laske-indeksikorotettu-sakko rivi))
-                                raportin-data)))]])))]]))
+                ["Yhteensä"
+                 nil
+                 nil
+                 (reduce + (keep :sakko_talvisuolaraja raportin-data))
+                 nil
+                 nil
+                 (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data))
+                 (reduce + (keep :suola_kaytetty raportin-data))
+                 (-
+                   (reduce + (keep :suola_kaytetty raportin-data))
+                   (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data)))
+                 nil
+                 (fmt/euro-opt false
+                               (reduce + (keep
+                                           (fn [rivi]
+                                             (laske-sakko rivi))
+                                           raportin-data)))
+                 nil
+                 (fmt/euro-opt false
+                               (reduce + (keep
+                                           (fn [rivi]
+                                             (laske-indeksikorotettu-sakko rivi))
+                                           raportin-data)))])))]]))
