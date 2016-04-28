@@ -354,6 +354,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                         jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                                         rivin alla
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
+  :rivi-ennen                           table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
+                                        :teksti (näytettävä teksti) ja :sarakkeita (colspan)
 
 
   "
@@ -665,6 +667,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
              (ajax-loader)
              [:table.grid
               [:thead
+               (when-let [rivi-ennen (:rivi-ennen opts)]
+                 [:tr
+                  (for [{:keys [teksti sarakkeita keskita?]} rivi-ennen]
+                    ^{:key teksti}
+                    [:th {:colSpan (or sarakkeita 1)
+                          :style (when keskita? {:text-align "center"})}
+                     teksti])])
                [:tr
                 (for [{:keys [otsikko leveys nimi otsikkorivi-luokka]} skeema]
                   ^{:key (str nimi)}
