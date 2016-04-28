@@ -161,10 +161,10 @@
               (get-in ur [:yhatiedot :yhatunnus]))
             "YHA-ELYt:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (get-in ur [:yhatiedot :elyt]))
+              (str/join ", " (get-in ur [:yhatiedot :elyt])))
             "YHA-vuodet:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (get-in ur [:yhatiedot :vuodet]))
+              (str/join ", " (get-in ur [:yhatiedot :vuodet])))
             "YHA-sidonta:"
             (cond
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
