@@ -3,15 +3,15 @@
     <yha:urakka>
         <yha:yha-id>3</yha:yha-id>
         <yha:harja-id>3</yha:harja-id>
-        <yha:sampo-id>string</yha:sampo-id>
+        <yha:sampotunnus>string</yha:sampotunnus>
         <yha:tunnus>string</yha:tunnus>
         <yha:kohteet>
             <!--Zero or more repetitions:-->
             <yha:kohde>
                 <yha:yha-id>3</yha:yha-id>
                 <yha:harja-id>3</yha:harja-id>
-                <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
-                <yha:nimi>string</yha:nimi>
+                <yha:kohdetyotyyppi>paikkaus</yha:kohdetyotyyppi>
+                <yha:tunnus>string</yha:tunnus>
                 <!--Optional:-->
                 <yha:toiden-aloituspaivamaara>2007-10-26</yha:toiden-aloituspaivamaara>
                 <!--Optional:-->
@@ -57,6 +57,7 @@
                         <yha:yha-id>3</yha:yha-id>
                         <yha:harja-id>3</yha:harja-id>
                         <yha:tierekisteriosoitevali>
+                            <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
                             <yha:tienumero>3</yha:tienumero>
                             <yha:ajorata>0</yha:ajorata>
                             <yha:kaista>22</yha:kaista>
@@ -70,7 +71,6 @@
                         <!--Optional:-->
                         <yha:paallystystoimenpide>
                             <yha:uusi-paallyste>1</yha:uusi-paallyste>
-                            <yha:edellinen-paallyste>2</yha:edellinen-paallyste>
                             <yha:raekoko>87</yha:raekoko>
                             <yha:kokonaismassamaara>100</yha:kokonaismassamaara>
                             <yha:rc-prosentti>12</yha:rc-prosentti>

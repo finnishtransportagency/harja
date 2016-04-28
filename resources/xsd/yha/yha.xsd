@@ -36,8 +36,20 @@
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
-                                        <xs:element name="tunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
-                                        <xs:element name="nimi" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element name="sampotunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:maxLength value="50"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="tunnus" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:maxLength value="20"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
@@ -82,7 +94,7 @@
                         <xs:sequence>
                             <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
                             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-                            <xs:element name="sampo-id" nillable="false" minOccurs="1" maxOccurs="1">
+                            <xs:element name="sampotunnus" nillable="false" minOccurs="1" maxOccurs="1">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="50"/>
@@ -118,7 +130,20 @@
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="virhe" minOccurs="0" maxOccurs="1" type="xs:string"/>
+                <xs:element name="virheet" minOccurs="0" maxOccurs="1">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="virhe" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="kohde-yha-id" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                                        <xs:element name="selite" type="xs:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -127,6 +152,7 @@
 
     <xs:complexType name="tierekisteriosoitevali">
         <xs:sequence>
+            <xs:element name="karttapaivamaara" type="xs:date" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="tienumero" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="ajorata" type="ajorata" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kaista" type="kaista" nillable="false" minOccurs="1" maxOccurs="1"/>
@@ -140,8 +166,8 @@
     <xs:complexType name="kohde">
         <xs:sequence>
             <xs:element name="yha-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
-            <xs:element name="nimi" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
+            <xs:element name="tunnus" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
                         <xs:maxLength value="30"/>
@@ -166,8 +192,8 @@
         <xs:sequence>
             <xs:element name="yha-id" type="xs:int" minOccurs="0" maxOccurs="1"/>
             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
-            <xs:element name="nimi" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="kohdetyotyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
+            <xs:element name="tunnus" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
                         <xs:maxLength value="30"/>
@@ -239,7 +265,6 @@
     <xs:complexType name="paallystystoimenpide">
         <xs:sequence>
             <xs:element name="uusi-paallyste" type="paallyste" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="edellinen-paallyste" type="paallyste" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="raekoko" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:int">
@@ -328,7 +353,7 @@
 
     <!--Tyypit-->
 
-    <xs:simpleType name="kohdetyyppi">
+    <xs:simpleType name="kohdetyotyyppi">
         <xs:restriction base="xs:string">
             <xs:enumeration value="paallystys"/>
             <xs:enumeration value="paikkaus"/>
@@ -337,21 +362,9 @@
 
     <xs:simpleType name="ajorata">
         <xs:restriction base="xs:int">
-            <xs:enumeration value="0">
-                <xs:annotation>
-                    <xs:documentation>pääkaista</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="1">
-                <xs:annotation>
-                    <xs:documentation>ohituskaista</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="2">
-                <xs:annotation>
-                    <xs:documentation>kolmas kaista</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
+            <xs:enumeration value="0"/>
+            <xs:enumeration value="1"/>
+            <xs:enumeration value="2"/>
         </xs:restriction>
     </xs:simpleType>
 

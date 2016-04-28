@@ -1,4 +1,9 @@
 <yha:urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
     <!--Optional:-->
-    <yha:virhe>string</yha:virhe>
+    <yha:virheet>
+        <yha:virhe>
+            <yha:kohde-yha-id>1</yha:kohde-yha-id>
+            <yha:selite>Jotain meni vikaan</yha:selite>
+        </yha:virhe>
+    </yha:virheet>
 </yha:urakan-kohteiden-toteumatietojen-kirjausvastaus>
