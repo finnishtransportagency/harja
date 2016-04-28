@@ -65,15 +65,17 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
+        poikkeamat (hae-laatupoikkeamat db {:konteksti            konteksti
+                                            :urakka-id            urakka-id
+                                            :hallintayksikko-id   hallintayksikko-id
+                                            :alkupvm              alkupvm
+                                            :loppupvm             loppupvm
+                                            :laatupoikkeamatekija (when (and laatupoikkeamatekija
+                                                                             (not= laatupoikkeamatekija :kaikki))
+                                                                    (name laatupoikkeamatekija))
+                                            :urakkatyyppi         urakkatyyppi})
         laatupoikkeamarivit (map konv/alaviiva->rakenne
-                                 (hae-laatupoikkeamat db {:konteksti konteksti
-                                                          :urakka-id urakka-id
-                                                          :hallintayksikko-id hallintayksikko-id
-                                                          :alkupvm alkupvm
-                                                          :loppupvm loppupvm
-                                                          :laatupoikkeamatekija (when (not= laatupoikkeamatekija :kaikki)
-                                                                                  (name laatupoikkeamatekija))
-                                                          :urakkatyyppi urakkatyyppi}))
+                                 poikkeamat)
         laatupoikkeamarivit (konv/sarakkeet-vektoriin
                             laatupoikkeamarivit
                             {:liite :liitteet})
@@ -100,15 +102,17 @@
        {:leveys 10 :otsikko "Te\u00ADki\u00ADjä"}
        {:leveys 35 :otsikko "Ku\u00ADvaus"}
        {:leveys 25 :otsikko "Liit\u00ADteet" :tyyppi :liite}]
-      (yleinen/ryhmittele-tulokset-raportin-taulukolle
-        (reverse (sort-by :aika laatupoikkeamarivit))
-        :urakka
-        (fn [rivi]
-          [(pvm/pvm (:aika rivi))
-           (:kohde rivi)
-           (:tekija rivi)
-           (:kuvaus rivi)
-           [:liitteet (:liitteet rivi)]]))]
+      (keep identity
+            (into []
+                  (yleinen/ryhmittele-tulokset-raportin-taulukolle
+                    (reverse (sort-by :aika laatupoikkeamarivit))
+                    :urakka
+                    (fn [rivi]
+                      [(pvm/pvm (:aika rivi))
+                       (:kohde rivi)
+                       (:tekija rivi)
+                       (:kuvaus rivi)
+                       [:liitteet (:liitteet rivi)]]))))]
 
      (when nayta-pylvaat?
        (if-not (empty? laatupoikkeamat-kuukausittain)
