@@ -44,7 +44,7 @@
     [grid
      {:otsikko "Löytyneet urakat"
       :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
-      :tunniste :tunnus}
+      :tunniste :yhatunnus}
      [{:otsikko "Tunnus"
        :nimi :yhatunnus
        :tyyppi :string
