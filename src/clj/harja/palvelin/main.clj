@@ -179,7 +179,7 @@
               (turi/->Turi (:turi asetukset))
               [:db :integraatioloki :liitteiden-hallinta])
 
-      :yha (component/using
+      :yha-integraatio (component/using
              (yha-integraatio/->Yha (:yha asetukset))
              [:db :integraatioloki])
 
@@ -296,7 +296,7 @@
 
       :yha (component/using
              (yha/->Yha)
-             [:http-palvelin :db])
+             [:http-palvelin :db :yha-integraatio])
 
       :tr-haku (component/using
                  (tierek-haku/->TierekisteriHaku)

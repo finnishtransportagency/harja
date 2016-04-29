@@ -18,17 +18,15 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-
 (deftest tarkista-urakoiden-haku
-  (let [odotettu-vastaus {:urakat [{:yha-id 3,
-                                    :elyt ["POP"],
-                                    :tunnus "YHATUNNUS",
-                                    :vuodet [2016],
-                                    :sampotunnus "SAMPOTUNNUS"}]}
+  (let [odotettu-vastaus [{:yha-id 3,
+                           :elyt ["POP"],
+                           :tunnus "YHATUNNUS",
+                           :vuodet [2016],
+                           :sampotunnus "SAMPOTUNNUS"}]
         url (str +yha-url+ "/urakkahaku")]
     (with-fake-http [url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)]
-        (println vastaus)
         (is (= odotettu-vastaus vastaus))))))
 
 (deftest tarkista-epaonnistunut-kutsu

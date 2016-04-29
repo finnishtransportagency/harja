@@ -25,12 +25,12 @@
                             :kun-onnistuu (fn [vastaus]
                                             (log "YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
                                             (reset! yha/hakutulokset-data vastaus))}]}
-   [{:otsikko "Nimi"
-     :nimi :nimi
+   [{:otsikko "YHA-tunniste"
+     :nimi :yhatunniste
      :pituus-max 512
      :tyyppi :string}
-    {:otsikko "Tunniste"
-     :nimi :tunniste
+    {:otsikko "Sampo-tunniste"
+     :nimi :sampotunniste
      :pituus-max 512
      :tyyppi :string}
     {:otsikko "Vuosi"
