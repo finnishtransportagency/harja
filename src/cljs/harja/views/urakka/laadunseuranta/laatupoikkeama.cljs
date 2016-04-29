@@ -265,12 +265,16 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  "Käsittely ja päätös"
 
                  {:otsikko "Käsittelyn pvm"
+                  :pakollinen? true
                   :nimi :paatos-pvm
-                  :hae (comp :kasittelyaika :paatos) :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
+                  :hae (comp :kasittelyaika :paatos)
+                  :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
                   :tyyppi :pvm-aika
                   :muokattava? muokattava?}
 
-                 {:otsikko "Käsitelty" :nimi :kasittelytapa
+                 {:otsikko "Käsitelty"
+                  :pakollinen? true
+                  :nimi :kasittelytapa
                   :hae (comp :kasittelytapa :paatos)
                   :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
                   :tyyppi :valinta
@@ -291,6 +295,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 
                  {:otsikko "Päätös"
+                  :pakollinen? true
                   :nimi :paatos-paatos
                   :tyyppi :valinta
                   :valinnat [:sanktio :ei_sanktiota :hylatty]
