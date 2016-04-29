@@ -63,17 +63,18 @@
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
   (oikeudet/lue oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (into []
-          laatupoikkeama-xf
-
-          (if (= :omat listaus)
-            (apply laatupoikkeamat/hae-omat-laatupoikkeamat
-                   (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
-            (apply (case listaus
-                     :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
-                     :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
-                     :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat)
-                   [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)])))))
+                            (let [tietokannasta-nostetut
+                                  (if (= :omat listaus)
+                                    (apply laatupoikkeamat/hae-omat-laatupoikkeamat
+                                           (conj [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)] (:id user)))
+                                    (apply (case listaus
+                                             :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
+                                             :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
+                                             :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat)
+                                           [db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)]))
+                                  uniikit (map (fn [[_ vektori]] (first vektori)) (group-by :id tietokannasta-nostetut))
+                                  tulos (into [] laatupoikkeama-xf uniikit)]
+                              tulos)))
 
 
 (defn hae-laatupoikkeaman-tiedot
