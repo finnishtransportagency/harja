@@ -38,6 +38,18 @@
     (.replace data "\u00AD" "")
     data))
 
+(defmulti erikoiskentta
+  (fn [elementti]
+    (assert (and (vector? elementti)
+                 (> (count elementti) 1)
+                 (keyword? (first elementti)))
+            (str "Erikoiskentän on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
+                 (pr-str elementti)))
+    (first elementti)))
+
+(defmethod erikoiskentta :liitteet [liitteet]
+  (count (second liitteet)))
+
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
     (let [nimi (:otsikko optiot)
@@ -76,7 +88,7 @@
                                                       {:font {:bold lihavoi?}})
                       arvo-datassa (nth data sarake-nro)
                       naytettava-arvo (if (vector? arvo-datassa)
-                                        ""  ;; fixme: implementoi supportti Exceliin komponentille
+                                        (erikoiskentta arvo-datassa)
                                         arvo-datassa)]
 
                   (if-let [kaava (:excel sarake)]

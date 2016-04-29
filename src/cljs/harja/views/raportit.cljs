@@ -502,7 +502,10 @@
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn  #(if % (:kuvaus %) "Valitse")
                                                 :valitse-fn #(valitse-raporttityyppi! (:nimi %))
-                                                :class      "raportti-alasveto"}
+                                                :class      "raportti-alasveto"
+                                                :li-luokka-fn #(if (= "Työmaakokousraportti" (:kuvaus %))
+                                                                "tyomaakokous"
+                                                                "")}
                            @mahdolliset-raporttityypit])]])
 
          (when @valittu-raporttityyppi
