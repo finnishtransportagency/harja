@@ -148,8 +148,12 @@
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
              paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
+             sisaltaa-paallystysilmoituksia? (> (:paallystysilmoituksia ur) 0)
              paallystysilmoituksia-vihje "Urakalle on kirjattu päällystysilmoituksia, sidontaa ei voi muuttaa."]
-         (when (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+         (when (and yha-tuontioikeus?
+                    paallystys-tai-paikkausurakka?
+                    (not paallystys-tai-paikkausurakka-sidottu?)
+                    (not sisaltaa-paallystysilmoituksia?))
            (yha/nayta-tuontidialogi ur))
          [:div
           [bs/panel {}
@@ -169,14 +173,14 @@
             "YHA-sidonta:"
             (cond
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
-              [:span (when (> (:paallystysilmoituksia ur) 0) {:title paallystysilmoituksia-vihje})
+              [:span (when sisaltaa-paallystysilmoituksia? {:title paallystysilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                           :disabled (> (:paallystysilmoituksia ur) 0)}
+                                           :disabled sisaltaa-paallystysilmoituksia?}
                "Sido YHA-urakkaan"]]
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              [:span (when (> (:paallystysilmoituksia ur) 0) {:title paallystysilmoituksia-vihje})
+              [:span (when sisaltaa-paallystysilmoituksia? {:title paallystysilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                           :disabled (> (:paallystysilmoituksia ur) 0)}
+                                           :disabled sisaltaa-paallystysilmoituksia?}
                "Vaihda sidottu urakka"]]
               :default nil)
             "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
