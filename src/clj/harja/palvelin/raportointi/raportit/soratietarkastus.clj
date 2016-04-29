@@ -251,7 +251,8 @@
      [:taulukko {:otsikko otsikko
                  :tyhja (when (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :korosta-rivit (kylla-loppuiset-rivi-indeksit ryhmittellyt-rivit)
-                 :viimeinen-rivi-yhteenveto? true}
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi raportin-nimi}
       taulukon-otsikot
       (remove nil?
               (conj

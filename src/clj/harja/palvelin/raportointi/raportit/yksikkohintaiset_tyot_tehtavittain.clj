@@ -85,7 +85,8 @@
                                                #{2 5 6}
                                                (if urakoittain?
                                                #{4}
-                                               #{}))}
+                                               #{}))
+                 :sheet-nimi raportin-nimi}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys 25 :otsikko "Urakka"})
                                {:leveys 25 :otsikko "Tehtävä"}

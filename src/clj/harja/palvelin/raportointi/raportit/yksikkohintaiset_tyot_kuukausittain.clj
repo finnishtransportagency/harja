@@ -155,7 +155,8 @@
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat oikealle-tasattavat
-                 :tyhja (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}
+                 :tyhja (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")
+                 :sheet-nimi raportin-nimi}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys 15 :otsikko "Urakka"})
                                {:leveys 10 :otsikko "Tehtävä"}

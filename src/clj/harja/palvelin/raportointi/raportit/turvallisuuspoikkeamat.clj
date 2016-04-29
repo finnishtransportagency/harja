@@ -66,7 +66,8 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
+     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi raportin-nimi}
       (into []
             (concat (when urakoittain?
                       [{:otsikko "Urakka"}])

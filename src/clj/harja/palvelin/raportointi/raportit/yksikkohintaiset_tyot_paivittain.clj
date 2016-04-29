@@ -40,7 +40,8 @@
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")
-                 :oikealle-tasattavat-kentat #{3 6 7}}
+                 :oikealle-tasattavat-kentat #{3 6 7}
+                 :sheet-nimi raportin-nimi}
       [{:leveys 10 :otsikko "Päivämäärä"}
        {:leveys 25 :otsikko "Tehtävä"}
        {:leveys 5 :otsikko "Yks."}

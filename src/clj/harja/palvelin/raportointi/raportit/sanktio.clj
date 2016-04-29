@@ -271,6 +271,7 @@
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko
-                 :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))}
+                 :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
+                 :sheet-nimi raportin-nimi}
       raportin-otsikot
       raportin-rivit]]))
