@@ -60,11 +60,16 @@
                                      :nimi (:urakoitsija_nimi %)
                                      :ytunnus (:urakoitsija_ytunnus %)}))
 
-        (map #(assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
-                                   :yhaid (:yha_yhaid %)
-                                   :yhanimi (:yha_yhanimi %)
-                                   :elyt (:yha_elyt %)
-                                   :vuodet (:yha_vuodet %)}))
+        (map #(konv/array->vec % :yha_elyt))
+        (map #(konv/array->vec % :yha_vuodet))
+
+        (map #(if (:yha_yhatunnus %)
+               (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
+                                     :yhaid (:yha_yhaid %)
+                                     :yhanimi (:yha_yhanimi %)
+                                     :elyt (:yha_elyt %)
+                                     :vuodet (:yha_vuodet %)})
+               %))
 
         (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
 
@@ -74,8 +79,8 @@
                                            (if (nil? jdbc-array)
                                              {}
                                              (into {} (map (fn [s](let [[id sampoid] (str/split s #"=")]
-                                                                    [(Long/parseLong id) sampoid]
-                                                                    )) (.getArray jdbc-array)))))))
+                                                                    [(Long/parseLong id) sampoid]))
+                                                           (.getArray jdbc-array)))))))
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
@@ -137,8 +142,8 @@
   (log/debug "Hae yksittäinen urakka id:llä: " urakka-id)
   (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (first (into []
-               urakka-xf
-               (q/hae-yksittainen-urakka db urakka-id))))
+                urakka-xf
+                (q/hae-yksittainen-urakka db urakka-id))))
 
 (defrecord Urakat []
   component/Lifecycle
