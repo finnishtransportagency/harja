@@ -83,7 +83,8 @@
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
+                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+                 :sheet-nimi raportin-nimi}
       [{:leveys 10 :otsikko "Päivämäärä"}
        {:leveys 5 :otsikko "Klo"}
        {:leveys 5 :otsikko "Tie"}

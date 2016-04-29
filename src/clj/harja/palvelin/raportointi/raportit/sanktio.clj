@@ -3,8 +3,6 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.pvm :as pvm]
-            [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
             [harja.kyselyt.konversio :as konv]
@@ -273,6 +271,7 @@
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko
-                 :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))}
+                 :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
+                 :sheet-nimi raportin-nimi}
       raportin-otsikot
       raportin-rivit]]))

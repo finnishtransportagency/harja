@@ -228,7 +228,7 @@
                              #(tallenna-toteuma @lomake-toteuma @lomake-tehtavat)
                              {:luokka "nappi-ensisijainen"
                               :disabled (or (false? @valmis-tallennettavaksi?)
-                                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka)))
+                                            (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))))
                               :kun-onnistuu (fn [vastaus]
                                               (log "Tehtävät tallennettu, vastaus: " (pr-str vastaus))
                                               (reset! yksikkohintaiset-tyot/yks-hint-tehtavien-summat (:tehtavien-summat vastaus))
@@ -381,11 +381,11 @@
           [{:tyyppi :vetolaatikon-tila :leveys 5}
            {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
            {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys 10}
-           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Yksikköhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10 :tasaa :oikea :fmt fmt/euro-opt}
            {:otsikko "Suunniteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
-            :fmt #(fmt/desimaaliluku-opt % 1)}
+            :fmt #(fmt/desimaaliluku-opt % 1) :tasaa :oikea}
            {:otsikko "Toteutunut määrä" :nimi :maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
-            :fmt #(fmt/desimaaliluku-opt % 1)}
+            :fmt #(fmt/desimaaliluku-opt % 1) :tasaa :oikea}
            {:otsikko "Suunnitellut kustannukset" :nimi :hoitokauden-suunnitellut-kustannukset :fmt fmt/euro-opt
             :tasaa :oikea :muokattava? (constantly false) :tyyppi :numero :leveys 10}
            {:otsikko "Toteutuneet kustannukset" :nimi :hoitokauden-toteutuneet-kustannukset :fmt fmt/euro-opt

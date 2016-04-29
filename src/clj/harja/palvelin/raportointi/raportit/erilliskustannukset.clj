@@ -74,7 +74,8 @@
                                                #{5 6}
                                                #{4 5})
                  :otsikko otsikko
-                 :viimeinen-rivi-yhteenveto? true}
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi raportin-nimi}
       (keep identity [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
                       {:leveys 7 :otsikko "Pvm"}
                       {:leveys 7 :otsikko "Sop. nro"}
