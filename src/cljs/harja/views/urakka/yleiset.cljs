@@ -174,7 +174,6 @@
                                            :disabled (> (:paallystysilmoituksia ur) 0)}
                "Sido YHA-urakkaan"]]
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              ; FIXME Tarkista myös, ettei ole ilmoituksia
               [:span (when (> (:paallystysilmoituksia ur) 0) {:title paallystysilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
                                            :disabled (> (:paallystysilmoituksia ur) 0)}
