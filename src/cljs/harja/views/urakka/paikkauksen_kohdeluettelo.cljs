@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      livi-pudotusvalikko]]
+                                      livi-pudotusvalikko vihje]]
             [harja.views.urakka.paikkauskohteet :as paikkauskohteet]
             [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]
 
@@ -33,10 +33,10 @@
                              (assoc :nykyinen_paallyste (get-in kohde [:osa :nykyinen_paallyste]))
                              (assoc :toimenpide (get-in kohde [:osa :toimenpide]))
                              (assoc :paikkausilmoitus {:tila (:tila kohde)})
-                             (assoc :tr {:numero        (get-in kohde [:osa :tr_numero])
-                                         :alkuosa       (get-in kohde [:osa :tr_alkuosa])
-                                         :alkuetaisyys  (get-in kohde [:osa :tr_alkuetaisyys])
-                                         :loppuosa      (get-in kohde [:osa :tr_loppuosa])
+                             (assoc :tr {:numero (get-in kohde [:osa :tr_numero])
+                                         :alkuosa (get-in kohde [:osa :tr_alkuosa])
+                                         :alkuetaisyys (get-in kohde [:osa :tr_alkuetaisyys])
+                                         :loppuosa (get-in kohde [:osa :tr_loppuosa])
                                          :loppuetaisyys (get-in kohde [:osa :tr_loppuetaisyys])})
                              (assoc :kohde-click #(do (kartta/poista-popup!)
                                                       (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaus :paikkausilmoitukset)
@@ -44,21 +44,23 @@
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
-  []
+  [ur]
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn []
-      [:span.kohdeluettelo
-       [bs/tabs {:style  :tabs :classes "tabs-taso2"
-                 :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaus)}
+      (if (:yhatiedot ur)
+        [:span.kohdeluettelo
+         [bs/tabs {:style :tabs :classes "tabs-taso2"
+                   :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaus)}
 
-        "Paikkauskohteet"
-        :paikkauskohteet
-        [paikkauskohteet/paikkauskohteet]
+          "Paikkauskohteet"
+          :paikkauskohteet
+          [paikkauskohteet/paikkauskohteet]
 
-        "Paikkausilmoitukset"
-        :paikkausilmoitukset
-        [paikkausilmoitukset/paikkausilmoitukset]]])))
+          "Paikkausilmoitukset"
+          :paikkausilmoitukset
+          [paikkausilmoitukset/paikkausilmoitukset]]]
+        [vihje "Paikkausurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))
 
