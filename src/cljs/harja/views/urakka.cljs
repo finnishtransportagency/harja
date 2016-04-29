@@ -86,7 +86,7 @@
      :kohdeluettelo-paallystys
      (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
        ^{:key "kohdeluettelo"}
-       [paallystyksen-kohdeluettelo/kohdeluettelo])
+       [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
      "Kohdeluettelo"
      :kohdeluettelo-paikkaus
