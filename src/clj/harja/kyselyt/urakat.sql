@@ -47,8 +47,8 @@ SELECT
   yhatunnus                AS yha_yhatunnus,
   yhaid                    AS yha_yhaid,
   yhanimi                  AS yha_yhanimi,
-  -- elyt                     AS yha_elyt, TODO Palauta myös nämä
-  -- vuodet                   AS yha_vuodet,
+  elyt::TEXT[]             AS yha_elyt,
+  vuodet::INTEGER[]        AS yha_vuodet,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -306,8 +306,8 @@ SELECT
   yhatunnus                AS yha_yhatunnus,
   yhaid                    AS yha_yhaid,
   yhanimi                  AS yha_yhanimi,
-  -- elyt                     AS yha_elyt, TODO Palauta myös nämä
-  -- vuodet                   AS yha_vuodet,
+  elyt::TEXT[]             AS yha_elyt,
+  vuodet::INTEGER[]        AS yha_vuodet,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,

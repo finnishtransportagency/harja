@@ -60,6 +60,9 @@
                                      :nimi (:urakoitsija_nimi %)
                                      :ytunnus (:urakoitsija_ytunnus %)}))
 
+        (map #(konv/array->vec % :yha_elyt))
+        (map #(konv/array->vec % :yha_vuodet))
+
         (map #(assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
                                    :yhaid (:yha_yhaid %)
                                    :yhanimi (:yha_yhanimi %)
@@ -74,8 +77,8 @@
                                            (if (nil? jdbc-array)
                                              {}
                                              (into {} (map (fn [s](let [[id sampoid] (str/split s #"=")]
-                                                                    [(Long/parseLong id) sampoid]
-                                                                    )) (.getArray jdbc-array)))))))
+                                                                    [(Long/parseLong id) sampoid]))
+                                                           (.getArray jdbc-array)))))))
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
@@ -137,8 +140,8 @@
   (log/debug "Hae yksittäinen urakka id:llä: " urakka-id)
   (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (first (into []
-               urakka-xf
-               (q/hae-yksittainen-urakka db urakka-id))))
+                urakka-xf
+                (q/hae-yksittainen-urakka db urakka-id))))
 
 (defrecord Urakat []
   component/Lifecycle
