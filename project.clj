@@ -5,7 +5,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.7.228"]
+                 [org.clojure/clojurescript "1.8.51"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "1.0.4"]
@@ -33,14 +33,14 @@
                  [hiccup "1.0.5"]
 
 
-                 [org.clojure/core.cache "0.6.4"]
+                 [org.clojure/core.cache "0.6.5"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  [org.postgresql/postgresql "9.4-1206-jdbc41"]
                  ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [clojunauts/postgis-jdbc "2.1.0SVN"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
-                 [com.mchange/c3p0 "0.9.5"]
+                 [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.3.3"]
 
 
@@ -51,7 +51,7 @@
                  [org.geotools/gt-swing "12.2"]             ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.1"]
+                 [org.clojure/data.zip "0.1.2"]
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
@@ -71,7 +71,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.3"]
-                 [figwheel "0.5.0-6"]
+                 [figwheel "0.5.2"]
 
                  [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
@@ -81,12 +81,12 @@
                  [clj-time "0.11.0"]
                  [com.andrewmcveigh/cljs-time "0.3.14"]      ;; tämän uusi versio aiheuttaa vertailuongelmia(?!)
 
-                 [cljsjs/openlayers "3.13.0"]
+                 [cljsjs/openlayers "3.15.1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.13"]                ;; siirrä oikeisiin depseihin, kun tarvitaan XLS export feature
-                 [org.apache.poi/poi-scratchpad "3.13"]     ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.13"]          ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "3.14"]
+                 [org.apache.poi/poi-scratchpad "3.14"]     ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.14"]          ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjastoe
