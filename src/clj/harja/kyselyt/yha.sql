@@ -19,3 +19,13 @@ WHERE urakka = :urakka;
 
 -- name: hae-urakan-yhatiedot
 SELECT yhatunnus, yhaid, yhanimi, elyt, vuodet FROM yhatiedot WHERE urakka = :urakka;
+
+-- name: poista-urakan-yllapitokohteet
+DELETE FROM yllapitokohde WHERE urakka = :urakka;
+
+-- name: poista-urakan-yllapitokohdeosat
+DELETE FROM yllapitokohdeosa
+WHERE yllapitokohde IN
+      (SELECT id
+       FROM yllapitokohde
+       WHERE urakka = :urakka);
