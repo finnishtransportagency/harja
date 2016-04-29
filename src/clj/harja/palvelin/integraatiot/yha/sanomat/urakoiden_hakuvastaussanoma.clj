@@ -7,9 +7,9 @@
 
 (defn lue-urakat [data]
   (mapv (fn [urakka]
-          (hash-map :yha-id (z/xml1-> urakka :yha:yha-id z/text)
+          (hash-map :yha-id (xml/parsi-kokonaisluku (z/xml1-> urakka :yha:yha-id z/text))
                     :elyt (mapv #(z/xml1-> % :yha:ely z/text) (z/xml-> urakka :yha:elyt))
-                    :vuodet (mapv #(z/xml1-> % :yha:vuosi z/text) (z/xml-> urakka :yha:vuodet))
+                    :vuodet (mapv #(xml/parsi-kokonaisluku (z/xml1-> % :yha:vuosi z/text)) (z/xml-> urakka :yha:vuodet))
                     :tunnus (z/xml1-> urakka :yha:tunnus z/text)
                     :sampotunnus (z/xml1-> urakka :yha:sampotunnus z/text)))
         (z/xml-> data :yha:urakat :yha:urakka)))
@@ -20,6 +20,10 @@
 (defn lue-sanoma [viesti]
   (when (not (xml/validoi +xsd-polku+ "yha.xsd" viesti))
     (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman yha.xsd mukaan validi.")))
-  (let [data (xml/lue viesti)]
-    {:urakat (lue-urakat data)
-     :virhe (lue-virhe data)}))
+  (let [data (xml/lue viesti)
+        urakat (lue-urakat data)
+        virhe (lue-virhe data)
+        vastaus {:urakat urakat}]
+    (if virhe
+      (assoc vastaus :virhe virhe)
+      vastaus)))

@@ -36,7 +36,7 @@
                    (map #(konv/array->vec % :elyt)))
                  (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
-(defrecord Yha []
+(defrecord Yha [this]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)

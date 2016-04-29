@@ -2,31 +2,42 @@
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]))
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.palvelin.integraatiot.yha.sanomat.urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus])
+  (:use [slingshot.slingshot :only [throw+]]))
+
+(def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
 
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this tunniste nimi vuosi])
   (hae-kohteet [this urakka-id])
   (laheta-kohde [this kohde-id]))
 
-(defn kasittele-vastaus [body headers]
-  )
+(defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
+  (log/debug format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (let [vastaus (urakoiden-hakuvastaus/lue-sanoma sisalto)
+        virhe (:virhe vastaus)]
+    (if virhe
+      (throw+
+        {:type +virhe-urakoiden-haussa+
+         :virheet {:virhe virhe}})
+      vastaus)))
 
-(defn hae-urakat-yhasta [integraatioloki db url tunniste nimi vuosi]
+(defn hae-urakat-yhasta [integraatioloki db url tunniste sampo-id vuosi]
   (let [url (str url "/urakkahaku")]
-    (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, nimi: %s & vuosi: %s)" tunniste nimi vuosi))
+    (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, nimi: %s & vuosi: %s)" tunniste sampo-id vuosi))
     (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "yha" "hae-urakat"
+      db integraatioloki "yha" "urakoiden-haku"
       (fn [konteksti]
         (let [parametrit {"tunniste" tunniste
-                          "nimi" nimi
+                          "nimi" sampo-id
                           "vuosi" vuosi}
               http-asetukset {:metodi :GET
                               :url url
                               :parametrit parametrit}
               {body :body headers :headers}
               (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (kasittele-vastaus body headers))))))
+          (kasittele-urakoiden-hakuvastaus body headers))))))
 
 (defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id]
   ;; todo: toteuta
@@ -38,8 +49,8 @@
 
 (defrecord Yha [asetukset]
   component/Lifecycle
-  (start [this])
-  (stop [this])
+  (start [this] this)
+  (stop [this] this)
 
   YllapidonUrakoidenHallinta
 

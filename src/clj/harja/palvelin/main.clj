@@ -15,12 +15,12 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti
-     :as tierekisteri]
+    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
+    [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -178,6 +178,10 @@
       :turi (component/using
               (turi/->Turi (:turi asetukset))
               [:db :integraatioloki :liitteiden-hallinta])
+
+      :yha (component/using
+             (yha-integraatio/->Yha (:yha asetukset))
+             [:db :integraatioloki])
 
       :raportointi (component/using
                      (raportointi/luo-raportointi)
